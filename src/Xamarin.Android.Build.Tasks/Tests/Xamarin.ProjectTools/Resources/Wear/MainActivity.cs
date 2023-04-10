@@ -8,6 +8,7 @@ using Android.Support.V4.App;
 using Android.Support.Wearable.Views;
 using Android.Views;
 using Android.Widget;
+//${USINGS}
 
 namespace ${ROOT_NAMESPACE}
 {

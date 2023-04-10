@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <RootNamespace>Xamarin.Android.Build.Tests</RootNamespace>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\bin\Test$(Configuration)\MSBuildDeviceIntegration\</OutputPath>
@@ -40,6 +40,7 @@
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.787" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
+    <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
   </ItemGroup>
 
   <ItemGroup>

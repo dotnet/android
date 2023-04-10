@@ -151,11 +151,6 @@ namespace Xamarin.Android.Prepare
 				fileToRemovePath: $"{monoFrameworksRoot}/{latestStableFramework}/Mono.Android.Export.*",
 				projectPath: "src/Mono.Android.Export/Mono.Android.Export.csproj"
 			);
-
-			WriteMSBuildCall (
-				fileToRemovePath: $"{monoFrameworksRoot}/{latestStableFramework}/OpenTK-1.0.*",
-				projectPath: "src/OpenTK-1.0/OpenTK.csproj"
-			);
 			sw.WriteLine ();
 
 			if (context.RuleGenerators == null || context.RuleGenerators.Count == 0)

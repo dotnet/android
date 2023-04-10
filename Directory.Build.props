@@ -35,7 +35,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>34.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.3</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.4</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
@@ -50,22 +50,8 @@
     <SystemCollectionsImmutableVersion>6.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
+    <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
   </PropertyGroup>
 
-  <!-- Properties to help us run managed assemblies on various runtimes.
-       Ex:
-       * Mono: mono xaprepare.exe
-       * Windows .NET: xaprepare.exe
-       * dotnet: dotnet xaprepare.dll
--->
-  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' != 'Core' ">
-    <ManagedToolInvocationRuntime>$(Runtime) </ManagedToolInvocationRuntime>
-    <ManagedToolInvocationExtension>.exe</ManagedToolInvocationExtension>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(MSBuildRuntimeType)' == 'Core' ">
-    <ManagedToolInvocationRuntime>dotnet </ManagedToolInvocationRuntime>
-    <ManagedToolInvocationExtension>.dll</ManagedToolInvocationExtension>
-  </PropertyGroup>
 </Project>

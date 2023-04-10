@@ -599,7 +599,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AndroidPackage>$(ApplicationId)</_AndroidPackage>
     <_ApplicationLabel>$(ApplicationTitle)</_ApplicationLabel>
     <_AndroidVersionName>$(ApplicationDisplayVersion)</_AndroidVersionName>
-    <_AndroidVersionCode Condition=" '$(AndroidCreatePackagePerAbi)' != 'true' ">$(ApplicationVersion)</_AndroidVersionCode>
+    <_AndroidVersionCode>$(ApplicationVersion)</_AndroidVersionCode>
   </PropertyGroup>
   <AndroidError Code="XA1018"
       ResourceName="XA1018"
@@ -965,6 +965,7 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidAddKeepAlives Condition="'$(AndroidAddKeepAlives)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">True</AndroidAddKeepAlives>
 		<AndroidLinkResources Condition="'$(AndroidLinkResources)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">False</AndroidLinkResources>
 		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
+		<_NuGetAssetsFile      Condition=" Exists('$(ProjectAssetsFile)') ">$(ProjectAssetsFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
 		<_NuGetAssetsTimestamp Condition=" '$(_NuGetAssetsFile)' != '' ">$([System.IO.File]::GetLastWriteTime('$(_NuGetAssetsFile)').Ticks)</_NuGetAssetsTimestamp>

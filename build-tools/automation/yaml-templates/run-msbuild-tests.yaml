@@ -27,7 +27,6 @@ jobs:
 
   - template: setup-test-environment.yaml
     parameters:
-      provisionClassic: false
       installTestSlicer: true
       installLegacyDotNet: false
       restoreNUnitConsole: false

@@ -263,6 +263,11 @@ namespace Xamarin.ProjectTools
 			Version = "1.1.0.1",
 			TargetFramework = "MonoAndroid10",
 		};
+		public static Package AndroidXAppCompat_1_6_0_1 = new Package {
+			Id = "Xamarin.AndroidX.AppCompat",
+			Version = "1.6.0.1",
+			TargetFramework = "MonoAndroid10",
+		};
 		public static Package AndroidXBrowser = new Package {
 			Id = "Xamarin.AndroidX.Browser",
 			Version = "1.2.0.1",

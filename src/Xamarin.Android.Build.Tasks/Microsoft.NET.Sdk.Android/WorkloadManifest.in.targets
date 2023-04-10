@@ -15,13 +15,6 @@
         TargetingPackVersion="@NET7_VERSION@"
     />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '6.0')) ">
-    <KnownFrameworkReference
-        Update="Microsoft.Android"
-        LatestRuntimeFrameworkVersion="@NET6_VERSION@"
-        TargetingPackVersion="@NET6_VERSION@"
-    />
-  </ItemGroup>
 
   <ItemGroup Condition=" '$(TargetFrameworkIdentifier)' == '.NETCoreApp' and $([MSBuild]::VersionGreaterThanOrEquals($(TargetFrameworkVersion), '6.0')) ">
     <SdkSupportedTargetPlatformIdentifier Include="android" DisplayName="Android" />

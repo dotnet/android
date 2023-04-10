@@ -239,8 +239,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			using (var zip = ZipHelper.OpenZip (archivePath)) {
 				existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
-				missingFiles = fileNames.Where (x => !zip.ContainsEntry (assembliesRootDir + Path.GetFileName (x))).ToList ();
-				additionalFiles = existingFiles.Where (x => !fileNames.Contains (Path.GetFileName (x))).ToList ();
+				missingFiles = fileNames.Where (x => !zip.ContainsEntry (assembliesRootDir + x)).ToList ();
+				additionalFiles = existingFiles.Where (x => !fileNames.Contains (x.Replace (assembliesRootDir, string.Empty))).ToList ();
 			}
 		}
 
@@ -258,7 +258,7 @@ namespace Xamarin.Android.Build.Tests
 			if (otherFiles.Count > 0) {
 				using (var zip = ZipHelper.OpenZip (archivePath)) {
 					foreach (string file in otherFiles) {
-						string fullPath = assembliesRootDir + Path.GetFileName (file);
+						string fullPath = assembliesRootDir + file;
 						if (zip.ContainsEntry (fullPath)) {
 							existingFiles.Add (file);
 						}
@@ -266,7 +266,13 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			var explorer = new AssemblyStoreExplorer (archivePath);
+			var explorer = new AssemblyStoreExplorer (archivePath, customLogger: (a, s) => {
+				Console.WriteLine ($"DEBUG! {s}");
+			});
+
+			foreach (var f in explorer.AssembliesByName) {
+				Console.WriteLine ($"DEBUG!\tKey:{f.Key}");
+			}
 
 			// Assembly stores don't store the assembly extension
 			var storeAssemblies = explorer.AssembliesByName.Keys.Select (x => $"{x}.dll");
@@ -298,7 +304,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			foreach (string file in fileNames) {
-				if (existingFiles.Contains (Path.GetFileName (file))) {
+				if (existingFiles.Contains (file)) {
 					continue;
 				}
 				missingFiles.Add (file);

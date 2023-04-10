@@ -526,7 +526,6 @@ projects. .NET 5 projects will not import this file.
       <_TargetArchitecture Include="$(_Android32bitArchitectures);$(_Android64bitArchitectures)" />
       <_TargetLibDir Include="$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\%(_TargetArchitecture.Identity)') "/>
       <_TargetLibInterpreterDir Include="$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)" Condition=" Exists('$(MSBuildThisFileDirectory)lib\$(_TargetInterpreterPrefix)%(_TargetArchitecture.Identity)') "/>
-      <AndroidNativeLibrary Include="%(_TargetLibDir.Identity)\libsqlite3_xamarin.so" Condition="$(_Assemblies.Contains('Mono.Data.Sqlite.dll'))" />
       <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' != 'True' " />
       <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libMonoPosixHelper.d.so" Condition="$(_Assemblies.Contains('Mono.Posix.dll')) and '$(_AndroidDebugNativeLibraries)' == 'True' " ArchiveFileName="libMonoPosixHelper.so" />
       <AndroidNativeLibrary Include="%(_TargetLibInterpreterDir.Identity)\libmono-native.so" Condition=" '$(_AndroidDebugNativeLibraries)' != 'True' " />

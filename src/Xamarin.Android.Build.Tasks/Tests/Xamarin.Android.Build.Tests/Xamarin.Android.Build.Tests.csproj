@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net472;$(DotNetStableTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>..\..\..\..\bin\Test$(Configuration)</OutputPath>
     <SignAssembly>true</SignAssembly>
@@ -56,6 +56,7 @@
   <ItemGroup>
     <PackageReference Include="ELFSharp" Version="$(ELFSharpVersion)" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
+    <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
   </ItemGroup>
 
   <ItemGroup>
