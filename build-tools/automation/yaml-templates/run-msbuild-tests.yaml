@@ -11,11 +11,12 @@ jobs:
     parallel: ${{ parameters.agentCount }}
   displayName: ${{ parameters.jobDisplayName }}
   ${{ if eq(parameters.testOS, 'Windows') }}:
-    pool: $(1ESWindowsPool)
+    pool: 
+      vmImage: windows-2022
   ${{ if eq(parameters.testOS, 'macOS') }}:
     pool:
       vmImage: $(HostedMacImage)
-  timeoutInMinutes: 180
+  timeoutInMinutes: 240
   cancelTimeoutInMinutes: 5
   steps:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
