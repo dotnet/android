@@ -66,12 +66,9 @@ namespace Xamarin.Android.Tools.Bytecode {
 
 			using (var jar = CreateZipArchive (jarStream, leaveOpen)) {
 				foreach (var entry in jar.Entries) {
-					if (entry.Length == 0)
+					if (!ShouldLoadEntry (entry))
 						continue;
-					using (var s = entry.Open ()) {
-						if (!ClassFile.IsClassFile (s) || entry.Name.EndsWith (".jnilib", StringComparison.OrdinalIgnoreCase))
-							continue;
-					}
+
 					using (var entry_stream = entry.Open ())
 					using (var s = new BufferedStream (entry_stream)) {
 						try {
@@ -84,6 +81,22 @@ namespace Xamarin.Android.Tools.Bytecode {
 					}
 				}
 			}
+		}
+
+		static bool ShouldLoadEntry (ZipArchiveEntry entry)
+		{
+			if (entry.Length == 0)
+				return false;
+
+			if (entry.Name == "module-info.class")
+				return false;
+
+			if (entry.Name.EndsWith (".jnilib", StringComparison.OrdinalIgnoreCase))
+				return false;
+
+			using var s = entry.Open ();
+
+			return ClassFile.IsClassFile (s);
 		}
 
 		static ZipArchive CreateZipArchive (Stream jarStream, bool leaveOpen)
