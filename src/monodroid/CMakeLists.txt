@@ -205,15 +205,19 @@ if(ENABLE_NET)
   if(ANDROID_ABI MATCHES "^arm64-v8a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
     set(COMPILER_BUILTINS_LIB_ABI "aarch64")
+    set(SYSROOT_ABI_LIB_DIR "aarch64-linux-android")
   elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
     set(COMPILER_BUILTINS_LIB_ABI "arm")
+    set(SYSROOT_ABI_LIB_DIR "arm-linux-androideabi")
   elseif(ANDROID_ABI MATCHES "^x86_64")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
     set(COMPILER_BUILTINS_LIB_ABI "x86_64")
+    set(SYSROOT_ABI_LIB_DIR "x86_64-linux-android")
   elseif(ANDROID_ABI MATCHES "^x86")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
     set(COMPILER_BUILTINS_LIB_ABI "i686")
+    set(SYSROOT_ABI_LIB_DIR "i686-linux-android")
   else()
     message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
   endif()
@@ -495,6 +499,7 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
+set(XAMARIN_NATIVE_TRACING_LIB xamarin-native-tracing)
 set(XAMARIN_MARSHAL_METHODS_TRACING_LIB marshal-methods-tracing)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
@@ -563,6 +568,14 @@ if(UNIX)
 endif()
 
 if(ANDROID AND ENABLE_NET)
+  set(NATIVE_TRACING_SOURCES
+    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+    ${SOURCES_DIR}/helpers.cc
+    ${SOURCES_DIR}/native-tracing.cc
+    ${SOURCES_DIR}/new_delete.cc
+  )
 
   set(MARSHAL_METHODS_TRACING_SOURCES
     ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
@@ -712,8 +725,57 @@ add_library(
 
 if(ANDROID)
   if(ENABLE_NET AND NOT DEBUG_BUILD)
-    # TODO: make it a shared library instead, will make it possible to not require NDK when building
-    #      an app with tracing
+    execute_process(
+      COMMAND ${CMAKE_CXX_COMPILER} -print-runtime-dir
+      RESULT_VARIABLE _CXX_COMPILER_EXIT_CODE
+      OUTPUT_VARIABLE _CXX_COMPILER_RUNTIME_DIR
+      ECHO_OUTPUT_VARIABLE
+      OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(NOT ${_CXX_COMPILER_EXIT_CODE} EQUAL 0)
+      message(FATAL_ERROR "Unable to determine compiler runtime directory")
+    endif()
+
+    message(STATUS "Clang runtime dir: ${_CXX_COMPILER_RUNTIME_DIR}")
+    message(STATUS "ABI dir: ${SYSROOT_ABI_LIB_DIR}")
+    set(BUILTINS_LIB ${_CXX_COMPILER_RUNTIME_DIR}/libclang_rt.builtins-${COMPILER_BUILTINS_LIB_ABI}-android.a)
+    set(CPP_ABI_PATH ${CMAKE_SYSROOT}/usr/lib/${SYSROOT_ABI_LIB_DIR}/libc++abi.a)
+
+    add_library(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      SHARED ${NATIVE_TRACING_SOURCES}
+    )
+
+    target_include_directories(
+      ${XAMARIN_NATIVE_TRACING_LIB} BEFORE
+      PRIVATE
+      ${LIBUNWIND_SOURCE_DIR}/include
+      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+      ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
+    )
+
+    target_compile_options(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
+      -Wno-deprecated-dynamic-exception-spec
+    )
+
+    target_link_libraries(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      -llog
+      ${CPP_ABI_PATH}
+      ${XA_LIBRARY_OUTPUT_DIRECTORY}/libunwind_xamarin.a
+    )
+
+    target_compile_definitions(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      XAMARIN_TRACING
+    )
+
     add_library(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
       STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
@@ -722,7 +784,7 @@ if(ANDROID)
     target_compile_definitions(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
       PRIVATE
-      MARSHAL_METHODS_TRACING
+      XAMARIN_TRACING
     )
 
     target_compile_options(
@@ -740,20 +802,6 @@ if(ANDROID)
       ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
     )
 
-    execute_process(
-      COMMAND ${CMAKE_CXX_COMPILER} -print-runtime-dir
-      RESULT_VARIABLE _CXX_COMPILER_EXIT_CODE
-      OUTPUT_VARIABLE _CXX_COMPILER_RUNTIME_DIR
-      ECHO_OUTPUT_VARIABLE
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    if(NOT ${_CXX_COMPILER_EXIT_CODE} EQUAL 0)
-      message(FATAL_ERROR "Unable to determine compiler runtime directory")
-    endif()
-
-    message(STATUS "Runtime dir: ${_CXX_COMPILER_RUNTIME_DIR}")
-    set(BUILTINS_LIB ${_CXX_COMPILER_RUNTIME_DIR}/libclang_rt.builtins-${COMPILER_BUILTINS_LIB_ABI}-android.a)
     file(COPY ${BUILTINS_LIB} DESTINATION ${XA_LIBRARY_OUTPUT_DIRECTORY})
   endif()
 
