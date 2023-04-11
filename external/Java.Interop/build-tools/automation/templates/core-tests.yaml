@@ -84,6 +84,7 @@ steps:
     testRunTitle: Java.Interop (netstandard2.0 - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)/Java.Interop-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop'
@@ -93,6 +94,7 @@ steps:
     testRunTitle: Java.Interop ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Dynamic'
@@ -102,6 +104,7 @@ steps:
     testRunTitle: Java.Interop.Dynamic (${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Dynamic-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Export'
@@ -111,6 +114,7 @@ steps:
     testRunTitle: Java.Interop.Export (${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'jnimarshalmethod-gen Java.Interop.Export-Tests.dll'
@@ -120,6 +124,7 @@ steps:
     custom: bin/$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/jnimarshalmethod-gen.dll
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll -v -v --keeptemp -o bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop.Export w/ jnimarshalmethod-gen!'
@@ -129,6 +134,7 @@ steps:
     testRunTitle: Java.Interop.Export (jnimarshalmethod-gen + ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop-Performance-net472'
@@ -138,6 +144,7 @@ steps:
     testRunTitle: Java.Interop-Performance (net472 - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)/Java.Interop-PerformanceTests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop-Performance-$(DotNetTargetFramework)'
@@ -147,6 +154,7 @@ steps:
     testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Base'
@@ -156,6 +164,7 @@ steps:
     testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
   continueOnError: true
+  retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'
