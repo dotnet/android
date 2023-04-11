@@ -1,0 +1,17 @@
+<metadata>
+  <!-- Change Bxc4288.useColors() method to take and return Android.Graphics.Color -->
+  <attr
+      path="/api/package[@name='com.xamarin.android']/class[@name='Bxc4288']/method[@name='useColors']"
+      name="return"
+  >Android.Graphics.Color</attr>
+  <attr
+      path="/api/package[@name='com.xamarin.android']/class[@name='Bxc4288']/method[@name='useColors']/parameter[1]"
+      name="type"
+  >Android.Graphics.Color</attr>
+
+  <!-- Interface method parameters names are lost -->
+  <attr path="/api/package[@name='com.xamarin.android']/interface[@name='DataListener']/method[@name='onDataReceived']/parameter[1]" name="managedName">fromNode</attr>
+  <attr path="/api/package[@name='com.xamarin.android']/interface[@name='DataListener']/method[@name='onDataReceived']/parameter[2]" name="managedName">fromChannel</attr>
+  <attr path="/api/package[@name='com.xamarin.android']/interface[@name='DataListener']/method[@name='onDataReceived']/parameter[3]" name="managedName">payloadType</attr>
+  <attr path="/api/package[@name='com.xamarin.android']/interface[@name='DataListener']/method[@name='onDataReceived']/parameter[4]" name="managedName">payload</attr>
+</metadata>

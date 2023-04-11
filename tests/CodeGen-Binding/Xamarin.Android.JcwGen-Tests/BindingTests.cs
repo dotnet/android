@@ -20,6 +20,7 @@ namespace Xamarin.Android.JcwGenTests {
 			Assert.IsTrue (t is Com.Xamarin.Android.Timing);
 		}
 
+#if TODO_7794
 		[Test]
 		public void TestResourceId ()
 		{
@@ -37,6 +38,7 @@ namespace Xamarin.Android.JcwGenTests {
 		{
 			Assert.AreEqual (TestNativeLib.Binding.SampleFunction2 (), 0xf200);
 		}
+#endif // TODO_7794
 
 		[Test]
 		public void NamespaceTransforms ()
@@ -178,6 +180,9 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
+#if TODO_7794
+		// This test requires that https://github.com/xamarin/xamarin-android/issues/7794
+		// be completed first, as it depends on Xamarin.Android.FixJavaAbstractMethod* projects.
 		[Test]
 		public void JavaAbstractMethodTest ()
 		{
@@ -202,6 +207,7 @@ namespace Xamarin.Android.JcwGenTests {
 			if (mi != null && mi.GetMethodBody ().LocalVariables.Count == 0)
 				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
 		}
+#endif // TODO_7794
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
 		[Test]
