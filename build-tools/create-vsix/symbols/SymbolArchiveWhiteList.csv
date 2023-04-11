@@ -17,4 +17,3 @@ xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\Java.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\mdoc.exe, Fails Pdb2Pdb.exe conversion.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\mkbundle.exe, Fails Pdb2Pdb.exe conversion.
 xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\mono-symbolicate.exe, Fails Pdb2Pdb.exe conversion.
-xamarin.android.sdk*\xamarin.android.sdk*.vsixdir\*msbuild\xamarin\android\pdb2mdb.exe, Fails Pdb2Pdb.exe conversion.

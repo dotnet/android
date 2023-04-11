@@ -287,7 +287,6 @@
     <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
     <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
     <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
-    <InputAssemblies Include="$(OutputPath)pdb2mdb.exe" />
   </ItemGroup>
 
   <Target Name="ILRepacker"

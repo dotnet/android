@@ -464,17 +464,11 @@ namespace Xamarin.Android.Tasks
 
 					// Try to add symbols if Debug
 					if (debug) {
-						var symbols = Path.ChangeExtension (assembly.ItemSpec, "dll.mdb");
+						var symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 						string symbolsPath = null;
 
 						if (File.Exists (symbols)) {
 							symbolsPath = symbols;
-						} else {
-							symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-
-							if (File.Exists (symbols)) {
-								symbolsPath = symbols;
-							}
 						}
 
 						if (!String.IsNullOrEmpty (symbolsPath)) {

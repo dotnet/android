@@ -19,7 +19,6 @@ namespace Xamarin.Android.Build.Tests
 			".dll",
 			".config",
 			".pdb",
-			".mdb",
 		};
 
 		static readonly Dictionary<string, string> ArchToAbi = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
