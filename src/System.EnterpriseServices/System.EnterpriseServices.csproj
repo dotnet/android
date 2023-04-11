@@ -1,7 +1,0 @@
-<Project>
-  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.props" />
-  <PropertyGroup>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-  </PropertyGroup>
-  <Import Project="..\..\build-tools\scripts\MonoAndroidFramework.targets" />
-</Project>

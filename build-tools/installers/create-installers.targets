@@ -218,7 +218,6 @@
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libMonoPosixHelper.d.so')"                      ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libmonosgen-2.0.so')"                           ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libmonosgen-2.0.d.so')"                         ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libsqlite3_xamarin.so')"                        ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libxamarin-debug-app-helper.so')"               ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libxamarin-debug-app-helper-checked+asan.so')"  ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
     <_MSBuildFiles Include="@(AndroidSupportedTargetJitAbi->'$(MicrosoftAndroidSdkOutDir)lib\%(Identity)\libxamarin-debug-app-helper-checked+ubsan.so')" ExcludeFromAndroidNETSdk="true" Condition=" '$(EnableNativeAnalyzers)' == 'true' " />
