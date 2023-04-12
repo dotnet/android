@@ -59,7 +59,7 @@
       <_ClassParseCommands
           Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
-        <Command>dotnet</Command>
+        <Command>$(DotNetPreviewTool)</Command>
         <Arguments>$(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
       </_ClassParseCommands>
     </ItemGroup>
@@ -86,7 +86,7 @@
       <_AdjustApiXmlPrepareCommands
           Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
-        <Command>dotnet</Command>
+        <Command>$(DotNetPreviewTool)</Command>
         <Arguments>$(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
       </_AdjustApiXmlPrepareCommands>
     </ItemGroup>
@@ -111,7 +111,7 @@
     </PropertyGroup>
     
     <Exec
-        Command="dotnet $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+        Command="&quot;$(DotNetPreviewTool)&quot; $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
         
   </Target>
   
@@ -121,7 +121,7 @@
       Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.dll"
       Outputs="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs">
     <Exec
-        Command="dotnet &quot;../../bin/Build$(Configuration)/jnienv-gen.dll&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs --use-java-interop"
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;../../bin/Build$(Configuration)/jnienv-gen.dll&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs" />
   </Target>
