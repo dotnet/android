@@ -115,6 +115,9 @@ namespace UnnamedProject
 			// [Test] Post
 			Android.Util.Log.Info(TAG, HttpClientTest.Post ());
 
+			// [Test] MethodsArePreserved
+			Android.Util.Log.Info (TAG, PreserveTest.MethodsArePreserved ());
+
 			// [Test] TextChanged
 			Android.Util.Log.Info (TAG, MaterialTextChanged.TextChanged (this));
 
