@@ -3,7 +3,7 @@
 parameters:
   stageName: msbuild_dotnet
   stageCondition: succeeded()
-  depensOn: mac_build
+  dependsOn: mac_build
   stagePrefix: ''
 
 stages:
