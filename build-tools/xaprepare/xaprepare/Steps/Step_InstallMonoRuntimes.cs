@@ -106,17 +106,14 @@ namespace Xamarin.Android.Prepare
 			}
 
 			StatusStep (context, "Conjuring Xamarin.Android.Cecil and Xamari.Android.Cecil.Mdb");
-			string conjurer = Path.Combine (Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.exe");
-			string conjurerSourceDir = Configurables.Paths.MonoProfileToolsDir;
-			string conjurerDestDir = Configurables.Paths.BuildBinDir;
+			string conjurer = Path.Combine (Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.dll");
 
-			result = Utilities.RunCommand (
-				haveManagedRuntime ? managedRuntime : conjurer, // command
+			result = Utilities.RunManagedCommand (
+				conjurer, // command
 				BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
 				true, // ignoreEmptyArguments
 
 				// arguments
-				haveManagedRuntime ? conjurer : String.Empty,
 				Configurables.Paths.MonoProfileToolsDir, // source dir
 				Configurables.Paths.BuildBinDir // destination dir
 			);
@@ -174,13 +171,12 @@ namespace Xamarin.Android.Prepare
 
 				string relDestFilePath = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, destFilePath);
 				StatusSubStep (context, $"Remapping Cecil references for {relDestFilePath}");
-				bool result = Utilities.RunCommand (
-					haveManagedRuntime ? managedRuntime : remapper, // command
+				bool result = Utilities.RunManagedCommand (
+					remapper, // command
 					BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
 					true, // ignoreEmptyArguments
 
 					// arguments
-					haveManagedRuntime ? remapper : String.Empty,
 					Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, muf.SourcePath),
 					relDestFilePath,
 					"Mono.Cecil",
