@@ -1,4 +1,5 @@
 #include <array>
+#include <cstring>
 #include <string>
 
 #include <dlfcn.h>
@@ -9,57 +10,26 @@
 #include "native-tracing.hh"
 #include "shared-constants.hh"
 
-using namespace xamarin::android::internal;
+constexpr int PRIORITY = ANDROID_LOG_INFO;
 
-[[gnu::always_inline]]
-unw_word_t NativeTracing::adjust_address (unw_word_t addr) noexcept
-{
-	// This is what bionic does, let's do the same so that our backtrace addresses match bionic output
-	// Code copied verbatim from
-	//    https://android.googlesource.com/platform/bionic/+/refs/tags/android-13.0.0_r37/libc/bionic/execinfo.cpp#50
-	if (addr != 0) {
-#if defined (__arm__)
-		// If the address is suspiciously low, do nothing to avoid a segfault trying
-		// to access this memory.
-		if (addr >= 4096) {
-			// Check bits [15:11] of the first halfword assuming the instruction
-			// is 32 bits long. If the bits are any of these values, then our
-			// assumption was correct:
-			//  b11101
-			//  b11110
-			//  b11111
-			// Otherwise, this is a 16 bit instruction.
-			uint16_t value = (*reinterpret_cast<uint16_t*>(addr - 2)) >> 11;
-			if (value == 0x1f || value == 0x1e || value == 0x1d) {
-				return addr - 4;
-			}
+static void append_frame_number (std::string &trace, size_t count) noexcept;
+static unw_word_t adjust_address (unw_word_t addr) noexcept;
+static void init_jni (JNIEnv *env) noexcept;
+static bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept;
 
-			return addr - 2;
-		}
-#elif defined (__aarch64__)
-		// All instructions are 4 bytes long, skip back one instruction.
-		return addr - 4;
-#elif defined (__i386__) || defined (__x86_64__)
-		// It's difficult to decode exactly where the previous instruction is,
-		// so subtract 1 to estimate where the instruction lives.
-		return addr - 1;
-#endif
-	}
+template<class TJavaPointer>
+static TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept;
 
-	return addr;
-}
+// java.lang.Thread
+static jclass java_lang_Thread;
+static jmethodID java_lang_Thread_currentThread;
+static jmethodID java_lang_Thread_getStackTrace;
 
-[[gnu::always_inline]]
-void NativeTracing::append_frame_number (std::string &trace, size_t count) noexcept
-{
-	std::array<char, 32>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
-									// additions (sign, padding, punctuation etc)
-	trace.append ("    #");
-	std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", count);
-	trace.append (num_buf.data ());
-}
+// java.lang.StackTraceElement
+static jclass java_lang_StackTraceElement;
+static jmethodID java_lang_StackTraceElement_toString;
 
-void NativeTracing::get_native_backtrace (std::string& trace) noexcept
+const char* xa_get_native_backtrace () noexcept
 {
 	constexpr int FRAME_OFFSET_WIDTH = sizeof(uintptr_t) * 2;
 
@@ -78,9 +48,11 @@ void NativeTracing::get_native_backtrace (std::string& trace) noexcept
 
 	size_t frame_counter = 0;
 
-	trace.append ("\n  Native stack trace:");
+	std::string trace;
 	while (unw_step (&cursor) > 0) {
-		trace.append ("\n");
+		if (!trace.empty ()) {
+			trace.append ("\n");
+		}
 
 		unw_get_reg (&cursor, UNW_REG_IP, &ip);
 		ip = adjust_address (ip);
@@ -157,30 +129,158 @@ void NativeTracing::get_native_backtrace (std::string& trace) noexcept
 			std::free (reinterpret_cast<void*>(const_cast<char*>(symbol_name)));
 		}
 	}
+
+	return strdup (trace.c_str ());
 }
 
-void NativeTracing::get_java_backtrace (JNIEnv *env, std::string &trace) noexcept
+const char* xa_get_java_backtrace (JNIEnv *env) noexcept
 {
+	init_jni (env);
+
 	// TODO: error handling
-	trace.append ("\n  Java stack trace:");
 	jobject current_thread = env->CallStaticObjectMethod (java_lang_Thread, java_lang_Thread_currentThread);
 	auto stack_trace_array = static_cast<jobjectArray>(env->CallNonvirtualObjectMethod (current_thread, java_lang_Thread, java_lang_Thread_getStackTrace));
 	jsize nframes = env->GetArrayLength (stack_trace_array);
+	std::string trace;
 
 	for (jsize i = 0; i < nframes; i++) {
 		jobject frame = env->GetObjectArrayElement (stack_trace_array, i);
 		auto frame_desc_java = static_cast<jstring>(env->CallObjectMethod (frame, java_lang_StackTraceElement_toString));
 		const char *frame_desc = env->GetStringUTFChars (frame_desc_java, nullptr);
 
-		trace.append ("\n");
+		if (!trace.empty ()) {
+			trace.append ("\n");
+		}
+
 		append_frame_number (trace, i);
 		trace.append (frame_desc);
 		env->ReleaseStringUTFChars (frame_desc_java, frame_desc);
 	}
+
+	return strdup (trace.c_str ());
+}
+
+[[gnu::always_inline]]
+unw_word_t adjust_address (unw_word_t addr) noexcept
+{
+	// This is what bionic does, let's do the same so that our backtrace addresses match bionic output
+	// Code copied verbatim from
+	//    https://android.googlesource.com/platform/bionic/+/refs/tags/android-13.0.0_r37/libc/bionic/execinfo.cpp#50
+	if (addr != 0) {
+#if defined (__arm__)
+		// If the address is suspiciously low, do nothing to avoid a segfault trying
+		// to access this memory.
+		if (addr >= 4096) {
+			// Check bits [15:11] of the first halfword assuming the instruction
+			// is 32 bits long. If the bits are any of these values, then our
+			// assumption was correct:
+			//  b11101
+			//  b11110
+			//  b11111
+			// Otherwise, this is a 16 bit instruction.
+			uint16_t value = (*reinterpret_cast<uint16_t*>(addr - 2)) >> 11;
+			if (value == 0x1f || value == 0x1e || value == 0x1d) {
+				return addr - 4;
+			}
+
+			return addr - 2;
+		}
+#elif defined (__aarch64__)
+		// All instructions are 4 bytes long, skip back one instruction.
+		return addr - 4;
+#elif defined (__i386__) || defined (__x86_64__)
+		// It's difficult to decode exactly where the previous instruction is,
+		// so subtract 1 to estimate where the instruction lives.
+		return addr - 1;
+#endif
+	}
+
+	return addr;
+}
+
+const char* xa_get_interesting_signal_handlers () noexcept
+{
+	constexpr char SA_SIGNAL[] = "signal";
+	constexpr char SA_SIGACTION[] = "sigaction";
+	constexpr char SIG_IGNORED[] = "[ignored]";
+
+	std::array<char, 32>   num_buf;
+	Dl_info info;
+	struct sigaction cur_sa;
+	std::string trace;
+
+	for (int i = 0; i < _NSIG; i++) {
+		if (sigaction (i, nullptr, &cur_sa) != 0) {
+			continue; // ignore
+		}
+
+		void *handler;
+		const char *installed_with;
+		if (cur_sa.sa_flags & SA_SIGINFO) {
+			handler = reinterpret_cast<void*>(cur_sa.sa_sigaction);
+			installed_with = SA_SIGACTION;
+		} else {
+			handler = reinterpret_cast<void*>(cur_sa.sa_handler);
+			installed_with = SA_SIGNAL;
+		}
+
+		if (handler == SIG_DFL) {
+			continue;
+		}
+
+		if (!trace.empty ()) {
+			trace.append ("\n");
+		}
+
+		const char *symbol_name = nullptr;
+		const char *file_name = nullptr;
+		if (handler == SIG_IGN) {
+			symbol_name = SIG_IGNORED;
+		} else {
+			if (dladdr (handler, &info) != 0) {
+				symbol_name = info.dli_sname;
+				file_name = info.dli_fname;
+			}
+		}
+
+		trace.append ("    ");
+		trace.append (strsignal (i));
+		trace.append (" (");
+		std::snprintf (num_buf.data (), num_buf.size (), "%d", i);
+		trace.append (num_buf.data ());
+		trace.append ("), with ");
+		trace.append (installed_with);
+		trace.append (": ");
+
+		if (file_name != nullptr) {
+			trace.append (file_name);
+			trace.append (" ");
+		}
+
+		if (symbol_name == nullptr) {
+			std::snprintf (num_buf.data (), num_buf.size (), "%p", handler);
+			trace.append (num_buf.data ());
+		} else {
+			trace.append (symbol_name);
+		}
+	}
+
+	return strdup (trace.c_str ());
+}
+
+[[gnu::always_inline]]
+void append_frame_number (std::string &trace, size_t count) noexcept
+{
+	std::array<char, 32>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
+									// additions (sign, padding, punctuation etc)
+	trace.append ("    #");
+	std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", count);
+	trace.append (num_buf.data ());
 }
 
 template<class TJavaPointer>
-TJavaPointer NativeTracing::to_gref (JNIEnv *env, TJavaPointer lref) noexcept
+[[gnu::always_inline]]
+TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept
 {
 	if (lref == nullptr) {
 		return nullptr;
@@ -191,7 +291,7 @@ TJavaPointer NativeTracing::to_gref (JNIEnv *env, TJavaPointer lref) noexcept
 	return ret;
 }
 
-void NativeTracing::init_jni (JNIEnv *env) noexcept
+void init_jni (JNIEnv *env) noexcept
 {
 	// We might be called more than once, ignore all but the first call
 	if (java_lang_Thread != nullptr) {
@@ -225,7 +325,7 @@ void NativeTracing::init_jni (JNIEnv *env) noexcept
 	}
 }
 
-bool NativeTracing::assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept
+bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept
 {
 	if (o != nullptr) {
 		return true;
@@ -233,76 +333,11 @@ bool NativeTracing::assert_valid_jni_pointer (void *o, const char *missing_kind,
 
 	__android_log_print (
 		PRIORITY,
-		SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
+		xamarin::android::internal::SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
 		"missing Java %s: %s",
 		missing_kind,
 		missing_name
 	);
 
 	return false;
-}
-
-void NativeTracing::get_interesting_signal_handlers (std::string &trace) noexcept
-{
-	constexpr char SA_SIGNAL[] = "signal";
-	constexpr char SA_SIGACTION[] = "sigaction";
-	constexpr char SIG_IGNORED[] = "[ignored]";
-
-	trace.append ("\n  Signal handlers:");
-
-	std::array<char, 32>   num_buf;
-	Dl_info info;
-	struct sigaction cur_sa;
-	for (int i = 0; i < _NSIG; i++) {
-		if (sigaction (i, nullptr, &cur_sa) != 0) {
-			continue; // ignore
-		}
-
-		void *handler;
-		const char *installed_with;
-		if (cur_sa.sa_flags & SA_SIGINFO) {
-			handler = reinterpret_cast<void*>(cur_sa.sa_sigaction);
-			installed_with = SA_SIGACTION;
-		} else {
-			handler = reinterpret_cast<void*>(cur_sa.sa_handler);
-			installed_with = SA_SIGNAL;
-		}
-
-		if (handler == SIG_DFL) {
-			continue;
-		}
-
-		trace.append ("\n");
-		const char *symbol_name = nullptr;
-		const char *file_name = nullptr;
-		if (handler == SIG_IGN) {
-			symbol_name = SIG_IGNORED;
-		} else {
-			if (dladdr (handler, &info) != 0) {
-				symbol_name = info.dli_sname;
-				file_name = info.dli_fname;
-			}
-		}
-
-		trace.append ("    ");
-		trace.append (strsignal (i));
-		trace.append (" (");
-		std::snprintf (num_buf.data (), num_buf.size (), "%d", i);
-		trace.append (num_buf.data ());
-		trace.append ("), with ");
-		trace.append (installed_with);
-		trace.append (": ");
-
-		if (file_name != nullptr) {
-			trace.append (file_name);
-			trace.append (" ");
-		}
-
-		if (symbol_name == nullptr) {
-			std::snprintf (num_buf.data (), num_buf.size (), "%p", handler);
-			trace.append (num_buf.data ());
-		} else {
-			trace.append (symbol_name);
-		}
-	}
 }

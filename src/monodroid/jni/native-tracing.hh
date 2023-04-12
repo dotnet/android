@@ -8,35 +8,21 @@
 #define UNW_LOCAL_ONLY
 #include <libunwind.h>
 
-namespace xamarin::android::internal
-{
-	class NativeTracing final
-	{
-		static constexpr int PRIORITY = ANDROID_LOG_INFO;
+// Public API must not expose any types that are part of libc++ - we don't know what version of the
+// library (if any) is used by the application we're embedded in.
+//
+// For the same reason, we cannot return memory allocated with the `new` operator - the implementation
+// used by the application's C++ code might be incompatible.  For this reason, any dynamically allocated
+// memory we return to the caller is allocated with the libc's `malloc`
+//
+extern "C" {
+	[[gnu::visibility("default")]]
+	const char* xa_get_native_backtrace () noexcept;
 
-	public:
-		static void get_native_backtrace (std::string& trace) noexcept;
-		static void get_java_backtrace (JNIEnv *env, std::string &trace) noexcept;
-		static void get_interesting_signal_handlers (std::string &trace) noexcept;
+	[[gnu::visibility("default")]]
+	const char* xa_get_java_backtrace (JNIEnv *env) noexcept;
 
-	private:
-		static void append_frame_number (std::string &trace, size_t count) noexcept;
-		static unw_word_t adjust_address (unw_word_t addr) noexcept;
-		static void init_jni (JNIEnv *env) noexcept;
-		static bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept;
-
-		template<class TJavaPointer>
-		static TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept;
-
-	private:
-		// java.lang.Thread
-		inline static jclass java_lang_Thread;
-		inline static jmethodID java_lang_Thread_currentThread;
-		inline static jmethodID java_lang_Thread_getStackTrace;
-
-		// java.lang.StackTraceElement
-		inline static jclass java_lang_StackTraceElement;
-		inline static jmethodID java_lang_StackTraceElement_toString;
-	};
+	[[gnu::visibility("default")]]
+	const char* xa_get_interesting_signal_handlers () noexcept;
 }
 #endif // ndef __NATIVE_TRACING_HH

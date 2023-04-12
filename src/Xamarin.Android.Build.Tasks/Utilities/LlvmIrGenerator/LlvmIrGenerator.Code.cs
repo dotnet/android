@@ -529,7 +529,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				new NounwindFunctionAttribute (),
 				new SspstrongFunctionAttribute (),
 				new StackProtectorBufferSizeFunctionAttribute (8),
-				new UwtableFunctionAttribute (),
+//				new UwtableFunctionAttribute (),
 				new WillreturnFunctionAttribute (),
 				new WriteonlyFunctionAttribute (),
 			};
@@ -541,7 +541,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				new NounwindFunctionAttribute (),
 				new SspstrongFunctionAttribute (),
 				new StackProtectorBufferSizeFunctionAttribute (8),
-				new UwtableFunctionAttribute (),
+//				new UwtableFunctionAttribute (),
 			};
 
 			FunctionAttributes[FunctionAttributesCall] = new LlvmFunctionAttributeSet {

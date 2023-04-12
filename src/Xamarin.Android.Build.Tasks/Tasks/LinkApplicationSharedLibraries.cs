@@ -130,6 +130,7 @@ namespace Xamarin.Android.Tasks
 				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, runtimeNativeLibStubsDir);
 			}
 
+			// 				"--eh-frame-hdr " +
 			const string commonLinkerArgs =
 				"--shared " +
 				"--allow-shlib-undefined " +
@@ -138,7 +139,6 @@ namespace Xamarin.Android.Tasks
 				"-z relro " +
 				"-z noexecstack " +
 				"--enable-new-dtags " +
-				"--eh-frame-hdr " +
 				"--build-id " +
 				"--warn-shared-textrel " +
 				"--fatal-warnings";
@@ -210,16 +210,14 @@ namespace Xamarin.Android.Tasks
 			if (mmTracingEnabled) {
 				string RID = MonoAndroidHelper.AbiToRid (abi);
 				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
-				string clangLibraryAbi = MonoAndroidHelper.ArchToClangLibraryAbi (targetArch);
-				string builtinsLibName = $"libclang_rt.builtins-{clangLibraryAbi}-android.a";
 				string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
 				string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
 
 				extraLibraries = new List<string> {
 					Path.Combine (runtimeLibsDir, "libmarshal-methods-tracing.a"),
-					Path.Combine (runtimeLibsDir, "libunwind_xamarin.a"),
-					Path.Combine (runtimeLibsDir, builtinsLibName),
+					$"-L \"{runtimeLibsDir}\"",
 					$"-L \"{libStubsPath}\"",
+					"-lxamarin-native-tracing",
 					"-lc",
 					"-ldl",
 					"-llog", // tracing uses android logger

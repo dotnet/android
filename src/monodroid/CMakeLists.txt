@@ -204,19 +204,15 @@ if(ENABLE_NET)
 
   if(ANDROID_ABI MATCHES "^arm64-v8a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
-    set(COMPILER_BUILTINS_LIB_ABI "aarch64")
     set(SYSROOT_ABI_LIB_DIR "aarch64-linux-android")
   elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
-    set(COMPILER_BUILTINS_LIB_ABI "arm")
     set(SYSROOT_ABI_LIB_DIR "arm-linux-androideabi")
   elseif(ANDROID_ABI MATCHES "^x86_64")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
-    set(COMPILER_BUILTINS_LIB_ABI "x86_64")
     set(SYSROOT_ABI_LIB_DIR "x86_64-linux-android")
   elseif(ANDROID_ABI MATCHES "^x86")
     set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
-    set(COMPILER_BUILTINS_LIB_ABI "i686")
     set(SYSROOT_ABI_LIB_DIR "i686-linux-android")
   else()
     message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
@@ -578,7 +574,6 @@ if(ANDROID AND ENABLE_NET)
   )
 
   set(MARSHAL_METHODS_TRACING_SOURCES
-    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
     ${SOURCES_DIR}/cxx-abi/string.cc
     ${SOURCES_DIR}/cxx-abi/terminate.cc
     ${SOURCES_DIR}/helpers.cc
@@ -725,21 +720,6 @@ add_library(
 
 if(ANDROID)
   if(ENABLE_NET AND NOT DEBUG_BUILD)
-    execute_process(
-      COMMAND ${CMAKE_CXX_COMPILER} -print-runtime-dir
-      RESULT_VARIABLE _CXX_COMPILER_EXIT_CODE
-      OUTPUT_VARIABLE _CXX_COMPILER_RUNTIME_DIR
-      ECHO_OUTPUT_VARIABLE
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-
-    if(NOT ${_CXX_COMPILER_EXIT_CODE} EQUAL 0)
-      message(FATAL_ERROR "Unable to determine compiler runtime directory")
-    endif()
-
-    message(STATUS "Clang runtime dir: ${_CXX_COMPILER_RUNTIME_DIR}")
-    message(STATUS "ABI dir: ${SYSROOT_ABI_LIB_DIR}")
-    set(BUILTINS_LIB ${_CXX_COMPILER_RUNTIME_DIR}/libclang_rt.builtins-${COMPILER_BUILTINS_LIB_ABI}-android.a)
     set(CPP_ABI_PATH ${CMAKE_SYSROOT}/usr/lib/${SYSROOT_ABI_LIB_DIR}/libc++abi.a)
 
     add_library(
@@ -760,6 +740,14 @@ if(ANDROID)
       PRIVATE
       # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
       -Wno-deprecated-dynamic-exception-spec
+      ${XA_DEFAULT_SYMBOL_VISIBILITY}
+      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+      -fno-asynchronous-unwind-tables
+    )
+
+    target_link_options(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
     )
 
     target_link_libraries(
@@ -781,6 +769,13 @@ if(ANDROID)
       STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
     )
 
+    target_include_directories(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
+      PRIVATE
+      ${LIBUNWIND_SOURCE_DIR}/include
+      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+    )
+
     target_compile_definitions(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
       PRIVATE
@@ -790,19 +785,9 @@ if(ANDROID)
     target_compile_options(
       ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
       PRIVATE
-      # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
-      -Wno-deprecated-dynamic-exception-spec
+      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+      -fno-asynchronous-unwind-tables
     )
-
-    target_include_directories(
-      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
-      PRIVATE
-      ${LIBUNWIND_SOURCE_DIR}/include
-      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
-      ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
-    )
-
-    file(COPY ${BUILTINS_LIB} DESTINATION ${XA_LIBRARY_OUTPUT_DIRECTORY})
   endif()
 
   # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h

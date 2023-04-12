@@ -84,6 +84,11 @@ else()
   list(APPEND LOCAL_COMPILER_ARGS -s -fomit-frame-pointer)
   add_compile_definitions(NDEBUG)
 endif()
+list(APPEND LOCAL_COMPILER_ARGS
+  ${XA_DEFAULT_SYMBOL_VISIBILITY}
+  -fno-asynchronous-unwind-tables
+  -fno-unwind-tables
+)
 
 xa_check_c_flags(XA_C_FLAGS "${LOCAL_COMPILER_ARGS}")
 xa_check_c_linker_flags(XA_C_LINKER_FLAGS "${LOCAL_COMPILER_ARGS}")
@@ -369,4 +374,9 @@ endif()
 add_library(${LIBUNWIND_LIBRARY_NAME}
   STATIC
   ${LIBUNWIND_XAMARIN_SOURCES}
+)
+
+target_link_options(
+  ${LIBUNWIND_LIBRARY_NAME}
+  PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
 )
