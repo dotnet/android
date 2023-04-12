@@ -1,12 +1,15 @@
 # Runs MSBuild tests that do not require devices on Mac/Windows
 
 parameters:
+  stageName: msbuild_dotnet
   stageCondition: succeeded()
+  depensOn: mac_build
+  stagePrefix: ''
 
 stages:
-- stage: msbuild_dotnet
-  displayName: MSBuild Tests
-  dependsOn: mac_build
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stagePrefix }}MSBuild Tests
+  dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
   jobs:
   - template: run-msbuild-tests.yaml
@@ -16,7 +19,7 @@ stages:
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 10
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
-      
+
   - template: run-msbuild-tests.yaml
     parameters:
       testOS: Windows

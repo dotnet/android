@@ -1,14 +1,17 @@
 # Runs MSBuild tests against a device running on macOS
 
 parameters:
+  stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
+  depensOn: mac_build
   agent_count: 8
   stageCondition: succeeded()
+  stagePrefix: ''
 
 stages:
-- stage: msbuilddevice_tests
-  displayName: MSBuild Emulator Tests
-  dependsOn: mac_build
+- stage: ${{ parameters.stageName }}
+  displayName: ${{ parameters.stagePrefix }}MSBuild Emulator Tests
+  dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
   jobs:
   - job: ${{ parameters.job_name }}
@@ -35,12 +38,12 @@ stages:
       parameters:
         displayName: install emulator
         arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
-        
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
-      
+
     - template: start-stop-emulator.yaml
 
     - template: run-sliced-nunit-tests.yaml
