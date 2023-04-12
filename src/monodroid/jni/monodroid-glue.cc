@@ -660,11 +660,12 @@ MonodroidRuntime::mono_runtime_init (JNIEnv *env, [[maybe_unused]] dynamic_local
 			loglevel = options.loglevel;
 
 		char *debug_arg = utils.monodroid_strdup_printf (
-			"--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1",
+			"--debugger-agent=transport=dt_socket,loglevel=%d,address=%s:%d,%sembedding=1,timeout=%d",
 			loglevel,
 			options.host,
 			options.sdb_port,
-			options.server ? "server=y," : ""
+			options.server ? "server=y," : "",
+			options.timeout_time
 		);
 
 		char *debug_options [2] = {
