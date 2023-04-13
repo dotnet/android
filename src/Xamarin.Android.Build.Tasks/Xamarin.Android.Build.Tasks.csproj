@@ -23,9 +23,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="pdb2mdb.exe">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)pdb2mdb.exe</HintPath>
-    </Reference>
     <Reference Include="Mono.CompilerServices.SymbolWriter.dll">
       <HintPath>$(MicrosoftAndroidSdkOutDir)Mono.CompilerServices.SymbolWriter.dll</HintPath>
     </Reference>
