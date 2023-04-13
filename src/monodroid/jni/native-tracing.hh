@@ -23,6 +23,9 @@ extern "C" {
 	const char* xa_get_java_backtrace (JNIEnv *env) noexcept;
 
 	[[gnu::visibility("default")]]
+	const char* xa_get_managed_backtrace () noexcept;
+
+	[[gnu::visibility("default")]]
 	const char* xa_get_interesting_signal_handlers () noexcept;
 }
 #endif // ndef __NATIVE_TRACING_HH

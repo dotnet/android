@@ -582,6 +582,7 @@ if(ANDROID AND ENABLE_NET)
   )
 
   list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/monodroid-tracing.cc
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
     ${SOURCES_DIR}/java_interop_api.c
@@ -798,6 +799,13 @@ target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY} "${LZ4_VISIBILITY_OPTS}"
   )
+
+target_include_directories(
+  ${XAMARIN_MONO_ANDROID_LIB} BEFORE
+  PRIVATE
+  ${LIBUNWIND_SOURCE_DIR}/include
+  ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+)
 
 if(APPLE)
   set_target_properties(

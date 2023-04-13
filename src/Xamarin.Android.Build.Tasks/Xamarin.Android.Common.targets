@@ -340,13 +340,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
-
-  <!-- Accepted values are:
-       none - disable tracing completely (the default)
-       basic - log marshal method function enter/leave messages
-       full - like 'basic' but also include stack traces at the entry to a marshal method
-  -->
-  <_AndroidMarshalMethodsTracingMode Condition=" '$(_AndroidMarshalMethodsTracingMode)' == '' ">none</_AndroidMarshalMethodsTracingMode>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->

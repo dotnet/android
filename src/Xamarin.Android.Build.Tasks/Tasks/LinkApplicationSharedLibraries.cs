@@ -219,8 +219,6 @@ namespace Xamarin.Android.Tasks
 					$"-L \"{libStubsPath}\"",
 					"-lxamarin-native-tracing",
 					"-lc",
-					"-ldl",
-					"-llog", // tracing uses android logger
 				};
 			}
 
