@@ -27,7 +27,7 @@
       Condition=" '$(TargetFramework)' == 'monoandroid10' "
       Inputs="$(MSBuildThisFile);$(JavaInteropFullPath)\src\Java.Interop\Java.Interop.csproj"
       Outputs="$(OutputPath)\..\v1.0\Java.Interop.dll">
-    <PropertyGroup>
+  <!--  <PropertyGroup>
       <_GlobalProperties>
         JavaInteropProfile=Net45;
         XAInstallPrefix=$(XAInstallPrefix);
@@ -35,7 +35,7 @@
     </PropertyGroup>
     <MSBuild
         Projects="$(JavaInteropFullPath)\build-tools\jnienv-gen\jnienv-gen.csproj"
-        Properties="TargetFramework=net472;"
+        Properties="TargetFramework=net7.0;"
     />
     <MSBuild
         Projects="$(JavaInteropFullPath)\src\Java.Interop\Java.Interop-MonoAndroid.csproj"
@@ -48,7 +48,7 @@
     <Copy
         SourceFiles="@(Assembly)"
         DestinationFolder="$(OutputPath)\..\v1.0"
-    />
+    />-->
   </Target>
   
   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->

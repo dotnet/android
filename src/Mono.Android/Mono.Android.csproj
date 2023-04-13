@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
