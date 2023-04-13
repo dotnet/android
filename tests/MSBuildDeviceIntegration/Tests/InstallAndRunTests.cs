@@ -383,22 +383,16 @@ namespace Library1 {
 				},
 				Sources = {
 					new BuildItem.Source ("Bug21578.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug21578.cs")))
-								return sr.ReadToEnd ();
-						},
+						TextContent = () => getResource("Bug21578")
 					},
 					new BuildItem.Source ("Bug35195.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug35195.cs")))
-								return sr.ReadToEnd ();
-						},
+						TextContent = () => getResource("Bug35195")
 					},
 					new BuildItem.Source ("HttpClientTest.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.HttpClientTest.cs")))
-								return sr.ReadToEnd ();
-						},
+						TextContent = () => getResource("HttpClientTest")
+					},
+					new BuildItem.Source ("PreserveTest.cs") {
+						TextContent = () => getResource("PreserveTest")
 					},
 				},
 			};
@@ -407,10 +401,7 @@ namespace Library1 {
 				// DataContractSerializer is not trimming safe
 				// https://github.com/dotnet/runtime/issues/45559
 				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
-					TextContent = () => {
-						using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.Bug36250.cs")))
-							return sr.ReadToEnd ();
-					},
+					TextContent = () => getResource ("Bug36250")
 				});
 			}
 
@@ -433,10 +424,7 @@ namespace Library1 {
 				},
 				Sources = {
 					new BuildItem.Source ("MaterialTextChanged.cs") {
-						TextContent = () => {
-							using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ("Xamarin.Android.Build.Tests.Resources.LinkDescTest.MaterialTextChanged.cs")))
-								return sr.ReadToEnd ();
-						},
+						TextContent = () => getResource ("MaterialTextChanged")
 					},
 				},
 				OtherBuildItems = {
@@ -499,6 +487,12 @@ namespace Library1 {
 			if (linkMode == AndroidLinkMode.Full) {
 				StringAssert.Contains ("[LINKALLPASS]", logcatOutput);
 				StringAssert.DoesNotContain ("[LINKALLFAIL]", logcatOutput);
+			}
+
+			string getResource (string name)
+			{
+				using (var sr = new StreamReader (typeof (InstallAndRunTests).Assembly.GetManifestResourceStream ($"Xamarin.Android.Build.Tests.Resources.LinkDescTest.{name}.cs")))
+					return sr.ReadToEnd ();
 			}
 		}
 
