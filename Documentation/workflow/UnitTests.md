@@ -32,7 +32,7 @@
 
 Running tests in an IDE is not currently supported.
 
-After building the repo you can make use of the `dotnet-local.sh` or `dotnet-local.cmd` scripts in the top checkout directory
+After building the repo you can make use of the [`dotnet-local.sh`](../../dotnet-local.sh) or [`dotnet-local.cmd`](../../dotnet-local.cmd) scripts in the top checkout directory
 to run unit tests against the locally build SDK. The `dotnet-local*` scripts are wrappers around the custom `dotnet` installation which the
 build downloads and installs into `bin/Debug/dotnet` or `bin/Release/dotnet` (depending on your configuration).
 
