@@ -2,6 +2,9 @@
 <linker>
 	<assembly fullname="Mono.Android">
 		<type fullname="Android.Runtime.AnnotationAttribute" />
+		<type fullname="Android.Runtime.AndroidEnvironment">
+			<method name="NotifyTimeZoneChanged" />
+		</type>
 		<type fullname="Android.Runtime.IJavaObject" />
 		<type fullname="Android.Runtime.InputStreamAdapter" preserve="methods" />
 		<type fullname="Android.Runtime.InputStreamInvoker" preserve="methods" />
