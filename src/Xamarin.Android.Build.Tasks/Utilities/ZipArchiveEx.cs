@@ -8,8 +8,8 @@ namespace Xamarin.Android.Tasks
 	public class ZipArchiveEx : IDisposable
 	{
 
-		public static int ZipFlushSizeLimit = 50 * 1024 * 1024;
-		public static int ZipFlushFilesLimit = 50;
+		public static int ZipFlushSizeLimit = 100 * 1024 * 1024;
+		public static int ZipFlushFilesLimit = 512;
 
 		ZipArchive zip;
 		string archive;
