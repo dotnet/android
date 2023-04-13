@@ -204,7 +204,26 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
+        
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Xamarin.Android.JcwGen_Tests
+        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-Default
 
+    - template: yaml-templates/apk-instrumentation.yaml
+      parameters:
+        configuration: $(XA.Build.Configuration)
+        testName: Xamarin.Android.JcwGen_Tests_FastDev
+        project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
+        testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml
+        artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
+        artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
+        extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
+        
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
