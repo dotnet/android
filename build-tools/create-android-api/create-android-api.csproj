@@ -12,7 +12,7 @@
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-merge\api-merge.csproj" ReferenceOutputAssembly="False" />
-    <ProjectReference Include="..\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" AdditionalProperties="TargetFramework=net472" />
+    <ProjectReference Include="..\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" />
   </ItemGroup>
   
   <PropertyGroup>
@@ -52,15 +52,15 @@
       Outputs="@(ApiFileDefinition->'%(ClassParseXml)')">
       
     <PropertyGroup>
-      <ClassParse>$(XamarinAndroidSourcePath)\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\class-parse.exe</ClassParse>
+      <ClassParse>$(MicrosoftAndroidSdkOutDir)class-parse.dll</ClassParse>
     </PropertyGroup>
     
     <ItemGroup>
       <_ClassParseCommands
           Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
-        <Command>$(ClassParse)</Command>
-        <Arguments>$(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
+        <Command>$(DotNetPreviewTool)</Command>
+        <Arguments>$(ClassParse) $(AndroidSdkDirectory)\platforms\android-%(ApiFileDefinition.Id)\android.jar -platform=%(ApiFileDefinition.Id) -parameter-names=&quot;%(ApiFileDefinition.ParameterDescription)&quot; -o=&quot;%(ApiFileDefinition.ClassParseXml)&quot;</Arguments>
       </_ClassParseCommands>
     </ItemGroup>
     
@@ -68,8 +68,6 @@
     
     <RunParallelCmds
         Commands="@(_ClassParseCommands)"
-        ManagedRuntime="$(ManagedRuntime)"
-        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
       />
   </Target>
   
@@ -81,22 +79,20 @@
       Outputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')">
 
     <PropertyGroup>
-      <ApiXmlAdjuster>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\api-xml-adjuster.exe</ApiXmlAdjuster>
+      <ApiXmlAdjuster>$(XamarinAndroidSourcePath)\bin\Build$(Configuration)\api-xml-adjuster.dll</ApiXmlAdjuster>
     </PropertyGroup>
     
     <ItemGroup>
       <_AdjustApiXmlPrepareCommands
           Condition="Exists('$(XamarinAndroidSourcePath)\src\Mono.Android\Profiles\api-%(ApiFileDefinition.Id).params.txt')"
           Include="@(ApiFileDefinition)">
-        <Command>$(ApiXmlAdjuster)</Command>
-        <Arguments>%(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
+        <Command>$(DotNetPreviewTool)</Command>
+        <Arguments>$(ApiXmlAdjuster) %(ApiFileDefinition.ClassParseXml) %(ApiFileDefinition.ApiAdjustedXml)</Arguments>
       </_AdjustApiXmlPrepareCommands>
     </ItemGroup>
 
     <RunParallelCmds
         Commands="@(_AdjustApiXmlPrepareCommands)"
-        ManagedRuntime="$(ManagedRuntime)"
-        ManagedRuntimeArguments="$(ManagedRuntimeArgs)"
       />
   </Target>
   
@@ -108,24 +104,24 @@
       Outputs="@(_MergedXmlFiles->'%(MergedXml)')">
     
     <PropertyGroup>
-      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.exe</ApiMerge>
+      <ApiMerge>..\..\bin\Build$(Configuration)\api-merge.dll</ApiMerge>
       <_ConfigurationFile>..\..\bin\Build$(Configuration)\merge-configuration.xml</_ConfigurationFile>
       <_ConfigurationInputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationInputBaseDirectory>
       <_ConfigurationOutputBaseDirectory>..\..\bin\Build$(Configuration)\api\</_ConfigurationOutputBaseDirectory>
     </PropertyGroup>
     
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+        Command="&quot;$(DotNetPreviewTool)&quot; $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
         
   </Target>
   
   <!-- Generates 'JNIEnv.g.cs' file. We do this here because it should only run once, not per-TF.  -->
   <Target Name="_BuildJNIEnv"
       BeforeTargets="Build"
-      Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.exe"
+      Inputs="..\..\bin\Build$(Configuration)\jnienv-gen.dll"
       Outputs="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;../../bin/Build$(Configuration)/jnienv-gen.exe&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs --use-java-interop"
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;../../bin/Build$(Configuration)/jnienv-gen.dll&quot; -o ../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs --use-java-interop"
     />
     <Touch Files="../../src/Mono.Android/Android.Runtime/JNIEnv.g.cs" />
   </Target>

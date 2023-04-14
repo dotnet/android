@@ -1415,33 +1415,27 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 
 
 		[Test]
-		public void BuildBasicApplicationCheckMdb ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ("temp/BuildBasicApplicationCheckMdb", false)) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
-			}
-		}
-
-		[Test]
-		public void BuildBasicApplicationCheckMdbRepeatBuild ()
+		public void BuildBasicApplicationCheckPdb ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
+				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
+					"UnnamedProject.pdb must be copied to the Intermediate directory");
+			}
+		}
+
+		[Test]
+		public void BuildBasicApplicationCheckPdbRepeatBuild ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
+					"UnnamedProject.pdb must be copied to the Intermediate directory");
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.mdb")) ||
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.dll.mdb must be copied to the Intermediate directory");
+				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
+					"UnnamedProject.pdb must be copied to the Intermediate directory");
 			}
 		}
 
@@ -1522,60 +1516,6 @@ namespace App1
 					binSrc = Path.Combine (outputPath, "App1.dll");
 					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should match.", binSrc, androidAssets);
 				}
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
-		public void BuildBasicApplicationCheckMdbAndPortablePdb ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			using (var b = CreateApkBuilder ()) {
-				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
-					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
-				};
-				proj.References.Add (reference);
-				var pdb = new BuildItem.NoActionResource ("PdbTestLibrary.pdb") {
-					WebContentFileNameFromAzure = "PdbTestLibrary.pdb"
-				};
-				proj.References.Add (pdb);
-				var netStandardRef = new BuildItem.Reference ("NetStandard16.dll") {
-					WebContentFileNameFromAzure = "NetStandard16.dll"
-				};
-				proj.References.Add (netStandardRef);
-				var netStandardpdb = new BuildItem.NoActionResource ("NetStandard16.pdb") {
-					WebContentFileNameFromAzure = "NetStandard16.pdb"
-				};
-				proj.References.Add (netStandardpdb);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				StringAssertEx.Contains ("XA0125", b.LastBuildOutput, "Output should contain XA0125 warnings");
-				var pdbToMdbPath = Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.dll.mdb");
-				Assert.IsTrue (
-					File.Exists (pdbToMdbPath),
-					"PdbTestLibrary.dll.mdb must be generated next to the .pdb");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.dll.mdb")) ||
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.pdb")),
-					"UnnamedProject.dll.mdb/UnnamedProject.pdb must be copied to the Intermediate directory");
-				Assert.IsFalse (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.pdb")),
-					"PdbTestLibrary.pdb must not be copied to Intermediate directory");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.dll.mdb")),
-					"PdbTestLibrary.dll.mdb must be copied to Intermediate directory");
-				FileAssert.AreNotEqual (pdbToMdbPath,
-					Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.pdb"),
-					"The .pdb should NOT match the .mdb");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
-					"NetStandard16.pdb must be copied to Intermediate directory");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTimeOffset.UtcNow;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				Assert.Less (lastTime,
-					File.GetLastWriteTimeUtc (pdbToMdbPath),
-					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
 

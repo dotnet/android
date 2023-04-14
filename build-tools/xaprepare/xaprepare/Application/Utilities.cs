@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
@@ -789,6 +790,25 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentException ("must not be null or empty", nameof (command));
 
 			var runner = new ProcessRunner (command, ignoreEmptyArguments, arguments) {
+				EchoStandardError = echoStderr,
+				WorkingDirectory = workingDirectory,
+			};
+
+			return runner.Run ();
+		}
+
+		public static bool RunManagedCommand (string command, string workingDirectory, bool ignoreEmptyArguments, params string [] arguments)
+		{
+			return RunManagedCommand (command, workingDirectory, echoStderr: true, ignoreEmptyArguments: ignoreEmptyArguments, arguments: arguments);
+		}
+
+		// This is a managed assembly that needs to be run as 'dotnet foo.dll'
+		public static bool RunManagedCommand (string command, string? workingDirectory, bool echoStderr, bool ignoreEmptyArguments, params string [] arguments)
+		{
+			if (string.IsNullOrEmpty (command))
+				throw new ArgumentException ("must not be null or empty", nameof (command));
+
+			var runner = new ProcessRunner ("dotnet", ignoreEmptyArguments, new [] { command }.Concat (arguments).ToArray ()) {
 				EchoStandardError = echoStderr,
 				WorkingDirectory = workingDirectory,
 			};

@@ -1109,6 +1109,82 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 		}
 
 		[Test]
+		public void ProjectDependencies ([Values(true, false)] bool projectReference)
+		{
+			// Setup dependencies App A -> Lib B -> Lib C
+			var path = Path.Combine ("temp", TestName);
+
+			var libB = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryB",
+				IsRelease = true,
+			};
+			libB.Sources.Clear ();
+			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => @"public class Foo {
+					public Foo () {
+						var bar = new Bar();
+					}
+				}",
+			});
+
+			var libC = new XASdkProject (outputType: "Library") {
+				ProjectName = "LibraryC",
+				IsRelease = true,
+			};
+			libC.Sources.Clear ();
+			libC.Sources.Add (new BuildItem.Source ("Bar.cs") {
+				TextContent = () => "public class Bar { }",
+			});
+			libC.Sources.Add (new BuildItem ("EmbeddedResource", "Foo.resx") {
+				TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+			});
+			libC.Sources.Add (new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+				TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+			});
+
+			// Add a @(Reference) or @(ProjectReference)
+			if (projectReference) {
+				libB.AddReference (libC);
+			} else {
+				libB.OtherBuildItems.Add (new BuildItem.Reference ($@"..\{libC.ProjectName}\bin\Release\{libC.TargetFramework}\{libC.ProjectName}.dll"));
+			}
+
+			// Build libraries
+			var libCBuilder = CreateDotNetBuilder (libC, Path.Combine (path, libC.ProjectName));
+			Assert.IsTrue (libCBuilder.Build (), $"{libC.ProjectName} should succeed");
+			var libBBuilder = CreateDotNetBuilder (libB, Path.Combine (path, libB.ProjectName));
+			Assert.IsTrue (libBBuilder.Build (), $"{libB.ProjectName} should succeed");
+
+			var appA = new XASdkProject {
+				ProjectName = "AppA",
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					},
+					new BuildItem ("EmbeddedResource", "Foo.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
+					},
+					new BuildItem ("EmbeddedResource", "Foo.es.resx") {
+						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancelar</value></data>")
+					},
+				}
+			};
+			appA.AddReference (libB);
+			var appBuilder = CreateDotNetBuilder (appA, Path.Combine (path, appA.ProjectName));
+			Assert.IsTrue (appBuilder.Build (), $"{appA.ProjectName} should succeed");
+
+			var apkPath = Path.Combine (FullProjectDirectory, appA.OutputPath, $"{appA.PackageName}-Signed.apk");
+			FileAssert.Exists (apkPath);
+			var helper = new ArchiveAssemblyHelper (apkPath);
+			helper.AssertContainsEntry ($"assemblies/{appA.ProjectName}.dll");
+			helper.AssertContainsEntry ($"assemblies/{libB.ProjectName}.dll");
+			helper.AssertContainsEntry ($"assemblies/{libC.ProjectName}.dll");
+			helper.AssertContainsEntry ($"assemblies/es/{appA.ProjectName}.resources.dll");
+			helper.AssertContainsEntry ($"assemblies/es/{libC.ProjectName}.resources.dll");
+		}
+
+		[Test]
 		public void DotNetDesignTimeBuild ()
 		{
 			var proj = new XASdkProject ();

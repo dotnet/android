@@ -407,7 +407,6 @@ namespace Xamarin.Android.Prepare
 			new MonoUtilityFile ("monodoc.dll.config",                     ignoreDebugInfo: true),
 			new MonoUtilityFile ("mono-api-html.exe",                      remap: true),
 			new MonoUtilityFile ("mono-api-info.exe",                      remap: true),
-			new MonoUtilityFile ("pdb2mdb.exe",                            remap: true),
 			new MonoUtilityFile ("ICSharpCode.SharpZipLib.dll",            remap: false),
 			new MonoUtilityFile ("Mono.CompilerServices.SymbolWriter.dll", remap: false),
 			new MonoUtilityFile ("aprofutil.exe",                          remap: false),

@@ -4,7 +4,7 @@
     <Company>Microsoft Corporation</Company>
     <Copyright>2021 Microsoft Corporation</Copyright>
     <Version>0.0.1</Version>
-    <TargetFramework>net472</TargetFramework>
+    <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <RootNamespace>Xamarin.Android.Tools.DecompressAssemblies</RootNamespace>
     <AssemblyName>decompress-assemblies</AssemblyName>

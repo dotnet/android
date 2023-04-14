@@ -43,6 +43,14 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: delete legacy xamarin-android submodule
 
+- script: rm -rf external/opentk
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy opentk submodule
+
+- script: rm -rf external/sqlite
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: delete legacy sqlite submodule
+
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
@@ -59,11 +67,6 @@ steps:
 - task: CodeQL3000Finalize@0
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-
-# Build test assemblies
-- script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make all-tests
 
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1

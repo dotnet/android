@@ -442,11 +442,6 @@ namespace Lib2
 					}
 				}
 			};
-			if (IsWindows && !Builder.UseDotNet) {
-				//NOTE: pdb2mdb will run on Windows on the current project's symbols if DebugType=Full
-				proj.SetProperty (proj.DebugProperties, "DebugType", "Full");
-				targets.Add ("_ConvertPdbFiles");
-			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should succeed");
 				var firstBuildTime = b.LastBuildTime;
