@@ -1,117 +1,75 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
+
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <ProjectGuid>{9479B71F-19FE-48F9-AB3F-AE764D76038A}</ProjectGuid>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <OutputType>Library</OutputType>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <OutputType>Exe</OutputType>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <ApplicationId>Xamarin.Android.JcwGen_Tests</ApplicationId>
+    <ApplicationVersion>1</ApplicationVersion>
+    <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <RootNamespace>Xamarin.Android.JcwGenTests</RootNamespace>
-    <AndroidApplication>True</AndroidApplication>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AssemblyName>Xamarin.Android.JcwGen-Tests</AssemblyName>
-    <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
-    <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
   </PropertyGroup>
+
   <Import Project="..\..\..\Configuration.props" />
+
   <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
+    <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>..\..\..\bin\TestDebug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>..\..\..\bin\TestRelease</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-  </PropertyGroup>
+
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-    <Reference Include="Xamarin.Android.NUnitLite" />
+    <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
+    <Compile Remove="TimingTests.cs" />
+    <AndroidLibrary Include="../Xamarin.Android.McwGen-Tests/Jars/KotlinUnsignedTypes.jar" />
+    <None Remove="Java\DefaultMethodsInterface.java" />
+    <None Remove="Java\StaticMethodsInterface.java" />
   </ItemGroup>
+
   <ItemGroup>
-    <Compile Include="BindingTests.cs" />
-    <Compile Include="KotlinUnsignedTypesTests.cs" />
-    <Compile Include="DimBindingTests.cs" />
-    <Compile Include="ExceptionTests.cs" />
-    <Compile Include="MainActivity.cs" />
-    <Compile Include="TestInstrumentation.cs" />
-    <Compile Include="TimingTests.cs" />
-    <Compile Include="TypeWithUnicodeCharacters.cs" />
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <PackageReference Include="Xamarin.Kotlin.StdLib" Version="1.8.0.1" />
   </ItemGroup>
+
   <ItemGroup>
-    <AndroidEnvironment Include="Environment.txt" />
+    <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Include="Resources\AboutResources.txt" />
-    <None Include="Assets\AboutAssets.txt" />
-    <None Include="Properties\AndroidManifest.xml" />
+    <AndroidNamespaceReplacement Include="xamarin.example" Replacement="Example" />
+    <AndroidNamespaceReplacement Include="com.example" Replacement="Transformed.Namespace" />
   </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\drawable\Icon.png" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
-  <Import Project="Xamarin.Android.JcwGen-Tests.targets" />
+
   <PropertyGroup>
-    <BuildDependsOn>
-      BuildNativeLibs;
-      $(BuildDependsOn)
-    </BuildDependsOn>
+    <_PackageName>$(ApplicationId)</_PackageName>
   </PropertyGroup>
-  <ItemGroup>
-    <AndroidNativeLibrary Include="libs\arm64-v8a\libtiming.so" />
-    <AndroidNativeLibrary Include="libs\armeabi-v7a\libtiming.so" />
-    <AndroidNativeLibrary Include="libs\x86\libtiming.so" />
-    <AndroidNativeLibrary Include="libs\x86_64\libtiming.so" />
-  </ItemGroup>
-  <PropertyGroup>
-    <CleanDependsOn>
-      $(CleanDependsOn);
-      CleanLocal;
-    </CleanDependsOn>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
   </PropertyGroup>
+
   <ItemGroup>
-    <AndroidJavaLibrary Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Jars\Cursor.jar">
-      <Link>Jars\Cursor.jar</Link>
-    </AndroidJavaLibrary>
+    <TestApk Include="$(OutputPath)$(ApplicationId)-Signed.apk">
+      <Package>$(ApplicationId)</Package>
+      <TimingDefinitionsFilename>$(MSBuildThisFileDirectory)..\..\..\build-tools\scripts\TimingDefinitions.txt</TimingDefinitionsFilename>
+      <TimingResultsFilename>$(MSBuildThisFileDirectory)..\..\..\TestResult-Xamarin.Android.JcwGen_Tests-times.csv</TimingResultsFilename>
+    </TestApk>
   </ItemGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj">
-      <Project>{7B9D9F32-973F-49CF-A8F8-05BDFC75556C}</Project>
-      <Name>Xamarin.Android.FixJavaAbstractMethod-APIv2Binding</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-Library\Xamarin.Android.FixJavaAbstractMethod-Library.csproj">
-      <Project>{B7476528-C166-40BF-931F-EAEB02247879}</Project>
-      <Name>Xamarin.Android.FixJavaAbstractMethod-Library</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.LibraryProjectZip-LibBinding\Xamarin.Android.LibraryProjectZip-LibBinding.csproj">
-      <Project>{9553ED9D-92EA-411B-ADFF-21C5608CCD16}</Project>
-      <Name>Xamarin.Android.LibraryProjectZip-LibBinding</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\Xamarin.Android.McwGen-Tests\Xamarin.Android.McwGen-Tests.csproj">
-      <Project>{EF798EB3-D639-4E09-9DB0-233E67F727B0}</Project>
-      <Name>Xamarin.Android.McwGen-Tests</Name>
-    </ProjectReference>
+    <TestApkInstrumentation Include="xamarin.android.jcwgentests.TestInstrumentation">
+      <Package>$(ApplicationId)</Package>
+      <ResultsPath>$(OutputPath)TestResult-Xamarin.Android.JcwGen_Tests.xml</ResultsPath>
+    </TestApkInstrumentation>
+
+    <TestApkPermission Include="READ_EXTERNAL_STORAGE">
+      <Package>$(ApplicationId)</Package>
+    </TestApkPermission>
+
+    <TestApkPermission Include="WRITE_EXTERNAL_STORAGE">
+      <Package>$(ApplicationId)</Package>
+    </TestApkPermission>
   </ItemGroup>
+
+  <Import Project="..\..\..\build-tools\scripts\TestApks.targets" />
+
 </Project>

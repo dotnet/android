@@ -210,11 +210,10 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (RuntimeChecks))]
-		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, string debugType, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
+		public void CheckWhichRuntimeIsIncluded (string supportedAbi, bool debugSymbols, bool? optimize, bool? embedAssemblies, string expectedRuntime) {
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
-			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			if (optimize.HasValue)
 				proj.SetProperty (proj.ActiveConfigurationProperties, "Optimize", optimize.Value);
 			else
@@ -255,7 +254,7 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("AOT"), Category ("MonoSymbolicate")]
 		[TestCaseSource (nameof (SequencePointChecks))]
 		public void CheckSequencePointGeneration (bool isRelease, bool monoSymbolArchive, bool aotAssemblies,
-		       bool debugSymbols, string debugType, bool embedMdb, string expectedRuntime, bool usesAssemblyBlobs)
+		       bool debugSymbols, string expectedRuntime, bool usesAssemblyBlobs)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -265,7 +264,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetAndroidSupportedAbis (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "MonoSymbolArchive", monoSymbolArchive);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugSymbols", debugSymbols);
-			proj.SetProperty (proj.ActiveConfigurationProperties, "DebugType", debugType);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -273,14 +271,11 @@ namespace Xamarin.Android.Build.Tests
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var msymarchive = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + ".apk.mSYM");
 				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-				var mdbExits = helper.Exists ("assemblies/UnnamedProject.dll.mdb") || helper.Exists ("assemblies/UnnamedProject.pdb");
-				Assert.AreEqual (embedMdb, mdbExits,
-				                 $"assemblies/UnnamedProject.dll.mdb or assemblies/UnnamedProject.pdb should{0}be in the {proj.PackageName}-Signed.apk", embedMdb ? " " : " not ");
 				if (aotAssemblies) {
 					foreach (var abi in abis) {
 						var assemblies = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 						                               "aot", abi, "libaot-UnnamedProject.dll.so");
-						var shouldExist = monoSymbolArchive && debugSymbols && (debugType == "PdbOnly" || debugType == "Portable");
+						var shouldExist = monoSymbolArchive && debugSymbols;
 						var symbolicateFile = Directory.GetFiles (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
 						                                                        "aot", abi), "UnnamedProject.dll.msym", SearchOption.AllDirectories).FirstOrDefault ();
 						if (shouldExist)
@@ -1058,75 +1053,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
 				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] // .mdb and non-portable .pdb files not supported in .NET 5+
-		public void BuildBasicApplicationCheckPdb ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				EmbedAssembliesIntoApk = true,
-			};
-			using (var b = CreateApkBuilder ()) {
-				var reference = new BuildItem.Reference ("PdbTestLibrary.dll") {
-					WebContentFileNameFromAzure = "PdbTestLibrary.dll"
-				};
-				proj.References.Add (reference);
-				var pdb = new BuildItem.NoActionResource ("PdbTestLibrary.pdb") {
-					WebContentFileNameFromAzure = "PdbTestLibrary.pdb"
-				};
-				proj.References.Add (pdb);
-				var netStandardRef = new BuildItem.Reference ("NetStandard16.dll") {
-					WebContentFileNameFromAzure = "NetStandard16.dll"
-				};
-				proj.References.Add (netStandardRef);
-				var netStandardpdb = new BuildItem.NoActionResource ("NetStandard16.pdb") {
-					WebContentFileNameFromAzure = "NetStandard16.pdb"
-				};
-				proj.References.Add (netStandardpdb);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var pdbToMdbPath = Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.dll.mdb");
-				Assert.IsTrue (
-					File.Exists (pdbToMdbPath),
-					"PdbTestLibrary.dll.mdb must be generated next to the .pdb");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
-				Assert.IsFalse (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.pdb")),
-					"PdbTestLibrary.pdb must not be copied to Intermediate directory");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "PdbTestLibrary.dll.mdb")),
-					"PdbTestLibrary.dll.mdb must be copied to Intermediate directory");
-				FileAssert.AreNotEqual (pdbToMdbPath,
-					Path.Combine (Root, b.ProjectDirectory, "PdbTestLibrary.pdb"),
-					"The .pdb should NOT match the .mdb");
-				Assert.IsTrue (
-					File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets", "NetStandard16.pdb")),
-					"NetStandard16.pdb must be copied to Intermediate directory");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/NetStandard16.pdb"),
-							"assemblies/NetStandard16.pdb should exist in the apk.");
-					Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/PdbTestLibrary.dll.mdb"),
-							"assemblies/PdbTestLibrary.dll.mdb should exist in the apk.");
-					Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-							"assemblies/PdbTestLibrary.pdb"),
-							"assemblies/PdbTestLibrary.pdb should not exist in the apk.");
-				}
-				b.BuildLogFile = "build1.log";
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build failed");
-				b.BuildLogFile = "build2.log";
-				var lastTime = File.GetLastWriteTimeUtc (pdbToMdbPath);
-				pdb.Timestamp = DateTimeOffset.UtcNow;
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "third build failed");
-				Assert.Less (lastTime,
-					File.GetLastWriteTimeUtc (pdbToMdbPath),
-					"{0} should have been updated", pdbToMdbPath);
 			}
 		}
 

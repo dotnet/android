@@ -219,7 +219,6 @@ projects. .NET 5 projects will not import this file.
   </PropertyGroup>
 
   <UsingTask TaskName="Xamarin.Android.Tasks.CheckGoogleSdkRequirements"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.ConvertDebuggingFiles"               AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateLibraryResourceArchive"        AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateManagedLibraryResourceArchive" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateNativeLibraryArchive"          AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
@@ -388,17 +387,10 @@ projects. .NET 5 projects will not import this file.
       <Output TaskParameter="PdbFiles" ItemName="_ResolvedPdbFiles" />
       <Output TaskParameter="PortablePdbFiles" ItemName="_ResolvedPortablePdbFiles" />
     </CollectPdbFiles>
-    <ItemGroup>
-      <_ConvertedMdbFiles Include="@(_ResolvedPdbFiles->'%(RootDir)%(Directory)%(Filename).dll.mdb')" />
-    </ItemGroup>
   </Target>
 
   <Target Name="_ConvertPdbFiles"
-      Inputs="@(_ResolvedPdbFiles)"
-      Outputs="@(_ConvertedMdbFiles)"
       DependsOnTargets="_CollectPdbFiles">
-    <ConvertDebuggingFiles Files="@(_ResolvedPdbFiles)" />
-    <Touch Files="@(_ConvertedMdbFiles)" ContinueOnError="true" />
     <ItemGroup>
       <!-- NOTE: @(_ResolvedPortablePdbFiles) are valid -->
       <_DeprecatedSymbols Include="@(_ResolvedMdbFiles);@(_ResolvedPdbFiles)" />
@@ -408,26 +400,9 @@ projects. .NET 5 projects will not import this file.
         FormatArguments="%(_DeprecatedSymbols.FileName)%(_DeprecatedSymbols.Extension)"
         Condition=" '%(_DeprecatedSymbols.Identity)' != '' "
     />
-    <ItemGroup>
-      <FileWrites Include="@(_ConvertedMdbFiles)" />
-    </ItemGroup>
   </Target>
 
-  <Target Name="ConvertDebuggingFiles"
-      Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' And Exists ('$(_IntermediatePdbFile)') And '$(OS)' == 'Windows_NT'"
-      DependsOnTargets="_ConvertDebuggingFiles"
-  />
-
-  <Target Name="_ConvertDebuggingFiles"
-      Inputs="$(OutDir)$(TargetFileName);$(_IntermediatePdbFile)"
-      Outputs="$(OutDir)$(TargetFileName).mdb"
-      DependsOnTargets="_ValidateAndroidPackageProperties">
-    <ConvertDebuggingFiles Files="$(OutDir)$(TargetFileName)" />
-    <Touch Files="$(OutDir)$(TargetFileName).mdb" />
-    <ItemGroup>
-      <FileWrites Include="$(OutDir)$(TargetFileName).mdb" />
-    </ItemGroup>
-  </Target>
+  <Target Name="ConvertDebuggingFiles" />
 
   <Target Name="_AddAndroidEnvironmentToCompile">
     <ItemGroup>
