@@ -4,6 +4,7 @@ parameters:
   jobDisplayName:         # Display name of the job
   agentCount:             # Number of build agents to run in parallel
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   
 jobs:
 - job: ${{ parameters.jobName }}
@@ -31,7 +32,8 @@ jobs:
       installLegacyDotNet: false
       restoreNUnitConsole: false
       updateMono: false
-      
+      xaSourcePath: ${{ parameters.xaSourcePath }}
+
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(TestAssembliesArtifactName)

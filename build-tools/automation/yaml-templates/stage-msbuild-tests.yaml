@@ -5,6 +5,7 @@ parameters:
   stageCondition: succeeded()
   dependsOn: mac_build
   stagePrefix: ''
+  xaSourcePath: $(System.DefaultWorkingDirectory)
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -19,6 +20,7 @@ stages:
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 10
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: run-msbuild-tests.yaml
     parameters:
@@ -27,3 +29,4 @@ stages:
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 6
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
+      xaSourcePath: ${{ parameters.xaSourcePath }}
