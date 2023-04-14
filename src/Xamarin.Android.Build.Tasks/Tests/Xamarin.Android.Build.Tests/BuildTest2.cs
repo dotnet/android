@@ -107,28 +107,20 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
-			string? oldLangVar = null;
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				TargetFrameworkVersion = tfv,
+			};
 
+			Dictionary<string, string> envvar = null;
 			if (!String.IsNullOrEmpty (langEnvironmentVariable)) {
-				// See: https://github.com/xamarin/xamarin-android/pull/7941
-				oldLangVar = Environment.GetEnvironmentVariable ("LANG");
-
-				// This will **not** call `setenv(3)`, but it should be fine since we're after the managed code here, not native
-				Environment.SetEnvironmentVariable ("LANG", langEnvironmentVariable);
+				envvar = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+					{"LANG", langEnvironmentVariable},
+				};
 			}
 
-			try {
-				var proj = new XamarinAndroidApplicationProject {
-					IsRelease = isRelease,
-					TargetFrameworkVersion = tfv,
-				};
-				using (var b = CreateApkBuilder ()) {
-					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				}
-			} finally {
-				if (oldLangVar != null) {
-					Environment.SetEnvironmentVariable ("LANG", oldLangVar);
-				}
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj, environmentVariables: envvar), "Build should have succeeded.");
 			}
 		}
 
