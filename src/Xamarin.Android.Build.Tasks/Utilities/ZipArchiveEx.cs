@@ -70,6 +70,30 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public void AddFileAndFlush (string filename, string archiveFileName, CompressionMethod compressionMethod)
+		{
+			var fi = new FileInfo (filename);
+			AddFileAndFlush (filename, fi.Length, archiveFileName, compressionMethod);
+		}
+
+		public void AddEntryAndFlush (byte[] data, string archiveFileName)
+		{
+			filesWrittenTotalSize += data.Length;
+			zip.AddEntry (data, archiveFileName);
+			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+				Flush ();
+			}
+		}
+
+		public void AddEntryAndFlush (string archiveFileName, Stream data, CompressionMethod method)
+		{
+			filesWrittenTotalSize += data.Length;
+			zip.AddEntry (archiveFileName, data, method);
+			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+				Flush ();
+			}
+		}
+
 		void AddFiles (string folder, string folderInArchive, CompressionMethod method)
 		{
 			foreach (string fileName in Directory.GetFiles (folder, "*.*", SearchOption.TopDirectoryOnly)) {
