@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Reflection.Metadata;
@@ -519,6 +520,15 @@ namespace Xamarin.Android.Tasks
 			var head = string.Join ("\\", path.Split (DirectorySeparators).TakeWhile (s => !s.Equals (assetsDirectory, StringComparison.OrdinalIgnoreCase)));
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
+		}
+
+		public static string? CultureInvariantToString (object? obj)
+		{
+			if (obj == null) {
+				return null;
+			}
+
+			return Convert.ToString (obj, CultureInfo.InvariantCulture);
 		}
 	}
 }

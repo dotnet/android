@@ -47,14 +47,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease)
+		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				TargetFrameworkVersion = tfv,
 			};
+
+			Dictionary<string, string> envvar = null;
+			if (!String.IsNullOrEmpty (langEnvironmentVariable)) {
+				envvar = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+					{"LANG", langEnvironmentVariable},
+				};
+			}
+
 			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (b.Build (proj, environmentVariables: envvar), "Build should have succeeded.");
 			}
 		}
 
