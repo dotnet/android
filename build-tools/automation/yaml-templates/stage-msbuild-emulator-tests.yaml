@@ -8,6 +8,8 @@ parameters:
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  repositoryAlias: 'self'
+  commit: 'HEAD'
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -35,6 +37,8 @@ stages:
         updateMono: false
         androidSdkPlatforms: $(androidSdkPlatforms)
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
 
     - template: run-xaprepare.yaml
       parameters:
@@ -90,6 +94,8 @@ stages:
         restoreNUnitConsole: false
         androidSdkPlatforms: $(androidSdkPlatforms)
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
 
     - template: run-xaprepare.yaml
       parameters:

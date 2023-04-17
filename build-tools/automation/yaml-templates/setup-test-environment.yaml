@@ -10,13 +10,19 @@ parameters:
   restoreNUnitConsole: true
   updateMono: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
+  repositoryAlias: 'self'
+  commit: 'HEAD'
 
 steps:
-- checkout: self
-  clean: true
-  submodules: recursive
-  ${{ if ne(parameters.xaSourcePath, variables['System.DefaultWorkingDirectory']) }}:
-    path: s/xamarin-android
+
+- template: sdk-unified/steps/checkout/v1.yml@yaml-templates
+  parameters:
+    resource: ${{ parameters.repositoryAlias }}
+    commit: ${{ parameters.commit }}
+    clean: true
+    submodules: recursive
+    ${{ if ne(parameters.xaSourcePath, variables['System.DefaultWorkingDirectory']) }}:
+      path: s/xamarin-android
 
 - ${{ if eq(parameters.updateVS, true) }}:
   - template: update-vs.yaml

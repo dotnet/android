@@ -5,7 +5,9 @@ parameters:
   agentCount:             # Number of build agents to run in parallel
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  
+  repositoryAlias: 'self'
+  commit: 'HEAD'
+
 jobs:
 - job: ${{ parameters.jobName }}
   strategy:
@@ -33,6 +35,8 @@ jobs:
       restoreNUnitConsole: false
       updateMono: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
 
   - task: DownloadPipelineArtifact@2
     inputs:
