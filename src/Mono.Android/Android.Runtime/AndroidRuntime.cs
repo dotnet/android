@@ -485,8 +485,11 @@ namespace Android.Runtime {
 		{
 			try {
 				if (methods.IsEmpty) {
-					if (jniAddNativeMethodRegistrationAttributePresent)
+					RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Assembly, $"RegisterJniNatives: Type {type.FullName} registers no methods");
+					if (jniAddNativeMethodRegistrationAttributePresent) {
+						RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Assembly, $"RegisterJniNatives: Type {type.FullName} has [AddNativeMethodRegistration] attribute");
 						base.RegisterNativeMembers (nativeClass, type, methods.ToString ());
+					}
 					return;
 				} else if (FastRegisterNativeMembers (nativeClass, type, methods)) {
 					return;
@@ -533,6 +536,7 @@ namespace Android.Runtime {
 								throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
 							callback = CreateDynamicCallback (minfo);
 							needToRegisterNatives = true;
+							RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Assembly, $"RegisterJniNativesMethod: [ ] {type.FullName}: __export__ found for method '{name.ToString ()}'");
 						} else {
 							Type callbackDeclaringType = type;
 							if (!callbackDeclaringTypeString.IsEmpty) {
@@ -550,6 +554,7 @@ namespace Android.Runtime {
 						if (callback != null) {
 							needToRegisterNatives = true;
 							natives [nativesIndex++] = new JniNativeMethodRegistration (name.ToString (), signature.ToString (), callback);
+							RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Assembly, $"RegisterJniNativesMethod: [ ] {type.FullName}.{name.ToString ()}");
 						}
 					}
 
@@ -557,19 +562,11 @@ namespace Android.Runtime {
 				}
 
 				if (needToRegisterNatives) {
+					RuntimeNativeMethods.monodroid_log (LogLevel.Info, LogCategories.Assembly, $"RegisterJniNatives: Type {type.FullName} calling JniEnvironment.Types.RegisterNatives");
 					JniEnvironment.Types.RegisterNatives (nativeClass.PeerReference, natives, nativesIndex);
 				}
 			} catch (Exception e) {
 				JniEnvironment.Runtime.RaisePendingException (e);
-			}
-
-			bool ShouldRegisterDynamically (string callbackTypeName, string callbackString, string typeName, string callbackName)
-			{
-				if (String.Compare (typeName, callbackTypeName, StringComparison.Ordinal) != 0) {
-					return false;
-				}
-
-				return String.Compare (callbackName, callbackString, StringComparison.Ordinal) == 0;
 			}
 		}
 

@@ -222,7 +222,7 @@ namespace Xamarin.Android.Tasks
 
 			MarshalMethodsClassifier classifier = null;
 			if (useMarshalMethods) {
-				classifier = new MarshalMethodsClassifier (cache, res, Log);
+				classifier = new MarshalMethodsClassifier (cache, res, Log, IntermediateOutputDirectory);
 			}
 
 			// Step 2 - Generate Java stub code
@@ -405,6 +405,7 @@ namespace Xamarin.Android.Tasks
 
 			if (useMarshalMethods) {
 				classifier.AddSpecialCaseMethods ();
+				classifier.FlushAndCloseOutputs ();
 
 				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
 
