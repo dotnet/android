@@ -11,6 +11,7 @@ parameters:
   artifactFolder: ""
   useDotNet: true
   condition: succeeded()
+  retryCountOnTaskFailure: 1
 
 steps:
 - ${{ if eq(parameters.useDotNet, false) }}:
@@ -26,6 +27,7 @@ steps:
         ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - ${{ if eq(parameters.useDotNet, true) }}:
   - template: run-dotnet-preview.yaml
@@ -40,6 +42,7 @@ steps:
         -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
       condition: ${{ parameters.condition }}
       continueOnError: true
+      retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
