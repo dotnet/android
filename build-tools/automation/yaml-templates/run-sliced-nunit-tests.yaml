@@ -21,3 +21,16 @@ steps:
     testAssembly: ${{ parameters.testAssembly }}
     dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
     testResultsFile: ${{ parameters.testResultsTitle }}-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+
+- task: CopyFiles@2
+  displayName: Copy sliced test results
+  inputs:
+    sourceFolder: $(Agent.TempDirectory)
+    contents: '*.trx'
+    targetFolder: $(Build.ArtifactStagingDirectory)/sliced-test-results
+        
+- task: PublishBuildArtifacts@1
+  displayName: Upload sliced test results
+  inputs:
+    artifactName: Sliced Test Results
+    pathToPublish: $(Build.ArtifactStagingDirectory)/sliced-test-results
