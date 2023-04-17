@@ -8,8 +8,8 @@ namespace Xamarin.Android.Tasks
 	public class ZipArchiveEx : IDisposable
 	{
 
-		public static int ZipFlushSizeLimit = 100 * 1024 * 1024;
-		public static int ZipFlushFilesLimit = 512;
+		const int DEFAULT_FLUSH_SIZE_LIMIT = 100 * 1024 * 1024;
+		const int DEFAULT_FLUSH_FILES_LIMIT = 512;
 
 		ZipArchive zip;
 		string archive;
@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tasks
 		public bool AutoFlush { get; set; } = true;
 
 		public bool CreateDirectoriesInZip { get; set; } = true;
+
+		public int ZipFlushSizeLimit { get; set; } = DEFAULT_FLUSH_SIZE_LIMIT;
+		public int ZipFlushFilesLimit { get; set; } = DEFAULT_FLUSH_FILES_LIMIT;
 
 		public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
 		{
@@ -65,7 +68,7 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += fileLength;
 			zip.AddFile (filename, archiveFileName, compressionMethod: compressionMethod);
-			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}
@@ -80,7 +83,7 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += data.Length;
 			zip.AddEntry (data, archiveFileName);
-			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}
@@ -89,7 +92,7 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += data.Length;
 			zip.AddEntry (archiveFileName, data, method);
-			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}

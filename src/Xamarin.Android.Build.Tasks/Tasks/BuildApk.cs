@@ -140,6 +140,12 @@ namespace Xamarin.Android.Tasks
 				refresh = false;
 			}
 			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
+				if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
+					apk.ZipFlushFilesLimit = flushFilesLimit;
+				}
+				if (int.TryParse (ZipFlushSizeLimit, out int flushSizeLimit)) {
+					apk.ZipFlushSizeLimit = flushSizeLimit;
+				}
 				if (refresh) {
 					for (long i = 0; i < apk.Archive.EntryCount; i++) {
 						ZipEntry e = apk.Archive.ReadEntry ((ulong) i);
@@ -294,12 +300,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
-				ZipArchiveEx.ZipFlushFilesLimit = flushFilesLimit;
-			}
-			if (int.TryParse (ZipFlushSizeLimit, out int flushSizeLimit)) {
-				ZipArchiveEx.ZipFlushSizeLimit = flushSizeLimit;
-			}
 			Aot.TryGetSequencePointsMode (AndroidSequencePointsMode, out sequencePointsMode);
 
 			var outputFiles = new List<string> ();
