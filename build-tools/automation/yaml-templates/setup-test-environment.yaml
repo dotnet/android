@@ -11,7 +11,7 @@ parameters:
   updateMono: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
-  commit: 'HEAD'
+  commit: ''
 
 steps:
 

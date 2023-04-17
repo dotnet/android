@@ -6,7 +6,7 @@ parameters:
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
-  commit: 'HEAD'
+  commit: ''
 
 jobs:
 - job: ${{ parameters.jobName }}

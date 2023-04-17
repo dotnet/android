@@ -9,7 +9,7 @@ parameters:
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
-  commit: 'HEAD'
+  commit: ''
 
 stages:
 - stage: ${{ parameters.stageName }}

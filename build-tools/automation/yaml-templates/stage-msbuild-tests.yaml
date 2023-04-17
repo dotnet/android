@@ -6,6 +6,8 @@ parameters:
   dependsOn: mac_build
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
+  repositoryAlias: 'self'
+  commit: ''
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -21,6 +23,8 @@ stages:
       agentCount: 10
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
 
   - template: run-msbuild-tests.yaml
     parameters:
@@ -30,3 +34,5 @@ stages:
       agentCount: 6
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      repositoryAlias: ${{ parameters.repositoryAlias }}
+      commit: ${{ parameters.commit }}
