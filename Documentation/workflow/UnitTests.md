@@ -85,6 +85,13 @@ To run a specific test you can use the `Name=Value` argument for `--filter`,
 ./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
 ```
 
+If the test has arguments then the `=` will not match the name. Instead use the `~`,
+this does a "Contains" check for the Name.
+
+```sh
+./dotnet-local.sh test bin/TestDebug/net7.0/Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
+```
+
 To list all the available tests use the `-lt` argument
 
 ```sh
@@ -118,6 +125,13 @@ To run a specific test you can use the `Name` argument for the `--filter`,
 dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
 ```
 
+If the test has arguments then the `=` will not match the name. Instead use the `~`,
+this does a "Contains" check for the Name.
+
+```sh
+./dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name~BuildBasicApplication
+```
+
 To list all the available tests use the `-lt` argument
 
 ```cmd
@@ -148,7 +162,7 @@ cleanup the unit tests. They will also capture additional things like
 screenshots if a test fails.
 
 Writing a test uses [`Xamarin.ProjectTools`](../../src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/),
-which exposes a way to programmatically generating `.csproj` files as well as
+which exposes a way to programmatically generate `.csproj` files as well as
 other application based source code. This saves us from having to have 1000's
 of `csproj` files all over the repo.
 
