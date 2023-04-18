@@ -14,7 +14,7 @@ stages:
       testOS: macOS
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
-      agentCount: 10
+      agentCount: 15
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       
   - template: run-msbuild-tests.yaml
@@ -22,5 +22,5 @@ stages:
       testOS: Windows
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
-      agentCount: 6
+      agentCount: 15
       testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
