@@ -95,6 +95,10 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseAssemblyStore { get; set; }
 
+		public string ZipFlushFilesLimit { get; set; }
+
+		public string ZipFlushSizeLimit { get; set; }
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -136,6 +140,12 @@ namespace Xamarin.Android.Tasks
 				refresh = false;
 			}
 			using (var apk = new ZipArchiveEx (apkOutputPath, File.Exists (apkOutputPath) ? FileMode.Open : FileMode.Create )) {
+				if (int.TryParse (ZipFlushFilesLimit, out int flushFilesLimit)) {
+					apk.ZipFlushFilesLimit = flushFilesLimit;
+				}
+				if (int.TryParse (ZipFlushSizeLimit, out int flushSizeLimit)) {
+					apk.ZipFlushSizeLimit = flushSizeLimit;
+				}
 				if (refresh) {
 					for (long i = 0; i < apk.Archive.EntryCount; i++) {
 						ZipEntry e = apk.Archive.ReadEntry ((ulong) i);
@@ -205,7 +215,6 @@ namespace Xamarin.Android.Tasks
 					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, $"{AssembliesPath}rc.bin", compressionMethod: UncompressedMethod);
 				}
 
-				int count = 0;
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
 					existingEntries.Remove (item);
@@ -215,12 +224,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 					Log.LogDebugMessage ("\tAdding {0}", file.filePath);
-					apk.Archive.AddFile (file.filePath, item, compressionMethod: compressionMethod);
-					count++;
-					if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
-						apk.Flush();
-						count = 0;
-					}
+					apk.AddFileAndFlush (file.filePath, item, compressionMethod: compressionMethod);
 				}
 
 				var jarFiles = (JavaSourceFiles != null) ? JavaSourceFiles.Where (f => f.ItemSpec.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)) : null;
@@ -235,7 +239,6 @@ namespace Xamarin.Android.Tasks
 				var jarFilePaths = libraryProjectJars.Concat (jarFiles != null ? jarFiles.Select (j => j.ItemSpec) : Enumerable.Empty<string> ());
 				jarFilePaths = MonoAndroidHelper.DistinctFilesByContent (jarFilePaths);
 
-				count = 0;
 				foreach (var jarFile in jarFilePaths) {
 					using (var stream = File.OpenRead (jarFile))
 					using (var jar = ZipArchive.Open (stream)) {
@@ -273,13 +276,8 @@ namespace Xamarin.Android.Tasks
 								data = d.ToArray ();
 							}
 							Log.LogDebugMessage ($"Adding {path} from {jarFile} as the archive file is out of date.");
-							apk.Archive.AddEntry (data, path);
+							apk.AddEntryAndFlush (data, path);
 						}
-					}
-					count++;
-					if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
-						apk.Flush();
-						count = 0;
 					}
 				}
 				// Clean up Removed files.
@@ -372,7 +370,6 @@ namespace Xamarin.Android.Tasks
 				storeGenerator = null;
 			}
 
-			int count = 0;
 			AssemblyStoreAssemblyInfo storeAssembly = null;
 
 			//
@@ -393,7 +390,6 @@ namespace Xamarin.Android.Tasks
 			AddAssembliesFromCollection (ResolvedUserAssemblies);
 
 			// Add framework assemblies
-			count = 0;
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
 			if (!UseAssemblyStore) {
@@ -483,12 +479,6 @@ namespace Xamarin.Android.Tasks
 
 					if (UseAssemblyStore) {
 						storeGenerator.Add (assemblyStoreApkName, storeAssembly);
-					} else {
-						count++;
-						if (count >= ZipArchiveEx.ZipFlushFilesLimit) {
-							apk.Flush();
-							count = 0;
-						}
 					}
 				}
 			}
@@ -555,7 +545,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 			Log.LogDebugMessage ($"Adding {file} as the archive file is out of date.");
-			apk.Archive.AddFile (file, inArchivePath, compressionMethod: compressionMethod);
+			apk.AddFileAndFlush (file, inArchivePath, compressionMethod: compressionMethod);
 			return true;
 		}
 
@@ -579,7 +569,7 @@ namespace Xamarin.Android.Tasks
 				source.CopyTo (dest);
 				dest.WriteByte (0);
 				dest.Position = 0;
-				apk.Archive.AddEntry (inArchivePath, dest, compressionMethod);
+				apk.AddEntryAndFlush (inArchivePath, dest, compressionMethod);
 			}
 		}
 
@@ -626,7 +616,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 			Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
-			apk.Archive.AddEntry (archivePath, File.OpenRead (filesystemPath), compressionMethod);
+			apk.AddEntryAndFlush (archivePath, File.OpenRead (filesystemPath), compressionMethod);
 		}
 
 		void AddRuntimeLibraries (ZipArchiveEx apk, string [] supportedAbis)

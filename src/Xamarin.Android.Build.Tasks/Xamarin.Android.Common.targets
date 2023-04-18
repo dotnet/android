@@ -2090,6 +2090,8 @@ because xbuild doesn't support framework reference assemblies.
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+    ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+    ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
@@ -2124,6 +2126,8 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>

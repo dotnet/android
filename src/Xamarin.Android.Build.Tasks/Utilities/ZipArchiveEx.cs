@@ -8,8 +8,8 @@ namespace Xamarin.Android.Tasks
 	public class ZipArchiveEx : IDisposable
 	{
 
-		public static int ZipFlushSizeLimit = 50 * 1024 * 1024;
-		public static int ZipFlushFilesLimit = 50;
+		const int DEFAULT_FLUSH_SIZE_LIMIT = 100 * 1024 * 1024;
+		const int DEFAULT_FLUSH_FILES_LIMIT = 512;
 
 		ZipArchive zip;
 		string archive;
@@ -23,6 +23,9 @@ namespace Xamarin.Android.Tasks
 		public bool AutoFlush { get; set; } = true;
 
 		public bool CreateDirectoriesInZip { get; set; } = true;
+
+		public int ZipFlushSizeLimit { get; set; } = DEFAULT_FLUSH_SIZE_LIMIT;
+		public int ZipFlushFilesLimit { get; set; } = DEFAULT_FLUSH_FILES_LIMIT;
 
 		public ZipArchiveEx (string archive) : this (archive, FileMode.CreateNew)
 		{
@@ -65,7 +68,31 @@ namespace Xamarin.Android.Tasks
 		{
 			filesWrittenTotalSize += fileLength;
 			zip.AddFile (filename, archiveFileName, compressionMethod: compressionMethod);
-			if ((filesWrittenTotalSize >= ZipArchiveEx.ZipFlushSizeLimit || filesWrittenTotalCount >= ZipArchiveEx.ZipFlushFilesLimit) && AutoFlush) {
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
+				Flush ();
+			}
+		}
+
+		public void AddFileAndFlush (string filename, string archiveFileName, CompressionMethod compressionMethod)
+		{
+			var fi = new FileInfo (filename);
+			AddFileAndFlush (filename, fi.Length, archiveFileName, compressionMethod);
+		}
+
+		public void AddEntryAndFlush (byte[] data, string archiveFileName)
+		{
+			filesWrittenTotalSize += data.Length;
+			zip.AddEntry (data, archiveFileName);
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
+				Flush ();
+			}
+		}
+
+		public void AddEntryAndFlush (string archiveFileName, Stream data, CompressionMethod method)
+		{
+			filesWrittenTotalSize += data.Length;
+			zip.AddEntry (archiveFileName, data, method);
+			if ((filesWrittenTotalSize >= ZipFlushSizeLimit || filesWrittenTotalCount >= ZipFlushFilesLimit) && AutoFlush) {
 				Flush ();
 			}
 		}
