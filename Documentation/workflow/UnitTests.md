@@ -119,7 +119,10 @@ If no Android device is attached, then the emulator will be created.
 The `ADB_TARGET` environment variable can be used to explicitly specify which
 Android device should be used when running Device Integration Tests.
 
-To run a specific test you can use the `Name` argument for the `--filter`,
+NOTE: Not all tests work under .NET Android yet. So we need to filter
+them on the `DotNetIgnore` category.
+
+To run a specific test you can use the `Name=Value` argument for the `--filter`,
 
 ```cmd
 dotnet-local.cmd test bin\TestDebug\net7.0\Xamarin.Android.Build.Tests.dll --filter=Name=BuildBasicApplication
