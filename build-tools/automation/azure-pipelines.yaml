@@ -80,6 +80,8 @@ variables:
     value: ''
   - name: DisablePipelineConfigDetector
     value: true
+  - name: TestVar
+    value: value
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
