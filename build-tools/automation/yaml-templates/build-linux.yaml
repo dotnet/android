@@ -37,10 +37,8 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - checkout: monodroid
-      clean: true
-      submodules: recursive
-      path: s/xamarin-android/external/monodroid
+    # Continue to use multi-repo checkout so that we don't have to update all instances of $(System.DefaultWorkingDirectory)
+    - checkout: yaml-templates
 
     - script: rm -rf external/monodroid/external/xamarin-android
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -53,6 +51,7 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
+    # Clone and prepare monodroid with submodules
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
