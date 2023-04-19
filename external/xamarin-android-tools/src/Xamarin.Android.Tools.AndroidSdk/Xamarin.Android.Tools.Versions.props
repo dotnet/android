@@ -4,14 +4,14 @@
     <!--
     This file contains the versions of the tooling which will be installed
     by default on a users machine. They should be the latest stable versions
-    which xamarin.android works with. 
-    
-    If this file is changed the submodule for androidtools should be updated, 
-    along with any other repo which references androidtools. 
+    which xamarin.android works with.
+
+    If this file is changed the submodule for androidtools should be updated,
+    along with any other repo which references androidtools.
     -->
     <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">32.0.0</AndroidSdkBuildToolsVersion>
     <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">7.0</AndroidCommandLineToolsVersion>
-    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">33.0.2</AndroidSdkPlatformToolsVersion>
+    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">34.0.1</AndroidSdkPlatformToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-33</AndroidSdkPlatformVersion>
     <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">24.0.8215888</AndroidNdkVersion>
