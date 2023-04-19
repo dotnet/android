@@ -32,5 +32,5 @@
     branch = master
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
-    url = https://github.com/dellis1972/xamarin-android-tools
-    branch = bumppt
+    url = https://github.com/xamarin/xamarin-android-tools
+    branch = main
