@@ -59,14 +59,14 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
 
-- task: DotNetCoreCLI@2
-  displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
+- task: NuGetCommand@2
+  displayName: restore Xamarin.Installer.Build.Tasks.csproj
   inputs:
     command: restore
     feedsToUse: select
     vstsFeed: DevDiv/xamarin-xvs
     includeNuGetOrg: false
-    projects: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
+    restoreSolution: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
 
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
