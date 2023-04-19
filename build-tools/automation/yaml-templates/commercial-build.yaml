@@ -57,6 +57,8 @@ steps:
 - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
+  env:
+    GH_AUTH_SECRET: $(GitHub.Token)
 
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'

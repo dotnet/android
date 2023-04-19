@@ -41,7 +41,6 @@ stages:
       clean: true
       submodules: recursive
       path: s/xamarin-android/external/monodroid
-      persistCredentials: true
 
     - script: rm -rf external/monodroid/external/xamarin-android
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -57,6 +56,8 @@ stages:
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
+      env:
+        GH_AUTH_SECRET: $(GitHub.Token)
 
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
