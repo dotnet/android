@@ -36,6 +36,11 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Condition="'$(AndroidUseNegotiateAuthentication)' != ''"
         Value="$(AndroidUseNegotiateAuthentication)"
         Trim="true" />
+    <!-- https://github.com/dotnet/runtime/blob/211cdd011f19a51b7092d8365e11e774a8280afb/src/libraries/System.Private.CoreLib/src/System/LocalAppContextSwitches.cs#L52 -->
+    <RuntimeHostConfigurationOption Include="Switch.System.Reflection.ForceInterpretedInvoke"
+        Value="$(_SystemReflectionForceInterpretedInvoke)"
+        Trim="true"
+    />
   </ItemGroup>
 
   <Target Name="_ParseRuntimeConfigFiles"
