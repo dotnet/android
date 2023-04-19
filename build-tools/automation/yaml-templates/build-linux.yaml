@@ -37,8 +37,11 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    # Continue to use multi-repo checkout so that we don't have to update all instances of $(System.DefaultWorkingDirectory)
-    - checkout: yaml-templates
+    - checkout: monodroid
+      clean: true
+      submodules: recursive
+      path: s/xamarin-android/external/monodroid
+      persistCredentials: true
 
     - script: rm -rf external/monodroid/external/xamarin-android
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -51,12 +54,18 @@ stages:
       inputs:
         forceReinstallCredentialProvider: true
 
-    # Clone and prepare monodroid with submodules
     - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: make prepare-external-git-dependencies
-      env:
-        GH_AUTH_SECRET: $(GitHub.Token)
+
+    - task: DotNetCoreCLI@2
+      displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
+      inputs:
+        command: restore
+        feedsToUse: config
+        nugetConfigPath:  $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/NuGet.Config
+        includeNuGetOrg: false
+        projects: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
 
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android

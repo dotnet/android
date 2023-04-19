@@ -32,8 +32,12 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-update-mono
 
-# Continue to use multi-repo checkout so that we don't have to update all instances of $(System.DefaultWorkingDirectory)
-- checkout: yaml-templates
+# Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
+- checkout: monodroid
+  clean: true
+  submodules: recursive
+  path: s/xamarin-android/external/monodroid
+  persistCredentials: true
 
 - script: rm -rf external/monodroid/external/xamarin-android
   workingDirectory: ${{ parameters.xaSourcePath }}
@@ -51,12 +55,18 @@ steps:
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-# Clone and prepare monodroid with submodules
 - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
-  env:
-    GH_AUTH_SECRET: $(GitHub.Token)
+
+- task: DotNetCoreCLI@2
+  displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
+  inputs:
+    command: restore
+    feedsToUse: config
+    nugetConfigPath:  $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/NuGet.Config
+    includeNuGetOrg: false
+    projects: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
 
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
