@@ -37,7 +37,6 @@ steps:
   clean: true
   submodules: recursive
   path: s/xamarin-android/external/monodroid
-  persistCredentials: true
 
 - script: rm -rf external/monodroid/external/xamarin-android
   workingDirectory: ${{ parameters.xaSourcePath }}
