@@ -63,8 +63,8 @@ steps:
   displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
   inputs:
     command: restore
-    feedsToUse: config
-    nugetConfigPath:  $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/NuGet.Config
+    feedsToUse: select
+    vstsFeed: DevDiv/xamarin-xvs
     includeNuGetOrg: false
     projects: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
 
