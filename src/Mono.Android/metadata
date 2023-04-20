@@ -1692,6 +1692,9 @@
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveActivity' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveContentProvider' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveService' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr api-since="26" path="/api/package[@name='android.app.admin']/class[@name='DevicePolicyManager']/method[@name='bindDeviceAdminServiceAsUser' and count(parameter)=5 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='android.content.Intent'] and parameter[3][@type='android.content.ServiceConnection'] and parameter[4][@type='int'] and parameter[5][@type='android.os.UserHandle']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=3 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='android.content.ServiceConnection'] and parameter[3][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr api-since="29" path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=4 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int'] and parameter[3][@type='java.util.concurrent.Executor'] and parameter[4][@type='android.content.ServiceConnection']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
 
   <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
   <attr api-since="33" path="/api/package[@name='android.app']/class[@name='Service']/method[@name='stopForeground' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='notificationBehavior']" name="name">flags</attr>
@@ -1788,9 +1791,9 @@
   <attr api-since="34" path="/api/package[@name='android.app.appsearch.util']" name="managedName">Android.App.AppSearch.Util</attr>
   <attr api-since="34" path="/api/package[@name='android.app.sdksandbox.sdkprovider']" name="managedName">Android.App.SdkSandbox.SdkProvider</attr>
   <attr api-since="34" path="/api/package[@name='android.devicelock']" name="managedName">Android.DeviceLock</attr>
-  <attr api-since="34" path="/api/package[@name='android.healthconnect']" name="managedName">Android.HealthConnect</attr>
-  <attr api-since="34" path="/api/package[@name='android.healthconnect.datatypes']" name="managedName">Android.HealthConnect.DataTypes</attr>
-  <attr api-since="34" path="/api/package[@name='android.healthconnect.datatypes.units']" name="managedName">Android.HealthConnect.DataTypes.Units</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.changelog']" name="managedName">Android.Health.Connect.ChangeLog</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes']" name="managedName">Android.Health.Connect.DataTypes</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes.units']" name="managedName">Android.Health.Connect.DataTypes.Units</attr>
   <attr api-since="34" path="/api/package[@name='android.location.altitude']" name="managedName">Android.Locations.Altitude</attr>
 
   <!--
