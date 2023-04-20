@@ -15,8 +15,8 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 
 		public JavaTypeReference? TypeModel { get; private set; }
 
-		public JavaFieldModel (string name, string visibility, string type, string typeGeneric, string? value, bool isStatic, JavaTypeModel declaringType, bool isFinal, string deprecated, string jniSignature, bool isTransient, bool isVolatile, bool isNotNull)
-			: base (name, isStatic, isFinal, visibility, declaringType, deprecated, jniSignature)
+		public JavaFieldModel (string name, string visibility, string type, string typeGeneric, string? value, bool isStatic, JavaTypeModel declaringType, bool isFinal, string deprecated, string jniSignature, bool isTransient, bool isVolatile, bool isNotNull, string? annotatedVisibility)
+			: base (name, isStatic, isFinal, visibility, declaringType, deprecated, jniSignature, annotatedVisibility)
 		{
 			Type = type;
 			TypeGeneric = typeGeneric;

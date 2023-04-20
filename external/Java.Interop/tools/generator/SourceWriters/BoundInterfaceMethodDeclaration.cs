@@ -35,6 +35,7 @@ namespace generator.SourceWriters
 				Comments.Add ($"// Metadata.xml XPath method reference: path=\"{method.GetMetadataXPathReference (method.DeclaringType)}\"");
 
 			SourceWriterExtensions.AddObsolete (Attributes, method.Deprecated, opt, deprecatedSince: method.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, method.AnnotatedVisibility, false, opt);
 
 			if (method.IsReturnEnumified)
 				Attributes.Add (new GeneratedEnumAttr (true));

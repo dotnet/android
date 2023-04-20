@@ -34,6 +34,7 @@ namespace generator.SourceWriters
 			}
 
 			SourceWriterExtensions.AddObsolete (Attributes, constructor.Deprecated, opt, deprecatedSince: constructor.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, constructor.AnnotatedVisibility, false, opt);
 
 			if (constructor.CustomAttributes != null)
 				Attributes.Add (new CustomAttr (constructor.CustomAttributes));

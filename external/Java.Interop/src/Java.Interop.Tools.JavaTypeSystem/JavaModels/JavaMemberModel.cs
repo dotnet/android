@@ -12,10 +12,11 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		public string Visibility { get; }
 		public string Deprecated { get; }
 		public string JniSignature { get; }
+		public string? AnnotatedVisibility { get; }
 
 		public Dictionary<string, string> PropertyBag { get; } = new Dictionary<string, string> ();
 
-		public JavaMemberModel (string name, bool isStatic, bool isFinal, string visibility, JavaTypeModel declaringType, string deprecated, string jniSignature)
+		public JavaMemberModel (string name, bool isStatic, bool isFinal, string visibility, JavaTypeModel declaringType, string deprecated, string jniSignature, string? annotatedVisibility)
 		{
 			Name = name;
 			IsStatic = isStatic;
@@ -24,6 +25,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			DeclaringType = declaringType;
 			Deprecated = deprecated;
 			JniSignature = jniSignature;
+			AnnotatedVisibility = annotatedVisibility;
 		}
 
 		public abstract void Resolve (JavaTypeCollection types, ICollection<JavaUnresolvableModel> unresolvables);

@@ -157,6 +157,7 @@ namespace MonoDroid.Generation
 		public static Ctor CreateCtor (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var ctor = new Ctor (declaringType) {
+				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),
 				Deprecated = elem.Deprecated (),
@@ -208,6 +209,7 @@ namespace MonoDroid.Generation
 		public static Field CreateField (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var field = new Field {
+				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				DeprecatedComment = elem.XGetAttribute ("deprecated"),
 				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
@@ -252,6 +254,7 @@ namespace MonoDroid.Generation
 		public static GenBaseSupport CreateGenBaseSupport (XElement pkg, XElement elem, CodeGenerationOptions opt, bool isInterface)
 		{
 			var support = new GenBaseSupport {
+				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				DeprecatedSince = elem.XGetAttributeAsIntOrNull ("deprecated-since"),
 				IsAcw = true,
 				IsDeprecated = elem.XGetAttribute ("deprecated") != "not deprecated",
@@ -360,6 +363,7 @@ namespace MonoDroid.Generation
 		public static Method CreateMethod (GenBase declaringType, XElement elem, CodeGenerationOptions options = null)
 		{
 			var method = new Method (declaringType) {
+				AnnotatedVisibility = elem.XGetAttribute ("annotated-visibility"),
 				ApiAvailableSince = declaringType.ApiAvailableSince,
 				ArgsType = elem.Attribute ("argsType")?.Value,
 				CustomAttributes = elem.XGetAttribute ("customAttributes"),

@@ -22,8 +22,8 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		public List<JavaParameterModel> Parameters { get; } = new List<JavaParameterModel> ();
 		public List<JavaExceptionModel> Exceptions { get; } = new List<JavaExceptionModel> ();
 
-		public JavaMethodModel (string javaName, string javaVisibility, bool javaAbstract, bool javaFinal, bool javaStatic, string javaReturn, JavaTypeModel javaDeclaringType, string deprecated, string jniSignature, bool isSynthetic, bool isBridge, string returnJni, bool isNative, bool isSynchronized, bool returnNotNull)
-			: base (javaName, javaStatic, javaFinal, javaVisibility, javaDeclaringType, deprecated, jniSignature)
+		public JavaMethodModel (string javaName, string javaVisibility, bool javaAbstract, bool javaFinal, bool javaStatic, string javaReturn, JavaTypeModel javaDeclaringType, string deprecated, string jniSignature, bool isSynthetic, bool isBridge, string returnJni, bool isNative, bool isSynchronized, bool returnNotNull, string? annotatedVisibility)
+			: base (javaName, javaStatic, javaFinal, javaVisibility, javaDeclaringType, deprecated, jniSignature, annotatedVisibility)
 		{
 			IsAbstract = javaAbstract;
 			Return = javaReturn;

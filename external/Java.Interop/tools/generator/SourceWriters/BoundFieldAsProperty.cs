@@ -48,6 +48,7 @@ namespace generator.SourceWriters
 			}
 
 			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, field.AnnotatedVisibility, false, opt);
 
 			SetVisibility (field.Visibility);
 			UseExplicitPrivateKeyword = true;

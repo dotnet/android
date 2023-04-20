@@ -4,6 +4,7 @@ namespace MonoDroid.Generation
 {
 	public class GenBaseSupport
 	{
+		public string AnnotatedVisibility { get; set; }
 		public bool IsAcw { get; set; }
 		public bool IsDeprecated { get; set; }
 		public string DeprecatedComment { get; set; }

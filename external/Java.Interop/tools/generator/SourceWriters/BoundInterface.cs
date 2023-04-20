@@ -44,6 +44,7 @@ namespace generator.SourceWriters
 			Comments.Add ($"// Metadata.xml XPath interface reference: path=\"{iface.MetadataXPathReference}\"");
 
 			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, iface.AnnotatedVisibility, true, opt);
 
 			if (!iface.IsConstSugar (opt)) {
 				var signature = string.IsNullOrWhiteSpace (iface.Namespace)

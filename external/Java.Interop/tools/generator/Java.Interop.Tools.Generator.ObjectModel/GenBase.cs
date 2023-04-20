@@ -178,6 +178,8 @@ namespace MonoDroid.Generation
 				yield return g;
 		}
 
+		public string AnnotatedVisibility => support.AnnotatedVisibility;
+
 		// not: not currently assembly qualified, but it uses needed
 		// Type.GetType() conventions such as '/' for nested types.
 		public string AssemblyQualifiedName => string.IsNullOrWhiteSpace (Namespace)

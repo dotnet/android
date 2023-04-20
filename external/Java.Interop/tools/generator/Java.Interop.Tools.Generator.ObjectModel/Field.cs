@@ -6,6 +6,7 @@ namespace MonoDroid.Generation
 {
 	public class Field : ApiVersionsSupport.IApiAvailability, ISourceLineInfo
 	{
+		public string AnnotatedVisibility { get; set; }
 		public string Annotation { get; set; }
 		public int ApiAvailableSince { get; set; }
 		public string DeprecatedComment { get; set; }

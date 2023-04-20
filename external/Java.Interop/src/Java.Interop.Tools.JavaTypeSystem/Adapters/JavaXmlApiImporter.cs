@@ -197,7 +197,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				returnJni: element.XGetAttribute ("jni-return"),
 				isNative: element.XGetAttributeAsBool ("native"),
 				isSynchronized: element.XGetAttributeAsBool ("synchronized"),
-				returnNotNull: element.XGetAttributeAsBool ("return-not-null")
+				returnNotNull: element.XGetAttributeAsBool ("return-not-null"),
+				annotatedVisibility: element.XGetAttributeOrNull ("annotated-visibility")
 			);
 
 			if (element.Element ("typeParameters") is XElement tp)
@@ -226,7 +227,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				deprecated: element.XGetAttribute ("deprecated"),
 				jniSignature: element.XGetAttribute ("jni-signature"),
 				isSynthetic: element.XGetAttributeAsBool ("synthetic"),
-				isBridge: element.XGetAttributeAsBool ("bridge")
+				isBridge: element.XGetAttributeAsBool ("bridge"),
+				annotatedVisibility: element.XGetAttributeOrNull ("annotated-visibility")
 			);
 
 			// Yes, constructors in Java can have generic type parameters ¯\_(ツ)_/¯
@@ -262,7 +264,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				jniSignature: element.XGetAttribute ("jni-signature"),
 				isTransient: element.XGetAttributeAsBool ("transient"),
 				isVolatile: element.XGetAttributeAsBool ("volatile"),
-				isNotNull: element.XGetAttributeAsBool ("not-null")
+				isNotNull: element.XGetAttributeAsBool ("not-null"),
+				annotatedVisibility: element.XGetAttributeOrNull ("annotated-visibility")
 			);
 
 			if (element.XGetAttribute ("merge.SourceFile") is string source && source.HasValue ())

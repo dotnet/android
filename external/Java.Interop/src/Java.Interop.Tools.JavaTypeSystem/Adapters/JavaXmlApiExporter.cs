@@ -158,7 +158,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 		}
 
 		static void SaveConstructor (JavaConstructorModel ctor, XmlWriter writer)
-			=> SaveMember (ctor, writer, "constructor", null, null, null, null, null, ctor.DeclaringType.FullName, null, null, null, ctor.Parameters, ctor.IsBridge, null, ctor.IsSynthetic, null);
+			=> SaveMember (ctor, writer, "constructor", null, null, null, null, null, ctor.DeclaringType.FullName, null, null, null, ctor.Parameters, ctor.IsBridge, null, ctor.IsSynthetic, null, ctor.AnnotatedVisibility);
 
 		static void SaveField (JavaFieldModel field, XmlWriter writer)
 		{
@@ -177,7 +177,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				null,
 				null,
 				null,
-				field.IsNotNull);
+				field.IsNotNull,
+				field.AnnotatedVisibility);
 		}
 
 		static void SaveMethod (JavaMethodModel method, XmlWriter writer)
@@ -228,7 +229,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				extBridge: method.IsBridge,
 				jniReturn: method.ReturnJni,
 				extSynthetic: method.IsSynthetic,
-				notNull: method.ReturnNotNull);
+				notNull: method.ReturnNotNull,
+				annotatedVisibility: method.AnnotatedVisibility);
 		}
 
 		static string GetVisibleReturnTypeString (JavaMethodModel method)
@@ -277,7 +279,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				string? transient, string? type, string? typeGeneric,
 				string? value, string? volat,
 				IEnumerable<JavaParameterModel>? parameters,
-				bool? extBridge, string? jniReturn, bool? extSynthetic, bool? notNull)
+				bool? extBridge, string? jniReturn, bool? extSynthetic, bool? notNull, string? annotatedVisibility)
 		{
 			// If any of the parameters contain reference to non-public type, it cannot be generated.
 			// TODO
@@ -310,6 +312,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			writer.WriteAttributeStringIfValue ("type", type);
 			writer.WriteAttributeStringIfValue ("type-generic-aware", typeGeneric);
 			writer.WriteAttributeStringIfValue ("value", value);
+			writer.WriteAttributeStringIfValue ("annotated-visibility", annotatedVisibility);
 
 			if (extSynthetic.HasValue)
 				writer.WriteAttributeString ("synthetic", extSynthetic.Value ? "true" : "false");

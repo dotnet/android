@@ -13,6 +13,7 @@ namespace MonoDroid.Generation
 			DeclaringType = declaringType;
 		}
 
+		public string AnnotatedVisibility { get; set; }
 		public string Annotation { get; internal set; }
 		public int ApiAvailableSince { get; set; }
 		public string AssemblyName { get; set; }

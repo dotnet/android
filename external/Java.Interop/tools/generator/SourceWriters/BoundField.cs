@@ -33,6 +33,7 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, field, opt);
 			SourceWriterExtensions.AddObsolete (Attributes, field.DeprecatedComment, opt, field.IsDeprecated, isError: field.IsDeprecatedError, deprecatedSince: field.DeprecatedSince);
+			SourceWriterExtensions.AddRestrictToWarning (Attributes, field.AnnotatedVisibility, false, opt);
 
 			if (field.Annotation.HasValue ())
 				Attributes.Add (new CustomAttr (field.Annotation));

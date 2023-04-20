@@ -341,6 +341,23 @@ namespace generator.SourceWriters
 			return true;
 		}
 
+		public static void AddRestrictToWarning (List<AttributeWriter> attributes, string scope, bool isType, CodeGenerationOptions opt)
+		{
+			if (!opt.UseRestrictToAttributes)
+				return;
+
+			// Empty scope means there is no @RestrictTo annotation
+			if (!scope.HasValue ())
+				return;
+
+			// We can't add 2 [Obsolete] attributes, we'll let a "real" obsolete message take precedence
+			if (attributes.OfType<ObsoleteAttr> ().Any ())
+				return;
+
+			// We consider all scopes to be "internal" API we need to warn about
+			attributes.Add (new RestrictToAttr (isType));
+		}
+
 		public static void WriteMethodInvokerBody (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)
 		{
 			writer.WriteLine ($"if ({method.EscapedIdName} == IntPtr.Zero)");

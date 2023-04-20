@@ -893,6 +893,144 @@ namespace generatortests
 		}
 
 		[Test]
+		public void RestrictToType ()
+		{
+			options.UseRestrictToAttributes = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;' annotated-visibility='LIBRARY_GROUP_PREFIX' />
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use a special [Obsolete] describing the "internal" nature of this API
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this type is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+		}
+
+		[Test]
+		public void RestrictToField ()
+		{
+			options.UseRestrictToAttributes = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <field deprecated='not deprecated' name='ACCEPT_HANDOVER' jni-signature='Ljava/lang/String;' transient='false' type='java.lang.String' type-generic-aware='java.lang.String' visibility='public' volatile='false' annotated-visibility='LIBRARY_GROUP_PREFIX'></field>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use a special [Obsolete] describing the "internal" nature of this API
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+		}
+
+		[Test]
+		public void RestrictToMethod ()
+		{
+			options.UseRestrictToAttributes = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' annotated-visibility='LIBRARY_GROUP_PREFIX'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use a special [Obsolete] describing the "internal" nature of this API
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+		}
+
+		[Test]
+		public void RestrictToProperty ()
+		{
+			options.UseRestrictToAttributes = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='getCount' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' annotated-visibility='LIBRARY_GROUP_PREFIX'></method>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='setCount' jni-signature='(I)V' bridge='false' native='false' return='void' jni-return='V' static='false' synchronized='false' synthetic='false' visibility='public' annotated-visibility='LIBRARY_GROUP_PREFIX'>
+				<parameter name='count' type='int' jni-type='I'></parameter>
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This should use a special [Obsolete] describing the "internal" nature of this API
+			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+		}
+
+		[Test]
+		public void DoNotWriteObsoleteAndRestrictTo ()
+		{
+			options.UseRestrictToAttributes = true;
+
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method deprecated='deprecated' abstract='false' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' annotated-visibility='LIBRARY_GROUP_PREFIX'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// This method is both @Deprecated and @RestrictTo. We cannot write 2 [Obsolete] attributes, so
+			// only write the deprecated one.
+			Assert.True (writer.ToString ().Replace (" (@\"deprecated\")", "").NormalizeLineEndings ().Contains ("[global::System.Obsolete]".NormalizeLineEndings ()), writer.ToString ());
+			Assert.False (writer.ToString ().NormalizeLineEndings ().Contains ("[global::System.Obsolete (\"While this member is 'public', Google considers it internal API and reserves the right to modify or delete it in the future. Use at your own risk.\", DiagnosticId = \"XAOBS001\")]".NormalizeLineEndings ()), writer.ToString ());
+		}
+
+		[Test]
 		[NonParallelizable]     // We are setting a static property on Report
 		public void WarnIfTypeNameMatchesNamespace ()
 		{

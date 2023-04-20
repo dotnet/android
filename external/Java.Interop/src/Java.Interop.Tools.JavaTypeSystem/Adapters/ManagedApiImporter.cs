@@ -185,7 +185,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				returnJni: jni_signature.Return.Jni,
 				isNative: false,
 				isSynchronized: false,
-				returnNotNull: false
+				returnNotNull: false,
+				annotatedVisibility: null
 			);
 
 			for (var i = 0; i < jni_signature.Parameters.Count; i++)
