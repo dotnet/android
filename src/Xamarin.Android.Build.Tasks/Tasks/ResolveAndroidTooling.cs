@@ -60,6 +60,12 @@ namespace Xamarin.Android.Tasks
 		public string LintToolPath { get; set; }
 
 		[Output]
+		public string ApkSignerJar { get; set; }
+
+		[Output]
+		public bool AndroidUseApkSigner { get; set; }
+
+		[Output]
 		public string Aapt2Version { get; set; }
 
 		[Output]
@@ -133,6 +139,9 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
+			ApkSignerJar = Path.Combine (AndroidSdkBuildToolsBinPath, "lib", ApkSigner);
+			AndroidUseApkSigner = File.Exists (ApkSignerJar);
+
 			if (AndroidUseAapt2) {
 				if (string.IsNullOrEmpty (Aapt2ToolPath)) {
 					var osBinPath = MonoAndroidHelper.GetOSBinPath ();
@@ -189,6 +198,8 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (ZipAlignPath)}: {ZipAlignPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidSequencePointsMode)}: {AndroidSequencePointsMode}");
 			Log.LogDebugMessage ($"  {nameof (LintToolPath)}: {LintToolPath}");
+			Log.LogDebugMessage ($"  {nameof (ApkSignerJar)}: {ApkSignerJar}");
+			Log.LogDebugMessage ($"  {nameof (AndroidUseApkSigner)}: {AndroidUseApkSigner}");
 			Log.LogDebugMessage ($"  {nameof (Aapt2Version)}: {Aapt2Version}");
 			Log.LogDebugMessage ($"  {nameof (Aapt2ToolPath)}: {Aapt2ToolPath}");
 		}

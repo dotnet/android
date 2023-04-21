@@ -722,12 +722,6 @@ because xbuild doesn't support framework reference assemblies.
 		/>
 	</CreateProperty>
 
-	<CreateProperty Value="$(MonoAndroidToolsDirectory)\apksigner.jar">
-		<Output TaskParameter="Value" PropertyName="ApkSignerJar"
-				Condition="'$(ApkSignerJar)' == ''"
-		/>
-	</CreateProperty>
-
 	<CreateProperty Value="$(MonoAndroidToolsDirectory)\manifestmerger.jar">
 		<Output TaskParameter="Value" PropertyName="AndroidManifestMergerJarPath"
 				Condition="'$(AndroidManifestMergerJarPath)' == ''"

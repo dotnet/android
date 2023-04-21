@@ -447,9 +447,6 @@
     <ProjectReference Include="..\aapt2\aapt2.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
-    <ProjectReference Include="..\apksigner\apksigner.csproj">
-      <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\bundletool\bundletool.csproj">
       <ReferenceOutputAssembly>False</ReferenceOutputAssembly>
     </ProjectReference>
