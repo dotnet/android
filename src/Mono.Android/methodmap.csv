@@ -78,7 +78,6 @@
 5, android.bluetooth,BluetoothClass,getMajorDeviceClass,return,Android.Bluetooth.MajorDeviceClass
 5, android.bluetooth,BluetoothClass,hasService,service,Android.Bluetooth.ServiceClass
 5, android.bluetooth,BluetoothDevice,getBondState,return,Android.Bluetooth.Bond
-0, android.content,Context,bindService,flags,Android.Content.Bind
 0, android.content,Context,createPackageContext,flags,Android.Content.PackageContextFlags
 0, android.content,Context,getDir,mode,Android.Content.FileCreationMode
 0, android.content,Context,getSharedPreferences,mode,Android.Content.FileCreationMode
@@ -2277,7 +2276,6 @@
 26, android.icu.util, UniversalTimeScale, toLong, timeScale, Android.Icu.Util.UniversalTimeScaleType
 26, android.icu.util, UniversalTimeScale, getTimeScaleValue, value, Android.Icu.Util.UniversalTimeScaleValue
 
-26, android.app.admin, DevicePolicyManager, bindDeviceAdminServiceAsUser, flags, Android.Content.Bind
 26, android.app.admin, DevicePolicyManager, resetPasswordWithToken, flags, Android.App.Admin.ResetPasswordFlags
 26, android.app.admin, DevicePolicyManager, lockNow, flags, Android.App.Admin.DevicePolicyManagerFlags
 26, android.app.assist, AssistStructure.ViewNode, getAutofillType, return, Android.Views.AutofillType
