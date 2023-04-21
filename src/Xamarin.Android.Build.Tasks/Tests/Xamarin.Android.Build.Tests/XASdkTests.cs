@@ -740,31 +740,23 @@ public class FooA {
 				.Select (Path.GetFileName)
 				.OrderBy (f => f, StringComparer.OrdinalIgnoreCase)
 				.ToArray ();
-			IEnumerable<string> expectedFiles;
+			var expectedFiles = new List<string> {
+				$"{proj.PackageName}-Signed.apk",
+				"es",
+				$"{proj.ProjectName}.dll",
+				$"{proj.ProjectName}.pdb",
+				$"{proj.ProjectName}.runtimeconfig.json",
+				$"{proj.ProjectName}.xml",
+			};
 			if (isRelease) {
-				expectedFiles = new string[] {
-					$"{proj.PackageName}.aab",
-					$"{proj.PackageName}-Signed.aab",
-					$"{proj.PackageName}-Signed.apk",
-					"es",
-					$"{proj.ProjectName}.dll",
-					$"{proj.ProjectName}.pdb",
-					$"{proj.ProjectName}.runtimeconfig.json",
-					$"{proj.ProjectName}.xml",
-				};
+				expectedFiles.Add ($"{proj.PackageName}.aab");
+				expectedFiles.Add ($"{proj.PackageName}-Signed.aab");
 			} else {
-				expectedFiles = new string[] {
-					$"{proj.PackageName}.apk",
-					$"{proj.PackageName}-Signed.apk",
-					"es",
-					$"{proj.ProjectName}.dll",
-					$"{proj.ProjectName}.pdb",
-					$"{proj.ProjectName}.runtimeconfig.json",
-					$"{proj.ProjectName}.xml",
-				};
+				expectedFiles.Add ($"{proj.PackageName}.apk");
+				expectedFiles.Add ($"{proj.PackageName}-Signed.apk.idsig");
 			}
 
-			expectedFiles = expectedFiles.OrderBy(f => f, StringComparer.OrdinalIgnoreCase);
+			expectedFiles.Sort(StringComparer.OrdinalIgnoreCase);
 
 			CollectionAssert.AreEquivalent (expectedFiles, files, $"Expected: {string.Join (";", expectedFiles)}\n   Found: {string.Join (";", files)}");
 
