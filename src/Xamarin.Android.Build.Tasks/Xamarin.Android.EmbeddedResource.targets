@@ -5,8 +5,11 @@ Xamarin.Android.EmbeddedResource.targets
 This file contains MSBuild targets related to the creation or
 extraction of `__AndroidLibraryProjects__.zip` or
 `__AndroidNativeLibraries__.zip`. These are packaged as
-`EmbeddedResource` files in Xamarin.Android assemblies. The actual
-creation of these files has moved to Xamarin.Android.Legacy.targets.
+`EmbeddedResource` files in Xamarin.Android assemblies.
+
+The actual creation of these files is only created in "classic"
+Xamarin.Android projects. We support *consuming* them from .NET 6+ in
+a backwards compatible fashion.
 
 This file is used by all project types, including binding projects.
 

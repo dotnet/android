@@ -2,9 +2,8 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.Tooling.targets
 
-This file contains .NET 5-specific calls to the <ValidateJavaVersion/>
-and <ResolveAndroidTooling/> MSBuild tasks. These MSBuild tasks are
-called for "legacy" projects in Xamarin.Android.Legacy.targets.
+This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
+<ResolveAndroidTooling/> MSBuild tasks.
 
 ***********************************************************************************************
 -->

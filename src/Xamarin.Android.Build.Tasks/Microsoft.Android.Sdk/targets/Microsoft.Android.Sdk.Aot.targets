@@ -2,8 +2,7 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.Aot.targets
 
-.NET 6 AOT support. You can find "legacy" Xamarin.Android AOT support
-in Xamarin.Android.Legacy.targets.
+MSBuild targets for .NET 6+ AOT support.
 
 For <MonoAOTCompiler/> usage, see:
 * https://github.com/dotnet/runtime/blob/15dec9a2aa5a4236d6ba70de2e9c146867b9d2e0/src/tasks/AotCompilerTask/MonoAOTCompiler.cs
