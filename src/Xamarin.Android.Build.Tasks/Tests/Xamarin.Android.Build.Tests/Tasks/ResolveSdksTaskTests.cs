@@ -295,6 +295,9 @@ namespace Xamarin.Android.Build.Tests {
 			Assert.AreEqual (androidTooling.AndroidSequencePointsMode, "None", "AndroidSequencePointsMode should be None");
 			expected = Path.Combine (androidSdkPath, "tools");
 			Assert.AreEqual (androidTooling.LintToolPath, expected, $"LintToolPath should be {expected}");
+			expected = Path.Combine (androidSdkPath, "build-tools", "26.0.3", "lib", "apksigner.jar");
+			Assert.AreEqual (androidTooling.ApkSignerJar, expected, $"ApkSignerJar should be {expected}");
+			Assert.AreEqual (androidTooling.AndroidUseApkSigner, false, "AndroidUseApkSigner should be false");
 			Assert.AreEqual (validateJavaVersion.JdkVersion, "1.8.0", "JdkVersion should be 1.8.0");
 			Assert.AreEqual (validateJavaVersion.MinimumRequiredJdkVersion, "1.8", "MinimumRequiredJdkVersion should be 1.8");
 			Directory.Delete (Path.Combine (Root, path), recursive: true);

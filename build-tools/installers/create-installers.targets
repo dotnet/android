@@ -184,7 +184,6 @@
   </ItemGroup>
   <ItemGroup>
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)android-support-multidex.jar" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)apksigner.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)aprofutil.exe"   ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)aprofutil.pdb"   ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)cil-strip.exe"   ExcludeFromAndroidNETSdk="true" />
