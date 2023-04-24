@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
@@ -103,11 +104,11 @@ partial class LlvmIrGenerator
 				foreach (StringSymbolInfo info in group.Strings) {
 					generator.WriteGlobalSymbolStart (info.SymbolName, LlvmIrVariableOptions.LocalConstexprString);
 					output.Write ('[');
-					output.Write (info.Size);
+					output.Write (info.Size.ToString (CultureInfo.InvariantCulture));
 					output.Write (" x i8] c");
 					output.Write (info.Value);
 					output.Write (", align ");
-					output.WriteLine (generator.GetAggregateAlignment (1, info.Size));
+					output.WriteLine (generator.GetAggregateAlignment (1, info.Size).ToString (CultureInfo.InvariantCulture));
 				}
 			}
 		}

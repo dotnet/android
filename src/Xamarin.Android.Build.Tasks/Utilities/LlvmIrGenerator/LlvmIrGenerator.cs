@@ -1316,7 +1316,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
 			WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true);
 			Output.Write (", align ");
-			Output.WriteLine (GetAggregateAlignment (PointerSize, stringSize));
+			Output.WriteLine (GetAggregateAlignment (PointerSize, stringSize).ToString (CultureInfo.InvariantCulture));
 
 			return symbolName;
 		}
