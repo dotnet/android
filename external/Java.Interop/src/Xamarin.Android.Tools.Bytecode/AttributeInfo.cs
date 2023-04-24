@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public  const   string  InnerClasses            = "InnerClasses";
 		public  const   string  LocalVariableTable      = "LocalVariableTable";
 		public  const   string  MethodParameters        = "MethodParameters";
+		public  const   string  Module                  = "Module";
+		public  const   string  ModulePackages          = "ModulePackages";
 		public  const   string  Signature               = "Signature";
 		public  const   string  SourceFile              = "SourceFile";
 		public  const   string  StackMapTable           = "StackMapTable";
@@ -79,6 +81,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			{ typeof (InnerClassesAttribute),           InnerClasses },
 			{ typeof (LocalVariableTableAttribute),     LocalVariableTable },
 			{ typeof (MethodParametersAttribute),       MethodParameters },
+			{ typeof (ModuleAttribute),                 Module },
+			{ typeof (ModulePackagesAttribute),         ModulePackages },
 			{ typeof (RuntimeVisibleAnnotationsAttribute),		RuntimeVisibleAnnotations },
 			{ typeof (RuntimeInvisibleAnnotationsAttribute),	RuntimeInvisibleAnnotations },
 			{ typeof (SignatureAttribute),              Signature },
@@ -98,6 +102,7 @@ namespace Xamarin.Android.Tools.Bytecode {
 		public static AttributeInfo CreateFromStream (ConstantPool constantPool, Stream stream)
 		{
 			var nameIndex   = stream.ReadNetworkUInt16 ();
+			var constant = constantPool [nameIndex];
 			var name        = ((ConstantPoolUtf8Item) constantPool [nameIndex]).Value;
 			var attr        = CreateAttribute (name, constantPool, nameIndex, stream);
 			return attr;
@@ -114,6 +119,8 @@ namespace Xamarin.Android.Tools.Bytecode {
 			case InnerClasses:          return new InnerClassesAttribute (constantPool, nameIndex, stream);
 			case LocalVariableTable:    return new LocalVariableTableAttribute (constantPool, nameIndex, stream);
 			case MethodParameters:      return new MethodParametersAttribute (constantPool, nameIndex, stream);
+			case Module:                return new ModuleAttribute (constantPool, nameIndex, stream);
+			case ModulePackages:        return new ModulePackagesAttribute (constantPool, nameIndex, stream);
 			case RuntimeVisibleAnnotations:		return new RuntimeVisibleAnnotationsAttribute (constantPool, nameIndex, stream);
 			case RuntimeInvisibleAnnotations:	return new RuntimeInvisibleAnnotationsAttribute (constantPool, nameIndex, stream);
 			case RuntimeInvisibleParameterAnnotations:	return new RuntimeInvisibleParameterAnnotationsAttribute (constantPool, nameIndex, stream);
@@ -500,6 +507,118 @@ namespace Xamarin.Android.Tools.Bytecode {
 				sb.Append (", ").Append (parameters [i]);
 			sb.Append (")");
 			return sb.ToString ();
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.25
+	public sealed class ModuleAttribute : AttributeInfo
+	{
+		ushort	moduleNameIndex;
+		public  string          ModuleName {
+			get {return ((ConstantPoolModuleItem) ConstantPool [moduleNameIndex]).Name.Value;}
+		}
+
+		public  ModuleFlags     ModuleFlags { get; private set; }
+
+		ushort  moduleVersionIndex;
+		public string? ModuleVersion {
+			get {return ((ConstantPoolUtf8Item) ConstantPool [moduleVersionIndex])?.Value;}
+		}
+
+		public  Collection<ModuleRequiresInfo>          Requires {get;} = new ();
+		public  Collection<ModuleExportsPackageInfo>    Exports {get;}  = new ();
+		public  Collection<ModuleOpensPackageInfo>      Opens {get;}    = new ();
+		public  Collection<ConstantPoolClassItem>       Uses {get;}     = new ();
+		public  Collection<ModuleProvidesInfo>          Provides {get;} = new ();
+
+		public ModuleAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var attribute_length        = stream.ReadNetworkUInt32 ();
+
+			moduleNameIndex             = stream.ReadNetworkUInt16 ();
+			ModuleFlags                 = (ModuleFlags) stream.ReadNetworkUInt16 ();
+			moduleVersionIndex          = stream.ReadNetworkUInt16 ();
+
+			var requires_count          = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < requires_count; ++i) {
+				Requires.Add (new ModuleRequiresInfo (constantPool, stream));
+			}
+
+			var exports_count           = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < exports_count; ++i) {
+				Exports.Add (new ModuleExportsPackageInfo (constantPool, stream));
+			}
+
+			var opens_count             = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < opens_count; ++i) {
+				Opens.Add (new ModuleOpensPackageInfo (constantPool, stream));
+			}
+
+			var uses_count              = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < uses_count; ++i) {
+				var uses_index = stream.ReadNetworkUInt16 ();
+				Uses.Add ((ConstantPoolClassItem) constantPool [uses_index]);
+			}
+
+			var provides_count          = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < provides_count; ++i) {
+				Provides.Add (new ModuleProvidesInfo (constantPool, stream));
+			}
+		}
+
+		public override string ToString ()
+		{
+			var s = new StringBuilder ()
+				.Append ("Module(").AppendLine ()
+				.Append ("  ").Append (nameof (ModuleName)).Append ("='").Append (ModuleName).AppendLine ("', ")
+				.Append ("  ").Append (nameof (ModuleVersion)).Append ("='").Append (ModuleVersion).Append ("'");
+			AppendString (s, nameof (Requires), Requires);
+			AppendString (s, nameof (Exports), Exports);
+			AppendString (s, nameof (Opens), Opens);
+			AppendString (s, nameof (Uses), Uses.Select (u => $"UsesService({u.Name})").ToList ());
+			AppendString (s, nameof (Provides), Provides);
+			s.Append (")");
+
+			return s.ToString ();
+		}
+
+		static StringBuilder AppendString<T> (StringBuilder s, string collectionName, IList<T> items)
+		{
+			if (items.Count == 0) {
+				return s;
+			}
+			s.AppendLine (",");
+			s.Append ("  ").Append (collectionName).AppendLine ("={");
+			s.Append ("    ").Append (items [0]);
+			for (int i = 1; i < items.Count; ++i) {
+				s.AppendLine (",");
+				s.Append ("    ");
+				s.Append (items [i]);
+			}
+			return s.Append ("}");
+		}
+	}
+
+	// https://docs.oracle.com/javase/specs/jvms/se11/html/jvms-4.html#jvms-4.7.26
+	public sealed class ModulePackagesAttribute : AttributeInfo {
+		public  Collection<ConstantPoolPackageItem>     Packages    {get;} = new ();
+
+		public ModulePackagesAttribute (ConstantPool constantPool, ushort nameIndex, Stream stream)
+			: base (constantPool, nameIndex, stream)
+		{
+			var attribute_length    = stream.ReadNetworkUInt32 ();
+
+			var package_count       = stream.ReadNetworkUInt16 ();
+			for (int i = 0; i < package_count; ++i) {
+				var package_index = stream.ReadNetworkUInt16 ();
+				Packages.Add ((ConstantPoolPackageItem) constantPool [package_index]);
+			}
+		}
+
+		public override string ToString ()
+		{
+			return $"ModulePackages({{{string.Join (", ", Packages.Select (p => p.Name.Value))}}})";
 		}
 	}
 

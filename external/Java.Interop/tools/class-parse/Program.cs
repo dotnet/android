@@ -71,59 +71,63 @@ namespace Xamarin.Android.Tools {
 			Log.OnLog = (t, v, m, a) => {
 				Console.Error.WriteLine(m, a);
 			};
-			var classPath = new ClassPath () {
-				ApiSource         = "class-parse",
-				AndroidFrameworkPlatform = platform,
-				DocumentationPaths  = docsPaths.Count == 0 ? null : docsPaths,
-				AutoRename = autorename
-			};
+			var globalClassPath = CreateClassPath (platform, docsPaths, autorename);
+			var classPaths      = new List<ClassPath> ();
 			foreach (var file in files) {
 				try {
-					if (dump) {
-						DumpClassFile (file, output);
+					if (ClassPath.IsJmodFile (file) || ClassPath.IsJarFile (file)) {
+						var cp = CreateClassPath (platform, docsPaths, autorename);
+						cp.Load (file);
+						classPaths.Add (cp);
 						continue;
 					}
-					DumpFileToXml (classPath, file);
+					using (var s = File.OpenRead (file)) {
+						if (!ClassFile.IsClassFile (s)) {
+							Console.Error.WriteLine ("class-parse: Unable to read file '{0}': Unknown file format.");
+							Environment.ExitCode    = 1;
+							continue;
+						}
+						globalClassPath.Add (new ClassFile (s));
+					}
 				} catch (Exception e) {
 					Console.Error.WriteLine ("class-parse: Unable to read file '{0}': {1}",
 							file, verbosity == 0 ? e.Message : e.ToString ());
 					Environment.ExitCode    = 1;
 				}
 			}
-			if (!dump)
-				classPath.SaveXmlDescription (output);
+			globalClassPath.FixupModuleVisibility (removeModules: !dump);
+			foreach (var cp in classPaths) {
+				globalClassPath.Add (cp, removeModules: !dump);
+			}
+			if (!dump) {
+				globalClassPath.SaveXmlDescription (output);
+			} else {
+				bool first = true;
+				foreach (var c in globalClassPath.GetClassFiles ()) {
+					if (!first) {
+						output.WriteLine ();
+					}
+					first = false;
+					DumpClassFile (c, output);
+				}
+			}
 			if (outputFile != null)
 				output.Close ();
 		}
 
-		static void DumpFileToXml (ClassPath jar, string file)
+		static ClassPath CreateClassPath (string platform, List<string> docsPaths, bool autoRename)
 		{
-			using (var s = File.OpenRead (file)) {
-				if (ClassFile.IsClassFile (s)) {
-					s.Position = 0;
-					var c = new ClassFile (s);
-					jar.Add (c);
-					return;
-				}
-			}
-			if (ClassPath.IsJmodFile (file) || ClassPath.IsJarFile (file)) {
-				jar.Load (file);
-				return;
-			}
-			Console.Error.WriteLine ("class-parse: Unable to read file '{0}': Unknown file format.");
-			Environment.ExitCode    = 1;
+			return new ClassPath () {
+				ApiSource                   = "class-parse",
+				AndroidFrameworkPlatform    = platform,
+				DocumentationPaths          = docsPaths.Count == 0 ? null : docsPaths,
+				AutoRename                  = autoRename
+			};
 		}
 
-		static ClassFile LoadClassFile (string file)
+		static void DumpClassFile (ClassFile c, TextWriter output)
 		{
-			using (var s = File.OpenRead (file)) {
-				return new ClassFile (s);
-			}
-		}
-
-		static void DumpClassFile (string file, TextWriter output)
-		{
-			var c   = LoadClassFile (file);
+			output.WriteLine ($"-- Begin {c.FullJniName} --");
 			output.WriteLine (".class version: {0}.{1}", c.MajorVersion, c.MinorVersion);
 			output.WriteLine ("ConstantPool Count: {0}", c.ConstantPool.Count);
 			for (int i = 0; i < c.ConstantPool.Count; ++i) {

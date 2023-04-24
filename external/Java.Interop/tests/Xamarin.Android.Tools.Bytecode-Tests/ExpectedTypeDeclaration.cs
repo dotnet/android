@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 			NAssert.AreEqual (ConstantPoolCount,        classDeclaration.ConstantPool.Count,    FullName + " ConstantPool Count");
 			NAssert.AreEqual (AccessFlags,              classDeclaration.AccessFlags,           FullName + " AccessFlags");
 			NAssert.AreEqual (FullName,                 classDeclaration.ThisClass.Name.Value,  FullName + " Name");
-			NAssert.AreEqual (Superclass.BinaryName,    classDeclaration.SuperClass.Name.Value, FullName + " SuperClass Name");
+			NAssert.AreEqual (Superclass?.BinaryName,   classDeclaration?.SuperClass?.Name?.Value,  FullName + " SuperClass Name");
 
 			NAssert.AreEqual (Deprecated,   classDeclaration.Attributes.Get<DeprecatedAttribute> () != null,    FullName + " Deprecated");
 

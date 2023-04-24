@@ -48,8 +48,15 @@ namespace Xamarin.Android.Tools.Bytecode {
 			Attributes      = new AttributeCollection (ConstantPool, stream);
 
 			int e = stream.ReadByte ();
-			if (e >= 0)
-				throw new BadImageFormatException ("Stream has trailing data?!");
+			if (e >= 0) {
+				var trailing    = new System.Text.StringBuilder ();
+				trailing.AppendFormat ("{0:x2}", (byte) e);
+				while ((e = stream.ReadByte ()) >= 0) {
+					trailing.Append (" ");
+					trailing.AppendFormat ("{0:x2}", (byte) e);
+				}
+				throw new BadImageFormatException ($"Stream has trailing data?! {{{trailing}}}");
+			}
 		}
 
 		public static bool IsClassFile (Stream stream)
@@ -213,6 +220,10 @@ namespace Xamarin.Android.Tools.Bytecode {
 		Synthetic   = 0x1000,
 		Annotation  = 0x2000,
 		Enum        = 0x4000,
+		Module      = 0x8000,
+
+		// This is not a real Java ClassAccessFlags, it is used to denote non-exported public types
+		Internal    = 0x10000000,
 	}
 }
 

@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 
 		// Passing null for 'newVisibility' parameter means 'package-private'
-		static ClassAccessFlags SetVisibility (ClassAccessFlags existing, ClassAccessFlags? newVisibility)
+		internal static ClassAccessFlags SetVisibility (ClassAccessFlags existing, ClassAccessFlags? newVisibility)
 		{
 			// First we need to remove any existing visibility flags,
 			// without modifying other flags like Abstract

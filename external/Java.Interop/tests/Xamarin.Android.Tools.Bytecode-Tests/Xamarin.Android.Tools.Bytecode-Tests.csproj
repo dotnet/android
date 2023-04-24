@@ -49,6 +49,7 @@
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\com\xamarin\ParameterClass2.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\java\util\Collection.class" />
+    <EmbeddedResource Include="$(IntermediateOutputPath)classes\module-info.class" />
     <EmbeddedResource Include="$(IntermediateOutputPath)classes\NonGenericGlobalType.class" />
   </ItemGroup>
 
