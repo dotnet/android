@@ -2,9 +2,8 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.BuildOrder.targets
 
-This file contains the .NET 5-specific setup for any $(FooDependsOn)
-properties that determine build ordering. For "legacy" Xamarin.Android
-projects, these properties are set in Xamarin.Android.Legacy.targets.
+This file contains the .NET 6+ setup for any $(FooDependsOn)
+properties that determine build ordering.
 
 ***********************************************************************************************
 -->

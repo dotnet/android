@@ -143,11 +143,6 @@ namespace Xamarin.Android.Prepare
 			string latestStableFramework = stableFrameworks [stableFrameworks.Count - 1];
 
 			WriteMSBuildCall (
-				fileToRemovePath: Path.Combine (monoFrameworksRoot, "v1.0", "Xamarin.Android.NUnitLite.dll"),
-				projectPath: "src/Xamarin.Android.NUnitLite/Xamarin.Android.NUnitLite.csproj"
-			);
-
-			WriteMSBuildCall (
 				fileToRemovePath: $"{monoFrameworksRoot}/{latestStableFramework}/Mono.Android.Export.*",
 				projectPath: "src/Mono.Android.Export/Mono.Android.Export.csproj"
 			);
