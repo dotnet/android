@@ -285,7 +285,8 @@ stages:
   # Check - "Xamarin.Android (Linux > Tests > MSBuild)"
   - job: linux_tests_smoke
     displayName: Linux > Tests > MSBuild
-    pool: android-devdiv-ubuntu-vmss
+    pool:
+      vmImage: ubuntu-22.04
     timeoutInMinutes: 180
     workspace:
       clean: all
