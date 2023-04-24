@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Reflection.Metadata;
@@ -630,6 +631,15 @@ namespace Xamarin.Android.Tasks
 			}
 
 			throw new InvalidOperationException ($"Unsupported marshal methods tracing mode '{input}'");
+		}
+
+		public static string? CultureInvariantToString (object? obj)
+		{
+			if (obj == null) {
+				return null;
+			}
+
+			return Convert.ToString (obj, CultureInfo.InvariantCulture);
 		}
 	}
 }

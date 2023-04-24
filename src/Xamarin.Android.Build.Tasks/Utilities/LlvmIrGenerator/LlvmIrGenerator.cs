@@ -1,6 +1,7 @@
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -315,10 +316,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				var v = (LlvmNativeFunctionSignature)(object)value;
-				return v.FieldValue?.ToString () ?? v.ToString ();
+				if (v.FieldValue != null) {
+					return MonoAndroidHelper.CultureInvariantToString (v.FieldValue);
+				}
+
+				return MonoAndroidHelper.CultureInvariantToString (v);
 			}
 
-			return value?.ToString () ?? String.Empty;
+			return MonoAndroidHelper.CultureInvariantToString (value) ?? String.Empty;
 		}
 
 		/// <summary>
@@ -400,7 +405,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			output.Write (symbolName);
 			output.Write (" = ");
 
-			var linkage = llvmLinkage [options.Linkage];
+			string linkage = llvmLinkage [options.Linkage];
 			if (!string.IsNullOrEmpty (linkage)) {
 				output.Write (linkage);
 				output.Write (' ');
@@ -463,18 +468,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			output = EnsureOutput (output);
 			string irType = MapManagedTypeToIR (smi.MemberType);
-			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter++}";
+			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter.ToString (CultureInfo.InvariantCulture)}";
+			structBufferCounter++;
 
 			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions, output);
 			ulong size = bufferSize * smi.BaseTypeSize;
 
 			// WriteLine $"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}"
 			output.Write ('[');
-			output.Write (bufferSize);
+			output.Write (bufferSize.ToString (CultureInfo.InvariantCulture));
 			output.Write (" x ");
 			output.Write (irType);
 			output.Write ("] zeroinitializer, align ");
-			output.WriteLine (GetAggregateAlignment ((int) smi.BaseTypeSize, size));
+			output.WriteLine (GetAggregateAlignment ((int) smi.BaseTypeSize, size).ToString (CultureInfo.InvariantCulture));
 
 			instance.AddPointerData (smi, variableName, size);
 			return true;
@@ -505,7 +511,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			int alignment = isArrayOfPointers ? PointerSize : GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count);
 			output.Write (", align ");
-			output.Write (alignment);
+			output.Write (alignment.ToString (CultureInfo.InvariantCulture));
 			if (named && !skipFinalComment) {
 				WriteEOL ($"end of '{symbolName!}' array", output);
 			} else {
@@ -522,7 +528,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}{pointerAsterisk}] zeroinitializer"
 			Output.Write ('[');
-			Output.Write (count);
+			Output.Write (count.ToString (CultureInfo.InvariantCulture));
 			Output.Write (" x %");
 			Output.Write (info.NativeTypeDesignator);
 			Output.Write ('.');
@@ -556,7 +562,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}] "
 			arrayOutput.Write ('[');
-			arrayOutput.Write (count);
+			arrayOutput.Write (count.ToString (CultureInfo.InvariantCulture));
 			arrayOutput.Write (" x %");
 			arrayOutput.Write (info.NativeTypeDesignator);
 			arrayOutput.Write ('.');
@@ -579,7 +585,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 					arrayOutput.Write (Indent);
 					arrayOutput.Write ("; ");
-					arrayOutput.WriteLine (i);
+					arrayOutput.WriteLine (i.ToString (CultureInfo.InvariantCulture));
 					WriteStructureBody (info, instance, bodyWriterOptions, nestedStructureWriter);
 					if (i < count - 1) {
 						arrayOutput.Write (", ");
@@ -635,7 +641,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// WriteLine $"[{values.Count} x {elementType}] ["
 			Output.Write ('[');
-			Output.Write (values.Count);
+			Output.Write (values.Count.ToString (CultureInfo.InvariantCulture));
 			Output.Write (" x ");
 			Output.Write (elementType);
 			Output.WriteLine ("] [");
@@ -662,7 +668,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				Output.Write (elementType);
 				Output.Write (' ');
-				Output.Write (values [i]);
+				Output.Write (MonoAndroidHelper.CultureInvariantToString (values [i]));
 
 				if (!optimizeOutput) {
 					bool last = i == values.Count - 1;
@@ -691,7 +697,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			Output.WriteLine ();
 			Output.Write ("], align ");
-			Output.WriteLine (GetAggregateAlignment ((int) size, size * (ulong) values.Count));
+			Output.WriteLine (GetAggregateAlignment ((int) size, size * (ulong) values.Count).ToString (CultureInfo.InvariantCulture));
 		}
 
 		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, ulong length, ulong expectedLength)
@@ -821,7 +827,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			object? value = overrideValue ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
 			output.Write (smi.IRType);
 			output.Write (' ');
-			output.Write (value);
+			output.Write (MonoAndroidHelper.CultureInvariantToString (value));
 		}
 
 		void WritePointer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter output, object? overrideValue = null)
@@ -1068,7 +1074,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void FinishStructureWrite<T> (StructureInfo<T> info, StructureBodyWriterOptions bodyWriterOptions)
 		{
 			bodyWriterOptions.StructureOutput.Write (", align ");
-			bodyWriterOptions.StructureOutput.WriteLine (info.MaxFieldAlignment);
+			bodyWriterOptions.StructureOutput.WriteLine (info.MaxFieldAlignment.ToString (CultureInfo.InvariantCulture));
 
 			WriteBufferToOutput (bodyWriterOptions.StringsOutput);
 			WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
@@ -1155,12 +1161,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					output.Write (irType);
 				}
 
+				string sizeStr = size.ToString (CultureInfo.InvariantCulture);
+				output.Write (irType);
 				output.Write (" getelementptr inbounds ([");
-				output.Write (size);
+				output.Write (sizeStr);
 				output.Write (" x ");
 				output.Write (irBaseType);
 				output.Write ("], [");
-				output.Write (size);
+				output.Write (sizeStr);
 				output.Write (" x ");
 				output.Write (irBaseType);
 				output.Write ("]* @");
@@ -1187,9 +1195,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			foreach (var kvp in arrayContents) {
 				string name = kvp.Key;
 				string value = kvp.Value;
+				string iStr = i.ToString (CultureInfo.InvariantCulture);
 
-				WriteArrayString (name, $"n_{i}");
-				WriteArrayString (value, $"v_{i}");
+				WriteArrayString (name, $"n_{iStr}");
+				WriteArrayString (value, $"v_{iStr}");
 				i++;
 			}
 
@@ -1212,7 +1221,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// $"[{strings.Count} x i8*]"
 			Output.Write ('[');
-			Output.Write (strings.Count);
+			Output.Write (strings.Count.ToString (CultureInfo.InvariantCulture));
 			Output.Write (" x i8*]");
 
 			if (strings.Count > 0) {
@@ -1246,7 +1255,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				Output.Write (']');
 			}
 			Output.Write (", align ");
-			Output.WriteLine (GetAggregateAlignment (PointerSize, arraySize));
+			Output.WriteLine (GetAggregateAlignment (PointerSize, arraySize).ToString (CultureInfo.InvariantCulture));
 		}
 
 		/// <summary>

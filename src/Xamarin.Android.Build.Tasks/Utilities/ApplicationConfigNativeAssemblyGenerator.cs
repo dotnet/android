@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
@@ -253,7 +254,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				dsos.Add ((name, $"dsoName{dsos.Count}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
 			}
 
 			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();

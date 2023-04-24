@@ -7,6 +7,9 @@ parameters:
   agent_count: 8
   stageCondition: succeeded()
   stagePrefix: ''
+  xaSourcePath: $(System.DefaultWorkingDirectory)
+  repositoryAlias: 'self'
+  commit: ''
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -33,6 +36,9 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         androidSdkPlatforms: $(androidSdkPlatforms)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
 
     - template: run-xaprepare.yaml
       parameters:
@@ -87,6 +93,9 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         androidSdkPlatforms: $(androidSdkPlatforms)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        repositoryAlias: ${{ parameters.repositoryAlias }}
+        commit: ${{ parameters.commit }}
 
     - template: run-xaprepare.yaml
       parameters:

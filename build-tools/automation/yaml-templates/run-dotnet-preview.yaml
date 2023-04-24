@@ -8,6 +8,7 @@ parameters:
   displayName: run dotnet preview
   condition: succeeded()
   continueOnError: true
+  retryCountOnTaskFailure: 0
 
 steps:
 - powershell: |
@@ -25,3 +26,4 @@ steps:
   displayName: ${{ parameters.displayName }}
   condition: ${{ parameters.condition }}
   continueOnError: ${{ parameters.continueOnError }}
+  retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}

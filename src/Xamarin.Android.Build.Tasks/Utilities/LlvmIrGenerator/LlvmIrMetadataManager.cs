@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 
 namespace Xamarin.Android.Tasks.LLVMIR
@@ -35,7 +36,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			string irType = LlvmIrGenerator.MapManagedTypeToIR (vt);
-			return $"{irType} {value}";
+			return $"{irType} {MonoAndroidHelper.CultureInvariantToString (value)}";
 		}
 
 		string QuoteString (string value)
@@ -114,7 +115,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public LlvmIrMetadataItem AddNumbered (params object[]? values)
 		{
-			string name = counter.ToString ();
+			string name = counter.ToString (CultureInfo.InvariantCulture);
 			counter++;
 			return Add (name, values);
 		}

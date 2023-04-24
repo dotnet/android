@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -51,7 +52,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteFunctionParameters (function.Parameters, writeNames: true);
 			Output.Write(") local_unnamed_addr ");
 			if (attributes != null) {
-				Output.Write ($"#{function.AttributeSetID}");
+				Output.Write ($"#{function.AttributeSetID.ToString (CultureInfo.InvariantCulture)}");
 			}
 		}
 
@@ -205,7 +206,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			CodeRenderType (source);
 			Output.Write ($" %{source.Name}, ");
 			CodeRenderType (destination);
-			Output.WriteLine ($"* {destination.Reference}, align {GetTypeSize (destination.Type)}");
+			Output.WriteLine ($"* {destination.Reference}, align {GetTypeSize (destination.Type).ToString (CultureInfo.InvariantCulture)}");
 		}
 
 		/// <summary>
@@ -222,7 +223,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			string variableType = sb.ToString ();
 			LlvmIrFunctionLocalVariable result = function.MakeLocalVariable (source, resultVariableName);
-			Output.WriteLine ($"{function.Indent}%{result.Name} = load {variableType}, {variableType}* @{source.Name}, align {PointerSize}");
+			Output.WriteLine ($"{function.Indent}%{result.Name} = load {variableType}, {variableType}* @{source.Name}, align {PointerSize.ToString (CultureInfo.InvariantCulture)}");
 
 			return result;
 		}
@@ -400,7 +401,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 							Output.Write ("nonnull ");
 						}
 
-						Output.Write ($"align {PointerSize} dereferenceable({PointerSize}) ");
+						string ptrSize = PointerSize.ToString (CultureInfo.InvariantCulture);
+						Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) ");
 
 						if (argument.Value is LlvmIrVariableReference variableRef) {
 							bool needBitcast = parameter.Type != argument.Type;
@@ -434,7 +436,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (!FunctionAttributes.ContainsKey (AttributeSetID)) {
 					throw new InvalidOperationException ($"Unknown attribute set ID {AttributeSetID}");
 				}
-				Output.Write ($" #{AttributeSetID}");
+				Output.Write ($" #{AttributeSetID.ToString (CultureInfo.InvariantCulture)}");
 			}
 			Output.WriteLine ();
 
@@ -563,7 +565,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			void WriteSet (int id, TextWriter output)
 			{
-				output.Write ($"attributes #{id} = {{ ");
+				output.Write ($"attributes #{id.ToString (CultureInfo.InvariantCulture)} = {{ ");
 				foreach (LLVMFunctionAttribute attr in FunctionAttributes[id]) {
 					output.Write (attr.Render ());
 					output.Write (' ');
