@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
 
 using Android.Runtime;
@@ -131,7 +132,7 @@ namespace Java.Interop {
 
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
-			return (T) Convert.ChangeType (v, typeof (T));
+			return (T) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
 		}
 
 		public static object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
@@ -164,7 +165,7 @@ namespace Java.Interop {
 
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
-			return Convert.ChangeType (v, targetType!);
+			return Convert.ChangeType (v, targetType!, CultureInfo.InvariantCulture);
 		}
 
 		static Dictionary<string, Type> TypeMappings = new Dictionary<string, Type> (9, StringComparer.Ordinal) {
@@ -229,7 +230,7 @@ namespace Java.Interop {
 				set = true;
 				if (o.Instance is T)
 					return (T) o.Instance;
-				return (T) Convert.ChangeType (o.Instance, typeof (T));
+				return (T) Convert.ChangeType (o.Instance, typeof (T), CultureInfo.InvariantCulture);
 			}
 			if (value is T) {
 				set = true;
@@ -245,7 +246,7 @@ namespace Java.Interop {
 			if (converter != null)
 				return (T) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
 			JNIEnv.DeleteLocalRef (lrefValue);
-			return (T) Convert.ChangeType (value, typeof (T));
+			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}
 
 		public static object? FromJavaObject (IJavaObject value, Type? targetType = null)
@@ -260,7 +261,7 @@ namespace Java.Interop {
 			if (value is Android.Runtime.JavaObject o) {
 				if (targetType == null)
 					return o.Instance;
-				return Convert.ChangeType (o.Instance, targetType);
+				return Convert.ChangeType (o.Instance, targetType, CultureInfo.InvariantCulture);
 			}
 
 			if (targetType == null || targetType.IsAssignableFrom (value.GetType ()))
@@ -274,7 +275,7 @@ namespace Java.Interop {
 			if (converter != null)
 				return converter (lrefValue, JniHandleOwnership.TransferLocalRef);
 			JNIEnv.DeleteLocalRef (lrefValue);
-			return Convert.ChangeType (value, targetType);
+			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
 		static Dictionary<Type, Func<object, IJavaObject>> JavaObjectConverters = new Dictionary<Type, Func<object, IJavaObject>>() {

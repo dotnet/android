@@ -188,7 +188,8 @@ namespace Android.Runtime {
 			if (certStore == null)
 				return null;
 
-			var alias = string.Format ("{0}:{1:x8}.0", userStore ? "user" : "system", hash);
+			var store = userStore ? "user" : "system";
+			var alias = FormattableString.Invariant ($"{store}:{hash:x8}.0");
 			var certificate = certStore.GetCertificate (alias);
 			if (certificate == null)
 				return null;
@@ -220,7 +221,7 @@ namespace Android.Runtime {
 				try {
 					clearInfo.Method ();
 				} catch (Exception e) {
-					Logger.Log (LogLevel.Warn, "MonoAndroid", string.Format ("Ignoring exception from {0}: {1}", clearInfo.Description, e));
+					Logger.Log (LogLevel.Warn, "MonoAndroid", FormattableString.Invariant ($"Ignoring exception from {clearInfo.Description}: {e}"));
 				}
 			}
 		}
@@ -426,11 +427,7 @@ namespace Android.Runtime {
 				if (address == null) // FIXME
 					return destination;
 
-#if ANDROID_19
-				return new Uri (string.Format ("http://{0}:{1}/", address.HostString, address.Port));
-#else
-				return new Uri (string.Format ("http://{0}:{1}/", address.HostName, address.Port));
-#endif
+				return new Uri (FormattableString.Invariant ($"http://{address.HostName}:{address.Port}/"));
 			}
 
 			public bool IsBypassed (Uri host)

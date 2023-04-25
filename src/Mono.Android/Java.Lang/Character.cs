@@ -75,7 +75,7 @@ namespace Java.Lang {
 
 		string IConvertible.ToString (IFormatProvider? provider)
 		{
-			return Convert.ToString (CharValue ());
+			return Convert.ToString (CharValue (), provider);
 		}
 
 		object IConvertible.ToType (Type conversionType, IFormatProvider? provider)

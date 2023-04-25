@@ -461,8 +461,9 @@ namespace Android.Runtime
 				var xi = r as IXmlLineInfo;
 				var loc = xi == null || !xi.HasLineInfo () ?
 					"(location N/A)" :
-					String.Format ("({0}, {1})", xi.LineNumber, xi.LinePosition);
-				return String.Format ("Node {0} at {1} {2}", r.NodeType, String.IsNullOrEmpty (r.BaseURI) ? null : r.BaseURI, loc);
+					FormattableString.Invariant ($"({xi.LineNumber}, {xi.LinePosition})");
+				var uri = string.IsNullOrEmpty (r.BaseURI) ? null : r.BaseURI;
+				return FormattableString.Invariant ($"Node {r.NodeType} at {uri} {loc}");
 			}
 		}
 	

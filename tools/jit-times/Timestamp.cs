@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Globalization;
 using System.Text.RegularExpressions;
 
 namespace jittimes {
@@ -21,9 +22,10 @@ namespace jittimes {
 				return ts;
 			}
 
-			ts.seconds = Convert.ToInt64 (match.Groups [1].Value);
-			ts.milliseconds = Convert.ToInt32 (match.Groups [2].Value);
-			ts.nanoseconds = Convert.ToInt32 (match.Groups [3].Value);
+			var culture = CultureInfo.InvariantCulture;
+			ts.seconds = Convert.ToInt64 (match.Groups [1].Value, culture);
+			ts.milliseconds = Convert.ToInt32 (match.Groups [2].Value, culture);
+			ts.nanoseconds = Convert.ToInt32 (match.Groups [3].Value, culture);
 
 			return ts;
 		}

@@ -32,7 +32,7 @@ public class Remap
 			}
 		}
 		if (!found) {
-			Console.Error.WriteLine (string.Format ("remap-assembly-ref.exe: warning: Assembly reference '{0}' not found in file '{1}'.", ref1, in_aname));
+			Console.Error.WriteLine (FormattableString.Invariant ($"remap-assembly-ref.exe: warning: Assembly reference '{ref1}' not found in file '{in_aname}'."));
 		}
 
 		ad.Write (out_aname);

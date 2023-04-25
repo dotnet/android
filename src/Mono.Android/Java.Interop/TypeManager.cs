@@ -138,10 +138,7 @@ namespace Java.Interop {
 			if (!ActivationEnabled) {
 				if (Logger.LogGlobalRef) {
 					Logger.Log (LogLevel.Info, "monodroid-gref",
-							string.Format ("warning: Skipping managed constructor invocation for handle 0x{0} (key_handle 0x{1}). " +
-								"Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of " +
-								"JNIEnv.NewObject() and/or JNIEnv.CreateInstance().",
-								jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x")));
+						FormattableString.Invariant ($"warning: Skipping managed constructor invocation for handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}). Please use JNIEnv.StartCreateInstance() + JNIEnv.FinishCreateInstance() instead of JNIEnv.NewObject() and/or JNIEnv.CreateInstance()."));
 				}
 				return;
 			}
@@ -179,8 +176,8 @@ namespace Java.Interop {
 				}
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
-				var m = string.Format ("Could not activate JNI Handle 0x{0} (key_handle 0x{1}) of Java type '{2}' as managed type '{3}'.",
-						jobject.ToString ("x"), JNIEnv.IdentityHash (jobject).ToString ("x"), JNIEnv.GetClassNameFromInstance (jobject), cinfo.DeclaringType.FullName);
+				var m = FormattableString.Invariant (
+					$"Could not activate JNI Handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}) of Java type '{JNIEnv.GetClassNameFromInstance (jobject)}' as managed type '{cinfo.DeclaringType.FullName}'.");
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 
@@ -286,8 +283,7 @@ namespace Java.Interop {
 			if (type == null) {
 				JNIEnv.DeleteRef (handle, transfer);
 				throw new NotSupportedException (
-						string.Format ("Internal error finding wrapper class for '{0}'. (Where is the Java.Lang.Object wrapper?!)",
-							JNIEnv.GetClassNameFromInstance (handle)),
+						FormattableString.Invariant ($"Internal error finding wrapper class for '{JNIEnv.GetClassNameFromInstance (handle)}'. (Where is the Java.Lang.Object wrapper?!)"),
 						CreateJavaLocationException ());
 			}
 
@@ -313,10 +309,8 @@ namespace Java.Interop {
 			} catch (MissingMethodException e) {
 				var key_handle  = JNIEnv.IdentityHash (handle);
 				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						string.Format ("Unable to activate instance of type {0} from native handle 0x{1} (key_handle 0x{2}).",
-							type, handle.ToString ("x"), key_handle.ToString ("x")),
-						e);
+				throw new NotSupportedException (FormattableString.Invariant (
+					$"Unable to activate instance of type {type} from native handle 0x{handle:x} (key_handle 0x{key_handle:x})."), e);
 			}
 			return result;
  		}
@@ -358,7 +352,7 @@ namespace Java.Interop {
 					}
 				} else if (!JNIEnvInit.IsRunningOnDesktop || t != typeof (Java.Interop.TypeManager)) {
 					// skip the registration and output a warning
-					Logger.Log (LogLevel.Warn, "monodroid", string.Format ("Type Registration Skipped for {0} to {1} ", java_class, t.ToString()));
+					Logger.Log (LogLevel.Warn, "monodroid", FormattableString.Invariant ($"Type Registration Skipped for {java_class} to {t} "));
 				}
 
 			}
