@@ -238,6 +238,27 @@ namespace generator.SourceWriters
 
 			body.Add ("try {");
 
+			AddMethodBodyTryBlock (body, method, opt);
+
+			if (method.IsCompatVirtualMethod) {
+				body.Add ("}");
+				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
+				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
+			}
+
+			body.Add ("} finally {");
+
+			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
+				body.Add ("\t" + cleanup);
+
+			foreach (var p in method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
+				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
+
+			body.Add ("}");
+		}
+
+		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt)
+		{
 			AddParameterListCallArgs (body, method.Parameters, opt, false);
 
 			var invokeType = JavaInteropCodeGenerator.GetInvokeType (method.RetVal.CallMethodPrefix);
@@ -265,22 +286,6 @@ namespace generator.SourceWriters
 				}
 				body.Add ($"\treturn {method.RetVal.ReturnCast}{method.RetVal.FromNative (opt, r, true) + opt.GetNullForgiveness (method.RetVal)};");
 			}
-
-			if (method.IsCompatVirtualMethod) {
-				body.Add ("}");
-				body.Add ("catch (Java.Lang.NoSuchMethodError) {");
-				body.Add ("	throw new Java.Lang.AbstractMethodError (__id);");
-			}
-
-			body.Add ("} finally {");
-
-			foreach (string cleanup in method.Parameters.GetCallCleanup (opt))
-				body.Add ("\t" + cleanup);
-
-			foreach (var p in method.Parameters.Where (para => para.ShouldGenerateKeepAlive ()))
-				body.Add ($"\tglobal::System.GC.KeepAlive ({opt.GetSafeIdentifier (p.Name)});");
-
-			body.Add ("}");
 		}
 
 		public static void AddParameterListCallArgs (List<string> body, ParameterList parameters, CodeGenerationOptions opt, bool invoker)

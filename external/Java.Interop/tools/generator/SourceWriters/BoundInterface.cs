@@ -215,13 +215,13 @@ namespace generator.SourceWriters
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
 				} else {
 					var bound_property = new BoundProperty (iface, prop, opt, true, false);
 					Properties.Add (bound_property);
 
 					if (prop.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-						Properties.Add (new BoundPropertyStringVariant (prop, opt));
+						Properties.Add (new BoundPropertyStringVariant (prop, opt, bound_property));
 				}
 			}
 		}

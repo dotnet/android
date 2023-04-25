@@ -346,7 +346,7 @@ namespace generator.SourceWriters
 			Properties.Add (bound_property);
 
 			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && !bound_property.IsOverride)
-				Properties.Add (new BoundPropertyStringVariant (property, opt));
+				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
 		}
 
 		void AddAbstractPropertyDeclaration (ClassGen klass, Property property, CodeGenerationOptions opt)
@@ -361,10 +361,11 @@ namespace generator.SourceWriters
 				}
 			}
 
-			Properties.Add (new BoundAbstractProperty (klass, property, opt));
+			var bound_property = new BoundAbstractProperty (klass, property, opt);
+			Properties.Add (bound_property);
 
 			if (property.Type.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal))
-				Properties.Add (new BoundPropertyStringVariant (property, opt));
+				Properties.Add (new BoundPropertyStringVariant (property, opt, bound_property));
 		}
 
 		void AddNestedTypes (ClassGen klass, CodeGenerationOptions opt, CodeGeneratorContext context, GenerationInfo genInfo)
