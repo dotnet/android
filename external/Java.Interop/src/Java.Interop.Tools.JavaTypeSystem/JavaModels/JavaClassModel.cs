@@ -15,8 +15,8 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		public JavaTypeReference? BaseTypeReference { get; private set; }
 		public List<JavaConstructorModel> Constructors { get; } = new List<JavaConstructorModel> ();
 
-		public JavaClassModel (JavaPackage javaPackage, string javaNestedName, string javaVisibility, bool javaAbstract, bool javaFinal, string javaBaseType, string javaBaseTypeGeneric, string javaDeprecated, bool javaStatic, string jniSignature, string baseTypeJni) :
-			base (javaPackage, javaNestedName, javaVisibility, javaAbstract, javaFinal, javaDeprecated, javaStatic, jniSignature)
+		public JavaClassModel (JavaPackage javaPackage, string javaNestedName, string javaVisibility, bool javaAbstract, bool javaFinal, string javaBaseType, string javaBaseTypeGeneric, string javaDeprecated, bool javaStatic, string jniSignature, string baseTypeJni, string annotatedVisibility) :
+			base (javaPackage, javaNestedName, javaVisibility, javaAbstract, javaFinal, javaDeprecated, javaStatic, jniSignature, annotatedVisibility)
 		{
 			BaseType = javaBaseType;
 			BaseTypeGeneric = javaBaseTypeGeneric;

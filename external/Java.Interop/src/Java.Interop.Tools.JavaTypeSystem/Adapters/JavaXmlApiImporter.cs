@@ -113,7 +113,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				javaDeprecated: element.XGetAttribute ("deprecated"),
 				javaStatic: element.XGetAttributeAsBool ("static"),
 				jniSignature: element.XGetAttribute ("jni-signature"),
-				baseTypeJni: element.XGetAttribute ("jni-extends")
+				baseTypeJni: element.XGetAttribute ("jni-extends"),
+				annotatedVisibility: element.XGetAttribute ("annotated-visibility")
 			);
 
 			if (element.XGetAttribute ("merge.SourceFile") is string source && source.HasValue ())
@@ -151,8 +152,9 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			var deprecated = element.XGetAttribute ("deprecated");
 			var is_static = element.XGetAttribute ("static") == "true";
 			var jni_signature = element.XGetAttribute ("jni-signature");
+			var annotated_visibility = element.XGetAttribute ("annotated-visibility");
 
-			var model = new JavaInterfaceModel (package, nested_name, visibility, deprecated, is_static, jni_signature);
+			var model = new JavaInterfaceModel (package, nested_name, visibility, deprecated, is_static, jni_signature, annotated_visibility);
 
 			if (element.XGetAttribute ("merge.SourceFile") is string source && source.HasValue ())
 				model.PropertyBag.Add ("merge.SourceFile", source);

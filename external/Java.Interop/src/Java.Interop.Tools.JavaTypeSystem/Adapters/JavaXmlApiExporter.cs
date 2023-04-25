@@ -58,15 +58,15 @@ namespace Java.Interop.Tools.JavaTypeSystem
 		static void SaveType (JavaTypeModel type, XmlWriter writer)
 		{
 			if (type is JavaClassModel cls)
-				SaveType (type, writer, "class", XmlConvert.ToString (cls.IsAbstract), cls.BaseType, cls.BaseTypeGeneric, cls.BaseTypeJni);
+				SaveType (type, writer, "class", XmlConvert.ToString (cls.IsAbstract), cls.BaseType, cls.BaseTypeGeneric, cls.BaseTypeJni, cls.AnnotatedVisibility);
 			else
-				SaveType (type, writer, "interface", "true", null, null, null);
+				SaveType (type, writer, "interface", "true", null, null, null, type.AnnotatedVisibility);
 
 			foreach (var nested in type.NestedTypes)
 				SaveType (nested, writer);
 		}
 
-		static void SaveType (JavaTypeModel cls, XmlWriter writer, string elementName, string abs, string? ext, string? extgen, string? jniExt)
+		static void SaveType (JavaTypeModel cls, XmlWriter writer, string elementName, string abs, string? ext, string? extgen, string? jniExt, string annotatedVisibility)
 		{
 			writer.WriteStartElement (elementName);
 
@@ -80,6 +80,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			writer.WriteAttributeString ("static", XmlConvert.ToString (cls.IsStatic));
 			writer.WriteAttributeString ("visibility", cls.Visibility);
 			writer.WriteAttributeStringIfValue ("jni-signature", cls.ExtendedJniSignature);
+			writer.WriteAttributeStringIfValue ("annotated-visibility", annotatedVisibility);
 
 			if (cls.PropertyBag.TryGetValue ("merge.SourceFile", out var source))
 				writer.WriteAttributeString ("merge.SourceFile", source);

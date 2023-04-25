@@ -14,7 +14,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			return JavaXmlApiImporter.Parse (ApiPath);
 		}
 
-		public static JavaClassModel CreateClass (JavaPackage javaPackage, string javaNestedName, string javaVisibility = "public", bool javaAbstract = false, bool javaFinal = false, string javaBaseType = "java.lang.Object", string javaBaseTypeGeneric = "java.lang.Object", string javaDeprecated = "not deprecated", bool javaStatic = false, string jniSignature = "", string baseTypeJni = "java/lang/Object")
+		public static JavaClassModel CreateClass (JavaPackage javaPackage, string javaNestedName, string javaVisibility = "public", bool javaAbstract = false, bool javaFinal = false, string javaBaseType = "java.lang.Object", string javaBaseTypeGeneric = "java.lang.Object", string javaDeprecated = "not deprecated", bool javaStatic = false, string jniSignature = "", string baseTypeJni = "java/lang/Object", string annotatedVisibility = "")
 		{
 			if (string.IsNullOrWhiteSpace (jniSignature))
 				jniSignature = $"{(!string.IsNullOrWhiteSpace (javaPackage.Name) ? javaPackage.Name + "." : "")}{javaNestedName}".Replace ('.', '/');
@@ -30,7 +30,8 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 				javaDeprecated: javaDeprecated,
 				javaStatic: javaStatic,
 				jniSignature: jniSignature,
-				baseTypeJni: baseTypeJni
+				baseTypeJni: baseTypeJni,
+				annotatedVisibility: annotatedVisibility
 			);
 
 			return klass;

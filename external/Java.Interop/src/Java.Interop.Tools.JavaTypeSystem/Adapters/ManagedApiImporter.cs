@@ -114,7 +114,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				javaDeprecated: obs_attr != null ? "deprecated" : "not-deprecated",
 				javaStatic: false,
 				jniSignature: FormatJniSignature (package, nested_name),
-				baseTypeJni: base_jni.HasValue () ? $"L{base_jni};" : string.Empty
+				baseTypeJni: base_jni.HasValue () ? $"L{base_jni};" : string.Empty,
+				annotatedVisibility: string.Empty
 			); ;
 
 			ParseImplementedInterfaces (type, model);
@@ -144,7 +145,8 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				javaVisibility: type.IsPublic || type.IsNestedPublic ? "public" : "protected internal",
 				javaDeprecated: obs_attr != null ? "deprecated" : "not-deprecated",
 				javaStatic: false,
-				jniSignature: FormatJniSignature (package, nested_name)
+				jniSignature: FormatJniSignature (package, nested_name),
+				annotatedVisibility: ""
 			);
 
 			ParseImplementedInterfaces (type, model);

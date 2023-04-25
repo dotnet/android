@@ -17,6 +17,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 		public string NestedName { get; set; }
 
 		public string Visibility { get; }
+		public string AnnotatedVisibility { get; }
 		public bool IsAbstract { get; }
 		public bool IsFinal { get; }
 		public string Deprecated { get; }
@@ -36,12 +37,13 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 
 		public Dictionary<string, string> PropertyBag { get; } = new Dictionary<string, string> ();
 
-		protected JavaTypeModel (JavaPackage javaPackage, string javaNestedName, string javaVisibility, bool javaAbstract, bool javaFinal, string deprecated, bool javaStatic, string jniSignature)
+		protected JavaTypeModel (JavaPackage javaPackage, string javaNestedName, string javaVisibility, bool javaAbstract, bool javaFinal, string deprecated, bool javaStatic, string jniSignature, string annotatedVisibility)
 		{
 			Package = javaPackage;
 			NestedName = javaNestedName.Replace ('$', '.');
 			Name = NestedName.LastSubset ('.');
 			Visibility = javaVisibility;
+			AnnotatedVisibility = annotatedVisibility;
 			IsAbstract = javaAbstract;
 			IsFinal = javaFinal;
 			Deprecated = deprecated;

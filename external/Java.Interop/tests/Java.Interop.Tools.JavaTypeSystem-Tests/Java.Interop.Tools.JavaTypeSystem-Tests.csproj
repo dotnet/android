@@ -4,6 +4,7 @@
     <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <RootNamespace>Java.Interop.Tools.JavaTypeSystem.Tests</RootNamespace>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
