@@ -93,6 +93,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         EnableBindingStaticAndDefaultInterfaceMethods="$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)"
         EnableBindingNestedInterfaceTypes="$(AndroidBoundInterfacesContainTypes)"
         EnableBindingInterfaceConstants="$(AndroidBoundInterfacesContainConstants)"
+        EnableRestrictToAttributes="$(AndroidEnableRestrictToAttributes)"
         Nullable="$(Nullable)"
         UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
         NamespaceTransforms="@(AndroidNamespaceReplacement)"

@@ -36,6 +36,7 @@
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
+    <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">true</AndroidEnableRestrictToAttributes>
 
     <!-- Mono components -->
     <AndroidEnableProfiler Condition=" '$(AndroidEnableProfiler)' == ''">false</AndroidEnableProfiler>
