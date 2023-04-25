@@ -2,9 +2,8 @@
 ***********************************************************************************************
 Microsoft.Android.Sdk.Tooling.targets
 
-This file contains .NET 5-specific calls to the <ValidateJavaVersion/>
-and <ResolveAndroidTooling/> MSBuild tasks. These MSBuild tasks are
-called for "legacy" projects in Xamarin.Android.Legacy.targets.
+This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
+<ResolveAndroidTooling/> MSBuild tasks.
 
 ***********************************************************************************************
 -->
@@ -51,6 +50,8 @@ called for "legacy" projects in Xamarin.Android.Legacy.targets.
       <Output TaskParameter="ZipAlignPath"                PropertyName="ZipAlignToolPath"            Condition="'$(ZipAlignToolPath)' == ''" />
       <Output TaskParameter="AndroidSequencePointsMode"   PropertyName="_SequencePointsMode"         Condition="'$(_SequencePointsMode)' == ''" />
       <Output TaskParameter="LintToolPath"                PropertyName="LintToolPath"                Condition="'$(LintToolPath)' == ''" />
+      <Output TaskParameter="ApkSignerJar"                PropertyName="ApkSignerJar"                Condition="'$(ApkSignerJar)' == ''" />
+      <Output TaskParameter="AndroidUseApkSigner"         PropertyName="AndroidUseApkSigner"         Condition="'$(AndroidUseApkSigner)' == ''" />
       <Output TaskParameter="Aapt2Version"                PropertyName="_Aapt2Version" />
       <Output TaskParameter="Aapt2ToolPath"               PropertyName="Aapt2ToolPath"               Condition="'$(Aapt2ToolPath)' == ''" />
     </ResolveAndroidTooling>
