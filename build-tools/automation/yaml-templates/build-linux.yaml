@@ -64,8 +64,11 @@ stages:
         username: xamarinc
         password: $(pat--xamarinc--vss--nuget--feed--auth)
 
-    - script: dotnet restore -v:n $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
-      displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
+    - task: NuGetCommand@2
+      displayName: restore Xamarin.Installer.Build.Tasks.csproj
+      inputs:
+        command: restore
+        restoreSolution: $(System.DefaultWorkingDirectory)/xamarin-android/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
 
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
