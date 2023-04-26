@@ -80,6 +80,18 @@ variables:
     value: ''
   - name: DisablePipelineConfigDetector
     value: true
+  - name: VSS_NUGET_EXTERNAL_FEED_ENDPOINTS
+    value: '
+    {
+      "endpointCredentials": [
+          {
+              "endpoint": "https://devdiv.pkgs.visualstudio.com/DevDiv/_packaging/xamarin-xvs/nuget/v3/index.json",
+              "username": "xamarinc",
+              "password": "$(pat--xamarinc--vss--nuget--feed--auth)"
+          }
+      ]
+    }'
+
 
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
