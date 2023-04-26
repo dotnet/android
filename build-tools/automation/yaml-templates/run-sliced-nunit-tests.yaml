@@ -3,15 +3,18 @@ parameters:
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   testRunTitle:           # Title of the test run
   testResultsTitle:       # Title used to construct test results file name
+  testOS:                 # 'macOS' or 'Windows'
 
 steps:
 - pwsh: |
     dotnet-test-slicer `
+      slice `
       --test-assembly="${{ parameters.testAssembly }}" `
       --test-filter="${{ parameters.testFilter }}" `
       --slice-number=$(System.JobPositionInPhase) `
       --total-slices=$(System.TotalJobsInPhase) `
-      --outfile="${{ parameters.testAssembly }}.runsettings"
+      --outfile="${{ parameters.testAssembly }}.runsettings" `
+      --balance-file="$(System.DefaultWorkingDirectory)/tests/sliced-tests-timings/test-timings-${{ parameters.testOS }}.xml"
   displayName: Slice unit tests
 
 - template: run-nunit-tests.yaml

@@ -49,6 +49,7 @@ jobs:
       testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       testResultsTitle: TestResult-MSBuildTests-${{ parameters.jobName }}
+      testOS: ${{ parameters.testOS }}
 
   - template: upload-results.yaml
     parameters:

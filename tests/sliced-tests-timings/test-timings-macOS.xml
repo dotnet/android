@@ -1,0 +1,816 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<tests>
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2AndroidResgenExtraArgsAreInvalid" duration="835" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2AndroidResgenExtraArgsAreSplit" duration="2366" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Compile" duration="879" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2CompileFiles" duration="717" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2CompileFixesUpErrors" duration="840" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2CompileUmlautsAndSpaces" duration="566" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2DaemonInstances(1,1,1,10)" duration="950" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2DaemonInstances(6,6,2,1)" duration="598" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2DaemonInstances(6,6,3,2)" duration="777" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2DaemonInstances(6,6,6,50)" duration="1320" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Link(False)" duration="720" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.Aapt2Link(True)" duration="1849" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;-1&quot;,&quot;&quot;,&quot;XA0004&quot;)" duration="272" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;-1&quot;,&quot;{abi}{versionCode:D5}&quot;,&quot;XA0004&quot;)" duration="317" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;1.0&quot;,&quot;&quot;,&quot;XA0003&quot;)" duration="310" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;1.0&quot;,&quot;{abi}{versionCode:D5}&quot;,&quot;XA0003&quot;)" duration="379" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;2100000001&quot;,&quot;&quot;,&quot;XA0004&quot;)" duration="282" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CheckForInvalidVersionCode(&quot;2100000001&quot;,&quot;{abi}{versionCode:D5}&quot;,&quot;XA0004&quot;)" duration="308" />
+  <test name="Xamarin.Android.Build.Tests.Aapt2Tests.CollectNonEmptyDirectoriesTest" duration="104" />
+  <test name="Xamarin.Android.Build.Tests.AidlTest.ListAndMap" duration="116027" />
+  <test name="Xamarin.Android.Build.Tests.AidlTest.NamespaceResolution" duration="114497" />
+  <test name="Xamarin.Android.Build.Tests.AidlTest.PrimitiveTypes" duration="141479" />
+  <test name="Xamarin.Android.Build.Tests.AndroidComputeResPathsTests.AndroidComputeResPathsTest(&quot;Assets/asset1.txt&quot;,&quot;%FOO%Assets/subfolder/../../asset1.txt&quot;,&quot;asset1.txt&quot;,&quot;Assets/asset1.txt&quot;)" duration="12" />
+  <test name="Xamarin.Android.Build.Tests.AndroidComputeResPathsTests.AndroidComputeResPathsTest(&quot;Assets/asset1.txt&quot;,&quot;%FOO%Assets/subfolder/asset1.txt&quot;,&quot;subfolder/asset1.txt&quot;,&quot;Assets/asset1.txt&quot;)" duration="19" />
+  <test name="Xamarin.Android.Build.Tests.AndroidComputeResPathsTests.AndroidComputeResPathsTest(&quot;Assets/asset1.txt&quot;,&quot;Assets/subfolder/asset1.txt&quot;,&quot;subfolder/asset1.txt&quot;,&quot;Assets/asset1.txt&quot;)" duration="21" />
+  <test name="Xamarin.Android.Build.Tests.AndroidComputeResPathsTests.AndroidComputeResPathsTest(&quot;Assets/asset1.txt&quot;,null,&quot;asset1.txt&quot;,&quot;Assets/asset1.txt&quot;)" duration="11" />
+  <test name="Xamarin.Android.Build.Tests.AndroidComputeResPathsTests.AndroidComputeResPathsTest(&quot;Assets/subfolder/asset1.txt&quot;,null,&quot;subfolder/asset1.txt&quot;,&quot;Assets/subfolder/asset1.txt&quot;)" duration="12" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyNdkRequiredConditions(&quot;AndroidEnableProfiledAot&quot;,False)" duration="10503" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyNdkRequiredConditions(&quot;AotAssemblies&quot;,False)" duration="10485" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyNdkRequiredConditions(&quot;EnableLLVM&quot;,True)" duration="7390" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyWhenBuildToolsAreMissingTest" duration="6500" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyWhenSDKIsMissingTest(False)" duration="6446" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.GetDependencyWhenSDKIsMissingTest(True)" duration="10239" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDependenciesTests.InstallAndroidDependenciesTest" duration="119363" />
+  <test name="Xamarin.Android.Build.Tests.AndroidDotnetToolTests.ShouldUseFullToolPath" duration="464" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;aapt2 W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.&quot;,True,&quot;&quot;,&quot;&quot;,&quot;aapt2 W 09-17 18&quot;,&quot;15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;aapt2.exe W 09-17 18:15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.&quot;,True,&quot;&quot;,&quot;&quot;,&quot;aapt2.exe W 09-17 18&quot;,&quot;15:27 98796 12879433 ApkAssets.cpp:138] resources.arsc in APK 'android.jar' is compressed.&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;Error: malformed resource filename&quot;,True,&quot;&quot;,&quot;&quot;,&quot;Error&quot;,&quot;malformed resource filename&quot;)" duration="37" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;Error: unable to generate entry for resource data&quot;,True,&quot;&quot;,&quot;&quot;,&quot;Error&quot;,&quot;unable to generate entry for resource data&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;invalid resource directory name: bar-55&quot;,True,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;invalid resource directory name: bar-55&quot;)" duration="4" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;max res 10, skipping values-sw600dp-land&quot;,True,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;max res 10, skipping values-sw600dp-land&quot;)" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;max res 10, skipping values-sw600dp&quot;,True,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;max res 10, skipping values-sw600dp&quot;)" duration="41" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;max res 10, skipping values-sw720dp-land-v13&quot;,True,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;max res 10, skipping values-sw720dp-land-v13&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;package name is required with --rename-manifest-package.&quot;,True,&quot;&quot;,&quot;&quot;,&quot;&quot;,&quot;package name is required with --rename-manifest-package.&quot;)" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;res/drawable/foo-bar.jpg: Invalid file name: must contain only [a-z0-9_.]&quot;,True,&quot;res/drawable/foo-bar.jpg&quot;,&quot;&quot;,&quot;&quot;,&quot;Invalid file name: must contain only [a-z0-9_.]&quot;)" duration="39" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;res\\layout\\main.axml: error: No resource identifier found for attribute \&quot;id2\&quot; in package \&quot;android\&quot; (TaskId:22)&quot;,True,&quot;res\\layout\\main.axml&quot;,&quot;&quot;,&quot;error&quot;,&quot;No resource identifier found for attribute \&quot;id2\&quot; in package \&quot;android\&quot; (TaskId:22)&quot;)" duration="39" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;Resources/values/theme.xml:2: error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.&quot;,True,&quot;Resources/values/theme.xml&quot;,&quot;2&quot;,&quot;error APT0000&quot;,&quot;Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.&quot;)" duration="49" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;Resources/values/theme.xml:55: No start tag found&quot;,True,&quot;Resources/values/theme.xml&quot;,&quot;55&quot;,&quot;&quot;,&quot;No start tag found&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;Resources/values/theme.xml(2): error APT0000: Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.&quot;,True,&quot;Resources/values/theme.xml&quot;,&quot;2&quot;,&quot;error APT0000&quot;,&quot;Error retrieving parent for item: No resource found that matches the given name '@android:style/Theme.AppCompat'.&quot;)" duration="38" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;W/ResourceType( 5536): For resource 0x0101053d, entry index(1341) is beyond type entryCount(1155)&quot;,True,&quot;W/ResourceType&quot;,&quot; 5536&quot;,&quot;&quot;,&quot;For resource 0x0101053d, entry index(1341) is beyond type entryCount(1155)&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;W/ResourceType(23681): For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)&quot;,True,&quot;W/ResourceType&quot;,&quot;23681&quot;,&quot;&quot;,&quot;For resource 0x0101053d, entry index(1341) is beyond type entryCount(733)&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;warning: Multiple AndroidManifest.xml files found, using foo\\AndroidManifest.xml&quot;,True,&quot;&quot;,&quot;&quot;,&quot;warning&quot;,&quot;Multiple AndroidManifest.xml files found, using foo\\AndroidManifest.xml&quot;)" duration="0" />
+  <test name="Xamarin.Android.Build.Tests.AndroidRegExTests.RegExTests(&quot;warning: string 'app_name1' has no default translation.&quot;,True,&quot;&quot;,&quot;&quot;,&quot;warning&quot;,&quot;string 'app_name1' has no default translation.&quot;)" duration="38" />
+  <test name="Xamarin.Android.Build.Tests.AndroidResourceTests.HeaderLayout" duration="25" />
+  <test name="Xamarin.Android.Build.Tests.AndroidResourceTests.MenuActionLayout" duration="29" />
+  <test name="Xamarin.Android.Build.Tests.AndroidResourceTests.UserLayout" duration="33" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.BuildAppWithManagedResourceParser" duration="188947" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.BuildAppWithManagedResourceParserAndLibraries" duration="205968" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.BuildAppWithSystemNamespace" duration="98039" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.Check9PatchFilesAreProcessed" duration="122015" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckAaptErrorNotRaisedForInvalidFileNameWithValidLogicalName(True)" duration="140430" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckAaptErrorRaisedForDuplicateResourceinApp" duration="18601" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckAaptErrorRaisedForInvalidDirectoryName" duration="18726" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckAaptErrorRaisedForInvalidFileName(True)" duration="15656" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckAaptErrorRaisedForMissingResource" duration="22604" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckCodeBehindIsGenerated" duration="283243" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckDontUpdateResourceIfNotNeeded(False)" duration="388874" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckDontUpdateResourceIfNotNeeded(True)" duration="597158" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckEmbeddedSupportLibraryResources" duration="292965" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckFilesAreRemoved" duration="164261" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckInvalidXmlInManagedResourceParser" duration="21694" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckMultipleLibraryProjectReferenceAlias(False,False)" duration="113990" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckMultipleLibraryProjectReferenceAlias(False,True)" duration="131799" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckMultipleLibraryProjectReferenceAlias(True,False)" duration="160917" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckMultipleLibraryProjectReferenceAlias(True,True)" duration="193771" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckNoVersionVectors(True)" duration="127392" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckOldResourceDesignerIsNotUsed(False)" duration="151963" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckOldResourceDesignerIsNotUsed(True)" duration="269252" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckOldResourceDesignerWithWrongCasingIsRemoved(False)" duration="103987" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckOldResourceDesignerWithWrongCasingIsRemoved(True)" duration="155996" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsCreated(False,CSharp)" duration="58489" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsCreated(False,FSharp)" duration="62291" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsCreated(True,CSharp)" duration="119781" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsCreated(True,FSharp)" duration="193129" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsUpdatedWhenReadOnly(False,CSharp)" duration="143536" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsUpdatedWhenReadOnly(False,FSharp)" duration="141999" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsUpdatedWhenReadOnly(True,CSharp)" duration="339439" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckResourceDesignerIsUpdatedWhenReadOnly(True,FSharp)" duration="408295" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckThatXA1034IsRaisedForInvalidConfiguration(False)" duration="47241" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckThatXA1034IsRaisedForInvalidConfiguration(True)" duration="56006" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CheckXmlResourcesFilesAreProcessed(True)" duration="185746" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.CustomViewAddResourceId(True)" duration="347907" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.DesignTimeBuild(False,False,True)" duration="106256" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.DesignTimeBuild(False,True,True)" duration="127222" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.DesignTimeBuild(True,False,True)" duration="146122" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.DesignTimeBuild(True,True,True)" duration="172377" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.InvalidFilenames" duration="155011" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.LightlyModifyLayout" duration="369891" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.MoveResource" duration="147889" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.RepetiviteBuildUpdateSingleResource(True)" duration="194215" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.ReportAaptErrorsInOriginalFileName" duration="20108" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.ReportAaptWarningsForBlankLevel(True)" duration="38703" />
+  <test name="Xamarin.Android.Build.Tests.AndroidUpdateResourcesTest.SolutionBuildSeveralProjects" duration="116099" />
+  <test name="Xamarin.Android.Build.Tests.AotProfileTests.BuildBasicApplicationAndAotProfileIt" duration="143429" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.AotAssembliesInIDE" duration="68819" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAMassiveApp" duration="631518" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationAndÜmläüts(&quot;arm64-v8a&quot;,False,False)" duration="104446" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationAndÜmläüts(&quot;armeabi-v7a;arm64-v8a;x86;x86_64&quot;,False,True)" duration="134895" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationAndÜmläüts(&quot;armeabi-v7a;arm64-v8a;x86;x86_64&quot;,True,False)" duration="139278" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationAndÜmläüts(&quot;armeabi-v7a;x86&quot;,True,True)" duration="128321" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationWithNdkAndBundleAndÜmläüts(&quot;arm64-v8a&quot;,False,False)" duration="43202" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationWithNdkAndBundleAndÜmläüts(&quot;armeabi-v7a;arm64-v8a;x86;x86_64&quot;,False,True)" duration="113285" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationWithNdkAndBundleAndÜmläüts(&quot;armeabi-v7a;arm64-v8a;x86;x86_64&quot;,True,False)" duration="135273" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildAotApplicationWithNdkAndBundleAndÜmläüts(&quot;armeabi-v7a;x86&quot;,True,True)" duration="82710" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildBasicApplicationReleaseProfiledAot(False)" duration="86128" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildBasicApplicationReleaseProfiledAotWithoutDefaultProfile" duration="134379" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.BuildBasicApplicationReleaseWithCustomAotProfile" duration="118866" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.NoSymbolsArgShouldReduceAppSize(&quot;&quot;,False)" duration="132195" />
+  <test name="Xamarin.Android.Build.Tests.AotTests.NoSymbolsArgShouldReduceAppSize(&quot;&quot;,True)" duration="160109" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.AarWithRClassesJar" duration="70136" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.AnnotationSupport" duration="16261" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindByteArrayInMethodParameter" duration="10350" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindDefaultInterfaceMethods(&quot;class-parse&quot;)" duration="10630" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindingCheckHiddenFiles" duration="48674" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindingCustomJavaApplicationClass" duration="48239" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindingDoNotPackage" duration="57027" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindingWithAndroidJavaSource" duration="98481" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BindngFilterUnsupportedNativeAbiLibraries" duration="51419" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BuildAarBindigLibraryWithNuGetPackageOfJar(&quot;class-parse&quot;)" duration="17688" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BuildAarBindingLibraryStandalone(&quot;class-parse&quot;)" duration="22432" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BuildBasicBindingLibrary(&quot;class-parse&quot;)" duration="21032" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.BuildLibraryZipBindigLibraryWithAarOfJar(&quot;class-parse&quot;)" duration="13295" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.CleanBasicBindingLibrary(&quot;class-parse&quot;)" duration="14125" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.DesignTimeBuild(&quot;class-parse&quot;)" duration="14931" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.JavaSourceJar" duration="16899" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.LibraryProjectZipWithLint" duration="100942" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.MergeAndroidManifest" duration="124540" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.NothingToBind(&quot;class-parse&quot;)" duration="8082" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.NullableReferenceTypes(&quot;class-parse&quot;)" duration="14820" />
+  <test name="Xamarin.Android.Build.Tests.BindingBuildTest.RemoveEventHandlerResolution" duration="31304" />
+  <test name="Xamarin.Android.Build.Tests.BuildAssetsTest.CheckAssetsAreIncludedInAPK(True)" duration="94795" />
+  <test name="Xamarin.Android.Build.Tests.BuildAssetsTest.CheckPostCompileAssetsIncludedInAPK" duration="60879" />
+  <test name="Xamarin.Android.Build.Tests.BuildAssetsTest.FullPath" duration="6537" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AarContentExtraction(True)" duration="133717" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AbiNameInIntermediateOutputPath" duration="100662" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AllResourcesInClassLibrary(True,False)" duration="154449" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AllResourcesInClassLibrary(True,True)" duration="137549" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AndroidXClassLibraryNoResources" duration="27599" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.ApplicationIdPlaceholder" duration="90945" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.ApplicationJavaClassProperties" duration="88170" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.AssemblyWithMissingTargetFramework" duration="240947" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildAfterAddingNuget" duration="344484" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildAfterUpgradingNuget" duration="129000" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun" duration="115561" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithJavaSource(False,True)" duration="125803" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithJavaSource(True,True)" duration="254101" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithSpacesInPath(False,&quot;&quot;)" duration="87611" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithSpacesInPath(False,&quot;r8&quot;)" duration="69404" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithSpacesInPath(True,&quot;&quot;)" duration="62940" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildApplicationWithSpacesInPath(True,&quot;r8&quot;)" duration="72122" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildInDesignTimeMode(False)" duration="58992" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildInDesignTimeMode(True)" duration="48729" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildLibraryWhichUsesResources(False)" duration="11811" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildLibraryWhichUsesResources(True)" duration="11973" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildOutsideVisualStudio" duration="191607" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildReleaseApplicationWithNugetPackages" duration="260309" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildWithExternalJavaLibrary" duration="139209" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildWithNativeLibraries(False)" duration="42075" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildWithNativeLibraries(True)" duration="56315" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.BuildWithNativeLibraryUnknownAbi" duration="71584" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckAssemblyCounts(False,False)" duration="84918" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckAssemblyCounts(True,False)" duration="83808" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckAssemblyCounts(True,True)" duration="120682" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckContentBuildAction" duration="111546" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckItemMetadata(False)" duration="95134" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckItemMetadata(True)" duration="234038" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckJavaError" duration="24635" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLintConfigMerging" duration="148125" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLintErrorsAndWarnings" duration="49482" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLintResourceFileReferencesAreFixed" duration="171852" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLogicalNamePathSeperators(False,False)" duration="126891" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLogicalNamePathSeperators(False,True)" duration="109315" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLogicalNamePathSeperators(True,False)" duration="230985" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckLogicalNamePathSeperators(True,True)" duration="217481" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckMonoComponentsMask(False,False,True,1)" duration="78150" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckMonoComponentsMask(True,False,False,4)" duration="123363" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckMonoComponentsMask(True,False,True,5)" duration="90917" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckMonoComponentsMask(True,True,True,7)" duration="79403" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhetherLibcAndLibmAreReferencedInAOTLibraries" duration="167549" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhichRuntimeIsIncluded(&quot;armeabi-v7a&quot;,False,null,null,&quot;debug&quot;)" duration="64591" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhichRuntimeIsIncluded(&quot;armeabi-v7a&quot;,True,False,False,&quot;debug&quot;)" duration="68687" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhichRuntimeIsIncluded(&quot;armeabi-v7a&quot;,True,False,True,&quot;debug&quot;)" duration="66660" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhichRuntimeIsIncluded(&quot;armeabi-v7a&quot;,True,True,False,&quot;debug&quot;)" duration="58579" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CheckWhichRuntimeIsIncluded(&quot;armeabi-v7a&quot;,True,True,True,&quot;release&quot;)" duration="122575" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.CompilerErrorShouldNotRunLinkAssemblies" duration="20609" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.Desugar(False,&quot;&quot;)" duration="82787" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.Desugar(False,&quot;r8&quot;)" duration="119441" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.Desugar(True,&quot;&quot;)" duration="195927" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.Desugar(True,&quot;r8&quot;)" duration="168573" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.DuplicateJCWNames" duration="83498" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.DuplicateManagedNames" duration="168680" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.DuplicateValuesInResourceCaseMap" duration="84318" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.ExtraAaptManifest" duration="137442" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.FastDeploymentDoesNotAddContentProvider" duration="87256" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateEventName(False,False,&quot;&lt;attr path=\&quot;/api/package/class[@name='Test']/method[@name='setOn123Listener']\&quot; name='eventName'&gt;OneTwoThree&lt;/attr&gt;&quot;,&quot;&quot;)" duration="39758" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateEventName(False,True,&quot;&quot;,&quot;&quot;)" duration="37913" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateEventName(True,True,&quot;&quot;,&quot;String s&quot;)" duration="34000" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateMultiMethodEventName(False,&quot;BG8505&quot;,&quot;&quot;,&quot;&quot;)" duration="48341" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateMultiMethodEventName(False,null,&quot;\n\t\t\t\t\t&lt;attr path=\&quot;/api/package/interface[@name='Test.OnFooListener']/method[@name='on123']\&quot; name='eventName'&gt;One23&lt;/attr&gt;\n\t\t\t\t\t&lt;attr path=\&quot;/api/package/interface[@name='Test.OnFooListener']/method[@name='on123']\&quot; name='argsType'&gt;OneTwoThreeEventArgs&lt;/attr&gt;\n\t\t\t\t&quot;,&quot;String s&quot;)" duration="36971" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateMultiMethodEventName(False,null,&quot;&lt;attr path=\&quot;/api/package/interface[@name='Test.OnFooListener']/method[@name='on123']\&quot; name='eventName'&gt;One23&lt;/attr&gt;&quot;,&quot;&quot;)" duration="30329" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.GeneratorValidateMultiMethodEventName(True,&quot;BG8504&quot;,&quot;&quot;,&quot;String s&quot;)" duration="37278" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.IfAndroidJarDoesNotExistThrowXA5207" duration="24245" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.KotlinServiceLoader(&quot;aab&quot;)" duration="177876" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.KotlinServiceLoader(&quot;apk&quot;)" duration="89707" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.LibraryProjectsShouldSkipGetPrimaryCpuAbi" duration="20644" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.MicrosoftExtensionsHttp" duration="95048" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.MissingOrgApacheHttpClient" duration="103479" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.NetworkSecurityConfig" duration="84012" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.NuGetizer3000" duration="24764" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.NUnitLiteNugetWorks" duration="81714" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.OpenTKNugetWorks" duration="100281" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.PackageNamingPolicy(&quot;LowercaseCrc64&quot;)" duration="72862" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.PackageNamingPolicy(&quot;LowercaseMD5&quot;)" duration="63004" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.RemoveOldMonoPackageManager" duration="91918" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.SmokeTestBuildWithSpecialCharacters(False,False)" duration="67428" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.SmokeTestBuildWithSpecialCharacters(True,False)" duration="176916" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.WarningForMinSdkVersion" duration="69066" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.WorkManager" duration="138687" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA0119" duration="127302" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA0119AAB" duration="97303" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA0119Interpreter" duration="120005" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1018" duration="10433" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1027XA1028(&quot;proguard&quot;,null,&quot;true&quot;,False,&quot;0 Warning(s)&quot;)" duration="15981" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1027XA1028(&quot;r8&quot;,null,&quot;true&quot;,True,&quot;0 Warning(s)&quot;)" duration="14702" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1027XA1028(null,&quot;true&quot;,null,False,&quot;warning XA1027:&quot;)" duration="9266" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1027XA1028(null,null,&quot;true&quot;,False,&quot;warning XA1028:&quot;)" duration="14241" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA1027XA1028(null,null,null,True,&quot;0 Warning(s)&quot;)" duration="10912" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA4212" duration="79376" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA4310(&quot;aab&quot;)" duration="136915" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA4310(&quot;apk&quot;)" duration="95472" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA4313(&quot;OpenTK-1.0&quot;)" duration="9977" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest.XA4313(&quot;Xamarin.Android.NUnitLite&quot;)" duration="9098" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.AndroidResourceNotExist" duration="18810" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.AndroidXMigration(False)" duration="86625" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.AndroidXMigration(True)" duration="180072" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildAfterMultiDexIsNotRequired" duration="185523" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildAppCheckDebugSymbols" duration="93066" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationAndClean(False,&quot;aab&quot;)" duration="100691" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationAndClean(False,&quot;apk&quot;)" duration="70525" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationAndClean(True,&quot;aab&quot;)" duration="169907" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationAndClean(True,&quot;apk&quot;)" duration="163890" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationOver65536Methods" duration="114784" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationWithLibraryAndClean(False)" duration="120397" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildApplicationWithLibraryAndClean(True)" duration="224228" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,False,&quot;&quot;)" duration="96962" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,False,&quot;en_US.UTF-8&quot;)" duration="80851" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,False,&quot;sv_SE.UTF-8&quot;)" duration="83003" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,True,&quot;&quot;)" duration="197875" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,True,&quot;en_US.UTF-8&quot;)" duration="169960" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplication(&quot;v13.0&quot;,True,&quot;sv_SE.UTF-8&quot;)" duration="191696" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationAppCompat(True)" duration="48276" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationCheckConfigFiles" duration="91743" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationCheckPdb" duration="109343" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationCheckPdbRepeatBuild" duration="113317" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationFSharp(False,False)" duration="31762" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationFSharp(True,False)" duration="63692" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationFSharp(True,True)" duration="106212" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationThenMoveIt(False)" duration="180255" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationThenMoveIt(True)" duration="310058" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildBasicApplicationWithNuGetPackageConflicts" duration="85945" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(False,False,False,&quot;aab&quot;)" duration="163607" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(False,False,False,&quot;apk&quot;)" duration="93078" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(False,True,False,&quot;apk&quot;)" duration="188415" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(False,True,True,&quot;apk&quot;)" duration="154612" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(True,False,False,&quot;aab&quot;)" duration="152324" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(True,False,False,&quot;apk&quot;)" duration="84039" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildHasNoWarnings(True,True,False,&quot;apk&quot;)" duration="198750" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildIncrementingAssemblyVersion" duration="145443" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildIncrementingClassName" duration="227093" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildMultiDexApplication" duration="153817" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildProguardEnabledProject(False,&quot;&quot;,&quot;&quot;)" duration="84010" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildProguardEnabledProject(True,&quot;r8&quot;,&quot;&quot;)" duration="182110" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildProguardEnabledProject(True,&quot;r8&quot;,&quot;android-arm64&quot;)" duration="98172" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildReleaseArm64(False)" duration="92680" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildReleaseArm64(True)" duration="162874" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildWithJavaToolOptions" duration="56241" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildXamarinFormsMapsApplication(False)" duration="122917" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.BuildXamarinFormsMapsApplication(True)" duration="127677" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CheckKeystoreIsCreated" duration="133852" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CheckTimestamps(False)" duration="116780" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CheckTimestamps(True)" duration="447055" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.ClassLibraryHasNoWarnings" duration="21383" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CompressedWithoutLinker" duration="265946" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CreateMultiDexWithSpacesInConfig" duration="77026" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CSharp8Features(False)" duration="119567" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CSharp8Features(True)" duration="31937" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.CustomApplicationClassAndMultiDex" duration="171044" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.DesignTimeBuildHasAndroidDefines" duration="14758" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.DuplicateRJavaOutput" duration="167544" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.FSharpAppHasAndroidDefine" duration="38753" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MarshalMethodsDefaultEnabledStatus(False,False,False)" duration="92636" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MarshalMethodsDefaultEnabledStatus(False,True,True)" duration="121373" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MultiDexAndCodeShrinker" duration="203124" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MultiDexCustomMainDexFileList(&quot;19&quot;)" duration="152990" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MultiDexCustomMainDexFileList(&quot;21&quot;)" duration="122565" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.MultiDexR8ConfigWithNoCodeShrinking" duration="136138" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.SkipConvertResourcesCases(True)" duration="84602" />
+  <test name="Xamarin.Android.Build.Tests.BuildTest2.SwitchBetweenDesignTimeBuild" duration="93649" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).ApkSet" duration="66135" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).AppBundle" duration="2048" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).AppBundleSigned" duration="3714" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).BaseZip" duration="2233" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).BuildApkSetCommand" duration="2773" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).BuildAppBundleCommand" duration="3628" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(False).InstallApkSetCommand" duration="1981" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).ApkSet" duration="61285" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).AppBundle" duration="513" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).AppBundleSigned" duration="1741" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).BaseZip" duration="562" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).BuildApkSetCommand" duration="1218" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).BuildAppBundleCommand" duration="377" />
+  <test name="Xamarin.Android.Build.Tests.BundleToolTests(True).InstallApkSetCommand" duration="369" />
+  <test name="Xamarin.Android.Build.Tests.CheckClientHandlerTypeTests.ErrorIsNotRaised(&quot;System.Net.Http.SocketsHttpHandler, System.Net.Http&quot;,&quot;System.Net.Http.HttpMessageHandler, System.Net.Http&quot;)" duration="28471" />
+  <test name="Xamarin.Android.Build.Tests.CheckClientHandlerTypeTests.ErrorIsNotRaised(&quot;Xamarin.Android.Net.AndroidClientHandler&quot;,&quot;System.Net.Http.HttpClientHandler, System.Net.Http&quot;)" duration="29227" />
+  <test name="Xamarin.Android.Build.Tests.CheckClientHandlerTypeTests.ErrorIsNotRaised(&quot;Xamarin.Android.Net.AndroidMessageHandler&quot;,&quot;System.Net.Http.HttpMessageHandler, System.Net.Http&quot;)" duration="26819" />
+  <test name="Xamarin.Android.Build.Tests.CheckClientHandlerTypeTests.ErrorIsRaised(&quot;Xamarin.Android.Net.AndroidMessageHandler&quot;,&quot;System.Net.Http.HttpClientHandler, System.Net.Http&quot;)" duration="32499" />
+  <test name="Xamarin.Android.Build.Tests.CheckDuplicateJavaLibrariesTests.XA1014ConflictingJarNames" duration="16" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;_myresource.xml&quot;,True,0)" duration="16" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;-myresource.xml&quot;,False,2)" duration="9" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;.myresource.xml&quot;,False,1)" duration="10" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;@myresource.xml&quot;,False,2)" duration="21" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;5myresource.xml&quot;,False,1)" duration="6" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;myresource.xml&quot;,True,0)" duration="2" />
+  <test name="Xamarin.Android.Build.Tests.CheckForInvalidResourceFileNamesTests.InvalidResourceFileNames(&quot;Myresource.xml&quot;,True,0)" duration="2" />
+  <test name="Xamarin.Android.Build.Tests.CheckGoogleSdkRequirementsTests.CheckManifestCompileSdkLowerThanTargetSdk" duration="11" />
+  <test name="Xamarin.Android.Build.Tests.CheckGoogleSdkRequirementsTests.CheckManifestIsOK" duration="34" />
+  <test name="Xamarin.Android.Build.Tests.CheckGoogleSdkRequirementsTests.CheckManifestMinSdkLowerThanTargetSdk" duration="30" />
+  <test name="Xamarin.Android.Build.Tests.CheckGoogleSdkRequirementsTests.CheckManifestTargetSdkLowerThanCompileSdk" duration="50" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildFew_ConflictingButton" duration="14583" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildFew_ConflictingFragment" duration="13160" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildFew_ConflictingLinearLayout" duration="12881" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildFew_ConflictingRelativeLayout" duration="14339" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildFew_ConflictingTextView" duration="13465" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildMany_ConflictingButton" duration="10135" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildMany_ConflictingFragment" duration="9781" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildMany_ConflictingLinearLayout" duration="11472" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildMany_ConflictingRelativeLayout" duration="10094" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.FailedBuildMany_ConflictingTextView" duration="9685" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.SuccessfulAndroidXApp" duration="125474" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.SuccessfulBuildFew" duration="78497" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.SuccessfulBuildFew_DTB" duration="10791" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.SuccessfulBuildMany" duration="80665" />
+  <test name="Xamarin.Android.Build.Tests.CodeBehindTests.SuccessfulBuildMany_DTB" duration="10819" />
+  <test name="Xamarin.Android.Build.Tests.ConvertResourcesCasesTests.CheckAdaptiveIconIsConverted" duration="35" />
+  <test name="Xamarin.Android.Build.Tests.ConvertResourcesCasesTests.CheckClassIsNotReplacedWithMd5" duration="41" />
+  <test name="Xamarin.Android.Build.Tests.ConvertResourcesCasesTests.CheckClassIsReplacedWithMd5" duration="56" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.CaseChanges" duration="28" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.DestinationNoExist" duration="7" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.DestinationOlder" duration="9" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.DestinationOlderNoLengthCheck" duration="9" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.NoChange" duration="6" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.SourceOlder" duration="7" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.SourceOlderDifferentLength" duration="15" />
+  <test name="Xamarin.Android.Build.Tests.CopyIfChangedTests.SourceOlderDifferentLengthButNoLengthCheck" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.CopyResourceTests.FilesThatAreExpected(&quot;machine.config&quot;)" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.CopyResourceTests.FilesThatAreExpected(&quot;MonoRuntimeProvider.Bundled.java&quot;)" duration="20" />
+  <test name="Xamarin.Android.Build.Tests.CopyResourceTests.FileThatDoesNotExist" duration="2" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTasksTests.TestResolveToolsExists" duration="9909" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies:Dexes&quot;,False,null)" duration="366918" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies:Dexes&quot;,True,null)" duration="254211" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies&quot;,False,&quot;guest1&quot;)" duration="230405" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies&quot;,False,null)" duration="165400" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies&quot;,True,null)" duration="187937" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(True,&quot;Assemblies&quot;,False,&quot;guest1&quot;)" duration="158346" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithDebuggerAndBreaks(True,&quot;Assemblies&quot;,False,null)" duration="285133" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(False,False,False)" duration="86638" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(False,False,True)" duration="95407" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(False,True,False)" duration="91139" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(False,True,True)" duration="107278" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(True,False,False)" duration="225625" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(True,False,True)" duration="248393" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(True,True,False)" duration="235286" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ApplicationRunsWithoutDebugger(True,True,True)" duration="202948" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ClassLibraryMainLauncherRuns(False)" duration="47586" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.ClassLibraryMainLauncherRuns(True)" duration="45341" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.CustomApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies:Dexes&quot;,False)" duration="419568" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.CustomApplicationRunsWithDebuggerAndBreaks(False,&quot;Assemblies&quot;,True)" duration="57828" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.CustomApplicationRunsWithDebuggerAndBreaks(True,&quot;Assemblies:Dexes&quot;,True)" duration="113400" />
+  <test name="Xamarin.Android.Build.Tests.DebuggingTest.CustomApplicationRunsWithDebuggerAndBreaks(True,&quot;Assemblies&quot;,True)" duration="61154" />
+  <test name="Xamarin.Android.Build.Tests.DeferredBuildTest.RunUpdateAndroidResourcesIfBackgroundBuildNotSupported" duration="5712" />
+  <test name="Xamarin.Android.Build.Tests.DeferredBuildTest.SelectivelyRunUpdateAndroidResources" duration="34411" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.CustomDesignerTargetSetupDependenciesForDesigner" duration="68409" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.DesignerBeforeNuGetRestore(False)" duration="33191" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.DesignerBeforeNuGetRestore(True)" duration="29707" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.GetExtraLibraryLocationsForDesigner" duration="76058" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.IncrementalDesignTimeBuild" duration="26345" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.IncrementalFullBuild" duration="51355" />
+  <test name="Xamarin.Android.Build.Tests.DesignerTests.IncrementalSetupDependenciesForDesigner" duration="25098" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.BuildApplicationWithMonoEnvironment(&quot;&quot;)" duration="108452" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.BuildApplicationWithMonoEnvironment(&quot;Normal&quot;)" duration="113248" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.BuildApplicationWithMonoEnvironment(&quot;Offline&quot;)" duration="109280" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckConcurrentGC" duration="80129" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckForInvalidHttpClientHandlerType" duration="6720" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckHttpClientHandlerType" duration="81292" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckMonoDebugIsAddedToEnvironment(&quot;&quot;)" duration="43843" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckMonoDebugIsAddedToEnvironment(&quot;Normal&quot;)" duration="38681" />
+  <test name="Xamarin.Android.Build.Tests.EnvironmentContentTests.CheckMonoDebugIsAddedToEnvironment(&quot;Offline&quot;)" duration="46345" />
+  <test name="Xamarin.Android.Build.Tests.FilterAssembliesTests.CircleImageView" duration="371" />
+  <test name="Xamarin.Android.Build.Tests.FilterAssembliesTests.GuavaListenableFuture" duration="427" />
+  <test name="Xamarin.Android.Build.Tests.FilterAssembliesTests.XamarinForms" duration="928" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.Anim" duration="23" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.Collision" duration="36" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.Id" duration="19" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.ManifestDoesNotExist" duration="15" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.NoMatches" duration="20" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.Styleable" duration="18" />
+  <test name="Xamarin.Android.Build.Tests.GenerateLibraryResourcesTests.TextFileDoesNotExist" duration="36" />
+  <test name="Xamarin.Android.Build.Tests.GeneratePackageManagerJavaTests.CheckPackageManagerAssemblyOrder([&quot;linked/HelloAndroid.dll&quot;, &quot;linked/Xamarin.AndroidX.SavedState.dll&quot;],[&quot;linked/Xamarin.AndroidX.SavedState.dll&quot;, &quot;linked/System.Console.dll&quot;, &quot;linked/System.Linq.dll&quot;, &quot;linked/HelloAndroid.dll&quot;])" duration="193" />
+  <test name="Xamarin.Android.Build.Tests.GeneratePackageManagerJavaTests.CheckPackageManagerAssemblyOrder([&quot;linked/Xamarin.AndroidX.SavedState.dll&quot;, &quot;linked/HelloAndroid.dll&quot;],[&quot;linked/Xamarin.AndroidX.SavedState.dll&quot;, &quot;linked/HelloAndroid.dll&quot;, &quot;linked/System.Console.dll&quot;, &quot;linked/System.Linq.dll&quot;])" duration="142" />
+  <test name="Xamarin.Android.Build.Tests.GenerateResourceCaseMapTests.CaseMapAllCapsWorks" duration="13" />
+  <test name="Xamarin.Android.Build.Tests.GetDependenciesTest.CheckNdkBundle(False)" duration="8" />
+  <test name="Xamarin.Android.Build.Tests.GetDependenciesTest.CheckNdkBundle(True)" duration="8" />
+  <test name="Xamarin.Android.Build.Tests.GetDependenciesTest.ManifestFileDoesNotExist" duration="8" />
+  <test name="Xamarin.Android.Build.Tests.GetDependenciesTest.ManifestFileExists" duration="10" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AaptError(True)" duration="45283" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AllProjectsHaveSameOutputDirectory" duration="190521" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AndroidAssetChange" duration="78092" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AndroidAssetMissing" duration="144023" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AndroidResourceChange" duration="78727" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AndroidXMigrationBug" duration="80026" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.AppProjectTargetsDoNotBreak" duration="133782" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.BasicApplicationRepetitiveBuild" duration="101355" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.BasicApplicationRepetitiveReleaseBuild" duration="493862" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.BuildPropsBreaksConvertResourcesCasesOnSecondBuild(True)" duration="129415" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.BuildSolutionWithMultipleProjectsInParallel" duration="1276170" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.CasingOnJavaLangObject" duration="76422" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ChangePackageNamingPolicy" duration="76876" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ChangeSupportedAbis" duration="281663" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.CheckNothingIsDeletedByIncrementalClean(False,True)" duration="433779" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.CheckNothingIsDeletedByIncrementalClean(True,True)" duration="477566" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.CheckResourceDirectoryDoesNotGetHosed" duration="227167" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ConvertCustomView(True)" duration="60008" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.CSProjUserFileChanges" duration="65834" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.DesignTimeBuild" duration="36402" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.DeterministicBuilds(False)" duration="207345" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.DeterministicBuilds(True)" duration="94910" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.GenerateJavaStubsAndAssembly(False)" duration="117844" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.GenerateJavaStubsAndAssembly(True)" duration="118690" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.IncrementalCleanDuringClean" duration="277846" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.InvalidAndroidResource(True)" duration="36663" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.JavacTaskDoesNotRunOnSecondBuild" duration="341929" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.LibraryIncrementalBuild" duration="23969" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.LibraryProjectTargetsDoNotBreak" duration="38518" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.LinkAssembliesNoShrink" duration="267499" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ManifestMergerIncremental" duration="104144" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.MissingProjectReference" duration="153118" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ProduceReferenceAssembly" duration="106880" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ResolveLibraryProjectImports(True)" duration="235656" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.ResolveNativeLibrariesInManagedReferences" duration="136511" />
+  <test name="Xamarin.Android.Build.Tests.IncrementalBuildTest.TransitiveDependencyProduceReferenceAssembly" duration="265676" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.AppWithStyleableUsageRuns(False,False)" duration="48434" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.AppWithStyleableUsageRuns(False,True)" duration="49106" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.AppWithStyleableUsageRuns(True,False)" duration="112365" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.AppWithStyleableUsageRuns(True,True)" duration="109386" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.CheckResouceIsOverridden(True)" duration="195923" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.CheckXamarinFormsAppDeploysAndAButtonWorks" duration="95706" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.CustomLinkDescriptionPreserve(Full)" duration="272107" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.CustomLinkDescriptionPreserve(SdkOnly)" duration="276666" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch(False)" duration="32149" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.GlobalLayoutEvent_ShouldRegisterAndFire_OnActivityLaunch(True)" duration="79571" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.JsonDeserializationCreatesJavaHandle(False)" duration="239637" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.JsonDeserializationCreatesJavaHandle(True)" duration="331350" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.NativeAssemblyCacheWithSatelliteAssemblies(False)" duration="110381" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.NativeAssemblyCacheWithSatelliteAssemblies(True)" duration="100867" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.ResourceDesignerWithNuGetReference(&quot;net8.0-android33.0&quot;)" duration="69612" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.RunWithInterpreterEnabled(False)" duration="39913" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.RunWithInterpreterEnabled(True)" duration="84283" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.RunWithLLVMEnabled" duration="132564" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.SingleProject_ApplicationId(False)" duration="38055" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.SingleProject_ApplicationId(True)" duration="37497" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.SmokeTestBuildAndRunWithSpecialCharacters" duration="198808" />
+  <test name="Xamarin.Android.Build.Tests.InstallAndRunTests.SubscribeToAppDomainUnhandledException" duration="116378" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.AdbTargetChangesAppBundle" duration="112068" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.BlankAdbTarget" duration="25235" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ChangeKeystoreRedeploy" duration="63772" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.IncrementalFastDeployment" duration="122930" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.InstallAndUnInstall(False)" duration="38278" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.InstallAndUnInstall(True)" duration="85607" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.InstallErrorCode" duration="28516" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.InstallWithoutSharedRuntime" duration="40080" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.LocalizedAssemblies_ShouldBeFastDeployed" duration="122013" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.LoggingPropsShouldCreateOverrideDirForRelease" duration="97313" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ReInstallIfUserUninstalled(False)" duration="60323" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ReInstallIfUserUninstalled(True)" duration="117575" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.SwitchConfigurationsShouldRedeploy" duration="123596" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,False,&quot;apk&quot;,&quot;&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="38647" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,False,&quot;apk&quot;,&quot;False&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="48719" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,False,&quot;apk&quot;,&quot;True&quot;,&quot;android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="42454" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,False,&quot;apk&quot;,&quot;True&quot;,&quot;env:android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="42183" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,False,&quot;apk&quot;,&quot;True&quot;,&quot;file:android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="41048" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,True,&quot;apk&quot;,&quot;&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="60113" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,True,&quot;apk&quot;,&quot;False&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="67644" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,True,&quot;apk&quot;,&quot;True&quot;,&quot;android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="66068" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,True,&quot;apk&quot;,&quot;True&quot;,&quot;env:android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="72496" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(False,True,&quot;apk&quot;,&quot;True&quot;,&quot;file:android&quot;,&quot;-keystore test.keystore&quot;,True)" duration="70156" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,False,&quot;apk&quot;,&quot;&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="42239" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,False,&quot;apk&quot;,&quot;False&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="39984" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,False,&quot;apk&quot;,&quot;True&quot;,&quot;android&quot;,&quot;--ks test.keystore&quot;,True)" duration="41672" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,False,&quot;apk&quot;,&quot;True&quot;,&quot;env:android&quot;,&quot;--ks test.keystore&quot;,True)" duration="37869" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,False,&quot;apk&quot;,&quot;True&quot;,&quot;file:android&quot;,&quot;--ks test.keystore&quot;,True)" duration="42316" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;aab&quot;,&quot;True&quot;,&quot;android&quot;,&quot;-ks test.keystore&quot;,True)" duration="77063" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;aab&quot;,&quot;True&quot;,&quot;env:android&quot;,&quot;-ks test.keystore&quot;,False)" duration="70989" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;aab&quot;,&quot;True&quot;,&quot;file:android&quot;,&quot;-ks test.keystore&quot;,True)" duration="85093" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;aab&quot;,&quot;True&quot;,&quot;pass:android&quot;,&quot;-ks test.keystore&quot;,True)" duration="84357" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="61975" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;False&quot;,&quot;android&quot;,&quot;debug.keystore&quot;,True)" duration="71701" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;True&quot;,&quot;android&quot;,&quot;--ks test.keystore&quot;,True)" duration="59714" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;True&quot;,&quot;env:android&quot;,&quot;--ks test.keystore&quot;,True)" duration="61157" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;True&quot;,&quot;file:android&quot;,&quot;--ks test.keystore&quot;,True)" duration="62046" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.TestAndroidStoreKey(True,True,&quot;apk&quot;,&quot;True&quot;,&quot;pass:android&quot;,&quot;--ks test.keystore&quot;,True)" duration="60547" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ToggleDebugReleaseWithSigning(&quot;aab&quot;)" duration="142085" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ToggleDebugReleaseWithSigning(&quot;apk&quot;)" duration="123746" />
+  <test name="Xamarin.Android.Build.Tests.InstallTests.ToggleFastDev" duration="76910" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunFastDevDexes(False)" duration="46487" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunFastDevDexes(True)" duration="45160" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunFastDevTypemaps" duration="32977" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunNativeLibrary" duration="36656" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunResourceChange" duration="39825" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.InstantRunSimpleBuild" duration="162706" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.SimpleInstallAndUninstall" duration="39222" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.SkipFastDevAlreadyInstalledFile" duration="101887" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.SkipFastDevAlreadyInstalledResources([],null)" duration="50920" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.SkipFastDevAlreadyInstalledResources([Xamarin.ProjectTools.Package, Xamarin.ProjectTools.Package],&quot;Android.Support.V7.App.AppCompatActivity&quot;)" duration="98715" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.TargetsSkipped(False)" duration="48033" />
+  <test name="Xamarin.Android.Build.Tests.InstantRunTest.TargetsSkipped(True)" duration="46902" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.CreateDebugKeyStore" duration="2213" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.CreateDebugKeyStoreWithStrongPassword" duration="1994" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.ListEmptyKey" duration="473" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.ListInvalidAlias" duration="601" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.ListInvalidPassword" duration="551" />
+  <test name="Xamarin.Android.Build.Tests.KeyToolTests.ListSuccessWithPassword" duration="616" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidAddKeepAlives(False,False,False,False)" duration="26670" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidAddKeepAlives(False,True,False,True)" duration="27612" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidAddKeepAlives(True,False,False,True)" duration="66777" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidAddKeepAlives(True,False,True,True)" duration="224244" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidUseNegotiateAuthentication(False)" duration="77749" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidUseNegotiateAuthentication(null)" duration="71842" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.AndroidUseNegotiateAuthentication(True)" duration="78755" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.DoNotErrorOnPerArchJavaTypeDuplicates" duration="71785" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.FixAbstractMethodsStep_Explicit" duration="194" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.FixAbstractMethodsStep_SkipDimMembers" duration="221" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.LinkDescription(False)" duration="111722" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.LinkDescription(True)" duration="122866" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.LinkWithNullAttribute" duration="66659" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.PreserveCustomHttpClientHandlers" duration="132621" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.RemoveDesigner(False)" duration="67161" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.RemoveDesigner(True)" duration="61822" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.TypeRegistrationsFallback(False)" duration="62657" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.TypeRegistrationsFallback(True)" duration="58730" />
+  <test name="Xamarin.Android.Build.Tests.LinkerTests.WarnAboutAppDomains(False)" duration="24501" />
+  <test name="Xamarin.Android.Build.Tests.MakeBundleNativeCodeExternalTests.XA5104AndroidNdkNotFound(&quot;&quot;)" duration="173" />
+  <test name="Xamarin.Android.Build.Tests.MakeBundleNativeCodeExternalTests.XA5104AndroidNdkNotFound(&quot;DoesNotExist&quot;)" duration="15" />
+  <test name="Xamarin.Android.Build.Tests.MakeBundleNativeCodeExternalTests.XA5104AndroidNdkNotFound(null)" duration="191" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.CheckPerformanceOfManagedParser" duration="901" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.CompareAapt2AndManagedParserOutput" duration="768" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.CompareAaptAndManagedParserOutputWithCustomIds" duration="975" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.GenerateDesignerFileFromEmptyRtxt" duration="100" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.GenerateDesignerFileFromRtxt(False)" duration="189" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.GenerateDesignerFileFromRtxt(True)" duration="6336" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.GenerateDesignerFileWithElevenStyleableAttributesFromRtxt" duration="105" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.GenerateDesignerFileWithÜmläüts" duration="223" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.RtxtGeneratorOutput" duration="128" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.UpdateLayoutIdIsIncludedInDesigner(False)" duration="210" />
+  <test name="Xamarin.Android.Build.Tests.ManagedResourceParserTests.UpdateLayoutIdIsIncludedInDesigner(True)" duration="175" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.AllActivityAttributeProperties(&quot;legacy&quot;)" duration="76831" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.AllActivityAttributeProperties(&quot;manifestmerger.jar&quot;)" duration="95532" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.AllServiceAttributeProperties(&quot;legacy&quot;)" duration="71874" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.AllServiceAttributeProperties(&quot;manifestmerger.jar&quot;)" duration="81923" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;1&quot;,False,&quot;manifest=1&quot;)" duration="155839" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;1&quot;,True,&quot;x86_64=500001;arm64-v8a=400001&quot;)" duration="191931" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;2&quot;,False,&quot;manifest=2&quot;)" duration="161228" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;2&quot;,True,&quot;x86_64=500002;arm64-v8a=400002&quot;)" duration="224225" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;999&quot;,False,&quot;manifest=999&quot;)" duration="209300" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ApplicationVersionTests(&quot;999&quot;,True,&quot;x86_64=500999;arm64-v8a=400999&quot;)" duration="224048" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.Bug12935(True)" duration="326973" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.CheckElementReOrdering(True)" duration="206256" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;&quot;,False,True)" duration="99144" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;&quot;,True,False)" duration="191523" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;Full&quot;,False,True)" duration="95748" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;Full&quot;,True,False)" duration="224139" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;None&quot;,False,True)" duration="109905" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;None&quot;,True,False)" duration="223819" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;PdbOnly&quot;,False,True)" duration="94895" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;PdbOnly&quot;,True,False)" duration="195290" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;Portable&quot;,False,True)" duration="84647" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DebuggerAttribute(&quot;Portable&quot;,True,False)" duration="153070" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.DirectBootAwareAttribute" duration="155787" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ExportedErrorMessage" duration="49744" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.IntentFilterData" duration="161458" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.IntentFilterDataLists" duration="224229" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.IntentFilterMultipleItems" duration="209192" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.LayoutAttributeElement" duration="223732" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ManifestPlaceholders(&quot;legacy&quot;)" duration="151853" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ManifestPlaceholders(&quot;manifestmerger.jar&quot;)" duration="195586" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ManifestPlaceHolders2" duration="120599" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ManifestPlaceHoldersXA1010(&quot;legacy&quot;)" duration="95208" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ManifestPlaceHoldersXA1010(&quot;manifestmerger.jar&quot;)" duration="53251" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.MergeLibraryManifest" duration="184864" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ModifyManifest(False)" duration="95984" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.ModifyManifest(True)" duration="224030" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.OverlayManifestTest" duration="209110" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.RemovePermissionTest" duration="262978" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(False,&quot;armeabi-v7a;x86&quot;,&quot;123&quot;,False,&quot;{abi}{versionCode}&quot;,null,True,&quot;123&quot;)" duration="129108" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(False,&quot;armeabi-v7a&quot;,&quot;1&quot;,False,&quot;{abi}{versionCode}&quot;,&quot;versionCode=123&quot;,True,&quot;123&quot;)" duration="93114" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(False,&quot;armeabi-v7a&quot;,&quot;123&quot;,False,&quot;{abi}{versionCode}&quot;,null,True,&quot;123&quot;)" duration="98103" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(False,&quot;armeabi-v7a&quot;,&quot;123&quot;,False,null,null,True,&quot;123&quot;)" duration="65117" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(False,&quot;armeabi-v7a&quot;,&quot;123&quot;,True,null,null,True,&quot;123&quot;)" duration="89677" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;12&quot;,False,&quot;{abi}{minSDK:00}{screen}{foo:0}{versionCode:000}&quot;,&quot;screen=24;foo=$(Foo)&quot;,True,&quot;219241012;319241012&quot;)" duration="134691" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;12&quot;,False,&quot;{abi}{minSDK:00}{screen}{foo:00}{versionCode:000}&quot;,&quot;screen=24;foo=$(Foo)&quot;,False,&quot;2192401012;3192401012&quot;)" duration="57644" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;12&quot;,False,&quot;{abi}{minSDK:00}{screen}{versionCode:000}&quot;,&quot;screen=24&quot;,True,&quot;21924012;31924012&quot;)" duration="37768" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;12&quot;,False,&quot;{abi}{minSDK:00}{versionCode:000}&quot;,null,True,&quot;219012;319012&quot;)" duration="105010" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;123&quot;,False,&quot;{abi}{versionCode}&quot;,null,True,&quot;2123;3123&quot;)" duration="51228" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;123&quot;,False,null,null,True,&quot;200123;300123&quot;)" duration="75389" />
+  <test name="Xamarin.Android.Build.Tests.ManifestTest.VersionCodeTests(True,&quot;armeabi-v7a;x86&quot;,&quot;123&quot;,True,null,null,True,&quot;131195;196731&quot;)" duration="78405" />
+  <test name="Xamarin.Android.Build.Tests.MonoAndroidExportTest.MonoAndroidExportReferencedAppStarts(False,&quot;Assemblies:Dexes&quot;,False)" duration="43452" />
+  <test name="Xamarin.Android.Build.Tests.MonoAndroidExportTest.MonoAndroidExportReferencedAppStarts(False,&quot;Assemblies&quot;,False)" duration="48527" />
+  <test name="Xamarin.Android.Build.Tests.MonoAndroidExportTest.MonoAndroidExportReferencedAppStarts(True,&quot;&quot;,True)" duration="107758" />
+  <test name="Xamarin.Android.Build.Tests.MonoAndroidExportTest.MonoAndroidExportReferencedAppStarts(True,&quot;Assemblies:Dexes&quot;,False)" duration="46025" />
+  <test name="Xamarin.Android.Build.Tests.MonoAndroidExportTest.MonoAndroidExportReferencedAppStarts(True,&quot;Assemblies&quot;,False)" duration="49703" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(-1,1)" duration="158910" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(-1,10)" duration="133663" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(-1,100)" duration="220940" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(-1,200)" duration="187929" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(-1,5)" duration="139141" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(1,-1)" duration="87214" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(100,-1)" duration="104193" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(1024,-1)" duration="85904" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(5,-1)" duration="78133" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(50,-1)" duration="80520" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.BuildApkWithZipFlushLimits(512,-1)" duration="158232" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckAppBundle(False)" duration="119611" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckAppBundle(True)" duration="208036" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckClassesDexIsIncluded" duration="168705" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckExcludedFilesAreMissing" duration="129203" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckIncludedAssemblies(False)" duration="34956" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckIncludedAssemblies(True)" duration="34846" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckIncludedNativeLibraries(False,True)" duration="33834" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckIncludedNativeLibraries(True,True)" duration="33918" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckMetadataSkipItemsAreProcessedCorrectly" duration="73681" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckProguardMappingFileExists" duration="191456" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckSignApk(False,False)" duration="170156" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckSignApk(False,True)" duration="151279" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckSignApk(True,False)" duration="71271" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.CheckSignApk(True,True)" duration="105140" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.EmbeddedDSOs" duration="48878" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.ExplicitPackageNamingPolicy" duration="39374" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.ExtractNativeLibsTrue" duration="41954" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.IgnoreManifestFromJar" duration="140462" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.IncrementalCompression" duration="102207" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.MissingSatelliteAssemblyInApp" duration="200816" />
+  <test name="Xamarin.Android.Build.Tests.PackagingTest.MissingSatelliteAssemblyInLibrary" duration="194631" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.Directories" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.HiddenFiles" duration="5" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.JavaFiles" duration="7" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.KotlinServices" duration="8" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.SigningFiles" duration="70" />
+  <test name="Xamarin.Android.Build.Tests.PackagingUtilsTests.SvnDirectories" duration="6" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_AndroidAsset_Change" duration="39059" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_AndroidManifest_Change" duration="20852" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_AndroidResource_Change" duration="21096" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_CSharp_Change" duration="24751" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_CSProj_Change" duration="33129" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_Designer_Change" duration="33751" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_From_Clean_DontIncludeRestore" duration="35761" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_JLO_Change" duration="46391" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_No_Changes" duration="34733" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_XAML_Change(False,False)" duration="77009" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_XAML_Change(True,False)" duration="65375" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Build_XAML_Change(True,True)" duration="83383" />
+  <test name="Xamarin.Android.Build.Tests.PerformanceTest.Install_CSharp_Change" duration="34773" />
+  <test name="Xamarin.Android.Build.Tests.RemoveDirTests.LongPath" duration="11" />
+  <test name="Xamarin.Android.Build.Tests.RemoveDirTests.NoExist" duration="13" />
+  <test name="Xamarin.Android.Build.Tests.RemoveDirTests.NormalDelete" duration="11" />
+  <test name="Xamarin.Android.Build.Tests.RemoveDirTests.ReadonlyFile" duration="10" />
+  <test name="Xamarin.Android.Build.Tests.ResolveMonoAndroidSdksTests.HasTrailingSlash" duration="4102" />
+  <test name="Xamarin.Android.Build.Tests.ResolveMonoAndroidSdksTests.MissingAndroidNDK" duration="3801" />
+  <test name="Xamarin.Android.Build.Tests.ResolveMonoAndroidSdksTests.NormalInputs" duration="4044" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.LatestTFV_OldTargetSdkVersion" duration="27629" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.ResolveSdkTiming" duration="1878" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.TargetFrameworkPairing(&quot;New Unstable API&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],null,&quot;27&quot;,&quot;27&quot;,&quot;v8.1&quot;)" duration="1577" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.TargetFrameworkPairing(&quot;Newer API Installed&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],[Xamarin.Android.Build.Tests.BaseTest+ApiInfo],null,&quot;27&quot;,&quot;27&quot;,&quot;v8.1&quot;)" duration="1688" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.TargetFrameworkPairing(&quot;Older API Installed&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo],[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],null,&quot;27&quot;,&quot;27&quot;,&quot;v8.1&quot;)" duration="1441" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.TargetFrameworkPairing(&quot;Paired Downgrade&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],null,&quot;26&quot;,&quot;26&quot;,&quot;v8.0&quot;)" duration="1455" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.TargetFrameworkPairing(&quot;User Selected Unstable API&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo],&quot;v9.0&quot;,&quot;28&quot;,&quot;28&quot;,&quot;v9.0&quot;)" duration="1484" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,&quot;v6.0&quot;,False,&quot;v6.0&quot;,&quot;XA0001&quot;,&quot;Unsupported or invalid $(TargetFrameworkVersion) value of 'v6.0'. Please update your Project Options.&quot;)" duration="1860" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,&quot;v8.0&quot;,True,&quot;v8.0&quot;,&quot;&quot;,&quot;&quot;)" duration="1866" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,&quot;v8.1&quot;,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="2151" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,&quot;v9.0&quot;,True,&quot;v9.0&quot;,&quot;&quot;,&quot;&quot;)" duration="2080" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,null,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="2194" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,&quot;v6.0&quot;,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="1951" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,&quot;v7.1&quot;,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="1842" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,&quot;v8.0&quot;,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="1833" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,&quot;v8.1&quot;,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="1875" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,&quot;v9.0&quot;,True,&quot;v9.0&quot;,&quot;&quot;,&quot;&quot;)" duration="1961" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;26.0.3&quot;,&quot;1.8.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],True,null,True,&quot;v8.1&quot;,&quot;&quot;,&quot;&quot;)" duration="2240" />
+  <test name="Xamarin.Android.Build.Tests.ResolveSdksTaskTests.UseLatestAndroidSdk(&quot;30.0.0&quot;,&quot;11.0&quot;,[Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, Xamarin.Android.Build.Tests.BaseTest+ApiInfo, ...],False,&quot;v11.0.99&quot;,True,&quot;v11.0.99&quot;,&quot;&quot;,&quot;&quot;)" duration="1727" />
+  <test name="Xamarin.Android.Build.Tests.SingleProjectTest.AndroidManifestProperties(&quot;1.0.0&quot;,&quot;1.0.0&quot;,&quot;XA0003&quot;)" duration="13118" />
+  <test name="Xamarin.Android.Build.Tests.SingleProjectTest.AndroidManifestProperties(&quot;2.1&quot;,&quot;42&quot;,&quot;&quot;)" duration="27691" />
+  <test name="Xamarin.Android.Build.Tests.SingleProjectTest.AndroidManifestProperties(&quot;3.1.3a1&quot;,&quot;42&quot;,&quot;&quot;)" duration="26910" />
+  <test name="Xamarin.Android.Build.Tests.SingleProjectTest.AndroidManifestProperties(&quot;6.0-preview.7&quot;,&quot;42&quot;,&quot;&quot;)" duration="25969" />
+  <test name="Xamarin.Android.Build.Tests.SingleProjectTest.AndroidManifestValuesWin" duration="27731" />
+  <test name="Xamarin.Android.Build.Tests.Tasks.NdkUtilTests.TestNdkUtil" duration="89" />
+  <test name="Xamarin.Android.Build.Tests.Tasks.ZipAlignTests.CheckAZAErrorCodeIsRaised" duration="600" />
+  <test name="Xamarin.Android.Build.Tests.UncaughtExceptionTests.EnsureUncaughtExceptionWorks" duration="91553" />
+  <test name="Xamarin.Android.Build.Tests.ValidateJavaVersionTests.BuildTools27_Requires_1_8_0" duration="1284" />
+  <test name="Xamarin.Android.Build.Tests.ValidateJavaVersionTests.CacheInvalidates" duration="3001" />
+  <test name="Xamarin.Android.Build.Tests.ValidateJavaVersionTests.CacheWorks" duration="1503" />
+  <test name="Xamarin.Android.Build.Tests.ValidateJavaVersionTests.ExtraJavacOutputIsIgnored" duration="1553" />
+  <test name="Xamarin.Android.Build.Tests.ValidateJavaVersionTests.TargetFramework8_1_Requires_1_8_0" duration="1245" />
+  <test name="Xamarin.Android.Build.Tests.WearTests.BasicProject(False)" duration="44957" />
+  <test name="Xamarin.Android.Build.Tests.WearTests.BasicProject(True)" duration="90376" />
+  <test name="Xamarin.Android.Build.Tests.WearTests.BundledWearApp" duration="43595" />
+  <test name="Xamarin.Android.Build.Tests.WearTests.ResolveLibraryImportsWithReadonlyFiles" duration="39000" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetDebug(&quot;net7.0-android&quot;)" duration="75491" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetDebug(&quot;net8.0-android&quot;)" duration="62222" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(False,False,&quot;net8.0-android&quot;)" duration="55823" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(False,True,&quot;net7.0-android&quot;)" duration="107193" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(False,True,&quot;net8.0-android&quot;)" duration="94643" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(True,False,&quot;net7.0-android&quot;)" duration="92283" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(True,False,&quot;net8.0-android&quot;)" duration="77135" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(True,True,&quot;net7.0-android&quot;)" duration="183039" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.DotNetInstallAndRun(True,True,&quot;net8.0-android&quot;)" duration="156324" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.SupportDesugaringStaticInterfaceMethods" duration="67023" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.TypeAndMemberRemapping(False)" duration="47996" />
+  <test name="Xamarin.Android.Build.Tests.XASdkDeployTests.TypeAndMemberRemapping(True)" duration="64350" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.AppWithSingleJar" duration="41225" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.BenchmarkDotNet" duration="34930" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DefaultItems" duration="29558" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86;android-x64&quot;,False,False,False)" duration="50382" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86;android-x64&quot;,False,False,True)" duration="58446" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86;android-x64&quot;,True,False,False)" duration="105325" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86;android-x64&quot;,True,False,True)" duration="109320" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86;android-x64&quot;,True,True,False)" duration="179807" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm;android-arm64;android-x86&quot;,True,False,False)" duration="91215" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,False,False,False)" duration="46960" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,False,False,True)" duration="49176" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,True,False,False)" duration="62630" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,True,False,True)" duration="64207" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,True,True,False)" duration="84941" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm&quot;,True,True,True)" duration="87742" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm64&quot;,False,False,False)" duration="53630" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-arm64&quot;,True,False,False)" duration="68566" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-x64&quot;,False,False,False)" duration="54414" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuild(&quot;android-x86&quot;,False,False,False)" duration="52025" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildBinding" duration="14062" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(False,False,False)" duration="52006" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(False,False,True)" duration="53810" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(False,True,False)" duration="54747" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(False,True,True)" duration="52399" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(True,False,False)" duration="108359" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildLibrary(True,False,True)" duration="105630" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildXamarinForms(False)" duration="64497" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetBuildXamarinForms(True)" duration="57104" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetDesignTimeBuild" duration="41287" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetIncremental(False,&quot;&quot;)" duration="41080" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetIncremental(False,&quot;android-arm64&quot;)" duration="29663" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetIncremental(True,&quot;&quot;)" duration="100103" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetIncremental(True,&quot;android-arm64&quot;)" duration="45986" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetLibraryAarChanges" duration="16937" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetNew(&quot;android-bindinglib&quot;)" duration="25773" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetNew(&quot;android&quot;)" duration="113615" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetNew(&quot;androidlib&quot;)" duration="24218" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetNew(&quot;androidwear&quot;)" duration="168472" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPack(&quot;net7.0&quot;,&quot;android&quot;,33)" duration="18193" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPack(&quot;net7.0&quot;,&quot;android33&quot;,33)" duration="17559" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPack(&quot;net8.0&quot;,&quot;android&quot;,33)" duration="13822" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPack(&quot;net8.0&quot;,&quot;android33&quot;,33)" duration="14591" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(False,[&quot;net7.0&quot;, &quot;android&quot;, 33])" duration="36883" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(False,[&quot;net8.0&quot;, &quot;android&quot;, 33])" duration="18561" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(False,[&quot;net8.0&quot;, &quot;android33&quot;, 33])" duration="19167" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(False,[&quot;net8.0&quot;, &quot;android34.0&quot;, 34])" duration="18837" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(True,[&quot;net7.0&quot;, &quot;android&quot;, 33])" duration="56202" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(True,[&quot;net8.0&quot;, &quot;android&quot;, 33])" duration="31203" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(True,[&quot;net8.0&quot;, &quot;android33&quot;, 33])" duration="30736" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.DotNetPublish(True,[&quot;net8.0&quot;, &quot;android34.0&quot;, 34])" duration="31799" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner_false(False)" duration="11283" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner_false(True)" duration="11887" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner(False,False)" duration="45099" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner(False,True)" duration="44703" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner(True,False)" duration="44918" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.GenerateResourceDesigner(True,True)" duration="47583" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.MauiTargetFramework(&quot;net7.0&quot;,&quot;android&quot;,33)" duration="7082" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.MauiTargetFramework(&quot;net8.0&quot;,&quot;android&quot;,33)" duration="6808" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.MauiTargetFramework(&quot;net8.0&quot;,&quot;android33&quot;,33)" duration="7017" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.MauiTargetFramework(&quot;net8.0&quot;,&quot;android34.0&quot;,34)" duration="8052" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.ProjectDependencies(False)" duration="94633" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.ProjectDependencies(True)" duration="100907" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SettingCombinations(False,False,True,False,True)" duration="52898" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SettingCombinations(False,False,True,True,True)" duration="76978" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SettingCombinations(True,False,False,True,False)" duration="5286" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SettingCombinations(True,True,True,True,True)" duration="79601" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SignAndroidPackage" duration="25746" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SupportedOSPlatformVersion(21)" duration="27265" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.SupportedOSPlatformVersion(31)" duration="31222" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.WearProjectJavaBuildFailure" duration="99017" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.XamarinLegacySdk(&quot;net7.0-android33.0&quot;)" duration="17021" />
+  <test name="Xamarin.Android.Build.Tests.XASdkTests.XamarinLegacySdk(&quot;net8.0-android33.0&quot;)" duration="16540" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.AddDirectory" duration="122" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.AddDirectoryCurrentDirectory" duration="179" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.AddDirectoryOddPaths" duration="138" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.SkipExistingFile_Compression" duration="542" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.SkipExistingFile_Exist" duration="1249" />
+  <test name="Xamarin.Android.Build.Tests.ZipArchiveExTests.SkipExistingFile_TimeStamp" duration="581" />
+</tests>

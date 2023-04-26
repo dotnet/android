@@ -58,6 +58,7 @@ stages:
         testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
+        testOS: macOS
 
     - template: start-stop-emulator.yaml
       parameters:
