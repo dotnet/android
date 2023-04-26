@@ -59,6 +59,15 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-external-git-dependencies
 
+- template: nuget-credentials/v1.yml@yaml-templates
+  parameters:
+    nugetConfigFiles:  [ "${{ parameters.xaSourcePath }}/external/monodroid/external/android-sdk-installer/NuGet.Config" ]
+    username: xamarinc
+    password: $(pat--xamarinc--vss--nuget--feed--auth)
+
+- script: dotnet build -t:Restore -c $(XA.Build.Configuration) -v:n ${{ parameters.xaSourcePath }}/external/monodroid/external/android-sdk-installer/Xamarin.Installer.Build.Tasks/Xamarin.Installer.Build.Tasks.csproj
+  displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
+
 - task: DotNetCoreCLI@2
   displayName: dotnet restore Xamarin.Installer.Build.Tasks.csproj
   inputs:
