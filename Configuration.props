@@ -42,7 +42,7 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.46</AndroidNet7Version>
+    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.56</AndroidNet7Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
