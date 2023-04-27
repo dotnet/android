@@ -92,12 +92,12 @@ steps:
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(NuGetArtifactName)
-    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
 
 - task: DownloadPipelineArtifact@2
   inputs:
     artifactName: $(LinuxNuGetArtifactName)
-    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/$(NuGetArtifactName)
+    downloadPath: ${{ parameters.xaSourcePath }}/bin/Build${{ parameters.configuration }}/nuget-unsigned
   condition: and(succeeded(), eq(variables['agent.os'], 'Linux'))
 
 - task: DotNetCoreCLI@2
