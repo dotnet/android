@@ -8,6 +8,8 @@ namespace Android.Runtime {
 
 		public Stream BaseStream {get; private set;}
 
+		InputStreamAdapter () {}
+
 		public InputStreamAdapter (System.IO.Stream stream)
 			: base (
 					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),

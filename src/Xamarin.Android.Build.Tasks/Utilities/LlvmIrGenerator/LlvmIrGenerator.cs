@@ -618,8 +618,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteEOL ();
 			WriteEOL (initialComment ?? symbolName);
 
-						var strings = new List<StringSymbolInfo> ();
-
+			var strings = new List<StringSymbolInfo> ();
 			foreach (string s in values) {
 				StringSymbolInfo symbol = StringManager.Add (s, groupName: symbolName);
 				strings.Add (symbol);
@@ -1162,7 +1161,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				string sizeStr = size.ToString (CultureInfo.InvariantCulture);
-				output.Write (irType);
 				output.Write (" getelementptr inbounds ([");
 				output.Write (sizeStr);
 				output.Write (" x ");
