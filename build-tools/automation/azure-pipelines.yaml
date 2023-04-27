@@ -71,6 +71,10 @@ variables:
     value: Azure Pipelines
   - name: MacBuildPoolImage
     value: internal-macos12
+  - name: LinuxBuildPoolName
+    value: android-devdiv-ubuntu-vmss
+  - name: LinuxBuildPoolImage
+    value: ''
 - ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
@@ -78,6 +82,10 @@ variables:
     value: VSEng-Xamarin-RedmondMac-Android-Untrusted
   - name: MacBuildPoolImage
     value: ''
+  - name: LinuxBuildPoolName
+    value: Azure Pipelines
+  - name: LinuxBuildPoolImage
+    value: ubuntu-22.04
   - name: DisablePipelineConfigDetector
     value: true
 
@@ -277,7 +285,8 @@ stages:
   # Check - "Xamarin.Android (Linux > Tests > MSBuild)"
   - job: linux_tests_smoke
     displayName: Linux > Tests > MSBuild
-    pool: android-devdiv-ubuntu-vmss
+    pool:
+      vmImage: ubuntu-22.04
     timeoutInMinutes: 180
     workspace:
       clean: all

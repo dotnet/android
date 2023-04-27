@@ -1,5 +1,6 @@
 parameters:
-  buildPool: android-devdiv-ubuntu-vmss
+  buildPoolName: $(LinuxBuildPoolName)
+  buildPoolImage: $(LinuxBuildPoolImage)
   buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
@@ -22,7 +23,9 @@ stages:
   jobs:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
-    pool: ${{ parameters.buildPool }}
+    pool:
+      name: ${{ parameters.buildPoolName }}
+      vmImage: ${{ parameters.buildPoolImage }}
     timeoutInMinutes: 180
     workspace:
       clean: all
