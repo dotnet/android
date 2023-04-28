@@ -38,16 +38,6 @@
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
-    <PackageReference Include="NuGet.Common" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Configuration" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.DependencyResolver.Core" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Frameworks" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.LibraryModel" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Packaging" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Packaging.Core" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.ProjectModel" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Protocol" Version="$(NuGetApiPackageVersion)" />
-    <PackageReference Include="NuGet.Versioning" Version="$(NuGetApiPackageVersion)" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
     <PackageReference Include="System.Reflection.Metadata" Version="6.0.1" />
