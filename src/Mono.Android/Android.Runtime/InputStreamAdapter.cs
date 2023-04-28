@@ -8,13 +8,18 @@ namespace Android.Runtime {
 
 		public Stream BaseStream {get; private set;}
 
-		InputStreamAdapter () {}
+		InputStreamAdapter () {
+			Console.WriteLine ("InputStreamAdapter () invoked");
+			Console.WriteLine (new System.Diagnostics.StackTrace(true));
+		}
 
 		public InputStreamAdapter (System.IO.Stream stream)
 			: base (
 					JNIEnv.StartCreateInstance ("mono/android/runtime/InputStreamAdapter", "()V"),
 					JniHandleOwnership.TransferLocalRef)
 		{
+			Console.WriteLine ("InputStreamAdapter (System.IO.Stream) invoked");
+			Console.WriteLine (new System.Diagnostics.StackTrace(true));
 			JNIEnv.FinishCreateInstance (Handle, "()V");
 
 			this.BaseStream = stream;
@@ -56,4 +61,3 @@ namespace Android.Runtime {
 		}
 	}
 }
-

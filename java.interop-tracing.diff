@@ -1,5 +1,5 @@
 diff --git a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
-index 76f2bfc0..33cefdbf 100644
+index 76f2bfc0..7a57f6b2 100644
 --- a/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
 +++ b/src/Java.Interop.Tools.JavaCallableWrappers/Java.Interop.Tools.JavaCallableWrappers/JavaCallableWrapperGenerator.cs
 @@ -133,6 +133,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
@@ -87,6 +87,41 @@ index 76f2bfc0..33cefdbf 100644
  					return;
  				}
  		}
+@@ -549,17 +566,17 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			GenerateHeader (writer);
+ 
+ 			bool needCtor = false;
+-			if (HasDynamicallyRegisteredMethods) {
++//			if (HasDynamicallyRegisteredMethods) {
+ 				needCtor = true;
+ 				writer.WriteLine ("/** @hide */");
+ 				writer.WriteLine ("\tpublic static final String __md_methods;");
+-			}
++//			}
+ 
+ 			if (children != null) {
+ 				for (int i = 0; i < children.Count; i++) {
+-					if (!children[i].HasDynamicallyRegisteredMethods) {
+-						continue;
+-					}
++					// if (!children[i].HasDynamicallyRegisteredMethods) {
++					// 	continue;
++					// }
+ 					needCtor = true;
+ 					writer.Write ("\tstatic final String __md_");
+ 					writer.Write (i + 1);
+@@ -570,9 +587,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 			if (needCtor) {
+ 				writer.WriteLine ("\tstatic {");
+ 
+-				if (HasDynamicallyRegisteredMethods) {
++//				if (HasDynamicallyRegisteredMethods) {
+ 					GenerateRegisterType (writer, this, "__md_methods");
+-				}
++//				}
+ 
+ 				if (children != null) {
+ 					for (int i = 0; i < children.Count; ++i) {
 @@ -687,9 +704,12 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
  
  		void GenerateBody (TextWriter sw)
@@ -101,6 +136,19 @@ index 76f2bfc0..33cefdbf 100644
  				GenerateConstructor (ctor, sw);
  			}
  
+@@ -745,9 +765,9 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
+ 
+ 		void GenerateRegisterType (TextWriter sw, JavaCallableWrapperGenerator self, string field)
+ 		{
+-			if (!self.HasDynamicallyRegisteredMethods) {
+-				return;
+-			}
++			// if (!self.HasDynamicallyRegisteredMethods) {
++			// 	return;
++			// }
+ 
+ 			sw.Write ("\t\t");
+ 			sw.Write (field);
 @@ -818,9 +838,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
  			return jniName.Replace ('/', '.').Replace ('$', '.');
  		}

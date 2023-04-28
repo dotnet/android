@@ -387,9 +387,9 @@ namespace Xamarin.Android.Tasks
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
 			foreach (var type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
-					if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
-						continue;
-					}
+					// if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
+					// 	continue;
+					// }
 
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
