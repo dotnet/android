@@ -457,30 +457,6 @@ class MemTest {
 		}
 
 		[Test]
-		[Category ("PackagesConfig")]
-		public void DuplicateReferences ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
-			var package = KnownPackages.SupportV7AppCompat_27_0_2_1;
-			var fullPath = Path.GetFullPath (Path.Combine (Root, "temp", "packages", $"{package.Id}.{package.Version}", "lib", package.TargetFramework, $"{package.Id}.dll"));
-			proj.PackageReferences.Add (package);
-			proj.Packages.Add (package);
-			proj.References.Add (new BuildItem.Reference (package.Id) {
-				MetadataValues = "HintPath=" + fullPath,
-			});
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-
-				// Remove NuGet packages, but leave References
-				proj.PackageReferences.Clear ();
-				proj.Packages.Clear ();
-
-				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
-			}
-		}
-
-		[Test]
 		public void DuplicateRJavaOutput ()
 		{
 			var proj = new XamarinAndroidApplicationProject {

@@ -263,16 +263,6 @@
 
   <ItemGroup>
     <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Common.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Configuration.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.DependencyResolver.Core.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Frameworks.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.LibraryModel.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Packaging.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Packaging.Core.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.ProjectModel.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Protocol.dll" />
-    <InputAssemblies Include="$(OutputPath)NuGet.Versioning.dll" />
     <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
     <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
   </ItemGroup>
