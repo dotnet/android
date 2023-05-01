@@ -253,27 +253,6 @@ stages:
         artifactName: Test Results - APKs .NET Debug - macOS
         configuration: Debug
 
-    - task: MSBuild@1
-      displayName: build plots-to-appinsights
-      inputs:
-        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /restore
-          /t:Build
-          /v:normal
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/plots-to-appinsights.binlog
-      continueOnError: true
-      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(XA.Build.Configuration)
-        plotGroup: Test times
-        plotTitle: Runtime merged $(DotNetTargetFramework)
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
-
     - template: yaml-templates/fail-on-issue.yaml
 
 - stage: linux_tests
