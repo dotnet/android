@@ -8,67 +8,70 @@
       "Size": 1024
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 58913
+      "Size": 58700
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 87163
+      "Size": 86764
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5895
+      "Size": 5924
     },
     "assemblies/rc.bin": {
-      "Size": 1182
+      "Size": 1235
     },
     "assemblies/System.Console.dll": {
-      "Size": 6438
+      "Size": 6449
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9122
+      "Size": 9132
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 516811
+      "Size": 535153
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2620
+      "Size": 2632
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3753
+      "Size": 3764
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3219
+      "Size": 3217
     },
     "classes.dex": {
-      "Size": 19020
+      "Size": 19752
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 379320
+      "Size": 380736
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3090760
+      "Size": 3150352
+    },
+    "lib/arm64-v8a/libSystem.Globalization.Native.so": {
+      "Size": 66336
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
-      "Size": 723840
+      "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94328
+      "Size": 94392
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 155056
+      "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16720
+      "Size": 16952
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3037
+      "Size": 3156
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2910
+      "Size": 3029
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -95,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2632010
+  "PackageSize": 2705831
 }
