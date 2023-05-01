@@ -6,7 +6,6 @@
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />

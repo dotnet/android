@@ -1,5 +1,4 @@
 using System;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -164,7 +163,7 @@ namespace tmt
 
 		public uint GetUInt32 (ulong symbolValue)
 		{
-			return GetUInt32 (GetData (symbolValue, 4), 0, symbolValue.ToString (CultureInfo.InvariantCulture));
+			return GetUInt32 (GetData (symbolValue, 4), 0, symbolValue.ToString ());
 		}
 
 		protected uint GetUInt32 (byte[] data, ulong offset, string symbolName)
@@ -183,7 +182,7 @@ namespace tmt
 
 		public ulong GetUInt64 (ulong symbolValue)
 		{
-			return GetUInt64 (GetData (symbolValue, 8), 0, symbolValue.ToString (CultureInfo.InvariantCulture));
+			return GetUInt64 (GetData (symbolValue, 8), 0, symbolValue.ToString ());
 		}
 
 		protected ulong GetUInt64 (byte[] data, ulong offset, string symbolName)

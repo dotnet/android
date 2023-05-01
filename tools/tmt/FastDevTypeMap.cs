@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -50,7 +49,7 @@ namespace tmt
 
 		public MapArchitecture MapArchitecture => MapArchitecture.FastDev;
 		public string Description              => "FastDev typemap";
-		public string FormatVersion            => SupportedFormat.ToString (CultureInfo.InvariantCulture);
+		public string FormatVersion            => SupportedFormat.ToString ();
 		public string FullPath                 { get; }
 
 		protected Stream Input                 { get; }

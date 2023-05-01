@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Reflection;
@@ -236,17 +235,16 @@ namespace Xamarin.Android.UnitTests
 			}
 #endif
 
-			var culture = CultureInfo.InvariantCulture;
 			LogPaddedInfo ("Tags", Build.Tags, alignColumn);
-			LogPaddedInfo ("Time", Build.Time.ToString (culture), alignColumn);
+			LogPaddedInfo ("Time", Build.Time.ToString (), alignColumn);
 			LogPaddedInfo ("Type", Build.Type, alignColumn);
 			LogPaddedInfo ("User", Build.User, alignColumn);
 			LogPaddedInfo ("VERSION.Codename:", Build.VERSION.Codename, alignColumn);
 			LogPaddedInfo ("VERSION.Incremental", Build.VERSION.Incremental, alignColumn);
 			LogPaddedInfo ("VERSION.Release", Build.VERSION.Release, alignColumn);
 			LogPaddedInfo ("VERSION.Sdk", Build.VERSION.Sdk, alignColumn);
-			LogPaddedInfo ("VERSION.SdkInt", Build.VERSION.SdkInt.ToString (culture), alignColumn);
-			LogPaddedInfo ("Device Date/Time", DateTime.UtcNow.ToString (culture), alignColumn);
+			LogPaddedInfo ("VERSION.SdkInt", Build.VERSION.SdkInt.ToString (), alignColumn);
+			LogPaddedInfo ("Device Date/Time", DateTime.UtcNow.ToString (), alignColumn);
 
 			// FIXME: add data about how the app was compiled (e.g. ARMvX, LLVM, Linker options)
 		}

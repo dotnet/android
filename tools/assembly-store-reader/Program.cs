@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -89,8 +88,8 @@ namespace Xamarin.Android.AssemblyStore
 					} else if (entry.Hash == prev) {
 						Console.WriteLine ($"{infoIndent}* entry {i} is a duplicate of the previous one");
 					}
-					sb.Append (FormattableString.Invariant ($"{infoIndent:0x}"));
-					sb.AppendLine (entry.Hash.ToString (hashFormat, CultureInfo.InvariantCulture));
+					sb.Append ($"{infoIndent}0x");
+					sb.AppendLine (entry.Hash.ToString (hashFormat));
 					prev = entry.Hash;
 				}
 				Console.WriteLine (sb.ToString ());

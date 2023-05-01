@@ -111,7 +111,7 @@ namespace Xamarin.Android.UnitTests.NUnit
 					failedMessage = new StringBuilder ();
 					failedMessage.Append (result.Test.FullName);
 					if (result.Test.FixtureType != null)
-						failedMessage.Append (FormattableString.Invariant ($" ({result.Test.FixtureType.Assembly.GetName ().Name})"));
+						failedMessage.Append ($" ({result.Test.FixtureType.Assembly.GetName ().Name})");
 					failedMessage.AppendLine ();
 					FailedTests++;
 				} else {
