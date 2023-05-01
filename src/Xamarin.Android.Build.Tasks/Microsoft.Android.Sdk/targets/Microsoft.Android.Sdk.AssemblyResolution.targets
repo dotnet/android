@@ -216,9 +216,11 @@ _ResolveAssemblies MSBuild target.
       <_MonoComponent Condition=" '$(AndroidUseInterpreter)' == 'true' " Include="hot_reload" />
       <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
       <_MonoComponent Condition=" '$(_AndroidExcludeMarshalIlgenComponent)' != 'true' " Include="marshal-ilgen" />
+      <_MonoExcludedLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
     </ItemGroup>
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"
+        ExcludedLibraries="@(_MonoExcludedLibraries)"
         Components="@(_MonoComponent->Distinct())"
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />

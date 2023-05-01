@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
@@ -26,6 +27,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public ITaskItem [] InputLibraries { get; set; }
 		public ITaskItem [] Components { get; set; }
+		public string [] ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
 
@@ -80,6 +82,9 @@ namespace Xamarin.Android.Tasks
 					if (!wantedComponents.Contains (fileName)) {
 						continue;
 					}
+				} else if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName)) {
+					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");
+					continue;
 				}
 
 				output.Add (library);
