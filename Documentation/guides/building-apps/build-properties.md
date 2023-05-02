@@ -488,15 +488,20 @@ This property is `False` by default.
 
 ## AndroidEnableRestrictToAttributes
 
-A boolean property that determines whether types and members marked with
-the Java annotation `androidx.annotation.RestrictTo` will be marked with an
-`[Obsolete]` attribute in the C# binding.
+An enum-style property with valid values of `obsolete` and `disable`.
+
+When set to `obsolete`, types and members that are marked with the Java annotation 
+`androidx.annotation.RestrictTo` *or* are in non-exported Java packages will 
+be marked with an `[Obsolete]` attribute in the C# binding.
 
 This `[Obsolete]` attribute has a descriptive message explaining that the
 Java package owner considers the API to be "internal" and warns against its use.
 
 This attribute also has a custom warning code `XAOBS001` so that it can be suppressed
 independently of "normal" obsolete API.
+
+When set to `disable`, API will be generated as normal with no additional
+attributes. (This is the same behavior as before .NET 8.)
 
 Adding `[Obsolete]` attributes instead of automatically removing the API was done to 
 preserve API compatibility with existing packages. If you would instead prefer to 
@@ -510,7 +515,7 @@ this property to prevent these types from being bound:
 
 Support for this property was added in .NET 8.
 
-This property is `True` by default.
+This property is set to `obsolete` by default.
 
 ## AndroidEnableSGenConcurrent
 
