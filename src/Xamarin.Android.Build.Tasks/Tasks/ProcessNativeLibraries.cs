@@ -82,7 +82,7 @@ namespace Xamarin.Android.Tasks
 					if (!wantedComponents.Contains (fileName)) {
 						continue;
 					}
-				} else if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName)) {
+				} else if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
 					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");
 					continue;
 				}
