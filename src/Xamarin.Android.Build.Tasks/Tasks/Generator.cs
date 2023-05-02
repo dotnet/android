@@ -51,6 +51,7 @@ namespace Xamarin.Android.Tasks
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
+		public string EnableRestrictToAttributes { get; set; }
 		public string Nullable { get; set; }
 
 		public ITaskItem[] TransformFiles { get; set; }
@@ -215,6 +216,9 @@ namespace Xamarin.Android.Tasks
 
 					if (EnableBindingStaticAndDefaultInterfaceMethods)
 						features.Add ("default-interface-methods");
+
+					if (string.Equals (EnableRestrictToAttributes, "obsolete", StringComparison.OrdinalIgnoreCase))
+						features.Add ("restrict-to-attributes");
 
 					if (string.Equals (Nullable, "enable", StringComparison.OrdinalIgnoreCase))
 						features.Add ("nullable-reference-types");
