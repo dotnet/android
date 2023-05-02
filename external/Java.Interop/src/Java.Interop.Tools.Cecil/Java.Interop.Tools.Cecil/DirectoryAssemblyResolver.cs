@@ -32,6 +32,7 @@ using System.Diagnostics;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 
@@ -61,6 +62,7 @@ namespace Java.Interop.Tools.Cecil {
 
 		public ICollection<string> SearchDirectories {get; private set;}
 
+		readonly List<MemoryMappedViewStream> viewStreams = new List<MemoryMappedViewStream> ();
 		Dictionary<string, AssemblyDefinition?> cache;
 		bool loadDebugSymbols;
 		Action<TraceLevel, string>              logger;
@@ -103,6 +105,10 @@ namespace Java.Interop.Tools.Cecil {
 				e.Value?.Dispose ();
 			}
 			cache.Clear ();
+			foreach (var viewStream in viewStreams) {
+				viewStream.Dispose ();
+			}
+			viewStreams.Clear ();
 		}
 
 		public Dictionary<string, AssemblyDefinition?> ToResolverCache ()
@@ -160,14 +166,41 @@ namespace Java.Interop.Tools.Cecil {
 				SymbolStream                    = loadReaderParameters.SymbolStream,
 			};
 			try {
-				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
+				return LoadFromMemoryMappedFile (file, reader_parameters);
 			} catch (Exception ex) {
 				logger (
 						TraceLevel.Verbose,
 						$"Failed to read '{file}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
 				logger (TraceLevel.Verbose, $"{ex.ToString ()}");
 				reader_parameters.ReadSymbols = false;
-				return AssemblyDefinition.ReadAssembly (file, reader_parameters);
+				return LoadFromMemoryMappedFile (file, reader_parameters);
+			}
+		}
+
+		AssemblyDefinition LoadFromMemoryMappedFile (string file, ReaderParameters options)
+		{
+			// We can't use MemoryMappedFile when ReadWrite is true
+			if (options.ReadWrite) {
+				return AssemblyDefinition.ReadAssembly (file, options);
+			}
+
+			MemoryMappedViewStream? viewStream = null;
+			try {
+				// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
+				using var fileStream = new FileStream (file, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, false);
+				using var mappedFile = MemoryMappedFile.CreateFromFile (
+					fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, true);
+				viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
+
+				AssemblyDefinition result = ModuleDefinition.ReadModule (viewStream, options).Assembly;
+				viewStreams.Add (viewStream);
+
+				// We transferred the ownership of the viewStream to the collection.
+				viewStream = null;
+
+				return result;
+			} finally {
+				viewStream?.Dispose ();
 			}
 		}
 
