@@ -3,21 +3,12 @@ using System;
 namespace Xamarin.Android.Prepare
 {
 	[Scenario (isDefault: false)]
-	partial class Scenario_EmulatorTestDependencies : ScenarioNoStandardEndSteps
+	partial class Scenario_EmulatorTestDependencies : Scenario_AndroidTestDependencies
 	{
+		protected override AndroidToolchainComponentType AndroidSdkNdkType => AndroidToolchainComponentType.CoreDependency | AndroidToolchainComponentType.EmulatorDependency;
+
 		public Scenario_EmulatorTestDependencies () 
-			: base ("EmulatorTestDependencies", "Install Android SDK emulator dependencies.")
+			: base ("EmulatorTestDependencies", "Install Android SDK (with emulator), OpenJDK, and .NET preview test dependencies.")
 		{}
-
-		protected override void AddSteps (Context context)
-		{
-			Steps.Add (new Step_Android_SDK_NDK (AndroidToolchainComponentType.EmulatorDependency));
-
-			// disable installation of missing programs...
-			context.SetCondition (KnownConditions.AllowProgramInstallation, false);
-
-			// ...but do not signal an error when any are missing
-			context.SetCondition (KnownConditions.IgnoreMissingPrograms, true);
-		}
 	}
 }

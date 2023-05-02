@@ -120,11 +120,7 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
+        xaprepareScenario: EmulatorTestDependencies
         
     - task: DownloadPipelineArtifact@2
       inputs:
