@@ -476,6 +476,38 @@ Support for this property was added in Xamarin.Android 9.4.
 
 This property is `False` by default.
 
+
+## AndroidEnableRestrictToAttributes
+
+An enum-style property with valid values of `obsolete` and `disable`.
+
+When set to `obsolete`, types and members that are marked with the Java annotation 
+`androidx.annotation.RestrictTo` *or* are in non-exported Java packages will 
+be marked with an `[Obsolete]` attribute in the C# binding.
+
+This `[Obsolete]` attribute has a descriptive message explaining that the
+Java package owner considers the API to be "internal" and warns against its use.
+
+This attribute also has a custom warning code `XAOBS001` so that it can be suppressed
+independently of "normal" obsolete API.
+
+When set to `disable`, API will be generated as normal with no additional
+attributes. (This is the same behavior as before .NET 8.)
+
+Adding `[Obsolete]` attributes instead of automatically removing the API was done to 
+preserve API compatibility with existing packages. If you would instead prefer to 
+*remove* members that have the `@RestrictTo` annotation *or* are in non-exported 
+Java packages, you can use [Transform files](https://learn.microsoft.com/xamarin/android/platform/binding-java-library/customizing-bindings/java-bindings-metadata#metadataxml-transform-file) in addition to
+this property to prevent these types from being bound:
+
+```xml
+<remove-node path="//*[@annotated-visibility]" />
+```
+
+Support for this property was added in .NET 8.
+
+This property is set to `obsolete` by default.
+
 ## AndroidEnableSGenConcurrent
 
 A boolean property that
