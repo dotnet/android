@@ -72,7 +72,7 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-31_r01",   apiLevel: "31", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-33_r01",   apiLevel: "33", pkgRevision: "1"),
+				new AndroidPlatformComponent ("platform-33_r02",   apiLevel: "33", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-UpsideDownCake_r03",   apiLevel: "UpsideDownCake", pkgRevision: "3"),
 
 				new AndroidToolchainComponent ("sources-33_r01",
