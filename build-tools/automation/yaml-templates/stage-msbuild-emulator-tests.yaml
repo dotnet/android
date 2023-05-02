@@ -10,6 +10,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
+  usesCleanImages: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -59,9 +60,10 @@ stages:
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
         testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
 
-    - template: start-stop-emulator.yaml
-      parameters:
-        command: stop
+    - ${{ if ne(parameters.usesCleanImages, true) }}:
+      - template: start-stop-emulator.yaml
+        parameters:
+          command: stop
 
     - template: upload-results.yaml
       parameters:
@@ -130,14 +132,15 @@ stages:
         dotNetTestExtraArgs: --filter "TestCategory = WearOS"
         testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
 
-    - template: start-stop-emulator.yaml
-      parameters:
-        command: stop
-        specificImage: true
-        deviceName: $(deviceName)
-        avdApiLevel: $(avdApiLevel)
-        avdAbi: $(avdAbi)
-        avdType: $(avdType)
+    - ${{ if ne(parameters.usesCleanImages, true) }}:
+      - template: start-stop-emulator.yaml
+        parameters:
+          command: stop
+          specificImage: true
+          deviceName: $(deviceName)
+          avdApiLevel: $(avdApiLevel)
+          avdAbi: $(avdAbi)
+          avdType: $(avdType)
 
     - template: upload-results.yaml
       parameters:
