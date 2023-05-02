@@ -705,10 +705,8 @@ namespace Android.Runtime {
 
 			if (Logger.LogGlobalRef) {
 				RuntimeNativeMethods._monodroid_gref_log (
-					FormattableString.Invariant ($"handle 0x{handleField:x}") +
-					FormattableString.Invariant ($"; key_handle 0x{hash:x}") +
-					FormattableString.Invariant ($": Java Type: `{JNIEnv.GetClassNameFromInstance (handleField)}`; ") +
-					FormattableString.Invariant ($"MCW type: `{value.GetType ().FullName}`\n"));
+					FormattableString.Invariant (
+						$"handle 0x{handleField:x}; key_handle 0x{hash:x}: Java Type: `{JNIEnv.GetClassNameFromInstance (handleField)}`; MCW type: `{value.GetType ().FullName}`\n"));
 			}
 		}
 

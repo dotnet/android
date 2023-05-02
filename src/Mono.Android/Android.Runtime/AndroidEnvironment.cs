@@ -427,7 +427,7 @@ namespace Android.Runtime {
 				if (address == null) // FIXME
 					return destination;
 
-				return new Uri (FormattableString.Invariant ($"http://{address.HostName}:{address.Port}/"));
+				return new Uri (FormattableString.Invariant ($"http://{address.HostString}:{address.Port}/"));
 			}
 
 			public bool IsBypassed (Uri host)
