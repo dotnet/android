@@ -53,7 +53,6 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
-        testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
 
     - template: start-stop-emulator.yaml
       parameters:

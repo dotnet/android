@@ -2,11 +2,12 @@ parameters:
   testAssembly:           # NUnit test assembly to run
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   testRunTitle:           # Title of the test run
-  testResultsTitle:       # Title used to construct test results file name
+  retryFailedTests: true  # Retry failed tests once
 
 steps:
 - pwsh: |
     dotnet-test-slicer `
+      slice `
       --test-assembly="${{ parameters.testAssembly }}" `
       --test-filter="${{ parameters.testFilter }}" `
       --slice-number=$(System.JobPositionInPhase) `
@@ -14,10 +15,42 @@ steps:
       --outfile="${{ parameters.testAssembly }}.runsettings"
   displayName: Slice unit tests
 
-- template: run-nunit-tests.yaml
-  parameters:
-    useDotNet: true
-    testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
-    testAssembly: ${{ parameters.testAssembly }}
-    dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
-    testResultsFile: ${{ parameters.testResultsTitle }}-$(System.JobPositionInPhase)-$(XA.Build.Configuration).xml
+- ${{ if eq(parameters.retryFailedTests, 'false') }}:
+  # If we aren't using auto-retry logic, then this is just a simple template call
+  - template: run-nunit-tests.yaml
+    parameters:
+      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+      testAssembly: ${{ parameters.testAssembly }}
+      dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
+
+- ${{ if eq(parameters.retryFailedTests, 'true') }}:
+  # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
+  - pwsh: |
+      dotnet `
+        test `
+        ${{ parameters.testAssembly }} `
+        --settings "${{ parameters.testAssembly }}.runsettings" `
+        --logger trx --results-directory $(Agent.TempDirectory) `
+        -- NUnit.NumberOfTestWorkers=$(NUnit.NumberOfTestWorkers)
+    displayName: Run tests
+    ignoreLASTEXITCODE: true
+      
+  - pwsh: |
+      dotnet-test-slicer `
+        retry `
+        --trx="$(Agent.TempDirectory)" `
+        --outfile="${{ parameters.testAssembly }}.runsettings"
+    displayName: Look for failed tests
+
+    # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
+  - task: PublishTestResults@2
+    inputs:
+      testResultsFormat: VSTest
+      testResultsFiles: $(Agent.TempDirectory)/*.trx
+      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
+
+  - template: run-nunit-tests.yaml
+    parameters:
+      testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
+      testAssembly: ${{ parameters.testAssembly }}
+      dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
