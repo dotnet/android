@@ -51,9 +51,9 @@ variables:
 - name: IsRelOrTargetingRel
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
 - name: DotNetNUnitCategories
-  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != PackagesConfig & TestCategory != StaticProject & TestCategory != SystemApplication'
+  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != StaticProject & TestCategory != SystemApplication'
 - name: ExcludedNUnitCategories
-  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != PackagesConfig & cat != StaticProject & cat != SystemApplication'
+  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != StaticProject & cat != SystemApplication'
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
   value: 33,UpsideDownCake
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
@@ -120,11 +120,7 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
+        xaprepareScenario: EmulatorTestDependencies
         
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -252,27 +248,6 @@ stages:
       parameters:
         artifactName: Test Results - APKs .NET Debug - macOS
         configuration: Debug
-
-    - task: MSBuild@1
-      displayName: build plots-to-appinsights
-      inputs:
-        solution: build-tools/plots-to-appinsights/ProcessPlotCSVFile.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: >-
-          /restore
-          /t:Build
-          /v:normal
-          /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/plots-to-appinsights.binlog
-      continueOnError: true
-      condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-
-    - template: yaml-templates/plots-to-appinsights.yaml
-      parameters:
-        condition: and(succeeded(), or(eq(variables['Build.Reason'], 'IndividualCI'), eq(variables['Build.Reason'], 'Manual')))
-        configuration: $(XA.Build.Configuration)
-        plotGroup: Test times
-        plotTitle: Runtime merged $(DotNetTargetFramework)
-        plotPathAndFilename: $(System.DefaultWorkingDirectory)/TestResult-Mono.Android.NET_Tests-times.csv
 
     - template: yaml-templates/fail-on-issue.yaml
 

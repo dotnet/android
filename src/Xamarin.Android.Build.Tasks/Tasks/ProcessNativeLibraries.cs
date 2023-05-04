@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
@@ -26,6 +27,7 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public ITaskItem [] InputLibraries { get; set; }
 		public ITaskItem [] Components { get; set; }
+		public string [] ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
 		public bool IncludeNativeTracing { get; set; }
@@ -83,6 +85,9 @@ namespace Xamarin.Android.Tasks
 					}
 				} else if (!IncludeNativeTracing && String.Compare ("libxamarin-native-tracing", fileName, StringComparison.Ordinal) == 0) {
 					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}' because native stack traces support is disabled");
+					continue;
+				} else if (ExcludedLibraries != null && ExcludedLibraries.Contains (fileName, StringComparer.OrdinalIgnoreCase)) {
+					Log.LogDebugMessage ($"Excluding '{library.ItemSpec}'");
 					continue;
 				}
 

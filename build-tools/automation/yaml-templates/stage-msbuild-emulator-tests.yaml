@@ -39,11 +39,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
-
-    - template: run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(DefaultTestSdkPlatforms)"
+        xaprepareScenario: EmulatorTestDependencies
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -57,7 +53,6 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
-        testResultsTitle: TestResult-MSBuildDeviceIntegration-${{ parameters.job_name }}
 
     - template: start-stop-emulator.yaml
       parameters:
@@ -96,16 +91,12 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
+        xaprepareScenario: EmulatorTestDependencies
 
     - template: run-xaprepare.yaml
       parameters:
         displayName: install required brew tools and prepare java.interop
         arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
-
-    - template: run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies --android-sdk-platforms="$(androidSdkPlatforms)"
 
     - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
       displayName: set Java8SdkDirectory

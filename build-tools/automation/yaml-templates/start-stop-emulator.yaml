@@ -5,7 +5,7 @@ parameters:
   avdApiLevel:            # Device API level, like '30', required if 'specificImage' is 'true'
   avdAbi:                 # Device ABI, like 'x86', required if 'specificImage' is 'true'
   avdType:                # Device AVD, like 'android-wear', required if 'specificImage' is 'true'
-  launchTimeoutMin: 15    # Minutes to wait for the emulator to start
+  launchTimeoutMin: 20    # Minutes to wait for the emulator to start
   xaSourcePath: $(System.DefaultWorkingDirectory) # working directory
 
 steps:

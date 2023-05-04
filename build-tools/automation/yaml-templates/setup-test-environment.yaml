@@ -12,6 +12,7 @@ parameters:
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
   commit: ''
+  xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
 
 steps:
 
@@ -69,7 +70,7 @@ steps:
 
 - template: run-xaprepare.yaml
   parameters:
-    arguments: --s=AndroidTestDependencies  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
+    arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
     xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.restoreNUnitConsole, true) }}:
