@@ -19,10 +19,40 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public const int FunctionAttributesXamarinAppInit = 0;
 		public const int FunctionAttributesJniMethods = 1;
 		public const int FunctionAttributesCall = 2;
+		public const int FunctionAttributesLlvmLifetime = 3;
+		public const int FunctionAttributesLibcFree = 4;
 
 		protected readonly Dictionary<int, LlvmFunctionAttributeSet> FunctionAttributes = new Dictionary<int, LlvmFunctionAttributeSet> ();
 
 		bool codeOutputInitialized = false;
+		List<LlvmIrFunction>? externalFunctions = null;
+		LlvmIrVariableReference? llvm_lifetime_start_p0i8_ref;
+		LlvmIrVariableReference? llvm_lifetime_end_p0i8_ref;
+
+		public void WriteFunctionDeclarations ()
+		{
+			if (externalFunctions == null || externalFunctions.Count == 0) {
+				return;
+			}
+
+			WriteEOL ();
+			WriteCommentLine ();
+			WriteCommentLine ("External functions");
+			WriteCommentLine ();
+
+			foreach (LlvmIrFunction func in externalFunctions) {
+				WriteFunctionForwardDeclaration (func);
+			}
+		}
+
+		public void AddExternalFunction (LlvmIrFunction func)
+		{
+			if (externalFunctions == null) {
+				externalFunctions = new List<LlvmIrFunction> ();
+			}
+
+			externalFunctions.Add (func);
+		}
 
 		void ValidateFunction (LlvmIrFunction function, out LlvmFunctionAttributeSet? attributes)
 		{
@@ -36,7 +66,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		void WriteFunctionSignature (LlvmIrFunction function, string statementKindKeyword, LlvmFunctionAttributeSet? attributes, string? comment)
+		void WriteFunctionSignature (LlvmIrFunction function, string statementKindKeyword, LlvmFunctionAttributeSet? attributes, string? comment, bool writeParameterNames = true)
 		{
 			if (!String.IsNullOrEmpty (comment)) {
 				foreach (string line in comment.Split ('\n')) {
@@ -49,7 +79,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			Output.Write ($"{statementKindKeyword} {GetKnownIRType (function.ReturnType)} @{function.Name} (");
-			WriteFunctionParameters (function.Parameters, writeNames: true);
+			WriteFunctionParameters (function.Parameters, writeNames: writeParameterNames);
 			Output.Write(") local_unnamed_addr ");
 			if (attributes != null) {
 				Output.Write ($"#{function.AttributeSetID.ToString (CultureInfo.InvariantCulture)}");
@@ -64,7 +94,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			ValidateFunction (function, out LlvmFunctionAttributeSet? attributes);
 
 			Output.WriteLine ();
-			WriteFunctionSignature (function, "declare", attributes, comment);
+			WriteFunctionSignature (function, "declare", attributes, comment, writeParameterNames: false);
 			Output.WriteLine (";");
 		}
 
@@ -92,11 +122,37 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			string extraPointer = variable.IsNativePointer ? "*" : String.Empty;
-			string irType = $"{GetKnownIRType (variable.Type)}{extraPointer}";
-			if (builder == null) {
-				Output.Write (irType);
-			} else {
-				builder.Append (irType);
+			StringBuilder? flags = null;
+			if (variable is LlvmIrFunctionParameter fparam) {
+				if (fparam.IsVarargs) {
+					DoWrite ("...");
+					return;
+				}
+
+				flags = new StringBuilder ();
+				if (fparam.NoCapture) {
+					flags.Append (" nocapture");
+				}
+
+				if (fparam.Immarg) {
+					flags.Append (" immarg");
+				}
+
+				if (fparam.NoUndef) {
+					flags.Append (" noundef");
+				}
+			}
+
+			string irType = $"{GetKnownIRType (variable.Type)}{extraPointer}{flags?.ToString() ?? String.Empty}";
+			DoWrite (irType);
+
+			void DoWrite (string s)
+			{
+				if (builder == null) {
+					Output.Write (s);
+				} else {
+					builder.Append (s);
+				}
 			}
 		}
 
@@ -128,6 +184,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				CodeRenderType (p, sb);
 
 				if (writeNames) {
+					if (String.IsNullOrEmpty (p.Name)) {
+						throw new InvalidOperationException ("Parameter name is required");
+					}
+
 					sb.Append ($" %{p.Name}");
 				}
 			}
@@ -394,6 +454,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					string paramType = $"{GetKnownIRType (parameter.Type)}{extra}";
 					Output.Write ($"{paramType} ");
 
+					if (argument.NonNull) {
+						Output.Write ("nonnull ");
+					}
+
 					if (argument.Value is LlvmIrFunctionLocalVariable variable) {
 						Output.Write ($"%{variable.Name}");
 					} else if (parameter.Type.IsNativePointer () || parameter.IsNativePointer) {
@@ -425,7 +489,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						StringSymbolInfo info = StringManager.Add (str);
 						WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true, skipPointerType: true);
 					} else {
-						Output.Write (argument.Value.ToString ());
+						Output.Write (MonoAndroidHelper.CultureInvariantToString (argument.Value));
 					}
 				}
 			}
@@ -503,6 +567,93 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return result;
 		}
 
+		void RegisterLlvmLifetimeTrackerFunctions ()
+		{
+			if (llvm_lifetime_start_p0i8_ref != null && llvm_lifetime_end_p0i8_ref != null) {
+				return;
+			}
+
+			const string llvm_lifetime_start_p0i8_name = "llvm.lifetime.start.p0i8";
+			const string llvm_lifetime_end_p0i8_name = "llvm.lifetime.end.p0i8";
+
+			var llvm_lifetime_start_end_params = new List<LlvmIrFunctionParameter> {
+				new LlvmIrFunctionParameter (typeof(long)) {
+					Immarg = true,
+				},
+				new LlvmIrFunctionParameter (typeof(sbyte), isNativePointer: true) {
+					NoCapture = true,
+				},
+			};
+
+			if (llvm_lifetime_start_p0i8_ref == null) {
+				var llvm_lifetime_start_p0i8_sig = new LlvmNativeFunctionSignature (
+					returnType: typeof(void),
+					parameters: llvm_lifetime_start_end_params
+				);
+
+				llvm_lifetime_start_p0i8_ref = new LlvmIrVariableReference (llvm_lifetime_start_p0i8_sig, llvm_lifetime_start_p0i8_name, isGlobal: true);
+				AddFunctionDeclaration (llvm_lifetime_start_p0i8_name, llvm_lifetime_start_p0i8_sig, LlvmIrGenerator.FunctionAttributesLlvmLifetime);
+			}
+
+			if (llvm_lifetime_end_p0i8_ref == null) {
+				var llvm_lifetime_end_p0i8_sig = new LlvmNativeFunctionSignature (
+					returnType: typeof(void),
+					parameters: llvm_lifetime_start_end_params
+				);
+
+				llvm_lifetime_end_p0i8_ref = new LlvmIrVariableReference (llvm_lifetime_end_p0i8_sig, llvm_lifetime_end_p0i8_name, isGlobal: true);
+				AddFunctionDeclaration (llvm_lifetime_end_p0i8_name, llvm_lifetime_end_p0i8_sig, LlvmIrGenerator.FunctionAttributesLlvmLifetime);
+			}
+
+			void AddFunctionDeclaration (string name, LlvmNativeFunctionSignature sig, int attributeSetID)
+			{
+				var func = new LlvmIrFunction (
+					name: name,
+					returnType: sig.ReturnType,
+					attributeSetID: attributeSetID,
+					parameters: sig.Parameters
+				);
+				AddExternalFunction (func);
+			}
+		}
+
+		public (LlvmIrFunctionLocalVariable variable, LlvmIrFunctionLocalVariable lifetimeTracker) EmitAllocStackVariable (LlvmIrFunction function, Type type, string? name = null)
+		{
+			RegisterLlvmLifetimeTrackerFunctions ();
+
+			string alignment = PointerSize.ToString (CultureInfo.InvariantCulture);
+			LlvmIrFunctionLocalVariable localVariable = function.MakeLocalVariable (type, name);
+			LlvmIrFunctionLocalVariable lifetimeTracker = function.MakeLocalVariable (localVariable.Type);
+
+			string localVariableTypeName = GetKnownIRType (localVariable.Type);
+			Output.WriteLine ($"{function.Indent}%{localVariable.Name} = alloca {localVariableTypeName}, align {alignment}");
+			Output.WriteLine ($"{function.Indent}%{lifetimeTracker.Name} = bitcast {GetKnownIRType (lifetimeTracker.Type)}* %{localVariable.Name} to {localVariableTypeName}");
+
+			var lifetimeStartArgs = new List<LlvmIrFunctionArgument> {
+				new LlvmIrFunctionArgument (typeof(long), (long)PointerSize),
+				new LlvmIrFunctionArgument (lifetimeTracker) {
+					NonNull = true,
+				},
+			};
+
+			EmitCall (function, llvm_lifetime_start_p0i8_ref, lifetimeStartArgs, marker: LlvmIrCallMarker.None, AttributeSetID: FunctionAttributesLlvmLifetime);
+			return (localVariable, lifetimeTracker);
+		}
+
+		public void EmitDeallocStackVariable (LlvmIrFunction function, LlvmIrFunctionLocalVariable lifetimeTracker)
+		{
+			RegisterLlvmLifetimeTrackerFunctions ();
+
+			var lifetimeEndArgs = new List<LlvmIrFunctionArgument> {
+				new LlvmIrFunctionArgument (typeof(long), (long)PointerSize),
+				new LlvmIrFunctionArgument (lifetimeTracker) {
+					NonNull = true,
+				},
+			};
+
+			EmitCall (function, llvm_lifetime_end_p0i8_ref, lifetimeEndArgs, marker: LlvmIrCallMarker.None, AttributeSetID: FunctionAttributesLlvmLifetime);
+		}
+
 		public void InitCodeOutput ()
 		{
 			if (codeOutputInitialized) {
@@ -549,6 +700,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			FunctionAttributes[FunctionAttributesCall] = new LlvmFunctionAttributeSet {
 				new NounwindFunctionAttribute (),
 			};
+
+			FunctionAttributes[FunctionAttributesLlvmLifetime] = new LlvmFunctionAttributeSet {
+				new ArgmemonlyFunctionAttribute (),
+				new MustprogressFunctionAttribute (),
+				new NofreeFunctionAttribute (),
+				new NosyncFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new WillreturnFunctionAttribute (),
+			};
+
+			FunctionAttributes[FunctionAttributesLibcFree] = new LlvmFunctionAttributeSet {
+				new InaccessiblememOrArgmemonlyFunctionAttribute (),
+				new MustprogressFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new WillreturnFunctionAttribute (),
+			};
+
+			FunctionAttributes[FunctionAttributesLibcFree].Add (FunctionAttributes[FunctionAttributesJniMethods]);
 		}
 
 		void WriteAttributeSets ()
@@ -560,6 +729,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteSet (FunctionAttributesXamarinAppInit, Output);
 			WriteSet (FunctionAttributesJniMethods, Output);
 			WriteSet (FunctionAttributesCall, Output);
+			WriteSet (FunctionAttributesLlvmLifetime, Output);
+			WriteSet (FunctionAttributesLibcFree, Output);
 
 			Output.WriteLine ();
 

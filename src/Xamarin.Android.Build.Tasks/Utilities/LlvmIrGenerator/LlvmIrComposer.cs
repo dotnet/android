@@ -26,6 +26,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			generator.WriteFileTop ();
 			generator.WriteStructureDeclarations ();
 			Write (generator);
+			generator.WriteFunctionDeclarations ();
 			generator.WriteFileEnd ();
 		}
 

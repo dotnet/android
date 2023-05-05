@@ -176,6 +176,8 @@ namespace Xamarin.Android.Tasks
 
 		const string mm_trace_func_enter_name = "_mm_trace_func_enter";
 		const string mm_trace_func_leave_name = "_mm_trace_func_leave";
+		const string asprintf_name = "asprintf";
+		const string free_name = "free";
 
 		ICollection<string> uniqueAssemblyNames;
 		int numberOfAssembliesInApk;
@@ -208,6 +210,8 @@ namespace Xamarin.Android.Tasks
 		// Tracing
 		LlvmIrVariableReference? mm_trace_func_enter_ref;
 		LlvmIrVariableReference? mm_trace_func_leave_ref;
+		LlvmIrVariableReference? asprintf_ref;
+		LlvmIrVariableReference? free_ref;
 
 		readonly bool generateEmptyCode;
 		readonly MarshalMethodsTracingMode tracingMode;
@@ -692,18 +696,47 @@ namespace Xamarin.Android.Tasks
 			);
 			mm_trace_func_leave_ref = new LlvmIrVariableReference (mm_trace_func_leave_sig, mm_trace_func_leave_name, isGlobal: true);
 
-			WriteTraceDeclaration (mm_trace_func_enter_name, mm_trace_func_enter_sig.ReturnType, mm_trace_func_enter_sig.Parameters);
-			WriteTraceDeclaration (mm_trace_func_leave_name, mm_trace_func_leave_sig.ReturnType, mm_trace_func_leave_sig.Parameters);
+			var asprintf_sig = new LlvmNativeFunctionSignature (
+				returnType: typeof(int),
+				parameters: new List<LlvmIrFunctionParameter> {
+					new LlvmIrFunctionParameter (typeof(string), isNativePointer: true) {
+						NoUndef = true,
+					},
+					new LlvmIrFunctionParameter (typeof(string)) {
+						NoUndef = true,
+					},
+					new LlvmIrFunctionParameter (typeof(void)) {
+						IsVarargs = true,
+					}
+			        }
+			);
+			asprintf_ref = new LlvmIrVariableReference (asprintf_sig, asprintf_name, isGlobal: true);
 
-			void WriteTraceDeclaration (string name, Type returnType, IList<LlvmIrFunctionParameter> parameters)
+			var free_sig = new LlvmNativeFunctionSignature (
+				returnType: typeof(void),
+				parameters: new List<LlvmIrFunctionParameter> {
+					new LlvmIrFunctionParameter (typeof(string)) {
+						NoCapture = true,
+						NoUndef = true,
+					},
+			        }
+			);
+			free_ref = new LlvmIrVariableReference (free_sig, free_name, isGlobal: true);
+
+			AddTraceFunctionDeclaration (asprintf_name, asprintf_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
+			AddTraceFunctionDeclaration (free_name, free_sig, LlvmIrGenerator.FunctionAttributesLibcFree);
+			AddTraceFunctionDeclaration (mm_trace_func_enter_name, mm_trace_func_enter_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
+			AddTraceFunctionDeclaration (mm_trace_func_leave_name, mm_trace_func_leave_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
+
+			void AddTraceFunctionDeclaration (string name, LlvmNativeFunctionSignature sig, int attributeSetID)
 			{
 				var func = new LlvmIrFunction (
 					name: name,
-					returnType: returnType,
-					attributeSetID: LlvmIrGenerator.FunctionAttributesJniMethods,
-					parameters: parameters
+					returnType: sig.ReturnType,
+					attributeSetID: attributeSetID,
+					parameters: sig.Parameters
 				);
-				generator.WriteFunctionForwardDeclaration (func);
+				generator.AddExternalFunction (func);
 			}
 		}
 
@@ -753,8 +786,13 @@ namespace Xamarin.Android.Tasks
 			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}");
 
 			List<LlvmIrFunctionArgument>? trace_enter_leave_args = null;
+			LlvmIrFunctionLocalVariable? tracingParamsStringLifetimeTracker = null;
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
+				const string paramsLocalVarName = "func_params";
+
+				(LlvmIrFunctionLocalVariable variable, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
+
 				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
 					new LlvmIrFunctionArgument (typeof(int), (int)tracingMode),
@@ -821,6 +859,7 @@ namespace Xamarin.Android.Tasks
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
 				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args);
+				generator.EmitDeallocStackVariable (func, tracingParamsStringLifetimeTracker);
 			}
 
 			if (result != null) {

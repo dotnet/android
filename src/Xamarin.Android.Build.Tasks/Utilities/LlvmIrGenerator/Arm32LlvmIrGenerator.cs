@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
 			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesLibcFree].Add (commonAttributes);
 		}
 	}
 }

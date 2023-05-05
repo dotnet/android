@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
 			new FramePointerFunctionAttribute ("non-leaf"),
 			new TargetCpuFunctionAttribute ("generic"),
-			new TargetFeaturesFunctionAttribute ("+neon,+outline-atomics"),
+			new TargetFeaturesFunctionAttribute ("+fix-cortex-a53-835769,+neon,+outline-atomics"),
 		};
 
 		public Arm64LlvmIrGenerator (AndroidTargetArch arch, StreamWriter output, string fileName)
@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
 			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesLibcFree].Add (commonAttributes);
 		}
 	}
 }

@@ -19,7 +19,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
 			new FramePointerFunctionAttribute ("none"),
 			new TargetCpuFunctionAttribute ("x86-64"),
-			new TargetFeaturesFunctionAttribute ("+cx16,+cx8,+fxsr,+mmx,+popcnt,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,+x87"),
+			new TargetFeaturesFunctionAttribute ("+crc32,+cx16,+cx8,+fxsr,+mmx,+popcnt,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,+x87"),
 			new TuneCpuFunctionAttribute ("generic"),
 		};
 
@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			FunctionAttributes[FunctionAttributesXamarinAppInit].Add (commonAttributes);
 			FunctionAttributes[FunctionAttributesJniMethods].Add (commonAttributes);
+			FunctionAttributes[FunctionAttributesLibcFree].Add (commonAttributes);
 		}
 	}
 }

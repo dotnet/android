@@ -27,7 +27,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 	class LlvmIrFunctionParameter : LlvmIrFunctionLocalVariable
 	{
+		public bool Immarg               { get; set; }
 		public bool IsCplusPlusReference { get; }
+		public bool IsVarargs            { get; set; }
+		public bool NoCapture            { get; set; }
+		public bool NoUndef              { get; set; }
+
+		public LlvmIrFunctionParameter (LlvmIrFunctionParameter other, string? name = null)
+			: this (other.Type, name, other.IsNativePointer, other.IsCplusPlusReference)
+		{
+			CopyProperties (other);
+		}
+
+		// This is most decidedly weird... poor API design ;)
+		public LlvmIrFunctionParameter (LlvmNativeFunctionSignature nativeFunction, LlvmIrFunctionParameter otherParam, string? name = null)
+			: this (nativeFunction, name, otherParam.IsNativePointer, otherParam.IsCplusPlusReference)
+		{
+			CopyProperties (otherParam);
+		}
 
 		public LlvmIrFunctionParameter (Type type, string? name = null, bool isNativePointer = false, bool isCplusPlusReference = false)
 			: base (type, name, isNativePointer)
@@ -40,12 +57,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			IsCplusPlusReference = isCplusPlusReference;
 		}
+
+		void CopyProperties (LlvmIrFunctionParameter other)
+		{
+			Immarg = other.Immarg;
+			IsVarargs = other.IsVarargs;
+			NoCapture = other.NoCapture;
+			NoUndef = other.NoUndef;
+		}
 	}
 
 	class LlvmIrFunctionArgument
 	{
 		public object Value { get; }
 		public Type Type    { get; }
+		public bool NonNull { get; set; }
 
 		public LlvmIrFunctionArgument (Type type, object? value = null)
 		{
@@ -89,7 +115,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		uint localSlot = 0;
 		uint indentLevel = 1;
 
-		public LlvmIrFunction (string name, Type returnType, int attributeSetID, IList<LlvmIrFunctionParameter>? parameters = null)
+		public LlvmIrFunction (string name, Type returnType, int attributeSetID, IList<LlvmIrFunctionParameter>? parameters = null, bool skipParameterNames = false)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -111,34 +137,38 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					throw new InvalidOperationException ("null parameters aren't allowed");
 				}
 
+				if (skipParameterNames) {
+					return parameter;
+				}
+
 				if (!String.IsNullOrEmpty (parameter.Name)) {
 					return parameter;
 				}
 
 				string name = GetNextSlotName ();
 				if (parameter.NativeFunction != null) {
-					return new LlvmIrFunctionParameter (parameter.NativeFunction, name, parameter.IsNativePointer, parameter.IsCplusPlusReference);
+					return new LlvmIrFunctionParameter (parameter.NativeFunction, parameter, name);
 				}
-				return new LlvmIrFunctionParameter (parameter.Type, name, parameter.IsNativePointer, parameter.IsCplusPlusReference);
+				return new LlvmIrFunctionParameter (parameter, name);
 			}
 		}
 
-		public LlvmIrFunctionLocalVariable MakeLocalVariable (Type type, string? name = null)
+		public LlvmIrFunctionLocalVariable MakeLocalVariable (Type type, string? name = null, bool isNativePointer = false)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				name = GetNextSlotName ();
 			}
 
-			return new LlvmIrFunctionLocalVariable (type, name);
+			return new LlvmIrFunctionLocalVariable (type, name, isNativePointer: isNativePointer);
 		}
 
-		public LlvmIrFunctionLocalVariable MakeLocalVariable (LlvmIrVariable variable, string? name = null)
+		public LlvmIrFunctionLocalVariable MakeLocalVariable (LlvmIrVariable variable, string? name = null, bool isNativePointer = false)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				name = GetNextSlotName ();
 			}
 
-			return new LlvmIrFunctionLocalVariable (variable, name);
+			return new LlvmIrFunctionLocalVariable (variable, name, isNativePointer: isNativePointer);
 		}
 
 		public void IncreaseIndent ()
