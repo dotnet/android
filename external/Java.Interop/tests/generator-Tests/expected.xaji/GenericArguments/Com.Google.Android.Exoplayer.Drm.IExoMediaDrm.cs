@@ -162,14 +162,18 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	}
 
-	[global::Android.Runtime.Register ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor")]
 	internal sealed partial class IExoMediaDrmOnEventListenerImplementor : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
 
 		object sender;
 
-		public IExoMediaDrmOnEventListenerImplementor (object sender) : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
+		public unsafe IExoMediaDrmOnEventListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 		{
-			global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
+			const string __id = "()V";
+			if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+				return;
+			var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+			SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+			JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
 			this.sender = sender;
 		}
 

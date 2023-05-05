@@ -22,16 +22,14 @@ namespace generator.SourceWriters
 			IsSealed = true;
 			IsPartial = true;
 
-			Attributes.Add (new RegisterAttr (jni_class, additionalProperties: iface.AdditionalAttributeString ()) { UseGlobal = true });
-
 			if (iface.NeedsSender)
 				Fields.Add (new FieldWriter { Name = "sender", Type = TypeReferenceWriter.Object });
 
-			AddConstructor (iface, jni_class, opt);
+			AddConstructor (iface);
 			AddMethods (iface, opt);
 		}
 
-		void AddConstructor (InterfaceGen iface, string jniClass, CodeGenerationOptions opt)
+		void AddConstructor (InterfaceGen iface)
 		{
 			var ctor = new ConstructorWriter {
 				Name = iface.Name + "Implementor",
@@ -41,9 +39,15 @@ namespace generator.SourceWriters
 			if (iface.NeedsSender)
 				ctor.Parameters.Add (new MethodParameterWriter ("sender", TypeReferenceWriter.Object));
 
-			ctor.BaseCall = $"base (global::Android.Runtime.JNIEnv.StartCreateInstance (\"{jniClass}\", \"()V\"), JniHandleOwnership.TransferLocalRef)";
+			ctor.IsUnsafe = true;
+			ctor.BaseCall = "base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)";
 
-			ctor.Body.Add ($"global::Android.Runtime.JNIEnv.FinishCreateInstance ({iface.GetObjectHandleProperty (opt, "this")}, \"()V\");");
+			ctor.Body.Add ("const string __id = \"()V\";");
+			ctor.Body.Add ("if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)");
+			ctor.Body.Add ("\treturn;");
+			ctor.Body.Add ("var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);");
+			ctor.Body.Add ("SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);");
+			ctor.Body.Add ("JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);");
 
 			if (iface.NeedsSender)
 				ctor.Body.Add ("this.sender = sender;");

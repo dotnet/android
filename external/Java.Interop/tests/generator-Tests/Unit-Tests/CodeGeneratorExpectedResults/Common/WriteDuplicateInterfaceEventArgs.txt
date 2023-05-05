@@ -157,14 +157,18 @@ public partial class AnimationEndEventArgs : global::System.EventArgs {
 
 }
 
-[global::Android.Runtime.Register ("mono/java/code/AnimatorListenerImplementor")]
 internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Object, AnimatorListener {
 
 	object sender;
 
-	public AnimatorListenerImplementor (object sender) : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/java/code/AnimatorListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
+	public unsafe AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
-		global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
+		const string __id = "()V";
+		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+			return;
+		var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+		JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
 		this.sender = sender;
 	}
 

@@ -111,11 +111,15 @@ namespace Android.Views {
 
 		}
 
-		[global::Android.Runtime.Register ("mono/android/view/View_OnClickListenerImplementor")]
 		internal sealed partial class IOnClickListenerImplementor : global::Java.Lang.Object, IOnClickListener {
-			public IOnClickListenerImplementor () : base (global::Android.Runtime.JNIEnv.StartCreateInstance ("mono/android/view/View_OnClickListenerImplementor", "()V"), JniHandleOwnership.TransferLocalRef)
+			public unsafe IOnClickListenerImplementor () : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 			{
-				global::Android.Runtime.JNIEnv.FinishCreateInstance (((global::Java.Lang.Object) this).Handle, "()V");
+				const string __id = "()V";
+				if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+					return;
+				var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+				SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+				JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
 			}
 
 			#pragma warning disable 0649
