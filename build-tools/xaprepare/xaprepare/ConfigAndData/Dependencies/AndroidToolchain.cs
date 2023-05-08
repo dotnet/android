@@ -53,25 +53,6 @@ namespace Xamarin.Android.Prepare
 			//    * system images
 			//
 			Components = new List<AndroidToolchainComponent> {
-				new AndroidPlatformComponent ("android-2.3.3_r02", apiLevel: "10", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-15_r05",    apiLevel: "15", pkgRevision: "5"),
-				new AndroidPlatformComponent ("android-16_r05",    apiLevel: "16", pkgRevision: "5"),
-				new AndroidPlatformComponent ("android-17_r03",    apiLevel: "17", pkgRevision: "3"),
-				new AndroidPlatformComponent ("android-18_r03",    apiLevel: "18", pkgRevision: "3"),
-				new AndroidPlatformComponent ("android-19_r04",    apiLevel: "19", pkgRevision: "4"),
-				new AndroidPlatformComponent ("android-20_r02",    apiLevel: "20", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-21_r02",    apiLevel: "21", pkgRevision: "2"),
-				new AndroidPlatformComponent ("android-22_r02",    apiLevel: "22", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-23_r03",   apiLevel: "23", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-24_r02",   apiLevel: "24", pkgRevision: "3"), // Local package revision is actually .3
-				new AndroidPlatformComponent ("platform-25_r03",   apiLevel: "25", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-26_r02",   apiLevel: "26", pkgRevision: "2"),
-				new AndroidPlatformComponent ("platform-27_r03",   apiLevel: "27", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-28_r04",   apiLevel: "28", pkgRevision: "4"),
-				new AndroidPlatformComponent ("platform-29_r01",   apiLevel: "29", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-31_r01",   apiLevel: "31", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-33_r02",   apiLevel: "33", pkgRevision: "2"),
 				new AndroidPlatformComponent ("platform-UpsideDownCake_r03",   apiLevel: "UpsideDownCake", pkgRevision: "3"),
 
