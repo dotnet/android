@@ -1,5 +1,5 @@
 #!/bin/bash -e
-NUNIT_VERSION=3.11.1
+NUNIT_VERSION=3.16.3
 MYDIR="$(dirname $0)"
 PACKAGES_PATH=
 

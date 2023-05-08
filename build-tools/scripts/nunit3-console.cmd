@@ -1,6 +1,6 @@
 @echo off
 SETLOCAL
-set NUNIT_VERSION=3.11.1
+set NUNIT_VERSION=3.16.3
 set PACKAGES_PATH=
 set MYDIR=%~dp0
 
