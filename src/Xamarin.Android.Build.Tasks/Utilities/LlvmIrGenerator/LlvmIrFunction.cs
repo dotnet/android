@@ -71,22 +71,37 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	{
 		public object Value { get; }
 		public Type Type    { get; }
+		public bool IsNativePointer { get; }
 		public bool NonNull { get; set; }
+		public bool NoUndef { get; set; }
 
-		public LlvmIrFunctionArgument (Type type, object? value = null)
+		public LlvmIrFunctionArgument (LlvmIrFunctionParameter parameter, object? value = null)
 		{
-			Type = type ?? throw new ArgumentNullException (nameof (type));
+			Type = parameter?.Type ?? throw new ArgumentNullException (nameof (parameter));
+			IsNativePointer = parameter.IsNativePointer;
 
-			if (value != null && value.GetType () != type) {
-				throw new ArgumentException ($"value type '{value.GetType ()}' does not match the argument type '{type}'");
+			if (value != null && value.GetType () != Type) {
+				throw new ArgumentException ($"value type '{value.GetType ()}' does not match the argument type '{Type}'");
 			}
 
 			Value = value;
 		}
 
+		public LlvmIrFunctionArgument (LlvmIrGenerator.StringSymbolInfo symbol)
+		{
+			Type = typeof(LlvmIrGenerator.StringSymbolInfo);
+			Value = symbol;
+		}
+
 		public LlvmIrFunctionArgument (LlvmIrFunctionLocalVariable variable)
 		{
 			Type = typeof(LlvmIrFunctionLocalVariable);
+			Value = variable;
+		}
+
+		public LlvmIrFunctionArgument (LlvmIrVariableReference variable)
+		{
+			Type = typeof(LlvmIrVariableReference);
 			Value = variable;
 		}
 	}

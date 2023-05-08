@@ -28,6 +28,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		List<LlvmIrFunction>? externalFunctions = null;
 		LlvmIrVariableReference? llvm_lifetime_start_p0i8_ref;
 		LlvmIrVariableReference? llvm_lifetime_end_p0i8_ref;
+		List<LlvmIrFunctionParameter>? llvm_lifetime_start_end_params;
 
 		public void WriteFunctionDeclarations ()
 		{
@@ -269,6 +270,34 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"* {destination.Reference}, align {GetTypeSize (destination.Type).ToString (CultureInfo.InvariantCulture)}");
 		}
 
+		public void EmitStoreInstruction<T> (LlvmIrFunction function, LlvmIrVariableReference destination, T? value)
+		{
+			if (function == null) {
+				throw new ArgumentNullException (nameof (function));
+			}
+
+			if (typeof(T) != destination.Type) {
+				throw new InvalidOperationException ($"Destination variable is of type '{destination.Type}', it cannot be assigned a value of type {typeof(T)}");
+			}
+
+			if (value == null && typeof(T) != typeof(string) && typeof(T) != typeof(IntPtr) && !destination.IsNativePointer) {
+				throw new InvalidOperationException ($"Cannot assign a NULL pointer value to variable of non-pointer type '{destination.Type}'");
+			}
+
+			var dataTypeSB = new StringBuilder ();
+			CodeRenderType (destination, dataTypeSB); // Types are identical, we can use destination to render the type here
+			string dataType = dataTypeSB.ToString ();
+
+			Output.Write ($"{function.Indent}store {dataType} ");
+			if (value == null) {
+				Output.Write ("null");
+			} else {
+				Output.Write (MonoAndroidHelper.CultureInvariantToString (value));
+			}
+			Output.Write ($", {dataType}");
+			Output.WriteLine ($"* {destination.Reference}, align {GetTypeSize (destination.Type).ToString (CultureInfo.InvariantCulture)}");
+		}
+
 		/// <summary>
 		/// Emits the <c>load</c> instruction (https://llvm.org/docs/LangRef.html#load-instruction)
 		/// </summary>
@@ -403,8 +432,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					throw new ArgumentNullException (nameof (arguments));
 				}
 
-				if (targetSignature.Parameters.Count != arguments.Count) {
-					throw new ArgumentException ($"number of passed parameters ({arguments.Count}) does not match number of parameters in function signature ({targetSignature.Parameters.Count})", nameof (arguments));
+				if ((targetSignature.IsVariadic && targetSignature.NumberOfRequiredArguments > arguments.Count) || (!targetSignature.IsVariadic && targetSignature.NumberOfRequiredArguments != arguments.Count)) {
+					throw new ArgumentException ($"number of passed parameters ({arguments.Count}) does not match number of required parameters in function signature ({targetSignature.NumberOfRequiredArguments})", nameof (arguments));
 				}
 			}
 
@@ -437,31 +466,64 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					throw new InvalidOperationException ($"Unsupported call marker '{marker}'");
 			}
 
-			Output.Write ($"call {GetKnownIRType (targetSignature.ReturnType)} {targetRef.Reference} (");
+			Output.Write ($"call {GetKnownIRType (targetSignature.ReturnType)} ");
+			if (targetSignature.IsVariadic) {
+				Output.Write ('(');
+				for (int i = 0; i < targetSignature.NumberOfRequiredArguments; i++) {
+					if (i > 0) {
+						Output.Write (", ");
+					}
+					LlvmIrFunctionParameter argument = targetSignature.Parameters[i];
+					Output.Write (GetParameterType (argument));
+				}
+				Output.Write (", ...) "); // We know the variadic parameter is last
+			}
+			Output.Write ($"{targetRef.Reference} (");
 
 			if (haveParameters) {
+				bool variadicCountry = false;
 				for (int i = 0; i < targetSignature.Parameters.Count; i++) {
-					LlvmIrFunctionParameter parameter = targetSignature.Parameters[i];
-					LlvmIrFunctionArgument argument = arguments[i];
+					LlvmIrFunctionParameter? parameter = null;
 
-					AssertValidType (i, parameter, argument);
+					if (!variadicCountry) {
+						parameter = targetSignature.Parameters[i];
+
+						if (parameter.IsVarargs) {
+							variadicCountry = true;
+						}
+					}
 
 					if (i > 0) {
 						Output.Write (", ");
 					}
 
-					string extra = parameter.IsNativePointer ? "*" : String.Empty;
-					string paramType = $"{GetKnownIRType (parameter.Type)}{extra}";
+					LlvmIrFunctionArgument argument = arguments[i];
+
+					string paramType;
+					if (!variadicCountry) {
+						AssertValidType (i, parameter, argument);
+
+						paramType = GetParameterType (parameter);
+					} else {
+						paramType = String.Empty;
+					}
+
 					Output.Write ($"{paramType} ");
 
 					if (argument.NonNull) {
 						Output.Write ("nonnull ");
 					}
 
+					if (argument.NoUndef) {
+						Output.Write ("noundef ");
+					}
+
 					if (argument.Value is LlvmIrFunctionLocalVariable variable) {
 						Output.Write ($"%{variable.Name}");
-					} else if (parameter.Type.IsNativePointer () || parameter.IsNativePointer) {
-						if (parameter.IsCplusPlusReference) {
+					} else if (argument.Value is StringSymbolInfo stringSymbol) {
+						WriteGetStringPointer (stringSymbol.SymbolName, stringSymbol.Size, indent: false, detectBitness: true, skipPointerType: true);
+					} else if (argument.Type.IsNativePointer () || argument.IsNativePointer) {
+						if (parameter != null && parameter.IsCplusPlusReference) {
 							Output.Write ("nonnull ");
 						}
 
@@ -469,7 +531,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 						Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) ");
 
 						if (argument.Value is LlvmIrVariableReference variableRef) {
-							bool needBitcast = parameter.Type != argument.Type;
+							bool needBitcast = parameter == null ? false : parameter.Type != argument.Type;
 
 							if (needBitcast) {
 								Output.Write ("bitcast (");
@@ -506,6 +568,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return result;
 
+			string GetParameterType (LlvmIrFunctionParameter parameter)
+			{
+				string extra = parameter.IsNativePointer ? "*" : String.Empty;
+				return $"{GetKnownIRType (parameter.Type)}{extra}";
+			}
+
 			static void AssertValidType (int index, LlvmIrFunctionParameter parameter, LlvmIrFunctionArgument argument)
 			{
 				if (argument.Type == typeof(LlvmIrFunctionLocalVariable) || argument.Type == typeof(LlvmIrVariableReference)) {
@@ -513,6 +581,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				if (parameter.Type != typeof(IntPtr)) {
+					if (argument.Type == typeof(StringSymbolInfo) && parameter.Type == typeof (string)) {
+						// Fine, we want to pass a pointer to string
+						return;
+					}
+
 					if (argument.Type != parameter.Type) {
 						ThrowException ();
 					}
@@ -576,7 +649,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			const string llvm_lifetime_start_p0i8_name = "llvm.lifetime.start.p0i8";
 			const string llvm_lifetime_end_p0i8_name = "llvm.lifetime.end.p0i8";
 
-			var llvm_lifetime_start_end_params = new List<LlvmIrFunctionParameter> {
+			llvm_lifetime_start_end_params = new List<LlvmIrFunctionParameter> {
 				new LlvmIrFunctionParameter (typeof(long)) {
 					Immarg = true,
 				},
@@ -630,7 +703,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"{function.Indent}%{lifetimeTracker.Name} = bitcast {GetKnownIRType (lifetimeTracker.Type)}* %{localVariable.Name} to {localVariableTypeName}");
 
 			var lifetimeStartArgs = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (typeof(long), (long)PointerSize),
+				new LlvmIrFunctionArgument (llvm_lifetime_start_end_params[0], (long)PointerSize),
 				new LlvmIrFunctionArgument (lifetimeTracker) {
 					NonNull = true,
 				},
@@ -645,7 +718,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			RegisterLlvmLifetimeTrackerFunctions ();
 
 			var lifetimeEndArgs = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (typeof(long), (long)PointerSize),
+				new LlvmIrFunctionArgument (llvm_lifetime_start_end_params[0], (long)PointerSize),
 				new LlvmIrFunctionArgument (lifetimeTracker) {
 					NonNull = true,
 				},

@@ -12,12 +12,17 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	/// </summary>
 	class LlvmNativeFunctionSignature
 	{
+		int requiredArgsCount;
+
 		public Type ReturnType { get; }
 		public IList<LlvmIrFunctionParameter>? Parameters { get; }
 		public object? FieldValue { get; set; }
+		public bool IsVariadic { get; set; }
+		public int NumberOfRequiredArguments => requiredArgsCount;
 
 		public LlvmNativeFunctionSignature (Type returnType, List<LlvmIrFunctionParameter>? parameters = null)
 		{
+			requiredArgsCount = 0;
 			ReturnType = returnType ?? throw new ArgumentNullException (nameof (returnType));
 			Parameters = parameters?.Select (p => EnsureValidParameter (p))?.ToList ()?.AsReadOnly ();
 
@@ -25,6 +30,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{
 				if (parameter == null) {
 					throw new InvalidOperationException ("null parameters aren't allowed");
+				}
+
+				if (IsVariadic) {
+					throw new InvalidOperationException ("Variadic argument must be the last one");
+				}
+
+				if (parameter.IsVarargs) {
+					IsVariadic = true;
+				} else {
+					requiredArgsCount++;
 				}
 
 				return parameter;

@@ -1291,7 +1291,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
+		/// <para>
 		/// Writes a string with symbol options (writeability, visibility) options specified in the <paramref name="options"/> parameter.
+		/// </para>
+		/// <para>
+		/// If symbol is local, as per <paramref name="options"/>, then <paramref name="symbolName"/> is used as a common prefix for a group of strings, with unique symbol
+		/// names assigned to each string added to the group.
+		/// </para>
 		/// </summary>
 		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options)
 		{
@@ -1299,15 +1305,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		/// <summary>
+		/// <para>
 		/// Writes a string with specified <paramref name="symbolName"/>, and symbol options (writeability, visibility etc) specified in the <paramref name="options"/>
-		/// parameter.  Returns string size (in bytes) in <paramref name="stringSize"/>
+		/// parameter.  Places string size (in bytes) in <paramref name="stringSize"/>.
+		/// </para>
+		/// <para>
+		/// If symbol is local, as per <paramref name="options"/>, then <paramref name="symbolName"/> is used as a common prefix for a group of strings, with unique symbol
+		/// names assigned to each string added to the group.
+		/// </para>
 		/// </summary>
+		/// <returns>Name of the native symbol which refers to the written string.</returns>
 		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options, out ulong stringSize)
 		{
-			StringSymbolInfo info = StringManager.Add (value, groupName: symbolName);
+			StringSymbolInfo info = AddString (value, groupName: symbolName);
 			stringSize = info.Size;
 			if (!options.IsGlobal) {
-				return symbolName;
+				return info.SymbolName;
 			}
 
 			string indexType = Is64Bit ? "i64" : "i32";
@@ -1319,7 +1332,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return symbolName;
 		}
 
-		public virtual void WriteFileTop ()
+		public StringSymbolInfo AddString (string value, string? groupName = null)
+		{
+			return StringManager.Add (value, groupName: groupName);
+		}
+
+		public void WriteFileTop ()
 		{
 			WriteCommentLine ($"ModuleID = '{fileName}'");
 			WriteDirective ("source_filename", QuoteStringNoEscape (fileName));

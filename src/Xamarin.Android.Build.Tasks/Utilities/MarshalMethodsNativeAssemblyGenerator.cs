@@ -208,6 +208,8 @@ namespace Xamarin.Android.Tasks
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
 		// Tracing
+		List<LlvmIrFunctionParameter>? mm_trace_func_enter_or_leave_params;
+		List<LlvmIrFunctionParameter>? get_function_pointer_params;
 		LlvmIrVariableReference? mm_trace_func_enter_ref;
 		LlvmIrVariableReference? mm_trace_func_leave_ref;
 		LlvmIrVariableReference? asprintf_ref;
@@ -674,7 +676,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Function names and declarations must match those in src/monodroid/jni/marshal-methods-tracing.hh
-			var mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
+			mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
 				new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
 				new LlvmIrFunctionParameter (typeof(int), "tracing_mode"),
 				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
@@ -758,6 +760,14 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		string GetPrintfFormatForFunctionParams (LlvmIrFunction func)
+		{
+			var ret = new StringBuilder ('(');
+
+			ret.Append (')');
+			return ret.ToString ();
+		}
+
 		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
 		{
 			var backingFieldSignature = new LlvmNativeFunctionSignature (
@@ -789,17 +799,36 @@ namespace Xamarin.Android.Tasks
 			LlvmIrFunctionLocalVariable? tracingParamsStringLifetimeTracker = null;
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
-				const string paramsLocalVarName = "func_params";
+				const string paramsLocalVarName = "func_params_render";
 
-				(LlvmIrFunctionLocalVariable variable, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
+				(LlvmIrFunctionLocalVariable paramsRenderVariable, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
+				var paramsRenderVariableRef = new LlvmIrVariableReference (paramsRenderVariable, isGlobal: false);
+				generator.EmitStoreInstruction<string> (func, paramsRenderVariableRef, null);
+				string asprintfFormat = GetPrintfFormatForFunctionParams (func);
+				LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (asprintfFormat, $"asprintf_fmt_{func.Name}");
+
+				var asprintf_args = new List<LlvmIrFunctionArgument> {
+					new LlvmIrFunctionArgument (paramsRenderVariable) {
+						NonNull = true,
+						NoUndef = true,
+					},
+					new LlvmIrFunctionArgument (asprintfFormatSym) {
+						NoUndef = true,
+					},
+				};
+
+				foreach (LlvmIrFunctionLocalVariable lfv in func.ParameterVariables) {
+					asprintf_args.Add (new LlvmIrFunctionArgument (lfv));
+				}
+				generator.EmitCall (func, asprintf_ref, asprintf_args, marker: LlvmIrCallMarker.None);
 
 				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
-					new LlvmIrFunctionArgument (typeof(int), (int)tracingMode),
-					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ()),
-					new LlvmIrFunctionArgument (typeof(string), method.NativeSymbolName),
+					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[1], (int)tracingMode),
+					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[2], method.AssemblyCacheIndex),
+					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[3], method.ClassCacheIndex),
+					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[4], nativeCallback.MetadataToken.ToUInt32 ()),
+					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[5], method.NativeSymbolName),
 				};
 
 				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args);
@@ -825,10 +854,10 @@ namespace Xamarin.Android.Tasks
 				func,
 				getFunctionPtrRef,
 				new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (typeof(uint), method.AssemblyCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (typeof(uint), nativeCallback.MetadataToken.ToUInt32 ()),
-					new LlvmIrFunctionArgument (typeof(LlvmIrVariableReference), backingFieldRef),
+					new LlvmIrFunctionArgument (get_function_pointer_params[0], method.AssemblyCacheIndex),
+					new LlvmIrFunctionArgument (get_function_pointer_params[1], method.ClassCacheIndex),
+					new LlvmIrFunctionArgument (get_function_pointer_params[2], nativeCallback.MetadataToken.ToUInt32 ()),
+					new LlvmIrFunctionArgument (backingFieldRef),
 				}
 			);
 
@@ -871,14 +900,16 @@ namespace Xamarin.Android.Tasks
 
 		LlvmIrVariableReference WriteXamarinAppInitFunction (LlvmIrGenerator generator)
 		{
+			get_function_pointer_params = new List<LlvmIrFunctionParameter> {
+				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
+				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
+				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
+				new LlvmIrFunctionParameter (typeof(IntPtr), "target_ptr", isNativePointer: true, isCplusPlusReference: true)
+			};
+
 			var get_function_pointer_sig = new LlvmNativeFunctionSignature (
 				returnType: typeof(void),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
-					new LlvmIrFunctionParameter (typeof(uint), "class_index"),
-					new LlvmIrFunctionParameter (typeof(uint), "method_token"),
-					new LlvmIrFunctionParameter (typeof(IntPtr), "target_ptr", isNativePointer: true, isCplusPlusReference: true)
-				}
+				parameters: get_function_pointer_params
 			) {
 				FieldValue = "null",
 			};
