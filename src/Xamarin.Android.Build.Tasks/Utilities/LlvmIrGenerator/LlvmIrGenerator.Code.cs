@@ -482,10 +482,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (haveParameters) {
 				bool variadicCountry = false;
-				for (int i = 0; i < targetSignature.Parameters.Count; i++) {
+				for (int i = 0; i < arguments.Count; i++) {
 					LlvmIrFunctionParameter? parameter = null;
 
 					if (!variadicCountry) {
+						if (i >= targetSignature.Parameters.Count) {
+							throw new InvalidOperationException ("Internal error: Exceeded number of declared parameters, expected a trailing variadic parameter at this point");
+						}
+
 						parameter = targetSignature.Parameters[i];
 
 						if (parameter.IsVarargs) {
@@ -505,7 +509,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 						paramType = GetParameterType (parameter);
 					} else {
-						paramType = String.Empty;
+						paramType = GetArgumentType (argument);
 					}
 
 					Output.Write ($"{paramType} ");
@@ -572,6 +576,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{
 				string extra = parameter.IsNativePointer ? "*" : String.Empty;
 				return $"{GetKnownIRType (parameter.Type)}{extra}";
+			}
+
+			string GetArgumentType (LlvmIrFunctionArgument argument)
+			{
+				string extra = argument.IsNativePointer ? "*" : String.Empty;
+
+				Type type;
+				if (argument.Value is LlvmIrFunctionLocalVariable variable) {
+					type = variable.Type;
+				} else if (argument.Value is StringSymbolInfo stringSymbol) {
+					type = typeof(string);
+				} else {
+					type = argument.Type;
+				}
+
+				return $"{GetKnownIRType (type)}{extra}";
 			}
 
 			static void AssertValidType (int index, LlvmIrFunctionParameter parameter, LlvmIrFunctionArgument argument)

@@ -97,12 +97,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			Type = typeof(LlvmIrFunctionLocalVariable);
 			Value = variable;
+			IsNativePointer = variable.IsNativePointer;
 		}
 
 		public LlvmIrFunctionArgument (LlvmIrVariableReference variable)
 		{
 			Type = typeof(LlvmIrVariableReference);
 			Value = variable;
+			IsNativePointer = variable.IsNativePointer;
 		}
 	}
 
@@ -139,7 +141,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			ReturnType = returnType ?? throw new ArgumentNullException (nameof (returnType));
 			AttributeSetID = attributeSetID;
 			Parameters = parameters?.Select (p => EnsureParameterName (p))?.ToList ()?.AsReadOnly ();
-			ParameterVariables = Parameters?.Select (p => new LlvmIrFunctionLocalVariable (p.Type, p.Name))?.ToList ()?.AsReadOnly ();
+			ParameterVariables = Parameters?.Select (p => new LlvmIrFunctionLocalVariable (p.Type, p.Name, isNativePointer: p.IsNativePointer))?.ToList ()?.AsReadOnly ();
 
 			// Unnamed local variables need to start from the value which equals [number_of_unnamed_parameters] + 1,
 			// since there's an implicit label created for the top of the function whose name is `[number_of_unnamed_parameters]`
