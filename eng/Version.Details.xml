@@ -8,9 +8,9 @@
       <Uri>https://github.com/dotnet/linker</Uri>
       <Sha>19fa656d35252ccf926e6a6d783b16a2f094aaef</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.6">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.7">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>43b5822e3add9e0c7c7bf8057ddadb7169c76dd3</Sha>
+      <Sha>ad24dacc5b51b83dc4b716cebe70c9f871f57270</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.net6.Manifest-7.0.100" Version="7.0.6" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
