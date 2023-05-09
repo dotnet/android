@@ -79,9 +79,16 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
 					},
 					new AndroidItem.ProguardConfiguration ("proguard.txt") {
-						TextContent = () => @"-ignorewarnings",
+						TextContent = () => "-ignorewarnings",
 					},
-				}
+				},
+				OtherBuildItems = {
+					new BuildItem ("AndroidLibrary") {
+						Update = () => "androidx.core.aar",
+						WebContent = "https://maven.google.com/androidx/core/core/1.10.0/core-1.10.0.aar",
+						MetadataValues = "Bind=false",
+					},
+				},
 			};
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
@@ -97,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aarPath);
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/bar/bar.txt");
-				aar.AssertContainsEntry (aarPath, "proguard.txt");
+				aar.AssertEntryEquals (aarPath, "proguard.txt", "-ignorewarnings");
 			}
 
 			var libB = new XASdkProject (outputType: "Library") {
