@@ -116,7 +116,8 @@ namespace Xamarin.Android.Tools.Bytecode
 		{
 			var value = GetValue (annotation, key);
 
-			if (value is null)
+			// Version is missing or empty
+			if (value is null || value == "[]")
 				return null;
 
 			var values = value.Trim ('[', ']').Split (',').Select (v => ParseInteger (v)).ToArray ();
