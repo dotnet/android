@@ -35,6 +35,8 @@ parameters:
 - name: provisionatorChannel
   type: string
   default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
+- name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
+  default: true
 
 # Global variables
 variables:
@@ -236,9 +238,10 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
-    - template: yaml-templates/start-stop-emulator.yaml
-      parameters:
-        command: stop
+    - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
+      - template: yaml-templates/start-stop-emulator.yaml
+        parameters:
+          command: stop
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -294,6 +297,8 @@ stages:
 - template: yaml-templates/stage-msbuild-tests.yaml
       
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
+  parameters:
+    usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
 - stage: dotnet_prepare_release
   displayName: Prepare .NET Release
