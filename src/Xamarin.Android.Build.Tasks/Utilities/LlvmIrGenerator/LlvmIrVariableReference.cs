@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		public LlvmIrVariableReference (LlvmIrVariable variable, bool isGlobal, bool isNativePointer = false)
-			: base (variable, variable?.Name, isNativePointer)
+			: base (variable, variable?.Name, isNativePointer || variable.IsNativePointer)
 		{
 			if (String.IsNullOrEmpty (variable?.Name)) {
 				throw new ArgumentException ("variable name must not be null or empty", nameof (variable));

@@ -768,6 +768,48 @@ namespace Xamarin.Android.Tasks
 			return ret.ToString ();
 		}
 
+		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, LlvmIrVariableReference allocatedStringVarRef)
+		{
+			LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (format, $"asprintf_fmt_{func.Name}");
+
+			var asprintf_args = new List<LlvmIrFunctionArgument> {
+				new LlvmIrFunctionArgument (allocatedStringVarRef) {
+					NonNull = true,
+					NoUndef = true,
+				},
+				new LlvmIrFunctionArgument (asprintfFormatSym) {
+					NoUndef = true,
+				},
+			};
+
+			asprintf_args.AddRange (variadicArgs);
+
+			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintf_args, marker: LlvmIrCallMarker.None, AttributeSetID: -1);
+			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
+
+			// Check whether asprintf returned a negative value
+			LlvmIrFunctionLocalVariable asprintfResultVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.SignedLessThan, resultRef, "0");
+			var asprintfResultVariableRef = new LlvmIrVariableReference (asprintfResultVariable, isGlobal: false);
+
+			string asprintfFailedLabel = func.MakeUniqueLabel ();
+			string asprintfSucceededLabel = func.MakeUniqueLabel ();
+			string ifElseDoneLabel = func.MakeUniqueLabel ();
+
+			generator.EmitBrInstruction (func, asprintfResultVariableRef, asprintfFailedLabel, asprintfSucceededLabel);
+
+			generator.EmitLabel (func, asprintfFailedLabel);
+			LlvmIrFunctionLocalVariable bufferPointerVar = generator.EmitLoadInstruction (func, allocatedStringVarRef);
+			generator.EmitBrInstruction (func, ifElseDoneLabel);
+
+			generator.EmitLabel (func, asprintfSucceededLabel);
+			generator.EmitStoreInstruction<string> (func, allocatedStringVarRef, null);
+			generator.EmitBrInstruction (func, ifElseDoneLabel);
+
+			generator.EmitLabel (func, ifElseDoneLabel);
+
+			return null;
+		}
+
 		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
 		{
 			var backingFieldSignature = new LlvmNativeFunctionSignature (
@@ -797,30 +839,27 @@ namespace Xamarin.Android.Tasks
 
 			List<LlvmIrFunctionArgument>? trace_enter_leave_args = null;
 			LlvmIrFunctionLocalVariable? tracingParamsStringLifetimeTracker = null;
+			List<LlvmIrFunctionArgument>? asprintfVariadicArgs = null;
+			LlvmIrVariableReference? asprintfAllocatedStringAccessorRef = null;
+			LlvmIrVariableReference? asprintfAllocatedStringVarRef = null;
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
 				const string paramsLocalVarName = "func_params_render";
 
-				(LlvmIrFunctionLocalVariable paramsRenderVariable, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
-				var paramsRenderVariableRef = new LlvmIrVariableReference (paramsRenderVariable, isGlobal: false);
-				generator.EmitStoreInstruction<string> (func, paramsRenderVariableRef, null);
-				string asprintfFormat = GetPrintfFormatForFunctionParams (func);
-				LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (asprintfFormat, $"asprintf_fmt_{func.Name}");
+				(LlvmIrFunctionLocalVariable asprintfAllocatedStringVar, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
+				asprintfAllocatedStringVarRef = new LlvmIrVariableReference (asprintfAllocatedStringVar, isGlobal: false);
+				generator.EmitStoreInstruction<string> (func, asprintfAllocatedStringVarRef, null);
 
-				var asprintf_args = new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (paramsRenderVariable) {
-						NonNull = true,
-						NoUndef = true,
-					},
-					new LlvmIrFunctionArgument (asprintfFormatSym) {
-						NoUndef = true,
-					},
-				};
-
+				asprintfVariadicArgs = new List<LlvmIrFunctionArgument> ();
 				foreach (LlvmIrFunctionLocalVariable lfv in func.ParameterVariables) {
-					asprintf_args.Add (new LlvmIrFunctionArgument (lfv));
+					asprintfVariadicArgs.Add (
+						new LlvmIrFunctionArgument (lfv) {
+							NoUndef = true,
+						}
+					);
 				}
-				generator.EmitCall (func, asprintf_ref, asprintf_args, marker: LlvmIrCallMarker.None);
+
+				asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, GetPrintfFormatForFunctionParams (func), asprintfVariadicArgs, asprintfAllocatedStringVarRef);
 
 				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env

@@ -111,18 +111,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ("{");
 		}
 
-		void CodeRenderType (LlvmIrVariable variable, StringBuilder? builder = null)
+		void CodeRenderType (LlvmIrVariable variable, StringBuilder? builder = null, bool ignoreNativePointer = false)
 		{
+			string extraPointer = !ignoreNativePointer && variable.IsNativePointer ? "*" : String.Empty;
+
 			if (variable.NativeFunction != null) {
 				if (builder == null) {
 					WriteFunctionSignature (variable.NativeFunction);
+					if (extraPointer.Length > 0) {
+						Output.Write (extraPointer);
+					}
 				} else {
 					builder.Append (RenderFunctionSignature (variable.NativeFunction));
+					if (extraPointer.Length > 0) {
+						builder.Append (extraPointer);
+					}
 				}
 				return;
 			}
 
-			string extraPointer = variable.IsNativePointer ? "*" : String.Empty;
 			StringBuilder? flags = null;
 			if (variable is LlvmIrFunctionParameter fparam) {
 				if (fparam.IsVarargs) {
@@ -284,18 +291,17 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"Cannot assign a NULL pointer value to variable of non-pointer type '{destination.Type}'");
 			}
 
-			var dataTypeSB = new StringBuilder ();
-			CodeRenderType (destination, dataTypeSB); // Types are identical, we can use destination to render the type here
-			string dataType = dataTypeSB.ToString ();
-
-			Output.Write ($"{function.Indent}store {dataType} ");
+			Output.Write ($"{function.Indent}store ");
+			CodeRenderType (destination, ignoreNativePointer: true);
+			Output.Write (' ');
 			if (value == null) {
 				Output.Write ("null");
 			} else {
 				Output.Write (MonoAndroidHelper.CultureInvariantToString (value));
 			}
-			Output.Write ($", {dataType}");
-			Output.WriteLine ($"* {destination.Reference}, align {GetTypeSize (destination.Type).ToString (CultureInfo.InvariantCulture)}");
+			Output.Write (", ");
+			CodeRenderType (destination);
+			Output.WriteLine ($" {destination.Reference}, align {GetTypeSize (destination.Type).ToString (CultureInfo.InvariantCulture)}");
 		}
 
 		/// <summary>
@@ -307,12 +313,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new ArgumentNullException (nameof (function));
 			}
 
-			var sb = new StringBuilder ();
-			CodeRenderType (source, sb);
-
-			string variableType = sb.ToString ();
 			LlvmIrFunctionLocalVariable result = function.MakeLocalVariable (source, resultVariableName);
-			Output.WriteLine ($"{function.Indent}%{result.Name} = load {variableType}, {variableType}* @{source.Name}, align {PointerSize.ToString (CultureInfo.InvariantCulture)}");
+			Output.Write ($"{function.Indent}%{result.Name} = load ");
+			CodeRenderType (source, ignoreNativePointer: true);
+			Output.Write (", ");
+			CodeRenderType (source);
+			if (!source.IsNativePointer) {
+				Output.Write ('*');
+			}
+
+			Output.WriteLine ($" {source.Reference}, align {PointerSize.ToString (CultureInfo.InvariantCulture)}");
 
 			return result;
 		}
@@ -401,10 +411,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"{function.Indent}br label %{label}");
 		}
 
-		public void EmitLabel (LlvmIrFunction function, string labelName)
+		public void EmitLabel (LlvmIrFunction function, string labelName, bool insertNewlineBefore = true)
 		{
 			if (function == null) {
 				throw new ArgumentNullException (nameof (function));
+			}
+
+			if (insertNewlineBefore) {
+				Output.WriteLine ();
 			}
 
 			Output.WriteLine ($"{labelName}:");
@@ -531,16 +545,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 							Output.Write ("nonnull ");
 						}
 
-						string ptrSize = PointerSize.ToString (CultureInfo.InvariantCulture);
-						Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) ");
-
 						if (argument.Value is LlvmIrVariableReference variableRef) {
-							bool needBitcast = parameter == null ? false : parameter.Type != argument.Type;
+							bool needBitcast = parameter == null ? false : parameter.Type != variableRef.Type;
 
 							if (needBitcast) {
-								Output.Write ("bitcast (");
+								string ptrSize = PointerSize.ToString (CultureInfo.InvariantCulture);
+								Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) bitcast (");
 								CodeRenderType (variableRef);
-								Output.Write ("* ");
+								Output.Write (' ');
 							}
 
 							Output.Write (variableRef.Reference);
@@ -642,7 +654,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			LlvmIrFunctionLocalVariable result = function.MakeLocalVariable (target, resultVariableName);
 			Output.Write ($"{function.Indent}%{result.Name} = phi ");
-			CodeRenderType (target);
+			CodeRenderType (target, ignoreNativePointer: true);
 
 			bool first = true;
 			foreach ((LlvmIrVariableReference variableRef, string label) in pairs) {
@@ -715,7 +727,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			RegisterLlvmLifetimeTrackerFunctions ();
 
 			string alignment = PointerSize.ToString (CultureInfo.InvariantCulture);
-			LlvmIrFunctionLocalVariable localVariable = function.MakeLocalVariable (type, name);
+			LlvmIrFunctionLocalVariable localVariable = function.MakeLocalVariable (type, name, isNativePointer: true);
 			LlvmIrFunctionLocalVariable lifetimeTracker = function.MakeLocalVariable (localVariable.Type);
 
 			string localVariableTypeName = GetKnownIRType (localVariable.Type);

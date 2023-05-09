@@ -132,6 +132,33 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		uint localSlot = 0;
 		uint indentLevel = 1;
 
+		// This is a hack to work around a requirement in LLVM IR compiler that we cannot meet with a forward-only, single-pass generator like ours.  Namely:
+		// LLVM IR compiler uses a monotonically increasing counter for all the unnamed function parameters, local variables and labels and it expects them to be
+		// used in strict sequence in the generated code.  However, branch instructions need to know their target labels, so in a generator like ours we'd have to allocate
+		// their names before outputting the branch instruction and the blocks that we refer to.  However, if those blocks use unnamed (counted) variables themselves, then
+		// they would be allocated numbers out of sequence, resulting in code similar to:
+		//
+		//         br i1 %7, label %8, label %9
+		//    8:
+		//         %11 = load i8*, i8** %func_params_render, align 8
+		//         br label %10
+		//
+		//    9:
+		//         store i8* null, i8** %func_params_render, align 8
+		//         br label %10
+		//
+		//    10:
+		//
+		// In this instance, the LLVM IR compiler would complain about the line after `8:` as follows:
+		//
+		//   error: instruction expected to be numbered '%9'
+		//
+		// Since we have no time to rewrite the generator in some manner that would support this scenario (e.g. two-pass generator with an AST and label/parameter/variable
+		// placeholders), we need to employ a different technique: named labels.  They won't be subject to the samme restrictions, but they pose another problem - if a
+		// given block of code is output more than once and generates the same label names, we'd have another error on our hands.  Thus this counter variable, which will
+		// generate a unique label name by appending a number to some prefix
+		uint labelCounter = 0;
+
 		public LlvmIrFunction (string name, Type returnType, int attributeSetID, IList<LlvmIrFunctionParameter>? parameters = null, bool skipParameterNames = false)
 		{
 			if (String.IsNullOrEmpty (name)) {
@@ -186,6 +213,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			return new LlvmIrFunctionLocalVariable (variable, name, isNativePointer: isNativePointer);
+		}
+
+		/// <summary>
+		/// Return name of a local label with unique name.
+		/// </summary>
+		public string MakeUniqueLabel (string? prefix = null)
+		{
+			string name = String.IsNullOrEmpty (prefix) ? "ll" : prefix;
+			return $"{name}{labelCounter++}";
 		}
 
 		public void IncreaseIndent ()
