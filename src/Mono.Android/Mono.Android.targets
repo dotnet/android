@@ -383,7 +383,7 @@
 
   <Target Name="_FindDocSourceFiles">
     <ItemGroup>
-      <_MsxDocSourceFile Include="$(XamarinAndroidSourcePath)external\android-api-docs\**" />
+      <_MsxDocSourceFile Include="$(XamarinAndroidSourcePath)external\android-api-docs\docs\Mono.Android\en\**" />
     </ItemGroup>
   </Target>
 
