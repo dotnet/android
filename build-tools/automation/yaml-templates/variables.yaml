@@ -14,7 +14,7 @@ variables:
 - name: WindowsToolchainPdbArtifactName
   value: windows-toolchain-pdb
 - name: NUnitConsoleVersion
-  value: 3.11.1
+  value: 3.16.3
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion

@@ -238,7 +238,7 @@
   <!-- Unit Test Properties -->
   <PropertyGroup>
     <!-- When changing the version below, please also update the 'build-tools/scripts/nunit3-console*' scripts -->
-    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.12.0</NUnitConsoleVersion>
+    <NUnitConsoleVersion Condition=" '$(NUnitConsoleVersion)' == '' ">3.16.3</NUnitConsoleVersion>
     <_Runtime Condition=" '$(HostOS)' != 'Windows' ">$(ManagedRuntime) $(ManagedRuntimeArgs)</_Runtime>
     <_NUnit>$(_Runtime) $(XAPackagesDir)\nunit.consolerunner\$(NUnitConsoleVersion)\tools\nunit3-console.exe</_NUnit>
   </PropertyGroup>
