@@ -304,14 +304,14 @@ namespace Xamarin.Android.Tasks {
 							new XAttribute (androidNs + "targetSdkVersion", TargetSdkVersionName)));
 			}
 
-			// If no minSdkVersion is specified, set it to TargetFrameworkVersion
+			// If no minSdkVersion is specified, set it to XABuildConfig.NDKMinimumApiAvailable
+			// For .NET projects, $(SupportedOSPlatformVersion) will be used.
 			var uses = manifest.Element ("uses-sdk");
 
 			if (uses.Attribute (androidNs + "minSdkVersion") == null) {
 				int minSdkVersion;
 				if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
 					minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
-				minSdkVersion = Math.Min (minSdkVersion, XABuildConfig.NDKMinimumApiAvailable);
 				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersion.ToString ());
 			}
 

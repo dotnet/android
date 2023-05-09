@@ -1172,7 +1172,7 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("Minor")]
+		[Category ("DotNetIgnore")]
 		public void BuildApplicationOver65536Methods ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -1213,16 +1213,18 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir, "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
-				var multidexKeepPath = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
-				Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
-				Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
-				if (!Builder.UseDotNet)
+				if (!Builder.UseDotNet) {
+					var multidexKeepPath = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
+					Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
+					Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
+				}
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
 
 		[Test]
+		[Category ("DotNetIgnore")]
 		public void BuildAfterMultiDexIsNotRequired ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
