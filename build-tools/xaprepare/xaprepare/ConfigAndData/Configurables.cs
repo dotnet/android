@@ -17,9 +17,9 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_15.0.7-5.0.3";
 
-		const string MicrosoftOpenJDK11Version      = "11.0.16";
+		const string MicrosoftOpenJDK11Version      = "17.0.7";
 		const string MicrosoftOpenJDK11Release      = "8.1";
-		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.16+8";
+		const string MicrosoftOpenJDK11RootDirName  = "jdk-17.0.7+7";
 
 		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
 		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
@@ -35,9 +35,9 @@ namespace Xamarin.Android.Prepare
 			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_windows_hotspot_8u345b01.zip
 			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/adoptium/temurin8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
 
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-linux-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-macOS-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-windows-x64.zip
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.7-linux-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.7-macOS-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.7-windows-x64.zip
 			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK11Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
