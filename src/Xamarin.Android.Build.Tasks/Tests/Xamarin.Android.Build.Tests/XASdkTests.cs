@@ -79,16 +79,9 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
 					},
 					new AndroidItem.ProguardConfiguration ("proguard.txt") {
-						TextContent = () => "-ignorewarnings",
+						TextContent = () => "# LibraryC",
 					},
-				},
-				OtherBuildItems = {
-					new BuildItem ("AndroidLibrary") {
-						Update = () => "androidx.core.aar",
-						WebContent = "https://maven.google.com/androidx/core/core/1.10.0/core-1.10.0.aar",
-						MetadataValues = "Bind=false",
-					},
-				},
+				}
 			};
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
@@ -104,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aarPath);
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/bar/bar.txt");
-				aar.AssertEntryEquals (aarPath, "proguard.txt", "-ignorewarnings");
+				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryC");
 			}
 
 			var libB = new XASdkProject (outputType: "Library") {
@@ -146,7 +139,7 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => ResourceData.JavaSourceTestExtension,
 					},
 					new AndroidItem.ProguardConfiguration ("proguard.txt") {
-						TextContent = () => @"-ignorewarnings",
+						TextContent = () => "# LibraryB",
 					},
 				}
 			};
@@ -192,6 +185,8 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86/libfoo.so");
+				// proguard.txt from Library C should not flow to Library B and "double"
+				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryB");
 			}
 
 			// Check EmbeddedResource files do not exist
