@@ -421,7 +421,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				Output.WriteLine ();
 			}
 
-			Output.WriteLine ($"{labelName}:");
+			Output.WriteLine ($"{function.MakeLabel (labelName)}:");
 		}
 
 		public LlvmIrFunctionLocalVariable? EmitCall (LlvmIrFunction function, LlvmIrVariableReference targetRef, List<LlvmIrFunctionArgument>? arguments = null,
@@ -646,7 +646,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// <summary>
 		/// Emits the <c>phi</c> instruction (https://llvm.org/docs/LangRef.html#phi-instruction) for a function pointer type
 		/// </summary>
-		public LlvmIrFunctionLocalVariable EmitPhiInstruction (LlvmIrFunction function, LlvmIrVariableReference target, List<(LlvmIrVariableReference variableRef, string label)> pairs, string? resultVariableName = null)
+		public LlvmIrFunctionLocalVariable EmitPhiInstruction (LlvmIrFunction function, LlvmIrVariableReference target, List<(LlvmIrVariableReference? variableRef, string label)> pairs, string? resultVariableName = null)
 		{
 			if (function == null) {
 				throw new ArgumentNullException (nameof (function));
@@ -665,7 +665,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					Output.Write (", ");
 				}
 
-				Output.Write ($"[{variableRef.Reference}, %{label}]");
+				string value = variableRef?.Reference ?? "null";
+				Output.Write ($"[{value}, %{label}]");
 			}
 			Output.WriteLine ();
 

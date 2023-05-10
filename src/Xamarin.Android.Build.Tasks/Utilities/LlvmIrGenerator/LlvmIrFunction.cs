@@ -124,6 +124,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public IList<LlvmIrFunctionParameter>? Parameters             { get; }
 		public string ImplicitFuncTopLabel                            { get; }
 		public IList<LlvmIrFunctionLocalVariable>? ParameterVariables { get; }
+		public string PreviousBlockStartLabel                         => previousBlockStartLabel;
+		public string PreviousBlockEndLabel                           => previousBlockEndLabel;
 
 		// Function writing state
 		public string Indent                              { get; private set; } = LlvmIrGenerator.Indent;
@@ -159,6 +161,16 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		// generate a unique label name by appending a number to some prefix
 		uint labelCounter = 0;
 
+		// Names of the previous basic code block's start and end delimiters (labels), needed when the `phi` instruction is emitted.  The instruction needs to refer to the
+		// code block preceding the current one, which will be the two labels preceding the current one (including the implicit label pointing to the beginning of the
+		// function, before any code.
+		//
+		// See also https://llvm.org/docs/LangRef.html#phi-instruction
+		//
+		string previousBlockStartLabel;
+		string previousBlockEndLabel;
+		string currentBlockStartLabel;
+
 		public LlvmIrFunction (string name, Type returnType, int attributeSetID, IList<LlvmIrFunctionParameter>? parameters = null, bool skipParameterNames = false)
 		{
 			if (String.IsNullOrEmpty (name)) {
@@ -172,7 +184,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			// Unnamed local variables need to start from the value which equals [number_of_unnamed_parameters] + 1,
 			// since there's an implicit label created for the top of the function whose name is `[number_of_unnamed_parameters]`
-			ImplicitFuncTopLabel = localSlot.ToString (CultureInfo.InvariantCulture);
+			ImplicitFuncTopLabel = previousBlockStartLabel = previousBlockEndLabel = currentBlockStartLabel = localSlot.ToString (CultureInfo.InvariantCulture);
 			localSlot++;
 
 			LlvmIrFunctionParameter EnsureParameterName (LlvmIrFunctionParameter parameter)
@@ -221,7 +233,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public string MakeUniqueLabel (string? prefix = null)
 		{
 			string name = String.IsNullOrEmpty (prefix) ? "ll" : prefix;
-			return $"{name}{labelCounter++}";
+			return ShiftBlockLabels ($"{name}{labelCounter++}");
+		}
+
+		public string MakeLabel (string labelName)
+		{
+			return ShiftBlockLabels (labelName);
+		}
+
+		string ShiftBlockLabels (string newCurrentLabel)
+		{
+			previousBlockStartLabel = previousBlockEndLabel;
+			previousBlockEndLabel = currentBlockStartLabel;
+			currentBlockStartLabel = newCurrentLabel;
+
+			return currentBlockStartLabel;
 		}
 
 		public void IncreaseIndent ()

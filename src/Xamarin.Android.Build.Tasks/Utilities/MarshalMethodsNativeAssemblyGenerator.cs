@@ -787,25 +787,35 @@ namespace Xamarin.Android.Tasks
 			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintf_args, marker: LlvmIrCallMarker.None, AttributeSetID: -1);
 			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
 
-			// Check whether asprintf returned a negative value
+			// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
 			LlvmIrFunctionLocalVariable asprintfResultVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.SignedLessThan, resultRef, "0");
 			var asprintfResultVariableRef = new LlvmIrVariableReference (asprintfResultVariable, isGlobal: false);
 
-			string asprintfFailedLabel = func.MakeUniqueLabel ();
-			string asprintfSucceededLabel = func.MakeUniqueLabel ();
-			string ifElseDoneLabel = func.MakeUniqueLabel ();
+			string asprintfIfThenLabel = func.MakeUniqueLabel ("if.then");
+			string asprintfIfElseLabel = func.MakeUniqueLabel ("if.else");
+			string ifElseDoneLabel = func.MakeUniqueLabel ("if.done");
 
-			generator.EmitBrInstruction (func, asprintfResultVariableRef, asprintfFailedLabel, asprintfSucceededLabel);
+			generator.EmitBrInstruction (func, asprintfResultVariableRef, asprintfIfThenLabel, asprintfIfElseLabel);
 
-			generator.EmitLabel (func, asprintfFailedLabel);
-			LlvmIrFunctionLocalVariable bufferPointerVar = generator.EmitLoadInstruction (func, allocatedStringVarRef);
-			generator.EmitBrInstruction (func, ifElseDoneLabel);
-
-			generator.EmitLabel (func, asprintfSucceededLabel);
+			// Condition is true if asprintf **failed**
+			generator.EmitLabel (func, asprintfIfThenLabel);
 			generator.EmitStoreInstruction<string> (func, allocatedStringVarRef, null);
 			generator.EmitBrInstruction (func, ifElseDoneLabel);
 
+			generator.EmitLabel (func, asprintfIfElseLabel);
+			LlvmIrFunctionLocalVariable bufferPointerVar = generator.EmitLoadInstruction (func, allocatedStringVarRef);
+			LlvmIrVariableReference bufferPointerVarRef = new LlvmIrVariableReference (bufferPointerVar, isGlobal: false);
+			generator.EmitBrInstruction (func, ifElseDoneLabel);
+
 			generator.EmitLabel (func, ifElseDoneLabel);
+			LlvmIrFunctionLocalVariable allocatedStringValueVar = generator.EmitPhiInstruction (
+				func,
+				allocatedStringVarRef,
+				new List<(LlvmIrVariableReference? variableRef, string label)> {
+					(null, func.PreviousBlockStartLabel),
+					(bufferPointerVarRef, func.PreviousBlockEndLabel),
+				}
+			);
 
 			return null;
 		}
@@ -883,9 +893,8 @@ namespace Xamarin.Android.Tasks
 			const string callbackLoadedLabel = "callbackLoaded";
 
 			generator.EmitBrInstruction (func, isNullVariableRef, loadCallbackLabel, callbackLoadedLabel);
-
-			generator.WriteEOL ();
 			generator.EmitLabel (func, loadCallbackLabel);
+
 			LlvmIrFunctionLocalVariable getFunctionPointerVariable = generator.EmitLoadInstruction (func, get_function_pointer_ref, "get_func_ptr");
 			var getFunctionPtrRef = new LlvmIrVariableReference (getFunctionPointerVariable, isGlobal: false);
 
@@ -904,16 +913,14 @@ namespace Xamarin.Android.Tasks
 			var callbackVariable2Ref = new LlvmIrVariableReference (callbackVariable2, isGlobal: false);
 
 			generator.EmitBrInstruction (func, callbackLoadedLabel);
-
-			generator.WriteEOL ();
 			generator.EmitLabel (func, callbackLoadedLabel);
 
 			LlvmIrFunctionLocalVariable fnVariable = generator.EmitPhiInstruction (
 				func,
 				backingFieldRef,
 				new List<(LlvmIrVariableReference variableRef, string label)> {
-					(callbackVariable1Ref, func.ImplicitFuncTopLabel),
-					(callbackVariable2Ref, loadCallbackLabel),
+					(callbackVariable1Ref, func.PreviousBlockStartLabel),
+					(callbackVariable2Ref, func.PreviousBlockEndLabel),
 				},
 				resultVariableName: "fn"
 			);
