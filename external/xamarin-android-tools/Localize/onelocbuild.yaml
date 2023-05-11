@@ -12,6 +12,12 @@ schedules:
   branches:
     include:
     - main
+- cron: "0 6 * * Sunday"
+  displayName: Run weekly on Sunday at 6:00 UTC
+  branches:
+    include:
+    - main
+  always: true
 
 jobs:
 - job: OneLocBuild
