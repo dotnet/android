@@ -12,48 +12,11 @@
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
 
     <!-- Ignore "unused member" warnings from code that originates from Mono.CodeGeneration -->
     <NoWarn>$(NoWarn);CS0169;CS0414;CS0649</NoWarn>
   </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
-    <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
-    <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
-  </PropertyGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-    <Reference Include="mscorlib">
-      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System">
-      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Java.Interop">
-      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime">
-      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Mono.Android\Mono.Android.csproj" />
@@ -61,13 +24,13 @@
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
-  <!-- Only build the .NET 6+ version of 'Mono.Android.Export.dll' for the latest stable Android version. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
+  <!-- Only build 'Mono.Android.Export.dll' for the latest stable Android version. -->
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' != '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
 
   <!-- Copy .NET ref/runtime assemblies to bin/$(Configuration)/dotnet/packs folder -->
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' == '$(AndroidLatestStableApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
       _CopyToPackDirs;
