@@ -57,7 +57,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BinutilsVersion            = Configurables.BinutilsVersion;
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
 
-			public static readonly string JdkFolder                        = "jdk-11";
+			public static readonly string JdkFolder                        = "jdk-17";
 
 			public static readonly Version MicrosoftOpenJDK11Version = new Version (Configurables.MicrosoftOpenJDK11Version);
 			public static readonly Version MicrosoftOpenJDK11Release = new Version (Configurables.MicrosoftOpenJDK11Release);
@@ -307,7 +307,7 @@ namespace Xamarin.Android.Prepare
 			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
-			public static string OpenJDK11InstallDir                 => GetCachedPath (ref openJDK11InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-11"));
+			public static string OpenJDK11InstallDir                 => GetCachedPath (ref openJDK11InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), Defaults.JdkFolder));
 			public static string OpenJDK11CacheDir                   => GetCachedPath (ref openJDK11CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 			// bundle
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
