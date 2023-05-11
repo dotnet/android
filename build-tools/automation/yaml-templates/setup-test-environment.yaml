@@ -13,8 +13,13 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
+  prepareSteps: []
 
 steps:
+
+- ${{ each step in parameters.prepareSteps }}:
+  - ${{ each pair in step }}:
+      ${{ pair.key }}: ${{ pair.value }}
 
 - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
   parameters:

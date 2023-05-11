@@ -7,6 +7,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
+  prepareSteps: []
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -37,6 +38,7 @@ jobs:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
+      prepareSteps: ${{ parameters.prepareSteps }}
 
   - task: DownloadPipelineArtifact@2
     inputs:
@@ -53,5 +55,6 @@ jobs:
   - template: upload-results.yaml
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: fail-on-issue.yaml

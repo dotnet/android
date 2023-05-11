@@ -11,6 +11,7 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   usesCleanImages: true
+  prepareSteps: []
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -41,6 +42,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        prepareSteps: ${{ parameters.prepareSteps }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -48,6 +50,8 @@ stages:
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
     - template: start-stop-emulator.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
@@ -59,10 +63,12 @@ stages:
       - template: start-stop-emulator.yaml
         parameters:
           command: stop
+          xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
 
@@ -95,6 +101,7 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
+        prepareSteps: ${{ parameters.prepareSteps }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -108,12 +115,14 @@ stages:
         avdApiLevel: $(avdApiLevel)
         avdAbi: $(avdAbi)
         avdType: $(avdType)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
         testRunTitle: WearOS On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat = WearOS
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml
@@ -124,10 +133,12 @@ stages:
           avdApiLevel: $(avdApiLevel)
           avdAbi: $(avdAbi)
           avdType: $(avdType)
+          xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml

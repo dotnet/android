@@ -11,7 +11,8 @@ namespace Xamarin.ProjectTools
 		public static string Configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Release";
 		#endif
 
-		public static string TopDirectory = GetTopDirRecursive (Path.GetFullPath (
+		// if in the megapipeline, we do know the root, else find it based on the assembly
+		public static string TopDirectory = GetTopDirRecursive (Environment.GetEnvironmentVariable ("MEGAPIPELINE_ANDROID_DIR") ?? Path.GetFullPath (
 			Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath)));
 
 		public static readonly string PrefixDirectory = Path.Combine (TopDirectory, "bin", Configuration);
@@ -39,8 +40,8 @@ namespace Xamarin.ProjectTools
 			if (Directory.Exists (_testOutputDirectory))
 				return _testOutputDirectory;
 
-			// Set when running on Azure Pipelines https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables
-			var rootDir = Environment.GetEnvironmentVariable ("BUILD_STAGINGDIRECTORY");
+			// Set when running on Azure Pipelines https://docs.microsoft.com/en-us/azure/devops/pipelines/build/variables or when part of the megapipeline
+			var rootDir = Environment.GetEnvironmentVariable ("MEGAPIPELINE_ANDROID_DIR") ?? Environment.GetEnvironmentVariable ("BUILD_STAGINGDIRECTORY");
 			if (!Directory.Exists (rootDir)) {
 				_testOutputDirectory = TestAssemblyOutputDirectory;
 			} else {
