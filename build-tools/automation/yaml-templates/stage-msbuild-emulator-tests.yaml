@@ -71,13 +71,13 @@ stages:
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 2
     strategy:
-      matrix:
-        Android30-x86:
-          avdApiLevel: 30
-          avdAbi: x86
-          avdType: android-wear
-          deviceName: wear_square
-          androidSdkPlatforms: 33
+      parallel: 1
+    variables:
+      avdApiLevel: 30
+      avdAbi: x86
+      avdType: android-wear
+      deviceName: wear_square
+      androidSdkPlatforms: 33
     pool:
       vmImage: $(HostedMacImage)
     workspace:
@@ -85,23 +85,16 @@ stages:
     steps:
     - template: setup-test-environment.yaml
       parameters:
-        configuration: $(XA.Build.Configuration)
+        installTestSlicer: true
         installApkDiff: false
         installLegacyDotNet: false
         restoreNUnitConsole: false
+        updateMono: false
         androidSdkPlatforms: $(androidSdkPlatforms)
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
-
-    - template: run-xaprepare.yaml
-      parameters:
-        displayName: install required brew tools and prepare java.interop
-        arguments: --s=Required --auto-provision=yes --auto-provision-uses-sudo=yes
-
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
-      displayName: set Java8SdkDirectory
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -116,12 +109,11 @@ stages:
         avdAbi: $(avdAbi)
         avdType: $(avdType)
 
-    - template: run-nunit-tests.yaml
+    - template: run-sliced-nunit-tests.yaml
       parameters:
         testRunTitle: WearOS On Device - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        dotNetTestExtraArgs: --filter "TestCategory = WearOS"
-        testResultsFile: TestResult-WearOS--$(XA.Build.Configuration).xml
+        testFilter: cat = WearOS
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml
@@ -139,4 +131,3 @@ stages:
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
 
     - template: fail-on-issue.yaml
-

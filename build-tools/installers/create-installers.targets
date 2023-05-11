@@ -7,8 +7,6 @@
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" />
   <PropertyGroup>
     <FrameworkSrcDir>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\</FrameworkSrcDir>
-    <AndroidApiDocsPath Condition=" '$(AndroidApiDocsPath)' == '' ">$(XamarinAndroidSourcePath)external\android-api-docs\</AndroidApiDocsPath>
-    <_AndroidApiDocsPath>$([MSBuild]::EnsureTrailingSlash($(AndroidApiDocsPath)))</_AndroidApiDocsPath>
     <_LatestStableFrameworkDir>$(FrameworkSrcDir)$(AndroidLatestStableFrameworkVersion)\</_LatestStableFrameworkDir>
     <_MonoDocOutputPath>$(XamarinAndroidSourcePath)bin\$(Configuration)\lib\monodoc\</_MonoDocOutputPath>
     <LegacyMSBuildSrcDir>$(XAInstallPrefix)xbuild\Xamarin\Android\</LegacyMSBuildSrcDir>
@@ -23,17 +21,6 @@
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
     <_HasCommercialFiles Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
   </PropertyGroup>
-  <ItemGroup>
-    <_MsxDocAssembly Include="Mono.Android">
-      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en</SourceDir>
-    </_MsxDocAssembly>
-    <_MonoDocAssembly Include="@(_MsxDocAssembly);OpenTK-1.0;Xamarin.Android.NUnitLite">
-      <SourceDir>$(_AndroidApiDocsPath)docs\%(Identity)\en</SourceDir>
-    </_MonoDocAssembly>
-    <_BclDocsAssembly Include="mscorlib;System.Core;System.ComponentModel.Composition;System.ComponentModel.DataAnnotations;System.Data;System" />
-    <_BclDocsAssembly Include="System.EnterpriseServices;System.Json;System.Numerics;System.Runtime.Serialization;System.ServiceModel" />
-    <_BclDocsAssembly Include="System.ServiceModel.Web;System.Transactions;System.Web.Services;System.Xml;System.Xml.Linq" />
-  </ItemGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>
       <_FrameworkDirs Include="@(AndroidApiInfo->'$(FrameworkSrcDir)%(Identity)\')" />
@@ -41,57 +28,6 @@
       <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
     </ItemGroup>
   </Target>
-  <Target Name="_FindDocSourceFiles">
-    <ItemGroup>
-      <_MsxDocSourceFile Include="%(_MsxDocAssembly.SourceDir)\**" />
-      <_MonoDocSourceFile Include="%(_MonoDocAssembly.SourceDir)\**" />
-    </ItemGroup>
-  </Target>
-  <Target Name="_GenerateMsxDocXmls"
-      DependsOnTargets="_FindFrameworkDirs;_FindDocSourceFiles"
-      Inputs="@(_MsxDocSourceFile)"
-      Outputs="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETDefaultOutDir)%(Identity).xml')">
-    <Exec Command="$(ManagedRuntime) &quot;$(MicrosoftAndroidSdkOutDir)mdoc.exe&quot; --debug export-msxdoc -o &quot;$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml&quot; &quot;%(_MsxDocAssembly.SourceDir)&quot;" />
-    <Copy
-        SourceFiles="$(_LatestStableFrameworkDir)%(_MsxDocAssembly.Identity).xml"
-        DestinationFolder="$(_MonoAndroidNETDefaultOutDir)"
-    />
-    <Touch Files="@(_MsxDocAssembly->'$(_LatestStableFrameworkDir)%(Identity).xml');@(_MsxDocAssembly->'$(_MonoAndroidNETDefaultOutDir)%(Identity).xml')" />
-  </Target>
-  <Target Name="_GenerateMsxDocXmlRedirects"
-      DependsOnTargets="_FindFrameworkDirs"
-      Inputs="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-Mono.Android.xml.in"
-      Outputs="@(_EarlierFrameworkDir->'%(Identity)Mono.Android.xml')">
-    <ReplaceFileContents
-        SourceFile="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-Mono.Android.xml.in"
-        DestinationFile="%(_EarlierFrameworkDir.Identity)Mono.Android.xml"
-        Replacements="@LAST_FRAMEWORK_VERSION@=$(AndroidLatestStableFrameworkVersion)" />
-  </Target>
-  <Target Name="_GenerateMonoAndroidLibArchive"
-      DependsOnTargets="_FindDocSourceFiles"
-      Inputs="@(_MonoDocSourceFile)"
-      Outputs="$(_MonoDocOutputPath)MonoAndroid-lib.zip;$(_MonoDocOutputPath)MonoAndroid-lib.tree">
-    <MakeDir Directories="$(_MonoDocOutputPath)"/>
-    <Exec Command="$(ManagedRuntime) &quot;$(MicrosoftAndroidSdkOutDir)mdoc.exe&quot; --debug assemble -o &quot;$(_MonoDocOutputPath)MonoAndroid-lib&quot; @(_MonoDocAssembly->'&quot;%(SourceDir)&quot;', ' ')" />
-  </Target>
-  <Target Name="_GenerateBclAssemblyDocXmlRedirects"
-      Inputs="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-BCL.xml.in"
-      Outputs="@(_BclDocsAssembly->'$(FrameworkSrcDir)$(BclFrameworkVersion)\%(Identity).xml')">
-    <ReplaceFileContents
-        SourceFile="$(XamarinAndroidSourcePath)build-tools\scripts\redirect-BCL.xml.in"
-        DestinationFile="$(FrameworkSrcDir)$(BclFrameworkVersion)\%(_BclDocsAssembly.Identity).xml"
-        Replacements="@ASSEMBLY@=%(_BclDocsAssembly.Identity)" />
-  </Target>
-  <Target Name="_CopyMonoAndroidDocsSource"
-      Inputs="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
-      Outputs="$(_MonodocOutputPath)MonoAndroid-docs.source">
-    <Copy
-        SourceFiles="$(_AndroidApiDocsPath)MonoAndroid-docs.source"
-        DestinationFolder="$(_MonoDocOutputPath)" />
-  </Target>
-  <Target
-      Name="AssembleApiDocs"
-      DependsOnTargets="_GenerateMsxDocXmls;_GenerateMsxDocXmlRedirects;_GenerateMonoAndroidLibArchive;_GenerateBclAssemblyDocXmlRedirects;_CopyMonoAndroidDocsSource" />
   <Target Name="_WriteVersionFiles"
       DependsOnTargets="GetXAVersionInfo" >
     <WriteLinesToFile
@@ -179,7 +115,6 @@
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.dll" />
     <_FrameworkFiles Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.pdb" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(FirstInstallerFrameworkVersion)\OpenTK-1.0.xml" />
-    <_FrameworkFilesWin Include="@(_BclDocsAssembly->'$(FrameworkSrcDir)$(BclFrameworkVersion)\%(Identity).xml')" />
     <_FrameworkFilesWin Include="$(FrameworkSrcDir)\$(BclFrameworkVersion)\Xamarin.Android.NUnitLite.xml" />
   </ItemGroup>
   <ItemGroup>
@@ -468,7 +403,7 @@
     <LegacyTargetsFiles Include="$(XAInstallPrefix)xbuild\Novell\Xamarin.Android.VisualBasic.targets" />
   </ItemGroup>
   <Target Name="ConstructInstallerItems"
-      DependsOnTargets="_FindFrameworkDirs;AssembleApiDocs;_WriteVersionFiles"
+      DependsOnTargets="_FindFrameworkDirs;_WriteVersionFiles"
       Returns="@(FrameworkItemsWin);@(FrameworkItemsUnix);@(MSBuildItemsWin);@(LegacyMSBuildItemsWin);@(MSBuildItemsUnix);@(LegacyMSBuildItemsUnix)">
     <ItemGroup>
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\AndroidApiInfo.xml')" />
