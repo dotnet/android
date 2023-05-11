@@ -113,7 +113,7 @@ property to the activity name.
 This is equivalent to:
 
 ```shell
-adb shell am start @PACKAGE_NAME@/$(AndroidLaunchActivity)
+adb shell am start -S -n @PACKAGE_NAME@/$(AndroidLaunchActivity)
 ```
 
 Added in Xamarin.Android 10.2.
