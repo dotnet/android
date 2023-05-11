@@ -56,7 +56,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
 			{ typeof (bool), "i8" },
 			{ typeof (byte), "i8" },
-			{ typeof (char), "i8" },
+			{ typeof (char), "i16" },
 			{ typeof (sbyte), "i8" },
 			{ typeof (short), "i16" },
 			{ typeof (ushort), "i16" },
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		static readonly Dictionary<Type, ulong> typeSizes = new Dictionary<Type, ulong> {
 			{ typeof (bool), 1 },
 			{ typeof (byte), 1 },
-			{ typeof (char), 1 },
+			{ typeof (char), 2 },
 			{ typeof (sbyte), 1 },
 			{ typeof (short), 2 },
 			{ typeof (ushort), 2 },

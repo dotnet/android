@@ -424,6 +424,37 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ($"{function.MakeLabel (labelName)}:");
 		}
 
+		public LlvmIrFunctionLocalVariable EmitUpcast (LlvmIrFunction function, LlvmIrVariableReference sourceRef, Type targetType)
+		{
+			if (function == null) {
+				throw new ArgumentNullException (nameof (function));
+			}
+
+			if (sourceRef == null) {
+				throw new ArgumentNullException (nameof (sourceRef));
+			}
+
+			if (targetType == null) {
+				throw new ArgumentNullException (nameof (targetType));
+			}
+
+			string extendOp;
+			if (targetType == typeof(double)) {
+				extendOp = "fp";
+			} else if (targetType == typeof(int)) {
+				extendOp = "s";
+			} else if (targetType == typeof(uint)) {
+				extendOp = "z";
+			} else {
+				throw new InvalidOperationException ($"Unsupported target type for upcasting: {targetType}");
+			}
+
+			LlvmIrFunctionLocalVariable result = function.MakeLocalVariable (targetType);
+			Output.WriteLine ($"{function.Indent}%{result.Name} = {extendOp}ext {GetKnownIRType (sourceRef.Type)} {sourceRef.Reference} to {GetKnownIRType (targetType)}");
+
+			return result;
+		}
+
 		public LlvmIrFunctionLocalVariable? EmitCall (LlvmIrFunction function, LlvmIrVariableReference targetRef, List<LlvmIrFunctionArgument>? arguments = null,
 		                                              string? resultVariableName = null, LlvmIrCallMarker marker = LlvmIrCallMarker.Tail, int AttributeSetID = FunctionAttributesCall)
 		{
