@@ -20,7 +20,8 @@ namespace Xamarin.Android.Tools {
 		static IEnumerable<string> GetUnixConfiguredJdkPaths (Action<TraceLevel, string> logger)
 		{
 			var config = AndroidSdkUnix.GetUnixConfigFile (logger);
-			foreach (var java_sdk in config.Root.Elements ("java-sdk")) {
+
+			foreach (var java_sdk in config.Elements ("java-sdk")) {
 				var path    = (string?) java_sdk.Attribute ("path");
 				if (path != null && !string.IsNullOrEmpty (path)) {
 					yield return path;

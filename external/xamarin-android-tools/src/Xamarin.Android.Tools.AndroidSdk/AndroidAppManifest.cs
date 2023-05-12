@@ -31,16 +31,20 @@ namespace Xamarin.Android.Tools
 				throw new ArgumentNullException (nameof (doc));
 			this.versions   = versions;
 			this.doc = doc;
-			manifest = doc.Root;
-			if (manifest.Name != "manifest")
+
+			if (doc.Root is null || doc.Root.Name != "manifest")
 				throw new ArgumentException ("App manifest does not have 'manifest' root element", nameof (doc));
 
-			application = manifest.Element ("application");
-			if (application == null)
+			manifest = doc.Root;
+
+			if (manifest.Element ("application") is XElement app)
+				application = app;
+			else
 				manifest.Add (application = new XElement ("application"));
 
-			usesSdk = manifest.Element ("uses-sdk");
-			if (usesSdk == null)
+			if (manifest.Element ("uses-sdk") is XElement uses)
+				usesSdk = uses;
+			else
 				manifest.Add (usesSdk = new XElement ("uses-sdk"));
 		}
 
@@ -185,7 +189,7 @@ namespace Xamarin.Android.Tools
 			set { usesSdk.SetAttributeValue (aNS + "targetSdkVersion", value == null ? null : value.ToString ()); }
 		}
 
-		int? ParseSdkVersion (XAttribute attribute)
+		int? ParseSdkVersion (XAttribute? attribute)
 		{
 			var version = (string?) attribute;
 			if (version == null || string.IsNullOrEmpty (version))
@@ -247,9 +251,9 @@ namespace Xamarin.Android.Tools
 					lastPerm = el;
 				}
 			} else {
-				var parentNode = (XNode) manifest.Element ("application") ?? manifest.LastNode;
+				var parentNode = (XNode?) manifest.Element ("application") ?? manifest.LastNode;
 				foreach (var el in newElements)
-					parentNode.AddBeforeSelf (el);
+					parentNode!.AddBeforeSelf (el);
 			}
 		}
 

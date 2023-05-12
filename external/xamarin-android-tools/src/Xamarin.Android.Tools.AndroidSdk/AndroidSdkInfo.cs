@@ -193,7 +193,7 @@ namespace Xamarin.Android.Tools
 			sdk.SetPreferredJavaSdkPath (latestJdk.HomePath);
 		}
 
-		public string TryGetCommandLineToolsPath ()
+		public string? TryGetCommandLineToolsPath ()
 		{
 			return GetCommandLineToolsPaths ("latest").FirstOrDefault ();
 		}

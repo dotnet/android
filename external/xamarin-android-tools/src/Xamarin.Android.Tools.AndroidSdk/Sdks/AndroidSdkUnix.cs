@@ -46,7 +46,7 @@ namespace Xamarin.Android.Tools
 		public override string? PreferedAndroidSdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
-				var androidEl = config_file.Root.Element ("android-sdk");
+				var androidEl = config_file.Element ("android-sdk");
 
 				if (androidEl != null) {
 					var path = (string?)androidEl.Attribute ("path");
@@ -61,7 +61,7 @@ namespace Xamarin.Android.Tools
 		public override string? PreferedAndroidNdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
-				var androidEl = config_file.Root.Element ("android-ndk");
+				var androidEl = config_file.Element ("android-ndk");
 
 				if (androidEl != null) {
 					var path = (string?)androidEl.Attribute ("path");
@@ -76,7 +76,7 @@ namespace Xamarin.Android.Tools
 		public override string? PreferedJavaSdkPath {
 			get {
 				var config_file = GetUnixConfigFile (Logger);
-				var javaEl = config_file.Root.Element ("java-sdk");
+				var javaEl = config_file.Element ("java-sdk");
 
 				if (javaEl != null) {
 					var path = (string?)javaEl.Attribute ("path");
@@ -126,11 +126,12 @@ namespace Xamarin.Android.Tools
 			path = NullIfEmpty (path);
 
 			var doc = GetUnixConfigFile (Logger);
-			var androidEl = doc.Root.Element ("android-sdk");
+
+			var androidEl = doc.Element ("android-sdk");
 
 			if (androidEl == null) {
 				androidEl = new XElement ("android-sdk");
-				doc.Root.Add (androidEl);
+				doc.Add (androidEl);
 			}
 
 			androidEl.SetAttributeValue ("path", path);
@@ -142,11 +143,12 @@ namespace Xamarin.Android.Tools
 			path = NullIfEmpty (path);
 
 			var doc = GetUnixConfigFile (Logger);
-			var javaEl = doc.Root.Element ("java-sdk");
+
+			var javaEl = doc.Element ("java-sdk");
 
 			if (javaEl == null) {
 				javaEl = new XElement ("java-sdk");
-				doc.Root.Add (javaEl);
+				doc.Add (javaEl);
 			}
 
 			javaEl.SetAttributeValue ("path", path);
@@ -158,18 +160,19 @@ namespace Xamarin.Android.Tools
 			path = NullIfEmpty (path);
 
 			var doc = GetUnixConfigFile (Logger);
-			var androidEl = doc.Root.Element ("android-ndk");
+
+			var androidEl = doc.Element ("android-ndk");
 
 			if (androidEl == null) {
 				androidEl = new XElement ("android-ndk");
-				doc.Root.Add (androidEl);
+				doc.Add (androidEl);
 			}
 
 			androidEl.SetAttributeValue ("path", path);
 			SaveConfig (doc);
 		}
 
-		void SaveConfig (XDocument doc)
+		void SaveConfig (XElement doc)
 		{
 			string cfg = UnixConfigPath;
 			List <string>? created = null;
@@ -229,7 +232,7 @@ namespace Xamarin.Android.Tools
 			}
 		}
 
-		internal static XDocument GetUnixConfigFile (Action<TraceLevel, string> logger)
+		internal static XElement GetUnixConfigFile (Action<TraceLevel, string> logger)
 		{
 			var file = UnixConfigPath;
 			XDocument? doc = null;
@@ -254,7 +257,7 @@ namespace Xamarin.Android.Tools
 			if (doc == null || doc.Root == null) {
 				doc = new XDocument (new XElement ("monodroid"));
 			}
-			return doc;
+			return doc.Root!;
 		}
 
 		void FixOwnership (List<string>? paths)

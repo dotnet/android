@@ -71,11 +71,11 @@ namespace Xamarin.Android.Tools
 		// </AndroidApiInfo>
 		static AndroidVersion Load (XDocument doc)
 		{
-			var id      = (string) doc.Root.Element ("Id");
-			var level   = (int) doc.Root.Element ("Level");
-			var name    = (string) doc.Root.Element ("Name");
-			var version = (string) doc.Root.Element ("Version");
-			var stable  = (bool) doc.Root.Element ("Stable");
+			var id      = (string?) doc.Root?.Element ("Id") ?? throw new InvalidOperationException ("Missing Id element");
+			var level   = (int?) doc.Root?.Element ("Level") ?? throw new InvalidOperationException ("Missing Level element");
+			var name    = (string?) doc.Root?.Element ("Name") ?? throw new InvalidOperationException ("Missing Name element");
+			var version = (string?) doc.Root?.Element ("Version") ?? throw new InvalidOperationException ("Missing Version element");
+			var stable  = (bool?) doc.Root?.Element ("Stable") ?? throw new InvalidOperationException ("Missing Stable element");
 
 			return new AndroidVersion (level, version.TrimStart ('v'), name, id, stable);
 		}
