@@ -215,6 +215,8 @@ namespace Xamarin.Android.Tasks
 		LlvmIrVariableReference? asprintf_ref;
 		LlvmIrVariableReference? free_ref;
 
+		LlvmIrCallMarker defaultCallMarker;
+
 		readonly bool generateEmptyCode;
 		readonly MarshalMethodsTracingMode tracingMode;
 
@@ -226,6 +228,7 @@ namespace Xamarin.Android.Tasks
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
+			defaultCallMarker = LlvmIrCallMarker.Tail;
 		}
 
 		/// <summary>
@@ -240,6 +243,7 @@ namespace Xamarin.Android.Tasks
 
 			generateEmptyCode = false;
 			this.tracingMode = tracingMode;
+			defaultCallMarker = tracingMode != MarshalMethodsTracingMode.None ? LlvmIrCallMarker.None : LlvmIrCallMarker.Tail;
 		}
 
 		public override void Init ()
@@ -683,6 +687,7 @@ namespace Xamarin.Android.Tasks
 				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
 				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
 				new LlvmIrFunctionParameter (typeof(string), "native_method_name"),
+				new LlvmIrFunctionParameter (typeof(string), "method_extra_info"),
 			};
 
 			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
@@ -836,9 +841,9 @@ namespace Xamarin.Android.Tasks
 				},
 			};
 
-			// TODO: add upcasts code here and update args accordingly
 			for (int i = 0; i < variadicArgs.Count; i++) {
 				if (parameterUpcasts[i] == null) {
+					asprintf_args.Add (variadicArgs[i]);
 					continue;
 				}
 
@@ -850,13 +855,16 @@ namespace Xamarin.Android.Tasks
 				}
 
 				LlvmIrFunctionLocalVariable upcastVar = generator.EmitUpcast (func, paramRef, parameterUpcasts[i]);
+				asprintf_args.Add (
+					new LlvmIrFunctionArgument (upcastVar) {
+						NoUndef = true,
+					}
+				);
 			}
-
-			asprintf_args.AddRange (variadicArgs);
 
 			generator.WriteEOL ();
 			generator.WriteCommentLine ($"Format: {format}", indent: true);
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintf_args, marker: LlvmIrCallMarker.None, AttributeSetID: -1);
+			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintf_args, marker: defaultCallMarker, AttributeSetID: -1);
 			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
 
 			// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
@@ -889,7 +897,7 @@ namespace Xamarin.Android.Tasks
 				}
 			);
 
-			return new LlvmIrVariableReference (allocatedStringValueVar, isGlobal: false);
+			return new LlvmIrVariableReference (allocatedStringValueVar, isGlobal: false, isNativePointer: true);
 		}
 
 		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
@@ -952,9 +960,10 @@ namespace Xamarin.Android.Tasks
 					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[3], method.ClassCacheIndex),
 					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[4], nativeCallback.MetadataToken.ToUInt32 ()),
 					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[5], method.NativeSymbolName),
+					new LlvmIrFunctionArgument (asprintfAllocatedStringAccessorRef),
 				};
 
-				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args);
+				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args, marker: defaultCallMarker);
 				asprintfAllocatedStringVar = generator.EmitLoadInstruction (func, asprintfAllocatedStringVarRef);
 
 				generator.EmitCall (
@@ -964,7 +973,8 @@ namespace Xamarin.Android.Tasks
 						new LlvmIrFunctionArgument (asprintfAllocatedStringVar) {
 							NoUndef = true,
 						},
-					}
+					},
+					marker: defaultCallMarker
 				);
 				generator.WriteCommentLine ("Tracing code end", indent: true);
 				generator.WriteEOL ();
@@ -993,7 +1003,8 @@ namespace Xamarin.Android.Tasks
 					new LlvmIrFunctionArgument (get_function_pointer_params[1], method.ClassCacheIndex),
 					new LlvmIrFunctionArgument (get_function_pointer_params[2], nativeCallback.MetadataToken.ToUInt32 ()),
 					new LlvmIrFunctionArgument (backingFieldRef),
-				}
+				},
+				marker: defaultCallMarker
 			);
 
 			LlvmIrFunctionLocalVariable callbackVariable2 = generator.EmitLoadInstruction (func, backingFieldRef, "cb2");
@@ -1016,13 +1027,15 @@ namespace Xamarin.Android.Tasks
 			LlvmIrFunctionLocalVariable? result = generator.EmitCall (
 				func,
 				fnVariableRef,
-				func.ParameterVariables.Select (pv => new LlvmIrFunctionArgument (pv)).ToList ()
+				func.ParameterVariables.Select (pv => new LlvmIrFunctionArgument (pv)).ToList (),
+				marker: defaultCallMarker
 			);
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
 				generator.WriteCommentLine ("Tracing code start", indent: true);
 
-				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args);
+				// TODO: replace last argumetn with asprintf-allocated string
+				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args, marker: defaultCallMarker);
 				generator.EmitDeallocStackVariable (func, tracingParamsStringLifetimeTracker);
 
 				generator.WriteCommentLine ("Tracing code end", indent: true);

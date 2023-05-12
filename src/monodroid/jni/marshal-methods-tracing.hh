@@ -17,10 +17,10 @@ extern "C" {
 	void _mm_trace (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* method_name, const char* message) noexcept;
 
 	[[gnu::visibility("hidden")]]
-	void _mm_trace_func_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept;
+	void _mm_trace_func_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name, const char* method_params) noexcept;
 
 	[[gnu::visibility("hidden")]]
-	void _mm_trace_func_leave (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept;
+	void _mm_trace_func_leave (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name, const char* method_params) noexcept;
 
 	// Returns pointer to a constant string, must not be freed
 	[[gnu::visibility("hidden")]]

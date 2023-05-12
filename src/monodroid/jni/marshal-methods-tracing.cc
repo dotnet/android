@@ -31,7 +31,7 @@ void _mm_trace (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, ui
 }
 
 static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token,
-                                        const char* which, const char* native_method_name, bool need_trace) noexcept
+                                        const char* which, const char* native_method_name, bool need_trace, const char* method_extra) noexcept
 {
 	uint64_t method_id = MarshalMethodsUtilities::get_method_id (mono_image_index, method_token);
 	const char *managed_method_name = MarshalMethodsUtilities::get_method_name (method_id);
@@ -42,9 +42,12 @@ static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint3
 		trace.append (which);
 		trace.append (": ");
 		trace.append (native_method_name);
-		trace.append (" (");
+		if (method_extra != nullptr) {
+			trace.append (method_extra);
+		}
+		trace.append (" [");
 		trace.append (managed_method_name);
-		trace.append (") in class ");
+		trace.append ("] in class ");
 		trace.append (class_name);
 
 		trace.append ("\n  Native stack trace:\n");
@@ -76,16 +79,16 @@ static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint3
 	}
 }
 
-void _mm_trace_func_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept
+void _mm_trace_func_enter (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name, const char* method_params) noexcept
 {
 	constexpr char ENTER[] = "ENTER";
-	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, ENTER, native_method_name, true /* need_trace */);
+	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, ENTER, native_method_name, true /* need_trace */, method_params);
 }
 
-void _mm_trace_func_leave (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name) noexcept
+void _mm_trace_func_leave (JNIEnv *env, int32_t tracing_mode, uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, const char* native_method_name, const char* method_return_value) noexcept
 {
 	constexpr char LEAVE[] = "LEAVE";
-	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, LEAVE, native_method_name, false /* need_trace */);
+	_mm_trace_func_leave_enter (env, tracing_mode, mono_image_index, class_index, method_token, LEAVE, native_method_name, false /* need_trace */, method_return_value);
 }
 
 const char* _mm_trace_render_bool (bool v) noexcept
