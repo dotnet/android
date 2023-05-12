@@ -294,8 +294,8 @@
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">33</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">xamarin-android-sdk-13</DocsFxMoniker>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
-    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
-    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/mdoc.exe"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net6.0/mdoc.dll"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net6.0/mdoc.dll"</_Mdoc>
   </PropertyGroup>
 
   <!-- Generate documentation using MDoc -->
@@ -361,7 +361,7 @@
         Lines="$(FrameworksXmlContent)"
     />
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_Lang)"
+        Command="dotnet $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_Lang)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
@@ -392,7 +392,7 @@
       Inputs="@(_MsxDocSourceFile)"
       Outputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
+        Command="dotnet $(_Mdoc) --debug export-msxdoc -o &quot;$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
     />
   </Target>
 
