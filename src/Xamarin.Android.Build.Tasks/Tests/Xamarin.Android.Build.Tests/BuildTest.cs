@@ -1750,7 +1750,7 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void WarningForMinSdkVersion ()
 		{
-			int minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
+			int minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel;
 			int tooLowSdkVersion = minSdkVersion - 1;
 			var proj = new XamarinAndroidApplicationProject {
 				MinSdkVersion = tooLowSdkVersion.ToString (),

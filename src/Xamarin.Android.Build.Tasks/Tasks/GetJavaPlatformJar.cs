@@ -58,22 +58,22 @@ namespace Xamarin.Android.Tasks
 								platform = target_sdk.Value;
 
 							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
-							if (min_sdk != null && (!int.TryParse (min_sdk.Value, out int minSdkVersion) || minSdkVersion < XABuildConfig.NDKMinimumApiAvailable)) {
+							if (min_sdk != null && (!int.TryParse (min_sdk.Value, out int minSdkVersion) || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel)) {
 								Log.LogWarningForXmlNode (
 										code:             "XA4216",
 										file:             AndroidManifest,
 										node:             min_sdk,
 										message:          Properties.Resources.XA4216_MinSdkVersion,
-										messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
+										messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel }
 								);
 							}
-							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.NDKMinimumApiAvailable)) {
+							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel)) {
 								Log.LogWarningForXmlNode (
 										code:             "XA4216",
 										file:             AndroidManifest,
 										node:             target_sdk,
 										message:          Properties.Resources.XA4216_TargetSdkVersion,
-										messageArgs:      new object [] { target_sdk?.Value, XABuildConfig.NDKMinimumApiAvailable }
+										messageArgs:      new object [] { target_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel }
 								);
 							}
 						}
