@@ -64,6 +64,7 @@
     <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
     <PublishReferencesDocumentationFiles Condition=" '$(PublishReferencesDocumentationFiles)' == '' ">false</PublishReferencesDocumentationFiles>
     <SelfContained Condition=" '$(SelfContained)' == '' ">true</SelfContained>
+    <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
