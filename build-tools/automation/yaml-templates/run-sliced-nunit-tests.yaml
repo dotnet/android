@@ -16,6 +16,11 @@ steps:
       --outfile="${{ parameters.testAssembly }}.runsettings"
   displayName: Slice unit tests
 
+- pwsh: |
+    Get-ChildItem -Path . -Recurse | Out-String -Width 160
+  displayName: Debug
+  workingDirectory: ${{ parameters.xaSourcePath }}
+
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
   - template: run-nunit-tests.yaml
