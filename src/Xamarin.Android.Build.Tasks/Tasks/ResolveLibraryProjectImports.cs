@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool DesignTimeBuild { get; set; }
 
+		public bool AndroidApplication { get; set; }
+
 		[Output]
 		public ITaskItem [] Jars { get; set; }
 
@@ -440,7 +442,7 @@ namespace Xamarin.Android.Tasks
 					resolvedAssetDirectories.Add (new TaskItem (Path.GetFullPath (assetsDir), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },
 					}));
-				if (File.Exists (proguardFile)) {
+				if (AndroidApplication && File.Exists (proguardFile)) {
 					proguardConfigFiles.Add (new TaskItem (Path.GetFullPath (proguardFile), new Dictionary<string, string> {
 						{ OriginalFile, aarFullPath },
 					}));
