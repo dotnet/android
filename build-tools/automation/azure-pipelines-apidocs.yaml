@@ -81,6 +81,10 @@ stages:
 
     - template: yaml-templates/use-dot-net.yaml
 
+    - template: yaml-templates/use-dot-net.yaml
+      parameters:
+        version: 6.0
+
     - task: NuGetAuthenticate@0
       displayName: authenticate with azure artifacts
       inputs:
