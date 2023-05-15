@@ -43,11 +43,11 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(TestAssembliesArtifactName)
-      downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+      downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
   - template: run-sliced-nunit-tests.yaml
     parameters:
-      testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+      testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       retryFailedTests: false
