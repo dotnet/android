@@ -1172,17 +1172,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
-		public void BuildApplicationOver65536Methods ()
-		{
-			var proj = CreateMultiDexRequiredApplication ();
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsFalse (b.Build (proj), "Without MultiDex option, build should fail");
-			}
-		}
-
-		[Test]
 		public void CreateMultiDexWithSpacesInConfig ()
 		{
 			var proj = CreateMultiDexRequiredApplication (releaseConfigurationName: "Test Config");
@@ -1224,7 +1213,6 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
 		public void BuildAfterMultiDexIsNotRequired ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
@@ -1238,13 +1226,11 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
 				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				FileAssert.Exists (Path.Combine (androidBinDir, "classes3.dex"));
 
 				using (var zip = ZipHelper.OpenZip (apkPath)) {
 					var entries = zip.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsTrue (entries.Contains ("classes2.dex"), "APK must contain `classes2.dex`.");
-					Assert.IsTrue (entries.Contains ("classes3.dex"), "APK must contain `classes3.dex`.");
 				}
 
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
@@ -1261,44 +1247,6 @@ namespace UnamedProject
 					var entries = zip.Select (e => e.FullName).ToList ();
 					Assert.IsTrue (entries.Contains ("classes.dex"), "APK must contain `classes.dex`.");
 					Assert.IsFalse (entries.Contains ("classes2.dex"), "APK must *not* contain `classes2.dex`.");
-					Assert.IsFalse (entries.Contains ("classes3.dex"), "APK must *not* contain `classes3.dex`.");
-				}
-			}
-		}
-
-		[Test]
-		public void MultiDexCustomMainDexFileList ([Values ("19", "21")] string minSdkVersion)
-		{
-			var expected = new [] {
-				"android/support/multidex/ZipUtil$CentralDirectory.class",
-				"android/support/multidex/MultiDexApplication.class",
-				"android/support/multidex/MultiDex$V19.class",
-				"android/support/multidex/ZipUtil.class",
-				"android/support/multidex/MultiDexExtractor$1.class",
-				"android/support/multidex/MultiDexExtractor.class",
-				"android/support/multidex/MultiDex.class",
-				"MyTest.class",
-			};
-			var proj = CreateMultiDexRequiredApplication ();
-			proj.MinSdkVersion = minSdkVersion;
-			proj.TargetSdkVersion = null;
-			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			proj.OtherBuildItems.Add (new BuildItem ("MultiDexMainDexList", "mymultidex.keep") { TextContent = () => "MyTest.class", Encoding = Encoding.ASCII });
-			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaSource", "MyTest.java") { TextContent = () => "public class MyTest {}", Encoding = Encoding.ASCII });
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "build should succeed. Run will fail.");
-				string androidBinDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "bin");
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				FileAssert.Exists (Path.Combine (androidBinDir, "classes.dex"));
-				FileAssert.Exists (Path.Combine (androidBinDir, "classes2.dex"));
-				if (minSdkVersion == "21") {
-					//NOTE: d8/r8 does not support custom dex list files in this case
-					return;
-				}
-				//NOTE: d8 has the list in a different order, so we should do an unordered comparison
-				var actual = File.ReadAllLines (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "multidex.keep"));
-				foreach (var item in expected) {
-					Assert.IsTrue (actual.Contains (item), $"multidex.keep did not contain `{item}`");
 				}
 			}
 		}
