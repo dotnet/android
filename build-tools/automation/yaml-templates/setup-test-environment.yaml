@@ -17,10 +17,7 @@ parameters:
 
 steps:
 
-- ${{ each step in parameters.prepareSteps }}:
-  - ${{ each pair in step }}:
-      ${{ pair.key }}: ${{ pair.value }}
-
+- ${{ parameters.prepareSteps }}
 - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
   parameters:
     resource: ${{ parameters.repositoryAlias }}
