@@ -209,6 +209,7 @@ namespace Xamarin.Android.Tasks
 
 		// Tracing
 		List<LlvmIrFunctionParameter>? mm_trace_func_enter_or_leave_params;
+		int mm_trace_func_enter_leave_extra_info_param_index = -1;
 		List<LlvmIrFunctionParameter>? get_function_pointer_params;
 		LlvmIrVariableReference? mm_trace_func_enter_ref;
 		LlvmIrVariableReference? mm_trace_func_leave_ref;
@@ -689,6 +690,7 @@ namespace Xamarin.Android.Tasks
 				new LlvmIrFunctionParameter (typeof(string), "native_method_name"),
 				new LlvmIrFunctionParameter (typeof(string), "method_extra_info"),
 			};
+			mm_trace_func_enter_leave_extra_info_param_index = mm_trace_func_enter_or_leave_params.Count - 1;
 
 			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
 				returnType: typeof(void),
@@ -765,12 +767,65 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		void AddPrintfFormatForType (StringBuilder sb, Type type, List<Type?> upcast)
+		{
+			string format;
+			if (type == typeof(string)) {
+				format = "\"%s\"";
+				upcast.Add (null);
+			} else if (type == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (type) || type == typeof(_JNIEnv)) {
+				format = "%p";
+				upcast.Add (null);
+			} else if (type == typeof(bool) || type == typeof(byte) || type == typeof(ushort)) {
+				format = "%u";
+				upcast.Add (typeof(uint));
+			} else if (type == typeof(sbyte) || type == typeof(short)) {
+				format = "%d";
+				upcast.Add (typeof(int));
+			} else if (type == typeof(char)) {
+				format = "'\\%x'";
+				upcast.Add (typeof(uint));
+			} else if (type == typeof(int)) {
+				format = "%d";
+				upcast.Add (null);
+			} else if (type == typeof(uint)) {
+				format = "%u";
+				upcast.Add (null);
+			} else if (type == typeof(long)) {
+				format = "%ld";
+				upcast.Add (null);
+			} else if (type == typeof(ulong)) {
+				format = "%lu";
+				upcast.Add (null);
+			} else if (type == typeof(float)) {
+				format = "%g";
+				upcast.Add (typeof(double));
+			} else if (type == typeof(double)) {
+				format = "%g";
+				upcast.Add (null);
+			} else {
+				throw new InvalidOperationException ($"Unsupported type '{type}'");
+			};
+
+			sb.Append (format);
+		}
+
+		(StringBuilder sb, List<Type?> upcasts) InitPrintfFormat (string startChars = "(")
+		{
+			return (new StringBuilder (startChars), new List<Type?> ());
+		}
+
+		(string asprintfFormat, List<Type?> paramUpcast) FinishPrintfFormat (StringBuilder sb, List<Type?> upcasts, string endChars = ")")
+		{
+			sb.Append (endChars);
+			return (sb.ToString (), upcasts);
+		}
+
 		(string asprintfFormat, List<Type?> paramUpcast) GetPrintfFormatForFunctionParams (LlvmIrFunction func)
 		{
-			var ret = new StringBuilder ("(");
+			(StringBuilder ret, List<Type?> upcasts) = InitPrintfFormat ();
 			bool first = true;
 
-			var upcast = new List<Type?> ();
 			foreach (LlvmIrFunctionParameter parameter in func.Parameters) {
 				if (!first) {
 					ret.Append (", ");
@@ -778,60 +833,26 @@ namespace Xamarin.Android.Tasks
 					first = false;
 				}
 
-				string format;
-				if (parameter.Type == typeof(string)) {
-					format = "\"%s\"";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (parameter.Type) || parameter.Type == typeof(_JNIEnv)) {
-					format = "%p";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(bool) || parameter.Type == typeof(byte) || parameter.Type == typeof(ushort)) {
-					format = "%u";
-					upcast.Add (typeof(uint));
-				} else if (parameter.Type == typeof(sbyte) || parameter.Type == typeof(short)) {
-					format = "%d";
-					upcast.Add (typeof(int));
-				} else if (parameter.Type == typeof(char)) {
-					format = "'\\%x'";
-					upcast.Add (typeof(uint));
-				} else if (parameter.Type == typeof(int)) {
-					format = "%d";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(uint)) {
-					format = "%u";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(long)) {
-					format = "%ld";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(ulong)) {
-					format = "%lu";
-					upcast.Add (null);
-				} else if (parameter.Type == typeof(float)) {
-					format = "%g";
-					upcast.Add (typeof(double));
-				} else if (parameter.Type == typeof(double)) {
-					format = "%g";
-					upcast.Add (null);
-				} else {
-					throw new InvalidOperationException ($"Unsupported type '{parameter.Type}'");
-				};
-
-				ret.Append (format);
+				AddPrintfFormatForType (ret, parameter.Type, upcasts);
 			}
 
-			ret.Append (')');
-			return (ret.ToString (), upcast);
+			return FinishPrintfFormat (ret, upcasts);
 		}
 
-		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, List<Type?> parameterUpcasts, LlvmIrVariableReference allocatedStringVarRef)
+		(string asprintfFormat, List<Type?> paramUpcast) GetPrintfFormatForReturnValue (LlvmIrFunctionLocalVariable localVariable)
 		{
-			if (variadicArgs.Count != parameterUpcasts.Count) {
-				throw new ArgumentException (nameof (parameterUpcasts), $"Number of upcasts ({parameterUpcasts.Count}) is not equal to the number of variadic arguments ({variadicArgs.Count})");
-			}
+			(StringBuilder ret, List<Type?> upcasts) = InitPrintfFormat ("=>[");
 
+			AddPrintfFormatForType (ret, localVariable.Type, upcasts);
+
+			return FinishPrintfFormat (ret, upcasts, "]");
+		}
+
+		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, LlvmIrVariableReference allocatedStringVarRef)
+		{
 			LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (format, $"asprintf_fmt_{func.Name}");
 
-			var asprintf_args = new List<LlvmIrFunctionArgument> {
+			var asprintfArgs = new List<LlvmIrFunctionArgument> {
 				new LlvmIrFunctionArgument (allocatedStringVarRef) {
 					NonNull = true,
 					NoUndef = true,
@@ -841,30 +862,11 @@ namespace Xamarin.Android.Tasks
 				},
 			};
 
-			for (int i = 0; i < variadicArgs.Count; i++) {
-				if (parameterUpcasts[i] == null) {
-					asprintf_args.Add (variadicArgs[i]);
-					continue;
-				}
-
-				LlvmIrVariableReference paramRef;
-				if (variadicArgs[i].Value is LlvmIrFunctionLocalVariable paramVar) {
-					paramRef = new LlvmIrVariableReference (paramVar, isGlobal: false);
-				} else {
-					throw new InvalidOperationException ($"Unexpected argument type {variadicArgs[i].Type}");
-				}
-
-				LlvmIrFunctionLocalVariable upcastVar = generator.EmitUpcast (func, paramRef, parameterUpcasts[i]);
-				asprintf_args.Add (
-					new LlvmIrFunctionArgument (upcastVar) {
-						NoUndef = true,
-					}
-				);
-			}
+			asprintfArgs.AddRange (variadicArgs);
 
 			generator.WriteEOL ();
 			generator.WriteCommentLine ($"Format: {format}", indent: true);
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintf_args, marker: defaultCallMarker, AttributeSetID: -1);
+			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintfArgs, marker: defaultCallMarker, AttributeSetID: -1);
 			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
 
 			// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
@@ -900,6 +902,55 @@ namespace Xamarin.Android.Tasks
 			return new LlvmIrVariableReference (allocatedStringValueVar, isGlobal: false, isNativePointer: true);
 		}
 
+		void AddAsprintfArgument (LlvmIrGenerator generator, LlvmIrFunction func, List<LlvmIrFunctionArgument> asprintfArgs, Type? upcast, LlvmIrFunctionLocalVariable paramVar)
+		{
+			if (upcast == null) {
+				asprintfArgs.Add (new LlvmIrFunctionArgument (paramVar) { NoUndef = true });
+				return;
+			}
+
+			LlvmIrVariableReference paramRef = new LlvmIrVariableReference (paramVar, isGlobal: false);
+			LlvmIrFunctionLocalVariable upcastVar = generator.EmitUpcast (func, paramRef, upcast);
+			asprintfArgs.Add (
+				new LlvmIrFunctionArgument (upcastVar) {
+					NoUndef = true,
+				}
+			);
+		}
+
+		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, List<Type?> parameterUpcasts, LlvmIrVariableReference allocatedStringVarRef)
+		{
+			if (variadicArgs.Count != parameterUpcasts.Count) {
+				throw new ArgumentException (nameof (parameterUpcasts), $"Number of upcasts ({parameterUpcasts.Count}) is not equal to the number of variadic arguments ({variadicArgs.Count})");
+			}
+
+			var asprintfArgs = new List<LlvmIrFunctionArgument> ();
+
+			for (int i = 0; i < variadicArgs.Count; i++) {
+				if (parameterUpcasts[i] == null) {
+					asprintfArgs.Add (variadicArgs[i]);
+					continue;
+				}
+
+				if (variadicArgs[i].Value is LlvmIrFunctionLocalVariable paramVar) {
+					AddAsprintfArgument (generator, func, asprintfArgs, parameterUpcasts[i], paramVar);
+					continue;
+				}
+
+				throw new InvalidOperationException ($"Unexpected argument type {variadicArgs[i].Type}");
+			}
+
+			return WriteAsprintfCall (generator, func, format, asprintfArgs, allocatedStringVarRef);
+		}
+
+		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, LlvmIrFunctionLocalVariable retVal, Type? retValUpcast, LlvmIrVariableReference allocatedStringVarRef)
+		{
+			var asprintfArgs = new List<LlvmIrFunctionArgument> ();
+			AddAsprintfArgument (generator, func, asprintfArgs, retValUpcast, retVal);
+
+			return WriteAsprintfCall (generator, func, format, asprintfArgs, allocatedStringVarRef);
+		}
+
 		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
 		{
 			var backingFieldSignature = new LlvmNativeFunctionSignature (
@@ -932,6 +983,8 @@ namespace Xamarin.Android.Tasks
 			List<LlvmIrFunctionArgument>? asprintfVariadicArgs = null;
 			LlvmIrVariableReference? asprintfAllocatedStringAccessorRef = null;
 			LlvmIrVariableReference? asprintfAllocatedStringVarRef = null;
+			string? asprintfFormat = null;
+			List<Type?> asprintfUpcasts = null;
 
 			if (tracingMode != MarshalMethodsTracingMode.None) {
 				const string paramsLocalVarName = "func_params_render";
@@ -950,8 +1003,8 @@ namespace Xamarin.Android.Tasks
 					);
 				}
 
-				(string asprintfFormat, List<Type?> upcasts) = GetPrintfFormatForFunctionParams (func);
-				asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfFormat, asprintfVariadicArgs, upcasts, asprintfAllocatedStringVarRef);
+				(asprintfFormat, asprintfUpcasts) = GetPrintfFormatForFunctionParams (func);
+				asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfFormat, asprintfVariadicArgs, asprintfUpcasts, asprintfAllocatedStringVarRef);
 
 				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
 					new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
@@ -1034,7 +1087,24 @@ namespace Xamarin.Android.Tasks
 			if (tracingMode != MarshalMethodsTracingMode.None) {
 				generator.WriteCommentLine ("Tracing code start", indent: true);
 
-				// TODO: replace last argumetn with asprintf-allocated string
+				LlvmIrFunctionArgument extraInfoArg;
+				if (result != null) {
+					(asprintfFormat, asprintfUpcasts) = GetPrintfFormatForReturnValue (result);
+					asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfFormat, result, asprintfUpcasts[0], asprintfAllocatedStringVarRef);
+					extraInfoArg = new LlvmIrFunctionArgument (asprintfAllocatedStringAccessorRef) {
+						NoUndef = true,
+					};
+				} else {
+					extraInfoArg = new LlvmIrFunctionArgument (asprintfAllocatedStringVarRef, isNull: true) {
+						NoUndef = true,
+					};
+				}
+
+				if (mm_trace_func_enter_leave_extra_info_param_index < 0) {
+					throw new InvalidOperationException ("Internal error: index of the extra info parameter is unknown");
+				}
+				trace_enter_leave_args[mm_trace_func_enter_leave_extra_info_param_index] = extraInfoArg;
+
 				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args, marker: defaultCallMarker);
 				generator.EmitDeallocStackVariable (func, tracingParamsStringLifetimeTracker);
 

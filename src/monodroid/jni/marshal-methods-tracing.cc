@@ -43,11 +43,12 @@ static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint3
 		trace.append (": ");
 		trace.append (native_method_name);
 		if (method_extra != nullptr) {
+			trace.append (" ");
 			trace.append (method_extra);
 		}
-		trace.append (" [");
+		trace.append (" {");
 		trace.append (managed_method_name);
-		trace.append ("] in class ");
+		trace.append ("} in class ");
 		trace.append (class_name);
 
 		trace.append ("\n  Native stack trace:\n");
@@ -69,10 +70,12 @@ static void _mm_trace_func_leave_enter (JNIEnv *env, int32_t tracing_mode, uint3
 		__android_log_print (
 			PRIORITY,
 			SharedConstants::LOG_CATEGORY_NAME_MONODROID_ASSEMBLY,
-			"%s%s: %s (%s) in class %s",
+			"%s%s: %s%s%s {%s} in class %s",
 			LEAD,
 			which,
 			native_method_name,
+			method_extra == nullptr ? "" : " ",
+			method_extra == nullptr ? "" : method_extra,
 			managed_method_name,
 			class_name
 		);

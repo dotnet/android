@@ -455,6 +455,156 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return result;
 		}
 
+		void WriteCallArgument (LlvmIrFunction function, LlvmIrFunctionArgument argument, LlvmIrFunctionParameter? parameter, bool variadicCountry, int argumentIndex)
+		{
+			string paramType;
+			if (!variadicCountry) {
+				AssertValidType (argumentIndex, parameter, argument);
+
+				paramType = GetParameterType (parameter);
+			} else {
+				paramType = GetArgumentType (argument);
+			}
+
+			Output.Write ($"{paramType} ");
+
+			if (argument.NonNull) {
+				Output.Write ("nonnull ");
+			}
+
+			if (argument.NoUndef) {
+				Output.Write ("noundef ");
+			}
+
+			if (argument.Value is LlvmIrFunctionLocalVariable variable) {
+				Output.Write ($"%{variable.Name}");
+				return;
+			}
+
+			if (argument.Value is StringSymbolInfo stringSymbol) {
+				WriteGetStringPointer (stringSymbol.SymbolName, stringSymbol.Size, indent: false, detectBitness: true, skipPointerType: true);
+				return;
+			}
+
+			if (argument.Type.IsNativePointer () || argument.IsNativePointer) {
+				if (parameter != null && parameter.IsCplusPlusReference) {
+					Output.Write ("nonnull ");
+				}
+
+				if (argument.Type == typeof(LlvmIrVariableReference)) {
+					var variableRef = argument.Value as LlvmIrVariableReference;
+					bool needBitcast = parameter == null || variableRef == null ? false : parameter.Type != variableRef.Type;
+
+					if (needBitcast) {
+						string ptrSize = PointerSize.ToString (CultureInfo.InvariantCulture);
+						Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) bitcast (");
+						CodeRenderType (variableRef);
+						Output.Write (' ');
+					}
+
+					if (variableRef != null) {
+						Output.Write (variableRef.Reference);
+					} else {
+						Output.Write ("null");
+					}
+
+					if (needBitcast) {
+						Output.Write ($" to {paramType})");
+					}
+				} else {
+					throw new InvalidOperationException ($"Unexpected pointer type in argument {argumentIndex}, '{argument.Type}'");
+				}
+				return;
+			}
+
+			if (argument.Value is string str) {
+				StringSymbolInfo info = StringManager.Add (str);
+				WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true, skipPointerType: true);
+				return;
+
+			}
+
+			Output.Write (MonoAndroidHelper.CultureInvariantToString (argument.Value));
+
+			string GetArgumentType (LlvmIrFunctionArgument argument)
+			{
+				string extra = argument.IsNativePointer ? "*" : String.Empty;
+
+				Type type;
+				if (argument.Value is LlvmIrFunctionLocalVariable variable) {
+					type = variable.Type;
+				} else if (argument.Value is StringSymbolInfo stringSymbol) {
+					type = typeof(string);
+				} else {
+					type = argument.Type;
+				}
+
+				return $"{GetKnownIRType (type)}{extra}";
+			}
+
+			static void AssertValidType (int index, LlvmIrFunctionParameter parameter, LlvmIrFunctionArgument argument)
+			{
+				if (argument.Type == typeof(LlvmIrFunctionLocalVariable) || argument.Type == typeof(LlvmIrVariableReference)) {
+					return;
+				}
+
+				if (parameter.Type != typeof(IntPtr)) {
+					if (argument.Type == typeof(StringSymbolInfo) && parameter.Type == typeof (string)) {
+						// Fine, we want to pass a pointer to string
+						return;
+					}
+
+					if (argument.Type != parameter.Type) {
+						ThrowException ();
+					}
+					return;
+				}
+
+				if (argument.Type.IsNativePointer ()) {
+					return;
+				}
+
+				if (typeof(LlvmIrVariable).IsAssignableFrom (argument.Type) &&
+				    argument.Value is LlvmIrVariable variable &&
+				    (variable.IsNativePointer || variable.NativeFunction != null)) {
+					return;
+				}
+
+				ThrowException ();
+
+				void ThrowException ()
+				{
+					throw new InvalidOperationException ($"Argument {index} type '{argument.Type}' does not match the expected function parameter type '{parameter.Type}'");
+				}
+			}
+		}
+
+		void WriteCallArguments (LlvmIrFunction function, LlvmNativeFunctionSignature targetSignature, List<LlvmIrFunctionArgument> arguments)
+		{
+			bool variadicCountry = false;
+			for (int i = 0; i < arguments.Count; i++) {
+				LlvmIrFunctionParameter? parameter = null;
+
+				if (!variadicCountry) {
+					if (i >= targetSignature.Parameters.Count) {
+						throw new InvalidOperationException ("Internal error: Exceeded number of declared parameters, expected a trailing variadic parameter at this point");
+					}
+
+					parameter = targetSignature.Parameters[i];
+
+					if (parameter.IsVarargs) {
+						variadicCountry = true;
+					}
+				}
+
+				if (i > 0) {
+					Output.Write (", ");
+				}
+
+				WriteCallArgument (function, arguments[i], parameter, variadicCountry, i);
+			}
+		}
+
 		public LlvmIrFunctionLocalVariable? EmitCall (LlvmIrFunction function, LlvmIrVariableReference targetRef, List<LlvmIrFunctionArgument>? arguments = null,
 		                                              string? resultVariableName = null, LlvmIrCallMarker marker = LlvmIrCallMarker.Tail, int AttributeSetID = FunctionAttributesCall)
 		{
@@ -526,81 +676,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.Write ($"{targetRef.Reference} (");
 
 			if (haveParameters) {
-				bool variadicCountry = false;
-				for (int i = 0; i < arguments.Count; i++) {
-					LlvmIrFunctionParameter? parameter = null;
-
-					if (!variadicCountry) {
-						if (i >= targetSignature.Parameters.Count) {
-							throw new InvalidOperationException ("Internal error: Exceeded number of declared parameters, expected a trailing variadic parameter at this point");
-						}
-
-						parameter = targetSignature.Parameters[i];
-
-						if (parameter.IsVarargs) {
-							variadicCountry = true;
-						}
-					}
-
-					if (i > 0) {
-						Output.Write (", ");
-					}
-
-					LlvmIrFunctionArgument argument = arguments[i];
-
-					string paramType;
-					if (!variadicCountry) {
-						AssertValidType (i, parameter, argument);
-
-						paramType = GetParameterType (parameter);
-					} else {
-						paramType = GetArgumentType (argument);
-					}
-
-					Output.Write ($"{paramType} ");
-
-					if (argument.NonNull) {
-						Output.Write ("nonnull ");
-					}
-
-					if (argument.NoUndef) {
-						Output.Write ("noundef ");
-					}
-
-					if (argument.Value is LlvmIrFunctionLocalVariable variable) {
-						Output.Write ($"%{variable.Name}");
-					} else if (argument.Value is StringSymbolInfo stringSymbol) {
-						WriteGetStringPointer (stringSymbol.SymbolName, stringSymbol.Size, indent: false, detectBitness: true, skipPointerType: true);
-					} else if (argument.Type.IsNativePointer () || argument.IsNativePointer) {
-						if (parameter != null && parameter.IsCplusPlusReference) {
-							Output.Write ("nonnull ");
-						}
-
-						if (argument.Value is LlvmIrVariableReference variableRef) {
-							bool needBitcast = parameter == null ? false : parameter.Type != variableRef.Type;
-
-							if (needBitcast) {
-								string ptrSize = PointerSize.ToString (CultureInfo.InvariantCulture);
-								Output.Write ($"align {ptrSize} dereferenceable({ptrSize}) bitcast (");
-								CodeRenderType (variableRef);
-								Output.Write (' ');
-							}
-
-							Output.Write (variableRef.Reference);
-
-							if (needBitcast) {
-								Output.Write ($" to {paramType})");
-							}
-						} else {
-							throw new InvalidOperationException ($"Unexpected pointer type in argument {i}, '{argument.Type}'");
-						}
-					} else if (argument.Value is string str) {
-						StringSymbolInfo info = StringManager.Add (str);
-						WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true, skipPointerType: true);
-					} else {
-						Output.Write (MonoAndroidHelper.CultureInvariantToString (argument.Value));
-					}
-				}
+				WriteCallArguments (function, targetSignature, arguments);
 			}
 
 			Output.Write (")");
@@ -614,64 +690,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Output.WriteLine ();
 
 			return result;
+		}
 
-			string GetParameterType (LlvmIrFunctionParameter parameter)
-			{
-				string extra = parameter.IsNativePointer ? "*" : String.Empty;
-				return $"{GetKnownIRType (parameter.Type)}{extra}";
-			}
-
-			string GetArgumentType (LlvmIrFunctionArgument argument)
-			{
-				string extra = argument.IsNativePointer ? "*" : String.Empty;
-
-				Type type;
-				if (argument.Value is LlvmIrFunctionLocalVariable variable) {
-					type = variable.Type;
-				} else if (argument.Value is StringSymbolInfo stringSymbol) {
-					type = typeof(string);
-				} else {
-					type = argument.Type;
-				}
-
-				return $"{GetKnownIRType (type)}{extra}";
-			}
-
-			static void AssertValidType (int index, LlvmIrFunctionParameter parameter, LlvmIrFunctionArgument argument)
-			{
-				if (argument.Type == typeof(LlvmIrFunctionLocalVariable) || argument.Type == typeof(LlvmIrVariableReference)) {
-					return;
-				}
-
-				if (parameter.Type != typeof(IntPtr)) {
-					if (argument.Type == typeof(StringSymbolInfo) && parameter.Type == typeof (string)) {
-						// Fine, we want to pass a pointer to string
-						return;
-					}
-
-					if (argument.Type != parameter.Type) {
-						ThrowException ();
-					}
-					return;
-				}
-
-				if (argument.Type.IsNativePointer ()) {
-					return;
-				}
-
-				if (typeof(LlvmIrVariable).IsAssignableFrom (argument.Type) &&
-				    argument.Value is LlvmIrVariable variable &&
-				    (variable.IsNativePointer || variable.NativeFunction != null)) {
-					return;
-				}
-
-				ThrowException ();
-
-				void ThrowException ()
-				{
-					throw new InvalidOperationException ($"Argument {index} type '{argument.Type}' does not match the expected function parameter type '{parameter.Type}'");
-				}
-			}
+		string GetParameterType (LlvmIrFunctionParameter parameter)
+		{
+			string extra = parameter.IsNativePointer ? "*" : String.Empty;
+			return $"{GetKnownIRType (parameter.Type)}{extra}";
 		}
 
 		/// <summary>

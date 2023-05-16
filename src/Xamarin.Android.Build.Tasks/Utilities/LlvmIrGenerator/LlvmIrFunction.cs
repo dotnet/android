@@ -93,17 +93,17 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Value = symbol;
 		}
 
-		public LlvmIrFunctionArgument (LlvmIrFunctionLocalVariable variable)
+		public LlvmIrFunctionArgument (LlvmIrFunctionLocalVariable variable, bool isNull = false)
 		{
 			Type = typeof(LlvmIrFunctionLocalVariable);
-			Value = variable;
+			Value = isNull ? null : variable;
 			IsNativePointer = variable.IsNativePointer;
 		}
 
-		public LlvmIrFunctionArgument (LlvmIrVariableReference variable)
+		public LlvmIrFunctionArgument (LlvmIrVariableReference variable, bool isNull = false)
 		{
 			Type = typeof(LlvmIrVariableReference);
-			Value = variable;
+			Value = isNull ? null : variable;
 			IsNativePointer = variable.IsNativePointer;
 		}
 	}
