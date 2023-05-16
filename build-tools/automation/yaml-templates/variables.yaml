@@ -45,3 +45,5 @@ variables:
   value: 0
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
   value: 33,UpsideDownCake
+- name: ExcludedNUnitCategories
+  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != StaticProject & cat != SystemApplication'
