@@ -51,6 +51,7 @@ jobs:
       testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       retryFailedTests: false
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: upload-results.yaml
     parameters:
