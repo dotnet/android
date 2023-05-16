@@ -9,7 +9,10 @@ namespace Android.Util {
 		/// <summary>
 		/// IFormatProvider passed to any underlying string.Format() calls. Defaults to System.Globalization.CultureInfo.CurrentCulture.
 		/// </summary>
-		public static IFormatProvider FormatProvider { get; set; } = CultureInfo.CurrentCulture;
+#if ANDROID_34
+		public
+#endif  // ANDROID_34
+		static IFormatProvider FormatProvider { get; set; } = CultureInfo.CurrentCulture;
 
 		public static int Debug (string tag, string format, params object[] args)
 		{
