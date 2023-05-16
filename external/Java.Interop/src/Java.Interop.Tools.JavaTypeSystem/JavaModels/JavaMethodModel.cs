@@ -77,7 +77,15 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 
 			var pt = (JavaClassModel)DeclaringType;
 
-			var candidate = type.Methods.FirstOrDefault (p => p.Name == Name && IsImplementing (this, p, pt.GenericInheritanceMapping ?? throw new InvalidOperationException ($"missing {nameof (pt.GenericInheritanceMapping)}!")));
+			var candidates = type.Methods.Where (p => p.Name == Name && IsImplementing (this, p, pt.GenericInheritanceMapping ?? throw new InvalidOperationException ($"missing {nameof (pt.GenericInheritanceMapping)}!")));
+
+			JavaMethodModel? candidate;
+
+			// Prefer non-synthetic, non-bridge methods
+			if (candidates.FirstOrDefault (c => !c.IsSynthetic && !c.IsBridge) is JavaMethodModel jm)
+				candidate = jm;
+			else
+				candidate = candidates.FirstOrDefault ();
 
 			if (candidate != null) {
 				BaseMethod = candidate;

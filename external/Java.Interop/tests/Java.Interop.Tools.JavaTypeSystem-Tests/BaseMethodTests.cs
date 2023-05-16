@@ -1,5 +1,7 @@
 using System;
 using System.Linq;
+using System.Text;
+using System.Xml;
 using Java.Interop.Tools.JavaTypeSystem.Models;
 using NUnit.Framework;
 
@@ -82,6 +84,58 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 			var t = xapi.Packages ["XXX"].Types.First (_ => _.Name == "GenericConstructors") as JavaClassModel;
 			var m = t.Constructors.FirstOrDefault ();
 			Assert.IsNotNull (m.TypeParameters, "constructor not found");
+		}
+
+		[Test]
+		public void PreferRealApi ()
+		{
+			// Our base method is abstract, and our derived method is not.  However their is also a "matching" non-abstract
+			// base method that is "synthetic, bridge".  If this method is chosen as the base then we will not write the derived
+			// method because it is not "different" from the base.  (They are both not-abstract.)  In reality, we need to
+			// match to the "not-synthetic, not-bridge" method that *is* abstract, so that the derived method is different
+			// enough to get written to the output.
+			// See "JavaXmlApiExporter.SaveMethod ()" for what constitutes "different" enough to be written.
+			string xml = @"<api>
+  <package name='com.google.crypto.tink.streamingaead' jni-name='com/google/crypto/tink/streamingaead'>
+  
+    <class abstract='true' deprecated='not deprecated' jni-extends='Ljava/lang/Object;' extends='java.lang.Object' extends-generic-aware='java.lang.Object' final='false' name='StreamingAeadKey' jni-signature='Lcom/google/crypto/tink/streamingaead/StreamingAeadKey;' source-file-name='StreamingAeadKey.java' static='false' visibility='public'>
+      <method abstract='false' deprecated='not deprecated' final='false' name='getParameters' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' visibility='public' bridge='true' synthetic='true' jni-signature='()Ljava/lang/Object;' />
+      <method abstract='true' deprecated='not deprecated' final='false' name='getParameters' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' visibility='public' bridge='false' synthetic='false' jni-signature='()Ljava/lang/Object;' />
+    </class>
+    
+    <class abstract='false' deprecated='not deprecated' jni-extends='Lcom/google/crypto/tink/streamingaead/StreamingAeadKey;' extends='com.google.crypto.tink.streamingaead.StreamingAeadKey' extends-generic-aware='com.google.crypto.tink.streamingaead.StreamingAeadKey' final='true' name='AesGcmHkdfStreamingKey' jni-signature='Lcom/google/crypto/tink/streamingaead/AesGcmHkdfStreamingKey;' source-file-name='AesGcmHkdfStreamingKey.java' static='false' visibility='public'>
+      <method abstract='false' deprecated='not deprecated' final='false' name='getParameters' native='false' return='java.lang.Object' jni-return='Ljava/lang/Object;' static='false' synchronized='false' visibility='public' bridge='false' synthetic='false' jni-signature='()Ljava/lang/Object;' />
+    </class>
+  
+  </package>
+</api>";
+
+			var xapi = JavaApiTestHelper.GetLoadedApi ();
+			JavaXmlApiImporter.ParseString (xml, xapi);
+
+			var results = xapi.ResolveCollection ();
+
+			var t = xapi.Packages ["com.google.crypto.tink.streamingaead"].Types.First (_ => _.Name == "AesGcmHkdfStreamingKey") as JavaClassModel;
+			var m = t.Methods.FirstOrDefault ();
+
+			// The non-synthetic, non-bridge, abstract base method should be chosen
+			Assert.IsFalse (m.BaseMethod.IsSynthetic);
+			Assert.IsFalse (m.BaseMethod.IsBridge);
+			Assert.IsTrue (m.BaseMethod.IsAbstract);
+
+			var sb = new StringBuilder ();
+
+			// Write the results out to XML
+			using (var xw = XmlWriter.Create (sb))
+				JavaXmlApiExporter.Save (xapi, xw);
+
+			// Read results back in to ensure AesGcmHkdfStreamingKey.getParameters was output
+			var new_collection = JavaXmlApiImporter.ParseString (sb.ToString ());
+
+			var t2 = new_collection.Packages ["com.google.crypto.tink.streamingaead"].Types.First (_ => _.Name == "AesGcmHkdfStreamingKey") as JavaClassModel;
+			var m2 = t.Methods.FirstOrDefault ();
+
+			Assert.IsNotNull (m2);
 		}
 	}
 }
