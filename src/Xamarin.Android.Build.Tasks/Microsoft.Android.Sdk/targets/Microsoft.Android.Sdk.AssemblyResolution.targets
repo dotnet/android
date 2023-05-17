@@ -89,6 +89,7 @@ _ResolveAssemblies MSBuild target.
     <PropertyGroup>
       <_AdditionalProperties>
         _ComputeFilesToPublishForRuntimeIdentifiers=true
+        ;SelfContained=true
         ;AppendRuntimeIdentifierToOutputPath=true
         ;ResolveAssemblyReferencesFindRelatedSatellites=false
         ;SkipCompilerExecution=true
