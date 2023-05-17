@@ -1107,11 +1107,13 @@ class TestActivity : Activity { }"
 
 				if (minSdkVersionInt < minDotnetApiLevel ) {
 					Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
-					StringAssertEx.ContainsText (
-						b.LastBuildOutput,
-						$"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{minSdkVersionInt}' is less than API-{supportedOSPlatVersInt}, this configuration is not supported."
-					),
-					$"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"{minSdkVersionInt}\""
+					Assert.IsTrue (
+						StringAssertEx.ContainsText (
+							builder.LastBuildOutput,
+							$"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{minSdkVersionInt}' is less than API-{minDotnetApiLevel}, this configuration is not supported."
+						),
+						$"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"{minSdkVersionInt}\""
+					);
 				}
 
 				if (minSdkVersionInt == supportedOSPlatVersInt && minSdkVersionInt >= minDotnetApiLevel && supportedOSPlatVersInt >= minDotnetApiLevel) {
