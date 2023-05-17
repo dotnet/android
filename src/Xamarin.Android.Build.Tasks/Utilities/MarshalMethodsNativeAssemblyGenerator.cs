@@ -17,7 +17,7 @@ using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
 //      why Blazor hangs.
 namespace Xamarin.Android.Tasks
 {
-	class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
+	partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
@@ -174,11 +174,6 @@ namespace Xamarin.Android.Tasks
 			{ 'L', typeof(_jobjectArray) },
 		};
 
-		const string mm_trace_func_enter_name = "_mm_trace_func_enter";
-		const string mm_trace_func_leave_name = "_mm_trace_func_leave";
-		const string asprintf_name = "asprintf";
-		const string free_name = "free";
-
 		ICollection<string> uniqueAssemblyNames;
 		int numberOfAssembliesInApk;
 		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
@@ -206,15 +201,6 @@ namespace Xamarin.Android.Tasks
 
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
-
-		// Tracing
-		List<LlvmIrFunctionParameter>? mm_trace_func_enter_or_leave_params;
-		int mm_trace_func_enter_leave_extra_info_param_index = -1;
-		List<LlvmIrFunctionParameter>? get_function_pointer_params;
-		LlvmIrVariableReference? mm_trace_func_enter_ref;
-		LlvmIrVariableReference? mm_trace_func_leave_ref;
-		LlvmIrVariableReference? asprintf_ref;
-		LlvmIrVariableReference? free_ref;
 
 		LlvmIrCallMarker defaultCallMarker;
 
@@ -600,7 +586,7 @@ namespace Xamarin.Android.Tasks
 		{
 			WriteAssemblyImageCache (generator, out Dictionary<string, uint> asmNameToIndex);
 			WriteClassCache (generator);
-			WriteInitTracing (generator);
+			InitializeTracing (generator);
 			LlvmIrVariableReference get_function_pointer_ref = WriteXamarinAppInitFunction (generator);
 			WriteNativeMethods (generator, asmNameToIndex, get_function_pointer_ref);
 
@@ -674,81 +660,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void WriteInitTracing (LlvmIrGenerator generator)
-		{
-			if (tracingMode == MarshalMethodsTracingMode.None) {
-				return;
-			}
-
-			// Function names and declarations must match those in src/monodroid/jni/marshal-methods-tracing.hh
-			mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
-				new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
-				new LlvmIrFunctionParameter (typeof(int), "tracing_mode"),
-				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
-				new LlvmIrFunctionParameter (typeof(string), "native_method_name"),
-				new LlvmIrFunctionParameter (typeof(string), "method_extra_info"),
-			};
-			mm_trace_func_enter_leave_extra_info_param_index = mm_trace_func_enter_or_leave_params.Count - 1;
-
-			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: mm_trace_func_enter_or_leave_params
-
-			);
-			mm_trace_func_enter_ref = new LlvmIrVariableReference (mm_trace_func_enter_sig, mm_trace_func_enter_name, isGlobal: true);
-
-			var mm_trace_func_leave_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: mm_trace_func_enter_or_leave_params
-			);
-			mm_trace_func_leave_ref = new LlvmIrVariableReference (mm_trace_func_leave_sig, mm_trace_func_leave_name, isGlobal: true);
-
-			var asprintf_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(int),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(string), isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(string)) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(void)) {
-						IsVarargs = true,
-					}
-			        }
-			);
-			asprintf_ref = new LlvmIrVariableReference (asprintf_sig, asprintf_name, isGlobal: true);
-
-			var free_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(string)) {
-						NoCapture = true,
-						NoUndef = true,
-					},
-			        }
-			);
-			free_ref = new LlvmIrVariableReference (free_sig, free_name, isGlobal: true);
-
-			AddTraceFunctionDeclaration (asprintf_name, asprintf_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (free_name, free_sig, LlvmIrGenerator.FunctionAttributesLibcFree);
-			AddTraceFunctionDeclaration (mm_trace_func_enter_name, mm_trace_func_enter_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_func_leave_name, mm_trace_func_leave_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-
-			void AddTraceFunctionDeclaration (string name, LlvmNativeFunctionSignature sig, int attributeSetID)
-			{
-				var func = new LlvmIrFunction (
-					name: name,
-					returnType: sig.ReturnType,
-					attributeSetID: attributeSetID,
-					parameters: sig.Parameters
-				);
-				generator.AddExternalFunction (func);
-			}
-		}
-
 		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
 		{
 			if (generateEmptyCode || methods == null || methods.Count == 0) {
@@ -765,190 +676,6 @@ namespace Xamarin.Android.Tasks
 				mmi.AssemblyCacheIndex = asmIndex;
 				WriteMarshalMethod (generator, mmi, get_function_pointer_ref, usedBackingFields);
 			}
-		}
-
-		void AddPrintfFormatForType (StringBuilder sb, Type type, List<Type?> upcast)
-		{
-			string format;
-			if (type == typeof(string)) {
-				format = "\"%s\"";
-				upcast.Add (null);
-			} else if (type == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (type) || type == typeof(_JNIEnv)) {
-				format = "%p";
-				upcast.Add (null);
-			} else if (type == typeof(bool) || type == typeof(byte) || type == typeof(ushort)) {
-				format = "%u";
-				upcast.Add (typeof(uint));
-			} else if (type == typeof(sbyte) || type == typeof(short)) {
-				format = "%d";
-				upcast.Add (typeof(int));
-			} else if (type == typeof(char)) {
-				format = "'\\%x'";
-				upcast.Add (typeof(uint));
-			} else if (type == typeof(int)) {
-				format = "%d";
-				upcast.Add (null);
-			} else if (type == typeof(uint)) {
-				format = "%u";
-				upcast.Add (null);
-			} else if (type == typeof(long)) {
-				format = "%ld";
-				upcast.Add (null);
-			} else if (type == typeof(ulong)) {
-				format = "%lu";
-				upcast.Add (null);
-			} else if (type == typeof(float)) {
-				format = "%g";
-				upcast.Add (typeof(double));
-			} else if (type == typeof(double)) {
-				format = "%g";
-				upcast.Add (null);
-			} else {
-				throw new InvalidOperationException ($"Unsupported type '{type}'");
-			};
-
-			sb.Append (format);
-		}
-
-		(StringBuilder sb, List<Type?> upcasts) InitPrintfFormat (string startChars = "(")
-		{
-			return (new StringBuilder (startChars), new List<Type?> ());
-		}
-
-		(string asprintfFormat, List<Type?> paramUpcast) FinishPrintfFormat (StringBuilder sb, List<Type?> upcasts, string endChars = ")")
-		{
-			sb.Append (endChars);
-			return (sb.ToString (), upcasts);
-		}
-
-		(string asprintfFormat, List<Type?> paramUpcast) GetPrintfFormatForFunctionParams (LlvmIrFunction func)
-		{
-			(StringBuilder ret, List<Type?> upcasts) = InitPrintfFormat ();
-			bool first = true;
-
-			foreach (LlvmIrFunctionParameter parameter in func.Parameters) {
-				if (!first) {
-					ret.Append (", ");
-				} else {
-					first = false;
-				}
-
-				AddPrintfFormatForType (ret, parameter.Type, upcasts);
-			}
-
-			return FinishPrintfFormat (ret, upcasts);
-		}
-
-		(string asprintfFormat, List<Type?> paramUpcast) GetPrintfFormatForReturnValue (LlvmIrFunctionLocalVariable localVariable)
-		{
-			(StringBuilder ret, List<Type?> upcasts) = InitPrintfFormat ("=>[");
-
-			AddPrintfFormatForType (ret, localVariable.Type, upcasts);
-
-			return FinishPrintfFormat (ret, upcasts, "]");
-		}
-
-		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, LlvmIrVariableReference allocatedStringVarRef)
-		{
-			LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (format, $"asprintf_fmt_{func.Name}");
-
-			var asprintfArgs = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (allocatedStringVarRef) {
-					NonNull = true,
-					NoUndef = true,
-				},
-				new LlvmIrFunctionArgument (asprintfFormatSym) {
-					NoUndef = true,
-				},
-			};
-
-			asprintfArgs.AddRange (variadicArgs);
-
-			generator.WriteEOL ();
-			generator.WriteCommentLine ($"Format: {format}", indent: true);
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintfArgs, marker: defaultCallMarker, AttributeSetID: -1);
-			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
-
-			// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
-			LlvmIrFunctionLocalVariable asprintfResultVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.SignedLessThan, resultRef, "0");
-			var asprintfResultVariableRef = new LlvmIrVariableReference (asprintfResultVariable, isGlobal: false);
-
-			string asprintfIfThenLabel = func.MakeUniqueLabel ("if.then");
-			string asprintfIfElseLabel = func.MakeUniqueLabel ("if.else");
-			string ifElseDoneLabel = func.MakeUniqueLabel ("if.done");
-
-			generator.EmitBrInstruction (func, asprintfResultVariableRef, asprintfIfThenLabel, asprintfIfElseLabel);
-
-			// Condition is true if asprintf **failed**
-			generator.EmitLabel (func, asprintfIfThenLabel);
-			generator.EmitStoreInstruction<string> (func, allocatedStringVarRef, null);
-			generator.EmitBrInstruction (func, ifElseDoneLabel);
-
-			generator.EmitLabel (func, asprintfIfElseLabel);
-			LlvmIrFunctionLocalVariable bufferPointerVar = generator.EmitLoadInstruction (func, allocatedStringVarRef);
-			LlvmIrVariableReference bufferPointerVarRef = new LlvmIrVariableReference (bufferPointerVar, isGlobal: false);
-			generator.EmitBrInstruction (func, ifElseDoneLabel);
-
-			generator.EmitLabel (func, ifElseDoneLabel);
-			LlvmIrFunctionLocalVariable allocatedStringValueVar = generator.EmitPhiInstruction (
-				func,
-				allocatedStringVarRef,
-				new List<(LlvmIrVariableReference? variableRef, string label)> {
-					(null, func.PreviousBlockStartLabel),
-					(bufferPointerVarRef, func.PreviousBlockEndLabel),
-				}
-			);
-
-			return new LlvmIrVariableReference (allocatedStringValueVar, isGlobal: false, isNativePointer: true);
-		}
-
-		void AddAsprintfArgument (LlvmIrGenerator generator, LlvmIrFunction func, List<LlvmIrFunctionArgument> asprintfArgs, Type? upcast, LlvmIrFunctionLocalVariable paramVar)
-		{
-			if (upcast == null) {
-				asprintfArgs.Add (new LlvmIrFunctionArgument (paramVar) { NoUndef = true });
-				return;
-			}
-
-			LlvmIrVariableReference paramRef = new LlvmIrVariableReference (paramVar, isGlobal: false);
-			LlvmIrFunctionLocalVariable upcastVar = generator.EmitUpcast (func, paramRef, upcast);
-			asprintfArgs.Add (
-				new LlvmIrFunctionArgument (upcastVar) {
-					NoUndef = true,
-				}
-			);
-		}
-
-		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, List<LlvmIrFunctionArgument> variadicArgs, List<Type?> parameterUpcasts, LlvmIrVariableReference allocatedStringVarRef)
-		{
-			if (variadicArgs.Count != parameterUpcasts.Count) {
-				throw new ArgumentException (nameof (parameterUpcasts), $"Number of upcasts ({parameterUpcasts.Count}) is not equal to the number of variadic arguments ({variadicArgs.Count})");
-			}
-
-			var asprintfArgs = new List<LlvmIrFunctionArgument> ();
-
-			for (int i = 0; i < variadicArgs.Count; i++) {
-				if (parameterUpcasts[i] == null) {
-					asprintfArgs.Add (variadicArgs[i]);
-					continue;
-				}
-
-				if (variadicArgs[i].Value is LlvmIrFunctionLocalVariable paramVar) {
-					AddAsprintfArgument (generator, func, asprintfArgs, parameterUpcasts[i], paramVar);
-					continue;
-				}
-
-				throw new InvalidOperationException ($"Unexpected argument type {variadicArgs[i].Type}");
-			}
-
-			return WriteAsprintfCall (generator, func, format, asprintfArgs, allocatedStringVarRef);
-		}
-
-		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, string format, LlvmIrFunctionLocalVariable retVal, Type? retValUpcast, LlvmIrVariableReference allocatedStringVarRef)
-		{
-			var asprintfArgs = new List<LlvmIrFunctionArgument> ();
-			AddAsprintfArgument (generator, func, asprintfArgs, retValUpcast, retVal);
-
-			return WriteAsprintfCall (generator, func, format, asprintfArgs, allocatedStringVarRef);
 		}
 
 		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
@@ -976,63 +703,9 @@ namespace Xamarin.Android.Tasks
 				parameters: method.Parameters
 			);
 
-			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}");
+			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}\nRegistered: {method.Method.RegisteredMethod?.FullName}");
 
-			List<LlvmIrFunctionArgument>? trace_enter_leave_args = null;
-			LlvmIrFunctionLocalVariable? tracingParamsStringLifetimeTracker = null;
-			List<LlvmIrFunctionArgument>? asprintfVariadicArgs = null;
-			LlvmIrVariableReference? asprintfAllocatedStringAccessorRef = null;
-			LlvmIrVariableReference? asprintfAllocatedStringVarRef = null;
-			string? asprintfFormat = null;
-			List<Type?> asprintfUpcasts = null;
-
-			if (tracingMode != MarshalMethodsTracingMode.None) {
-				const string paramsLocalVarName = "func_params_render";
-
-				generator.WriteCommentLine ("Tracing code start", indent: true);
-				(LlvmIrFunctionLocalVariable asprintfAllocatedStringVar, tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
-				asprintfAllocatedStringVarRef = new LlvmIrVariableReference (asprintfAllocatedStringVar, isGlobal: false);
-				generator.EmitStoreInstruction<string> (func, asprintfAllocatedStringVarRef, null);
-
-				asprintfVariadicArgs = new List<LlvmIrFunctionArgument> ();
-				foreach (LlvmIrFunctionLocalVariable lfv in func.ParameterVariables) {
-					asprintfVariadicArgs.Add (
-						new LlvmIrFunctionArgument (lfv) {
-							NoUndef = true,
-						}
-					);
-				}
-
-				(asprintfFormat, asprintfUpcasts) = GetPrintfFormatForFunctionParams (func);
-				asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfFormat, asprintfVariadicArgs, asprintfUpcasts, asprintfAllocatedStringVarRef);
-
-				trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
-					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[1], (int)tracingMode),
-					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[2], method.AssemblyCacheIndex),
-					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[3], method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[4], nativeCallback.MetadataToken.ToUInt32 ()),
-					new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[5], method.NativeSymbolName),
-					new LlvmIrFunctionArgument (asprintfAllocatedStringAccessorRef),
-				};
-
-				generator.EmitCall (func, mm_trace_func_enter_ref, trace_enter_leave_args, marker: defaultCallMarker);
-				asprintfAllocatedStringVar = generator.EmitLoadInstruction (func, asprintfAllocatedStringVarRef);
-
-				generator.EmitCall (
-					func,
-					free_ref,
-					new List<LlvmIrFunctionArgument> {
-						new LlvmIrFunctionArgument (asprintfAllocatedStringVar) {
-							NoUndef = true,
-						},
-					},
-					marker: defaultCallMarker
-				);
-				generator.WriteCommentLine ("Tracing code end", indent: true);
-				generator.WriteEOL ();
-			}
-
+			TracingState? tracingState = WriteMarshalMethodTracingTop (generator, method, func);
 			LlvmIrFunctionLocalVariable callbackVariable1 = generator.EmitLoadInstruction (func, backingFieldRef, "cb1");
 			var callbackVariable1Ref = new LlvmIrVariableReference (callbackVariable1, isGlobal: false);
 
@@ -1084,33 +757,7 @@ namespace Xamarin.Android.Tasks
 				marker: defaultCallMarker
 			);
 
-			if (tracingMode != MarshalMethodsTracingMode.None) {
-				generator.WriteCommentLine ("Tracing code start", indent: true);
-
-				LlvmIrFunctionArgument extraInfoArg;
-				if (result != null) {
-					(asprintfFormat, asprintfUpcasts) = GetPrintfFormatForReturnValue (result);
-					asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfFormat, result, asprintfUpcasts[0], asprintfAllocatedStringVarRef);
-					extraInfoArg = new LlvmIrFunctionArgument (asprintfAllocatedStringAccessorRef) {
-						NoUndef = true,
-					};
-				} else {
-					extraInfoArg = new LlvmIrFunctionArgument (asprintfAllocatedStringVarRef, isNull: true) {
-						NoUndef = true,
-					};
-				}
-
-				if (mm_trace_func_enter_leave_extra_info_param_index < 0) {
-					throw new InvalidOperationException ("Internal error: index of the extra info parameter is unknown");
-				}
-				trace_enter_leave_args[mm_trace_func_enter_leave_extra_info_param_index] = extraInfoArg;
-
-				generator.EmitCall (func, mm_trace_func_leave_ref, trace_enter_leave_args, marker: defaultCallMarker);
-				generator.EmitDeallocStackVariable (func, tracingParamsStringLifetimeTracker);
-
-				generator.WriteCommentLine ("Tracing code end", indent: true);
-			}
-
+			WriteMarshalMethodTracingBottom (tracingState, generator, func, result);
 			if (result != null) {
 				generator.EmitReturnInstruction (func, result);
 			}
@@ -1150,6 +797,8 @@ namespace Xamarin.Android.Tasks
 
 			generator.WriteFunctionStart (func);
 			generator.EmitStoreInstruction (func, fnParameter, new LlvmIrVariableReference (get_function_pointer_sig, GetFunctionPointerFieldName, isGlobal: true));
+
+			WriteTracingInit (generator, func);
 
 			generator.WriteFunctionEnd (func);
 

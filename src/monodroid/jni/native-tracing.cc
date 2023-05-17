@@ -16,10 +16,6 @@ constexpr int PRIORITY = ANDROID_LOG_INFO;
 static void append_frame_number (std::string &trace, size_t count) noexcept;
 static unw_word_t adjust_address (unw_word_t addr) noexcept;
 static void init_jni (JNIEnv *env) noexcept;
-static bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept;
-
-template<class TJavaPointer>
-static TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept;
 
 // java.lang.Thread
 static jclass java_lang_Thread;
@@ -286,19 +282,6 @@ void append_frame_number (std::string &trace, size_t count) noexcept
 	trace.append ("    #");
 	std::snprintf (num_buf.data (), num_buf.size (), "%-3zu: ", count);
 	trace.append (num_buf.data ());
-}
-
-template<class TJavaPointer>
-[[gnu::always_inline]]
-TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept
-{
-	if (lref == nullptr) {
-		return nullptr;
-	}
-
-	auto ret = static_cast<TJavaPointer> (env->NewGlobalRef (lref));
-	env->DeleteLocalRef (lref);
-	return ret;
 }
 
 void init_jni (JNIEnv *env) noexcept

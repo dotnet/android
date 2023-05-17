@@ -28,4 +28,19 @@ extern "C" {
 	[[gnu::visibility("default")]]
 	const char* xa_get_interesting_signal_handlers () noexcept;
 }
+
+template<class TJavaPointer>
+[[gnu::always_inline]]
+inline TJavaPointer to_gref (JNIEnv *env, TJavaPointer lref) noexcept
+{
+	if (lref == nullptr) {
+		return nullptr;
+	}
+
+	auto ret = static_cast<TJavaPointer> (env->NewGlobalRef (lref));
+	env->DeleteLocalRef (lref);
+	return ret;
+}
+
+bool assert_valid_jni_pointer (void *o, const char *missing_kind, const char *missing_name) noexcept;
 #endif // ndef __NATIVE_TRACING_HH
