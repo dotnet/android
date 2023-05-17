@@ -550,6 +550,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' "
   />
+  <AndroidError Code="XA1036"
+      ResourceName="XA1036"
+      Condition="$([MSBuild]::VersionLessThan('$(SupportedOSPlatformVersion)', '$(AndroidMinimumSupportedApiLevel)'))"
+      FormatArguments="$(AndroidNETSdkVersion);$(SupportedOSPlatformVersion);$(AndroidMinimumSupportedApiLevel)"
+  />
 </Target>
 
 <!--

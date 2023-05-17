@@ -998,9 +998,9 @@ class TestActivity : Activity { }"
 				SupportedOSPlatformVersion = minSdkVersion,
 			};
 
-			// An empty SupportedOSPlatformVersion property should use the target platform version value
+			// An empty SupportedOSPlatformVersion property will default to AndroidMinimumDotNetApiLevel
 			if (string.IsNullOrEmpty (minSdkVersion)) {
-				minSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
+				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel.ToString ();
 			}
 
 			if (removeUsesSdkElement) {
@@ -1018,11 +1018,7 @@ class TestActivity : Activity { }"
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
-			int minSdkVersionInt = 0;
-			if (Version.TryParse ($"{minSdkVersion}.0", out var minSdkAsVersion)) {
-				minSdkVersionInt = minSdkAsVersion.Major;
-			}
-
+			var minSdkVersionInt = GetVersionStringAsInt (minSdkVersion);
 			if (minSdkVersionInt < 22) {
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
@@ -1034,6 +1030,90 @@ class TestActivity : Activity { }"
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
+		}
+
+		int GetVersionStringAsInt (string versionString)
+		{
+			int versionInt = 0;
+			if (versionString.Contains (".", StringComparison.OrdinalIgnoreCase)) {
+				if (Version.TryParse (versionString, out var versionStringAsVersion)) {
+					versionInt = versionStringAsVersion.Major;
+				}
+			} else {
+				int.TryParse (versionString, out versionInt);
+			}
+			return versionInt;
+		}
+
+		static object [] SupportedOSErrorsTestSources = new object [] {
+			new object[] {
+				/* minSdkVersion       */		"",
+				/* supportedOSPlatVers */		"",
+			},
+			new object[] {
+				/* minSdkVersion       */		"19",
+				/* supportedOSPlatVers */		"",
+			},
+			new object[] {
+				/* minSdkVersion       */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
+				/* supportedOSPlatVers */		"",
+			},
+			new object[] {
+				/* minSdkVersion       */		"",
+				/* supportedOSPlatVers */		"19.0",
+			},
+			new object[] {
+				/* minSdkVersion       */		"19",
+				/* supportedOSPlatVers */		"19",
+			},
+			new object[] {
+				/* minSdkVersion       */		"29",
+				/* supportedOSPlatVers */		$"{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.0",
+			},
+		};
+		[Test]
+		[TestCaseSource(nameof (SupportedOSErrorsTestSources))]
+		public void SupportedOSPlatformVersionErrors (string minSdkVersion, string supportedOSPlatVers)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+				MinSdkVersion = minSdkVersion,
+				SupportedOSPlatformVersion = supportedOSPlatVers,
+			};
+
+			// Empty values will default to AndroidMinimumDotNetApiLevel
+			int minDotnetApiLevel = XABuildConfig.AndroidMinimumDotNetApiLevel;
+			if (string.IsNullOrEmpty (minSdkVersion)) {
+				minSdkVersion = minDotnetApiLevel.ToString ();
+			}
+			if (string.IsNullOrEmpty (supportedOSPlatVers)) {
+				supportedOSPlatVers = minDotnetApiLevel.ToString ();
+			}
+			var minSdkVersionInt = GetVersionStringAsInt (minSdkVersion);
+			var supportedOSPlatVersInt = GetVersionStringAsInt (supportedOSPlatVers);
+			var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			var buildResult = builder.Build (proj);
+
+			// XA1036 will stop the build before any attempts to read AndroidManifest.xml
+			if (supportedOSPlatVersInt < minDotnetApiLevel) {
+				Assert.IsFalse (buildResult, "SupportedOSPlatformVersion version too low, build should fail.");
+				StringAssertEx.Contains ("error XA1036", builder.LastBuildOutput, "Should get error about SupportedOSPlatformVersion being too low.");
+			} else {
+				if (minSdkVersionInt != supportedOSPlatVersInt) {
+					Assert.IsFalse (buildResult, $"Min version mismatch {minSdkVersionInt} != {supportedOSPlatVersInt}, build should fail.");
+					StringAssertEx.Contains ("error XA1037", builder.LastBuildOutput, "Should get error about Min version mismatch.");
+				}
+
+				if (minSdkVersionInt < minDotnetApiLevel ) {
+					Assert.IsFalse (buildResult, "minSdkVersion too low, build should fail.");
+					StringAssertEx.Contains ("warning XA4216", builder.LastBuildOutput, "Should get warning about minSdkVersion being too low.");
+				}
+
+				if (minSdkVersionInt == supportedOSPlatVersInt && minSdkVersionInt >= minDotnetApiLevel && supportedOSPlatVersInt >= minDotnetApiLevel) {
+					Assert.IsTrue (buildResult, "compatible min versions, build should succeed");
+				}
+			}
 		}
 
 	}

@@ -329,7 +329,10 @@ namespace Xamarin.Android.Tasks
 					Log.LogCodedError ("XA4215", Properties.Resources.XA4215_Details, kvp.Key, typeName);
 			}
 
-			// NOTE: $(SupportedOSPlatformVersion) will potentially be 21.0
+			// NOTE: $(SupportedOSPlatformVersion) will potentially be 21.0, but could also be an int
+			if (SupportedOSPlatformVersion.IndexOf (".", StringComparison.OrdinalIgnoreCase) == -1) {
+				SupportedOSPlatformVersion += ".0";
+			}
 			string minSdkVersion = null;
 			if (Version.TryParse (SupportedOSPlatformVersion, out var version)) {
 				minSdkVersion = version.Major.ToString ();

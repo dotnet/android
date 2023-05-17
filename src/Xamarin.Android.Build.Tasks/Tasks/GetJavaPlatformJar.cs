@@ -25,6 +25,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool DesignTimeBuild { get; set; }
 
+		public string SupportedOSPlatformVersion { get; set; }
+
 		[Output]
 		public string JavaPlatformJarPath { get; set; }
 
@@ -58,14 +60,31 @@ namespace Xamarin.Android.Tasks
 								platform = target_sdk.Value;
 
 							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
-							if (min_sdk != null && (!int.TryParse (min_sdk.Value, out int minSdkVersion) || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel)) {
-								Log.LogWarningForXmlNode (
-										code:             "XA4216",
-										file:             AndroidManifest,
-										node:             min_sdk,
-										message:          Properties.Resources.XA4216_MinSdkVersion,
-										messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel }
-								);
+							if (min_sdk != null) {
+								// NOTE: $(SupportedOSPlatformVersion) will potentially be a version, but could also be an int
+								if (SupportedOSPlatformVersion.IndexOf (".", StringComparison.OrdinalIgnoreCase) == -1) {
+									SupportedOSPlatformVersion += ".0";
+								}
+								int supportedOsPlatformVersionAsInt = 0;
+								if (Version.TryParse (SupportedOSPlatformVersion, out var version)) {
+									supportedOsPlatformVersionAsInt = version.Major;
+								}
+
+								var failedToParseMinSdk = !int.TryParse (min_sdk.Value, out int minSdkVersion);
+
+								if (failedToParseMinSdk || minSdkVersion != supportedOsPlatformVersionAsInt) {
+									Log.LogCodedError ("XA1037", Properties.Resources.XA1037, min_sdk?.Value, SupportedOSPlatformVersion);
+								}
+
+								if (failedToParseMinSdk || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel) {
+									Log.LogWarningForXmlNode (
+											code:             "XA4216",
+											file:             AndroidManifest,
+											node:             min_sdk,
+											message:          Properties.Resources.XA4216_MinSdkVersion,
+											messageArgs:      new object [] { min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel }
+									);
+								}
 							}
 							if (target_sdk != null && (!int.TryParse (target_sdk.Value, out int targetSdkVersion) || targetSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel)) {
 								Log.LogWarningForXmlNode (
