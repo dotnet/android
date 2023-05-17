@@ -1300,6 +1300,17 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			Assert.AreEqual (expected, builder.Build (), $"{proj.ProjectName} should {(expected ? "succeed" : "fail")}");
 		}
 
+		[Test]
+		public void EolFrameworks()
+		{
+			var library = new XASdkProject (outputType: "Library") {
+				TargetFramework = "net6.0-android",
+			};
+			var dotnet = CreateDotNetBuilder (library);
+			Assert.IsFalse (dotnet.Restore (), $"{library.ProjectName} should fail");
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, "NETSDK1202"), $"{dotnet.BuildLogFile} should have NETSDK1202.");
+		}
+
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)
 		{
 			if (string.IsNullOrEmpty (relativeProjectDir)) {
