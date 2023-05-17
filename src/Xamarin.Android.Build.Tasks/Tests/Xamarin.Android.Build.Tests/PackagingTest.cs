@@ -1008,6 +1008,7 @@ public class Test
 			var proj = new XamarinAndroidApplicationProject {
 				// This combination produces android:extractNativeLibs="false" by default
 				MinSdkVersion = "23",
+				SupportedOSPlatformVersion = "23",
 				ManifestMerger = "manifestmerger.jar",
 			};
 			using (var b = CreateApkBuilder ()) {
