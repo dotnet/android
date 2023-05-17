@@ -13,7 +13,7 @@
          CS1572: XML comment has a param tag for 'Bar', but there is no parameter by that name
          CS1591: Missing XML comment for publicly visible type or member 'Foo'
     -->
-    <NoWarn>1570;1572;1591</NoWarn>
+    <NoWarn>1570;1572;1591;CA1305</NoWarn>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 

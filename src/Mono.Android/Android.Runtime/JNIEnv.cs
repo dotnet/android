@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -262,8 +263,8 @@ namespace Android.Runtime {
 			try {
 				IntPtr ctor = JNIEnv.GetMethodID (lrefClass, "<init>", jniCtorSignature);
 				if (ctor == IntPtr.Zero)
-					throw new ArgumentException (string.Format ("Could not find constructor JNI signature '{0}' on type '{1}'.",
-								jniCtorSignature, Java.Interop.TypeManager.GetClassName (lrefClass)));
+					throw new ArgumentException (FormattableString.Invariant (
+						$"Could not find constructor JNI signature '{jniCtorSignature}' on type '{Java.Interop.TypeManager.GetClassName (lrefClass)}'."));
 				CallNonvirtualVoidMethod (instance, lrefClass, ctor, constructorParameters);
 			} finally {
 				DeleteLocalRef (lrefClass);
@@ -280,8 +281,8 @@ namespace Android.Runtime {
 		{
 			IntPtr ctor = JNIEnv.GetMethodID (jniClass, "<init>", signature);
 			if (ctor == IntPtr.Zero)
-				throw new ArgumentException (string.Format ("Could not find constructor JNI signature '{0}' on type '{1}'.",
-							signature, Java.Interop.TypeManager.GetClassName (jniClass)));
+				throw new ArgumentException (FormattableString.Invariant (
+					$"Could not find constructor JNI signature '{signature}' on type '{Java.Interop.TypeManager.GetClassName (jniClass)}'."));
 			return JNIEnv.NewObject (jniClass, ctor, constructorParameters);
 		}
 
@@ -627,9 +628,8 @@ namespace Android.Runtime {
 			IntPtr lrefDest   = GetObjectClass (destArray);
 			try {
 				if (!IsAssignableFrom (grefSource, lrefDest)) {
-					throw new InvalidCastException (string.Format ("Unable to cast from '{0}' to '{1}'.",
-								Java.Interop.TypeManager.GetClassName (grefSource),
-								Java.Interop.TypeManager.GetClassName (lrefDest)));
+					throw new InvalidCastException (FormattableString.Invariant (
+						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (grefSource)}' to '{Java.Interop.TypeManager.GetClassName (lrefDest)}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefSource);
@@ -643,9 +643,8 @@ namespace Android.Runtime {
 			IntPtr lrefSource = GetObjectClass (sourceArray);
 			try {
 				if (!IsAssignableFrom (lrefSource, grefDest)) {
-					throw new InvalidCastException (string.Format ("Unable to cast from '{0}' to '{1}'.",
-								Java.Interop.TypeManager.GetClassName (lrefSource),
-								Java.Interop.TypeManager.GetClassName (grefDest)));
+					throw new InvalidCastException (FormattableString.Invariant (
+						$"Unable to cast from '{Java.Interop.TypeManager.GetClassName (lrefSource)}' to '{Java.Interop.TypeManager.GetClassName (grefDest)}'."));
 				}
 			} finally {
 				DeleteGlobalRef (grefDest);
@@ -1145,7 +1144,7 @@ namespace Android.Runtime {
 				ret [i] = value;
 				ret [i] = targetType == null || targetType.IsInstanceOfType (value)
 					? value
-					: Convert.ChangeType (value, targetType);
+					: Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 			}
 
 			return ret;

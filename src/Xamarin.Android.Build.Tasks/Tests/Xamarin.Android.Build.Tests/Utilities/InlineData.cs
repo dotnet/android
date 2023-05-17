@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -90,7 +91,7 @@ namespace @projectName@
 		{
 			var content = new StringBuilder ();
 			foreach (string data in dataNames) {
-				content.AppendFormat (@"internal static string {0} {{
+				content.AppendFormat (CultureInfo.InvariantCulture, @"internal static string {0} {{
 			get {{
 				return ResourceManager.GetString(""{0}"", resourceCulture);
 			}}

@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using Android.Runtime;
 
 namespace Java.Lang {
@@ -75,7 +76,7 @@ namespace Java.Lang {
 
 		string IConvertible.ToString (IFormatProvider? provider)
 		{
-			return Convert.ToString (LongValue ());
+			return Convert.ToString (LongValue (), CultureInfo.InvariantCulture);
 		}
 
 		object IConvertible.ToType (Type conversionType, IFormatProvider? provider)

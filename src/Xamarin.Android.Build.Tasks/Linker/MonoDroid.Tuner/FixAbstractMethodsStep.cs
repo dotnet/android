@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using Mono.Cecil;
@@ -123,7 +124,7 @@ namespace MonoDroid.Tuner
 
 			foreach (var mr in assembly.MainModule.GetMemberReferences ()) {
 				if (mr.ToString ().Contains ("System.AppDomain System.AppDomain::CreateDomain")) {
-					warn (string.Format (Resources.XA2000, assembly));
+					warn (string.Format (CultureInfo.CurrentCulture, Resources.XA2000, assembly));
 					break;
 				}
 			}
