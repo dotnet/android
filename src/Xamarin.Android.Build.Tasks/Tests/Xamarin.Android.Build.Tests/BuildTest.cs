@@ -2292,7 +2292,6 @@ namespace UnnamedProject
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
-				proj.MinSdkVersion = "24";
 				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
