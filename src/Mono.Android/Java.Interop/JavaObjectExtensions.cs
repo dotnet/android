@@ -72,8 +72,7 @@ namespace Java.Interop {
 				return (TResult) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
-				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",
-							instance.GetType ().FullName, resultType.FullName));
+				throw new NotSupportedException (FormattableString.Invariant ($"Unable to convert type '{instance.GetType ().FullName}' to '{resultType.FullName}'."));
 		}
 
 		static IJavaObject CastClass (IJavaObject instance, Type resultType)
@@ -84,8 +83,7 @@ namespace Java.Interop {
 					throw new ArgumentException ("Unable to determine JNI class for '" + resultType.FullName + "'.", "TResult");
 				if (!JNIEnv.IsInstanceOf (instance.Handle, klass))
 					throw new InvalidCastException (
-							string.Format ("Unable to convert instance of type '{0}' to type '{1}'.",
-								instance.GetType ().FullName, resultType.FullName));
+							FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{resultType.FullName}'."));
 			} finally {
 				JNIEnv.DeleteGlobalRef (klass);
 			}
@@ -118,8 +116,7 @@ namespace Java.Interop {
 				return (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
-				throw new NotSupportedException (string.Format ("Unable to convert type '{0}' to '{1}'.",
-							instance.GetType ().FullName, resultType.FullName));
+				throw new NotSupportedException (FormattableString.Invariant ($"Unable to convert type '{instance.GetType ().FullName}' to '{resultType.FullName}'."));
 		}
 
 		// typeof(Foo) -> FooInvoker
