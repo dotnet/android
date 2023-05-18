@@ -403,6 +403,15 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Metadata.xml element &apos;{0}&apos; is missing the &apos;path&apos; attribute..
+        /// </summary>
+        public static string Generator_BG8A08 {
+            get {
+                return ResourceManager.GetString("Generator_BG8A08", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unknown generic argument constraint type &apos;{0}&apos; for member &apos;{1}&apos;..
         /// </summary>
         public static string Generator_BG8B00 {

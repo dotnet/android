@@ -3,21 +3,12 @@
   <!-- Note: MUST be imported *after* $(Configuration) is set! -->
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <!-- Mono's MSBuild does not support some implicit .NET6 source generator stuff -->
-    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' And '$(MSBuildRuntimeType)' != 'Mono' ">true</TreatWarningsAsErrors>
+    <TreatWarningsAsErrors Condition=" '$(Configuration)' == 'Release' ">true</TreatWarningsAsErrors>
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
     <DotNetTargetFrameworkVersion>7.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
-    <!-- 
-      Workaround for https://github.com/NuGet/Home/issues/6461 (VSWin Only)
-      Even though we don't build NuGet packages, it still attempts to build the NuGet package name, which includes 
-      the assembly version if PackageVersion isn't specified. Because our assemblies have different versions
-      per-TFM, that causes a problem because the package can't have multiple versions in it.  
-      Set a dummy PackageVersion because we don't actually need it.
-    -->
-    <PackageVersion>1.0.0.0</PackageVersion>
   </PropertyGroup>
 
   <Import
@@ -76,19 +67,10 @@
   </PropertyGroup>
 
   <!--
-    When building on a bot w/ VS2019:
-
-      warning CS8032: An instance of analyzer System.Text.Json.SourceGeneration.JsonSourceGenerator cannot be created from
-
-    however, with `$(TreatWarningsAsErrors)`=True, this becomes an error,
-    meaning we can't build on VS2019.
-
-    Ignore CS8032 so that we can build on VS2019.
-    
     JniEnvironment.g.cs(34,8): error CS8981: The type name 'jobject' only contains lower-cased ascii characters. Such names may become reserved for the language.
     -->
   <PropertyGroup>
-    <NoWarn>$(NoWarn);CS8032;CS8981</NoWarn>
+    <NoWarn>$(NoWarn);CS8981</NoWarn>
   </PropertyGroup>
 
 </Project>

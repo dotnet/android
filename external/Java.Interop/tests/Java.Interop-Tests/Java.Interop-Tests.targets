@@ -13,7 +13,7 @@
         Lines="@(_Source)"
         Overwrite="True"
     />
-    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)../$(Configuration)/java-interop.jar&quot; &quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)it-classes&quot; -classpath &quot;$(OutputPath)java-interop.jar&quot; &quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
     <Delete Files="$(IntermediateOutputPath)_java_sources.txt" />
     <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)interop-test.jar&quot; -C &quot;$(IntermediateOutputPath)it-classes&quot; ." />
   </Target>

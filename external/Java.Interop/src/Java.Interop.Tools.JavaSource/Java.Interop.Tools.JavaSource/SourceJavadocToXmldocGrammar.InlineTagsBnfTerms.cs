@@ -35,7 +35,7 @@ namespace Java.Interop.Tools.JavaSource {
 
 				CodeDeclaration.Rule = grammar.ToTerm ("{@code") + InlineValue + "}";
 				CodeDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					parseNode.AstNode = new XElement ("c", parseNode.ChildNodes [1].AstNode.ToString ().Trim ());
+					parseNode.AstNode = new XElement ("c", parseNode.ChildNodes [1].AstNode?.ToString ()?.Trim ());
 				};
 
 				DocRootDeclaration.Rule = grammar.ToTerm ("{@docRoot}");
@@ -69,7 +69,7 @@ namespace Java.Interop.Tools.JavaSource {
 					if (optionalBracketMatch.ChildNodes.Count > 0 && optionalBracketMatch.ChildNodes [0].Term.Name == "}") {
 						parseNode.AstNode = new XElement ("c", target);
 					} else {
-						parseNode.AstNode = new XText (target.ToString ());
+						parseNode.AstNode = new XText (target.ToString () ?? string.Empty);
 					}
 				};
 
@@ -78,13 +78,13 @@ namespace Java.Interop.Tools.JavaSource {
 					// TODO: *everything*; {@link target label}, but target can contain spaces!
 					// Also need to convert to appropriate CREF value, use text for now.
 					var target = parseNode.ChildNodes [1].AstNode.ToString ();
-					parseNode.AstNode = new XText (target);
+					parseNode.AstNode = new XText (target ?? string.Empty);
 				};
 
 				LiteralDeclaration.Rule = grammar.ToTerm ("{@literal") + InlineValue + "}";
 				LiteralDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					var content = parseNode.ChildNodes [1].AstNode.ToString ();
-					parseNode.AstNode = new XText (content);
+					parseNode.AstNode = new XText (content ?? string.Empty);
 				};
 
 				SeeDeclaration.Rule = grammar.ToTerm ("{@see") + InlineValue + "}";

@@ -20,7 +20,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 			var constants = new List<ConstantEntry> ();
 			var transient = false;
 
-			string s;
+			string? s;
 
 			// Read the enum csv file
 			while ((s = reader.ReadLine ()) != null) {
@@ -105,7 +105,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 	{
 		public static JavaSignatureComparer Instance { get; } = new JavaSignatureComparer ();
 
-		public bool Equals (ConstantEntry x, ConstantEntry y) => x?.JavaSignature == y?.JavaSignature;
+		public bool Equals (ConstantEntry? x, ConstantEntry? y) => x?.JavaSignature == y?.JavaSignature;
 		public int GetHashCode (ConstantEntry obj) => 0;
 	}
 }

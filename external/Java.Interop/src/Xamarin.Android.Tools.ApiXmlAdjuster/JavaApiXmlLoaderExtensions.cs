@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 					if (reader.NodeType != XmlNodeType.Element || reader.LocalName != "package")
 						throw XmlUtil.UnexpectedElementOrContent ("api", reader, "package");
 
-					var name = reader.GetAttribute ("name");
+					var name = reader.GetAttribute ("name") ?? throw new InvalidOperationException ("<package> element must contain a 'name' attribute");
 
 					if (!api.Packages.TryGetValue (name, out var pkg)) {
 						pkg = new JavaPackage (api);

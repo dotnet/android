@@ -133,7 +133,7 @@ namespace Java.Interop.Tools.JavaSource {
 					| CreateStartElementIgnoreAttribute ("a", "id") + InlineDeclarations + CreateEndElement ("a", grammar, optional: true)
 					;
 				IgnorableElementDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					var aElementValue = new XText (parseNode.ChildNodes [1].AstNode.ToString ());
+					var aElementValue = new XText (parseNode.ChildNodes [1].AstNode.ToString () ?? string.Empty);
 					parseNode.AstNode = aElementValue;
 				};
 
@@ -325,6 +325,9 @@ namespace Java.Interop.Tools.JavaSource {
 
 		public override Token? TryMatch (ParsingContext context, ISourceStream source)
 		{
+			if (_stopChars is null)
+				throw new InvalidOperationException ("Init must be called before TryMatch");
+
 			var stopIndex = source.Text.IndexOfAny (_stopChars, source.Location.Position);
 			if (stopIndex == source.Location.Position)
 				return null;

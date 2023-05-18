@@ -71,6 +71,7 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage WarningMoveNodeMatchedNoNodes => new LocalizedMessage (0x8A05, Localization.Resources.Generator_BG8A00);
 		public static LocalizedMessage WarningRemoveAttrMatchedNoNodes => new LocalizedMessage (0x8A06, Localization.Resources.Generator_BG8A00);
 		public static LocalizedMessage WarningInvalidNamespaceTransform => new LocalizedMessage (0x8A07, Localization.Resources.Generator_BG8A07);
+		public static LocalizedMessage WarningNodeMissingPathAttribute => new LocalizedMessage (0x8A08, Localization.Resources.Generator_BG8A08);
 		public static LocalizedMessage WarningUnknownGenericConstraint => new LocalizedMessage (0x8B00, Localization.Resources.Generator_BG8B00);
 		public static LocalizedMessage WarningBaseInterfaceNotFound => new LocalizedMessage (0x8C00, Localization.Resources.Generator_BG8C00);
 		public static LocalizedMessage WarningBaseInterfaceInvalid => new LocalizedMessage (0x8C01, Localization.Resources.Generator_BG8C01);

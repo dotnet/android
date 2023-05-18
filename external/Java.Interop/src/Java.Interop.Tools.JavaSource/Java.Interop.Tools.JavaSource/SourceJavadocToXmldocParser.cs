@@ -128,7 +128,7 @@ namespace Java.Interop.Tools.JavaSource {
 				yield return node;
 			}
 			else {
-				yield return new XCData (ast?.ToString ());
+				yield return new XCData (ast?.ToString () ?? string.Empty);
 			}
 		}
 

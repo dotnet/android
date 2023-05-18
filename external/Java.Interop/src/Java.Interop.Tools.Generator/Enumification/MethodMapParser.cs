@@ -19,7 +19,7 @@ namespace Java.Interop.Tools.Generator.Enumification
 		{
 			var entries = new List<MethodMapEntry> ();
 
-			string s;
+			string? s;
 
 			// Read the enum csv file
 			while ((s = reader.ReadLine ()) != null) {

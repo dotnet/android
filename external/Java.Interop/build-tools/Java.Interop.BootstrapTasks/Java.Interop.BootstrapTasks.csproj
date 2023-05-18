@@ -8,11 +8,7 @@
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
-    <OutputPath>$(BuildToolOutputFullPath)</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <OutputPath>$(BuildToolOutputFullPath)</OutputPath>
+    <OutputPath>$(BuildToolOutputFullPathNoTF)</OutputPath>
     <GitDefaultBranch>main</GitDefaultBranch>
     <GitThisAssembly>false</GitThisAssembly>
   </PropertyGroup>

@@ -4,17 +4,8 @@
     <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>
   </PropertyGroup>
   <Import Condition="Exists ('$(XAConfigPath)')" Project="$(XAConfigPath)" />
-  <!--
-    NOTE: in xamarin-android, this project gets built by xabuild in Xamarin.Android-Tests.sln
-    Exclude net6.0+, because xabuild cannot build net5.0 or higher
-  -->
-  <PropertyGroup Condition=" '$(XABuild)' == 'true' ">
-    <TargetFramework>netstandard2.0</TargetFramework>
-    <_JniEnvSkipGetTargetFrameworkProperties>true</_JniEnvSkipGetTargetFrameworkProperties>
-    <_JniEnvAdditionalProperties>TargetFramework=net472</_JniEnvAdditionalProperties>
-  </PropertyGroup>
   <PropertyGroup Condition=" '$(XABuild)' != 'true' ">
-    <TargetFrameworks>netstandard2.0;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
   </PropertyGroup>
   <PropertyGroup>
     <NoWarn>$(NoWarn);1591</NoWarn>

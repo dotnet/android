@@ -38,12 +38,12 @@ namespace Java.Interop.Tools.Generator.Enumification
 		static MethodMapEntry FromElement (XElement element, string parameterName)
 		{
 			var entry = new MethodMapEntry {
-				JavaPackage = element.Parent.Parent.XGetAttribute ("name")?.Replace ('.', '/'),
-				JavaType = element.Parent.XGetAttribute ("name")?.Replace ('.', '$'),
+				JavaPackage = element.Parent?.Parent?.XGetAttribute ("name")?.Replace ('.', '/'),
+				JavaType = element.Parent?.XGetAttribute ("name")?.Replace ('.', '$'),
 				JavaName = element.XGetAttribute ("name"),
 				ParameterName = parameterName,
 				ApiLevel = NamingConverter.ParseApiLevel (element),
-				IsInterface = element.Parent.Name == "interface"
+				IsInterface = element.Parent?.Name == "interface"
 			};
 
 			if (element.Name == "constructor")

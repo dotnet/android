@@ -294,6 +294,11 @@ The following terms should not be translated: Metadata.xml.</comment>
     <value>Invalid namespace transform '{0}'</value>
     <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
   </data>
+  <data name="Generator_BG8A08" xml:space="preserve">
+    <value>Metadata.xml element '{0}' is missing the 'path' attribute.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml, path.</comment>
+  </data>
   <data name="Generator_BG8B00" xml:space="preserve">
     <value>Unknown generic argument constraint type '{0}' for member '{1}'.</value>
     <comment>{0} - .NET type name

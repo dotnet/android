@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <ProjectGuid>{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}</ProjectGuid>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
@@ -20,12 +20,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj">
-      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
-      <Name>Java.Interop</Name>
-      <SkipGetTargetFrameworkProperties>true</SkipGetTargetFrameworkProperties>
-      <AdditionalProperties>TargetFramework=netstandard2.0</AdditionalProperties>
-    </ProjectReference>
+    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />

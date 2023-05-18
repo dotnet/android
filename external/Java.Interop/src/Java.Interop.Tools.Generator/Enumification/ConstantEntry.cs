@@ -148,18 +148,18 @@ namespace Java.Interop.Tools.Generator.Enumification
 			var entry = new ConstantEntry {
 				Action = ConstantAction.None,
 				ApiLevel = NamingConverter.ParseApiLevel (elem),
-				JavaSignature = elem.Parent.Parent.Attribute ("name").Value,
+				JavaSignature = elem.Parent?.Parent?.Attribute ("name")?.Value,
 				Value = elem.Attribute ("value")?.Value,
 			};
 
-			var java_package = elem.Parent.Parent.Attribute ("name").Value.Replace ('.', '/');
-			var java_type = elem.Parent.Attribute ("name").Value.Replace ('.', '$');
-			var java_member = elem.Attribute ("name").Value;
+			var java_package = elem.Parent?.Parent?.Attribute ("name")?.Value.Replace ('.', '/');
+			var java_type = elem.Parent?.Attribute ("name")?.Value.Replace ('.', '$');
+			var java_member = elem.Attribute ("name")?.Value;
 
 			entry.JavaSignature = $"{java_package}/{java_type}.{java_member}".TrimStart ('/');
 
 			// Interfaces get an "I:" prefix
-			if (elem.Parent.Name.LocalName == "interface")
+			if (elem.Parent?.Name.LocalName == "interface")
 				entry.JavaSignature = "I:" + entry.JavaSignature;
 
 			return entry;

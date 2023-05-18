@@ -2,11 +2,10 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
     <AppendTargetFrameworkToOutputPath>True</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIENVIRONMENT_XA_INTPTRS </DefineConstants>
-    <DefineConstants Condition=" '$(TargetFramework)' != 'net472' ">$(DefineConstants);FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS</DefineConstants>
+    <DefineConstants>FEATURE_JNIENVIRONMENT_JI_INTPTRS;FEATURE_JNIENVIRONMENT_JI_PINVOKES;FEATURE_JNIENVIRONMENT_SAFEHANDLES;FEATURE_JNIENVIRONMENT_XA_INTPTRS;FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS </DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />

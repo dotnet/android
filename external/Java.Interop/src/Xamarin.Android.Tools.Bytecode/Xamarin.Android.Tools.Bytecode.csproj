@@ -1,11 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <LangVersion>10.0</LangVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
@@ -14,10 +13,6 @@
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Compile Condition=" '$(TargetFramework)' == 'netstandard2.0' " Include="..\utils\NullableAttributes.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <!-- Always reference the netstandard2.0 version of protobuf-net as it is a shared dependency. -->

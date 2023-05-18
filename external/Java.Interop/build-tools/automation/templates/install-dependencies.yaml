@@ -3,7 +3,6 @@ parameters:
 
 steps:
 - task: UseDotNet@2
-  displayName: Use .NET Core $(DotNetCoreVersion)
+  displayName: Use .NET $(DotNetCoreVersion)
   inputs:
     version: $(DotNetCoreVersion)
-    includePreviewVersions: true

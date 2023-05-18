@@ -78,16 +78,6 @@ steps:
 
 - task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop'
-  condition: eq('${{ parameters.runNativeTests }}', 'true')
-  inputs:
-    command: test
-    testRunTitle: Java.Interop (netstandard2.0 - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)/Java.Interop-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
-
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop'
   condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
   inputs:
     command: test
@@ -133,16 +123,6 @@ steps:
     command: test
     testRunTitle: Java.Interop.Export (jnimarshalmethod-gen + ${{ parameters.platformName }})
     arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Export-Tests.dll
-  continueOnError: true
-  retryCountOnTaskFailure: 1
-
-- task: DotNetCoreCLI@2
-  displayName: 'Tests: Java.Interop-Performance-net472'
-  condition: eq('${{ parameters.runNativeTests }}', 'true')
-  inputs:
-    command: test
-    testRunTitle: Java.Interop-Performance (net472 - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)/Java.Interop-PerformanceTests.dll
   continueOnError: true
   retryCountOnTaskFailure: 1
 

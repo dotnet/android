@@ -21,7 +21,7 @@ variables:
   RunningOnCI: true
   Build.Configuration: Release
   MaxJdkVersion: 8
-  DotNetCoreVersion: 7.0.100-rc.1.22431.12
+  DotNetCoreVersion: 7.x
   DotNetTargetFramework: net7.0
   NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)
   1ESWindowsPool: AzurePipelines-EO
@@ -31,56 +31,8 @@ variables:
   DisablePipelineConfigDetector: true
 
 jobs:
-- job: windows_build
-  displayName: Windows - .NET Framework
-  pool:
-    name: $(1ESWindowsPool)
-    demands: 
-    - ImageOverride -equals $(1ESWindowsImage)
-  timeoutInMinutes: 20
-  workspace:
-    clean: all
-  steps:
-  - checkout: self
-    submodules: recursive
-
-  - template: templates\install-dependencies.yaml
-
-  - task: MSBuild@1
-    displayName: MSBuild Java.Interop.sln /t:Restore
-    inputs:
-      solution: Java.Interop.sln
-      configuration: $(Build.Configuration)
-      msbuildArguments: /t:Restore /p:RestoreConfigFile=$(System.DefaultWorkingDirectory)\external\xamarin-android-tools\NuGet.config
-
-  - task: MSBuild@1
-    displayName: MSBuild Java.Interop.sln /t:Prepare
-    inputs:
-      solution: Java.Interop.sln
-      configuration: $(Build.Configuration)
-      msbuildArguments: /restore /t:Prepare
-
-  - task: MSBuild@1
-    displayName: MSBuild Java.Interop.sln
-    inputs:
-      solution: Java.Interop.sln
-      configuration: $(Build.Configuration)
-      msbuildArguments: /restore
-
-  - task: MSBuild@1
-    displayName: MSBuild RunNUnitTests.targets
-    inputs:
-      solution: build-tools/scripts/RunNUnitTests.targets
-      configuration: $(Build.Configuration)
-      msbuildArguments: /p:TestAssembly="bin\Test$(Build.Configuration)\generator-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaCallableWrappers-Tests.dll;bin\Test$(Build.Configuration)\logcat-parse-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.ApiXmlAdjuster-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.JavaTypeSystem-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.Android.Tools.Bytecode-Tests.dll;bin\Test$(Build.Configuration)\Java.Interop.Tools.Generator-Tests.dll;bin\Test$(Build.Configuration)\Xamarin.SourceWriter-Tests.dll"
-    condition: succeededOrFailed()
-
-  - template: templates\publish-test-results.yaml
-    parameters:
-      platformName: .NET Framework - Windows
-
 - job: windows_dotnet_build
-  displayName: Windows - .NET Core
+  displayName: Windows - .NET
   pool:
     name: $(1ESWindowsPool)
     demands: 
@@ -121,57 +73,8 @@ jobs:
       ArtifactName: debug
     condition: succeededOrFailed()
 
-- job: mac_build
-  displayName: Mac - Mono
-  pool:
-    name: $(1ESMacPool)
-    vmImage: $(1ESMacImage)
-  timeoutInMinutes: 20
-  workspace:
-    clean: all
-  steps:
-  - checkout: self
-    submodules: recursive
-
-  - template: templates\install-dependencies.yaml
-
-  - script: >
-      dotnet tool install --global boots &&
-      boots https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.145.macos10.xamarin.universal.pkg
-    displayName: Install Mono
-
-  - template: templates\core-build.yaml
-
-  - script: |
-      r=0
-      make run-all-tests CONFIGURATION=$(Build.Configuration) JI_MAX_JDK=$(MaxJdkVersion) || r=$?
-      jar cf xatb.jar -C tests/Xamarin.Android.Tools.Bytecode-Tests/obj/*/classes .
-      zip -r bin.zip bin
-      exit $r
-    displayName: Run Tests
-
-  - template: templates\publish-test-results.yaml
-    parameters:
-      platformName: Mono - Mac
-
-  - task: CopyFiles@2
-    displayName: 'Copy Files to: Artifact Staging Directory'
-    inputs:
-      SourceFolder: $(System.DefaultWorkingDirectory)
-      Contents: |
-        xatb.jar
-        bin.zip
-      TargetFolder: $(Build.ArtifactStagingDirectory)
-    condition: succeededOrFailed()
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: debug'
-    inputs:
-      ArtifactName: debug
-    condition: succeededOrFailed()
-
 - job: mac_dotnet_build
-  displayName: Mac - .NET Core
+  displayName: Mac - .NET
   pool:
     name: $(1ESMacPool)
     vmImage: $(1ESMacImage)

@@ -48,6 +48,11 @@ namespace Java.Interop.Tools.Generator
 
 				prev_path = path;
 
+				if (path is null) {
+					Report.LogCodedWarning (0, Report.WarningNodeMissingPathAttribute, null, metaitem, metaitem.ToString ());
+					continue;
+				}
+
 				switch (metaitem.Name.LocalName) {
 				case "remove-node":
 					try {
@@ -105,9 +110,12 @@ namespace Java.Interop.Tools.Generator
 					try {
 						var  attr_name = metaitem.XGetAttribute ("name");
 
-						if (string.IsNullOrEmpty (attr_name))
+						if (string.IsNullOrEmpty (attr_name)) {
 							// BG4307
 							Report.LogCodedError (Report.ErrorMissingAttrName, metaitem, path);
+							continue;
+						}
+
 						var nodes = attr_last_cache != null ? new XElement [] { attr_last_cache } : apiDocument.ApiDocument.XPathSelectElements (path);
 						var attr_matched = 0;
 

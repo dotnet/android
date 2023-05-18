@@ -57,7 +57,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 			if (Unresolvable is JavaParameterModel p)
 				return p.DeclaringMethod.ToString ();
 
-			return Unresolvable.ToString ();
+			return Unresolvable.ToString () ?? string.Empty;
 		}
 
 		string GetReason ()

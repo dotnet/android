@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.Build.NoTargets">
   <PropertyGroup>
-    <TargetFrameworks>net472;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <OutputName>java-interop</OutputName>
     <DefineSymbols>JI_DLL_EXPORT MONODEVELOP JAVA_INTEROP_DLL_EXPORT</DefineSymbols>
     <SourceDirectory>.</SourceDirectory>
