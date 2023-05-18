@@ -4,6 +4,7 @@
 parameters:
   version: $(DotNetSdkVersion)
   remove_dotnet: false
+  retryCountOnTaskFailure: 3
 
 steps:
 
@@ -40,6 +41,7 @@ steps:
       & .\dotnet-install.ps1 -Version ${{ parameters.version }} -InstallDir $DotNetRoot -Verbose
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
   - bash: >
       DOTNET_ROOT=~/.dotnet/ &&
@@ -52,6 +54,7 @@ steps:
       echo "##vso[task.setvariable variable=PATH]$PATH"
     displayName: install .NET Core ${{ parameters.version }}
     condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
+    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
   - script: dotnet --info
     displayName: display dotnet --info
