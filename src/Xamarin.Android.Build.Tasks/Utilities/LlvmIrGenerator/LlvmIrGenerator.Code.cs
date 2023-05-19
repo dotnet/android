@@ -581,8 +581,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteCallArguments (LlvmIrFunction function, LlvmNativeFunctionSignature targetSignature, List<LlvmIrFunctionArgument> arguments)
 		{
+			Console.WriteLine ($"WCA for '{function.Name}'");
 			bool variadicCountry = false;
 			for (int i = 0; i < arguments.Count; i++) {
+				Console.WriteLine ($"  WCA: arg #{i}");
 				LlvmIrFunctionParameter? parameter = null;
 
 				if (!variadicCountry) {

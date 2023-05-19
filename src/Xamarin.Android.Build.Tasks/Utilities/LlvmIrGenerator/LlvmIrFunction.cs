@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		public LlvmIrFunctionLocalVariable (LlvmIrVariable variable, string? name = null, bool isNativePointer = false)
-			: base (variable, name, isNativePointer)
+			: base (variable, name, variable.IsNativePointer || isNativePointer)
 		{}
 	}
 
