@@ -62,7 +62,7 @@ namespace Xamarin.Android.Tasks
 							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
 							if (min_sdk != null) {
 								// NOTE: $(SupportedOSPlatformVersion) will potentially be a version, but could also be an int
-								if (SupportedOSPlatformVersion.IndexOf (".", StringComparison.OrdinalIgnoreCase) == -1) {
+								if (SupportedOSPlatformVersion.IndexOf ('.') == -1) {
 									SupportedOSPlatformVersion += ".0";
 								}
 								int supportedOsPlatformVersionAsInt = 0;
