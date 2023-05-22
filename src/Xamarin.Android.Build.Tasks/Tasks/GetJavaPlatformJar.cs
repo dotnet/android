@@ -61,15 +61,7 @@ namespace Xamarin.Android.Tasks
 
 							var min_sdk = uses_sdk.Attribute (androidNs + "minSdkVersion");
 							if (min_sdk != null) {
-								// NOTE: $(SupportedOSPlatformVersion) will potentially be a version, but could also be an int
-								if (SupportedOSPlatformVersion.IndexOf ('.') == -1) {
-									SupportedOSPlatformVersion += ".0";
-								}
-								int supportedOsPlatformVersionAsInt = 0;
-								if (Version.TryParse (SupportedOSPlatformVersion, out var version)) {
-									supportedOsPlatformVersionAsInt = version.Major;
-								}
-
+								int supportedOsPlatformVersionAsInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion);
 								var failedToParseMinSdk = !int.TryParse (min_sdk.Value, out int minSdkVersion);
 
 								if (failedToParseMinSdk || minSdkVersion != supportedOsPlatformVersionAsInt) {
