@@ -21,6 +21,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, output, fileName);
 
+			string newFileName = Path.Combine (Path.GetDirectoryName (fileName), $"new-{Path.GetFileName(fileName)}");
+			using var newOutput = new StreamWriter (File.Create (newFileName), new UTF8Encoding (false));
+
+			LlvmIrModule module = LlvmIrModule.Create (arch, output, newFileName);
+
 			InitGenerator (generator);
 			MapStructures (generator);
 			generator.WriteFileTop ();
@@ -28,6 +33,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Write (generator);
 			generator.WriteFunctionDeclarations ();
 			generator.WriteFileEnd ();
+
+			module.Generate (newOutput);
+			newOutput.Flush ();
 		}
 
 		protected static string GetAbiName (AndroidTargetArch arch)

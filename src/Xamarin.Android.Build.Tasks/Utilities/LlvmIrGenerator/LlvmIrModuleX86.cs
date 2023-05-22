@@ -1,0 +1,47 @@
+using System.Collections.Generic;
+
+using Xamarin.Android.Tools;
+
+namespace Xamarin.Android.Tasks.LLVMIR
+{
+	class LlvmIrModuleX86 : LlvmIrModule
+	{
+		public override LlvmIrDataLayout DataLayout { get; }
+		public override string TargetTriple => "i686-unknown-linux-android21";
+		public override AndroidTargetArch TargetArch => AndroidTargetArch.X86;
+
+		public LlvmIrModuleX86 (string fileName)
+			: base (fileName)
+		{
+			//
+			// As per Android NDK:
+			//   target datalayout = "e-m:e-p:32:32-p270:32:32-p271:32:32-p272:64:64-f64:32:64-f80:32-n8:16:32-S128"
+			//
+			DataLayout = new LlvmIrDataLayout {
+				LittleEndian = true,
+				Mangling = new LlvmIrDataLayoutMangling (LlvmIrDataLayoutManglingOption.ELF),
+
+				PointerSize = new List<LlvmIrDataLayoutPointerSize> {
+					new LlvmIrDataLayoutPointerSize (size: 32, abi: 32),
+					new LlvmIrDataLayoutPointerSize (size: 32, abi: 32) {
+						AddressSpace = 270,
+					},
+					new LlvmIrDataLayoutPointerSize (size: 32, abi: 32) {
+						AddressSpace = 271,
+					},
+					new LlvmIrDataLayoutPointerSize (size: 64, abi: 64) {
+						AddressSpace = 272,
+					},
+				},
+
+				FloatAlignment = new List<LlvmIrDataLayoutFloatAlignment> {
+					new LlvmIrDataLayoutFloatAlignment (size: 64, abi: 32, pref: 64), // f64
+					new LlvmIrDataLayoutFloatAlignment (size: 80, abi: 32), // f80
+				},
+
+				NativeIntegerWidths = new List<uint> { 8, 16, 32 },
+				StackAlignment = 128,
+			};
+		}
+	}
+}

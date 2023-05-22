@@ -6,7 +6,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	// Not all attributes are currently used throughout the code, but we define them call for potential future use.
 	// Documentation can be found here: https://llvm.org/docs/LangRef.html#function-attributes
-	abstract class LLVMFunctionAttribute
+	abstract class LLVMFunctionAttribute : IComparable, IComparable<LLVMFunctionAttribute>, IEquatable<LLVMFunctionAttribute>
 	{
 		public string Name { get; }
 		public bool Quoted { get; }
@@ -89,6 +89,83 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return value;
 		}
+
+		public int CompareTo (object obj)
+		{
+			var attr = obj as LLVMFunctionAttribute;
+			if (obj == null) {
+				return 1;
+			}
+
+			return CompareTo (attr);
+		}
+
+		public int CompareTo (LLVMFunctionAttribute other)
+		{
+			return Name.CompareTo (other?.Name);
+		}
+
+		public override int GetHashCode()
+		{
+			int hc = 0;
+			if (Name != null) {
+				hc ^= Name.GetHashCode ();
+			}
+
+			return
+				hc ^
+				Quoted.GetHashCode () ^
+				SupportsParams.GetHashCode () ^
+				ParamsAreOptional.GetHashCode () ^
+				HasValueAsignment.GetHashCode ();
+		}
+
+		public override bool Equals (object obj)
+		{
+			var attr = obj as LLVMFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return Equals (attr);
+		}
+
+		public virtual bool Equals (LLVMFunctionAttribute other)
+		{
+			if (other == null) {
+				return false;
+			}
+
+			if (String.Compare (Name, other.Name, StringComparison.Ordinal) != 0) {
+				return false;
+			}
+
+			return
+				Quoted == other.Quoted &&
+				SupportsParams == other.SupportsParams &&
+				ParamsAreOptional == other.ParamsAreOptional &&
+				HasValueAsignment == other.HasValueAsignment;
+		}
+
+		public static bool operator > (LLVMFunctionAttribute a, LLVMFunctionAttribute b)
+		{
+			return a.CompareTo (b) > 0;
+		}
+
+		public static bool operator < (LLVMFunctionAttribute a, LLVMFunctionAttribute b)
+		{
+			return a.CompareTo (b) < 0;
+		}
+
+		public static bool operator >= (LLVMFunctionAttribute a, LLVMFunctionAttribute b)
+		{
+			return a.CompareTo (b) >= 0;
+		}
+
+		public static bool operator <= (LLVMFunctionAttribute a, LLVMFunctionAttribute b)
+		{
+			return a.CompareTo (b) <= 0;
+		}
 	}
 
 	abstract class LLVMFlagFunctionAttribute : LLVMFunctionAttribute
@@ -116,6 +193,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			sb.Append (alignment.ToString (CultureInfo.InvariantCulture));
 		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AlignstackFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return alignment == attr.alignment;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ alignment.GetHashCode ();
+		}
 	}
 
 	class AllocFamilyFunctionAttribute : LLVMFunctionAttribute
@@ -131,6 +227,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected override void RenderAssignedValue (StringBuilder sb)
 		{
 			sb.Append (family);
+		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllocFamilyFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (family, attr.family, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (family?.GetHashCode () ?? 0);
 		}
 	}
 
@@ -149,6 +264,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append ('"');
 			sb.Append (kind);
 			sb.Append ('"');
+		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllockindFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (kind, attr.kind, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (kind?.GetHashCode () ?? 0);
 		}
 	}
 
@@ -173,6 +307,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			sb.Append (", ");
 			sb.Append (numberOfElements.Value.ToString (CultureInfo.InvariantCulture));
+		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllocsizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return elementSize == attr.elementSize && numberOfElements == attr.numberOfElements;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ elementSize.GetHashCode () ^ (numberOfElements?.GetHashCode () ?? 0);
 		}
 	}
 
@@ -252,6 +405,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (fpMode);
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as FramePointerFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (fpMode, attr.fpMode, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (fpMode?.GetHashCode () ?? 0);
+		}
 	}
 
 	class HotFunctionAttribute : LLVMFlagFunctionAttribute
@@ -652,6 +824,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			sb.Append (isSync.Value ? "sync" : "async");
 		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as UwtableFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return isSync == attr.isSync;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (isSync?.GetHashCode () ?? 0);
+		}
 	}
 
 	class NocfCheckFunctionAttribute : LLVMFlagFunctionAttribute
@@ -686,6 +877,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (threshold);
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as WarnStackSizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return threshold == attr.threshold;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ threshold.GetHashCode ();
+		}
 	}
 
 	class VscaleRangeFunctionAttribute : LLVMFunctionAttribute
@@ -710,6 +920,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (", ");
 			sb.Append (max.Value.ToString (CultureInfo.InvariantCulture));
 		}
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as VscaleRangeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return min == attr.min && max == attr.max;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ min.GetHashCode () ^ (max?.GetHashCode () ?? 0);
+		}
 	}
 
 	class MinLegalVectorWidthFunctionAttribute : LLVMFunctionAttribute
@@ -723,6 +952,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as MinLegalVectorWidthFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return size == attr.size;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ size.GetHashCode ();
+		}
 	}
 
 	class StackProtectorBufferSizeFunctionAttribute : LLVMFunctionAttribute
@@ -736,6 +984,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as StackProtectorBufferSizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return size == attr.size;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ size.GetHashCode ();
+		}
 	}
 
 	class TargetCpuFunctionAttribute : LLVMFunctionAttribute
@@ -749,6 +1016,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TargetCpuFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (cpu?.GetHashCode () ?? 0);
+		}
 	}
 
 	class TuneCpuFunctionAttribute : LLVMFunctionAttribute
@@ -762,6 +1048,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TuneCpuFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (cpu?.GetHashCode () ?? 0);
+		}
 	}
 
 	class TargetFeaturesFunctionAttribute : LLVMFunctionAttribute
@@ -775,6 +1080,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (features);
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TargetFeaturesFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (features, attr.features, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (features?.GetHashCode () ?? 0);
+		}
 	}
 
 	class NoTrappingMathFunctionAttribute : LLVMFunctionAttribute
@@ -788,6 +1112,25 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (yesno.ToString ().ToLowerInvariant ());
+
+		public override bool Equals (LLVMFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as NoTrappingMathFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return yesno == attr.yesno;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ yesno.GetHashCode ();
+		}
 	}
 
 	class StackrealignFunctionAttribute : LLVMFlagFunctionAttribute
