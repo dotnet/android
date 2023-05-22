@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.Tools.Zip;
 using System.Collections.Generic;
+using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Build.Tests
@@ -1018,7 +1019,7 @@ class TestActivity : Activity { }"
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 
-			var minSdkVersionInt = GetVersionStringAsInt (minSdkVersion);
+			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
 			if (minSdkVersionInt < 22) {
 				StringAssertEx.Contains ("warning CA1416", builder.LastBuildOutput, "Should get warning about Android 22 API");
 			} else {
@@ -1030,19 +1031,6 @@ class TestActivity : Activity { }"
 			var manifest = XDocument.Load (manifestPath);
 			XNamespace ns = "http://schemas.android.com/apk/res/android";
 			Assert.AreEqual (minSdkVersionInt.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
-		}
-
-		int GetVersionStringAsInt (string versionString)
-		{
-			int versionInt = 0;
-			if (versionString.Contains (".", StringComparison.OrdinalIgnoreCase)) {
-				if (Version.TryParse (versionString, out var versionStringAsVersion)) {
-					versionInt = versionStringAsVersion.Major;
-				}
-			} else {
-				int.TryParse (versionString, out versionInt);
-			}
-			return versionInt;
 		}
 
 		static object [] SupportedOSErrorsTestSources = new object [] {
@@ -1089,8 +1077,8 @@ class TestActivity : Activity { }"
 			if (string.IsNullOrEmpty (supportedOSPlatVers)) {
 				supportedOSPlatVers = minDotnetApiLevel.ToString ();
 			}
-			var minSdkVersionInt = GetVersionStringAsInt (minSdkVersion);
-			var supportedOSPlatVersInt = GetVersionStringAsInt (supportedOSPlatVers);
+			var minSdkVersionInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (minSdkVersion);
+			var supportedOSPlatVersInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (supportedOSPlatVers);
 			var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			var buildResult = builder.Build (proj);
