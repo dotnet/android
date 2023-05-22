@@ -1779,6 +1779,14 @@
   <!-- A new nested class "Request" was added which has a name conflict with existing methods named "Request" -->
   <attr api-since="34" path="/api/package[@name='android.view']/class[@name='PixelCopy.Request']" name="managedName">PixelCopyRequest</attr>
 
+  <!-- Unsupported covariant return types -->
+  <attr api-since="34" path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='arrayType' and count(parameter)=0]" name="managedReturn">Java.Lang.Object</attr>
+
+  <!-- Existing interface method was given a default implementation, existing implementations need to be changed to override -->
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="abstract">false</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/class[@name='Constructor']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/class[@name='Field']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="managedOverride">override</attr>
+	
   <!-- Rename Namespaces -->
   <attr api-since="34" path="/api/package[@name='android.adservices.adid']" name="managedName">Android.AdServices.AdIds</attr>
   <attr api-since="34" path="/api/package[@name='android.adservices.adselection']" name="managedName">Android.AdServices.AdSelection</attr>
@@ -1795,6 +1803,7 @@
   <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes']" name="managedName">Android.Health.Connect.DataTypes</attr>
   <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes.units']" name="managedName">Android.Health.Connect.DataTypes.Units</attr>
   <attr api-since="34" path="/api/package[@name='android.location.altitude']" name="managedName">Android.Locations.Altitude</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.runtime']" name="managedName">Java.Lang.Runtimes</attr>
 
   <!--
     ***********************************************************************
