@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Diagnostics;
 using System.IO;
@@ -305,7 +306,9 @@ namespace Xamarin.Android.Build.Tests
 			}, logcatFilePath, timeout);
 			var match = regex.Match (capturedLine);
 			if (match.Success) {
-				startupTime = new TimeSpan (0, 0, 0, int.Parse (match.Groups ["seconds"].Value), int.Parse (match.Groups ["milliseconds"].Value));
+				startupTime = new TimeSpan (0, 0, 0,
+					int.Parse (match.Groups ["seconds"].Value, CultureInfo.InvariantCulture),
+					int.Parse (match.Groups ["milliseconds"].Value, CultureInfo.InvariantCulture));
 			}
 			return result;
 		}
@@ -414,7 +417,7 @@ namespace Xamarin.Android.Build.Tests
 			Console.WriteLine (output);
 			var match = regex.Match (output);
 			if (match.Success) {
-				return int.Parse (match.Groups ["userId"].Value);
+				return int.Parse (match.Groups ["userId"].Value, CultureInfo.InvariantCulture);
 			}
 			return -1;
 		}

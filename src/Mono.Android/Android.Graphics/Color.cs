@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Text;
@@ -64,7 +65,7 @@ namespace Android.Graphics
 
 		public override string ToString ()
 		{
-			return String.Format ("Color [A={0}, R={1}, G={2}, B={3}]", A, R, G, B);
+			return FormattableString.Invariant ($"Color [A={A}, R={R}, G={G}, B={B}]");
 		}
 
 		public override bool Equals (object obj)
@@ -217,9 +218,8 @@ namespace Android.Graphics
 
 		private static ArgumentException CreateColorArgumentException (int value, string color)
 		{
-			return new ArgumentException (string.Format ("'{0}' is not a valid"
-				+ " value for '{1}'. '{1}' should be greater or equal to 0 and"
-				+ " less than or equal to 255.", value, color));
+			return new ArgumentException (FormattableString.Invariant (
+				$"'{value}' is not a valid  value for '{color}'. '{color}' should be greater or equal to 0 and less than or equal to 255."));
 		}
 
 		public static Color ParseColor (string colorString)

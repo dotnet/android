@@ -16,6 +16,7 @@
 // http://www.rassoc.com/gregr/weblog/stories/2002/07/09/webServicesSecurityHttpDigestAuthenticationWithoutActiveDirectory.html
 //
 using System;
+using System.Globalization;
 using System.Net;
 using System.Security.Cryptography;
 using System.Text;
@@ -96,7 +97,7 @@ namespace Xamarin.Android.Net
 
 			var sb = new StringBuilder ();
 			foreach (byte b in result)
-				sb.Append (b.ToString ("x2"));
+				sb.Append (b.ToString ("x2", CultureInfo.InvariantCulture));
 			return sb.ToString ();
 		}
 
@@ -121,9 +122,9 @@ namespace Xamarin.Android.Net
 
 		string? Response (string username, string password, HttpURLConnection webRequest)
 		{
-			string response = $"{HA1 (username, password)}:{Nonce}:";
+			string response = FormattableString.Invariant ($"{HA1 (username, password)}:{Nonce}:");
 			if (QOP != null)
-				response += $"{_nc.ToString ("X8")}:{CNonce}:{QOP}:";
+				response += FormattableString.Invariant ($"{_nc:X8}:{CNonce}:{QOP}:");
 			response += HA2 (webRequest);
 			return HashToHexString (response);
 		}
@@ -147,36 +148,36 @@ namespace Xamarin.Android.Net
 
 			string password = cred.Password;
 			var auth = new StringBuilder ();
-			auth.Append ($"Digest username=\"{userName}\", ");
-			auth.Append ($"realm=\"{Realm}\", ");
-			auth.Append ($"nonce=\"{Nonce}\", ");
-			auth.Append ($"uri=\"{uri.PathAndQuery}\", ");
+			auth.Append (FormattableString.Invariant ($"Digest username=\"{userName}\", "));
+			auth.Append (FormattableString.Invariant ($"realm=\"{Realm}\", "));
+			auth.Append (FormattableString.Invariant ($"nonce=\"{Nonce}\", "));
+			auth.Append (FormattableString.Invariant ($"uri=\"{uri.PathAndQuery}\", "));
 
 			if (Algorithm != null) { // hash algorithm (only MD5 in RFC2617)
-				auth.Append ($"algorithm=\"{Algorithm}\", ");
+				auth.Append (FormattableString.Invariant ($"algorithm=\"{Algorithm}\", "));
 			}
 
-			auth.Append ($"response=\"{Response (userName, password, request)}\", ");
+			auth.Append (FormattableString.Invariant ($"response=\"{Response (userName, password, request)}\", "));
 
 			if (QOP != null) { // quality of protection (server decision)
-				auth.Append ($"qop=\"{QOP}\", ");
+				auth.Append (FormattableString.Invariant ($"qop=\"{QOP}\", "));
 			}
 
 			lock (this) {
 				// _nc MUST NOT change from here...
 				// number of request using this nonce
 				if (QOP != null) {
-					auth.Append ($"nc={_nc.ToString ("X8")}, ");
+					auth.Append (FormattableString.Invariant ($"nc={_nc:X8}, "));
 					_nc++;
 				}
 				// until here, now _nc can change
 			}
 
 			if (CNonce != null) // opaque value from the client
-				auth.Append ($"cnonce=\"{CNonce}\", ");
+				auth.Append (FormattableString.Invariant ($"cnonce=\"{CNonce}\", "));
 
 			if (Opaque != null) // exact same opaque value as received from server
-				auth.Append ($"opaque=\"{Opaque}\", ");
+				auth.Append (FormattableString.Invariant ($"opaque=\"{Opaque}\", "));
 
 			auth.Length -= 2; // remove ", "
 			return new Authorization (auth.ToString ());

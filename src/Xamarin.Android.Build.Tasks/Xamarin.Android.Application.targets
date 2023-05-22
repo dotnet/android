@@ -19,7 +19,7 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
+    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
   </Target>
   <Target Name="StopAndroidPackage"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName">

@@ -8,6 +8,7 @@
     <AssemblyOriginatorKeyFile>..\..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DebugSymbols>True</DebugSymbols>
     <DebugType>portable</DebugType>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\..\..\Configuration.props" />

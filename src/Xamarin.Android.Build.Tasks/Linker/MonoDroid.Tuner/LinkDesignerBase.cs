@@ -5,6 +5,7 @@ using System;
 using System.Linq;
 using Xamarin.Android.Tasks;
 using System.Collections.Generic;
+using System.Globalization;
 using Mono.Cecil.Cil;
 using System.Text.RegularExpressions;
 using Mono.Collections.Generic;
@@ -100,7 +101,7 @@ namespace MonoDroid.Tuner  {
 				{
 					string key = $"{definition.Name}::{field.Name}";
 					if (!output.ContainsKey (key))
-						output.Add(key, int.Parse (field.Constant?.ToString () ?? "0"));
+						output.Add(key, int.Parse (field.Constant?.ToString () ?? "0", CultureInfo.InvariantCulture));
 				}
 			}
 			return output;

@@ -5,7 +5,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>monoandroid10;$(DotNetTargetFramework)</TargetFrameworks>
+    <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
@@ -24,15 +24,7 @@
     <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-    <TargetFrameworkIdentifier>MonoAndroid</TargetFrameworkIdentifier>
-    <TargetFrameworkVersion>v1.0</TargetFrameworkVersion>
-    <TargetFrameworkRootPath>$(XAInstallPrefix)xbuild-frameworks</TargetFrameworkRootPath>
-    <DefineConstants>$(DefineConstants);NET_2_0</DefineConstants>
-    <OutputPath>$(XAInstallPrefix)xbuild-frameworks\MonoAndroid\$(AndroidFrameworkVersion)\</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
+  <PropertyGroup>
     <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
   </PropertyGroup>
@@ -55,50 +47,7 @@
     <DefineConstants>$(DefineConstants);ENABLE_MARSHAL_METHODS</DefineConstants>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(TargetFramework)' == 'monoandroid10' ">
-    <Reference Include="mscorlib">
-      <HintPath>$(OutputPath)..\v1.0\mscorlib.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System">
-      <HintPath>$(OutputPath)..\v1.0\System.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Collections">
-      <HintPath>$(OutputPath)..\v1.0\Facades\System.Collections.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Core">
-      <HintPath>$(OutputPath)..\v1.0\System.Core.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Net.Http">
-      <HintPath>$(OutputPath)..\v1.0\System.Net.Http.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime.Serialization">
-      <HintPath>$(OutputPath)..\v1.0\System.Runtime.Serialization.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Xml">
-      <HintPath>$(OutputPath)..\v1.0\System.Xml.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="Java.Interop">
-      <HintPath>$(OutputPath)..\v1.0\Java.Interop.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Runtime">
-      <HintPath>$(OutputPath)..\v1.0\Facades\System.Runtime.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-    <Reference Include="System.Drawing.Common.dll">
-      <HintPath>$(OutputPath)..\v1.0\Facades\System.Drawing.Common.dll</HintPath>
-      <Private>False</Private>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' != 'monoandroid10' ">
+  <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop\Java.Interop.csproj" />
     <EmbeddedResource Include="ILLink/ILLink.LinkAttributes.xml">
       <LogicalName>ILLink.LinkAttributes.xml</LogicalName>
@@ -374,8 +323,7 @@
     <Compile Include="System.Drawing/SizeFConverter.cs" />
     <Compile Include="System.IO\AndroidExtensions.cs" />
     <Compile Include="System.Linq\Extensions.cs" />
-    <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
-    <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\AndroidClientHandler.Legacy.cs" />
+    <Compile Include="Xamarin.Android.Net\AndroidClientHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidMessageHandler.cs" />
     <Compile Include="Xamarin.Android.Net\AndroidHttpResponseMessage.cs" />
     <Compile Include="Xamarin.Android.Net\AuthDigestHeaderParser.cs" />
@@ -386,15 +334,15 @@
     <Compile Include="Xamarin.Android.Net\AuthModuleDigest.cs" />
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
     <Compile Include="Xamarin.Android.Net\ServerCertificateCustomValidator.cs" />
-    <Compile Condition=" '$(TargetFramework)' != 'monoandroid10' " Include="Xamarin.Android.Net\NegotiateAuthenticationHelper.cs" />
-    <Compile Condition=" '$(TargetFramework)' == 'monoandroid10' " Include="Xamarin.Android.Net\OldAndroidSSLSocketFactory.cs" />
+    <Compile Include="Xamarin.Android.Net\NegotiateAuthenticationHelper.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\build-tools\create-android-api\create-android-api.csproj" ReferenceOutputAssembly="false" />
     <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472"/>
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net472" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
@@ -409,18 +357,14 @@
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />
 
   <!-- Only build the .NET 6+ version of 'Mono.Android.dll' for the default API level that is supported or higher. -->
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
-    <BuildDependsOn></BuildDependsOn>
-  </PropertyGroup>
-
-  <!-- Do not build classic for API versions above 33 -->
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' And '$(AndroidApiLevel)' &gt; '33'">
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
   
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
+  <PropertyGroup Condition=" '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
+      _ExportMsxDoc;
       _CopyToPackDirs;
     </BuildDependsOn>
   </PropertyGroup>
