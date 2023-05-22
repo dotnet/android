@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="nunit" />
     <PackageReference Include="NUnit.ConsoleRunner" />
     <PackageReference Include="NUnit3TestAdapter" />
@@ -22,4 +21,5 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
   </ItemGroup>
+  
 </Project>

@@ -4,7 +4,6 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
     <DefineConstants>$(DefineConstants);GENERATOR;HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
@@ -40,13 +39,11 @@
     <Reference Include="HtmlAgilityPack">
         <HintPath>$(PkgHtmlAgilityPack)\lib\netstandard2.0\HtmlAgilityPack.dll</HintPath>
     </Reference>
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <None Condition=" '$(TargetFramework)' == 'net472' " Include="$(PkgMono_Options)\lib\net40\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
-    <None Condition=" '$(TargetFramework)' != 'net472' " Include="$(PkgMono_Options)\lib\netstandard2.0\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
+    <None Include="$(PkgMono_Options)\lib\netstandard2.0\Mono.Options.pdb" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

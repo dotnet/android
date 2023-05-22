@@ -1,28 +1,32 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <ProjectGuid>{D1243BAB-23CA-4566-A2A3-3ADA2C2DC3AF}</ProjectGuid>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AssemblyTitle>Java.Interop.GenericMarshaler</AssemblyTitle>
   </PropertyGroup>
+  
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
     <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
+  
   <ItemGroup>
     <None Include="Java.Interop.GenericMarshaler\JniPeerInstanceMethodsExtensions.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>Java.Interop.GenericMarshaler\JniPeerInstanceMethodsExtensions.cs</LastGenOutput>
     </None>
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
+  
 </Project>

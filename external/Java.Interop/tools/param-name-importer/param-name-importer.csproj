@@ -1,17 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
   </PropertyGroup>
+  
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
   <PropertyGroup>
     <OutputPath>$(UtilityOutputFullPath)</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <!-- Not sure why needed, but only System.IO.Compression.FileSystem.dll is
-      included by default, and ZipArchive is type forwarded to System.IO.Compression -->
-    <Reference Include="System.IO.Compression" Condition="$(TargetFramework.StartsWith('net4'))" />
-  </ItemGroup>
+  
   <ItemGroup>
     <!-- This package erroneously contains /netcoreapp3.1/SgmlReader.exe and /netcoreapp3.1/SgmlReaderDll.dll.
          We are going to use a package reference to download the nuget, and a regular reference to actually
@@ -21,12 +20,13 @@
       <HintPath>$(PkgMicrosoft_Xml_SgmlReader)\lib\netstandard2.0\SgmlReaderDll.dll</HintPath>
     </Reference>
     <PackageReference Include="Mono.Options" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.Tools.Bytecode\Xamarin.Android.Tools.Bytecode.csproj" />
   </ItemGroup>
+  
 </Project>

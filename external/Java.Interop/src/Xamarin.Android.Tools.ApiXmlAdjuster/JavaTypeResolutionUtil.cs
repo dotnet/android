@@ -11,7 +11,7 @@ namespace Xamarin.Android.Tools.ApiXmlAdjuster
 		[return: MaybeNull]
 		static V Get<K,V> (this IDictionary<K,V> dic, K key)
 		{
-			V v;
+			V? v;
 			return dic.TryGetValue (key, out v) ? v : default (V);
 		}
 

@@ -8,20 +8,13 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <DefineConstants>$(DefineConstants);JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />

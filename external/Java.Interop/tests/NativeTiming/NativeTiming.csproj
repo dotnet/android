@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.Build.NoTargets">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>

@@ -28,7 +28,6 @@
     <PackageReference Include="Mono.Linq.Expressions" />
   </ItemGroup>
 
-
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop.Tools.Expressions\Java.Interop.Tools.Expressions.csproj" />
   </ItemGroup>

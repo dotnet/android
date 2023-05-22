@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <LangVersion>8.0</LangVersion>
     <AssemblyName>jnimarshalmethod-gen</AssemblyName>
   </PropertyGroup>
 
@@ -22,7 +21,6 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Options" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
 

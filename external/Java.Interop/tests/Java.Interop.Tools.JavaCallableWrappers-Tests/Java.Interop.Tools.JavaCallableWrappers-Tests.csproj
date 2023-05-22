@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
-    <LangVersion>8.0</LangVersion>
     <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
   </PropertyGroup>
 
@@ -17,7 +16,6 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="nunit" />
     <PackageReference Include="NUnit.ConsoleRunner" />
     <PackageReference Include="NUnit3TestAdapter" />

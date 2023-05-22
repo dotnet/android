@@ -1,27 +1,24 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
-    <ProjectGuid>{5C0B3562-8DA0-4726-9762-75B9709ED6B7}</ProjectGuid>
-    <AssemblyTitle>Java.Interop.Tools.JavaSource</AssemblyTitle>
   </PropertyGroup>
+  
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
-  <ItemGroup>
-    <Compile Include="..\utils\NullableAttributes.cs" />
-  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="Irony" />
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\Xamarin.Android.Tools.ApiXmlAdjuster\Xamarin.Android.Tools.ApiXmlAdjuster.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
-  </ItemGroup>
+
 </Project>

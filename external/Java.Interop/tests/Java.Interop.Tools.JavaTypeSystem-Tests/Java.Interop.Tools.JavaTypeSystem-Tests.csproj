@@ -4,7 +4,6 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <RootNamespace>Java.Interop.Tools.JavaTypeSystem.Tests</RootNamespace>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
@@ -21,7 +20,6 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

@@ -4,7 +4,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <LangVersion>9.0</LangVersion>
+    <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT;NO_GC_BRIDGE_SUPPORT</DefineConstants>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
@@ -13,17 +13,12 @@
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(TargetFramework)' != 'net472' ">
-    <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT;NO_GC_BRIDGE_SUPPORT</DefineConstants>
-  </PropertyGroup>
-
   <ItemGroup>
     <Compile Remove="Java.Interop\JniReferenceSafeHandleTest.cs" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="Mono.Linq.Expressions" />
     <PackageReference Include="nunit" />
     <PackageReference Include="NUnit.ConsoleRunner" GeneratePathProperty="true" />
@@ -35,10 +30,6 @@
     <ProjectReference Include="..\..\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
-  </ItemGroup>
-
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net472' ">
-    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
   </ItemGroup>
 
   <ItemGroup>

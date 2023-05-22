@@ -1,27 +1,26 @@
-<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <LangVersion>8.0</LangVersion>
-    <ProjectGuid>{AD4468F8-8883-434B-9D4C-E1801BB3B52A}</ProjectGuid>
     <Nullable>annotations</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <AssemblyTitle>Java.Interop.Dynamic</AssemblyTitle>
-    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
+  
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
   <PropertyGroup>
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
+    <Version>$(JICoreLibVersion)</Version>
   </PropertyGroup>
+  
   <ItemGroup>
-    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj">
-      <Project>{94BD81F7-B06F-4295-9636-F8A3B6BDC762}</Project>
-      <Name>Java.Interop</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Java.Interop\Java.Interop.csproj" />
   </ItemGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>
+  
 </Project>

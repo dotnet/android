@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
-    <LangVersion>10.0</LangVersion>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <Nullable>enable</Nullable>
@@ -15,9 +14,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     <!-- Always reference the netstandard2.0 version of protobuf-net as it is a shared dependency. -->
     <PackageReference Include="protobuf-net" ExcludeAssets="Compile" GeneratePathProperty="true" />
-    <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
     <Reference Include="protobuf-net">
       <HintPath>$(PkgProtobuf-net)\lib\netstandard2.0\protobuf-net.dll</HintPath>
     </Reference>

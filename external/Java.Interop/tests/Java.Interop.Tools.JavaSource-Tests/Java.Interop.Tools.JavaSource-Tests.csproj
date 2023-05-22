@@ -1,20 +1,25 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
+  
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>False</IsPackable>
   </PropertyGroup>
+  
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
+  
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
   </PropertyGroup>
+  
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" />
-    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" PrivateAssets="All" />
     <PackageReference Include="nunit" />
     <PackageReference Include="NUnit.ConsoleRunner" />
     <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop.Tools.JavaSource\Java.Interop.Tools.JavaSource.csproj" />
   </ItemGroup>
+  
 </Project>
