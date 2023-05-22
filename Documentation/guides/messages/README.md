@@ -136,7 +136,8 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1033](xa1033.md): Could not resolve '{0}'. Please check your `AndroidHttpClientHandlerType` setting.
 + [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 + [XA1036](xa1036.md): Microsoft.Android 34.0.0 does not support a deployment target of '19' (the minimum is '21'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.
-+ [XA1037](xa1037.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed). Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
++ [XA1037](xa1037.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
 
 ## XA2xxx: Linker
 
