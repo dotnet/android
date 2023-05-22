@@ -497,14 +497,7 @@ Please change the value to an assembly-qualifed type name which inherits from '{
     <value>The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
-	<data name="XA1036" xml:space="preserve">
-    <value>Microsoft.Android {0} does not support a deployment target of '{1}' (the minimum is '{2}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
-    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
-{0} - The version of the SDK
-{1} - The value of the property
-{2} - The minimum SupportedOSPlatformVersion supported by this version of the SDK</comment>
-  </data>
-  <data name="XA1037" xml:space="preserve">
+  <data name="XA1036" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
@@ -622,11 +615,19 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>Microsoft.Android {0} does not support a deployment target of '{1}' (the minimum is '{2}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The version of the SDK
+{1} - The value of $(SupportedOSPlatformVersion)
+{2} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>Microsoft.Android {0} does not support a deployment target of '{1}' (the minimum is '{2}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The version of the SDK
+{1} - The value of //uses-sdk/@android:minSdkVersion
+{2} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</value>

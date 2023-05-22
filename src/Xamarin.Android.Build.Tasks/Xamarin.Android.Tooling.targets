@@ -102,6 +102,7 @@ projects.
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+        AndroidNETSdkVersion="$(AndroidNETSdkVersion)"
     >
       <Output TaskParameter="JavaPlatformJarPath" PropertyName="JavaPlatformJarPath" />
       <Output TaskParameter="TargetSdkVersion"    PropertyName="_AndroidTargetSdkVersion" />
