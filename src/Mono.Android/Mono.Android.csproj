@@ -78,6 +78,7 @@
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
+    <Compile Include="Java.Lang.Invoke\MethodType.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />

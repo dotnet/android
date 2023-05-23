@@ -1,6 +1,7 @@
 using System;
 using Android.Runtime;
 using Java.Interop;
+using Java.Lang.Invoke;
 
 namespace Java.Lang {
 
@@ -28,5 +29,14 @@ namespace Java.Lang {
 
 			return Java.Lang.Object.GetObject<Class> (JNIEnv.FindClass (type), JniHandleOwnership.TransferGlobalRef)!;
 		}
+
+#if ANDROID_34
+		// A new interface (Java.Lang.Invoke.ITypeDescriptor.IOfField) was added to this class in API-34.
+		// The new required ComponentType () method conflicts with our ComponentType property created from
+		// the existing getComponentType method. Explicitly implement this method, which Android has documented
+		// as equivalent to the existing getComponentType method.
+		Java.Lang.Object? ITypeDescriptor.IOfField.ComponentType ()
+			=> ComponentType;
+#endif
 	}
 }
