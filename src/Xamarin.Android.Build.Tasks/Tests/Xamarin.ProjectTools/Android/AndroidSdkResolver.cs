@@ -47,17 +47,18 @@ namespace Xamarin.ProjectTools
 
 		public static string GetJavaSdkPath ()
 		{
-			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = RunPathsTargets ("GetJavaSdkDirectory");
-			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
-			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = Environment.GetEnvironmentVariable ("JAVA_HOME");
-			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = GetPathFromRegistry ("JavaSdkDirectory");
-			if (string.IsNullOrEmpty (JavaSdkPath))
-				JavaSdkPath = Path.GetFullPath (Path.Combine (DefaultToolchainPath, "jdk"));
-			return JavaSdkPath;
+			var javaSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= RunPathsTargets ("GetJavaSdkDirectory");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= Environment.GetEnvironmentVariable ("JAVA_HOME");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= GetPathFromRegistry ("JavaSdkDirectory");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= Path.GetFullPath (Path.Combine (DefaultToolchainPath, "jdk"));
+			return javaSdkPath;
 		}
 
 		static string JavaSdkVersionString;
