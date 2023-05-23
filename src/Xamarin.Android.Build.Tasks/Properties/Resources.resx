@@ -616,18 +616,16 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {1} - The managed type name</comment>
   </data>
   <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
-    <value>Microsoft.Android {0} does not support a deployment target of '{1}' (the minimum is '{2}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
-{0} - The version of the SDK
-{1} - The value of $(SupportedOSPlatformVersion)
-{2} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>Microsoft.Android {0} does not support a deployment target of '{1}' (the minimum is '{2}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
-{0} - The version of the SDK
-{1} - The value of //uses-sdk/@android:minSdkVersion
-{2} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' is less than API-{1}, this configuration is not supported.</value>

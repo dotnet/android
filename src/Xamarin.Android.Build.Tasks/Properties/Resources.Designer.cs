@@ -945,7 +945,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Microsoft.Android {0} does not support a deployment target of &apos;{1}&apos; (the minimum is &apos;{2}&apos;). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml..
+        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml..
         /// </summary>
         public static string XA4216_MinSdkVersion {
             get {
@@ -954,7 +954,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Microsoft.Android {0} does not support a deployment target of &apos;{1}&apos; (the minimum is &apos;{2}&apos;). Please increase the $(SupportedOSPlatformVersion) property value in your project file..
+        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase the $(SupportedOSPlatformVersion) property value in your project file..
         /// </summary>
         public static string XA4216_SupportedOSPlatformVersion {
             get {

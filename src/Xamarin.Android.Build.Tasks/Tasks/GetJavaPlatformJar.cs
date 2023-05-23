@@ -27,8 +27,6 @@ namespace Xamarin.Android.Tasks
 
 		public string SupportedOSPlatformVersion { get; set; }
 
-		public string AndroidNETSdkVersion { get; set; }
-
 		[Output]
 		public string JavaPlatformJarPath { get; set; }
 
@@ -43,7 +41,7 @@ namespace Xamarin.Android.Tasks
 
 			int supportedOsPlatformVersionAsInt = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion);
 			if (supportedOsPlatformVersionAsInt < XABuildConfig.AndroidMinimumDotNetApiLevel) {
-				Log.LogCodedError ("XA4216", Properties.Resources.XA4216_SupportedOSPlatformVersion, AndroidNETSdkVersion, supportedOsPlatformVersionAsInt, XABuildConfig.AndroidMinimumDotNetApiLevel);
+				Log.LogCodedError ("XA4216", Properties.Resources.XA4216_SupportedOSPlatformVersion, supportedOsPlatformVersionAsInt, XABuildConfig.AndroidMinimumDotNetApiLevel);
 			}
 
 			// Look for targetSdkVersion in the user's AndroidManifest.xml
@@ -71,7 +69,7 @@ namespace Xamarin.Android.Tasks
 								var failedToParseMinSdk = !int.TryParse (min_sdk.Value, out int minSdkVersion);
 
 								if (failedToParseMinSdk || minSdkVersion < XABuildConfig.AndroidMinimumDotNetApiLevel) {
-									Log.LogCodedError ("XA4216", Properties.Resources.XA4216_MinSdkVersion, AndroidNETSdkVersion, min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel);
+									Log.LogCodedError ("XA4216", Properties.Resources.XA4216_MinSdkVersion, min_sdk?.Value, XABuildConfig.AndroidMinimumDotNetApiLevel);
 								}
 
 								if (failedToParseMinSdk || minSdkVersion != supportedOsPlatformVersionAsInt) {
