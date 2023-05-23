@@ -3,27 +3,27 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Xamarin.Android.Tasks.LLVMIR
+namespace Xamarin.Android.Tasks.LLVM.IR
 {
-	class LlvmFunctionAttributeSet : IEnumerable<LLVMFunctionAttribute>, IEquatable<LlvmFunctionAttributeSet>
+	class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
 	{
 		static readonly object counterLock = new object ();
 		static uint counter = 0;
 
 		public uint Number { get; }
 
-		HashSet<LLVMFunctionAttribute> attributes;
+		HashSet<LlvmIrFunctionAttribute> attributes;
 
-		public LlvmFunctionAttributeSet ()
+		public LlvmIrFunctionAttributeSet ()
 		{
-			attributes = new HashSet<LLVMFunctionAttribute> ();
+			attributes = new HashSet<LlvmIrFunctionAttribute> ();
 
 			lock (counterLock) {
 				Number = counter++;
 			}
 		}
 
-		public void Add (LLVMFunctionAttribute attr)
+		public void Add (LlvmIrFunctionAttribute attr)
 		{
 			if (attr == null) {
 				throw new ArgumentNullException (nameof (attr));
@@ -34,30 +34,30 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public void Add (LlvmFunctionAttributeSet sourceSet)
+		public void Add (LlvmIrFunctionAttributeSet sourceSet)
 		{
 			if (sourceSet == null) {
 				throw new ArgumentNullException (nameof (sourceSet));
 			}
 
-			foreach (LLVMFunctionAttribute attr in sourceSet) {
+			foreach (LlvmIrFunctionAttribute attr in sourceSet) {
 				Add (attr);
 			}
 		}
 
 		public string Render ()
 		{
-			List<LLVMFunctionAttribute> list = attributes.ToList ();
-			list.Sort ((LLVMFunctionAttribute a, LLVMFunctionAttribute b) => a.Name.CompareTo (b.Name));
+			List<LlvmIrFunctionAttribute> list = attributes.ToList ();
+			list.Sort ((LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b) => a.Name.CompareTo (b.Name));
 
 			return String.Join (" ", list.Select (a => a.Render ()));
 		}
 
-		public IEnumerator<LLVMFunctionAttribute> GetEnumerator () => attributes.GetEnumerator ();
+		public IEnumerator<LlvmIrFunctionAttribute> GetEnumerator () => attributes.GetEnumerator ();
 
 		IEnumerator IEnumerable.GetEnumerator () => GetEnumerator ();
 
-		public bool Equals (LlvmFunctionAttributeSet other)
+		public bool Equals (LlvmIrFunctionAttributeSet other)
 		{
 			if (other == null) {
 				return false;
@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return false;
 			}
 
-			foreach (LLVMFunctionAttribute attr in attributes) {
+			foreach (LlvmIrFunctionAttribute attr in attributes) {
 				if (!other.attributes.Contains (attr)) {
 					return false;
 				}
@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public override bool Equals (object obj)
 		{
-			var attrSet = obj as LlvmFunctionAttributeSet;
+			var attrSet = obj as LlvmIrFunctionAttributeSet;
 			if (attrSet == null) {
 				return false;
 			}
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			int hc = 0;
 
-			foreach (LLVMFunctionAttribute attr in attributes) {
+			foreach (LlvmIrFunctionAttribute attr in attributes) {
 				hc ^= attr?.GetHashCode () ?? 0;
 			}
 

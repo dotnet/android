@@ -21,7 +21,7 @@ namespace Xamarin.Android.Tasks
 		Tracing   = 0x04,
 	}
 
-	class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
+	partial class ApplicationConfigNativeAssemblyGenerator : LlvmIrComposer
 	{
 		sealed class DSOCacheEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 		{

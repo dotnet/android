@@ -4,6 +4,12 @@ using System.IO;
 
 using Xamarin.Android.Tools;
 
+using LlvmIrFunctionAttributeSet = Xamarin.Android.Tasks.LLVM.IR.LlvmIrFunctionAttributeSet;
+using FramePointerFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.FramePointerFunctionAttribute;
+using TargetCpuFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetCpuFunctionAttribute;
+using TargetFeaturesFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetFeaturesFunctionAttribute;
+using TuneCpuFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TuneCpuFunctionAttribute;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class X64LlvmIrGenerator : LlvmIrGenerator
@@ -16,7 +22,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 8;
 		protected override string Triple     => "x86_64-unknown-linux-android"; // NDK appends API level, we don't need that
 
-		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+		static readonly LlvmIrFunctionAttributeSet commonAttributes = new LlvmIrFunctionAttributeSet {
 			new FramePointerFunctionAttribute ("none"),
 			new TargetCpuFunctionAttribute ("x86-64"),
 			new TargetFeaturesFunctionAttribute ("+crc32,+cx16,+cx8,+fxsr,+mmx,+popcnt,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,+x87"),

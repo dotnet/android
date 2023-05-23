@@ -8,7 +8,7 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingReleaseNativeAssemblyGenerator : TypeMappingAssemblyGenerator
+	partial class TypeMappingReleaseNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
 		sealed class TypeMapModuleContextDataProvider : NativeAssemblerStructContextDataProvider
 		{

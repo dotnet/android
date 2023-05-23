@@ -4,6 +4,11 @@ using System.IO;
 
 using Xamarin.Android.Tools;
 
+using LlvmIrFunctionAttributeSet = Xamarin.Android.Tasks.LLVM.IR.LlvmIrFunctionAttributeSet;
+using FramePointerFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.FramePointerFunctionAttribute;
+using TargetCpuFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetCpuFunctionAttribute;
+using TargetFeaturesFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetFeaturesFunctionAttribute;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class Arm64LlvmIrGenerator : LlvmIrGenerator
@@ -16,7 +21,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 8;
 		protected override string Triple     => "aarch64-unknown-linux-android"; // NDK appends API level, we don't need that
 
-		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+		static readonly LlvmIrFunctionAttributeSet commonAttributes = new LlvmIrFunctionAttributeSet {
 			new FramePointerFunctionAttribute ("non-leaf"),
 			new TargetCpuFunctionAttribute ("generic"),
 			new TargetFeaturesFunctionAttribute ("+fix-cortex-a53-835769,+neon,+outline-atomics"),

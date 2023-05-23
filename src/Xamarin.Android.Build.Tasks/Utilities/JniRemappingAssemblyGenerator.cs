@@ -42,7 +42,7 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 
-	class JniRemappingAssemblyGenerator : LlvmIrComposer
+	partial class JniRemappingAssemblyGenerator : LlvmIrComposer
 	{
 		sealed class JniRemappingTypeReplacementEntryContextDataProvider : NativeAssemblerStructContextDataProvider
 		{

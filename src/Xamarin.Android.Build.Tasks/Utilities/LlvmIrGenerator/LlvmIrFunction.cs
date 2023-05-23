@@ -4,6 +4,194 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 
+namespace Xamarin.Android.Tasks.LLVM.IR
+{
+	// TODO: remove these aliases once everything is migrated to the LLVM.IR namespace
+	using LlvmIrAddressSignificance = Xamarin.Android.Tasks.LLVMIR.LlvmIrAddressSignificance;
+
+	class LlvmIrFunctionParameter : LlvmIrLocalVariable
+	{
+		// To save on time, we declare only attributes that are actually used in our generated code.  More will be added, as needed.
+
+		/// <summary>
+		/// <c>align(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1239"/>
+		/// </summary>
+		public uint? Align { get; set; }
+
+		/// <summary>
+		/// <c>allocptr</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1413"/>
+		/// </summary>
+		public bool AllocPtr { get; set; }
+
+		/// <summary>
+		/// <c>dereferenceable(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1324"/>
+		/// </summary>
+		public uint? Dereferenceable { get; set; }
+
+		/// <summary>
+		/// <c>immarg</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1383"/>
+		/// </summary>
+		public bool ImmArg { get; set; }
+
+		/// <summary>
+		/// <c>nocapture</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1279"/>
+		/// </summary>
+		public bool NoCapture { get; set; }
+
+		/// <summary>
+		/// <c>nonnull</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1316"/>
+		/// </summary>
+		public bool NonNull { get; set; }
+
+		/// <summary>
+		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1390"/>
+		/// </summary>
+		public bool NoUndef { get; set; }
+
+		/// <summary>
+		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1420"/>
+		/// </summary>
+		public bool ReadNone { get; set; }
+
+		/// <summary>
+		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1090"/>
+		/// </summary>
+		public bool ZeroExt { get; set; }
+
+		public LlvmIrFunctionParameter (Type type, string? name = null)
+			: base (type, name)
+		{
+			NameMatters = false;
+		}
+	}
+
+	class LlvmIrFunctionSignature : IEquatable<LlvmIrFunctionSignature>
+	{
+		public string Name                               { get; }
+		public Type ReturnType                           { get; }
+		public IList<LlvmIrFunctionParameter> Parameters { get; }
+		public LlvmIrFunctionAttributeSet? AttributeSet  { get; set; }
+
+		public LlvmIrFunctionSignature (string name, Type returnType, IList<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
+		{
+			if (String.IsNullOrEmpty (name)) {
+				throw new ArgumentException ("must not be null or empty", nameof (name));
+			}
+
+			Name = name;
+			ReturnType = returnType;
+			Parameters = parameters ?? new List<LlvmIrFunctionParameter> ();
+			AttributeSet = attributeSet;
+		}
+
+		/// <summary>
+		/// Create new signature using data from the <see cref="templateSignature"/> one, with the exception of name.
+		/// Useful when there are several functions with different names but identical parameters and return types.
+		/// </summary>
+		public LlvmIrFunctionSignature (string name, LlvmIrFunctionSignature templateSignature)
+			: this (name, templateSignature.ReturnType, templateSignature.Parameters, templateSignature.AttributeSet)
+		{}
+
+		public override int GetHashCode ()
+		{
+			int hc =
+				Name.GetHashCode () ^
+				Parameters.GetHashCode () ^
+				ReturnType.GetHashCode () ^
+				(AttributeSet?.GetHashCode () ?? 0);
+
+			foreach (LlvmIrFunctionParameter p in Parameters) {
+				hc ^= p.GetHashCode ();
+			}
+
+			return hc;
+		}
+
+	        public override bool Equals (object obj)
+		{
+			var sig = obj as LlvmIrFunctionSignature;
+			if (sig == null) {
+				return false;
+			}
+
+			return Equals (sig);
+		}
+
+	        public bool Equals (LlvmIrFunctionSignature other)
+		{
+			if (other == null) {
+				return false;
+			}
+
+			if (Parameters.Count != other.Parameters.Count ||
+			    ReturnType != other.ReturnType ||
+			    String.Compare (Name, other.Name, StringComparison.Ordinal) != 0
+			) {
+				return false;
+			}
+
+			for (int i = 0; i < Parameters.Count; i++) {
+				if (Parameters[i] != other.Parameters[i]) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+	}
+
+	/// <summary>
+	/// Describes a native function to be emitted or declared and keeps code emitting state between calls to various generator.
+	/// methods.
+	/// </summary>
+	class LlvmIrFunction : IEquatable<LlvmIrFunction>
+	{
+		public LlvmIrFunctionSignature Signature             { get; }
+		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.LocalUnnamed;
+
+		public LlvmIrFunction (LlvmIrFunctionSignature signature)
+		{
+			Signature = signature;
+		}
+
+		/// <summary>
+		/// Create new function using data from the <see cref="templateSignature"/> signature, with the exception of name.
+		/// Useful when there are several functions with different names but identical parameters and return types.
+		/// </summary>
+		public LlvmIrFunction (string name, LlvmIrFunctionSignature templateSignature)
+			: this (new LlvmIrFunctionSignature (name, templateSignature))
+		{}
+
+		public LlvmIrFunction (string name, Type returnType, List<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
+			: this (new LlvmIrFunctionSignature (name, returnType, parameters, attributeSet))
+		{}
+
+		public override int GetHashCode ()
+		{
+			return Signature.GetHashCode ();
+		}
+
+		public override bool Equals (object obj)
+		{
+			var func = obj as LlvmIrFunction;
+			if (func == null) {
+				return false;
+			}
+
+			return Equals (func);
+		}
+
+	        public bool Equals (LlvmIrFunction other)
+		{
+			if (other == null) {
+				return false;
+			}
+
+			return Signature == other.Signature;
+		}
+	}
+}
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class LlvmIrFunctionLocalVariable : LlvmIrVariable

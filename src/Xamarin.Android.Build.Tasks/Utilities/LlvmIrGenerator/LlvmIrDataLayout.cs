@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace Xamarin.Android.Tasks.LLVMIR
+namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	abstract class LlvmIrDataLayoutField
 	{

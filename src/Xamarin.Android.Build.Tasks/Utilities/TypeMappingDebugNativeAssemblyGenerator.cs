@@ -5,7 +5,7 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
+	partial class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
 	{
 		const string JavaToManagedSymbol = "map_java_to_managed";
 		const string ManagedToJavaSymbol = "map_managed_to_java";

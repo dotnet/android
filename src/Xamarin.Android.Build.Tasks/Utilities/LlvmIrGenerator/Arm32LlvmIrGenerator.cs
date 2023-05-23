@@ -4,6 +4,11 @@ using System.IO;
 
 using Xamarin.Android.Tools;
 
+using LlvmIrFunctionAttributeSet = Xamarin.Android.Tasks.LLVM.IR.LlvmIrFunctionAttributeSet;
+using FramePointerFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.FramePointerFunctionAttribute;
+using TargetCpuFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetCpuFunctionAttribute;
+using TargetFeaturesFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.TargetFeaturesFunctionAttribute;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class Arm32LlvmIrGenerator : LlvmIrGenerator
@@ -16,7 +21,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public override int PointerSize   => 4;
 		protected override string Triple     => "armv7-unknown-linux-android"; // NDK appends API level, we don't need that
 
-		static readonly LlvmFunctionAttributeSet commonAttributes = new LlvmFunctionAttributeSet {
+		static readonly LlvmIrFunctionAttributeSet commonAttributes = new LlvmIrFunctionAttributeSet {
 			new FramePointerFunctionAttribute ("all"),
 			new TargetCpuFunctionAttribute ("generic"),
 			new TargetFeaturesFunctionAttribute ("+armv7-a,+d32,+dsp,+fp64,+neon,+thumb-mode,+vfp2,+vfp2sp,+vfp3,+vfp3d16,+vfp3d16sp,+vfp3sp,-aes,-fp-armv8,-fp-armv8d16,-fp-armv8d16sp,-fp-armv8sp,-fp16,-fp16fml,-fullfp16,-sha2,-vfp4,-vfp4d16,-vfp4d16sp,-vfp4sp"),

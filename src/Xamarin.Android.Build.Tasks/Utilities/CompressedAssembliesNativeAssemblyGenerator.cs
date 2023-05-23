@@ -5,7 +5,7 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
+	partial class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
 	{
 		const string DescriptorsArraySymbolName = "compressed_assembly_descriptors";
 		const string CompressedAssembliesSymbolName = "compressed_assemblies";

@@ -4,6 +4,22 @@ using System.Globalization;
 using System.IO;
 using System.Text;
 
+using LlvmIrFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.LlvmIrFunctionAttribute;
+using LlvmIrFunctionAttributeSet = Xamarin.Android.Tasks.LLVM.IR.LlvmIrFunctionAttributeSet;
+using ArgmemonlyFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.ArgmemonlyFunctionAttribute;
+using InaccessiblememOrArgmemonlyFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.InaccessiblememOrArgmemonlyFunctionAttribute;
+using MinLegalVectorWidthFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.MinLegalVectorWidthFunctionAttribute;
+using MustprogressFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.MustprogressFunctionAttribute;
+using NoTrappingMathFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.NoTrappingMathFunctionAttribute;
+using NofreeFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.NofreeFunctionAttribute;
+using NorecurseFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.NorecurseFunctionAttribute;
+using NosyncFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.NosyncFunctionAttribute;
+using NounwindFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.NounwindFunctionAttribute;
+using SspstrongFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.SspstrongFunctionAttribute;
+using StackProtectorBufferSizeFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.StackProtectorBufferSizeFunctionAttribute;
+using WillreturnFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.WillreturnFunctionAttribute;
+using WriteonlyFunctionAttribute = Xamarin.Android.Tasks.LLVM.IR.WriteonlyFunctionAttribute;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	abstract partial class LlvmIrGenerator
@@ -22,7 +38,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public const int FunctionAttributesLlvmLifetime = 3;
 		public const int FunctionAttributesLibcFree = 4;
 
-		protected readonly Dictionary<int, LlvmFunctionAttributeSet> FunctionAttributes = new Dictionary<int, LlvmFunctionAttributeSet> ();
+		protected readonly Dictionary<int, LlvmIrFunctionAttributeSet> FunctionAttributes = new Dictionary<int, LlvmIrFunctionAttributeSet> ();
 
 		bool codeOutputInitialized = false;
 		List<LlvmIrFunction>? externalFunctions = null;
@@ -55,7 +71,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			externalFunctions.Add (func);
 		}
 
-		void ValidateFunction (LlvmIrFunction function, out LlvmFunctionAttributeSet? attributes)
+		void ValidateFunction (LlvmIrFunction function, out LlvmIrFunctionAttributeSet? attributes)
 		{
 			if (function == null) {
 				throw new ArgumentNullException (nameof (function));
@@ -67,7 +83,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		void WriteFunctionSignature (LlvmIrFunction function, string statementKindKeyword, LlvmFunctionAttributeSet? attributes, string? comment, bool writeParameterNames = true)
+		void WriteFunctionSignature (LlvmIrFunction function, string statementKindKeyword, LlvmIrFunctionAttributeSet? attributes, string? comment, bool writeParameterNames = true)
 		{
 			if (!String.IsNullOrEmpty (comment)) {
 				foreach (string line in comment.Split ('\n')) {
@@ -92,7 +108,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public void WriteFunctionForwardDeclaration (LlvmIrFunction function, string? comment = null)
 		{
-			ValidateFunction (function, out LlvmFunctionAttributeSet? attributes);
+			ValidateFunction (function, out LlvmIrFunctionAttributeSet? attributes);
 
 			Output.WriteLine ();
 			WriteFunctionSignature (function, "declare", attributes, comment, writeParameterNames: false);
@@ -104,7 +120,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public void WriteFunctionStart (LlvmIrFunction function, string? comment = null)
 		{
-			ValidateFunction (function, out LlvmFunctionAttributeSet? attributes);
+			ValidateFunction (function, out LlvmIrFunctionAttributeSet? attributes);
 			Output.WriteLine ();
 			WriteFunctionSignature (function, "define", attributes, comment);
 			Output.WriteLine ();
@@ -835,7 +851,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		protected virtual void InitFunctionAttributes ()
 		{
-			FunctionAttributes[FunctionAttributesXamarinAppInit] = new LlvmFunctionAttributeSet {
+			FunctionAttributes[FunctionAttributesXamarinAppInit] = new LlvmIrFunctionAttributeSet {
 				new MinLegalVectorWidthFunctionAttribute (0),
 				new MustprogressFunctionAttribute (),
 				new NofreeFunctionAttribute (),
@@ -850,7 +866,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				new WriteonlyFunctionAttribute (),
 			};
 
-			FunctionAttributes[FunctionAttributesJniMethods] = new LlvmFunctionAttributeSet {
+			FunctionAttributes[FunctionAttributesJniMethods] = new LlvmIrFunctionAttributeSet {
 				new MinLegalVectorWidthFunctionAttribute (0),
 				new MustprogressFunctionAttribute (),
 				new NoTrappingMathFunctionAttribute (true),
@@ -860,11 +876,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 //				new UwtableFunctionAttribute (),
 			};
 
-			FunctionAttributes[FunctionAttributesCall] = new LlvmFunctionAttributeSet {
+			FunctionAttributes[FunctionAttributesCall] = new LlvmIrFunctionAttributeSet {
 				new NounwindFunctionAttribute (),
 			};
 
-			FunctionAttributes[FunctionAttributesLlvmLifetime] = new LlvmFunctionAttributeSet {
+			FunctionAttributes[FunctionAttributesLlvmLifetime] = new LlvmIrFunctionAttributeSet {
 				new ArgmemonlyFunctionAttribute (),
 				new MustprogressFunctionAttribute (),
 				new NofreeFunctionAttribute (),
@@ -873,7 +889,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				new WillreturnFunctionAttribute (),
 			};
 
-			FunctionAttributes[FunctionAttributesLibcFree] = new LlvmFunctionAttributeSet {
+			FunctionAttributes[FunctionAttributesLibcFree] = new LlvmIrFunctionAttributeSet {
 				new InaccessiblememOrArgmemonlyFunctionAttribute (),
 				new MustprogressFunctionAttribute (),
 				new NounwindFunctionAttribute (),
@@ -900,7 +916,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			void WriteSet (int id, TextWriter output)
 			{
 				output.Write ($"attributes #{id.ToString (CultureInfo.InvariantCulture)} = {{ ");
-				foreach (LLVMFunctionAttribute attr in FunctionAttributes[id]) {
+				foreach (LlvmIrFunctionAttribute attr in FunctionAttributes[id]) {
 					output.Write (attr.Render ());
 					output.Write (' ');
 				}

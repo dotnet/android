@@ -5,6 +5,8 @@ using System.Text;
 
 using Xamarin.Android.Tools;
 
+using LlvmIrModule = Xamarin.Android.Tasks.LLVM.IR.LlvmIrModule;
+
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	/// <summary>
@@ -31,6 +33,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			generator.WriteFileTop ();
 			generator.WriteStructureDeclarations ();
 			Write (generator);
+			Write (module);
 			generator.WriteFunctionDeclarations ();
 			generator.WriteFileEnd ();
 
@@ -85,5 +88,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// native pointer size).
 		/// </summary>
 		protected abstract void Write (LlvmIrGenerator generator);
+		protected abstract void Write (LlvmIrModule module);
 	}
 }

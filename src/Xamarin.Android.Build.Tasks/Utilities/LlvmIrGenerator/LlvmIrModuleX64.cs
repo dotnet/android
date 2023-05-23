@@ -1,17 +1,18 @@
+using System;
 using System.Collections.Generic;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks.LLVMIR
+namespace Xamarin.Android.Tasks.LLVM.IR
 {
-	class LlvmIrModuleX64 : LlvmIrModule
+	class LlvmIrModuleX64 : LlvmIrModuleTarget
 	{
 		public override LlvmIrDataLayout DataLayout { get; }
-		public override string TargetTriple => "x86_64-unknown-linux-android21";
+		public override string Triple => "x86_64-unknown-linux-android21";
 		public override AndroidTargetArch TargetArch => AndroidTargetArch.X86_64;
+		public override uint NativePointerSize => 8;
 
-		public LlvmIrModuleX64 (string fileName)
-			: base (fileName)
+		public LlvmIrModuleX64 ()
 		{
 			//
 			// As per Android NDK:
@@ -44,6 +45,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				NativeIntegerWidths = new List<uint> { 8, 16, 32, 64 },
 				StackAlignment = 128,
 			};
+		}
+
+		public override void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
+		{
+			throw new NotImplementedException ();
 		}
 	}
 }
