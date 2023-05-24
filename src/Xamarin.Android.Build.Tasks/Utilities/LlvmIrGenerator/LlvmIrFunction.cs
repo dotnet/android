@@ -7,7 +7,10 @@ using System.Text;
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	// TODO: remove these aliases once everything is migrated to the LLVM.IR namespace
-	using LlvmIrAddressSignificance = Xamarin.Android.Tasks.LLVMIR.LlvmIrAddressSignificance;
+	using LlvmIrAddressSignificance = LLVMIR.LlvmIrAddressSignificance;
+	using LlvmIrLinkage = LLVMIR.LlvmIrLinkage;
+	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
+	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
 
 	class LlvmIrFunctionParameter : LlvmIrLocalVariable
 	{
@@ -21,7 +24,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// <summary>
 		/// <c>allocptr</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1413"/>
 		/// </summary>
-		public bool AllocPtr { get; set; }
+		public bool? AllocPtr { get; set; }
 
 		/// <summary>
 		/// <c>dereferenceable(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1324"/>
@@ -31,32 +34,37 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// <summary>
 		/// <c>immarg</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1383"/>
 		/// </summary>
-		public bool ImmArg { get; set; }
+		public bool? ImmArg { get; set; }
 
 		/// <summary>
 		/// <c>nocapture</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1279"/>
 		/// </summary>
-		public bool NoCapture { get; set; }
+		public bool? NoCapture { get; set; }
 
 		/// <summary>
 		/// <c>nonnull</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1316"/>
 		/// </summary>
-		public bool NonNull { get; set; }
+		public bool? NonNull { get; set; }
 
 		/// <summary>
 		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1390"/>
 		/// </summary>
-		public bool NoUndef { get; set; }
+		public bool? NoUndef { get; set; }
 
 		/// <summary>
 		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1420"/>
 		/// </summary>
-		public bool ReadNone { get; set; }
+		public bool? ReadNone { get; set; }
+
+		/// <summary>
+		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1094"/>
+		/// </summary>
+		public bool? SignExt { get; set; }
 
 		/// <summary>
 		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1090"/>
 		/// </summary>
-		public bool ZeroExt { get; set; }
+		public bool? ZeroExt { get; set; }
 
 		public LlvmIrFunctionParameter (Type type, string? name = null)
 			: base (type, name)
@@ -70,9 +78,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public string Name                               { get; }
 		public Type ReturnType                           { get; }
 		public IList<LlvmIrFunctionParameter> Parameters { get; }
-		public LlvmIrFunctionAttributeSet? AttributeSet  { get; set; }
 
-		public LlvmIrFunctionSignature (string name, Type returnType, IList<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
+		public LlvmIrFunctionSignature (string name, Type returnType, IList<LlvmIrFunctionParameter>? parameters = null)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -81,7 +88,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			Name = name;
 			ReturnType = returnType;
 			Parameters = parameters ?? new List<LlvmIrFunctionParameter> ();
-			AttributeSet = attributeSet;
 		}
 
 		/// <summary>
@@ -89,7 +95,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// Useful when there are several functions with different names but identical parameters and return types.
 		/// </summary>
 		public LlvmIrFunctionSignature (string name, LlvmIrFunctionSignature templateSignature)
-			: this (name, templateSignature.ReturnType, templateSignature.Parameters, templateSignature.AttributeSet)
+			: this (name, templateSignature.ReturnType, templateSignature.Parameters)
 		{}
 
 		public override int GetHashCode ()
@@ -97,8 +103,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			int hc =
 				Name.GetHashCode () ^
 				Parameters.GetHashCode () ^
-				ReturnType.GetHashCode () ^
-				(AttributeSet?.GetHashCode () ?? 0);
+				ReturnType.GetHashCode ();
 
 			foreach (LlvmIrFunctionParameter p in Parameters) {
 				hc ^= p.GetHashCode ();
@@ -148,22 +153,42 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	{
 		public LlvmIrFunctionSignature Signature             { get; }
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.LocalUnnamed;
+		public LlvmIrFunctionAttributeSet? AttributeSet      { get; set; }
+		public LlvmIrLinkage Linkage                         { get; set; } = LlvmIrLinkage.Default;
+		public LlvmIrRuntimePreemption RuntimePreemption     { get; set; } = LlvmIrRuntimePreemption.Default;
+		public LlvmIrVisibility Visibility                   { get; set; } = LlvmIrVisibility.Default;
 
-		public LlvmIrFunction (LlvmIrFunctionSignature signature)
+		// Counter shared by unnamed local variables (including function parameters) and unnamed labels.
+		uint unnamedTemporaryCounter = 0;
+
+		// Implicit unnamed label at the start of the function
+		readonly uint startingBlockNumber;
+
+		public LlvmIrFunction (LlvmIrFunctionSignature signature, LlvmIrFunctionAttributeSet? attributeSet = null)
 		{
 			Signature = signature;
+			AttributeSet = attributeSet;
+
+			foreach (LlvmIrFunctionParameter parameter in signature.Parameters) {
+				if (!String.IsNullOrEmpty (parameter.Name)) {
+					continue;
+				}
+
+				parameter.AssignNumber (unnamedTemporaryCounter++);
+			}
+			startingBlockNumber = unnamedTemporaryCounter++;
 		}
 
 		/// <summary>
 		/// Create new function using data from the <see cref="templateSignature"/> signature, with the exception of name.
 		/// Useful when there are several functions with different names but identical parameters and return types.
 		/// </summary>
-		public LlvmIrFunction (string name, LlvmIrFunctionSignature templateSignature)
-			: this (new LlvmIrFunctionSignature (name, templateSignature))
+		public LlvmIrFunction (string name, LlvmIrFunctionSignature templateSignature, LlvmIrFunctionAttributeSet? attributeSet = null)
+			: this (new LlvmIrFunctionSignature (name, templateSignature), attributeSet)
 		{}
 
 		public LlvmIrFunction (string name, Type returnType, List<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
-			: this (new LlvmIrFunctionSignature (name, returnType, parameters, attributeSet))
+			: this (new LlvmIrFunctionSignature (name, returnType, parameters), attributeSet)
 		{}
 
 		public override int GetHashCode ()

@@ -36,7 +36,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public override void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
 		{
-			throw new NotImplementedException ();
+			attrSet.Add (new TargetCpuFunctionAttribute ("generic"));
+			attrSet.Add (new TargetFeaturesFunctionAttribute ("+fix-cortex-a53-835769,+neon,+outline-atomics,+v8a"));
 		}
 	}
 }

@@ -49,7 +49,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public override void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
 		{
-			throw new NotImplementedException ();
+			attrSet.Add (new TargetCpuFunctionAttribute ("x86-64"));
+			attrSet.Add (new TargetFeaturesFunctionAttribute ("+crc32,+cx16,+cx8,+fxsr,+mmx,+popcnt,+sse,+sse2,+sse3,+sse4.1,+sse4.2,+ssse3,+x87"));
+			attrSet.Add (new TuneCpuFunctionAttribute ("generic"));
+		}
+
+		public override void SetParameterFlags (LlvmIrFunctionParameter parameter)
+		{
+			base.SetParameterFlags (parameter);
+			SetIntegerParameterUpcastFlags (parameter);
 		}
 	}
 }

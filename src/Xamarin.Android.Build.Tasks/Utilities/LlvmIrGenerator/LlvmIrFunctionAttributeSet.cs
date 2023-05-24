@@ -7,20 +7,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
 	{
-		static readonly object counterLock = new object ();
-		static uint counter = 0;
-
-		public uint Number { get; }
+		public uint Number { get; set; } = 0;
 
 		HashSet<LlvmIrFunctionAttribute> attributes;
 
 		public LlvmIrFunctionAttributeSet ()
 		{
 			attributes = new HashSet<LlvmIrFunctionAttribute> ();
-
-			lock (counterLock) {
-				Number = counter++;
-			}
 		}
 
 		public void Add (LlvmIrFunctionAttribute attr)

@@ -496,6 +496,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{}
 	}
 
+	class NocallbackFunctionAttribute : LlvmIrFlagFunctionAttribute
+	{
+		public NocallbackFunctionAttribute ()
+			: base ("nocallback")
+		{}
+	}
+
 	class NoduplicateFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoduplicateFunctionAttribute ()
