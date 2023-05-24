@@ -122,6 +122,7 @@ namespace Java.Interop {
 		// typeof(Foo) -> FooInvoker
 		// typeof(Foo<>) -> FooInvoker`1
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "*Invoker types are preserved by the MarkJavaObjects linker step.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "*Invoker types are preserved by the MarkJavaObjects linker step.")]
 		internal static Type? GetInvokerType (Type type)
 		{
 			const string suffix = "Invoker";

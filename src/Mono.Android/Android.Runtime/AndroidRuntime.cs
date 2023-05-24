@@ -391,6 +391,7 @@ namespace Android.Runtime {
 
 		// See ExportAttribute.cs
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Mono.Android.Export.dll is preserved when [Export] is used via [DynamicDependency].")]
 		static Delegate CreateDynamicCallback (MethodInfo method)
 		{
 			if (dynamic_callback_gen == null) {
@@ -479,10 +480,13 @@ namespace Android.Runtime {
 			}
 		}
 
-		public override void RegisterNativeMembers (JniType nativeClass, Type type, string? methods) =>
+		public override void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
-		public void RegisterNativeMembers (JniType nativeClass, Type type, ReadOnlySpan<char> methods)
+		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
+		public void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, ReadOnlySpan<char> methods)
 		{
 			try {
 				if (methods.IsEmpty) {
