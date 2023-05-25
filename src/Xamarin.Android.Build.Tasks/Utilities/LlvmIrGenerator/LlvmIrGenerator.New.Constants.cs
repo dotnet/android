@@ -9,7 +9,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
 	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
 
-	partial class LlvmIrModule
+	partial class LlvmIrGenerator
 	{
 		// https://llvm.org/docs/LangRef.html#global-variables
 		static readonly Dictionary<LlvmIrAddressSignificance, string> llvmAddressSignificance = new Dictionary<LlvmIrAddressSignificance, string> {

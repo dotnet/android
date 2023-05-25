@@ -1,11 +1,10 @@
 using Xamarin.Android.Tasks.LLVM.IR;
 
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks.New
 {
-	partial class TypeMappingDebugNativeAssemblyGenerator
+	class TypeMappingDebugNativeAssemblyGenerator : LlvmIrComposer
 	{
-		protected override void Write (LlvmIrModule module)
-		{
-		}
+		protected override void Construct (LlvmIrModule module)
+		{}
 	}
 }

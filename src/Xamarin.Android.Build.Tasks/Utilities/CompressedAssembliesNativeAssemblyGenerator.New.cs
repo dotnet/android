@@ -1,12 +1,10 @@
-namespace Xamarin.Android.Tasks
-{
-	// TODO: remove once migration to LLVM.IR is done
-	using LlvmIrModule = Xamarin.Android.Tasks.LLVM.IR.LlvmIrModule;
+using Xamarin.Android.Tasks.LLVM.IR;
 
-	partial class CompressedAssembliesNativeAssemblyGenerator
+namespace Xamarin.Android.Tasks.New
+{
+	partial class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
 	{
-		protected override void Write (LlvmIrModule module)
-		{
-		}
+		protected override void Construct (LlvmIrModule module)
+		{}
 	}
 }

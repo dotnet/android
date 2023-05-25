@@ -1,22 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks.LLVM.IR;
 
-namespace Xamarin.Android.Tasks
+namespace Xamarin.Android.Tasks.New
 {
 	// TODO: remove these aliases once everything is migrated to the LLVM.IR namespace
 	using LlvmIrAddressSignificance = LLVMIR.LlvmIrAddressSignificance;
 
-	partial class MarshalMethodsNativeAssemblyGenerator
+	partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
 		LlvmIrFunction? mm_trace_func_enter;
 		LlvmIrFunction? mm_trace_func_leave;
 		LlvmIrFunction? llvm_lifetime_start;
 		LlvmIrFunction? llvm_lifetime_end;
 
-		protected override void Write (LlvmIrModule module)
+		protected override void Construct (LlvmIrModule module)
 		{
 			InitTracing (module);
 		}
@@ -60,13 +61,13 @@ namespace Xamarin.Android.Tasks
 			};
 
 			var mm_trace_func_enter_leave_sig = new LlvmIrFunctionSignature (
-				name: mm_trace_func_enter_name,
+				name: "_mm_trace_func_enter",
 				returnType: typeof(void),
 				parameters: mm_trace_func_enter_or_leave_params
 			);
 
 			mm_trace_func_enter = module.DeclareExternalFunction (new LlvmIrFunction (mm_trace_func_enter_leave_sig, traceFunctionsAttributeSet));
-			mm_trace_func_leave = module.DeclareExternalFunction (new LlvmIrFunction (mm_trace_func_leave_name, mm_trace_func_enter_leave_sig, traceFunctionsAttributeSet));
+			mm_trace_func_leave = module.DeclareExternalFunction (new LlvmIrFunction ("_mm_trace_func_leave", mm_trace_func_enter_leave_sig, traceFunctionsAttributeSet));
 		}
 
 		LlvmIrFunctionAttributeSet MakeLlvmIntrinsicFunctionsAttributeSet (LlvmIrModule module)
@@ -90,25 +91,11 @@ namespace Xamarin.Android.Tasks
 				new StackProtectorBufferSizeFunctionAttribute (8),
 			};
 
-			switch (module.Target.TargetArch) {
-				case AndroidTargetArch.Arm64:
-					ret.Add (new FramePointerFunctionAttribute ("non-leaf"));
-					break;
+			ret.Add (AndroidTargetArch.Arm64, new FramePointerFunctionAttribute ("non-leaf"));
+			ret.Add (AndroidTargetArch.Arm, new FramePointerFunctionAttribute ("all"));
+			ret.Add (AndroidTargetArch.X86, new FramePointerFunctionAttribute ("none"));
+			ret.Add (AndroidTargetArch.X86_64, new FramePointerFunctionAttribute ("none"));
 
-				case AndroidTargetArch.Arm:
-					ret.Add (new FramePointerFunctionAttribute ("all"));
-					break;
-
-				case AndroidTargetArch.X86:
-				case AndroidTargetArch.X86_64:
-					ret.Add (new FramePointerFunctionAttribute ("none"));
-					break;
-
-				default:
-					throw new InvalidOperationException ($"Internal error: unsupported target architecture {module.Target.TargetArch}");
-			}
-
-			module.Target.AddTargetSpecificAttributes (ret);
 			return ret;
 		}
 	}

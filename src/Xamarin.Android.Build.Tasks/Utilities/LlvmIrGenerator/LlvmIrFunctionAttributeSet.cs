@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
@@ -10,10 +12,26 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public uint Number { get; set; } = 0;
 
 		HashSet<LlvmIrFunctionAttribute> attributes;
+		Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;
 
 		public LlvmIrFunctionAttributeSet ()
 		{
 			attributes = new HashSet<LlvmIrFunctionAttribute> ();
+		}
+
+		public LlvmIrFunctionAttributeSet (LlvmIrFunctionAttributeSet other)
+		{
+			attributes = new HashSet<LlvmIrFunctionAttribute> (other);
+			Number = other.Number;
+		}
+
+		public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch)
+		{
+			if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
+				return null;
+			}
+
+			return list.AsReadOnly ();
 		}
 
 		public void Add (LlvmIrFunctionAttribute attr)
@@ -25,6 +43,30 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			if (!attributes.Contains (attr)) {
 				attributes.Add (attr);
 			}
+		}
+
+		public void Add (IList<LlvmIrFunctionAttribute> attrList)
+		{
+			foreach (LlvmIrFunctionAttribute attr in attrList) {
+				Add (attr);
+			}
+		}
+
+		/// <summary>
+		/// Add architecture-specific attributes, private to the module generator (as opposed to arch-specific attributes which are common
+		/// between all attribute sets.
+		/// </summary>
+		public void Add (AndroidTargetArch targetArch, LlvmIrFunctionAttribute attr)
+		{
+			if (privateTargetSpecificAttributes == null) {
+				privateTargetSpecificAttributes = new Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>> ();
+			}
+
+			if (!privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
+				list = new List<LlvmIrFunctionAttribute> ();
+			}
+
+			list.Add (attr);
 		}
 
 		public void Add (LlvmIrFunctionAttributeSet sourceSet)

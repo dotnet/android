@@ -5,8 +5,6 @@ using System.Text;
 
 using Xamarin.Android.Tools;
 
-using LlvmIrModule = Xamarin.Android.Tasks.LLVM.IR.LlvmIrModule;
-
 namespace Xamarin.Android.Tasks.LLVMIR
 {
 	/// <summary>
@@ -23,22 +21,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, output, fileName);
 
-			string newFileName = Path.Combine (Path.GetDirectoryName (fileName), $"new-{Path.GetFileName(fileName)}");
-			using var newOutput = new StreamWriter (File.Create (newFileName), new UTF8Encoding (false));
-
-			LlvmIrModule module = LlvmIrModule.Create (arch, output, newFileName);
-
 			InitGenerator (generator);
 			MapStructures (generator);
 			generator.WriteFileTop ();
 			generator.WriteStructureDeclarations ();
 			Write (generator);
-			Write (module);
 			generator.WriteFunctionDeclarations ();
 			generator.WriteFileEnd ();
-
-			module.Generate (newOutput);
-			newOutput.Flush ();
 		}
 
 		protected static string GetAbiName (AndroidTargetArch arch)
@@ -88,6 +77,5 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// native pointer size).
 		/// </summary>
 		protected abstract void Write (LlvmIrGenerator generator);
-		protected abstract void Write (LlvmIrModule module);
 	}
 }

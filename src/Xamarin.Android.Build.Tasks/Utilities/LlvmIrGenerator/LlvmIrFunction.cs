@@ -12,69 +12,170 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
 	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
 
+	interface ILlvmIrFunctionParameterState {}
+
 	class LlvmIrFunctionParameter : LlvmIrLocalVariable
 	{
+		sealed class ParameterState : ILlvmIrFunctionParameterState
+		{
+			public readonly LlvmIrFunctionParameter Owner;
+
+			public uint? Align;
+			public bool? AllocPtr;
+			public uint? Dereferenceable;
+			public bool? ImmArg;
+			public bool? NoCapture;
+			public bool? NonNull;
+			public bool? NoUndef;
+			public bool? ReadNone;
+			public bool? SignExt;
+			public bool? ZeroExt;
+
+			public ParameterState (LlvmIrFunctionParameter owner)
+			{
+				Owner = owner;
+			}
+		}
+
+		ParameterState state;
+
 		// To save on time, we declare only attributes that are actually used in our generated code.  More will be added, as needed.
 
 		/// <summary>
 		/// <c>align(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1239"/>
 		/// </summary>
-		public uint? Align { get; set; }
+		public uint? Align {
+			get => state.Align;
+			set => state.Align = value;
+		}
 
 		/// <summary>
 		/// <c>allocptr</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1413"/>
 		/// </summary>
-		public bool? AllocPtr { get; set; }
+		public bool? AllocPtr {
+			get => state.AllocPtr;
+			set => state.AllocPtr = value;
+		}
 
 		/// <summary>
 		/// <c>dereferenceable(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1324"/>
 		/// </summary>
-		public uint? Dereferenceable { get; set; }
+		public uint? Dereferenceable {
+			get => state.Dereferenceable;
+			set => state.Dereferenceable = value;
+		}
 
 		/// <summary>
 		/// <c>immarg</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1383"/>
 		/// </summary>
-		public bool? ImmArg { get; set; }
+		public bool? ImmArg {
+			get => state.ImmArg;
+			set => state.ImmArg = value;
+		}
 
 		/// <summary>
 		/// <c>nocapture</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1279"/>
 		/// </summary>
-		public bool? NoCapture { get; set; }
+		public bool? NoCapture {
+			get => state.NoCapture;
+			set => state.NoCapture = value;
+		}
 
 		/// <summary>
 		/// <c>nonnull</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1316"/>
 		/// </summary>
-		public bool? NonNull { get; set; }
+		public bool? NonNull {
+			get => state.NonNull;
+			set => state.NonNull = value;
+		}
 
 		/// <summary>
 		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1390"/>
 		/// </summary>
-		public bool? NoUndef { get; set; }
+		public bool? NoUndef {
+			get => state.NoUndef;
+			set => state.NoUndef = value;
+		}
 
 		/// <summary>
 		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1420"/>
 		/// </summary>
-		public bool? ReadNone { get; set; }
+		public bool? ReadNone {
+			get => state.ReadNone;
+			set => state.ReadNone = value;
+		}
 
 		/// <summary>
 		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1094"/>
 		/// </summary>
-		public bool? SignExt { get; set; }
+		public bool? SignExt {
+			get => state.SignExt;
+			set => state.SignExt = value;
+		}
 
 		/// <summary>
 		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1090"/>
 		/// </summary>
-		public bool? ZeroExt { get; set; }
+		public bool? ZeroExt {
+			get => state.ZeroExt;
+			set => state.ZeroExt = value;
+		}
 
 		public LlvmIrFunctionParameter (Type type, string? name = null)
 			: base (type, name)
 		{
 			NameMatters = false;
+			state = new ParameterState (this);
+		}
+
+		/// <summary>
+		/// Save (opaque) parameter state.  This is necessary because we generate code from the same model (module) for different
+		/// targets.  At the same time, function, signature and parameter instances are shared between the different code generation
+		/// sessions, so we must sure the state as set by the model is properly preserved. NOTE: it does NOT make the code thread-safe!
+		/// Instances are **still** shared and thus different threads would step on each other's toes should they saved and restored
+		/// state without synchronization.
+		/// </summary>
+		public ILlvmIrFunctionParameterState SaveState ()
+		{
+			ILlvmIrFunctionParameterState ret = state;
+			state = new ParameterState (this);
+			return ret;
+		}
+
+		/// <summary>
+		/// Restore (opaque) state. <see cref="SaveState()"/> for more info
+		/// </summary>
+		public void RestoreState (ILlvmIrFunctionParameterState savedState)
+		{
+			var oldState = savedState as ParameterState;
+			if (oldState == null) {
+				throw new InvalidOperationException ("Internal error: savedState not an instance of ParameterState");
+			}
+
+			if (oldState.Owner != this) {
+				throw new InvalidOperationException ("Internal error: savedState not saved by this instance");
+			}
+
+			state = oldState;
 		}
 	}
 
+	interface ILlvmIrFunctionSignatureState {}
+
 	class LlvmIrFunctionSignature : IEquatable<LlvmIrFunctionSignature>
 	{
+		sealed class SignatureState : ILlvmIrFunctionSignatureState
+		{
+			public readonly LlvmIrFunctionSignature Owner;
+			public readonly IList<ILlvmIrFunctionParameterState> ParameterStates;
+
+			public SignatureState (LlvmIrFunctionSignature owner, IList<ILlvmIrFunctionParameterState> parameterStates)
+			{
+				Owner = owner;
+				ParameterStates = parameterStates;
+			}
+		}
+
 		public string Name                               { get; }
 		public Type ReturnType                           { get; }
 		public IList<LlvmIrFunctionParameter> Parameters { get; }
@@ -98,6 +199,43 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			: this (name, templateSignature.ReturnType, templateSignature.Parameters)
 		{}
 
+		/// <summary>
+		/// Save (opaque) signature state.  This includes states of all the parameters. <see cref="LlvmIrFunctionParameter.SaveState()"/>
+		/// for more information.
+		/// </summary>
+		public ILlvmIrFunctionSignatureState SaveState ()
+		{
+			var list = new List<ILlvmIrFunctionParameterState> ();
+
+			foreach (LlvmIrFunctionParameter parameter in Parameters) {
+				list.Add (parameter.SaveState ());
+			}
+
+			return new SignatureState (this, list.AsReadOnly ());
+		}
+
+		/// <summary>
+		/// Restore (opaque) signature state.  This includes states of all the parameters. <see cref="LlvmIrFunctionParameter.RestoreState(ILlvmIrFunctionParameterState)"/>
+		/// for more information.
+		/// </summary>
+		public void RestoreState (ILlvmIrFunctionSignatureState savedState)
+		{
+			var oldState = savedState as SignatureState;
+			if (oldState == null) {
+				throw new InvalidOperationException ("Internal error: savedState not an instance of {nameof(SignatureState)}");
+			}
+
+			if (oldState.Owner != this) {
+				throw new InvalidOperationException ("Internal error: savedState not saved by this instance");
+			}
+
+			for (int i = 0; i < oldState.ParameterStates.Count; i++) {
+				ILlvmIrFunctionParameterState parameterState = oldState.ParameterStates[i];
+				Parameters[i].RestoreState (parameterState);
+
+			}
+		}
+
 		public override int GetHashCode ()
 		{
 			int hc =
@@ -112,7 +250,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return hc;
 		}
 
-	        public override bool Equals (object obj)
+		public override bool Equals (object obj)
 		{
 			var sig = obj as LlvmIrFunctionSignature;
 			if (sig == null) {
@@ -122,7 +260,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return Equals (sig);
 		}
 
-	        public bool Equals (LlvmIrFunctionSignature other)
+		public bool Equals (LlvmIrFunctionSignature other)
 		{
 			if (other == null) {
 				return false;
@@ -145,12 +283,25 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 	}
 
+	interface ILlvmIrFunctionState {}
+
 	/// <summary>
 	/// Describes a native function to be emitted or declared and keeps code emitting state between calls to various generator.
 	/// methods.
 	/// </summary>
 	class LlvmIrFunction : IEquatable<LlvmIrFunction>
 	{
+		sealed class FunctionState : ILlvmIrFunctionState
+		{
+			public readonly LlvmIrFunction Owner;
+			public readonly ILlvmIrFunctionSignatureState SignatureState;
+
+			public FunctionState (LlvmIrFunction owner, ILlvmIrFunctionSignatureState signatureState)
+			{
+				Owner = owner;
+			}
+		}
+
 		public LlvmIrFunctionSignature Signature             { get; }
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.LocalUnnamed;
 		public LlvmIrFunctionAttributeSet? AttributeSet      { get; set; }
@@ -190,6 +341,33 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public LlvmIrFunction (string name, Type returnType, List<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
 			: this (new LlvmIrFunctionSignature (name, returnType, parameters), attributeSet)
 		{}
+
+		/// <summary>
+		/// Save (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.SaveState()"/>
+		/// for more information.
+		/// </summary>
+		public ILlvmIrFunctionState SaveState ()
+		{
+			return new FunctionState (this, Signature.SaveState ());
+		}
+
+		/// <summary>
+		/// Restore (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.RestoreState(ILlvmIrFunctionSignatureState)"/>
+		/// for more information.
+		/// </summary>
+		public void RestoreState (ILlvmIrFunctionState savedState)
+		{
+			var oldState = savedState as FunctionState;
+			if (oldState == null) {
+				throw new InvalidOperationException ("Internal error: savedState not an instance of {nameof(FunctionState)}");
+			}
+
+			if (oldState.Owner != this) {
+				throw new InvalidOperationException ("Internal error: savedState not saved by this instance");
+			}
+
+			Signature.RestoreState (oldState.SignatureState);
+		}
 
 		public override int GetHashCode ()
 		{
