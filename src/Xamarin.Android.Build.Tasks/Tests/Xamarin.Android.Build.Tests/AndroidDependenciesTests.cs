@@ -32,7 +32,7 @@ namespace Xamarin.Android.Build.Tests
 				var proj = new XamarinAndroidApplicationProject {
 					TargetSdkVersion = apiLevel.ToString (),
 				};
-				const string ExpectedPlatformToolsVersion = "34.0.1";
+				const string ExpectedPlatformToolsVersion = "34.0.3";
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
