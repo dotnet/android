@@ -914,6 +914,113 @@ namespace Styleable.Library {
 			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
+		[Test]
+		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease)
+		{
+			var app = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				PackageName = "Xamarin.SkiaSharpCanvasTest",
+				PackageReferences = {
+					KnownPackages.SkiaSharp,
+					KnownPackages.SkiaSharp_Views,
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.AndroidXAppCompatResources,
+				},
+			};
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
+			});
+// 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\attrs.xml") {
+// 				TextContent = () => @"<resources><declare-styleable name='SKCanvasView'>
+// 	<attr name='ignorePixelScaling' format='boolean'/>
+// </declare-styleable></resources>",
+// 			});
+//			app:ignorePixelScaling='true'
+			app.LayoutMain = app.LayoutMain.Replace ("<LinearLayout", @"<FrameLayout
+	xmlns:android='http://schemas.android.com/apk/res/android'
+	xmlns:app='http://schemas.android.com/apk/res-auto'
+	android:layout_width='match_parent'
+	android:layout_height='match_parent'>
+	<SkiaSharp.Views.Android.SKCanvasView
+		android:layout_width='match_parent'
+		android:layout_height='match_parent'
+		android:id='@+id/skiaView' />")
+				.Replace ("</LinearLayout>", "</FrameLayout>");
+			app.MainActivity = @"using Android.App;
+using Android.OS;
+using AndroidX.AppCompat.App;
+
+using SkiaSharp;
+using SkiaSharp.Views.Android;
+
+namespace UnnamedProject
+{
+	[Activity(MainLauncher = true, Theme = ""@style/AppTheme"")]
+	public class MainActivity : AppCompatActivity
+	{
+		private SKCanvasView skiaView;
+
+		protected override void OnCreate(Bundle savedInstanceState)
+		{
+			base.OnCreate(savedInstanceState);
+
+			SetContentView(Resource.Layout.Main);
+
+			skiaView = FindViewById<SKCanvasView>(Resource.Id.skiaView);
+		}
+
+		protected override void OnResume()
+		{
+			base.OnResume();
+
+			skiaView.PaintSurface += OnPaintSurface;
+		}
+
+		protected override void OnPause()
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
+
+			base.OnPause();
+		}
+
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
+			// the the canvas and properties
+			var canvas = e.Surface.Canvas;
+
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
+
+			// draw some text
+			var paint = new SKPaint
+			{
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill,
+				TextAlign = SKTextAlign.Center,
+				TextSize = 24
+			};
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
+			canvas.DrawText(""SkiaSharp"", coord, paint);
+		}
+	}
+}
+";
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
+				b.BuildLogFile = "build1.log";
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
+				// b.BuildLogFile = "install1.log";
+				// Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
+				// AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				// WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
+				// ClearAdbLogcat ();
+				// WaitForActivityToStart (app.PackageName, "MainActivity",
+				// 	Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+				// Assert.Fail ();
+			}
+		}
+
 
 		[Test]
 		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)

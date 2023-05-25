@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
-				string itemName = ResourceIdentifier.GetResourceName(items [1], items [2], map, log);
+				string itemName = ResourceIdentifier.GetResourceName(ResourceParser.GetNestedTypeName (items [1]), items [2], map, log);
 				if (knownTypes.Contains (items [1])) {
 					if (items [1] != "styleable") {
 						result.Add (new R () {
