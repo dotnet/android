@@ -55,6 +55,11 @@ It is shared between "legacy" binding projects and .NET 5 projects.
       Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
 
+    <PropertyGroup>
+      <!-- Allow $(_BindingsToolsLocation) to override where to find class-parse/generator -->
+      <_BindingsToolsLocation Condition=" '$(_BindingsToolsLocation)' == '' ">$(MonoAndroidToolsDirectory)</_BindingsToolsLocation>
+    </PropertyGroup>
+    
     <!-- Delete previous generated files if they still exist -->
     <RemoveDirFixed Directories="$(GeneratedOutputPath)" Condition="Exists ('$(GeneratedOutputPath)')" />
 
@@ -87,7 +92,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
         TypeMappingReportFile="$(GeneratedOutputPath)type-mapping.txt"
         NetCoreRoot="$(NetCoreRoot)"
-        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(BindingsGeneratorToolExe)"
         LangVersion="$(LangVersion)"
         EnableBindingStaticAndDefaultInterfaceMethods="$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)"
