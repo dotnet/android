@@ -138,7 +138,6 @@ namespace MonoDroid.Tuner
 				if (idx >= 0) {
 					string key = line.Substring (idx + designerFullName.Length);
 					LogMessage ($"Looking for {key}.");
-					Console.WriteLine ($"Looking for {key}.");
 					if (lookup.TryGetValue (key, out MethodDefinition method)) {
 						var importedMethod = designer.Module.ImportReference (method);
 						var newIn = Instruction.Create (OpCodes.Call, importedMethod);
