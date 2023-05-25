@@ -18,6 +18,11 @@ This file is only used by binding projects.
       Inputs="@(EmbeddedJar);@(EmbeddedReferenceJar);@(InputJar);@(ReferenceJar);@(_AndroidMSBuildAllProjects)"
       Outputs="$(ApiOutputFile)">
 
+    <PropertyGroup>
+      <!-- Allow $(_BindingsToolsLocation) to override where to find class-parse/generator -->
+      <_BindingsToolsLocation Condition=" '$(_BindingsToolsLocation)' == '' ">$(MonoAndroidToolsDirectory)</_BindingsToolsLocation>
+    </PropertyGroup>
+
     <ItemGroup>
       <_AndroidDocumentationPath Include="@(_JavaSourceJavadocXml)" />
       <_AndroidDocumentationPath Include="@(JavaDocIndex->'%(RootDir)\%(Directory)')" />
@@ -32,7 +37,7 @@ This file is only used by binding projects.
         SourceJars="@(EmbeddedJar);@(InputJar)"
         DocumentationPaths="@(_AndroidDocumentationPath)"
         NetCoreRoot="$(NetCoreRoot)"
-        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(ClassParseToolExe)"
     />
     <BindingsGenerator
@@ -44,7 +49,7 @@ This file is only used by binding projects.
         ReferencedManagedLibraries="@(ReferencePath);@(ReferenceDependencyPaths)"
         MonoAndroidFrameworkDirectories="$(_XATargetFrameworkDirectories)"
         NetCoreRoot="$(NetCoreRoot)"
-        ToolPath="$(MonoAndroidToolsDirectory)"
+        ToolPath="$(_BindingsToolsLocation)"
         ToolExe="$(BindingsGeneratorToolExe)"
         Nullable="$(Nullable)"
         UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
