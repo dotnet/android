@@ -143,7 +143,7 @@ namespace MonoDroid.Tuner
 						var newIn = Instruction.Create (OpCodes.Call, importedMethod);
 						instructions.Add (i, newIn);
 					} else {
-						LogMessage ($"DEBUG! Failed to find {key}! defaulting to 0x0");
+						LogMessage ($"DEBUG! Failed to find {key}!");
 						throw new InvalidOperationException ($"Failed to find AndroidResource for {key}!");
 					}
 				}
