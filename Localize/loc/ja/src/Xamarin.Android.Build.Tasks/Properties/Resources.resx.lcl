@@ -1403,19 +1403,25 @@
       </Item>
       <Item ItemId=";XA5300_Android_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android SDK ディレクトリが見つかりませんでした。Visual Studio の Android SDK マネージャーで正常にインストールされていることを確認します。コマンド ライン ビルドにカスタムの SDK パスを使用するには、'AndroidSdkDirectory' MSBuild プロパティをカスタム パスに設定します。]]></Val>
+            <Val><![CDATA[Android SDK ディレクトリが見つかりませんでした。Android SDK をインストールするには、次にしたがってください: https://aka.ms/dotnet-android-install-sdk]D;]A;コマンド ライン ビルドにカスタム SDK パスを使用するには、'AndroidSdkDirectory' MSBuild プロパティをカスタム パスに設定します。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5300_Java_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Java SDK ディレクトリが見つかりませんでした。Visual Studio オプションの Android セクションで、Java SDK ディレクトリが適切に構成されていることを確認します。コマンド ライン ビルドにカスタムの SDK パスを使用するには、'JavaSdkDirectory' MSBuild プロパティをカスタム パスに設定します。]]></Val>
+            <Val><![CDATA[Java SDK ディレクトリが見つかりませんでした。Java SDK をインストールするには、次にしたがってください: https://aka.ms/dotnet-android-install-sdk]D;]A;コマンド ライン ビルドにカスタム JDK パスを使用するには、'JavaSdkDirectory' MSBuild プロパティをカスタム パスに設定します。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
