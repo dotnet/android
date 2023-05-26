@@ -14,7 +14,7 @@ resources:
   - repository: yaml
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/pjc/oos-wl
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -1425,6 +1425,7 @@ stages:
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
       useDateTimeVersion: false
+      arcadePackageVersion: 6.0.0-beta.23274.5
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets

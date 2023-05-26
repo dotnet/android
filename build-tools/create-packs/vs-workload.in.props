@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetName>Microsoft.NET.Sdk.Android.Workload</TargetName>
     <ManifestBuildVersion>@WORKLOAD_VERSION@</ManifestBuildVersion>
+    <IsOutOfSupportInVisualStudio>true</IsOutOfSupportInVisualStudio>
   </PropertyGroup>
   <ItemGroup>
     <!-- Shorten package names to avoid long path caching issues in Visual Studio -->
