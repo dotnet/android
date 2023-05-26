@@ -930,7 +930,7 @@ namespace Styleable.Library {
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
 				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
 			});
-			// being Remove these lines when the new fixed SkiaSharp is released.
+			// begin Remove these lines when the new fixed SkiaSharp is released.
 			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\attrs.xml") {
 				TextContent = () => @"<resources><declare-styleable name='SKCanvasView'>
 	<attr name='ignorePixelScaling' format='boolean'/>
