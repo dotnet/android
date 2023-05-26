@@ -399,7 +399,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			var sb = new StringBuilder ();
-			CodeRenderType (variable, sb);
+			CodeRenderType (variable, sb, ignoreNativePointer: true);
 
 			string variableType = sb.ToString ();
 			LlvmIrFunctionLocalVariable result = function.MakeLocalVariable (variable.Type, resultVariableName);

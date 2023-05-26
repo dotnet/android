@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		};
 
 		public LlvmIrLinkage Linkage { get; set; } = LlvmIrLinkage.Default;
-		public LlvmIrRuntimePreemption RuntimePreemption { get; set; } = LlvmIrRuntimePreemption.Default;
+		public LlvmIrRuntimePreemption RuntimePreemption { get; set; } = LlvmIrRuntimePreemption.DSOLocal;
 		public LlvmIrVisibility Visibility { get; set; } = LlvmIrVisibility.Default;
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.Default;
 		public LlvmIrWritability Writability { get; set; } = LlvmIrWritability.Writable;

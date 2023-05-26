@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Globalization;
 
 using Xamarin.Android.Tools;
 
@@ -11,25 +12,31 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	using LlvmIrLinkage = LLVMIR.LlvmIrLinkage;
 	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
 	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
+	using LlvmIrWritability = LLVMIR.LlvmIrWritability;
+	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
 
 	partial class LlvmIrGenerator
 	{
+		const char IndentChar = '\t';
+
 		sealed class BasicType
 		{
 			public readonly string Name;
 			public readonly ulong Size;
+			public readonly bool IsNumeric;
 
-			public BasicType (string name, ulong size)
+			public BasicType (string name, ulong size, bool isNumeric = true)
 			{
 				Name = name;
 				Size = size;
+				IsNumeric = isNumeric;
 			}
 		}
 
-		const string IRPointerType = "ptr";
+		public const string IRPointerType = "ptr";
 
 		static readonly Dictionary<Type, BasicType> basicTypeMap = new Dictionary<Type, BasicType> {
-			{ typeof (bool),   new ("i8",     1) },
+			{ typeof (bool),   new ("i8",     1, isNumeric: false) },
 			{ typeof (byte),   new ("i8",     1) },
 			{ typeof (char),   new ("i16",    2) },
 			{ typeof (sbyte),  new ("i8",     1) },
@@ -41,13 +48,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			{ typeof (ulong),  new ("i64",    8) },
 			{ typeof (float),  new ("float",  4) },
 			{ typeof (double), new ("double", 8) },
-			{ typeof (void),   new ("void",   0) },
+			{ typeof (void),   new ("void",   0, isNumeric: false) },
 		};
 
 		public string FilePath           { get; }
 		public string FileName           { get; }
 
 		LlvmIrModuleTarget target;
+		int currentIndentLevel = 0;
+		string currentIndent = String.Empty;
 
 		protected LlvmIrGenerator (string filePath, LlvmIrModuleTarget target)
 		{
@@ -76,11 +85,210 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			writer.WriteLine (target.DataLayout.Render ());
 			writer.WriteLine ($"target triple = \"{target.Triple}\"");
-			writer.WriteLine ();
-			WriteExternalFunctionDeclarations (writer, module);
+			WriteStructureDeclarations (writer, module);
+			WriteGlobalVariables (writer, module);
 
 			// Bottom of file
+			WriteExternalFunctionDeclarations (writer, module);
 			WriteAttributeSets (writer, module);
+		}
+
+		void WriteGlobalVariables (TextWriter writer, LlvmIrModule module)
+		{
+			if (module.GlobalVariables == null || module.GlobalVariables.Count == 0) {
+				return;
+			}
+
+			writer.WriteLine ();
+			foreach (LlvmIrGlobalVariable gv in module.GlobalVariables) {
+				writer.Write ('@');
+				writer.Write (gv.Name);
+				writer.Write (" = ");
+
+				LlvmIrVariableOptions options = gv.Options ?? LlvmIrGlobalVariable.DefaultOptions;
+				WriteLinkage (writer, options.Linkage);
+				WritePreemptionSpecifier (writer, options.RuntimePreemption);
+				WriteVisibility (writer, options.Visibility);
+				WriteAddressSignificance (writer, options.AddressSignificance);
+				WriteWritability (writer, options.Writability);
+
+				WriteTypeAndValue (writer, gv, out ulong size, out bool isPointer);
+				writer.Write (", align ");
+				writer.Write ((isPointer ? target.NativePointerSize : size).ToString (CultureInfo.InvariantCulture));
+			}
+		}
+
+		void WriteTypeAndValue (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer)
+		{
+			string irType = MapToIRType (variable.Type, out size, out isPointer);
+			writer.Write (irType);
+			writer.Write (' ');
+
+			if (variable.Value == null) {
+				if (isPointer) {
+					writer.Write ("null");
+				}
+
+				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
+			}
+
+			Type valueType = variable.Value.GetType ();
+			if (valueType != variable.Type) {
+				throw new InvalidOperationException ($"Internal error: variable type '{variable.Type}' is different to its value type, '{valueType}'");
+			}
+
+			WriteValue (writer, valueType, variable.Value);
+		}
+
+		void WriteValue (TextWriter writer, Type valueType, object value)
+		{
+			if (IsNumeric (valueType)) {
+				writer.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				return;
+			}
+
+			throw new NotSupportedException ($"Internal error: value type '{valueType}' is unsupported");
+		}
+
+		void WriteLinkage (TextWriter writer, LlvmIrLinkage linkage)
+		{
+			if (linkage == LlvmIrLinkage.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (writer, llvmLinkage[linkage]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported writability '{writability}'", ex);
+			}
+		}
+
+		void WriteWritability (TextWriter writer, LlvmIrWritability writability)
+		{
+			try {
+				WriteAttribute (writer, llvmWritability[writability]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported writability '{writability}'", ex);
+			}
+		}
+
+		void WriteAddressSignificance (TextWriter writer, LlvmIrAddressSignificance addressSignificance)
+		{
+			if (addressSignificance == LlvmIrAddressSignificance.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (writer, llvmAddressSignificance[addressSignificance]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported address significance '{addressSignificance}'", ex);
+			}
+		}
+
+		void WriteVisibility (TextWriter writer, LlvmIrVisibility visibility)
+		{
+			if (visibility == LlvmIrVisibility.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (writer, llvmVisibility[visibility]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported visibility '{visibility}'", ex);
+			}
+		}
+
+		void WritePreemptionSpecifier (TextWriter writer, LlvmIrRuntimePreemption preemptionSpecifier)
+		{
+			if (preemptionSpecifier == LlvmIrRuntimePreemption.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (writer, llvmRuntimePreemption[preemptionSpecifier]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported preemption specifier '{preemptionSpecifier}'", ex);
+			}
+		}
+
+		/// <summary>
+		/// Write attribute named in <paramref ref="attr"/> followed by a single space
+		/// </summary>
+		void WriteAttribute (TextWriter writer, string attr)
+		{
+			writer.Write (attr);
+			writer.Write (' ');
+		}
+
+		void WriteStructureDeclarations (TextWriter writer, LlvmIrModule module)
+		{
+			if (module.Structures == null || module.Structures.Count == 0) {
+				Console.WriteLine (" #1");
+				return;
+			}
+
+			foreach (IStructureInfo si in module.Structures) {
+				Console.WriteLine (" #2");
+				writer.WriteLine ();
+				WriteStructureDeclaration (writer, si);
+			}
+		}
+
+		void WriteStructureDeclaration (TextWriter writer, IStructureInfo si)
+		{
+			// $"%{typeDesignator}.{name} = type "
+			writer.Write ('%');
+			writer.Write (si.NativeTypeDesignator);
+			writer.Write ('.');
+			writer.Write (si.Name);
+			writer.Write (" = type ");
+
+			if (si.IsOpaque) {
+				writer.WriteLine ("opaque");
+			} else {
+				writer.WriteLine ('{');
+			}
+
+			if (si.IsOpaque) {
+				return;
+			}
+
+			IncreaseIndent ();
+			for (int i = 0; i < si.Members.Count; i++) {
+				StructureMemberInfo info = si.Members[i];
+				string nativeType = MapManagedTypeToNative (info.MemberType);
+
+				// TODO: nativeType can be an array, update to indicate that (and get the size)
+				string arraySize;
+				if (info.IsNativeArray) {
+					arraySize = $"[{info.ArrayElements}]";
+				} else {
+					arraySize = String.Empty;
+				}
+
+				var comment = $" {nativeType} {info.Info.Name}{arraySize}";
+				WriteStructureDeclarationField (info.IRType, comment, i == si.Members.Count - 1);
+			}
+			DecreaseIndent ();
+
+			writer.WriteLine ('}');
+
+			void WriteStructureDeclarationField (string typeName, string comment, bool last)
+			{
+				writer.Write (currentIndent);
+				writer.Write (typeName);
+				if (!last) {
+					writer.Write (", ");
+				} else {
+					writer.Write (' ');
+				}
+
+				if (!String.IsNullOrEmpty (comment)) {
+					WriteCommentLine (writer, comment);
+				} else {
+					writer.WriteLine ();
+				}
+			}
 		}
 
 		//
@@ -92,8 +300,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			module.ExternalFunctions.Sort ((LlvmIrFunction a, LlvmIrFunction b) => a.Signature.Name.CompareTo (b.Signature.Name));
-
+			writer.WriteLine ();
 			foreach (LlvmIrFunction func in module.ExternalFunctions) {
 				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags)
 				ILlvmIrFunctionState funcState = func.SaveState ();
@@ -261,8 +468,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			writer.WriteLine ();
-			module.AttributeSets.Sort ((LlvmIrFunctionAttributeSet a, LlvmIrFunctionAttributeSet b) => a.Number.CompareTo (b.Number));
-
 			foreach (LlvmIrFunctionAttributeSet attrSet in module.AttributeSets) {
 				// Must not modify the original set, it is shared with other targets.
 				var targetSet = new LlvmIrFunctionAttributeSet (attrSet);
@@ -289,13 +494,82 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			writer.WriteLine ();
 		}
 
-		string MapToIRType (Type type)
+		void IncreaseIndent ()
 		{
-			if (basicTypeMap.TryGetValue (type, out BasicType typeDesc)) {
+			currentIndentLevel++;
+			currentIndent = MakeIndentString ();
+		}
+
+		void DecreaseIndent ()
+		{
+			if (currentIndentLevel > 0) {
+				currentIndentLevel--;
+			}
+			currentIndent = MakeIndentString ();
+		}
+
+		string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
+
+		static Type GetActualType (Type type)
+		{
+			// Arrays of types are handled elsewhere, so we obtain the array base type here
+			if (type.IsArray) {
+				return type.GetElementType ();
+			}
+
+			return type;
+		}
+
+		/// <summary>
+		/// Map a managed <paramref name="type"/> to its <c>C++</c> counterpart. Only primitive types,
+		/// <c>string</c> and <c>IntPtr</c> are supported.
+		/// </summary>
+		static string MapManagedTypeToNative (Type type)
+		{
+			Type baseType = GetActualType (type);
+
+			if (baseType == typeof (bool)) return "bool";
+			if (baseType == typeof (byte)) return "uint8_t";
+			if (baseType == typeof (char)) return "char";
+			if (baseType == typeof (sbyte)) return "int8_t";
+			if (baseType == typeof (short)) return "int16_t";
+			if (baseType == typeof (ushort)) return "uint16_t";
+			if (baseType == typeof (int)) return "int32_t";
+			if (baseType == typeof (uint)) return "uint32_t";
+			if (baseType == typeof (long)) return "int64_t";
+			if (baseType == typeof (ulong)) return "uint64_t";
+			if (baseType == typeof (float)) return "float";
+			if (baseType == typeof (double)) return "double";
+			if (baseType == typeof (string)) return "char*";
+			if (baseType == typeof (IntPtr)) return "void*";
+
+			return type.GetShortName ();
+		}
+
+		static bool IsNumeric (Type type) => basicTypeMap.TryGetValue (type, out BasicType typeDesc) && typeDesc.IsNumeric;
+
+		public static string MapToIRType (Type type)
+		{
+			return MapToIRType (type, out _, out _);
+		}
+
+		public static string MapToIRType (Type type, out ulong size)
+		{
+			return MapToIRType (type, out size, out _);
+		}
+
+		public static string MapToIRType (Type type, out ulong size, out bool isPointer)
+		{
+			type = GetActualType (type);
+			if (!type.IsNativePointer () && basicTypeMap.TryGetValue (type, out BasicType typeDesc)) {
+				size = typeDesc.Size;
+				isPointer = false;
 				return typeDesc.Name;
 			}
 
 			// if it's not a basic type, then it's an opaque pointer
+			size = 0; // Will be determined by the specific target architecture class
+			isPointer = true;
 			return IRPointerType;
 		}
 	}

@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Hashing;
-using System.Text;
 
 using Xamarin.Android.Tools;
 
@@ -17,6 +15,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			var module = new LlvmIrModule ();
 			Construct (module);
+			module.AfterConstruction ();
 			constructed = true;
 
 			return module;

@@ -406,6 +406,37 @@ namespace Xamarin.Android.Tasks
 			};
 			appConfigAsmGen.Init ();
 
+			var appConfigAsmGenNew = new New.ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+				UsesMonoAOT = usesMonoAOT,
+				UsesMonoLLVM = EnableLLVM,
+				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
+				MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
+				AotEnableLazyLoad = AndroidAotEnableLazyLoad,
+				AndroidPackageName = AndroidPackageName,
+				BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
+				PackageNamingPolicy = pnp,
+				BoundExceptionType = boundExceptionType,
+				InstantRunEnabled = InstantRunEnabled,
+				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+				NumberOfAssembliesInApk = assemblyCount,
+				BundledAssemblyNameWidth = assemblyNameWidth,
+				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
+				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
+				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
+				// and in the same order.
+				MonoComponents = (New.MonoComponent)monoComponents,
+				NativeLibraries = uniqueNativeLibraries,
+				HaveAssemblyStore = UseAssemblyStore,
+				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
+				JNIEnvInitializeToken = jnienv_initialize_method_token,
+				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
+				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
+				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
+				MarshalMethodsEnabled = EnableMarshalMethods,
+			};
+			LLVM.IR.LlvmIrModule appConfigModule = appConfigAsmGenNew.Construct ();
+
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
 			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
 
@@ -434,6 +465,13 @@ namespace Xamarin.Android.Tasks
 					appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+				}
+
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					string newEnvironmentLlFilePath = Path.Combine (Path.GetDirectoryName (environmentLlFilePath), $"new-{Path.GetFileName (environmentLlFilePath)}");
+					appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, newEnvironmentLlFilePath);
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, newEnvironmentLlFilePath);
 				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

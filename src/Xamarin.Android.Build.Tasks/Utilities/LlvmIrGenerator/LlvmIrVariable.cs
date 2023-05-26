@@ -3,6 +3,9 @@ using System.Globalization;
 
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
+	// TODO: remove these aliases once the refactoring is done
+	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
+
 	abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	{
 		public abstract bool Global { get; }
@@ -10,6 +13,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public string? Name { get; protected set; }
 		public Type Type { get; }
+		public object? Value { get; set; }
 
 		/// <summary>
 		/// Both global and local variables will want their names to matter in equality checks, but function
@@ -95,20 +99,33 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 	class LlvmIrGlobalVariable : LlvmIrVariable
 	{
+		/// <summary>
+		/// By default a global variable is constant and exported.
+		/// </summary>
+		public static readonly LlvmIrVariableOptions DefaultOptions = LlvmIrVariableOptions.GlobalConstant;
+
 		public override bool Global => true;
 		public override string NamePrefix => "@";
 
 		/// <summary>
+		/// Specify variable options. If omitted, it defaults to <see cref="DefaultOptions"/>.
+		/// <seealso href="https://llvm.org/docs/LangRef.html#global-variables"/>
+		/// </summary>
+		public LlvmIrVariableOptions? Options { get; set; }
+
+		/// <summary>
 		/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
 		/// https://llvm.org/docs/LangRef.html#t-firstclass) only if it's an integral or floating point type.  In all other cases it
-		/// is treated as an opaque pointer type.  <paramref name="name"/> is required because global variables must not be unnamed.
+		/// is treated as an opaque pointer type.  <paramref name="name"/> is required because global variables must be named.
 		/// </summary>
-		public LlvmIrGlobalVariable (Type type, string name)
+		public LlvmIrGlobalVariable (Type type, string name, LlvmIrVariableOptions? options = null)
 			: base (type, name)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
 			}
+
+			Options = options;
 		}
 	}
 }
