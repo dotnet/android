@@ -933,4 +933,10 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {1} - A Filename.
     </comment>
   </data>
+  <data name="XA_Fixup_Designer_Error" xml:space="preserve">
+    <value>Could not find an 'AndroidResource' for '{0}'.</value>
+    <comment>
+{0} - An Android Resource Identifier.
+    </comment>
+  </data>
 </root>

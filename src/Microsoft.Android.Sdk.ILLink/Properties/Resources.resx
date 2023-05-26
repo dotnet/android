@@ -122,4 +122,10 @@
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA_Fixup_Designer_Error" xml:space="preserve">
+    <value>Could not find an 'AndroidResource' for '{0}'.</value>
+    <comment>
+{0} - An Android Resource Identifier.
+    </comment>
+  </data>
 </root>

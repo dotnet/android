@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 using Mono.Cecil;
@@ -13,6 +14,9 @@ using Mono.Linker.Steps;
 using Mono.Tuner;
 #if ILLINK
 using Microsoft.Android.Sdk.ILLink;
+using Resources = Microsoft.Android.Sdk.ILLink.Properties.Resources;
+#else   // !ILLINK
+using Resources = Xamarin.Android.Tasks.Properties.Resources;
 #endif  // ILLINK
 
 namespace MonoDroid.Tuner
@@ -144,7 +148,7 @@ namespace MonoDroid.Tuner
 						instructions.Add (i, newIn);
 					} else {
 						LogMessage ($"DEBUG! Failed to find {key}!");
-						throw new InvalidOperationException ($"Failed to find AndroidResource for {key}!");
+						throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key));
 					}
 				}
 			}
