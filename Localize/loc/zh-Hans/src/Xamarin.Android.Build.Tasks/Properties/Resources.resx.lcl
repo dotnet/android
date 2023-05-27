@@ -1403,19 +1403,25 @@
       </Item>
       <Item ItemId=";XA5300_Android_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[找不到 Android SDK 目录。请检查 Visual Studio 中的 Android SDK 管理器是否显示有效的安装。若要使用命令行生成的自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
+            <Val><![CDATA[找不到 Android SDK 目录。按照以下说明安装 Android SDK: https://aka.ms/dotnet-android-install-sdk]D;]A;若要对命令行生成使用自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5300_Java_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[找不到 Java SDK 目录。请确保 Visual Studio 选项的 Android 部分配置了有效的 Java SDK 目录。若要使用命令行生成的自定义 SDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
+            <Val><![CDATA[找不到 Java SDK 目录。按照以下说明安装 Java SDK: https://aka.ms/dotnet-android-install-sdk]D;]A;若要对命令行生成使用自定义 JDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

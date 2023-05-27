@@ -1403,19 +1403,25 @@
       </Item>
       <Item ItemId=";XA5300_Android_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie odnaleziono katalogu zestawu SDK systemu Android. Sprawdź, czy jest wyświetlana prawidłowa instalacja w menedżerze zestawu SDK systemu Android w programie Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „AndroidSdkDirectory”.]]></Val>
+            <Val><![CDATA[Nie można odnaleźć katalogu zestawu Android SDK. Zainstaluj zestaw Android SDK, postępując zgodnie z instrukcjami w temacie: https://aka.ms/dotnet-android-install-sdk]D;]A;Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji wiersza polecenia, ustaw ścieżkę niestandardową właściwości "AndroidSdkDirectory" programu MSBuild.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5300_Java_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nie odnaleziono katalogu zestawu SDK języka Java. Sprawdź, czy jest skonfigurowany prawidłowy katalog zestawu SDK języka Java w sekcji systemu Android w opcjach programu Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „JavaSdkDirectory”.]]></Val>
+            <Val><![CDATA[Nie można odnaleźć katalogu zestawu Java SDK. Zainstaluj zestaw Java SDK, postępując zgodnie z instrukcjami na stronie https://aka.ms/dotnet-android-install-sdk]D;]A;Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza polecenia, ustaw właściwości „JavaSdkDirectory” programu MSBuild na ścieżkę niestandardową.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
