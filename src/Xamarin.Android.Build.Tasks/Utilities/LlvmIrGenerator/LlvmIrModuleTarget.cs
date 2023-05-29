@@ -51,5 +51,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 			}
 		}
+
+		public virtual int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
+		{
+			return maxFieldAlignment;
+		}
 	}
 }

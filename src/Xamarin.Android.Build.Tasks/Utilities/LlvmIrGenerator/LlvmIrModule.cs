@@ -4,16 +4,27 @@ using System.Linq;
 
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
+	// TODO: remove these aliases once the refactoring is done
+	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
+
 	partial class LlvmIrModule
 	{
+		/// <summary>
+		/// Global variable type to be used to output name:value string arrays. This is a notational shortcut,
+		/// do **NOT** change the type without understanding how it affects the rest of code.
+		/// </summary>
+		public static readonly Type NameValueArrayType = typeof(IDictionary<string, string>);
+
 		public IList<LlvmIrFunction>? ExternalFunctions         { get; private set; }
 		public IList<LlvmIrFunctionAttributeSet>? AttributeSets { get; private set; }
 		public IList<IStructureInfo>? Structures                { get; private set; }
 		public IList<LlvmIrGlobalVariable>? GlobalVariables     { get; private set; }
+		public IList<LlvmIrStringGroup>? Strings                { get; private set; }
 
 		Dictionary<LlvmIrFunctionAttributeSet, LlvmIrFunctionAttributeSet>? attributeSets;
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? externalFunctions;
 		Dictionary<Type, IStructureInfo>? structures;
+		LlvmIrStringManager? stringManager;
 
 		List<LlvmIrGlobalVariable>? globalVariables;
 
@@ -40,16 +51,171 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				Structures = list.AsReadOnly ();
 			}
 
+			if (stringManager != null && stringManager.StringGroups.Count > 0) {
+				Strings = stringManager.StringGroups.AsReadOnly ();
+			}
+
 			GlobalVariables = globalVariables?.AsReadOnly ();
 		}
 
+		/// <summary>
+		/// A shortcut way to add a global variable without first having to create an instance of <see cref="LlvmIrGlobalVariable"/> first.
+		/// </summary>
+		public LlvmIrGlobalVariable AddGlobalVariable (Type type, string name, object? value, LlvmIrVariableOptions? options = null)
+		{
+			var ret = new LlvmIrGlobalVariable (type, name, options) { Value = value };
+			Add (ret);
+			return ret;
+		}
+
+		public void Add (LlvmIrGlobalVariable variable, string stringGroupName, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			EnsureValidGlobalVariableType (variable);
+
+			if (IsStringVariable (variable)) {
+				AddStringGlobalVariable (variable, stringGroupName, stringGroupComment, symbolSuffix);
+				return;
+			}
+
+			if (IsStringArrayVariable (variable)) {
+				AddStringArrayGlobalVariable (variable, stringGroupName, stringGroupComment, symbolSuffix);
+				return;
+			}
+
+			throw new InvalidOperationException ("Internal error: this overload is for adding ONLY string or array-of-string variables");
+		}
+
 		public void Add (LlvmIrGlobalVariable variable)
+		{
+			EnsureValidGlobalVariableType (variable);
+
+			if (IsStringVariable (variable)) {
+				AddStringGlobalVariable (variable);
+				return;
+			}
+
+			if (IsStringArrayVariable (variable)) {
+				AddStringArrayGlobalVariable (variable);
+				return;
+			}
+
+			AddStandardGlobalVariable (variable);
+		}
+
+		void AddStandardGlobalVariable (LlvmIrGlobalVariable variable)
 		{
 			if (globalVariables == null) {
 				globalVariables = new List<LlvmIrGlobalVariable> ();
 			}
 
 			globalVariables.Add (variable);
+		}
+
+		void AddStringGlobalVariable (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			if (stringManager == null) {
+				stringManager = new LlvmIrStringManager ();
+			}
+
+			LlvmIrStringVariable sv = RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
+			variable.Value = sv;
+
+			AddStandardGlobalVariable (variable);
+		}
+
+		LlvmIrStringVariable RegisterString (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			return RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix);
+		}
+
+		LlvmIrStringVariable RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			LlvmIrStringVariable sv = stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix);
+			return sv;
+		}
+
+		void AddStringArrayGlobalVariable (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			if (variable.Value == null) {
+				AddStandardGlobalVariable (variable);
+				return;
+			}
+
+			List<string>? entries = null;
+			if (NameValueArrayType.IsAssignableFrom (variable.Type)) {
+				entries = new List<string> ();
+				var dict = (IDictionary<string, string>)variable.Value;
+				foreach (var kvp in dict) {
+					entries.Add (kvp.Key);
+					entries.Add (kvp.Value);
+				}
+			} else if (typeof(ICollection<string>).IsAssignableFrom (variable.Type)) {
+				entries = new List<string> ((ICollection<string>)variable.Value);
+			} else if (variable.Type == typeof(string[])) {
+				entries = new List<string> ((string[])variable.Value);
+			} else {
+				throw new InvalidOperationException ($"Internal error: unsupported array string type `{variable.Type}'");
+			}
+
+			var strings = new List<LlvmIrStringVariable> ();
+			foreach (string entry in entries) {
+				var sv = RegisterString (entry, stringGroupName, stringGroupComment, symbolSuffix);
+				strings.Add (sv);
+			}
+
+			var arrayInfo = new LlvmIrArrayVariableInfo (typeof(LlvmIrStringVariable), strings, variable.Value);
+			variable.OverrideValue (typeof(LlvmIrArrayVariableInfo), arrayInfo);
+			AddStandardGlobalVariable (variable);
+		}
+
+		bool IsStringArrayVariable (LlvmIrGlobalVariable variable)
+		{
+			if (NameValueArrayType.IsAssignableFrom (variable.Type)) {
+				if (variable.Value != null &&  !NameValueArrayType.IsAssignableFrom (variable.Value.GetType ())) {
+					throw new InvalidOperationException ($"Internal error: name:value array variable must have its value set to either `null` or `{NameValueArrayType}`");
+				}
+
+				return true;
+			}
+
+			var ctype = typeof(ICollection<string>);
+			if (ctype.IsAssignableFrom (variable.Type)) {
+				if (variable.Value != null && !ctype.IsAssignableFrom (variable.Value.GetType ())) {
+					throw new InvalidOperationException ($"Internal error: string array variable must have its value set to either `null` or implement `{ctype}`");
+				}
+
+				return true;
+			}
+
+			if (variable.Type.IsArray && variable.Type.GetElementType () == typeof(string)) {
+				if (variable.Value != null && variable.Value.GetType () != typeof(string[])) {
+					throw new InvalidOperationException ($"Internal error: string array variable must have its value set to either `null` or be `{typeof(string[])}`");
+				}
+
+				return true;
+			}
+
+			return false;
+		}
+
+		bool IsStringVariable (LlvmIrGlobalVariable variable)
+		{
+			if (variable.Type != typeof(string)) {
+				return false;
+			}
+
+			if (variable.Value != null && variable.Value.GetType () != typeof(string)) {
+				throw new InvalidOperationException ("Internal error: variable of string type must have its value set to either `null` or a string");
+			}
+
+			return true;
+		}
+
+		void EnsureValidGlobalVariableType (LlvmIrGlobalVariable variable)
+		{
+			if (variable is LlvmIrStringVariable) {
+				throw new ArgumentException ("Internal error: do not add instances of LlvmIrStringVariable, simply set variable value to the desired string instead");
+			}
 		}
 
 		/// <summary>

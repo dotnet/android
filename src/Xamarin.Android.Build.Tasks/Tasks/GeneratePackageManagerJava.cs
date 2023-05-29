@@ -469,9 +469,14 @@ namespace Xamarin.Android.Tasks
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					string newEnvironmentLlFilePath = Path.Combine (Path.GetDirectoryName (environmentLlFilePath), $"new-{Path.GetFileName (environmentLlFilePath)}");
-					appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, newEnvironmentLlFilePath);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, newEnvironmentLlFilePath);
+					try {
+						appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, newEnvironmentLlFilePath);
+					} catch {
+						throw;
+					} finally {
+						sw.Flush ();
+						Files.CopyIfStreamChanged (sw.BaseStream, newEnvironmentLlFilePath);
+					}
 				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {

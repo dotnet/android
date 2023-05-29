@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 
 using Java.Interop.Tools.TypeNameMappings;
@@ -11,7 +12,6 @@ namespace Xamarin.Android.Tasks.New
 {
 	// TODO: remove these aliases once the refactoring is done
 	using ApplicationConfig = Xamarin.Android.Tasks.ApplicationConfig;
-	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
 
 	// Must match the MonoComponent enum in src/monodroid/jni/xamarin-app.hh
 	[Flags]
@@ -66,6 +66,12 @@ namespace Xamarin.Android.Tasks.New
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 		const ulong FORMAT_TAG = 0x015E6972616D58;
 
+		SortedDictionary <string, string>? environmentVariables;
+		SortedDictionary <string, string>? systemProperties;
+		TaskLoggingHelper log;
+		StructureInstance? application_config;
+		List<StructureInstance>? dsoCache;
+
 		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
 		StructureInfo<DSOCacheEntry>? dsoCacheEntryStructureInfo;
 
@@ -96,16 +102,126 @@ namespace Xamarin.Android.Tasks.New
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 		{
+			if (environmentVariables != null) {
+				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
+			}
+
+			if (systemProperties != null) {
+				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
+			}
+
+			this.log = log;
 		}
 
 		protected override void Construct (LlvmIrModule module)
 		{
 			MapStructures (module);
 
-			var format_tag = new LlvmIrGlobalVariable (FORMAT_TAG.GetType (), "format_tag") {
-				Value = FORMAT_TAG,
+			module.AddGlobalVariable (FORMAT_TAG.GetType (), "format_tag", FORMAT_TAG);
+			module.AddGlobalVariable (typeof(string), "mono_aot_mode_name", MonoAOTMode);
+
+			var envVars = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_environment_variables") {
+				Value = environmentVariables,
 			};
-			module.Add (format_tag);
+			module.Add (envVars, "env", "Application environment variables");
+
+			var sysProps = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_system_properties") {
+				Value = systemProperties,
+			};
+			module.Add (sysProps, "sysprop", "System properties defined by the application");
+
+			dsoCache = InitDSOCache ();
+			var app_cfg = new ApplicationConfig {
+				uses_mono_llvm = UsesMonoLLVM,
+				uses_mono_aot = UsesMonoAOT,
+				aot_lazy_load = AotEnableLazyLoad,
+				uses_assembly_preload = UsesAssemblyPreload,
+				broken_exception_transitions = BrokenExceptionTransitions,
+				instant_run_enabled = InstantRunEnabled,
+				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
+				have_runtime_config_blob = HaveRuntimeConfigBlob,
+				have_assemblies_blob = HaveAssemblyStore,
+				marshal_methods_enabled = MarshalMethodsEnabled,
+				bound_stream_io_exception_type = (byte)BoundExceptionType,
+				package_naming_policy = (uint)PackageNamingPolicy,
+				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
+				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
+				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
+				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
+				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
+				number_of_dso_cache_entries = (uint)dsoCache.Count,
+				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
+				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
+				jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
+				jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
+				jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
+				mono_components_mask = (uint)MonoComponents,
+				android_package_name = AndroidPackageName,
+			};
+			application_config = new StructureInstance (app_cfg);
+			//module.AddGlobalVariable (application_config.GetType (), "application_config", application_config);
+		}
+
+		List<StructureInstance> InitDSOCache ()
+		{
+			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
+			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			foreach (ITaskItem item in NativeLibraries) {
+				string? name = item.GetMetadata ("ArchiveFileName");
+				if (String.IsNullOrEmpty (name)) {
+					name = item.ItemSpec;
+				}
+				name = Path.GetFileName (name);
+
+				if (nameCache.Contains (name)) {
+					continue;
+				}
+
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+			}
+
+			var dsoCache = new List<StructureInstance> ();
+			var nameMutations = new List<string> ();
+
+			for (int i = 0; i < dsos.Count; i++) {
+				string name = dsos[i].name;
+				nameMutations.Clear();
+				AddNameMutations (name);
+				// All mutations point to the actual library name, but have hash of the mutated one
+				foreach (string entryName in nameMutations) {
+					var entry = new DSOCacheEntry {
+						HashedName = entryName,
+						hash = 0, // Hash is arch-specific, we compute it before writing
+						ignore = dsos[i].ignore,
+						name = name,
+					};
+
+					dsoCache.Add (new StructureInstance (entry));
+				}
+			}
+
+			return dsoCache;
+
+			void AddNameMutations (string name)
+			{
+				nameMutations.Add (name);
+				if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!);
+				} else {
+					nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
+				}
+
+				const string aotPrefix = "libaot-";
+				if (name.StartsWith (aotPrefix, StringComparison.OrdinalIgnoreCase)) {
+					AddNameMutations (name.Substring (aotPrefix.Length));
+				}
+
+				const string libPrefix = "lib";
+				if (name.StartsWith (libPrefix, StringComparison.OrdinalIgnoreCase)) {
+					AddNameMutations (name.Substring (libPrefix.Length));
+				}
+			}
 		}
 
 		void MapStructures (LlvmIrModule module)

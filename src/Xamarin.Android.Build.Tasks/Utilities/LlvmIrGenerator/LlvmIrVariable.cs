@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public abstract string NamePrefix { get; }
 
 		public string? Name { get; protected set; }
-		public Type Type { get; }
+		public Type Type { get; protected set; }
 		public object? Value { get; set; }
 
 		/// <summary>
@@ -126,6 +126,29 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			Options = options;
+		}
+
+		/// <summary>
+		/// Supports instances where a variable value must be processed by <see cref="LlvmIrModule"/> (for instance for arrays).
+		/// Should **not** be used by code other than LlvmIrModule.
+		/// <summary>
+		public void OverrideValue (Type newType, object? newValue)
+		{
+			if (newValue != null && !newType.IsAssignableFrom (newValue.GetType ())) {
+				throw new ArgumentException ($"Must be exactly, or derived from, the '{newType}' type.", nameof (newValue));
+			}
+
+			Type = newType;
+			Value = newValue;
+		}
+	}
+
+	class LlvmIrStringVariable : LlvmIrGlobalVariable
+	{
+		public LlvmIrStringVariable (string name, string value)
+			: base (typeof(string), name, LlvmIrVariableOptions.LocalString)
+		{
+			Value = value;
 		}
 	}
 }

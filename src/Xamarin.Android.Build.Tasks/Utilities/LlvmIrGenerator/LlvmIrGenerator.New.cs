@@ -1,7 +1,10 @@
 using System;
+using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 using System.Globalization;
+using System.IO;
+using System.Text;
 
 using Xamarin.Android.Tools;
 
@@ -89,8 +92,39 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteGlobalVariables (writer, module);
 
 			// Bottom of file
+			WriteStrings (writer, module);
 			WriteExternalFunctionDeclarations (writer, module);
 			WriteAttributeSets (writer, module);
+		}
+
+		void WriteStrings (TextWriter writer, LlvmIrModule module)
+		{
+			if (module.Strings == null || module.Strings.Count == 0) {
+				return;
+			}
+
+			writer.WriteLine ();
+			WriteComment (writer, " Strings");
+
+			foreach (LlvmIrStringGroup group in module.Strings) {
+				writer.WriteLine ();
+
+				if (!String.IsNullOrEmpty (group.Comment)) {
+					WriteCommentLine (writer, group.Comment);
+				}
+
+				foreach (LlvmIrStringVariable info in group.Strings) {
+					string s = QuoteString ((string)info.Value, out ulong size);
+
+					WriteGlobalVariableStart (writer, info);
+					writer.Write ('[');
+					writer.Write (size.ToString (CultureInfo.InvariantCulture));
+					writer.Write (" x i8] c");
+					writer.Write (s);
+					writer.Write (", align ");
+					writer.WriteLine (target.GetAggregateAlignment (1, size).ToString (CultureInfo.InvariantCulture));
+				}
+			}
 		}
 
 		void WriteGlobalVariables (TextWriter writer, LlvmIrModule module)
@@ -101,27 +135,46 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			writer.WriteLine ();
 			foreach (LlvmIrGlobalVariable gv in module.GlobalVariables) {
-				writer.Write ('@');
-				writer.Write (gv.Name);
-				writer.Write (" = ");
-
-				LlvmIrVariableOptions options = gv.Options ?? LlvmIrGlobalVariable.DefaultOptions;
-				WriteLinkage (writer, options.Linkage);
-				WritePreemptionSpecifier (writer, options.RuntimePreemption);
-				WriteVisibility (writer, options.Visibility);
-				WriteAddressSignificance (writer, options.AddressSignificance);
-				WriteWritability (writer, options.Writability);
-
-				WriteTypeAndValue (writer, gv, out ulong size, out bool isPointer);
-				writer.Write (", align ");
-				writer.Write ((isPointer ? target.NativePointerSize : size).ToString (CultureInfo.InvariantCulture));
+				WriteGlobalVariable (writer, gv);
 			}
 		}
 
-		void WriteTypeAndValue (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer)
+		public void WriteGlobalVariableStart (TextWriter writer, LlvmIrGlobalVariable variable)
 		{
-			string irType = MapToIRType (variable.Type, out size, out isPointer);
-			writer.Write (irType);
+			writer.Write ('@');
+			writer.Write (variable.Name);
+			writer.Write (" = ");
+
+			LlvmIrVariableOptions options = variable.Options ?? LlvmIrGlobalVariable.DefaultOptions;
+			WriteLinkage (writer, options.Linkage);
+			WritePreemptionSpecifier (writer, options.RuntimePreemption);
+			WriteVisibility (writer, options.Visibility);
+			WriteAddressSignificance (writer, options.AddressSignificance);
+			WriteWritability (writer, options.Writability);
+		}
+
+		public void WriteGlobalVariable (TextWriter writer, LlvmIrGlobalVariable variable)
+		{
+			WriteGlobalVariableStart (writer, variable);
+			WriteTypeAndValue (writer, variable, out ulong typeSize, out bool isPointer, out bool isAggregate);
+			writer.Write (", align ");
+
+			ulong alignment;
+			if (isAggregate) {
+				uint count = GetAggregateValueElementCount (variable);
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeSize, count * typeSize);
+			} else if (isPointer) {
+				alignment = target.NativePointerSize;
+			} else {
+				alignment = typeSize;
+			}
+
+			writer.WriteLine (alignment.ToString (CultureInfo.InvariantCulture));
+		}
+
+		void WriteTypeAndValue (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer, out bool isAggregate)
+		{
+			WriteType (writer, variable, out size, out isPointer, out isAggregate);
 			writer.Write (' ');
 
 			if (variable.Value == null) {
@@ -132,22 +185,133 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
 			}
 
-			Type valueType = variable.Value.GetType ();
-			if (valueType != variable.Type) {
+			Type valueType;
+			if (variable.Value is LlvmIrVariable referencedVariable) {
+				valueType = referencedVariable.Type;
+			} else {
+				valueType = variable.Value.GetType ();
+			}
+
+			if (valueType != variable.Type && !LlvmIrModule.NameValueArrayType.IsAssignableFrom (variable.Type)) {
 				throw new InvalidOperationException ($"Internal error: variable type '{variable.Type}' is different to its value type, '{valueType}'");
 			}
 
-			WriteValue (writer, valueType, variable.Value);
+			WriteValue (writer, valueType, variable);
 		}
 
-		void WriteValue (TextWriter writer, Type valueType, object value)
+		uint GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value);
+
+		uint GetAggregateValueElementCount (Type type, object? value)
 		{
+			if (!IsArray (type)) {
+				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
+			}
+
+			if (value == null) {
+				return 0;
+			}
+
+			var info = (LlvmIrArrayVariableInfo)value;
+			return (uint)info.Entries.Count;
+		}
+
+		void WriteType (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer, out bool isAggregate)
+		{
+			WriteType (writer, variable.Type, variable.Value, out size, out isPointer, out isAggregate);
+		}
+
+		void WriteType (TextWriter writer, Type type, object? value, out ulong size, out bool isPointer, out bool isAggregate)
+		{
+			string irType;
+
+			if (IsArray (type)) {
+				isAggregate = true;
+				irType = GetIRType (type, out size, out isPointer);
+
+				writer.Write ('[');
+				writer.Write (GetAggregateValueElementCount (type, value).ToString (CultureInfo.InvariantCulture));
+				writer.Write (" x ");
+				writer.Write (irType);
+				writer.Write (']');
+				return;
+			}
+
+			isAggregate = false;
+			irType = GetIRType (type, out size, out isPointer);
+			writer.Write (irType);
+		}
+
+		bool IsArray (Type t) => t == typeof(LlvmIrArrayVariableInfo);
+
+		void WriteValue (TextWriter writer, Type valueType, LlvmIrVariable variable)
+		{
+			if (variable.Value is LlvmIrVariable variableRef) {
+				writer.Write (variableRef.Reference);
+				return;
+			}
+
+			if (IsArray (variable.Type)) {
+				uint count = GetAggregateValueElementCount (variable);
+				if (count == 0) {
+					writer.Write ("zeroinitializer");
+					return;
+				}
+
+				WriteArray (writer, (LlvmIrArrayVariableInfo)variable.Value);
+				return;
+			}
+
 			if (IsNumeric (valueType)) {
-				writer.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				writer.Write (MonoAndroidHelper.CultureInvariantToString (variable.Value));
 				return;
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{valueType}' is unsupported");
+		}
+
+		void WriteValue (TextWriter writer, Type type, object? value)
+		{
+			if (value is LlvmIrVariable variableRef) {
+				writer.Write (variableRef.Reference);
+				return;
+			}
+
+			if (IsNumeric (type)) {
+				writer.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				return;
+			}
+
+			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
+		}
+
+		void WriteArray (TextWriter writer, LlvmIrArrayVariableInfo arrayInfo)
+		{
+			writer.WriteLine (" [");
+			IncreaseIndent ();
+
+			string irType;
+			if (arrayInfo.ElementType == typeof(LlvmIrStringVariable)) {
+				irType = MapToIRType (typeof(string));
+			} else {
+				irType = MapToIRType (arrayInfo.ElementType);
+			}
+
+			bool first = true;
+			foreach (object entry in arrayInfo.Entries) {
+				if (!first) {
+					writer.WriteLine (',');
+				} else {
+					first = false;
+				}
+				writer.Write (currentIndent);
+				WriteType (writer, arrayInfo.ElementType, entry, out _, out _, out _);
+				writer.Write (' ');
+				WriteValue (writer, arrayInfo.ElementType, entry);
+			}
+			writer.WriteLine ();
+
+			DecreaseIndent ();
+			writer.Write (']');
 		}
 
 		void WriteLinkage (TextWriter writer, LlvmIrLinkage linkage)
@@ -159,7 +323,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			try {
 				WriteAttribute (writer, llvmLinkage[linkage]);
 			} catch (Exception ex) {
-				throw new InvalidOperationException ($"Internal error: unsupported writability '{writability}'", ex);
+				throw new InvalidOperationException ($"Internal error: unsupported writability '{linkage}'", ex);
 			}
 		}
 
@@ -482,13 +646,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteComment (TextWriter writer, string comment)
+		public void WriteComment (TextWriter writer, string comment)
 		{
 			writer.Write (';');
 			writer.Write (comment);
 		}
 
-		void WriteCommentLine (TextWriter writer, string comment)
+		public void WriteCommentLine (TextWriter writer, string comment)
 		{
 			WriteComment (writer, comment);
 			writer.WriteLine ();
@@ -558,6 +722,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return MapToIRType (type, out size, out _);
 		}
 
+		/// <summary>
+		/// Maps managed type to equivalent IR type.  Puts type size in <paramref name="size"/> and whether or not the type
+		/// is a pointer in <paramref name="isPointer"/>.  When a type is determined to be a pointer, <paramref name="size"/>
+		/// will be set to <c>0</c>, because this method doesn't have access to the generator target.  In order to adjust pointer
+		/// size, the instance method <see cref="GetIRType"/> must be called (private to the generator as other classes should not
+		/// have any need to know the pointer size).
+		/// </summary>
 		public static string MapToIRType (Type type, out ulong size, out bool isPointer)
 		{
 			type = GetActualType (type);
@@ -571,6 +742,69 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			size = 0; // Will be determined by the specific target architecture class
 			isPointer = true;
 			return IRPointerType;
+		}
+
+		string GetIRType (Type type, out ulong size, out bool isPointer)
+		{
+			string ret = MapToIRType (type, out size, out isPointer);
+			if (isPointer && size == 0) {
+				size = target.NativePointerSize;
+			}
+
+			return ret;
+		}
+
+		public static string QuoteStringNoEscape (string s)
+		{
+			return $"\"{s}\"";
+		}
+
+		public static string QuoteString (string value, bool nullTerminated = true)
+		{
+			return QuoteString (value, out _, nullTerminated);
+		}
+
+		public static string QuoteString (byte[] bytes)
+		{
+			return QuoteString (bytes, bytes.Length, out _, nullTerminated: false);
+		}
+
+		public static string QuoteString (string value, out ulong stringSize, bool nullTerminated = true)
+		{
+			var encoding = Encoding.UTF8;
+			int byteCount = encoding.GetByteCount (value);
+			var bytes = ArrayPool<byte>.Shared.Rent (byteCount);
+			try {
+				encoding.GetBytes (value, 0, value.Length, bytes, 0);
+				return QuoteString (bytes, byteCount, out stringSize, nullTerminated);
+			} finally {
+				ArrayPool<byte>.Shared.Return (bytes);
+			}
+		}
+
+		public static string QuoteString (byte[] bytes, int byteCount, out ulong stringSize, bool nullTerminated = true)
+		{
+			var sb = new StringBuilder (byteCount * 2); // rough estimate of capacity
+
+			byte b;
+			for (int i = 0; i < byteCount; i++) {
+				b = bytes [i];
+				if (b != '"' && b != '\\' && b >= 32 && b < 127) {
+					sb.Append ((char)b);
+					continue;
+				}
+
+				sb.Append ('\\');
+				sb.Append ($"{b:X2}");
+			}
+
+			stringSize = (ulong) byteCount;
+			if (nullTerminated) {
+				stringSize++;
+				sb.Append ("\\00");
+			}
+
+			return QuoteStringNoEscape (sb.ToString ());
 		}
 	}
 }

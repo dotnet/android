@@ -57,6 +57,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Linkage = LlvmIrLinkage.Private,
 			Writability = LlvmIrWritability.Constant,
 			AddressSignificance = LlvmIrAddressSignificance.Unnamed,
+			RuntimePreemption = LlvmIrRuntimePreemption.Default,
 		};
 
 		/// <summary>

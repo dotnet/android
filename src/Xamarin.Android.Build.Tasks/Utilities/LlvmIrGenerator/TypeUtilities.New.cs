@@ -71,5 +71,32 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			var attr = t.GetCustomAttribute<NativeClassAttribute> ();
 			return attr != null;
 		}
+
+		public static bool ImplementsInterface (this Type type, Type requiredIfaceType)
+		{
+			if (type == null || requiredIfaceType == null) {
+				return false;
+			}
+
+			bool generic = requiredIfaceType.IsGenericType;
+			foreach (Type iface in type.GetInterfaces ()) {
+				if (generic) {
+					if (!iface.IsGenericType) {
+						continue;
+					}
+
+					if (iface.GetGenericTypeDefinition () == requiredIfaceType.GetGenericTypeDefinition ()) {
+						return true;
+					}
+					continue;
+				}
+
+				if (iface == requiredIfaceType) {
+					return true;
+				}
+			}
+
+			return false;
+		}
 	}
 }

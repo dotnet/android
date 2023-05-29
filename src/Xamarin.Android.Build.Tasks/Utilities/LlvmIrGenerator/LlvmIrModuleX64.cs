@@ -59,5 +59,19 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			base.SetParameterFlags (parameter);
 			SetIntegerParameterUpcastFlags (parameter);
 		}
+
+		public override int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
+		{
+			// System V ABI for x86_64 mandates that any aggregates 16 bytes or more long will
+			// be aligned at at least 16 bytes
+			//
+			//  See: https://refspecs.linuxbase.org/elf/x86_64-abi-0.99.pdf (Section '3.1.2 Data Representation', "Aggregates and Unions")
+			//
+			if (dataSize >= 16 && maxFieldAlignment < 16) {
+				return 16;
+			}
+
+			return maxFieldAlignment;
+		}
 	}
 }

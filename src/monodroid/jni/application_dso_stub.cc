@@ -129,7 +129,9 @@ const ApplicationConfig application_config = {
 };
 
 const char* const mono_aot_mode_name = "normal";
-const char* const app_environment_variables[] = {};
+const char* const app_environment_variables[] = {
+	"name", "value",
+};
 const char* const app_system_properties[] = {};
 
 static constexpr size_t AssemblyNameWidth = 128;
