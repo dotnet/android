@@ -1403,19 +1403,25 @@
       </Item>
       <Item ItemId=";XA5300_Android_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android SDK 디렉터리를 찾을 수 없습니다. Visual Studio의 Android SDK 관리자에서 유효한 설치를 표시하는지 확인합니다. 명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'AndroidSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.]]></Val>
+            <Val><![CDATA[Android SDK 디렉터리를 찾을 수 없습니다. 다음 지침에 따라 Android SDK 설치하세요. https://aka.ms/dotnet-android-install-sdk]D;]A;명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'AndroidSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5300_Java_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Java SDK 디렉터리를 찾을 수 없습니다. Visual Studio 옵션의 Android 섹션에 유효한 Java SDK 디렉터리가 구성되어 있는지 확인하세요. 명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'JavaSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.]]></Val>
+            <Val><![CDATA[Java SDK 디렉터리를 찾을 수 없습니다. 다음 지침에 따라 Java SDK를 설치하세요. https://aka.ms/dotnet-android-install-sdk]D;]A;명령줄 빌드에 사용자 지정 JDK 경로를 사용하려면 'JavaSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
