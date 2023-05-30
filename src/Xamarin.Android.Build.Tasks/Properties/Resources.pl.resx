@@ -850,13 +850,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk
-To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.</value>
+    <value>Nie można odnaleźć katalogu zestawu Android SDK. Zainstaluj zestaw Android SDK, postępując zgodnie z instrukcjami w temacie: https://aka.ms/dotnet-android-install-sdk
+Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji wiersza polecenia, ustaw ścieżkę niestandardową właściwości "AndroidSdkDirectory" programu MSBuild.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk
-To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.</value>
+    <value>Nie można odnaleźć katalogu zestawu Java SDK. Zainstaluj zestaw Java SDK, postępując zgodnie z instrukcjami na stronie https://aka.ms/dotnet-android-install-sdk
+Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza polecenia, ustaw właściwości „JavaSdkDirectory” programu MSBuild na ścieżkę niestandardową.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">
