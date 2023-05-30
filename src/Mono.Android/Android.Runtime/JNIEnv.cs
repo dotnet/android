@@ -747,7 +747,7 @@ namespace Android.Runtime {
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
 		{
-			TValue converter;
+			TValue? converter;
 
 			if (elementType != null) {
 				if (elementType.IsEnum)

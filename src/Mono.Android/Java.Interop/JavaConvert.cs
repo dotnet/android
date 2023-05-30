@@ -109,7 +109,7 @@ namespace Java.Interop {
 
 			var interned = (IJavaObject?) Java.Lang.Object.PeekObject (handle);
 			if (interned != null) {
-				T r = FromJavaObject<T>(interned, out set);
+				T? r = FromJavaObject<T>(interned, out set);
 				if (set) {
 					JNIEnv.DeleteRef (handle, transfer);
 					return r;
@@ -119,12 +119,12 @@ namespace Java.Interop {
 			set = true;
 
 			if (typeof (IJavaObject).IsAssignableFrom (typeof (T)))
-				return (T) Java.Lang.Object._GetObject<T> (handle, transfer);
+				return (T?) Java.Lang.Object._GetObject<T> (handle, transfer);
 
 			var converter = GetJniHandleConverter (typeof (T)) ??
 				GetJniHandleConverter (GetTypeMapping (handle));
 			if (converter != null)
-				return (T) converter (handle, transfer);
+				return (T?) converter (handle, transfer);
 
 			var v = Java.Lang.Object.GetObject (handle, transfer);
 			if (v is T)
@@ -132,7 +132,7 @@ namespace Java.Interop {
 
 			// hail mary pass; perhaps there's a MCW which participates in normal
 			// .NET type conversion?
-			return (T) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
+			return (T?) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
 		}
 
 		public static object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
@@ -244,7 +244,7 @@ namespace Java.Interop {
 			set = true;
 			var converter = GetJniHandleConverter (typeof (T));
 			if (converter != null)
-				return (T) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
+				return (T?) converter (lrefValue, JniHandleOwnership.TransferLocalRef);
 			JNIEnv.DeleteLocalRef (lrefValue);
 			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}

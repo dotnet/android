@@ -381,7 +381,7 @@ namespace Android.Runtime {
 				throw new ArgumentException ("array");
 
 			int i = 0;
-			foreach (T item in this)
+			foreach (T item in this!)
 				array [array_index + i++] = item;
 		}
 

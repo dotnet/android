@@ -266,7 +266,7 @@ namespace Java.Lang {
 		[return: MaybeNull]
 		internal static T PeekObject <T> (IntPtr handle)
 		{
-			return (T)PeekObject (handle, typeof (T));
+			return (T?)PeekObject (handle, typeof (T));
 		}
 
 		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
@@ -288,7 +288,7 @@ namespace Java.Lang {
 			if (handle == IntPtr.Zero)
 				return default (T);
 
-			return (T) GetObject (handle, transfer, typeof (T));
+			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
 		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
