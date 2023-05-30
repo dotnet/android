@@ -92,6 +92,10 @@
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
+    <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
+    <Compile Include="Java.Time\ZonedDateTime.cs" />
+    <Compile Include="Java.Time\LocalDateTime.cs" />
+    <Compile Include="Java.Time\LocalDate.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
