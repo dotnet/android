@@ -915,7 +915,7 @@ namespace Styleable.Library {
 		}
 
 		[Test]
-		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease)
+		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool addResource)
 		{
 			var app = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
@@ -931,11 +931,13 @@ namespace Styleable.Library {
 				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
 			});
 			// begin Remove these lines when the new fixed SkiaSharp is released.
-			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\attrs.xml") {
-				TextContent = () => @"<resources><declare-styleable name='SKCanvasView'>
-	<attr name='ignorePixelScaling' format='boolean'/>
-</declare-styleable></resources>",
-			});
+			if (addResource) {
+				app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\attrs.xml") {
+					TextContent = () => @"<resources><declare-styleable name='SKCanvasView'>
+		<attr name='ignorePixelScaling' format='boolean'/>
+	</declare-styleable></resources>",
+				});
+			}
 			// end
 			app.LayoutMain = app.LayoutMain.Replace ("<LinearLayout", @"<FrameLayout
 	xmlns:android='http://schemas.android.com/apk/res/android'
@@ -945,7 +947,6 @@ namespace Styleable.Library {
 	<SkiaSharp.Views.Android.SKCanvasView
 		android:layout_width='match_parent'
 		android:layout_height='match_parent'
-		app:ignorePixelScaling='true'
 		android:id='@+id/skiaView' />")
 				.Replace ("</LinearLayout>", "</FrameLayout>");
 			app.MainActivity = @"using Android.App;
@@ -1011,7 +1012,11 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.BuildLogFile = "build1.log";
 				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
+				if (!addResource) {
+					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
+					return;
+				}
+				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have succeeded.");
 				b.BuildLogFile = "install1.log";
 				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
 				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
