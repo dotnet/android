@@ -1,5 +1,7 @@
 using System;
 using System.IO;
+using System.IO.Hashing;
+using System.Text;
 
 using Xamarin.Android.Tools;
 
@@ -30,6 +32,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
 			generator.Generate (output, module);
 			output.Flush ();
+		}
+
+		public static ulong GetXxHash (string str, bool is64Bit)
+		{
+			byte[] stringBytes = Encoding.UTF8.GetBytes (str);
+			if (is64Bit) {
+				return XxHash64.HashToUInt64 (stringBytes);
+			}
+
+			return (ulong)XxHash32.HashToUInt32 (stringBytes);
 		}
 	}
 }

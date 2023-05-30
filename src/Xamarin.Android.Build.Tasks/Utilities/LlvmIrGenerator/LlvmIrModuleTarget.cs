@@ -8,6 +8,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public abstract string Triple                { get; }
 		public abstract AndroidTargetArch TargetArch { get; }
 		public abstract uint NativePointerSize       { get; }
+		public abstract bool Is64Bit                 { get; }
 
 		/// <summary>
 		/// Adds target-specific attributes which are common to many attribute sets. Usually this specifies CPU type, tuning and

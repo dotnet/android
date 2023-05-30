@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public override string Triple => "armv7-unknown-linux-android21";
 		public override AndroidTargetArch TargetArch => AndroidTargetArch.Arm;
 		public override uint NativePointerSize => 4;
+		public override bool Is64Bit => false;
 
 		public LlvmIrModuleArmV7a ()
 		{

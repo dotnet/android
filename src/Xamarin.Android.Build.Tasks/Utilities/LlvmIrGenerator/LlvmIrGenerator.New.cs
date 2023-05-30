@@ -22,6 +22,55 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	{
 		const char IndentChar = '\t';
 
+		sealed class LlvmTypeInfo
+		{
+			public readonly bool IsPointer;
+			public readonly bool IsAggregate;
+			public readonly bool IsStructure;
+			public readonly ulong Size;
+			public readonly ulong MaxFieldAlignment;
+
+			public LlvmTypeInfo (bool isPointer, bool isAggregate, bool isStructure, ulong size, ulong maxFieldAlignment)
+			{
+				IsPointer = isPointer;
+				IsAggregate = isAggregate;
+				IsStructure = isStructure;
+				Size = size;
+				MaxFieldAlignment = maxFieldAlignment;
+			}
+		}
+
+		sealed class WriteContext
+		{
+			int currentIndentLevel = 0;
+
+			public readonly TextWriter Output;
+			public readonly LlvmIrModule Module;
+			public string CurrentIndent { get; private set; } = String.Empty;
+
+			public WriteContext (TextWriter writer, LlvmIrModule module)
+			{
+				Output = writer;
+				Module = module;
+			}
+
+			public void IncreaseIndent ()
+			{
+				currentIndentLevel++;
+				CurrentIndent = MakeIndentString ();
+			}
+
+			public void DecreaseIndent ()
+			{
+				if (currentIndentLevel > 0) {
+					currentIndentLevel--;
+				}
+				CurrentIndent = MakeIndentString ();
+			}
+
+			string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
+		}
+
 		sealed class BasicType
 		{
 			public readonly string Name;
@@ -58,8 +107,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public string FileName           { get; }
 
 		LlvmIrModuleTarget target;
-		int currentIndentLevel = 0;
-		string currentIndent = String.Empty;
 
 		protected LlvmIrGenerator (string filePath, LlvmIrModuleTarget target)
 		{
@@ -81,105 +128,115 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public void Generate (TextWriter writer, LlvmIrModule module)
 		{
+			var context = new WriteContext (writer, module);
 			if (!String.IsNullOrEmpty (FilePath)) {
-				WriteCommentLine (writer, $" ModuleID = '{FileName}'");
-				writer.WriteLine ($"source_filename = \"{FileName}\"");
+				WriteCommentLine (context, $" ModuleID = '{FileName}'");
+				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
 			}
 
-			writer.WriteLine (target.DataLayout.Render ());
-			writer.WriteLine ($"target triple = \"{target.Triple}\"");
-			WriteStructureDeclarations (writer, module);
-			WriteGlobalVariables (writer, module);
+			context.Output.WriteLine (target.DataLayout.Render ());
+			context.Output.WriteLine ($"target triple = \"{target.Triple}\"");
+			WriteStructureDeclarations (context);
+			WriteGlobalVariables (context);
 
 			// Bottom of file
-			WriteStrings (writer, module);
-			WriteExternalFunctionDeclarations (writer, module);
-			WriteAttributeSets (writer, module);
+			WriteStrings (context);
+			WriteExternalFunctionDeclarations (context);
+			WriteAttributeSets (context);
 		}
 
-		void WriteStrings (TextWriter writer, LlvmIrModule module)
+		void WriteStrings (WriteContext context)
 		{
-			if (module.Strings == null || module.Strings.Count == 0) {
+			if (context.Module.Strings == null || context.Module.Strings.Count == 0) {
 				return;
 			}
 
-			writer.WriteLine ();
-			WriteComment (writer, " Strings");
+			context.Output.WriteLine ();
+			WriteComment (context, " Strings");
 
-			foreach (LlvmIrStringGroup group in module.Strings) {
-				writer.WriteLine ();
+			foreach (LlvmIrStringGroup group in context.Module.Strings) {
+				context.Output.WriteLine ();
 
 				if (!String.IsNullOrEmpty (group.Comment)) {
-					WriteCommentLine (writer, group.Comment);
+					WriteCommentLine (context, group.Comment);
 				}
 
 				foreach (LlvmIrStringVariable info in group.Strings) {
 					string s = QuoteString ((string)info.Value, out ulong size);
 
-					WriteGlobalVariableStart (writer, info);
-					writer.Write ('[');
-					writer.Write (size.ToString (CultureInfo.InvariantCulture));
-					writer.Write (" x i8] c");
-					writer.Write (s);
-					writer.Write (", align ");
-					writer.WriteLine (target.GetAggregateAlignment (1, size).ToString (CultureInfo.InvariantCulture));
+					WriteGlobalVariableStart (context, info);
+					context.Output.Write ('[');
+					context.Output.Write (size.ToString (CultureInfo.InvariantCulture));
+					context.Output.Write (" x i8] c");
+					context.Output.Write (s);
+					context.Output.Write (", align ");
+					context.Output.WriteLine (target.GetAggregateAlignment (1, size).ToString (CultureInfo.InvariantCulture));
 				}
 			}
 		}
 
-		void WriteGlobalVariables (TextWriter writer, LlvmIrModule module)
+		void WriteGlobalVariables (WriteContext context)
 		{
-			if (module.GlobalVariables == null || module.GlobalVariables.Count == 0) {
+			if (context.Module.GlobalVariables == null || context.Module.GlobalVariables.Count == 0) {
 				return;
 			}
 
-			writer.WriteLine ();
-			foreach (LlvmIrGlobalVariable gv in module.GlobalVariables) {
-				WriteGlobalVariable (writer, gv);
+			context.Output.WriteLine ();
+			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
+				if (gv.BeforeWriteCallback != null) {
+					gv.BeforeWriteCallback (gv, target);
+				}
+				WriteGlobalVariable (context, gv);
 			}
 		}
 
-		public void WriteGlobalVariableStart (TextWriter writer, LlvmIrGlobalVariable variable)
+		void WriteGlobalVariableStart (WriteContext context, LlvmIrGlobalVariable variable)
 		{
-			writer.Write ('@');
-			writer.Write (variable.Name);
-			writer.Write (" = ");
+			if (!String.IsNullOrEmpty (variable.Comment)) {
+				WriteCommentLine (context, variable.Comment);
+			}
+			context.Output.Write ('@');
+			context.Output.Write (variable.Name);
+			context.Output.Write (" = ");
 
 			LlvmIrVariableOptions options = variable.Options ?? LlvmIrGlobalVariable.DefaultOptions;
-			WriteLinkage (writer, options.Linkage);
-			WritePreemptionSpecifier (writer, options.RuntimePreemption);
-			WriteVisibility (writer, options.Visibility);
-			WriteAddressSignificance (writer, options.AddressSignificance);
-			WriteWritability (writer, options.Writability);
+			WriteLinkage (context, options.Linkage);
+			WritePreemptionSpecifier (context, options.RuntimePreemption);
+			WriteVisibility (context, options.Visibility);
+			WriteAddressSignificance (context, options.AddressSignificance);
+			WriteWritability (context, options.Writability);
 		}
 
-		public void WriteGlobalVariable (TextWriter writer, LlvmIrGlobalVariable variable)
+		void WriteGlobalVariable (WriteContext context, LlvmIrGlobalVariable variable)
 		{
-			WriteGlobalVariableStart (writer, variable);
-			WriteTypeAndValue (writer, variable, out ulong typeSize, out bool isPointer, out bool isAggregate);
-			writer.Write (", align ");
+			context.Output.WriteLine ();
+			WriteGlobalVariableStart (context, variable);
+			WriteTypeAndValue (context, variable, out LlvmTypeInfo typeInfo);
+			context.Output.Write (", align ");
 
 			ulong alignment;
-			if (isAggregate) {
+			if (typeInfo.IsAggregate) {
 				uint count = GetAggregateValueElementCount (variable);
-				alignment = (ulong)target.GetAggregateAlignment ((int)typeSize, count * typeSize);
-			} else if (isPointer) {
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.Size, count * typeInfo.Size);
+			} else if (typeInfo.IsStructure) {
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, typeInfo.Size);
+			} else if (typeInfo.IsPointer) {
 				alignment = target.NativePointerSize;
 			} else {
-				alignment = typeSize;
+				alignment = typeInfo.Size;
 			}
 
-			writer.WriteLine (alignment.ToString (CultureInfo.InvariantCulture));
+			context.Output.WriteLine (alignment.ToString (CultureInfo.InvariantCulture));
 		}
 
-		void WriteTypeAndValue (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer, out bool isAggregate)
+		void WriteTypeAndValue (WriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
 		{
-			WriteType (writer, variable, out size, out isPointer, out isAggregate);
-			writer.Write (' ');
+			WriteType (context, variable, out typeInfo);
+			context.Output.Write (' ');
 
 			if (variable.Value == null) {
-				if (isPointer) {
-					writer.Write ("null");
+				if (typeInfo.IsPointer) {
+					context.Output.Write ("null");
 				}
 
 				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
@@ -196,7 +253,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				throw new InvalidOperationException ($"Internal error: variable type '{variable.Type}' is different to its value type, '{valueType}'");
 			}
 
-			WriteValue (writer, valueType, variable);
+			WriteValue (context, valueType, variable);
 		}
 
 		uint GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value);
@@ -215,79 +272,156 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return (uint)info.Entries.Count;
 		}
 
-		void WriteType (TextWriter writer, LlvmIrVariable variable, out ulong size, out bool isPointer, out bool isAggregate)
+		void WriteType (WriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
 		{
-			WriteType (writer, variable.Type, variable.Value, out size, out isPointer, out isAggregate);
+			WriteType (context, variable.Type, variable.Value, out typeInfo);
 		}
 
-		void WriteType (TextWriter writer, Type type, object? value, out ulong size, out bool isPointer, out bool isAggregate)
+		void WriteType (WriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo)
 		{
-			string irType;
+			if (type == typeof(StructureInstance)) {
+				if (value == null) {
+					throw new ArgumentException ("must not be null for structure instances", nameof (value));
+				}
 
-			if (IsArray (type)) {
-				isAggregate = true;
-				irType = GetIRType (type, out size, out isPointer);
+				var si = (StructureInstance)value;
+				ulong alignment;
 
-				writer.Write ('[');
-				writer.Write (GetAggregateValueElementCount (type, value).ToString (CultureInfo.InvariantCulture));
-				writer.Write (" x ");
-				writer.Write (irType);
-				writer.Write (']');
+				if (si.Info.HasPointers && target.NativePointerSize > si.Info.MaxFieldAlignment) {
+					alignment = target.NativePointerSize;
+				} else {
+					alignment = (ulong)si.Info.MaxFieldAlignment;
+				}
+
+				typeInfo = new LlvmTypeInfo (
+					isPointer: false,
+					isAggregate: false,
+					isStructure: true,
+					size: si.Info.Size,
+					maxFieldAlignment: alignment
+				);
+
+				context.Output.Write ('%');
+				context.Output.Write (si.Info.NativeTypeDesignator);
+				context.Output.Write ('.');
+				context.Output.Write (si.Info.Name);
 				return;
 			}
 
-			isAggregate = false;
+			string irType;
+			ulong size;
+			bool isPointer;
+
+			if (IsArray (type)) {
+				irType = GetIRType (type, out size, out isPointer);
+				typeInfo = new LlvmTypeInfo (
+					isPointer: isPointer,
+					isAggregate: true,
+					isStructure: false,
+					size: size,
+					maxFieldAlignment: size
+				);
+
+				context.Output.Write ('[');
+				context.Output.Write (GetAggregateValueElementCount (type, value).ToString (CultureInfo.InvariantCulture));
+				context.Output.Write (" x ");
+				context.Output.Write (irType);
+				context.Output.Write (']');
+				return;
+			}
+
 			irType = GetIRType (type, out size, out isPointer);
-			writer.Write (irType);
+			typeInfo = new LlvmTypeInfo (
+				isPointer: isPointer,
+				isAggregate: false,
+				isStructure: false,
+				size: size,
+				maxFieldAlignment: size
+			);
+			context.Output.Write (irType);
 		}
 
 		bool IsArray (Type t) => t == typeof(LlvmIrArrayVariableInfo);
 
-		void WriteValue (TextWriter writer, Type valueType, LlvmIrVariable variable)
+		void WriteValue (WriteContext context, Type valueType, LlvmIrVariable variable)
 		{
-			if (variable.Value is LlvmIrVariable variableRef) {
-				writer.Write (variableRef.Reference);
-				return;
-			}
-
 			if (IsArray (variable.Type)) {
 				uint count = GetAggregateValueElementCount (variable);
 				if (count == 0) {
-					writer.Write ("zeroinitializer");
+					context.Output.Write ("zeroinitializer");
 					return;
 				}
 
-				WriteArray (writer, (LlvmIrArrayVariableInfo)variable.Value);
+				WriteArray (context, (LlvmIrArrayVariableInfo)variable.Value);
 				return;
 			}
 
-			if (IsNumeric (valueType)) {
-				writer.Write (MonoAndroidHelper.CultureInvariantToString (variable.Value));
-				return;
-			}
-
-			throw new NotSupportedException ($"Internal error: value type '{valueType}' is unsupported");
+			WriteValue (context, valueType, variable.Value);
 		}
 
-		void WriteValue (TextWriter writer, Type type, object? value)
+		void WriteValue (WriteContext context, Type type, object? value)
 		{
 			if (value is LlvmIrVariable variableRef) {
-				writer.Write (variableRef.Reference);
+				context.Output.Write (variableRef.Reference);
 				return;
 			}
 
 			if (IsNumeric (type)) {
-				writer.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				context.Output.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				return;
+			}
+
+			if (type == typeof(bool)) {
+				context.Output.Write ((bool)value ? '1' : '0');
+				return;
+			}
+
+			if (type == typeof(StructureInstance)) {
+				WriteStructureValue (context, (StructureInstance?)value);
 				return;
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
 		}
 
-		void WriteArray (TextWriter writer, LlvmIrArrayVariableInfo arrayInfo)
+		void WriteStructureValue (WriteContext context, StructureInstance? instance)
 		{
-			writer.WriteLine (" [");
-			IncreaseIndent ();
+			if (instance == null) {
+				context.Output.Write ("zeroinitializer");
+				return;
+			}
+
+			context.Output.WriteLine ('{');
+			context.IncreaseIndent ();
+
+			StructureInfo info = instance.Info;
+			int lastMember = info.Members.Count - 1;
+
+			for (int i = 0; i < info.Members.Count; i++) {
+				StructureMemberInfo smi = info.Members[i];
+
+				context.Output.Write (context.CurrentIndent);
+				WriteType (context, smi.MemberType, value: null, out _);
+				context.Output.Write (' ');
+
+				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
+				WriteValue (context, smi.MemberType, value);
+
+				if (i < lastMember) {
+					context.Output.Write (", ");
+				}
+
+				WriteCommentLine (context, $" {MapManagedTypeToNative (smi.MemberType)} {smi.Info.Name}");
+			}
+
+			context.DecreaseIndent ();
+			context.Output.Write ('}');
+		}
+
+		void WriteArray (WriteContext context, LlvmIrArrayVariableInfo arrayInfo)
+		{
+			context.Output.WriteLine (" [");
+			context.IncreaseIndent ();
 
 			string irType;
 			if (arrayInfo.ElementType == typeof(LlvmIrStringVariable)) {
@@ -299,77 +433,77 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			bool first = true;
 			foreach (object entry in arrayInfo.Entries) {
 				if (!first) {
-					writer.WriteLine (',');
+					context.Output.WriteLine (',');
 				} else {
 					first = false;
 				}
-				writer.Write (currentIndent);
-				WriteType (writer, arrayInfo.ElementType, entry, out _, out _, out _);
-				writer.Write (' ');
-				WriteValue (writer, arrayInfo.ElementType, entry);
+				context.Output.Write (context.CurrentIndent);
+				WriteType (context, arrayInfo.ElementType, entry, out _);
+				context.Output.Write (' ');
+				WriteValue (context, arrayInfo.ElementType, entry);
 			}
-			writer.WriteLine ();
+			context.Output.WriteLine ();
 
-			DecreaseIndent ();
-			writer.Write (']');
+			context.DecreaseIndent ();
+			context.Output.Write (']');
 		}
 
-		void WriteLinkage (TextWriter writer, LlvmIrLinkage linkage)
+		void WriteLinkage (WriteContext context, LlvmIrLinkage linkage)
 		{
 			if (linkage == LlvmIrLinkage.Default) {
 				return;
 			}
 
 			try {
-				WriteAttribute (writer, llvmLinkage[linkage]);
+				WriteAttribute (context, llvmLinkage[linkage]);
 			} catch (Exception ex) {
 				throw new InvalidOperationException ($"Internal error: unsupported writability '{linkage}'", ex);
 			}
 		}
 
-		void WriteWritability (TextWriter writer, LlvmIrWritability writability)
+		void WriteWritability (WriteContext context, LlvmIrWritability writability)
 		{
 			try {
-				WriteAttribute (writer, llvmWritability[writability]);
+				WriteAttribute (context, llvmWritability[writability]);
 			} catch (Exception ex) {
 				throw new InvalidOperationException ($"Internal error: unsupported writability '{writability}'", ex);
 			}
 		}
 
-		void WriteAddressSignificance (TextWriter writer, LlvmIrAddressSignificance addressSignificance)
+		void WriteAddressSignificance (WriteContext context, LlvmIrAddressSignificance addressSignificance)
 		{
 			if (addressSignificance == LlvmIrAddressSignificance.Default) {
 				return;
 			}
 
 			try {
-				WriteAttribute (writer, llvmAddressSignificance[addressSignificance]);
+				WriteAttribute (context, llvmAddressSignificance[addressSignificance]);
 			} catch (Exception ex) {
 				throw new InvalidOperationException ($"Internal error: unsupported address significance '{addressSignificance}'", ex);
 			}
 		}
 
-		void WriteVisibility (TextWriter writer, LlvmIrVisibility visibility)
+		void WriteVisibility (WriteContext context, LlvmIrVisibility visibility)
 		{
 			if (visibility == LlvmIrVisibility.Default) {
 				return;
 			}
 
 			try {
-				WriteAttribute (writer, llvmVisibility[visibility]);
+				WriteAttribute (context, llvmVisibility[visibility]);
 			} catch (Exception ex) {
 				throw new InvalidOperationException ($"Internal error: unsupported visibility '{visibility}'", ex);
 			}
 		}
 
-		void WritePreemptionSpecifier (TextWriter writer, LlvmIrRuntimePreemption preemptionSpecifier)
+		void WritePreemptionSpecifier (WriteContext context, LlvmIrRuntimePreemption preemptionSpecifier)
 		{
 			if (preemptionSpecifier == LlvmIrRuntimePreemption.Default) {
 				return;
 			}
 
 			try {
-				WriteAttribute (writer, llvmRuntimePreemption[preemptionSpecifier]);
+				WriteAttribute (context, llvmRuntimePreemption[preemptionSpecifier]);
 			} catch (Exception ex) {
 				throw new InvalidOperationException ($"Internal error: unsupported preemption specifier '{preemptionSpecifier}'", ex);
 			}
@@ -378,46 +512,44 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// <summary>
 		/// Write attribute named in <paramref ref="attr"/> followed by a single space
 		/// </summary>
-		void WriteAttribute (TextWriter writer, string attr)
+		void WriteAttribute (WriteContext context, string attr)
 		{
-			writer.Write (attr);
-			writer.Write (' ');
+			context.Output.Write (attr);
+			context.Output.Write (' ');
 		}
 
-		void WriteStructureDeclarations (TextWriter writer, LlvmIrModule module)
+		void WriteStructureDeclarations (WriteContext context)
 		{
-			if (module.Structures == null || module.Structures.Count == 0) {
-				Console.WriteLine (" #1");
+			if (context.Module.Structures == null || context.Module.Structures.Count == 0) {
 				return;
 			}
 
-			foreach (IStructureInfo si in module.Structures) {
-				Console.WriteLine (" #2");
-				writer.WriteLine ();
-				WriteStructureDeclaration (writer, si);
+			foreach (StructureInfo si in context.Module.Structures) {
+				context.Output.WriteLine ();
+				WriteStructureDeclaration (context, si);
 			}
 		}
 
-		void WriteStructureDeclaration (TextWriter writer, IStructureInfo si)
+		void WriteStructureDeclaration (WriteContext context, StructureInfo si)
 		{
 			// $"%{typeDesignator}.{name} = type "
-			writer.Write ('%');
-			writer.Write (si.NativeTypeDesignator);
-			writer.Write ('.');
-			writer.Write (si.Name);
-			writer.Write (" = type ");
+			context.Output.Write ('%');
+			context.Output.Write (si.NativeTypeDesignator);
+			context.Output.Write ('.');
+			context.Output.Write (si.Name);
+			context.Output.Write (" = type ");
 
 			if (si.IsOpaque) {
-				writer.WriteLine ("opaque");
+				context.Output.WriteLine ("opaque");
 			} else {
-				writer.WriteLine ('{');
+				context.Output.WriteLine ('{');
 			}
 
 			if (si.IsOpaque) {
 				return;
 			}
 
-			IncreaseIndent ();
+			context.IncreaseIndent ();
 			for (int i = 0; i < si.Members.Count; i++) {
 				StructureMemberInfo info = si.Members[i];
 				string nativeType = MapManagedTypeToNative (info.MemberType);
@@ -433,24 +565,24 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				var comment = $" {nativeType} {info.Info.Name}{arraySize}";
 				WriteStructureDeclarationField (info.IRType, comment, i == si.Members.Count - 1);
 			}
-			DecreaseIndent ();
+			context.DecreaseIndent ();
 
-			writer.WriteLine ('}');
+			context.Output.WriteLine ('}');
 
 			void WriteStructureDeclarationField (string typeName, string comment, bool last)
 			{
-				writer.Write (currentIndent);
-				writer.Write (typeName);
+				context.Output.Write (context.CurrentIndent);
+				context.Output.Write (typeName);
 				if (!last) {
-					writer.Write (", ");
+					context.Output.Write (", ");
 				} else {
-					writer.Write (' ');
+					context.Output.Write (' ');
 				}
 
 				if (!String.IsNullOrEmpty (comment)) {
-					WriteCommentLine (writer, comment);
+					WriteCommentLine (context, comment);
 				} else {
-					writer.WriteLine ();
+					context.Output.WriteLine ();
 				}
 			}
 		}
@@ -458,14 +590,14 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		//
 		// Functions syntax: https://llvm.org/docs/LangRef.html#functions
 		//
-		void WriteExternalFunctionDeclarations (TextWriter writer, LlvmIrModule module)
+		void WriteExternalFunctionDeclarations (WriteContext context)
 		{
-			if (module.ExternalFunctions == null || module.ExternalFunctions.Count == 0) {
+			if (context.Module.ExternalFunctions == null || context.Module.ExternalFunctions.Count == 0) {
 				return;
 			}
 
-			writer.WriteLine ();
-			foreach (LlvmIrFunction func in module.ExternalFunctions) {
+			context.Output.WriteLine ();
+			foreach (LlvmIrFunction func in context.Module.ExternalFunctions) {
 				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags)
 				ILlvmIrFunctionState funcState = func.SaveState ();
 
@@ -473,106 +605,106 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					target.SetParameterFlags (parameter);
 				}
 
-				WriteFunctionAttributesComment (writer, func);
-				writer.Write ("declare ");
-				WriteFunctionDeclarationLeadingDecorations (writer, func);
-				WriteFunctionSignature (writer, func, writeParameterNames: false);
-				WriteFunctionDeclarationTrailingDecorations (writer, func);
-				writer.WriteLine ();
+				WriteFunctionAttributesComment (context, func);
+				context.Output.Write ("declare ");
+				WriteFunctionDeclarationLeadingDecorations (context, func);
+				WriteFunctionSignature (context, func, writeParameterNames: false);
+				WriteFunctionDeclarationTrailingDecorations (context, func);
+				context.Output.WriteLine ();
 
 				func.RestoreState (funcState);
 			}
 		}
 
-		void WriteFunctionAttributesComment (TextWriter writer, LlvmIrFunction func)
+		void WriteFunctionAttributesComment (WriteContext context, LlvmIrFunction func)
 		{
 			if (func.AttributeSet == null) {
 				return;
 			}
 
-			writer.WriteLine ();
-			WriteCommentLine (writer, $"Function attributes: {func.AttributeSet.Render ()}");
+			context.Output.WriteLine ();
+			WriteCommentLine (context, $"Function attributes: {func.AttributeSet.Render ()}");
 		}
 
-		void WriteFunctionDeclarationLeadingDecorations (TextWriter writer, LlvmIrFunction func)
+		void WriteFunctionDeclarationLeadingDecorations (WriteContext context, LlvmIrFunction func)
 		{
-			WriteFunctionLeadingDecorations (writer, func, declaration: true);
+			WriteFunctionLeadingDecorations (context, func, declaration: true);
 		}
 
-		void WriteFunctionDefinitionLeadingDecorations (TextWriter writer, LlvmIrFunction func)
+		void WriteFunctionDefinitionLeadingDecorations (WriteContext context, LlvmIrFunction func)
 		{
-			WriteFunctionLeadingDecorations (writer, func, declaration: false);
+			WriteFunctionLeadingDecorations (context, func, declaration: false);
 		}
 
-		void WriteFunctionLeadingDecorations (TextWriter writer, LlvmIrFunction func, bool declaration)
+		void WriteFunctionLeadingDecorations (WriteContext context, LlvmIrFunction func, bool declaration)
 		{
 			if (func.Linkage != LlvmIrLinkage.Default) {
-				writer.Write (llvmLinkage[func.Linkage]);
-				writer.Write (' ');
+				context.Output.Write (llvmLinkage[func.Linkage]);
+				context.Output.Write (' ');
 			}
 
 			if (!declaration && func.RuntimePreemption != LlvmIrRuntimePreemption.Default) {
-				writer.Write (llvmRuntimePreemption[func.RuntimePreemption]);
-				writer.Write (' ');
+				context.Output.Write (llvmRuntimePreemption[func.RuntimePreemption]);
+				context.Output.Write (' ');
 			}
 
 			if (func.Visibility != LlvmIrVisibility.Default) {
-				writer.Write (llvmVisibility[func.Visibility]);
-				writer.Write (' ');
+				context.Output.Write (llvmVisibility[func.Visibility]);
+				context.Output.Write (' ');
 			}
 		}
 
-		void WriteFunctionDeclarationTrailingDecorations (TextWriter writer, LlvmIrFunction func)
+		void WriteFunctionDeclarationTrailingDecorations (WriteContext context, LlvmIrFunction func)
 		{
-			WriteFunctionTrailingDecorations (writer, func, declaration: true);
+			WriteFunctionTrailingDecorations (context, func, declaration: true);
 		}
 
-		void WriteFunctionDefinitionTrailingDecorations (TextWriter writer, LlvmIrFunction func)
+		void WriteFunctionDefinitionTrailingDecorations (WriteContext context, LlvmIrFunction func)
 		{
-			WriteFunctionTrailingDecorations (writer, func, declaration: false);
+			WriteFunctionTrailingDecorations (context, func, declaration: false);
 		}
 
-		void WriteFunctionTrailingDecorations (TextWriter writer, LlvmIrFunction func, bool declaration)
+		void WriteFunctionTrailingDecorations (WriteContext context, LlvmIrFunction func, bool declaration)
 		{
 			if (func.AddressSignificance != LlvmIrAddressSignificance.Default) {
-				writer.Write ($" {llvmAddressSignificance[func.AddressSignificance]}");
+				context.Output.Write ($" {llvmAddressSignificance[func.AddressSignificance]}");
 			}
 
 			if (func.AttributeSet != null) {
-				writer.Write ($" #{func.AttributeSet.Number}");
+				context.Output.Write ($" #{func.AttributeSet.Number}");
 			}
 		}
 
-		void WriteFunctionSignature (TextWriter writer, LlvmIrFunction func, bool writeParameterNames)
+		void WriteFunctionSignature (WriteContext context, LlvmIrFunction func, bool writeParameterNames)
 		{
-			writer.Write (MapToIRType (func.Signature.ReturnType));
-			writer.Write (" @");
-			writer.Write (func.Signature.Name);
-			writer.Write ('(');
+			context.Output.Write (MapToIRType (func.Signature.ReturnType));
+			context.Output.Write (" @");
+			context.Output.Write (func.Signature.Name);
+			context.Output.Write ('(');
 
 			bool first = true;
 			foreach (LlvmIrFunctionParameter parameter in func.Signature.Parameters) {
 				if (!first) {
-					writer.Write (", ");
+					context.Output.Write (", ");
 				} else {
 					first = false;
 				}
 
-				writer.Write (MapToIRType (parameter.Type));
-				WriteParameterAttributes (writer, parameter);
+				context.Output.Write (MapToIRType (parameter.Type));
+				WriteParameterAttributes (context, parameter);
 				if (writeParameterNames) {
 					if (String.IsNullOrEmpty (parameter.Name)) {
 						throw new InvalidOperationException ($"Internal error: parameter must have a name");
 					}
-					writer.Write (" %"); // Function arguments are always local variables
-					writer.Write (parameter.Name);
+					context.Output.Write (" %"); // Function arguments are always local variables
+					context.Output.Write (parameter.Name);
 				}
 			}
 
-			writer.Write (')');
+			context.Output.Write (')');
 		}
 
-		void WriteParameterAttributes (TextWriter writer, LlvmIrFunctionParameter parameter)
+		void WriteParameterAttributes (WriteContext context, LlvmIrFunctionParameter parameter)
 		{
 			var attributes = new List<string> ();
 			if (AttributeIsSet (parameter.ImmArg)) {
@@ -619,20 +751,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			writer.Write (' ');
-			writer.Write (String.Join (" ", attributes));
+			context.Output.Write (' ');
+			context.Output.Write (String.Join (" ", attributes));
 
 			bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
 		}
 
-		void WriteAttributeSets (TextWriter writer, LlvmIrModule module)
+		void WriteAttributeSets (WriteContext context)
 		{
-			if (module.AttributeSets == null || module.AttributeSets.Count == 0) {
+			if (context.Module.AttributeSets == null || context.Module.AttributeSets.Count == 0) {
 				return;
 			}
 
-			writer.WriteLine ();
-			foreach (LlvmIrFunctionAttributeSet attrSet in module.AttributeSets) {
+			context.Output.WriteLine ();
+			foreach (LlvmIrFunctionAttributeSet attrSet in context.Module.AttributeSets) {
 				// Must not modify the original set, it is shared with other targets.
 				var targetSet = new LlvmIrFunctionAttributeSet (attrSet);
 				target.AddTargetSpecificAttributes (targetSet);
@@ -642,37 +774,21 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					targetSet.Add (privateTargetSet);
 				}
 
-				writer.WriteLine ($"attributes #{targetSet.Number} {{ {targetSet.Render ()} }}");
+				context.Output.WriteLine ($"attributes #{targetSet.Number} {{ {targetSet.Render ()} }}");
 			}
 		}
 
-		public void WriteComment (TextWriter writer, string comment)
+		void WriteComment (WriteContext context, string comment)
 		{
-			writer.Write (';');
-			writer.Write (comment);
+			context.Output.Write (';');
+			context.Output.Write (comment);
 		}
 
-		public void WriteCommentLine (TextWriter writer, string comment)
+		void WriteCommentLine (WriteContext context, string comment)
 		{
-			WriteComment (writer, comment);
-			writer.WriteLine ();
+			WriteComment (context, comment);
+			context.Output.WriteLine ();
 		}
-
-		void IncreaseIndent ()
-		{
-			currentIndentLevel++;
-			currentIndent = MakeIndentString ();
-		}
-
-		void DecreaseIndent ()
-		{
-			if (currentIndentLevel > 0) {
-				currentIndentLevel--;
-			}
-			currentIndent = MakeIndentString ();
-		}
-
-		string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
 
 		static Type GetActualType (Type type)
 		{
@@ -711,6 +827,25 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 
 		static bool IsNumeric (Type type) => basicTypeMap.TryGetValue (type, out BasicType typeDesc) && typeDesc.IsNumeric;
+
+		object? GetTypedMemberValue (WriteContext context, StructureInfo info, StructureMemberInfo smi, StructureInstance instance, Type expectedType, object? defaultValue = null)
+		{
+			object? value = smi.GetValue (instance.Obj);
+			if (value == null) {
+				return defaultValue;
+			}
+
+			Type valueType = value.GetType ();
+			if (valueType != expectedType) {
+				throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
+			}
+
+			if (valueType == typeof(string)) {
+				return context.Module.LookupRequiredVariableForString ((string)value);
+			}
+
+			return value;
+		}
 
 		public static string MapToIRType (Type type)
 		{

@@ -59,5 +59,14 @@ partial class LlvmIrModule
 
 			return stringVar;
 		}
+
+		public LlvmIrStringVariable? Lookup (string value)
+		{
+			if (stringSymbolCache.TryGetValue (value, out LlvmIrStringVariable? sv)) {
+				return sv;
+			}
+
+			return null;
+		}
 	}
 }

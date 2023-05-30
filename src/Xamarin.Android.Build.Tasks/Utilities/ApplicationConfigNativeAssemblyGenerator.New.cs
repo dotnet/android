@@ -29,11 +29,7 @@ namespace Xamarin.Android.Tasks.New
 		{
 			public override string GetComment (object data, string fieldName)
 			{
-				var dso_entry = data as DSOCacheEntry;
-				if (dso_entry == null) {
-					throw new InvalidOperationException ("Invalid data type, expected an instance of DSOCacheEntry");
-				}
-
+				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
 					return $"hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
 				}
@@ -72,8 +68,8 @@ namespace Xamarin.Android.Tasks.New
 		StructureInstance? application_config;
 		List<StructureInstance>? dsoCache;
 
-		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
-		StructureInfo<DSOCacheEntry>? dsoCacheEntryStructureInfo;
+		StructureInfo? applicationConfigStructureInfo;
+		StructureInfo? dsoCacheEntryStructureInfo;
 
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
@@ -117,18 +113,20 @@ namespace Xamarin.Android.Tasks.New
 		{
 			MapStructures (module);
 
-			module.AddGlobalVariable (FORMAT_TAG.GetType (), "format_tag", FORMAT_TAG);
+			module.AddGlobalVariable (FORMAT_TAG.GetType (), "format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 			module.AddGlobalVariable (typeof(string), "mono_aot_mode_name", MonoAOTMode);
 
 			var envVars = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_environment_variables") {
 				Value = environmentVariables,
+				Comment = " Application environment variables array, name:value",
 			};
-			module.Add (envVars, "env", "Application environment variables");
+			module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
 
 			var sysProps = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_system_properties") {
 				Value = systemProperties,
+				Comment = " System properties defined by the application",
 			};
-			module.Add (sysProps, "sysprop", "System properties defined by the application");
+			module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
 
 			dsoCache = InitDSOCache ();
 			var app_cfg = new ApplicationConfig {
@@ -158,8 +156,39 @@ namespace Xamarin.Android.Tasks.New
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
-			application_config = new StructureInstance (app_cfg);
-			//module.AddGlobalVariable (application_config.GetType (), "application_config", application_config);
+			application_config = new StructureInstance (applicationConfigStructureInfo, app_cfg);
+			module.AddGlobalVariable (application_config.GetType (), "application_config", application_config);
+
+			var dso_cache = new LlvmIrGlobalVariable (dsoCache.GetType (), "dso_cache", options: LLVMIR.LlvmIrVariableOptions.GlobalWritable) {
+				Value = dsoCache,
+				Comment = " DSO cache entries",
+				BeforeWriteCallback = HashAndSortDSOCache,
+			};
+			module.Add (dso_cache);
+		}
+
+		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target)
+		{
+			var cache = variable.Value as List<StructureInstance>;
+			if (cache == null) {
+				return;
+			}
+
+			bool is64Bit = target.Is64Bit;
+			foreach (StructureInstance instance in cache) {
+				if (instance.Obj == null) {
+					throw new InvalidOperationException ("Internal error: DSO cache must not contain null entries");
+				}
+
+				var entry = instance.Obj as DSOCacheEntry;
+				if (entry == null) {
+					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
+				}
+
+				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+			}
+
+			cache.Sort ((StructureInstance a, StructureInstance b) => ((DSOCacheEntry)a.Obj).hash.CompareTo (((DSOCacheEntry)b.Obj).hash));
 		}
 
 		List<StructureInstance> InitDSOCache ()
@@ -197,7 +226,7 @@ namespace Xamarin.Android.Tasks.New
 						name = name,
 					};
 
-					dsoCache.Add (new StructureInstance (entry));
+					dsoCache.Add (new StructureInstance (dsoCacheEntryStructureInfo, entry));
 				}
 			}
 

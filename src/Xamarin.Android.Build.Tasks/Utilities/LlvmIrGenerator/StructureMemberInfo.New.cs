@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
 			} else if (this.IsIRStruct ()) {
-				IStructureInfo si = module.GetStructureInfo (MemberType);
+				StructureInfo si = module.GetStructureInfo (MemberType);
 				size = si.Size;
 				Alignment = (ulong)si.MaxFieldAlignment;
 			}
@@ -91,6 +91,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			if (Alignment == 0) {
 				Alignment = size;
 			}
+		}
+
+		public object? GetValue (object instance)
+		{
+			if (Info is FieldInfo fi) {
+				return fi.GetValue (instance);
+			}
+
+			var pi = Info as PropertyInfo;
+			return pi.GetValue (instance);
 		}
 
 		int GetArraySizeFromProvider (NativeAssemblerStructContextDataProvider? provider, string fieldName)

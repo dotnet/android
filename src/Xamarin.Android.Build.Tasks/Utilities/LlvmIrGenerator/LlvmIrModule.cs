@@ -17,13 +17,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public IList<LlvmIrFunction>? ExternalFunctions         { get; private set; }
 		public IList<LlvmIrFunctionAttributeSet>? AttributeSets { get; private set; }
-		public IList<IStructureInfo>? Structures                { get; private set; }
+		public IList<StructureInfo>? Structures                { get; private set; }
 		public IList<LlvmIrGlobalVariable>? GlobalVariables     { get; private set; }
 		public IList<LlvmIrStringGroup>? Strings                { get; private set; }
 
 		Dictionary<LlvmIrFunctionAttributeSet, LlvmIrFunctionAttributeSet>? attributeSets;
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? externalFunctions;
-		Dictionary<Type, IStructureInfo>? structures;
+		Dictionary<Type, StructureInfo>? structures;
 		LlvmIrStringManager? stringManager;
 
 		List<LlvmIrGlobalVariable>? globalVariables;
@@ -46,8 +46,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			if (structures != null) {
-				List<IStructureInfo> list = structures.Values.ToList ();
-				list.Sort ((IStructureInfo a, IStructureInfo b) => a.Name.CompareTo (b.Name));
+				List<StructureInfo> list = structures.Values.ToList ();
+				list.Sort ((StructureInfo a, StructureInfo b) => a.Name.CompareTo (b.Name));
 				Structures = list.AsReadOnly ();
 			}
 
@@ -61,9 +61,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// <summary>
 		/// A shortcut way to add a global variable without first having to create an instance of <see cref="LlvmIrGlobalVariable"/> first.
 		/// </summary>
-		public LlvmIrGlobalVariable AddGlobalVariable (Type type, string name, object? value, LlvmIrVariableOptions? options = null)
+		public LlvmIrGlobalVariable AddGlobalVariable (Type type, string name, object? value, LlvmIrVariableOptions? options = null, string? comment = null)
 		{
-			var ret = new LlvmIrGlobalVariable (type, name, options) { Value = value };
+			var ret = new LlvmIrGlobalVariable (type, name, options) {
+				Value = value,
+				Comment = comment,
+			};
 			Add (ret);
 			return ret;
 		}
@@ -82,7 +85,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			throw new InvalidOperationException ("Internal error: this overload is for adding ONLY string or array-of-string variables");
+			throw new InvalidOperationException ("Internal error: this overload is ONLY for adding string or array-of-string variables");
 		}
 
 		public void Add (LlvmIrGlobalVariable variable)
@@ -99,7 +102,30 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (IsStructureVariable (variable)) {
+				PrepareStructure (variable);
+			}
+
 			AddStandardGlobalVariable (variable);
+		}
+
+		void PrepareStructure (LlvmIrGlobalVariable variable)
+		{
+			var structure = variable.Value as StructureInstance;
+			if (structure == null) {
+				return;
+			}
+
+			foreach (StructureMemberInfo smi in structure.Info.Members) {
+				if (smi.MemberType != typeof(string)) {
+					continue;
+				}
+
+				string? value = smi.GetValue (structure.Obj) as string;
+				if (!String.IsNullOrEmpty (value)) {
+					RegisterString (value, stringGroupName: structure.Info.Name, symbolSuffix: smi.Info.Name);
+				}
+			}
 		}
 
 		void AddStandardGlobalVariable (LlvmIrGlobalVariable variable)
@@ -211,11 +237,40 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return true;
 		}
 
+		bool IsStructureVariable (LlvmIrGlobalVariable variable)
+		{
+			if (variable.Type != typeof(StructureInstance)) {
+				return false;
+			}
+
+			if (variable.Value != null && variable.Value.GetType () != typeof(StructureInstance)) {
+				throw new InvalidOperationException ("Internal error: variable referring to a structure instance must have its value set to either `null` or an instance of the StructureInstance class");
+			}
+
+			return true;
+		}
+
 		void EnsureValidGlobalVariableType (LlvmIrGlobalVariable variable)
 		{
 			if (variable is LlvmIrStringVariable) {
 				throw new ArgumentException ("Internal error: do not add instances of LlvmIrStringVariable, simply set variable value to the desired string instead");
 			}
+		}
+
+		/// <summary>
+		/// Looks up LLVM variable for a previously registered string given in <paramref name="value"/>.  If a variable isn't found,
+		/// an exception is thrown.  This is primarily used by <see cref="LlvmIrGenerator"/> to look up variables related to strings which
+		/// are part of structure instances.  Such strings **MUST** be registered by <see cref="LlvmIrModule"/> and, thus, failure to do
+		/// so is an internal error.
+		/// </summary>
+		public LlvmIrStringVariable LookupRequiredVariableForString (string value)
+		{
+			LlvmIrStringVariable? sv = stringManager?.Lookup (value);
+			if (sv == null) {
+				throw new InvalidOperationException ($"Internal error: string '{value}' wasn't registered with string manager");
+			}
+
+			return sv;
 		}
 
 		/// <summary>
@@ -265,11 +320,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// data from instances of <typeparamref name="T"/>.  This method is typically called from the <see cref="LlvmIrGenerator.MapStructures"/>
 		/// method.
 		/// </summary>
-		public StructureInfo<T> MapStructure<T> ()
+		public StructureInfo MapStructure<T> ()
 		{
 			Console.WriteLine ($"Mapping structure: {typeof(T)}");
 			if (structures == null) {
-				structures = new Dictionary<Type, IStructureInfo> ();
+				structures = new Dictionary<Type, StructureInfo> ();
 			}
 
 			Type t = typeof(T);
@@ -278,24 +333,24 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			// TODO: check if already there
-			if (structures.TryGetValue (t, out IStructureInfo sinfo)) {
-				return (StructureInfo<T>)sinfo;
+			if (structures.TryGetValue (t, out StructureInfo sinfo)) {
+				return (StructureInfo)sinfo;
 			}
 
-			var ret = new StructureInfo<T> (this);
+			var ret = new StructureInfo (this, typeof(T));
 			structures.Add (t, ret);
 
 			return ret;
 		}
 
-		internal IStructureInfo GetStructureInfo (Type type)
+		internal StructureInfo GetStructureInfo (Type type)
 		{
 			if (structures == null) {
 				throw new InvalidOperationException ($"Internal error: no structures have been mapped, cannot return info for {type}");
 			}
 
 			foreach (var kvp in structures) {
-				IStructureInfo si = kvp.Value;
+				StructureInfo si = kvp.Value;
 				if (si.Type != type) {
 					continue;
 				}

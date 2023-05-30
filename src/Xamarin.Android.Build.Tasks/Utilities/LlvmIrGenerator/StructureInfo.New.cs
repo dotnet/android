@@ -5,7 +5,7 @@ using System.Reflection;
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	// TODO: add cache for members and data provider info
-	sealed class StructureInfo<T> : IStructureInfo
+	sealed class StructureInfo
 	{
 		Type type;
 
@@ -17,13 +17,14 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public int MaxFieldAlignment                                  { get; private set; } = 0;
 		public bool HasStrings                                        { get; private set; }
 		public bool HasPreAllocatedBuffers                            { get; private set; }
+		public bool HasPointers                                       { get; private set; }
 
 		public bool IsOpaque                                          => Members.Count == 0;
 		public string NativeTypeDesignator                            { get; }
 
-		public StructureInfo (LlvmIrModule module)
+		public StructureInfo (LlvmIrModule module, Type type)
 		{
-			type = typeof(T);
+			this.type = type;
 			Name = type.GetShortName ();
 			Size = GatherMembers (type, module);
 			DataProvider = type.GetDataProvider ();
@@ -39,6 +40,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 
 				var info = new StructureMemberInfo (mi, module);
+				if (info.IsNativePointer) {
+					HasPointers = true;
+				}
+
 				if (storeMembers) {
 					Members.Add (info);
 					size += info.Size;
