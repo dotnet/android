@@ -1425,7 +1425,6 @@ stages:
       propsArtifactName: nuget-unsigned
       signType: $(MicroBuildSignType)
       useDateTimeVersion: false
-      arcadePackageVersion: 6.0.0-beta.23274.5
 
   # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
   - job: push_signed_nugets
