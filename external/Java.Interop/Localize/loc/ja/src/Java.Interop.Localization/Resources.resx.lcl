@@ -351,6 +351,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";Generator_BG8A08" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Metadata.xml element '{0}' is missing the 'path' attribute.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Metadata.xml 要素 '{0}' に 'path' 属性がありません。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";Generator_BG8B00" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Unknown generic argument constraint type '{0}' for member '{1}'.]]></Val>
