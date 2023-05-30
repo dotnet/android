@@ -294,6 +294,11 @@ The following terms should not be translated: Metadata.xml.</comment>
     <value>잘못된 네임스페이스 변환 '{0}'</value>
     <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
   </data>
+  <data name="Generator_BG8A08" xml:space="preserve">
+    <value>Metadata.xml 요소 '{0}'에 'path' 특성이 없습니다.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml, path.</comment>
+  </data>
   <data name="Generator_BG8B00" xml:space="preserve">
     <value>'{1}' 멤버에 대한 알 수 없는 일반 인수 제약 형식 '{0}'.</value>
     <comment>{0} - .NET type name

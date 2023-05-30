@@ -294,6 +294,11 @@ The following terms should not be translated: Metadata.xml.</comment>
     <value>Neplatná transformace oboru názvů {0}</value>
     <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
   </data>
+  <data name="Generator_BG8A08" xml:space="preserve">
+    <value>V elementu {0} souboru Metadata.xml chybí atribut path.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml, path.</comment>
+  </data>
   <data name="Generator_BG8B00" xml:space="preserve">
     <value>Neznámý typ omezení obecného argumentu {0} pro člena {1}.</value>
     <comment>{0} - .NET type name

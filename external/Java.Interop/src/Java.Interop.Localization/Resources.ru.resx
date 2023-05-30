@@ -294,6 +294,11 @@ The following terms should not be translated: Metadata.xml.</comment>
     <value>Недопустимое преобразование пространства имен "{0}"</value>
     <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
   </data>
+  <data name="Generator_BG8A08" xml:space="preserve">
+    <value>В элементе Metadata.xml "{0}" отсутствует атрибут "path".</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml, path.</comment>
+  </data>
   <data name="Generator_BG8B00" xml:space="preserve">
     <value>Неизвестный универсальный тип ограничения аргумента "{0}" для элемента "{1}".</value>
     <comment>{0} - .NET type name

@@ -294,6 +294,11 @@ The following terms should not be translated: Metadata.xml.</comment>
     <value>'{0}' ad alanı dönüşümü geçersiz.</value>
     <comment>{0} - XML transform. (example: '&lt;ns-replace source="example" replacement="Example" /&gt;')</comment>
   </data>
+  <data name="Generator_BG8A08" xml:space="preserve">
+    <value>'{0}' Metadata.xml öğesinde 'path' özniteliği yok.</value>
+    <comment>{0} - XML transform. (example: '&lt;remove-node path="/api/package[@name='javax.sql']"')
+The following terms should not be translated: Metadata.xml, path.</comment>
+  </data>
   <data name="Generator_BG8B00" xml:space="preserve">
     <value>'{1}' üyesi için '{0}' genel bağımsız değişken kısıtlama türü bilinmiyor.</value>
     <comment>{0} - .NET type name
