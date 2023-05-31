@@ -14,6 +14,21 @@ namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidResourceTests : BaseTest {
 		[Test]
+		public void RTtParserTest ()
+		{
+			var path = Path.Combine (Root, "temp", TestName);
+			var rtxt = Path.Combine (path, "R.txt");
+			Directory.CreateDirectory (path);
+			File.WriteAllText (rtxt, ResourceData.RTxt);
+			IBuildEngine4 engine = new MockBuildEngine (System.Console.Out);
+			var log = new TaskLoggingHelper (engine, TestName);
+			var parser = new RtxtParser ();
+			var resources = parser.Parse (rtxt, log, new Dictionary<string, string> ());
+			var lines = File.ReadAllLines (rtxt);
+			Assert.AreEqual (lines.Count (), resources.Count ());
+		}
+
+		[Test]
 		public void HeaderLayout ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
@@ -58,7 +73,7 @@ namespace Xamarin.Android.Build.Tests {
 	android:orientation = ""horizontal""
 	android:layout_width = ""match_parent""
 	android:layout_height = ""match_parent"" >");
-			
+
 			var actions = Path.Combine (menuDir, "actions.xml");
 			File.WriteAllText (actions, @"<?xml version=""1.0"" encoding=""utf-8""?>
 <menu

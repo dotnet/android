@@ -327,6 +327,11 @@ namespace Xamarin.Android.Tasks
 						continue;
 					if (reader.IsStartElement ()) {
 						var elementName = reader.Name;
+						var elementNS = reader.NamespaceURI;
+						if (!string.IsNullOrEmpty (elementNS)) {
+							if (elementNS != "http://schemas.android.com/apk/res/android")
+								continue;
+						}
 						if (elementName == "declare-styleable" || elementName == "configVarying" || elementName == "add-resource") {
 							ProcessStyleable (reader.ReadSubtree (), resources);
 							continue;

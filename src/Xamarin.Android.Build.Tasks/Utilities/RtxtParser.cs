@@ -112,7 +112,7 @@ namespace Xamarin.Android.Tasks
 					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
 					continue;
 				}
-				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3], 16) : -1;
+				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
 				string itemName = ResourceIdentifier.GetResourceName(items [1], items [2], map, log);
 				if (knownTypes.Contains (items [1])) {
 					if (items [1] != "styleable") {
@@ -128,7 +128,7 @@ namespace Xamarin.Android.Tasks
 							result.Add (new R () {
 								ResourceTypeName = items [1],
 								Identifier = itemName,
-								Id = Convert.ToInt32 (items [3], 10),
+								Id = Convert.ToInt32 (items [3].Trim (), 10),
 							});
 							break;
 						case "int[]":

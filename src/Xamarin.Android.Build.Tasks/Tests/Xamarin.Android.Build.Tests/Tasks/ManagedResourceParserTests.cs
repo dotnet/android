@@ -33,7 +33,7 @@ namespace Xamarin.Android.Build.Tests {
 ";
 
 		const string StringsXml = @"<?xml version=""1.0"" encoding=""utf-8""?>
-<resources>
+<resources xmlns:ns1=""http://schemas.android.com/tools"" xmlns:ns2=""urn:oasis:names:tc:xliff:document:1.2"">
   <string name=""hello"">Hello World, Click Me!</string>
   <string name=""app_name"">App1</string>
   <plurals name=""num_locations_reported"">
@@ -41,6 +41,7 @@ namespace Xamarin.Android.Build.Tests {
     <item quantity=""one""> One location reported</item>
     <item quantity=""other"">%d locations reported</item>
   </plurals>
+  <string name=""translatable_text"" translatable=""false""><ns2:g example=""999"" id=""maximum number"">%1$d</ns2:g><ns2:g example=""+"" id=""suffix"">%2$s</ns2:g></string>
 </resources>
 ";
 
@@ -229,6 +230,7 @@ int string fixed 0x7f110001
 int string foo 0x7f110002
 int string hello 0x7f110003
 int string menu_settings 0x7f110004
+int string translatable_text 0x7f110005
 int[] styleable CustomFonts { 0x010100d2, 0x7f040000, 0x7f040000, 0x7f040001 }
 int styleable CustomFonts_android_scrollX 0
 int styleable CustomFonts_customFont 1
@@ -624,8 +626,8 @@ int xml myxml 0x7f140000
 			string aapt2Designer = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			string managedDesigner = Path.Combine (Root, path, "Resource.designer.managed.cs");
 			CompareFilesIgnoreRuntimeInfoString (managedDesigner, aapt2Designer);
-			Directory.Delete (Path.Combine (Root, path), recursive: true);
-
+			//Directory.Delete (Path.Combine (Root, path), recursive: true);
+			Assert.Fail ();
 		}
 
 		[Test]
