@@ -136,6 +136,33 @@ namespace Microsoft.Android.Build.Tasks
 		}
 
 		/// <summary>
+		/// Logs a coded error from a node in an XML document
+		/// </summary>
+		/// <param name="node">An element that implements IXmlLineInfo</param>
+		public static void LogErrorForXmlNode (this TaskLoggingHelper log, string code, string file, object node, string message, params object [] messageArgs)
+		{
+			int lineNumber = 0;
+			int columnNumber = 0;
+			var lineInfo = node as IXmlLineInfo;
+			if (lineInfo != null && lineInfo.HasLineInfo ()) {
+				lineNumber = lineInfo.LineNumber;
+				columnNumber = lineInfo.LinePosition;
+			}
+			log.LogError (
+					subcategory: string.Empty,
+					errorCode: code,
+					helpKeyword: string.Empty,
+					file: file,
+					lineNumber: lineNumber,
+					columnNumber: columnNumber,
+					endLineNumber: 0,
+					endColumnNumber: 0,
+					message: message,
+					messageArgs: messageArgs
+			);
+		}
+
+		/// <summary>
 		/// Logs a coded warning from a node in an XML document
 		/// </summary>
 		/// <param name="node">An element that implements IXmlLineInfo</param>
