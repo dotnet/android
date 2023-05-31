@@ -626,8 +626,7 @@ int xml myxml 0x7f140000
 			string aapt2Designer = Path.Combine (Root, path, "Resource.designer.aapt2.cs");
 			string managedDesigner = Path.Combine (Root, path, "Resource.designer.managed.cs");
 			CompareFilesIgnoreRuntimeInfoString (managedDesigner, aapt2Designer);
-			//Directory.Delete (Path.Combine (Root, path), recursive: true);
-			Assert.Fail ();
+			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
 		[Test]
