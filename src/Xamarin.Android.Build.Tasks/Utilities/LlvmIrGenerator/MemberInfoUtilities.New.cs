@@ -31,6 +31,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return attr != null && attr.Ignore;
 		}
 
+		public static bool UsesDataProvider (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			return attr != null && attr.UsesDataProvider;
+		}
+
 		public static bool IsInlineArray (this MemberInfo mi)
 		{
 			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();

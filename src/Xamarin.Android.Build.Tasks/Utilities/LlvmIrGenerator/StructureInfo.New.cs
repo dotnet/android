@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public ulong Size                                             { get; }
 		public IList<StructureMemberInfo> Members                     { get; } = new List<StructureMemberInfo> ();
 		public NativeAssemblerStructContextDataProvider? DataProvider { get; }
-		public int MaxFieldAlignment                                  { get; private set; } = 0;
+		public ulong MaxFieldAlignment                                { get; private set; } = 0;
 		public bool HasStrings                                        { get; private set; }
 		public bool HasPreAllocatedBuffers                            { get; private set; }
 		public bool HasPointers                                       { get; private set; }
@@ -29,6 +29,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			Size = GatherMembers (type, module);
 			DataProvider = type.GetDataProvider ();
 			NativeTypeDesignator = type.IsNativeClass () ? "class" : "struct";
+		}
+
+		public string? GetCommentFromProvider (StructureMemberInfo smi, StructureInstance instance)
+		{
+			if (DataProvider == null || !smi.Info.UsesDataProvider ()) {
+				return null;
+			}
+
+			string ret = DataProvider.GetComment (instance.Obj, smi.Info.Name);
+			if (ret.Length == 0) {
+				return null;
+			}
+
+			return ret;
 		}
 
 		ulong GatherMembers (Type type, LlvmIrModule module, bool storeMembers = true)
@@ -48,8 +62,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					Members.Add (info);
 					size += info.Size;
 
-					if ((int)info.Alignment > MaxFieldAlignment) {
-						MaxFieldAlignment = (int)info.Alignment;
+					if (info.Alignment > MaxFieldAlignment) {
+						MaxFieldAlignment = info.Alignment;
 					}
 				}
 

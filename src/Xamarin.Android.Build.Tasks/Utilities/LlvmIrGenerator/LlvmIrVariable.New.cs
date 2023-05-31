@@ -136,6 +136,7 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 		Options = options;
 	}
 
+	// TODO: fix this, it's cumbersome and clunky
 	/// <summary>
 	/// Supports instances where a variable value must be processed by <see cref="LlvmIrModule"/> (for instance for arrays).
 	/// Should **not** be used by code other than LlvmIrModule.

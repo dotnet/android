@@ -31,11 +31,11 @@ namespace Xamarin.Android.Tasks.New
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $"hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
-					return $"name: {dso_entry.name}";
+					return $" name: {dso_entry.name}";
 				}
 
 				return String.Empty;
@@ -55,6 +55,7 @@ namespace Xamarin.Android.Tasks.New
 			public ulong hash;
 			public bool ignore;
 
+			[NativeAssembler (UsesDataProvider = true)]
 			public string name;
 			public IntPtr handle = IntPtr.Zero;
 		}
@@ -159,7 +160,7 @@ namespace Xamarin.Android.Tasks.New
 			application_config = new StructureInstance (applicationConfigStructureInfo, app_cfg);
 			module.AddGlobalVariable (application_config.GetType (), "application_config", application_config);
 
-			var dso_cache = new LlvmIrGlobalVariable (dsoCache.GetType (), "dso_cache", options: LLVMIR.LlvmIrVariableOptions.GlobalWritable) {
+			var dso_cache = new LlvmIrGlobalVariable (dsoCache.GetType (), "dso_cache") {
 				Value = dsoCache,
 				Comment = " DSO cache entries",
 				BeforeWriteCallback = HashAndSortDSOCache,
@@ -169,11 +170,13 @@ namespace Xamarin.Android.Tasks.New
 
 		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target)
 		{
-			var cache = variable.Value as List<StructureInstance>;
+			var arrayInfo = variable.Value as LlvmIrArrayVariableInfo;
+			var cache = arrayInfo.OriginalVariableValue as List<StructureInstance>;
 			if (cache == null) {
 				return;
 			}
 
+			Console.WriteLine ("Hashing and sorting DSO cache");
 			bool is64Bit = target.Is64Bit;
 			foreach (StructureInstance instance in cache) {
 				if (instance.Obj == null) {
@@ -186,6 +189,7 @@ namespace Xamarin.Android.Tasks.New
 				}
 
 				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+				Console.WriteLine ($"  hashed '{entry.HashedName}' as 0x{entry.hash:x}");
 			}
 
 			cache.Sort ((StructureInstance a, StructureInstance b) => ((DSOCacheEntry)a.Obj).hash.CompareTo (((DSOCacheEntry)b.Obj).hash));

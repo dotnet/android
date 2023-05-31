@@ -102,6 +102,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (IsStructureArrayVariable (variable)) {
+				AddStructureArrayGlobalVariable (variable);
+				return;
+			}
+
 			if (IsStructureVariable (variable)) {
 				PrepareStructure (variable);
 			}
@@ -116,6 +121,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			PrepareStructure (structure);
+		}
+
+		void PrepareStructure (StructureInstance structure)
+		{
 			foreach (StructureMemberInfo smi in structure.Info.Members) {
 				if (smi.MemberType != typeof(string)) {
 					continue;
@@ -160,6 +170,39 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return sv;
 		}
 
+		void AddStructureArrayGlobalVariable (LlvmIrGlobalVariable variable)
+		{
+			if (variable.Value == null) {
+				AddStandardGlobalVariable (variable);
+				return;
+			}
+
+			List<StructureInstance>? entries = null;
+			if (typeof(ICollection<StructureInstance>).IsAssignableFrom (variable.Type)) {
+				entries = new List<StructureInstance> ((ICollection<StructureInstance>)variable.Value);
+			} else {
+				throw new InvalidOperationException ($"Internal error: unsupported structure array type `{variable.Type}'");
+			}
+
+			// For simplicity we support only arrays with homogenous entry types
+			StructureInfo? info = null;
+			foreach (StructureInstance structure in entries) {
+				if (info == null) {
+					info = structure.Info;
+				}
+
+				if (structure.Type != info.Type) {
+					throw new InvalidOperationException ($"Internal error: only arrays with homogenous element types are currently supported.  All entries were expected to be of type '{info.Type}', but the '{structure.Type}' type was encountered.");
+				}
+
+				PrepareStructure (structure);
+			}
+
+			var arrayInfo = new LlvmIrArrayVariableInfo (typeof(StructureInstance), entries, variable.Value, info);
+			variable.OverrideValue (typeof(LlvmIrArrayVariableInfo), arrayInfo);
+			AddStandardGlobalVariable (variable);
+		}
+
 		void AddStringArrayGlobalVariable (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
 			if (variable.Value == null) {
@@ -177,10 +220,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 			} else if (typeof(ICollection<string>).IsAssignableFrom (variable.Type)) {
 				entries = new List<string> ((ICollection<string>)variable.Value);
-			} else if (variable.Type == typeof(string[])) {
-				entries = new List<string> ((string[])variable.Value);
-			} else {
-				throw new InvalidOperationException ($"Internal error: unsupported array string type `{variable.Type}'");
+			}  else {
+				throw new InvalidOperationException ($"Internal error: unsupported string array type `{variable.Type}'");
 			}
 
 			var strings = new List<LlvmIrStringVariable> ();
@@ -213,7 +254,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return true;
 			}
 
-			if (variable.Type.IsArray && variable.Type.GetElementType () == typeof(string)) {
+			if (variable.Type == typeof(string[])) {
 				if (variable.Value != null && variable.Value.GetType () != typeof(string[])) {
 					throw new InvalidOperationException ($"Internal error: string array variable must have its value set to either `null` or be `{typeof(string[])}`");
 				}
@@ -235,6 +276,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			return true;
+		}
+
+		bool IsStructureArrayVariable (LlvmIrGlobalVariable variable)
+		{
+			var ctype = typeof(ICollection<StructureInstance>);
+			return ctype.IsAssignableFrom (variable.Type) || variable.Type == typeof(StructureInstance[]);
 		}
 
 		bool IsStructureVariable (LlvmIrGlobalVariable variable)

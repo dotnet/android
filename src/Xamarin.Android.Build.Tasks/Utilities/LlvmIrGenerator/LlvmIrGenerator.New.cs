@@ -217,7 +217,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			ulong alignment;
 			if (typeInfo.IsAggregate) {
 				uint count = GetAggregateValueElementCount (variable);
-				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.Size, count * typeInfo.Size);
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, count * typeInfo.Size);
 			} else if (typeInfo.IsStructure) {
 				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, typeInfo.Size);
 			} else if (typeInfo.IsPointer) {
@@ -311,15 +311,29 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			string irType;
 			ulong size;
 			bool isPointer;
+			ulong maxFieldAlignment;
 
 			if (IsArray (type)) {
-				irType = GetIRType (type, out size, out isPointer);
+				var arrayInfo = (LlvmIrArrayVariableInfo)value;
+				if (arrayInfo.ElementType == typeof(StructureInstance)) {
+					if (arrayInfo.StructureInfo == null) {
+						throw new InvalidOperationException ($"Internal error: structure type cannot be determined");
+					}
+
+					irType = $"%{arrayInfo.StructureInfo.NativeTypeDesignator}.{arrayInfo.StructureInfo.Name}";
+					size = arrayInfo.StructureInfo.Size;
+					maxFieldAlignment = arrayInfo.StructureInfo.MaxFieldAlignment;
+					isPointer = false;
+				} else {
+					irType = GetIRType (arrayInfo.ElementType, out size, out isPointer);
+					maxFieldAlignment = size;
+				}
 				typeInfo = new LlvmTypeInfo (
 					isPointer: isPointer,
 					isAggregate: true,
 					isStructure: false,
 					size: size,
-					maxFieldAlignment: size
+					maxFieldAlignment: maxFieldAlignment
 				);
 
 				context.Output.Write ('[');
@@ -381,6 +395,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (type == typeof(IntPtr)) {
+				var ptr = (IntPtr)value;
+				if (ptr == IntPtr.Zero) {
+					context.Output.Write ("null");
+				} else {
+					context.Output.Write (((long)ptr).ToString (CultureInfo.InvariantCulture));
+				}
+				return;
+			}
+
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
 		}
 
@@ -411,32 +435,41 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					context.Output.Write (", ");
 				}
 
-				WriteCommentLine (context, $" {MapManagedTypeToNative (smi.MemberType)} {smi.Info.Name}");
+				string? comment = info.GetCommentFromProvider (smi, instance);
+				if (String.IsNullOrEmpty (comment)) {
+					var sb = new StringBuilder (" ");
+					sb.Append (MapManagedTypeToNative (smi.MemberType));
+					sb.Append (' ');
+					sb.Append (smi.Info.Name);
+					if (value != null && smi.MemberType.IsPrimitive && smi.MemberType != typeof(bool)) {
+						sb.Append ($" (0x{value:x})");
+					}
+					comment = sb.ToString ();
+				}
+				WriteCommentLine (context, comment);
 			}
 
 			context.DecreaseIndent ();
+			context.Output.Write (context.CurrentIndent);
 			context.Output.Write ('}');
 		}
 
 		void WriteArray (WriteContext context, LlvmIrArrayVariableInfo arrayInfo)
 		{
-			context.Output.WriteLine (" [");
+			context.Output.WriteLine ('[');
 			context.IncreaseIndent ();
 
-			string irType;
-			if (arrayInfo.ElementType == typeof(LlvmIrStringVariable)) {
-				irType = MapToIRType (typeof(string));
-			} else {
-				irType = MapToIRType (arrayInfo.ElementType);
-			}
-
 			bool first = true;
+			ulong counter = 0;
 			foreach (object entry in arrayInfo.Entries) {
 				if (!first) {
 					context.Output.WriteLine (',');
 				} else {
 					first = false;
 				}
+				context.Output.Write (context.CurrentIndent);
+				WriteCommentLine (context, $" {counter++}");
+
 				context.Output.Write (context.CurrentIndent);
 				WriteType (context, arrayInfo.ElementType, entry, out _);
 				context.Output.Write (' ');
