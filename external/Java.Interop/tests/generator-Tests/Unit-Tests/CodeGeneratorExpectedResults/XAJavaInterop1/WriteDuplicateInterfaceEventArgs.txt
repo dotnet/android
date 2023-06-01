@@ -1,0 +1,208 @@
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='AnimatorListener']"
+[Register ("java/code/AnimatorListener", "", "java.code.AnimatorListenerInvoker")]
+public partial interface AnimatorListener : IJavaObject, IJavaPeerable {
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='AnimatorListener']/method[@name='OnAnimationEnd' and count(parameter)=1 and parameter[1][@type='int']]"
+	[Register ("OnAnimationEnd", "(I)Z", "GetOnAnimationEnd_IHandler:java.code.AnimatorListenerInvoker, ")]
+	bool OnAnimationEnd (int param1);
+
+	// Metadata.xml XPath method reference: path="/api/package[@name='java.code']/interface[@name='AnimatorListener']/method[@name='OnAnimationEnd' and count(parameter)=2 and parameter[1][@type='int'] and parameter[2][@type='int']]"
+	[Register ("OnAnimationEnd", "(II)Z", "GetOnAnimationEnd_IIHandler:java.code.AnimatorListenerInvoker, ")]
+	bool OnAnimationEnd (int param1, int param2);
+
+}
+
+[global::Android.Runtime.Register ("java/code/AnimatorListener", DoNotGenerateAcw=true)]
+internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, AnimatorListener {
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
+
+	static IntPtr java_class_ref {
+		get { return _members.JniPeerType.PeerReference.Handle; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override IntPtr ThresholdClass {
+		get { return class_ref; }
+	}
+
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	protected override global::System.Type ThresholdType {
+		get { return _members.ManagedPeerType; }
+	}
+
+	IntPtr class_ref;
+
+	public static AnimatorListener GetObject (IntPtr handle, JniHandleOwnership transfer)
+	{
+		return global::Java.Lang.Object.GetObject<AnimatorListener> (handle, transfer);
+	}
+
+	static IntPtr Validate (IntPtr handle)
+	{
+		if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
+			throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.code.AnimatorListener'.");
+		return handle;
+	}
+
+	protected override void Dispose (bool disposing)
+	{
+		if (this.class_ref != IntPtr.Zero)
+			JNIEnv.DeleteGlobalRef (this.class_ref);
+		this.class_ref = IntPtr.Zero;
+		base.Dispose (disposing);
+	}
+
+	public AnimatorListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
+	{
+		IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
+		this.class_ref = JNIEnv.NewGlobalRef (local_ref);
+		JNIEnv.DeleteLocalRef (local_ref);
+	}
+
+	static Delegate cb_OnAnimationEnd_I;
+#pragma warning disable 0169
+	static Delegate GetOnAnimationEnd_IHandler ()
+	{
+		if (cb_OnAnimationEnd_I == null)
+			cb_OnAnimationEnd_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_Z (n_OnAnimationEnd_I));
+		return cb_OnAnimationEnd_I;
+	}
+
+	static bool n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.OnAnimationEnd (param1);
+	}
+#pragma warning restore 0169
+
+	IntPtr id_OnAnimationEnd_I;
+	public unsafe bool OnAnimationEnd (int param1)
+	{
+		if (id_OnAnimationEnd_I == IntPtr.Zero)
+			id_OnAnimationEnd_I = JNIEnv.GetMethodID (class_ref, "OnAnimationEnd", "(I)Z");
+		JValue* __args = stackalloc JValue [1];
+		__args [0] = new JValue (param1);
+		return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_OnAnimationEnd_I, __args);
+	}
+
+	static Delegate cb_OnAnimationEnd_II;
+#pragma warning disable 0169
+	static Delegate GetOnAnimationEnd_IIHandler ()
+	{
+		if (cb_OnAnimationEnd_II == null)
+			cb_OnAnimationEnd_II = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPII_Z (n_OnAnimationEnd_II));
+		return cb_OnAnimationEnd_II;
+	}
+
+	static bool n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)
+	{
+		var __this = global::Java.Lang.Object.GetObject<java.code.AnimatorListener> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+		return __this.OnAnimationEnd (param1, param2);
+	}
+#pragma warning restore 0169
+
+	IntPtr id_OnAnimationEnd_II;
+	public unsafe bool OnAnimationEnd (int param1, int param2)
+	{
+		if (id_OnAnimationEnd_II == IntPtr.Zero)
+			id_OnAnimationEnd_II = JNIEnv.GetMethodID (class_ref, "OnAnimationEnd", "(II)Z");
+		JValue* __args = stackalloc JValue [2];
+		__args [0] = new JValue (param1);
+		__args [1] = new JValue (param2);
+		return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_OnAnimationEnd_II, __args);
+	}
+
+}
+
+// event args for java.code.AnimatorListener.OnAnimationEnd
+public partial class AnimationEndEventArgs : global::System.EventArgs {
+	bool handled;
+
+	public bool Handled {
+		get { return handled; }
+		set { handled = value; }
+	}
+
+	public AnimationEndEventArgs (bool handled, int param1)
+	{
+		this.handled = handled;
+		this.param1 = param1;
+	}
+
+	int param1;
+
+	public int Param1 {
+		get { return param1; }
+	}
+
+	public AnimationEndEventArgs (bool handled, int param1, int param2)
+	{
+		this.handled = handled;
+		this.param1 = param1;
+		this.param2 = param2;
+	}
+
+	int param2;
+
+	public int Param2 {
+		get { return param2; }
+	}
+
+}
+
+internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Object, AnimatorListener {
+
+	object sender;
+
+	public unsafe AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
+	{
+		const string __id = "()V";
+		if (((global::Java.Lang.Object) this).Handle != IntPtr.Zero)
+			return;
+		var h = JniPeerMembers.InstanceMethods.StartCreateInstance (__id, ((object) this).GetType (), null);
+		SetHandle (h.Handle, JniHandleOwnership.TransferLocalRef);
+		JniPeerMembers.InstanceMethods.FinishCreateInstance (__id, this, null);
+		this.sender = sender;
+	}
+
+	#pragma warning disable 0649
+	public EventHandler<AnimationEndEventArgs> OnAnimationEndHandler;
+	#pragma warning restore 0649
+
+	public bool OnAnimationEnd (int param1)
+	{
+		var __h = OnAnimationEndHandler;
+		if (__h == null)
+			return false;
+		var __e = new AnimationEndEventArgs (true, param1);
+		__h (sender, __e);
+		return __e.Handled;
+	}
+
+	#pragma warning disable 0649
+	public EventHandler<AnimationEndEventArgs> OnAnimationEndHandler;
+	#pragma warning restore 0649
+
+	public bool OnAnimationEnd (int param1, int param2)
+	{
+		var __h = OnAnimationEndHandler;
+		if (__h == null)
+			return false;
+		var __e = new AnimationEndEventArgs (true, param1, param2);
+		__h (sender, __e);
+		return __e.Handled;
+	}
+
+	internal static bool __IsEmpty (AnimatorListenerImplementor value)
+	{
+		return value.OnAnimationEndHandler == null && value.OnAnimationEndHandler == null;
+	}
+
+}

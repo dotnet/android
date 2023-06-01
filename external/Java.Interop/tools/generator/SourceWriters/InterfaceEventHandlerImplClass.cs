@@ -22,8 +22,11 @@ namespace generator.SourceWriters
 			IsSealed = true;
 			IsPartial = true;
 
-			if (iface.NeedsSender)
-				Fields.Add (new FieldWriter { Name = "sender", Type = TypeReferenceWriter.Object });
+			if (iface.NeedsSender) {
+				var type = TypeReferenceWriter.Object;
+				type.Nullable = opt.SupportNullableReferenceTypes;
+				Fields.Add (new FieldWriter { Name = "sender", Type = type });
+			}
 
 			AddConstructor (iface);
 			AddMethods (iface, opt);

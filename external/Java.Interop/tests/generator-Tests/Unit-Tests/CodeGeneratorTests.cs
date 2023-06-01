@@ -421,7 +421,7 @@ namespace generatortests
 			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
 			generator.Context.ContextTypes.Pop ();
 
-			AssertOriginalExpected (nameof (WriteDuplicateInterfaceEventArgs), writer.ToString ());
+			AssertTargetedExpected (nameof (WriteDuplicateInterfaceEventArgs), writer.ToString ());
 		}
 
 		[Test]

@@ -49,7 +49,7 @@ public partial class AnimationEndEventArgs : global::System.EventArgs {
 
 internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Object, AnimatorListener {
 
-	object sender;
+	object? sender;
 
 	public unsafe AnimatorListenerImplementor (object sender) : base (IntPtr.Zero, JniHandleOwnership.DoNotTransfer)
 	{
