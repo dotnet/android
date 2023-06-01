@@ -148,7 +148,8 @@ namespace MonoDroid.Tuner
 						instructions.Add (i, newIn);
 					} else {
 						LogMessage ($"DEBUG! Failed to find {key}!");
-						throw new InvalidOperationException (string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key.Replace ("::", "/")));
+						var msg = string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key.Replace ("::", "/"));
+						LogError (7000, msg);
 					}
 				}
 			}
