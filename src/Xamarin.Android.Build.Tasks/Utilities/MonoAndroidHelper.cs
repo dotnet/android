@@ -544,5 +544,22 @@ namespace Xamarin.Android.Tasks
 
 			return Convert.ToString (obj, CultureInfo.InvariantCulture);
 		}
+
+		/// <summary>
+		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).
+		/// </summary>
+		/// <param name="version">The version to parse</param>
+		/// <returns>The API level that corresponds to $(SupportedOSPlatformVersion), or 0 if parsing fails.</returns>
+		public static int ConvertSupportedOSPlatformVersionToApiLevel (string version)
+		{
+			int apiLevel = 0;
+			if (version.IndexOf ('.') == -1) {
+				version += ".0";
+			}
+			if (Version.TryParse (version, out var parsedVersion)) {
+				apiLevel = parsedVersion.Major;
+			}
+			return apiLevel;
+		}
 	}
 }

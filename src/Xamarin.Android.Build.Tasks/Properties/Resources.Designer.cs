@@ -945,11 +945,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; is less than API-{1}, this configuration is not supported..
+        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml..
         /// </summary>
         public static string XA4216_MinSdkVersion {
             get {
                 return ResourceManager.GetString("XA4216_MinSdkVersion", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase the $(SupportedOSPlatformVersion) property value in your project file..
+        /// </summary>
+        public static string XA4216_SupportedOSPlatformVersion {
+            get {
+                return ResourceManager.GetString("XA4216_SupportedOSPlatformVersion", resourceCulture);
             }
         }
 
@@ -1483,6 +1492,16 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string XA1034 {
             get {
                 return ResourceManager.GetString("XA1034", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; does not match the $(SupportedOSPlatformVersion) value &apos;{1}&apos; in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+        ///Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn&apos;t already exist)..
+        /// </summary>
+        public static string XA1036 {
+            get {
+                return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
     }

@@ -22,7 +22,7 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">26</AndroidJavaRuntimeApiLevel>
-    <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
+    <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">33</AndroidLatestStableApiLevel>

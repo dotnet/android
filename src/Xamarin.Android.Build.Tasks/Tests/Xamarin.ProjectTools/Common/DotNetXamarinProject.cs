@@ -26,9 +26,9 @@ namespace Xamarin.ProjectTools
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
 			if (Builder.UseDotNet) {
-				SetProperty ("TargetFramework", "net8.0-android");
-				SetProperty ("EnableDefaultItems", "false");
-				SetProperty ("AppendTargetFrameworkToOutputPath", "false");
+				TargetFramework = "net8.0-android";
+				EnableDefaultItems = false;
+				AppendTargetFrameworkToOutputPath = false;
 			} else {
 				AddReferences ("System"); // default
 				SetProperty ("Platform", "AnyCPU", "'$(Platform)' == ''");
@@ -77,7 +77,15 @@ namespace Xamarin.ProjectTools
 
 		public string Sdk { get; set; } = "Microsoft.NET.Sdk";
 
-		public bool EnableDefaultItems => false;
+		public bool EnableDefaultItems {
+			get { return string.Equals (GetProperty ("EnableDefaultItems"), "true", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty ("EnableDefaultItems", value.ToString ()); }
+		}
+
+		public bool AppendTargetFrameworkToOutputPath {
+			get { return string.Equals (GetProperty ("AppendTargetFrameworkToOutputPath"), "true", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty ("AppendTargetFrameworkToOutputPath", value.ToString ()); }
+		}
 
 		public void AddReferences (params string [] references)
 		{
