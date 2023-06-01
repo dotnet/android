@@ -1,4 +1,6 @@
 using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Reflection;
 
 namespace Xamarin.Android.Tasks.LLVM.IR
@@ -74,29 +76,118 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public static bool ImplementsInterface (this Type type, Type requiredIfaceType)
 		{
+			Console.WriteLine ($"{type}.ImplementsInterface ({requiredIfaceType})");
 			if (type == null || requiredIfaceType == null) {
+				Console.WriteLine ("  nope #1");
 				return false;
 			}
 
+			if (type == requiredIfaceType) {
+				return true;
+			}
+
 			bool generic = requiredIfaceType.IsGenericType;
+			Console.WriteLine ($"  required iface is generic? {generic}");
 			foreach (Type iface in type.GetInterfaces ()) {
+				Console.WriteLine ($" impl: {iface}");
+				if (iface == requiredIfaceType) {
+					Console.WriteLine ("  yep #1");
+					return true;
+				}
+
 				if (generic) {
 					if (!iface.IsGenericType) {
+						Console.WriteLine ("  not generic");
 						continue;
 					}
 
 					if (iface.GetGenericTypeDefinition () == requiredIfaceType.GetGenericTypeDefinition ()) {
+						Console.WriteLine ("  yep #2");
 						return true;
 					}
-					continue;
-				}
-
-				if (iface == requiredIfaceType) {
-					return true;
 				}
 			}
 
+			Console.WriteLine ("  nope #2");
 			return false;
+		}
+
+		public static bool IsStructureInstance (this Type type, out Type? structureType)
+		{
+			structureType = null;
+			if (!type.IsGenericType) {
+				return false;
+			}
+
+			if (type.GetGenericTypeDefinition () != typeof(StructureInstance<>)) {
+				return false;
+			}
+
+			structureType = type.GetGenericArguments ()[0];
+			return true;
+		}
+
+		/// <summary>
+		/// Return element type of a single-dimensional (with one exception, see below) array.  Parameter <paramref name="type"/> **MUST**
+		/// correspond to one of the following array types: T[], ICollection&lt;T&gt; or IDictionary&lt;string, string&gt;.  The latter is
+		/// used to comfortably represent name:value arrays, which are output as single dimensional arrays in the native code.
+		/// </summary>
+		/// <exception cref="System.InvalidOperationException">
+		/// Thrown when <paramref name="type"/> is not one of the array types listed above.
+		/// </exception>
+		public static Type GetArrayElementType (this Type type)
+		{
+			if (type.IsArray) {
+				return type.GetElementType ();
+			}
+
+			if (!type.IsGenericType) {
+				throw WrongTypeException ();
+			}
+
+			Type genericType = type.GetGenericTypeDefinition ();
+			if (genericType.ImplementsInterface (typeof(ICollection<>))) {
+				Type[] genericArgs = type.GetGenericArguments ();
+				return genericArgs[0];
+			}
+
+			if (!genericType.ImplementsInterface (typeof(IDictionary<string, string>))) {
+				throw WrongTypeException ();
+			}
+
+			return typeof(string);
+
+			// Dictionary
+			Exception WrongTypeException () => new InvalidOperationException ($"Internal error: type '{type}' is not an array, ICollection<T> or IDictionary<string, string>");
+		}
+
+		/// <summary>
+		/// Determine whether type represents an array, in our understanding.  That means the type has to be
+		/// a standard single-dimensional language array (i.e. <c>T[]</c>), implement ICollection&lt;T&gt; together with ICollection or,
+		/// as a special case for name:value pair collections, implement IDictionary&lt;string, string&gt;
+		/// </summary>
+		public static bool IsArray (this Type t)
+		{
+			if (t.IsPrimitive) {
+				return false;
+			}
+
+			if (t == typeof(string)) {
+				return false;
+			}
+
+			if (t.IsArray) {
+				if (t.GetArrayRank () > 1) {
+					throw new NotSupportedException ("Internal error: multi-dimensional arrays aren't supported");
+				}
+
+				return true;
+			}
+
+			// TODO: cache results here
+			// IDictionary<string, string> is a special case for name:value string arrays which we use for some constructs.
+			return (t.ImplementsInterface (typeof(ICollection<>)) && t.ImplementsInterface (typeof(ICollection))) ||
+				t.ImplementsInterface (typeof(IDictionary<string, string>));
 		}
 	}
 }

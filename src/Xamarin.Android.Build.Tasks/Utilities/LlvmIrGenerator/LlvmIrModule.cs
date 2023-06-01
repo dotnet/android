@@ -149,25 +149,22 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		void AddStringGlobalVariable (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
+			RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
+			AddStandardGlobalVariable (variable);
+		}
+
+		void RegisterString (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
+			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix);
+		}
+
+		void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		{
 			if (stringManager == null) {
 				stringManager = new LlvmIrStringManager ();
 			}
 
-			LlvmIrStringVariable sv = RegisterString (variable, stringGroupName, stringGroupComment, symbolSuffix);
-			variable.Value = sv;
-
-			AddStandardGlobalVariable (variable);
-		}
-
-		LlvmIrStringVariable RegisterString (LlvmIrGlobalVariable variable, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
-		{
-			return RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix);
-		}
-
-		LlvmIrStringVariable RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
-		{
-			LlvmIrStringVariable sv = stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix);
-			return sv;
+			stringManager.Add (value, stringGroupName, stringGroupComment, symbolSuffix);
 		}
 
 		void AddStructureArrayGlobalVariable (LlvmIrGlobalVariable variable)
@@ -177,16 +174,9 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			List<StructureInstance>? entries = null;
-			if (typeof(ICollection<StructureInstance>).IsAssignableFrom (variable.Type)) {
-				entries = new List<StructureInstance> ((ICollection<StructureInstance>)variable.Value);
-			} else {
-				throw new InvalidOperationException ($"Internal error: unsupported structure array type `{variable.Type}'");
-			}
-
 			// For simplicity we support only arrays with homogenous entry types
 			StructureInfo? info = null;
-			foreach (StructureInstance structure in entries) {
+			foreach (StructureInstance structure in (IEnumerable<StructureInstance>)variable.Value) {
 				if (info == null) {
 					info = structure.Info;
 				}
@@ -198,8 +188,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				PrepareStructure (structure);
 			}
 
-			var arrayInfo = new LlvmIrArrayVariableInfo (typeof(StructureInstance), entries, variable.Value, info);
-			variable.OverrideValue (typeof(LlvmIrArrayVariableInfo), arrayInfo);
 			AddStandardGlobalVariable (variable);
 		}
 
@@ -215,24 +203,23 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				entries = new List<string> ();
 				var dict = (IDictionary<string, string>)variable.Value;
 				foreach (var kvp in dict) {
-					entries.Add (kvp.Key);
-					entries.Add (kvp.Value);
+					Register (kvp.Key);
+					Register (kvp.Value);
 				}
 			} else if (typeof(ICollection<string>).IsAssignableFrom (variable.Type)) {
-				entries = new List<string> ((ICollection<string>)variable.Value);
+				foreach (string s in (ICollection<string>)variable.Value) {
+					Register (s);
+				}
 			}  else {
 				throw new InvalidOperationException ($"Internal error: unsupported string array type `{variable.Type}'");
 			}
 
-			var strings = new List<LlvmIrStringVariable> ();
-			foreach (string entry in entries) {
-				var sv = RegisterString (entry, stringGroupName, stringGroupComment, symbolSuffix);
-				strings.Add (sv);
-			}
-
-			var arrayInfo = new LlvmIrArrayVariableInfo (typeof(LlvmIrStringVariable), strings, variable.Value);
-			variable.OverrideValue (typeof(LlvmIrArrayVariableInfo), arrayInfo);
 			AddStandardGlobalVariable (variable);
+
+			void Register (string value)
+			{
+				RegisterString (value, stringGroupName, stringGroupComment, symbolSuffix);
+			}
 		}
 
 		bool IsStringArrayVariable (LlvmIrGlobalVariable variable)
@@ -280,17 +267,25 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		bool IsStructureArrayVariable (LlvmIrGlobalVariable variable)
 		{
-			var ctype = typeof(ICollection<StructureInstance>);
-			return ctype.IsAssignableFrom (variable.Type) || variable.Type == typeof(StructureInstance[]);
+			if (typeof(StructureInstance[]).IsAssignableFrom (variable.Type)) {
+				return true;
+			}
+
+			if (!variable.Type.IsArray ()) {
+				return false;
+			}
+
+			Type elementType = variable.Type.GetArrayElementType ();
+			return typeof(StructureInstance).IsAssignableFrom (elementType);
 		}
 
 		bool IsStructureVariable (LlvmIrGlobalVariable variable)
 		{
-			if (variable.Type != typeof(StructureInstance)) {
+			if (!typeof(StructureInstance).IsAssignableFrom (variable.Type)) {
 				return false;
 			}
 
-			if (variable.Value != null && variable.Value.GetType () != typeof(StructureInstance)) {
+			if (variable.Value != null && !typeof(StructureInstance).IsAssignableFrom (variable.Value.GetType ())) {
 				throw new InvalidOperationException ("Internal error: variable referring to a structure instance must have its value set to either `null` or an instance of the StructureInstance class");
 			}
 
@@ -405,7 +400,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return si;
 			}
 
-			throw new InvalidOperationException ($"Unmapped structure {type}");
+			throw new InvalidOperationException ($"Internal error: unmapped structure {type}");
 		}
 	}
 }

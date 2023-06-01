@@ -11,10 +11,10 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	public abstract bool Global { get; }
 	public abstract string NamePrefix { get; }
 
-	public string? Name { get; protected set; }
-	public Type Type { get; protected set; }
-	public object? Value { get; set; }
-	public string? Comment { get; set; }
+	public string? Name            { get; protected set; }
+	public Type Type               { get; protected set; }
+	public virtual object? Value   { get; set; }
+	public virtual string? Comment { get; set; }
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function
@@ -27,7 +27,7 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	/// (using the <c>@</c> prefix character) variable, ready for use in the generated code wherever variables are
 	/// referenced.
 	/// </summary>
-	public string Reference {
+	public virtual string Reference {
 		get {
 			if (String.IsNullOrEmpty (Name)) {
 				throw new InvalidOperationException ("Variable doesn't have a name, it cannot be referenced");
@@ -42,7 +42,7 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	/// the target (e.g. its bitness).  This callback, if set, will be invoked before the variable is written to the output
 	/// stream, allowing updating of any such data as described above.
 	/// </summary>
-	public Action<LlvmIrVariable, LlvmIrModuleTarget>? BeforeWriteCallback { get; set; }
+	public virtual Action<LlvmIrVariable, LlvmIrModuleTarget>? BeforeWriteCallback { get; set; }
 
 	/// <summary>
 	/// Constructs an abstract variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
@@ -119,7 +119,7 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// Specify variable options. If omitted, it defaults to <see cref="DefaultOptions"/>.
 	/// <seealso href="https://llvm.org/docs/LangRef.html#global-variables"/>
 	/// </summary>
-	public LlvmIrVariableOptions? Options { get; set; }
+	public virtual LlvmIrVariableOptions? Options { get; set; }
 
 	/// <summary>
 	/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
@@ -136,19 +136,15 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 		Options = options;
 	}
 
-	// TODO: fix this, it's cumbersome and clunky
 	/// <summary>
-	/// Supports instances where a variable value must be processed by <see cref="LlvmIrModule"/> (for instance for arrays).
-	/// Should **not** be used by code other than LlvmIrModule.
-	/// <summary>
-	public void OverrideValue (Type newType, object? newValue)
+	/// Constructs a local variable and sets the <see cref="Value"/> property to <paramref name="value"/> and <see cref="Type"/>
+	/// property to its type.  For that reason, <paramref name="Value"/> **must not** be <c>null</c>.  <paramref name="name"/> is
+	/// required because global variables must be named.
+	/// </summary>
+	public LlvmIrGlobalVariable (object value, string name, LlvmIrVariableOptions? options = null)
+		: this ((value ?? throw new ArgumentNullException (nameof (value))).GetType (), name, options)
 	{
-		if (newValue != null && !newType.IsAssignableFrom (newValue.GetType ())) {
-			throw new ArgumentException ($"Must be exactly, or derived from, the '{newType}' type.", nameof (newValue));
-		}
-
-		Type = newType;
-		Value = newValue;
+		Value = value;
 	}
 }
 

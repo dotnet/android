@@ -67,7 +67,7 @@ namespace Xamarin.Android.Tasks.New
 		SortedDictionary <string, string>? systemProperties;
 		TaskLoggingHelper log;
 		StructureInstance? application_config;
-		List<StructureInstance>? dsoCache;
+		List<StructureInstance<DSOCacheEntry>>? dsoCache;
 
 		StructureInfo? applicationConfigStructureInfo;
 		StructureInfo? dsoCacheEntryStructureInfo;
@@ -117,14 +117,12 @@ namespace Xamarin.Android.Tasks.New
 			module.AddGlobalVariable (FORMAT_TAG.GetType (), "format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
 			module.AddGlobalVariable (typeof(string), "mono_aot_mode_name", MonoAOTMode);
 
-			var envVars = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_environment_variables") {
-				Value = environmentVariables,
+			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
 				Comment = " Application environment variables array, name:value",
 			};
 			module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
 
-			var sysProps = new LlvmIrGlobalVariable (LlvmIrModule.NameValueArrayType, "app_system_properties") {
-				Value = systemProperties,
+			var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
 				Comment = " System properties defined by the application",
 			};
 			module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
@@ -157,7 +155,7 @@ namespace Xamarin.Android.Tasks.New
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
-			application_config = new StructureInstance (applicationConfigStructureInfo, app_cfg);
+			application_config = new StructureInstance<ApplicationConfig> (applicationConfigStructureInfo, app_cfg);
 			module.AddGlobalVariable (application_config.GetType (), "application_config", application_config);
 
 			var dso_cache = new LlvmIrGlobalVariable (dsoCache.GetType (), "dso_cache") {
@@ -170,8 +168,7 @@ namespace Xamarin.Android.Tasks.New
 
 		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target)
 		{
-			var arrayInfo = variable.Value as LlvmIrArrayVariableInfo;
-			var cache = arrayInfo.OriginalVariableValue as List<StructureInstance>;
+			var cache = variable.Value as List<StructureInstance>;
 			if (cache == null) {
 				return;
 			}
@@ -195,7 +192,7 @@ namespace Xamarin.Android.Tasks.New
 			cache.Sort ((StructureInstance a, StructureInstance b) => ((DSOCacheEntry)a.Obj).hash.CompareTo (((DSOCacheEntry)b.Obj).hash));
 		}
 
-		List<StructureInstance> InitDSOCache ()
+		List<StructureInstance<DSOCacheEntry>> InitDSOCache ()
 		{
 			var dsos = new List<(string name, string nameLabel, bool ignore)> ();
 			var nameCache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
@@ -214,7 +211,7 @@ namespace Xamarin.Android.Tasks.New
 				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
 			}
 
-			var dsoCache = new List<StructureInstance> ();
+			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
 			var nameMutations = new List<string> ();
 
 			for (int i = 0; i < dsos.Count; i++) {
@@ -230,7 +227,7 @@ namespace Xamarin.Android.Tasks.New
 						name = name,
 					};
 
-					dsoCache.Add (new StructureInstance (dsoCacheEntryStructureInfo, entry));
+					dsoCache.Add (new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry));
 				}
 			}
 
