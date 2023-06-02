@@ -149,7 +149,7 @@ namespace MonoDroid.Tuner
 					} else {
 						LogMessage ($"DEBUG! Failed to find {key}!");
 						var msg = string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key.Replace ("::", "/"));
-						LogError (7000, msg);
+						LogError (8000, msg);
 					}
 				}
 			}

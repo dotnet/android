@@ -222,6 +222,10 @@ Exceptions that have not been gracefully handled yet.  Ideally these will be fix
 These take the form of `XACCC7NNN`, where `CCC` is a 3 character code denoting the MSBuild Task that is throwing the exception,
 and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 
+## XA8xxx: Linker Step Errors
+
++ [XA8000/IL8000](xa8000.md): Could not find an 'AndroidResource' for '{0}'. To Fix this issue add the required 'AndroidResource' item to your project.
+
 **Tasks:**
 * `A2C` - `Aapt2Compile`
 * `A2L` - `Aapt2Link`
