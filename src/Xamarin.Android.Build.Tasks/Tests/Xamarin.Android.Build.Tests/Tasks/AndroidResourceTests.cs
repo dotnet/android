@@ -14,7 +14,7 @@ namespace Xamarin.Android.Build.Tests {
 	[Parallelizable (ParallelScope.Self)]
 	public class AndroidResourceTests : BaseTest {
 		[Test]
-		public void RTtParserTest ()
+		public void RTxtParserTest ()
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var rtxt = Path.Combine (path, "R.txt");
@@ -25,7 +25,7 @@ namespace Xamarin.Android.Build.Tests {
 			var parser = new RtxtParser ();
 			var resources = parser.Parse (rtxt, log, new Dictionary<string, string> ());
 			var lines = File.ReadAllLines (rtxt);
-			Assert.AreEqual (lines.Count (), resources.Count ());
+			Assert.AreEqual (lines.Count () - 1, resources.Count ());
 		}
 
 		[Test]

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
@@ -63,6 +64,7 @@ namespace Xamarin.Android.Tasks
 		static readonly char[] EmptyChar = new char [] { ' ' };
 		static readonly char[] CurlyBracketsChar = new char [] { '{', '}' };
 		static readonly char[] CommaChar = new char [] { ',' };
+		static readonly Regex ValidChars = new Regex (@"([^a-f0-9x, \{\}])+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 
 		TaskLoggingHelper log;
 		Dictionary<string, string> map;
@@ -110,6 +112,10 @@ namespace Xamarin.Android.Tasks
 				var items = line.Split (EmptyChar, 4);
 				if (items.Length < 4) {
 					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it does not have the correct number of elements.");
+					continue;
+				}
+				if (ValidChars.IsMatch (items [3])) {
+					log.LogDebugMessage ($"'{file}:{lineNumber}' ignoring contents '{line}', it contains invalid characters.");
 					continue;
 				}
 				int value = items [1] != "styleable" ? Convert.ToInt32 (items [3].Trim (), 16) : -1;
