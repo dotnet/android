@@ -148,6 +148,9 @@ namespace MonoDroid.Tuner
 						instructions.Add (i, newIn);
 					} else {
 						LogMessage ($"DEBUG! Failed to find {key}!");
+						// The 'key' in this case will be something like Layout::Toolbar.
+						// We want format this into Layout/Toolbar so its easier to understand
+						// for the user.
 						var msg = string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key.Replace ("::", "/"));
 						LogError (8000, msg);
 					}
