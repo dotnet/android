@@ -121,6 +121,9 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// </summary>
 	public virtual LlvmIrVariableOptions? Options { get; set; }
 
+	public bool ZeroInitializeArray { get; set; }
+	public ulong ArrayItemCount { get; set; }
+
 	/// <summary>
 	/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
 	/// https://llvm.org/docs/LangRef.html#t-firstclass) only if it's an integral or floating point type.  In all other cases it

@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public static readonly LlvmIrVariableOptions GlobalWritable = new LlvmIrVariableOptions {
 			Writability = LlvmIrWritability.Writable,
+			AddressSignificance = LlvmIrAddressSignificance.LocalUnnamed,
 		};
 
 		/// <summary>

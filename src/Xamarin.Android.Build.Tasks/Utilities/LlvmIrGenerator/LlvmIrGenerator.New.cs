@@ -216,7 +216,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			ulong alignment;
 			if (typeInfo.IsAggregate) {
-				uint count = GetAggregateValueElementCount (variable);
+				ulong count = GetAggregateValueElementCount (variable);
 				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, count * typeInfo.Size);
 			} else if (typeInfo.IsStructure) {
 				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, typeInfo.Size);
@@ -234,19 +234,25 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteType (context, variable, out typeInfo);
 			context.Output.Write (' ');
 
-			if (variable.Value == null) {
-				if (typeInfo.IsPointer) {
-					context.Output.Write ("null");
-				}
-
-				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
-			}
-
 			Type valueType;
 			if (variable.Value is LlvmIrVariable referencedVariable) {
 				valueType = referencedVariable.Type;
 			} else {
-				valueType = variable.Value.GetType ();
+				valueType = variable.Value?.GetType () ?? variable.Type;
+			}
+
+			if (variable.Value == null) {
+				if (typeInfo.IsPointer) {
+					context.Output.Write ("null");
+					return;
+				}
+
+				if (typeInfo.IsAggregate) {
+					WriteValue (context, valueType, variable);
+					return;
+				}
+
+				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
 			}
 
 			if (valueType != variable.Type && !LlvmIrModule.NameValueArrayType.IsAssignableFrom (variable.Type)) {
@@ -256,15 +262,18 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteValue (context, valueType, variable);
 		}
 
-		uint GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value);
+		ulong GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value, variable as LlvmIrGlobalVariable);
 
-		uint GetAggregateValueElementCount (Type type, object? value)
+		ulong GetAggregateValueElementCount (Type type, object? value, LlvmIrGlobalVariable? globalVariable = null)
 		{
 			if (!type.IsArray ()) {
 				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
 			}
 
 			if (value == null) {
+				if (globalVariable != null) {
+					return globalVariable.ArrayItemCount;
+				}
 				return 0;
 			}
 
@@ -282,10 +291,28 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		void WriteType (WriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
 		{
-			WriteType (context, variable.Type, variable.Value, out typeInfo);
+			WriteType (context, variable.Type, variable.Value, out typeInfo, variable as LlvmIrGlobalVariable);
 		}
 
-		void WriteType (WriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo)
+		void WriteType (WriteContext context, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
+		{
+			if (memberInfo.IsNativePointer) {
+				typeInfo = new LlvmTypeInfo (
+					isPointer: true,
+					isAggregate: false,
+					isStructure: false,
+					size: target.NativePointerSize,
+					maxFieldAlignment: target.NativePointerSize
+				);
+
+				context.Output.Write (IRPointerType);
+				return;
+			}
+
+			WriteType (context, memberInfo.MemberType, value: null, out typeInfo);
+		}
+
+		void WriteType (WriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
 		{
 			if (IsStructureInstance (type)) {
 				if (value == null) {
@@ -293,13 +320,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 
 				var si = (StructureInstance)value;
-				ulong alignment;
-
-				if (si.Info.HasPointers && target.NativePointerSize > si.Info.MaxFieldAlignment) {
-					alignment = target.NativePointerSize;
-				} else {
-					alignment = (ulong)si.Info.MaxFieldAlignment;
-				}
+				ulong alignment = GetStructureMaxFieldAlignment (si.Info);
 
 				typeInfo = new LlvmTypeInfo (
 					isPointer: false,
@@ -328,7 +349,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 					irType = $"%{si.NativeTypeDesignator}.{si.Name}";
 					size = si.Size;
-					maxFieldAlignment = si.MaxFieldAlignment;
+					maxFieldAlignment = GetStructureMaxFieldAlignment (si);
 					isPointer = false;
 				} else {
 					irType = GetIRType (elementType, out size, out isPointer);
@@ -343,7 +364,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				);
 
 				context.Output.Write ('[');
-				context.Output.Write (GetAggregateValueElementCount (type, value).ToString (CultureInfo.InvariantCulture));
+				context.Output.Write (GetAggregateValueElementCount (type, value, globalVariable).ToString (CultureInfo.InvariantCulture));
 				context.Output.Write (" x ");
 				context.Output.Write (irType);
 				context.Output.Write (']');
@@ -359,6 +380,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				maxFieldAlignment: size
 			);
 			context.Output.Write (irType);
+
+			ulong GetStructureMaxFieldAlignment (StructureInfo si)
+			{
+				if (si.HasPointers && target.NativePointerSize > si.MaxFieldAlignment) {
+					return target.NativePointerSize;
+				}
+
+				return si.MaxFieldAlignment;
+			}
 		}
 
 		bool IsStructureInstance (Type t) => typeof(StructureInstance).IsAssignableFrom (t);
@@ -366,8 +396,14 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		void WriteValue (WriteContext context, Type valueType, LlvmIrVariable variable)
 		{
 			if (variable.Type.IsArray ()) {
-				uint count = GetAggregateValueElementCount (variable);
-				if (count == 0) {
+				bool zeroInitialize = false;
+				if (variable is LlvmIrGlobalVariable gv) {
+					zeroInitialize = gv.ZeroInitializeArray || variable.Value == null;
+				} else {
+					zeroInitialize = GetAggregateValueElementCount (variable) == 0;
+				}
+
+				if (zeroInitialize) {
 					context.Output.Write ("zeroinitializer");
 					return;
 				}
@@ -377,6 +413,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			WriteValue (context, valueType, variable.Value);
+		}
+
+		void WriteValue (WriteContext context, StructureMemberInfo smi, object? value)
+		{
+			if (smi.IsNativePointer && value == null) {
+				context.Output.Write ("null");
+				return;
+			}
+
+			WriteValue (context, smi.MemberType, value);
 		}
 
 		void WriteValue (WriteContext context, Type type, object? value)
@@ -402,12 +448,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			if (type == typeof(IntPtr)) {
-				var ptr = (IntPtr)value;
-				if (ptr == IntPtr.Zero) {
-					context.Output.Write ("null");
-				} else {
-					context.Output.Write (((long)ptr).ToString (CultureInfo.InvariantCulture));
-				}
+				// Pointers can only be `null` or a reference to variable
+				context.Output.Write ("null");
 				return;
 			}
 
@@ -442,11 +484,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				StructureMemberInfo smi = info.Members[i];
 
 				context.Output.Write (context.CurrentIndent);
-				WriteType (context, smi.MemberType, value: null, out _);
+				WriteType (context, smi, out _);
 				context.Output.Write (' ');
 
 				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
-				WriteValue (context, smi.MemberType, value);
+				WriteValue (context, smi, value);
 
 				if (i < lastMember) {
 					context.Output.Write (", ");
@@ -455,7 +497,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				string? comment = info.GetCommentFromProvider (smi, instance);
 				if (String.IsNullOrEmpty (comment)) {
 					var sb = new StringBuilder (" ");
-					sb.Append (MapManagedTypeToNative (smi.MemberType));
+					sb.Append (MapManagedTypeToNative (smi));
 					sb.Append (' ');
 					sb.Append (smi.Info.Name);
 					if (value != null && smi.MemberType.IsPrimitive && smi.MemberType != typeof(bool)) {
@@ -887,6 +929,21 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			if (baseType == typeof (IntPtr)) return "void*";
 
 			return type.GetShortName ();
+		}
+
+		static string MapManagedTypeToNative (StructureMemberInfo smi)
+		{
+			string nativeType = MapManagedTypeToNative (smi.MemberType);
+			// Silly, but effective
+			if (nativeType[nativeType.Length - 1] == '*') {
+				return nativeType;
+			}
+
+			if (!smi.IsNativePointer) {
+				return nativeType;
+			}
+
+			return $"{nativeType}*";
 		}
 
 		static bool IsNumeric (Type type) => basicTypeMap.TryGetValue (type, out BasicType typeDesc) && typeDesc.IsNumeric;

@@ -131,7 +131,7 @@ namespace Xamarin.Android.Tasks
 			public uint name_length;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-			public char name;
+			public string name;
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
@@ -229,7 +229,7 @@ namespace Xamarin.Android.Tasks
 					data_size = 0,
 					data = 0,
 					name_length = (uint)BundledAssemblyNameWidth,
-					name = '\0',
+					name = null,
 				};
 
 				for (int i = 0; i < NumberOfAssembliesInApk; i++) {

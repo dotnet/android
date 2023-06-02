@@ -59,6 +59,19 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 
 		/// <summary>
+		/// A shortcut way to add a global variable without first having to create an instance of <see cref="LlvmIrGlobalVariable"/> first. This overload
+		/// requires the <paramref name="value"/> parameter to not be <c>null</c>.
+		/// </summary>
+		public LlvmIrGlobalVariable AddGlobalVariable (string name, object value, LlvmIrVariableOptions? options = null, string? comment = null)
+		{
+			if (value == null) {
+				throw new ArgumentNullException (nameof (value));
+			}
+
+			return AddGlobalVariable (value.GetType (), name, value, options, comment);
+		}
+
+		/// <summary>
 		/// A shortcut way to add a global variable without first having to create an instance of <see cref="LlvmIrGlobalVariable"/> first.
 		/// </summary>
 		public LlvmIrGlobalVariable AddGlobalVariable (Type type, string name, object? value, LlvmIrVariableOptions? options = null, string? comment = null)

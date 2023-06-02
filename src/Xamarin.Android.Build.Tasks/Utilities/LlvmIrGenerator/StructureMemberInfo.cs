@@ -110,5 +110,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return (int)provider.GetMaxInlineWidth (null, fieldName);
 		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ Info.GetHashCode () ^ MemberType.GetHashCode ();
+		}
+
 	}
 }

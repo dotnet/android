@@ -459,25 +459,25 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
-
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
-				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					string newEnvironmentLlFilePath = Path.Combine (Path.GetDirectoryName (environmentLlFilePath), $"new-{Path.GetFileName (environmentLlFilePath)}");
+					//string newEnvironmentLlFilePath = Path.Combine (Path.GetDirectoryName (environmentLlFilePath), $"new-{Path.GetFileName (environmentLlFilePath)}");
 					try {
-						appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, newEnvironmentLlFilePath);
+						appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, environmentLlFilePath);
 					} catch {
 						throw;
 					} finally {
 						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, newEnvironmentLlFilePath);
+						Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
 					}
 				}
+
+				// using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				// 	appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
+				// 	sw.Flush ();
+				// 	Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+				// }
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
