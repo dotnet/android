@@ -1,47 +1,51 @@
 <api
   api-source="class-parse">
   <package
-    name="java.util"
-    jni-name="java/util">
+    name="android.animation"
+    jni-name="android/animation">
     <interface
       abstract="true"
       deprecated="not deprecated"
       final="false"
-      name="Collection"
-      jni-signature="Ljava/util/Collection;"
-      source-file-name="Collection.java"
+      name="TypeEvaluator"
+      jni-signature="Landroid/animation/TypeEvaluator;"
+      source-file-name="TypeEvaluator.java"
       static="false"
       visibility="public">
       <typeParameters>
         <typeParameter
-          name="E"
+          name="T"
           jni-classBound="Ljava/lang/Object;"
           classBound="java.lang.Object"
           interfaceBounds=""
           jni-interfaceBounds="" />
       </typeParameters>
-      <implements
-        name="java.lang.Iterable"
-        name-generic-aware="java.lang.Iterable&lt;E&gt;"
-        jni-type="Ljava/lang/Iterable&lt;TE;&gt;;" />
       <method
         abstract="true"
         deprecated="not deprecated"
         final="false"
-        name="add"
+        name="evaluate"
         native="false"
-        return="boolean"
-        jni-return="Z"
+        return="T"
+        jni-return="TT;"
         static="false"
         synchronized="false"
         visibility="public"
         bridge="false"
         synthetic="false"
-        jni-signature="(Ljava/lang/Object;)Z">
+        jni-signature="(FLjava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;">
         <parameter
-          name="e"
-          type="E"
-          jni-type="TE;" />
+          name="fraction"
+          type="float"
+          jni-type="F" />
+        <parameter
+          name="startValue"
+          type="T"
+          jni-type="TT;" />
+        <parameter
+          name="endValue"
+          type="T"
+          jni-type="TT;" />
       </method>
     </interface>
   </package>

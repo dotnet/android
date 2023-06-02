@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 				return;
 			}
 			try {
-				AssertXmlDeclaration ("Collection.class", "ParameterFixupFromDocs.xml", Path.Combine (Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH"), "docs", "reference"));
+				AssertXmlDeclaration ("TypeEvaluator.class", "ParameterFixupFromDocs.xml", Path.Combine (Environment.GetEnvironmentVariable ("ANDROID_SDK_PATH"), "docs", "reference"));
 			} catch (Exception ex) {
 				Assert.Fail ("An unexpected exception was thrown : {0}", ex);
 			}
@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			try {
 				tempFile = LoadToTempFile ("ParameterFixupApiXmlDocs.xml");
 
-				AssertXmlDeclaration ("Collection.class", "ParameterFixupFromDocs.xml", tempFile);
+				AssertXmlDeclaration ("TypeEvaluator.class", "ParameterFixupFromDocs.xml", tempFile);
 			} finally {
 				if (File.Exists (tempFile))
 					File.Delete (tempFile);
@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			try {
 				tempFile = LoadToTempFile ("ParameterDescription.txt");
 
-				AssertXmlDeclaration (new string [] { "Collection.class" }, "ParameterFixupFromDocs.xml", tempFile);
+				AssertXmlDeclaration (new string [] { "TypeEvaluator.class" }, "ParameterFixupFromDocs.xml", tempFile);
 			}
 			finally {
 				if (File.Exists (tempFile))

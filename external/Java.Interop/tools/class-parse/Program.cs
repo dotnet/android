@@ -83,10 +83,11 @@ namespace Xamarin.Android.Tools {
 					}
 					using (var s = File.OpenRead (file)) {
 						if (!ClassFile.IsClassFile (s)) {
-							Console.Error.WriteLine ("class-parse: Unable to read file '{0}': Unknown file format.");
+							Console.Error.WriteLine ($"class-parse: Unable to read file '{file}': Unknown file format.");
 							Environment.ExitCode    = 1;
 							continue;
 						}
+						s.Position  = 0;
 						globalClassPath.Add (new ClassFile (s));
 					}
 				} catch (Exception e) {

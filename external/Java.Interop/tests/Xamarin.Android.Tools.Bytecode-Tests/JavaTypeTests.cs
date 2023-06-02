@@ -18,9 +18,9 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		{
 			var c   = LoadClassFile ("JavaType.class");
 			new ExpectedTypeDeclaration {
-				MajorVersion        = 0x34,
+				MajorVersion        = 0x37,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 198,
+				ConstantPoolCount   = 202,
 				AccessFlags         = ClassAccessFlags.Public | ClassAccessFlags.Super,
 				FullName            = "com/xamarin/JavaType",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),
@@ -64,6 +64,12 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						OuterClassName  = null,
 						InnerName       = null,
 						AccessFlags     = 0,
+					},
+					new ExpectedInnerClassInfo {
+						InnerClassName  = "com/xamarin/JavaType$RNC$RPNC",
+						OuterClassName  = "com/xamarin/JavaType$RNC",
+						InnerName       = "RPNC",
+						AccessFlags     = ClassAccessFlags.Public | ClassAccessFlags.Abstract,
 					},
 				},
 				Fields = {
@@ -143,7 +149,7 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 						Name                = "STATIC_FINAL_STRING",
 						Descriptor          = "Ljava/lang/String;",
 						AccessFlags         = FieldAccessFlags.Public | FieldAccessFlags.Static | FieldAccessFlags.Final,
-						ConstantValue       = "String(stringIndex=188 Utf8=\"Hello, \\\"embedded\0Nulls\" and \ud83d\udca9!\")",
+						ConstantValue       = "String(stringIndex=190 Utf8=\"Hello, \\\"embedded\0Nulls\" and \ud83d\udca9!\")",
 					},
 					new ExpectedFieldDeclaration {
 						Name                = "STATIC_FINAL_BOOL_FALSE",

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<api api-source="java-source-utils">
+  <package jni-name="" name="">
+    <class jni-signature="LA;" name="A">
+      <javadoc>
+        <![CDATA[jni-sig=LA;]]>
+      </javadoc>
+      <constructor jni-signature="(ILjava/lang/String;)V">
+        <parameter jni-type="I" name="one" type="int"/>
+        <parameter jni-type="Ljava/lang/String;" name="two" type="java.lang.String"/>
+        <javadoc>
+          <![CDATA[jni-sig=<init>.(ILjava/lang/String;)V]]>
+        </javadoc>
+      </constructor>
+      <field jni-signature="I" name="field">
+        <javadoc>
+          <![CDATA[jni-sig=field.I]]>
+        </javadoc>
+      </field>
+      <method jni-return="V" jni-signature="(Ljava/lang/Object;J)V" name="m" return="void">
+        <parameter jni-type="Ljava/lang/Object;" name="value" type="T"/>
+        <parameter jni-type="J" name="x" type="long"/>
+        <javadoc>
+          <![CDATA[jni-sig=m.(Ljava/lang/Object;J)V]]>
+        </javadoc>
+      </method>
+    </class>
+    <interface jni-signature="LI;" name="I">
+      <javadoc>
+        <![CDATA[jni-sig=LI;]]>
+      </javadoc>
+      <method jni-return="Ljava/lang/Object;" jni-signature="(Ljava/util/List;)Ljava/lang/Object;" name="m" return="T">
+        <parameter jni-type="Ljava/util/List;" name="x" type="java.util.List&lt;T&gt;"/>
+        <javadoc>
+          <![CDATA[jni-sig=m.(Ljava/util/List;)Ljava/lang/Object;]]>
+        </javadoc>
+      </method>
+    </interface>
+  </package>
+  <package jni-name="before/example" name="before.example"/>
+  <package jni-name="example" name="example">
+    <interface jni-signature="Lexample/Exampleable;" name="Exampleable">
+      <javadoc>
+        <![CDATA[jni-sig=Lexample/Exampleable;]]>
+      </javadoc>
+      <method jni-return="V" jni-signature="(Ljava/lang/String;)V" name="example" return="void">
+        <parameter jni-type="Ljava/lang/String;" name="e" type="java.lang.String"/>
+        <javadoc>
+          <![CDATA[jni-sig=example.(Ljava/lang/String;)V]]>
+        </javadoc>
+      </method>
+      <method jni-return="V" jni-signature="()V" name="noParameters" return="void">
+        <javadoc>
+          <![CDATA[jni-sig=noParameters.()V]]>
+        </javadoc>
+      </method>
+    </interface>
+  </package>
+</api>

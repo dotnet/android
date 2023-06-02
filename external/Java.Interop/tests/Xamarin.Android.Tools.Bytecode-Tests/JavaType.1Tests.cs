@@ -16,9 +16,9 @@ namespace Xamarin.Android.Tools.BytecodeTests {
 		{
 			var c   = LoadClassFile (JavaType + ".class");
 			new ExpectedTypeDeclaration {
-				MajorVersion        = 0x34,
+				MajorVersion        = 0x37,
 				MinorVersion        = 0,
-				ConstantPoolCount   = 47,
+				ConstantPoolCount   = 48,
 				AccessFlags         = ClassAccessFlags.Super,
 				FullName            = "com/xamarin/JavaType$1",
 				Superclass          = new TypeInfo ("java/lang/Object", "Ljava/lang/Object;"),

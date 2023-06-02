@@ -9,8 +9,8 @@
   </ItemGroup>
 
   <Target Name="_GetJavaBaseJmodPath">
-    <PropertyGroup Condition=" '$(Java11SdkDirectory)' != '' ">
-      <_JavaBaseJmod>$(Java11SdkDirectory)/jmods/java.base.jmod</_JavaBaseJmod>
+    <PropertyGroup Condition=" '$(JavaSdkDirectory)' != '' ">
+      <_JavaBaseJmod>$(JavaSdkDirectory)/jmods/java.base.jmod</_JavaBaseJmod>
     </PropertyGroup>
   </Target>
 

@@ -1,27 +1,24 @@
 <Project>
 
   <ItemGroup>
-    <TestJarNoParameters Include="java/**/Collection.java" />
+    <TestJarNoParameters Include="java/**/TypeEvaluator.java" />
     <TestJarNoParameters Include="java/**/*NoParameters.java" />
-    <TestJarJdk11 Include="java\**\module-info.java" />
-    <TestJar Include="java\**\*.java" Exclude="@(TestJarNoParameters);@(TestJarJdk11);java\android\annotation\NonNull.java;" />
+    <TestJar Include="java\**\*.java" Exclude="@(TestJarNoParameters);java\android\annotation\NonNull.java;" />
     <TestKotlinJar Include="kotlin\**\*.kt" />
   </ItemGroup>
 
   <ItemGroup>
     <_BuildClassOutputs Include="@(TestJar->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
-    <_BuildClassOutputs Include="@(TestJarJdk11->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
     <_BuildClassOutputs Include="@(TestJarNoParameters->'$(IntermediateOutputPath)classes\%(RecursiveDir)%(Filename).class')" />
   </ItemGroup>
 
   <Target Name="BuildClasses"
         BeforeTargets="BeforeCompile"
-        Inputs="@(TestJar);@(TestJarNoParameters);@(TestJarJdk11)"
+        Inputs="@(TestJar);@(TestJarNoParameters)"
         Outputs="@(_BuildClassOutputs)">
     <MakeDir Directories="$(IntermediateOutputPath)classes" />
     <Exec Command="&quot;$(JavaCPath)&quot; -parameters $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; java/android/annotation/NonNull.java @(TestJar->'%(Identity)', ' ')" />
     <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarNoParameters->'%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JavaC11Path)&quot; -source 11 -target 11 -g -d &quot;$(IntermediateOutputPath)classes&quot; @(TestJarJdk11->'%(Identity)', ' ')" />
   </Target>
 
   <!-- 
@@ -41,7 +38,7 @@
       AfterTargets="BuildClasses"
       Inputs="@(_BuildClassOutputs)"
       Outputs="$(IntermediateOutputPath)xatb.jar">
-    <Exec Command="&quot;$(Jar11Path)&quot; cf &quot;$(IntermediateOutputPath)xatb.jar&quot; -C &quot;$(IntermediateOutputPath)classes&quot; ." />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(IntermediateOutputPath)xatb.jar&quot; -C &quot;$(IntermediateOutputPath)classes&quot; ." />
   </Target>
 
 </Project>

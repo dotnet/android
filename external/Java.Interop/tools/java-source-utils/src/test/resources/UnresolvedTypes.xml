@@ -4,9 +4,11 @@
     <class jni-signature="Lexample/UnresolvedTypes;" name="UnresolvedTypes">
       <method jni-return="L.*UnresolvedReturnType;" jni-signature="([L.*example.name.UnresolvedParameterType;)L.*UnresolvedReturnType;" name="method" return=".*UnresolvedReturnType">
         <parameter jni-type="[L.*example.name.UnresolvedParameterType;" name="parameter" type=".*example.name.UnresolvedParameterType..."/>
-        <javadoc><![CDATA[Method using unresolvable types.  As such, we make do.
+        <javadoc>
+          <![CDATA[Method using unresolvable types.  As such, we make do.
 
-JNI Sig: method.([L.*example.name.UnresolvedParameterType;)L.*UnresolvedReturnType;]]></javadoc>
+JNI Sig: method.([L.*example.name.UnresolvedParameterType;)L.*UnresolvedReturnType;]]>
+        </javadoc>
       </method>
     </class>
   </package>

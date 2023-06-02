@@ -20,7 +20,6 @@ pr:
 variables:
   RunningOnCI: true
   Build.Configuration: Release
-  MaxJdkVersion: 8
   DotNetCoreVersion: 7.x
   DotNetTargetFramework: net7.0
   NetCoreTargetFrameworkPathSuffix: -$(DotNetTargetFramework)

@@ -52,11 +52,12 @@ jar {
     } {
         exclude 'META-INF/*.RSA', 'META-INF/*.SF', 'META-INF/*.DSA'
     }
-    archiveName 'java-source-utils.jar'
+    archiveFileName.set('java-source-utils.jar')
 }
 
 test {
     reports {
-        junitXml.enabled = true
+        junitXml {
+        }
     }
 }

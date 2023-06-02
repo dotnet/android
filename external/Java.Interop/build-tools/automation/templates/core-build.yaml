@@ -6,7 +6,7 @@ steps:
   displayName: Prepare Solution
   inputs:
     projects: Java.Interop.sln
-    arguments: '-c $(Build.Configuration) -target:Prepare -p:MaxJdkVersion=$(MaxJdkVersion)'
+    arguments: '-c $(Build.Configuration) -target:Prepare'
 
 - task: DotNetCoreCLI@2
   displayName: Shut down existing build server
