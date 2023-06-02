@@ -103,7 +103,7 @@ namespace Xamarin.Android.Build.Tests {
 			var manifestFile = Path.Combine (path, "AndroidManifest.xml");
 			File.WriteAllText (manifestFile, @"<?xml version='1.0' ?>
 <manifest xmlns:android='http://schemas.android.com/apk/res/android' android:versionCode='1' android:versionName='1.0' package='Mono.Android_Tests'>
-	<uses-sdk android:minSdkVersion='10' />
+	<uses-sdk android:minSdkVersion='21' />
 </manifest>");
 
 			task.PlatformToolsVersion = "26.0.3";

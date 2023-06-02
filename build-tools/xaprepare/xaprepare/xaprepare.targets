@@ -43,6 +43,7 @@
       <Replacement Include="@AndroidCmakeUrlPrefix@=$(AndroidCmakeUrlPrefix)" />
       <Replacement Include="@AndroidCmakeVersion@=$(AndroidCmakeVersion)" />
       <Replacement Include="@AndroidCmakeVersionPath@=$(AndroidCmakeVersionPath)" />
+      <Replacement Include="@AndroidMinimumDotNetApiLevel@=$(AndroidMinimumDotNetApiLevel)" />
       <Replacement Include="@AndroidDefaultTargetDotnetApiLevel@=$(AndroidDefaultTargetDotnetApiLevel)" />
       <Replacement Include="@AndroidLatestStableApiLevel@=$(AndroidLatestStableApiLevel)" />
       <Replacement Include="@AndroidLatestUnstableApiLevel@=$(AndroidLatestUnstableApiLevel)" />

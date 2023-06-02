@@ -30,10 +30,6 @@ namespace Xamarin.ProjectTools
 			get { return GetProperty ("PackageTargetFallback"); }
 			set { SetProperty ("PackageTargetFallback", value); }
 		}
-		public string TargetFramework {
-			get { return GetProperty ("TargetFramework"); }
-			set { SetProperty ("TargetFramework", value); }
-		}
 
 		/// <summary>
 		/// Projects targeting net7.0 require ref/runtime packs on NuGet.org or dotnet6/dotnet7
