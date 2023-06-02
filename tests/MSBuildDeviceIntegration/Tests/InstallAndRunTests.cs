@@ -1014,7 +1014,6 @@ namespace UnnamedProject
 				b.ThrowOnBuildFailure = false;
 				if (!addResource) {
 					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
-					Assert.Fail ();
 					return;
 				}
 				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have succeeded.");
