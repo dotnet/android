@@ -2,10 +2,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
 	// TODO: remove these aliases once the refactoring is done
 	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
+	using LlvmIrModuleMergeBehavior = LLVMIR.LlvmIrModuleMergeBehavior;
 
 	partial class LlvmIrModule
 	{
@@ -17,7 +20,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public IList<LlvmIrFunction>? ExternalFunctions         { get; private set; }
 		public IList<LlvmIrFunctionAttributeSet>? AttributeSets { get; private set; }
-		public IList<StructureInfo>? Structures                { get; private set; }
+		public IList<StructureInfo>? Structures                 { get; private set; }
 		public IList<LlvmIrGlobalVariable>? GlobalVariables     { get; private set; }
 		public IList<LlvmIrStringGroup>? Strings                { get; private set; }
 
@@ -25,8 +28,30 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? externalFunctions;
 		Dictionary<Type, StructureInfo>? structures;
 		LlvmIrStringManager? stringManager;
+		LlvmIrMetadataManager metadataManager;
 
 		List<LlvmIrGlobalVariable>? globalVariables;
+
+		public LlvmIrModule ()
+		{
+			metadataManager = new LlvmIrMetadataManager ();
+
+			// Only model agnostic items can be added here
+			LlvmIrMetadataItem flags = metadataManager.Add (LlvmIrKnownMetadata.LlvmModuleFlags);
+			flags.AddReferenceField (metadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "wchar_size", 4));
+			flags.AddReferenceField (metadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Max, "PIC Level", 2));
+
+			LlvmIrMetadataItem ident = metadataManager.Add (LlvmIrKnownMetadata.LlvmIdent);
+			LlvmIrMetadataItem identValue = metadataManager.AddNumbered ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
+			ident.AddReferenceField (identValue.Name);
+		}
+
+		/// <summary>
+		/// Return a metadata manager instance which includes copies of all the target-agnostic metadata items.
+		/// We must not modify the original manager since each target may have conflicting values for certain
+		/// flags.
+		/// </summary>
+		public LlvmIrMetadataManager GetMetadataManagerCopy () => new LlvmIrMetadataManager (metadataManager);
 
 		/// <summary>
 		/// Perform any tasks that need to be done after construction is complete.

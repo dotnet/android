@@ -63,6 +63,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			if (IsNativePointer) {
 				size = 0; // Real size will be determined when code is generated and we know the target architecture
 			} else if (mi.IsInlineArray ()) {
+				if (!MemberType.IsArray) {
+					throw new InvalidOperationException ($"Internal error: member {mi.Name} of structure {mi.DeclaringType.Name} is marked as inline array, but is not of an array type.");
+				}
+
 				IsInlineArray = true;
 				IsNativeArray = true;
 				NeedsPadding = mi.InlineArrayNeedsPadding ();

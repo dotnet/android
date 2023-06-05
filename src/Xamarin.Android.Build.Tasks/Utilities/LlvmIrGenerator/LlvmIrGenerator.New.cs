@@ -46,12 +46,14 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			public readonly TextWriter Output;
 			public readonly LlvmIrModule Module;
+			public readonly LlvmIrMetadataManager MetadataManager;
 			public string CurrentIndent { get; private set; } = String.Empty;
 
-			public WriteContext (TextWriter writer, LlvmIrModule module)
+			public WriteContext (TextWriter writer, LlvmIrModule module, LlvmIrMetadataManager metadataManager)
 			{
 				Output = writer;
 				Module = module;
+				MetadataManager = metadataManager;
 			}
 
 			public void IncreaseIndent ()
@@ -128,7 +130,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public void Generate (TextWriter writer, LlvmIrModule module)
 		{
-			var context = new WriteContext (writer, module);
+			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
+			target.AddTargetSpecificMetadata (metadataManager);
+
+			var context = new WriteContext (writer, module, metadataManager);
 			if (!String.IsNullOrEmpty (FilePath)) {
 				WriteCommentLine (context, $" ModuleID = '{FileName}'");
 				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
@@ -143,6 +148,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteStrings (context);
 			WriteExternalFunctionDeclarations (context);
 			WriteAttributeSets (context);
+			WriteMetadata (context);
 		}
 
 		void WriteStrings (WriteContext context)
@@ -309,6 +315,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (memberInfo.IsInlineArray) {
+				WriteArrayType (context, memberInfo.MemberType.GetArrayElementType (), memberInfo.ArrayElements, out typeInfo);
+				return;
+			}
+
 			WriteType (context, memberInfo.MemberType, value: null, out typeInfo);
 		}
 
@@ -340,34 +351,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			string irType;
 			ulong size;
 			bool isPointer;
-			ulong maxFieldAlignment;
 
 			if (type.IsArray ()) {
 				Type elementType = type.GetArrayElementType ();
-				if (elementType.IsStructureInstance (out Type? structureType)) {
-					StructureInfo si = context.Module.GetStructureInfo (structureType);
+				ulong elementCount = GetAggregateValueElementCount (type, value, globalVariable);
 
-					irType = $"%{si.NativeTypeDesignator}.{si.Name}";
-					size = si.Size;
-					maxFieldAlignment = GetStructureMaxFieldAlignment (si);
-					isPointer = false;
-				} else {
-					irType = GetIRType (elementType, out size, out isPointer);
-					maxFieldAlignment = size;
-				}
-				typeInfo = new LlvmTypeInfo (
-					isPointer: isPointer,
-					isAggregate: true,
-					isStructure: false,
-					size: size,
-					maxFieldAlignment: maxFieldAlignment
-				);
-
-				context.Output.Write ('[');
-				context.Output.Write (GetAggregateValueElementCount (type, value, globalVariable).ToString (CultureInfo.InvariantCulture));
-				context.Output.Write (" x ");
-				context.Output.Write (irType);
-				context.Output.Write (']');
+				WriteArrayType (context, elementType, elementCount, out typeInfo);
 				return;
 			}
 
@@ -380,15 +369,48 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				maxFieldAlignment: size
 			);
 			context.Output.Write (irType);
+		}
 
-			ulong GetStructureMaxFieldAlignment (StructureInfo si)
-			{
-				if (si.HasPointers && target.NativePointerSize > si.MaxFieldAlignment) {
-					return target.NativePointerSize;
-				}
+		void WriteArrayType (WriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
+		{
+			string irType;
+			ulong size;
+			ulong maxFieldAlignment;
+			bool isPointer;
 
-				return si.MaxFieldAlignment;
+			if (elementType.IsStructureInstance (out Type? structureType)) {
+				StructureInfo si = context.Module.GetStructureInfo (structureType);
+
+				irType = $"%{si.NativeTypeDesignator}.{si.Name}";
+				size = si.Size;
+				maxFieldAlignment = GetStructureMaxFieldAlignment (si);
+				isPointer = false;
+			} else {
+				irType = GetIRType (elementType, out size, out isPointer);
+				maxFieldAlignment = size;
 			}
+			typeInfo = new LlvmTypeInfo (
+				isPointer: isPointer,
+				isAggregate: true,
+				isStructure: false,
+				size: size,
+				maxFieldAlignment: maxFieldAlignment
+			);
+
+			context.Output.Write ('[');
+			context.Output.Write (elementCount.ToString (CultureInfo.InvariantCulture));
+			context.Output.Write (" x ");
+			context.Output.Write (irType);
+			context.Output.Write (']');
+		}
+
+		ulong GetStructureMaxFieldAlignment (StructureInfo si)
+		{
+			if (si.HasPointers && target.NativePointerSize > si.MaxFieldAlignment) {
+				return target.NativePointerSize;
+			}
+
+			return si.MaxFieldAlignment;
 		}
 
 		bool IsStructureInstance (Type t) => typeof(StructureInstance).IsAssignableFrom (t);
@@ -415,11 +437,39 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteValue (context, valueType, variable.Value);
 		}
 
+		void AssertArraySize (StructureMemberInfo smi, ulong length, ulong expectedLength)
+		{
+			if (length == expectedLength) {
+				return;
+			}
+
+			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{smi.Info.DeclaringType.Name}', expected {expectedLength}, found {length}");
+		}
+
 		void WriteValue (WriteContext context, StructureMemberInfo smi, object? value)
 		{
-			if (smi.IsNativePointer && value == null) {
+			// Structure members decorated with the [NativePointer] attribute cannot have a
+			// value other than `null`, unless they are strings
+			if (smi.IsNativePointer && smi.MemberType != typeof(string)) {
 				context.Output.Write ("null");
 				return;
+			}
+
+			if (smi.IsInlineArray) {
+				Array a = (Array)value;
+				ulong length = smi.ArrayElements == 0 ? (ulong)a.Length : smi.ArrayElements;
+
+				if (smi.MemberType == typeof(byte[])) {
+					var bytes = (byte[])value;
+
+					// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
+					AssertArraySize (smi, length, smi.ArrayElements);
+					context.Output.Write ('c');
+					context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
+					return;
+				}
+
+				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point");
 			}
 
 			WriteValue (context, smi.MemberType, value);
@@ -462,6 +512,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString ((string)value);
 				context.Output.Write (sv.Reference);
 				return;
+			}
+
+			if (type.IsInlineArray ()) {
+
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
@@ -880,6 +934,19 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 
 				context.Output.WriteLine ($"attributes #{targetSet.Number} {{ {targetSet.Render ()} }}");
+			}
+		}
+
+		void WriteMetadata (WriteContext context)
+		{
+			if (context.MetadataManager.Items.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteCommentLine (context, " Metadata");
+			foreach (LlvmIrMetadataItem metadata in context.MetadataManager.Items) {
+				context.Output.WriteLine (metadata.Render ());
 			}
 		}
 

@@ -418,12 +418,35 @@ namespace Xamarin.Android.Tasks
 			generator.Init ();
 			GenerateNativeAssembly (generator, outputDirectory);
 
+			var generatorNew = new New.TypeMappingReleaseNativeAssemblyGenerator (data);
+			GenerateNativeAssembly (generatorNew, generatorNew.Construct (), outputDirectory);
+
 			return true;
 		}
 
 		bool ShouldSkipInJavaToManaged (TypeDefinition td)
 		{
 			return td.IsInterface || td.HasGenericParameters;
+		}
+
+		void GenerateNativeAssembly (New.TypeMappingReleaseNativeAssemblyGenerator generator, LLVM.IR.LlvmIrModule typeMapModule, string baseFileName)
+		{
+			AndroidTargetArch arch;
+			foreach (string abi in supportedAbis) {
+				arch = GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi);
+
+				string outputFile = $"{baseFileName}-new.{abi}.ll";
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					try {
+						generator.Generate (typeMapModule, arch, sw, outputFile);
+					} catch {
+						throw;
+					} finally {
+						sw.Flush ();
+						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
+					}
+				}
+			}
 		}
 
 		void GenerateNativeAssembly (TypeMappingAssemblyGenerator generator, string baseFileName)

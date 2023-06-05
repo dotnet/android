@@ -17,6 +17,9 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public virtual void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
 		{}
 
+		public virtual void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
+		{}
+
 		public virtual void SetParameterFlags (LlvmIrFunctionParameter parameter)
 		{
 			if (!parameter.NoUndef.HasValue) {
@@ -56,6 +59,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public virtual int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
 		{
 			return maxFieldAlignment;
+		}
+
+		protected LlvmIrMetadataItem GetFlagsMetadata (LlvmIrMetadataManager manager)
+		{
+			LlvmIrMetadataItem? flags = manager.GetItem (LlvmIrKnownMetadata.LlvmModuleFlags);
+			if (flags == null) {
+				flags = manager.Add (LlvmIrKnownMetadata.LlvmModuleFlags);
+			}
+
+			return flags;
 		}
 	}
 }

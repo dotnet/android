@@ -192,8 +192,8 @@ namespace Xamarin.Android.Tasks.New
 		{
 			MapStructures (module);
 
-			module.AddGlobalVariable (FORMAT_TAG.GetType (), "format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
-			module.AddGlobalVariable (typeof(string), "mono_aot_mode_name", MonoAOTMode);
+			module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
+			module.AddGlobalVariable ("mono_aot_mode_name", MonoAOTMode);
 
 			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
 				Comment = " Application environment variables array, name:value",
@@ -293,7 +293,6 @@ namespace Xamarin.Android.Tasks.New
 				throw new InvalidOperationException ($"Internal error: DSO cache must no be empty");
 			}
 
-			Console.WriteLine ("Hashing and sorting DSO cache");
 			bool is64Bit = target.Is64Bit;
 			foreach (StructureInstance instance in cache) {
 				if (instance.Obj == null) {
@@ -306,7 +305,6 @@ namespace Xamarin.Android.Tasks.New
 				}
 
 				entry.hash = GetXxHash (entry.HashedName, is64Bit);
-				Console.WriteLine ($"  hashed '{entry.HashedName}' as 0x{entry.hash:x}");
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));

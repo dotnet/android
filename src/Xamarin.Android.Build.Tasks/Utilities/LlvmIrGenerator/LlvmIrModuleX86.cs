@@ -5,6 +5,9 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
+	// TODO: remove these aliases once the refactoring is done
+	using LlvmIrModuleMergeBehavior = LLVMIR.LlvmIrModuleMergeBehavior;
+
 	class LlvmIrModuleX86 : LlvmIrModuleTarget
 	{
 		public override LlvmIrDataLayout DataLayout { get; }
@@ -58,6 +61,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			base.SetParameterFlags (parameter);
 			SetIntegerParameterUpcastFlags (parameter);
+		}
+
+		public override void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
+		{
+			LlvmIrMetadataItem flags = GetFlagsMetadata (manager);
+
+			flags.AddReferenceField (manager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "NumRegisterParameters", 0));
 		}
 	}
 }

@@ -5,6 +5,9 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVM.IR
 {
+	// TODO: remove these aliases once the refactoring is done
+	using LlvmIrModuleMergeBehavior = LLVMIR.LlvmIrModuleMergeBehavior;
+
 	class LlvmIrModuleAArch64 : LlvmIrModuleTarget
 	{
 		public override LlvmIrDataLayout DataLayout { get; }
@@ -39,6 +42,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			attrSet.Add (new TargetCpuFunctionAttribute ("generic"));
 			attrSet.Add (new TargetFeaturesFunctionAttribute ("+fix-cortex-a53-835769,+neon,+outline-atomics,+v8a"));
+		}
+
+		public override void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
+		{
+			LlvmIrMetadataItem flags = GetFlagsMetadata (manager);
+
+			flags.AddReferenceField (manager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "branch-target-enforcement", 0));
+			flags.AddReferenceField (manager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "sign-return-address", 0));
+			flags.AddReferenceField (manager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "sign-return-address-all", 0));
+			flags.AddReferenceField (manager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "sign-return-address-with-bkey", 0));
 		}
 	}
 }
