@@ -264,7 +264,7 @@ stages:
   - job: linux_tests_smoke
     displayName: Linux > Tests > MSBuild
     pool:
-      vmImage: android-devdiv-ubuntu-vmss-pr
+      name: android-devdiv-ubuntu-vmss-pr
     timeoutInMinutes: 180
     workspace:
       clean: all
