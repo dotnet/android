@@ -14,7 +14,7 @@ namespace Foo.Foo
 {
 	
 	
-	[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Xamarin.Android.Build.Tasks", "13.2.99.322")]
+	[global::System.CodeDom.Compiler.GeneratedCodeAttribute("Xamarin.Android.Build.Tasks", "13.2.99.327")]
 	public partial class Resource
 	{
 		
@@ -204,25 +204,19 @@ namespace Foo.Foo
 			public const int Føø_Bar = 2131361792;
 			
 			// aapt resource value: 0x7F0A0003
-			public const int maximum_number = 2131361795;
+			public const int menu_settings = 2131361795;
 			
 			// aapt resource value: 0x7F0A0004
-			public const int menu_settings = 2131361796;
+			public const int regular = 2131361796;
 			
 			// aapt resource value: 0x7F0A0005
-			public const int regular = 2131361797;
+			public const int seekBar = 2131361797;
 			
 			// aapt resource value: 0x7F0A0006
-			public const int seekBar = 2131361798;
+			public const int seekbar = 2131361798;
 			
 			// aapt resource value: 0x7F0A0007
-			public const int seekbar = 2131361799;
-			
-			// aapt resource value: 0x7F0A0008
-			public const int suffix = 2131361800;
-			
-			// aapt resource value: 0x7F0A0009
-			public const int textview_withperiod = 2131361801;
+			public const int textview_withperiod = 2131361799;
 			
 			static Id()
 			{
