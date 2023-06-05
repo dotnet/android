@@ -49,6 +49,13 @@ steps:
       testResultsFiles: $(Agent.TempDirectory)/*.trx
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
 
+  - task: DotNetCoreCLI@2
+    displayName: Shut down existing dotnet daemons
+    inputs:
+      command: custom
+      custom: build-server
+      arguments: shutdown
+
   - template: run-nunit-tests.yaml
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
