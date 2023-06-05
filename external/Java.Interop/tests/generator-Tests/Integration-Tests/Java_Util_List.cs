@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "java.util.List",
-					apiDescriptionFile:     "expected/java.util.List/java.util.List.xml",
+					apiDescriptionFile:     "expected.ji/java.util.List/java.util.List.xml",
 					expectedRelativePath:   "java.util.List");
 		}
 	}

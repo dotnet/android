@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
 namespace generatortests
@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "Android.Graphics.Color",
-					apiDescriptionFile:     "expected/Android.Graphics.Color/Android.Graphics.Color.xml",
+					apiDescriptionFile:     "expected.ji/Android.Graphics.Color/Android.Graphics.Color.xml",
 					expectedRelativePath:   "Android.Graphics.Color");
 		}
 	}

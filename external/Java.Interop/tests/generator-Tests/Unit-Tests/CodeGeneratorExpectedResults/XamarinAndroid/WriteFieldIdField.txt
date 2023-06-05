@@ -1,1 +1,0 @@
-static IntPtr bar_jfieldId;

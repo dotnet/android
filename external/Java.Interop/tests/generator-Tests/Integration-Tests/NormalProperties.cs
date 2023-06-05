@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "NormalProperties",
-					apiDescriptionFile:     "expected/NormalProperties/NormalProperties.xml",
+					apiDescriptionFile:     "expected.ji/NormalProperties/NormalProperties.xml",
 					expectedRelativePath:   "NormalProperties");
 		}
 	}

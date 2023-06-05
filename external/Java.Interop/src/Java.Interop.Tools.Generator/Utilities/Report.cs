@@ -33,7 +33,6 @@ namespace Java.Interop.Tools.Generator
 		public static LocalizedMessage ErrorRemoveAttrInvalidXPath => new LocalizedMessage (0x4306, Localization.Resources.Generator_BG4300);
 		public static LocalizedMessage ErrorMissingAttrName => new LocalizedMessage (0x4307, Localization.Resources.Generator_BG4307);
 		public static LocalizedMessage ErrorUnexpectedGlobal => new LocalizedMessage (0x4400, Localization.Resources.Generator_BG4400);
-		public static LocalizedMessage ErrorInvalidDIMArgument => new LocalizedMessage (0x4500, Localization.Resources.Generator_BG4500);
 
 		public static LocalizedMessage WarningUnexpectedChild => new LocalizedMessage (0x8101, Localization.Resources.Generator_BG8101);
 		public static LocalizedMessage WarningUnknownBaseType => new LocalizedMessage (0x8102, Localization.Resources.Generator_BG8102);

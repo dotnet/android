@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
 namespace generatortests
@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "InterfaceMethodsConflict",
-					apiDescriptionFile:     "expected/InterfaceMethodsConflict/InterfaceMethodsConflict.xml",
+					apiDescriptionFile:     "expected.ji/InterfaceMethodsConflict/InterfaceMethodsConflict.xml",
 					expectedRelativePath:   "InterfaceMethodsConflict");
 		}
 	}

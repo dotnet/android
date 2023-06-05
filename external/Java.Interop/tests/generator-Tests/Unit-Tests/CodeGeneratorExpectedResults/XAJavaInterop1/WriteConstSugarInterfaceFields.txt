@@ -1,5 +1,8 @@
-// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
-public partial interface IMyInterface {
+[Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+public abstract class MyInterface : Java.Lang.Object {
+	internal MyInterface ()
+	{
+	}
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyConstantField']"
 	[Register ("MyConstantField")]
@@ -11,8 +14,51 @@ public partial interface IMyInterface {
 
 	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyDeprecatedField']"
 	[Register ("MyDeprecatedField")]
-	[Obsolete ("")]
+	[global::System.Obsolete]
 	public const int MyDeprecatedField = (int) 7;
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyDeprecatedEnumField']"
+	[Register ("MyDeprecatedEnumField")]
+	[global::System.Obsolete (@"This constant will be removed in the future version.")]
+	public const int MyDeprecatedEnumField = (int) MyEnumValue;
+
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyStaticField']"
+	[Register ("MyStaticField")]
+	public static int MyStaticField {
+		get {
+			const string __id = "MyStaticField.I";
+
+			var __v = _members.StaticFields.GetInt32Value (__id);
+			return __v;
+		}
+		set {
+			const string __id = "MyStaticField.I";
+
+			try {
+				_members.StaticFields.SetValue (__id, value);
+			} finally {
+			}
+		}
+	}
+
+	static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (MyInterface));
 
 }
 
+// Metadata.xml XPath interface reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']"
+public partial interface IMyInterface {
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyConstantField']"
+	[Register ("MyConstantField")]
+	public const int MyConstantField = (int) 7;
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyConstantStringField']"
+	[Register ("MyConstantStringField")]
+	public const string MyConstantStringField = (string) "hello";
+
+	// Metadata.xml XPath field reference: path="/api/package[@name='java.code']/interface[@name='IMyInterface']/field[@name='MyDeprecatedField']"
+	[Register ("MyDeprecatedField")]
+	[global::System.Obsolete]
+	public const int MyDeprecatedField = (int) 7;
+
+}

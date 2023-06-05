@@ -44,8 +44,6 @@ namespace MonoDroid.Generation {
 			var c   = rgm != null
 				? opt.GetSafeIdentifier (rgm.ToInteroperableJavaObject (Name))
 				: ToNative (opt);
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.XamarinAndroid)
-				return c;
 			if (sym.NativeType != "IntPtr")
 				return c;
 			if (!NeedsPrep)

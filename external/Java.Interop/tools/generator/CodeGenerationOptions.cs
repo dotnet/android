@@ -19,7 +19,6 @@ namespace MonoDroid.Generation
 			get { return codeGenerationTarget; }
 			set {
 				switch (value) {
-				case CodeGenerationTarget.XamarinAndroid:
 				case CodeGenerationTarget.XAJavaInterop1:
 				case CodeGenerationTarget.JavaInterop1:
 					codeGenerationTarget    = value;
@@ -30,16 +29,14 @@ namespace MonoDroid.Generation
 			}
 		}
 
-		internal CodeGenerator CreateCodeGenerator (TextWriter writer)
+		internal JavaInteropCodeGenerator CreateCodeGenerator (TextWriter writer)
 		{
 			switch (codeGenerationTarget) {
-				case CodeGenerationTarget.JavaInterop1:
-					return new JavaInteropCodeGenerator (writer, this);
 				case CodeGenerationTarget.XAJavaInterop1:
 					return new XAJavaInteropCodeGenerator (writer, this);
-				case CodeGenerationTarget.XamarinAndroid:
+				case CodeGenerationTarget.JavaInterop1:
 				default:
-					return new XamarinAndroidCodeGenerator (writer, this);
+					return new JavaInteropCodeGenerator (writer, this);
 			}
 		}
 

@@ -11,9 +11,9 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "Streams",
-					apiDescriptionFile:     "expected/Streams/Streams.xml",
+					apiDescriptionFile:     "expected.ji/Streams/Streams.xml",
 					expectedRelativePath:   "Streams",
-					additionalSupportPaths: new[]{ "expected/Streams/SupportFiles" });
+					additionalSupportPaths: new[]{ "expected.ji/Streams/SupportFiles" });
 		}
 	}
 }

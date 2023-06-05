@@ -1,8 +1,13 @@
-namespace Android.App {
-	public enum RecentTaskFlags {
-		[global::Android.Runtime.IntDefinition ("android.app.ActivityManager.RECENT_IGNORE_UNAVAILABLE", JniField = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE")]
-		WithExcluded = 1,
-		[global::Android.Runtime.IntDefinition (null, JniField = "android/app/ActivityManager.RECENT_WITH_EXCLUDED")]
-		IgnoreUnavailable = 2,
-	}
+namespace Android.App
+{
+public enum RecentTaskFlags 
+{
+	[global::Android.Runtime.IntDefinition ("android.app.ActivityManager.RECENT_IGNORE_UNAVAILABLE", JniField = "android/app/ActivityManager.RECENT_IGNORE_UNAVAILABLE")]
+	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android30.0")]
+	WithExcluded = 1,
+
+	[global::Android.Runtime.IntDefinition (null, JniField = "android/app/ActivityManager.RECENT_WITH_EXCLUDED")]
+	IgnoreUnavailable = 2,
+
+}
 }

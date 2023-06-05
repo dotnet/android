@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath: "AccessModifiers",
-					apiDescriptionFile: "expected/AccessModifiers/AccessModifiers.xml",
+					apiDescriptionFile: "expected.ji/AccessModifiers/AccessModifiers.xml",
 					expectedRelativePath: "AccessModifiers",
 					additionalSupportPaths: null);
 		}

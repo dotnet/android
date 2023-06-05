@@ -1,7 +1,0 @@
-﻿<enum-field-mappings>
-  <mapping jni-class="xamarin/test/SomeObject" clr-enum-type="Xamarin.Test.SomeValues">
-    <field jni-name="SOME_VALUE"  clr-name="SomeValue"  value="0" />
-    <field jni-name="SOME_VALUE2"  clr-name="SomeValue2"  value="1" />
-  </mapping>
-</enum-field-mappings>
-

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
 namespace generatortests
@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "TestInterface",
-					apiDescriptionFile:     "expected/TestInterface/TestInterface.xml",
+					apiDescriptionFile:     "expected.ji/TestInterface/TestInterface.xml",
 					expectedRelativePath:   "TestInterface");
 		}
 	}

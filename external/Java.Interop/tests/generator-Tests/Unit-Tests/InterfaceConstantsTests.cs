@@ -10,30 +10,6 @@ namespace generatortests
 		protected override Xamarin.Android.Binder.CodeGenerationTarget Target => Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1;
 	}
 
-	[TestFixture]
-	class XamarinAndroidInterfaceConstantsTests : InterfaceConstantsTests
-	{
-		protected override Xamarin.Android.Binder.CodeGenerationTarget Target => Xamarin.Android.Binder.CodeGenerationTarget.XamarinAndroid;
-
-		[Test]
-		public void WriteInterfaceFields ()
-		{
-			// This is an interface that has both fields and method declarations
-			var iface = SupportTypeBuilder.CreateEmptyInterface ("java.code.IMyInterface");
-
-			iface.Fields.Add (new TestField ("int", "MyConstantField").SetConstant ().SetValue ("7"));
-			iface.Methods.Add (new TestMethod (iface, "DoSomething").SetAbstract ());
-
-			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
-
-			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
-			generator.Context.ContextTypes.Pop ();
-
-			Assert.AreEqual (GetTargetedExpected (nameof (WriteInterfaceFields)), writer.ToString ().NormalizeLineEndings ());
-		}
-	}
-
 	abstract class InterfaceConstantsTests : CodeGeneratorTestBase
 	{
 		protected override CodeGenerationOptions CreateOptions ()
@@ -71,7 +47,7 @@ namespace generatortests
 			iface.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ());
 
 			generator.Context.ContextTypes.Push (iface);
-			generator.WriteInterfaceDeclaration (iface, string.Empty, new GenerationInfo (null, null, null));
+			generator.WriteType (iface, string.Empty, new GenerationInfo (null, null, null));
 			generator.Context.ContextTypes.Pop ();
 
 			Assert.AreEqual (GetTargetedExpected (nameof (WriteConstSugarInterfaceFields)), writer.ToString ().NormalizeLineEndings ());

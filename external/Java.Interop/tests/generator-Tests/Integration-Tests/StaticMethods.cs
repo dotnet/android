@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "StaticMethods",
-					apiDescriptionFile:     "expected/StaticMethods/StaticMethod.xml",
+					apiDescriptionFile:     "expected.ji/StaticMethods/StaticMethod.xml",
 					expectedRelativePath:   "StaticMethods");
 		}
 	}

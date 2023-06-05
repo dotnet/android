@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "NonStaticFields",
-					apiDescriptionFile:     "expected/NonStaticFields/NonStaticField.xml",
+					apiDescriptionFile:     "expected.ji/NonStaticFields/NonStaticField.xml",
 					expectedRelativePath:   "NonStaticFields");
 		}
 	}

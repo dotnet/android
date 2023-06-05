@@ -144,9 +144,7 @@ namespace MonoDroid.Generation
 				if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
 					sw.WriteLine ("using Android.Runtime;");
 				}
-				if (opt.CodeGenerationTarget != CodeGenerationTarget.XamarinAndroid) {
-					sw.WriteLine ("using Java.Interop;");
-				}
+				sw.WriteLine ("using Java.Interop;");
 				sw.WriteLine ();
 				var hasNamespace = !string.IsNullOrWhiteSpace (Namespace);
 				if (hasNamespace) {

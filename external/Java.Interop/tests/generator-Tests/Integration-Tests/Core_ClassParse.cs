@@ -13,9 +13,9 @@ namespace generatortests
 
 			RunAllTargets (
 					outputRelativePath: "Core_ClassParse",
-					apiDescriptionFile: "expected/Core_ClassParse/api.xml",
+					apiDescriptionFile: "expected.ji/Core_ClassParse/api.xml",
 					expectedRelativePath: "Core_ClassParse",
-					metadataFile: FullPath ("expected/Core_ClassParse/metadata.xml"));
+					metadataFile: FullPath ("expected.ji/Core_ClassParse/metadata.xml"));
 		}
 	}
 }

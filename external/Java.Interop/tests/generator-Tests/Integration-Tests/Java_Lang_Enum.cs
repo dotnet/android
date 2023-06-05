@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "java.lang.Enum",
-					apiDescriptionFile:     "expected/java.lang.Enum/Java.Lang.Enum.xml",
+					apiDescriptionFile:     "expected.ji/java.lang.Enum/Java.Lang.Enum.xml",
 					expectedRelativePath:   "java.lang.Enum");
 		}
 	}

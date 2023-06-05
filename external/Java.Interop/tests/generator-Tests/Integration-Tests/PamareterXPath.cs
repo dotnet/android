@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "ParameterXPath",
-					apiDescriptionFile:     "expected/ParameterXPath/ParameterXPath.xml",
+					apiDescriptionFile:     "expected.ji/ParameterXPath/ParameterXPath.xml",
 					expectedRelativePath:   "ParameterXPath");
 		}
 	}

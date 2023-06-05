@@ -124,15 +124,6 @@ namespace Java.Interop.Localization {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;lang-features=default-interface-methods&apos; is not compatible with &apos;codegen-target=xamarinandroid&apos;..
-        /// </summary>
-        public static string Generator_BG4500 {
-            get {
-                return ResourceManager.GetString("Generator_BG4500", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unexpected class child {0}..
         /// </summary>
         public static string Generator_BG8101 {

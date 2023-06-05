@@ -1,18 +1,21 @@
 using System;
-using System.Collections.Generic;
-using System.Collections.Specialized;
 using System.IO;
 using generator.SourceWriters;
-using Mono.Options;
 using Xamarin.SourceWriter;
 
 namespace MonoDroid.Generation
 {
-	class JavaInteropCodeGenerator : CodeGenerator
+	class JavaInteropCodeGenerator
 	{
+		protected TextWriter writer;
+		protected CodeGenerationOptions opt;
 
-		public JavaInteropCodeGenerator (TextWriter writer, CodeGenerationOptions options) : base (writer, options)
+		public CodeGeneratorContext Context { get; } = new CodeGeneratorContext ();
+
+		public JavaInteropCodeGenerator (TextWriter writer, CodeGenerationOptions options)
 		{
+			this.writer = writer;
+			opt = options;
 		}
 
 		public static string GetInvokeType (string type)
@@ -33,7 +36,7 @@ namespace MonoDroid.Generation
 			};
 		}
 
-		public override void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
+		public virtual void WriteType (GenBase gen, string indent, GenerationInfo gen_info)
 		{
 			TypeWriter type_writer;
 
@@ -51,18 +54,6 @@ namespace MonoDroid.Generation
 			var cw = new CodeWriter (writer, indent);
 			type_writer.Write (cw);
 		}
-
-		internal override void WriteClassHandle (ClassGen type, string indent, bool requireNew) => throw new NotImplementedException ();
-		internal override void WriteClassHandle (InterfaceGen type, string indent, string declaringType) => throw new NotImplementedException ();
-		internal override void WriteClassInvokerHandle (ClassGen type, string indent, string declaringType) => throw new NotImplementedException ();
-		internal override void WriteConstructorBody (Ctor ctor, string indent, StringCollection call_cleanup) => throw new NotImplementedException ();
-		internal override void WriteConstructorIdField (Ctor ctor, string indent) => throw new NotImplementedException ();
-		internal override void WriteFieldGetBody (Field field, string indent, GenBase type) => throw new NotImplementedException ();
-		internal override void WriteFieldIdField (Field field, string indent) => throw new NotImplementedException ();
-		internal override void WriteFieldSetBody (Field field, string indent, GenBase type) => throw new NotImplementedException ();
-		internal override void WriteInterfaceInvokerHandle (InterfaceGen type, string indent, string declaringType) => throw new NotImplementedException ();
-		internal override void WriteMethodBody (Method method, string indent, GenBase type) => throw new NotImplementedException ();
-		internal override void WriteMethodIdField (Method method, string indent) => throw new NotImplementedException ();
 	}
 }
 

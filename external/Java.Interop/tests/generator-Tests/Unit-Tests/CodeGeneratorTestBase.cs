@@ -12,7 +12,7 @@ namespace generatortests
 {
 	abstract class CodeGeneratorTestBase
 	{
-		protected CodeGenerator generator;
+		protected JavaInteropCodeGenerator generator;
 		protected StringBuilder builder;
 		protected StringWriter writer;
 		protected CodeGenerationOptions options;

@@ -197,19 +197,12 @@ namespace Xamarin.Android.Binder
 
 			opts.ApiDescriptionFile = apis [0];
 
-			if (opts.SupportDefaultInterfaceMethods && opts.CodeGenerationTarget == CodeGenerationTarget.XamarinAndroid) {
-				Console.Error.WriteLine (Report.FormatCodedMessage (true, Report.ErrorInvalidDIMArgument));
-				return null;
-			}
-
 			return opts;
 		}
 
 		static CodeGenerationTarget ParseCodeGenerationTarget (string value)
 		{
 			switch (value.ToLowerInvariant ()) {
-			case "xamarinandroid":
-				return CodeGenerationTarget.XamarinAndroid;
 			case "xajavainterop1":
 				return CodeGenerationTarget.XAJavaInterop1;
 			case "javainterop1":

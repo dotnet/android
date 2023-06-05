@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "NormalMethods",
-					apiDescriptionFile:     "expected/NormalMethods/NormalMethods.xml",
+					apiDescriptionFile:     "expected.ji/NormalMethods/NormalMethods.xml",
 					expectedRelativePath:   "NormalMethods");
 		}
 	}

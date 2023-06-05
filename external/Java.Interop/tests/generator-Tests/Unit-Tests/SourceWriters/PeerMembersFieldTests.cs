@@ -11,7 +11,7 @@ namespace generatortests.SourceWriters
 		[Test]
 		public void PeerMembersField_Class ()
 		{
-			var field = new PeerMembersField (new CodeGenerationOptions (), "B", "MyJavaType", false);
+			var field = new PeerMembersField (new CodeGenerationOptions { CodeGenerationTarget = CodeGenerationTarget.JavaInterop1 }, "B", "MyJavaType", false);
 
 			Assert.AreEqual ("static readonly JniPeerMembers _members = new JniPeerMembers (\"B\", typeof (MyJavaType));", GetOutput (field).Trim ());
 		}

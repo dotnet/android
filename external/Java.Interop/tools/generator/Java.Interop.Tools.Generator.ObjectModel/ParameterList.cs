@@ -78,7 +78,7 @@ namespace MonoDroid.Generation {
 		{
 			if (items.Count != 0)
 				return ", __args";
-			if (opt.CodeGenerationTarget == CodeGenerationTarget.XamarinAndroid || invoker)
+			if (invoker)
 				return "";
 			return ", null";
 		}

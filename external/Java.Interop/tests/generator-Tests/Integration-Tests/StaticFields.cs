@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "StaticFields",
-					apiDescriptionFile:     "expected/StaticFields/StaticField.xml",
+					apiDescriptionFile:     "expected.ji/StaticFields/StaticField.xml",
 					expectedRelativePath:   "StaticFields");
 		}
 	}

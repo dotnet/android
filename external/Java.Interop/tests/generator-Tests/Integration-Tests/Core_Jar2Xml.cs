@@ -15,10 +15,10 @@ namespace generatortests
 
 			RunAllTargets (
 					outputRelativePath: "Core_Jar2Xml",
-					apiDescriptionFile: "expected/Core_Jar2Xml/api.xml",
+					apiDescriptionFile: "expected.ji/Core_Jar2Xml/api.xml",
 					expectedRelativePath: "Core_Jar2Xml",
-					enumFieldsMapFile: "expected/Core_Jar2Xml/fields.xml",
-					enumMethodMapFile: "expected/Core_Jar2Xml/methods.xml"
+					enumFieldsMapFile: "expected.ji/Core_Jar2Xml/fields.xml",
+					enumMethodMapFile: "expected.ji/Core_Jar2Xml/methods.xml"
 					);
 		}
 	}

@@ -11,7 +11,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "CSharpKeywords",
-					apiDescriptionFile:     "expected/CSharpKeywords/CSharpKeywords.xml",
+					apiDescriptionFile:     "expected.ji/CSharpKeywords/CSharpKeywords.xml",
 					expectedRelativePath:   "CSharpKeywords");
 		}
 	}

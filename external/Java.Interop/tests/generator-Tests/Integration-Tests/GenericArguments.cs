@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using NUnit.Framework;
 
 namespace generatortests
@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath: "GenericArguments",
-					apiDescriptionFile: "expected/GenericArguments/GenericArguments.xml",
+					apiDescriptionFile: "expected.ji/GenericArguments/GenericArguments.xml",
 					expectedRelativePath: "GenericArguments",
 					additionalSupportPaths: null);
 		}

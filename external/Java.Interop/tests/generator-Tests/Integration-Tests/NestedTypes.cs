@@ -13,7 +13,7 @@ namespace generatortests
 		{
 			RunAllTargets (
 					outputRelativePath:     "NestedTypes",
-					apiDescriptionFile:     "expected/NestedTypes/NestedTypes.xml",
+					apiDescriptionFile:     "expected.ji/NestedTypes/NestedTypes.xml",
 					expectedRelativePath:   "NestedTypes");
 		}
 	}

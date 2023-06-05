@@ -1,3 +1,0 @@
-// Metadata.xml XPath field reference: path="/api/package[@name='com.mypackage']/class[@name='foo']/field[@name='bar']"
-[Register ("bar")]
-public const string bar = (string) "hello";

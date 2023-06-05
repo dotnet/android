@@ -1,1 +1,0 @@
-static IntPtr id_bar;
