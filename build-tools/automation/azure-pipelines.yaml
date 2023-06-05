@@ -85,9 +85,9 @@ variables:
   - name: MacBuildPoolImage
     value: ''
   - name: LinuxBuildPoolName
-    value: Azure Pipelines
+    value: android-devdiv-ubuntu-vmss-pr
   - name: LinuxBuildPoolImage
-    value: ubuntu-22.04
+    value: ''
   - name: DisablePipelineConfigDetector
     value: true
 
@@ -264,7 +264,7 @@ stages:
   - job: linux_tests_smoke
     displayName: Linux > Tests > MSBuild
     pool:
-      vmImage: ubuntu-22.04
+      name: android-devdiv-ubuntu-vmss-pr
     timeoutInMinutes: 180
     workspace:
       clean: all
