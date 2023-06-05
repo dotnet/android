@@ -92,15 +92,13 @@ namespace Java.Interop {
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
 
-		[return: MaybeNull]
-		public static T FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer)
+		public static T? FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer)
 		{
 			bool set;
 			return FromJniHandle<T>(handle, transfer, out set);
 		}
 
-		[return: MaybeNull]
-		public static T FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer, out bool set)
+		public static T? FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer, out bool set)
 		{
 			if (handle == IntPtr.Zero) {
 				set = false;
@@ -208,15 +206,13 @@ namespace Java.Interop {
 			return null;
 		}
 
-		[return: MaybeNull]
-		public static T FromJavaObject<T>(IJavaObject? value)
+		public static T? FromJavaObject<T>(IJavaObject? value)
 		{
 			bool set;
 			return FromJavaObject<T>(value, out set);
 		}
 
-		[return: MaybeNull]
-		public static T FromJavaObject<T>(IJavaObject? value, out bool set)
+		public static T? FromJavaObject<T>(IJavaObject? value, out bool set)
 		{
 			if (value == null) {
 				set = false;

@@ -185,9 +185,8 @@ namespace Android.Widget {
 		}
 
 		static IntPtr id_getItem_I;
-		[return: MaybeNull]
 		[Register ("getItem", "(I)Ljava/lang/Object;", "GetGetItem_IHandler")]
-		public T GetItem (int position)
+		public T? GetItem (int position)
 		{
 			if (id_getItem_I == IntPtr.Zero)
 				id_getItem_I = JNIEnv.GetMethodID (class_ref, "getItem", "(I)Ljava/lang/Object;");

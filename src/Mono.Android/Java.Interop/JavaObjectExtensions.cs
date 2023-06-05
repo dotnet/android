@@ -52,8 +52,7 @@ namespace Java.Interop {
 			return _JavaCast<TResult> (instance);
 		}
 
-		[return: MaybeNull]
-		internal static TResult _JavaCast<TResult> (this IJavaObject? instance)
+		internal static TResult? _JavaCast<TResult> (this IJavaObject? instance)
 		{
 			if (instance == null)
 				return default (TResult);
