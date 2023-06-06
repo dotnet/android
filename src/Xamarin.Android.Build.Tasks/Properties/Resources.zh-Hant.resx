@@ -498,8 +498,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
-Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' 與專案檔中的 $(SupportedOSPlatformVersion) 值 '{1}' 不符 (如果專案檔中沒有 $(SupportedOSPlatformVersion) 值，則假設為預設值)。
+請變更 AndroidManifest.xml 中的值以符合 $(SupportedOSPlatformVersion) 值，或移除 AndroidManifest.xml 中的值 (如果該值不存在，則將 $(SupportedOSPlatformVersion) 值新增至專案檔)。</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
@@ -616,13 +616,13 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {1} - The managed type name</comment>
   </data>
   <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <value>不支援部署目標 '{0}' (最小值為 '{1}')。請增加專案檔中 $(SupportedOSPlatformVersion) 屬性值。</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
 {0} - The value of $(SupportedOSPlatformVersion)
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <value>不支援部署目標 '{0}' (最小值為 '{1}')。請增加 (或移除) AndroidManifest.xml中的 //uses-sdk/@android:minSdkVersion 值。</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
 {0} - The value of //uses-sdk/@android:minSdkVersion
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
