@@ -414,10 +414,6 @@ namespace Xamarin.Android.Tasks
 			NativeTypeMappingData data;
 			data = new NativeTypeMappingData (logger, modules);
 
-			var generator = new TypeMappingReleaseNativeAssemblyGenerator (data);
-			generator.Init ();
-			GenerateNativeAssembly (generator, outputDirectory);
-
 			var generatorNew = new New.TypeMappingReleaseNativeAssemblyGenerator (data);
 			GenerateNativeAssembly (generatorNew, generatorNew.Construct (), outputDirectory);
 
@@ -435,7 +431,7 @@ namespace Xamarin.Android.Tasks
 			foreach (string abi in supportedAbis) {
 				arch = GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi);
 
-				string outputFile = $"{baseFileName}-new.{abi}.ll";
+				string outputFile = $"{baseFileName}.{abi}.ll";
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
 						generator.Generate (typeMapModule, arch, sw, outputFile);

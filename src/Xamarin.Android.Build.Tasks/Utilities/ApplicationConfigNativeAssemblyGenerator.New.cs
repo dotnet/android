@@ -286,7 +286,7 @@ namespace Xamarin.Android.Tasks.New
 			module.Add (assembly_stores);
 		}
 
-		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target)
+		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 		{
 			var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
 			if (cache == null) {

@@ -25,7 +25,10 @@ const TypeMap type_map = {
 #else
 const uint32_t map_module_count = 2;
 const uint32_t java_type_count = 0;
-const char* const java_type_names[] = {};
+const char* const java_type_names[] = {
+	"java/lang/String",
+	"java/lang/Exception",
+};
 
 static TypeMapModuleEntry module1[] = {
 	{

@@ -25,6 +25,18 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return attr.PointsToPreAllocatedBuffer;
 		}
 
+		public static bool PointsToSymbol (this MemberInfo mi, out string? symbolName)
+		{
+			var attr = mi.GetCustomAttribute <NativePointerAttribute> ();
+			if (attr == null || attr.PointsToSymbol == null) {
+				symbolName = null;
+				return false;
+			}
+
+			symbolName = attr.PointsToSymbol;
+			return true;
+		}
+
 		public static bool ShouldBeIgnored (this MemberInfo mi)
 		{
 			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();

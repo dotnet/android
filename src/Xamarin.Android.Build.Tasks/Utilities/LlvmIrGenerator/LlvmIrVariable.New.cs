@@ -6,15 +6,23 @@ namespace Xamarin.Android.Tasks.LLVM.IR;
 // TODO: remove these aliases once the refactoring is done
 using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
 
+[Flags]
+enum LlvmIrVariableWriteOptions
+{
+	None                    = 0x0000,
+	ArrayWriteIndexComments = 0x0001,
+}
+
 abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 {
 	public abstract bool Global { get; }
 	public abstract string NamePrefix { get; }
 
-	public string? Name            { get; protected set; }
-	public Type Type               { get; protected set; }
-	public virtual object? Value   { get; set; }
-	public virtual string? Comment { get; set; }
+	public string? Name                            { get; protected set; }
+	public Type Type                               { get; protected set; }
+	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
+	public virtual object? Value                   { get; set; }
+	public virtual string? Comment                 { get; set; }
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function
@@ -38,11 +46,39 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	}
 
 	/// <summary>
+	/// <para>
 	/// Certain data must be calculated when the target architecture is known, because it may depend on certain aspects of
 	/// the target (e.g. its bitness).  This callback, if set, will be invoked before the variable is written to the output
 	/// stream, allowing updating of any such data as described above.
+	/// </para>
+	/// <para>
+	/// First parameter passed to the callback is the variable itself, second parameter is the current
+	/// <see cref="LlvmIrModuleTarget"/> and the third is the value previously assigned to <see cref="BeforeWriteCallbackCallerState"/>
+	/// </para>
 	/// </summary>
-	public virtual Action<LlvmIrVariable, LlvmIrModuleTarget>? BeforeWriteCallback { get; set; }
+	public Action<LlvmIrVariable, LlvmIrModuleTarget, object?>? BeforeWriteCallback { get; set; }
+
+	/// <summary>
+	/// Object passed to the <see cref="BeforeWriteCallback"/> method, if any, as the caller state.
+	/// </summary>
+	public object? BeforeWriteCallbackCallerState { get; set; }
+
+	/// <summary>
+	/// <para>
+	/// Callback used when processing array variables, called for each item of the array in order to obtain the item's comment, if any.
+	/// </para>
+	/// <para>
+	/// The first argument is the variable which contains the array, second is the item index, third is the item value and fourth is
+	/// the caller state object, previously assigned to the <see cref="GetArrayItemCommentCallbackCallerState"/> property.  The callback
+	/// can return an empty string or <c>null</c>, in which case no comment is written.
+	/// </para>
+	/// </summary>
+	public Func<LlvmIrVariable, ulong, object?, object?, string?>? GetArrayItemCommentCallback { get; set; }
+
+	/// <summary>
+	/// Object passed to the <see cref="GetArrayItemCommentCallback"/> method, if any, as the caller state.
+	/// </summary>
+	public object? GetArrayItemCommentCallbackCallerState { get; set; }
 
 	/// <summary>
 	/// Constructs an abstract variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
@@ -148,6 +184,17 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 		: this ((value ?? throw new ArgumentNullException (nameof (value))).GetType (), name, options)
 	{
 		Value = value;
+	}
+
+	/// <summary>
+	/// This is, unfortunately, needed to be able to address scenarios when a single symbol can have a different type when
+	/// generating output for a specific target (e.g. 32-bit vs 64-bit integer variables).  If the variable requires such
+	/// type changes, this should be done at generation time from within the <see cref="BeforeWriteCallback"/> method.
+	/// </summary>
+	public void OverrideValueAndType (Type newType, object? newValue)
+	{
+		Type = newType;
+		Value = newValue;
 	}
 }
 

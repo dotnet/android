@@ -190,7 +190,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.WriteLine ();
 			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
 				if (gv.BeforeWriteCallback != null) {
-					gv.BeforeWriteCallback (gv, target);
+					gv.BeforeWriteCallback (gv, target, gv.BeforeWriteCallbackCallerState);
 				}
 				WriteGlobalVariable (context, gv);
 			}
@@ -430,29 +430,28 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					return;
 				}
 
-				WriteArray (context, variable);
+				WriteArrayValue (context, variable);
 				return;
 			}
 
 			WriteValue (context, valueType, variable.Value);
 		}
 
-		void AssertArraySize (StructureMemberInfo smi, ulong length, ulong expectedLength)
+		void AssertArraySize (StructureInstance si, StructureMemberInfo smi, ulong length, ulong expectedLength)
 		{
 			if (length == expectedLength) {
 				return;
 			}
 
-			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{smi.Info.DeclaringType.Name}', expected {expectedLength}, found {length}");
+			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{si.Info.Name}', expected {expectedLength}, found {length}");
 		}
 
-		void WriteValue (WriteContext context, StructureMemberInfo smi, object? value)
+		void WriteValue (WriteContext context, StructureInstance structInstance, StructureMemberInfo smi, object? value)
 		{
-			// Structure members decorated with the [NativePointer] attribute cannot have a
-			// value other than `null`, unless they are strings
-			if (smi.IsNativePointer && smi.MemberType != typeof(string)) {
-				context.Output.Write ("null");
-				return;
+			if (smi.IsNativePointer) {
+				if (WriteNativePointerValue (context, structInstance, smi, value)) {
+					return;
+				}
 			}
 
 			if (smi.IsInlineArray) {
@@ -463,16 +462,46 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					var bytes = (byte[])value;
 
 					// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
-					AssertArraySize (smi, length, smi.ArrayElements);
+					AssertArraySize (structInstance, smi, length, smi.ArrayElements);
 					context.Output.Write ('c');
 					context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
 					return;
 				}
 
-				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point");
+				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
 			}
 
 			WriteValue (context, smi.MemberType, value);
+		}
+
+		bool WriteNativePointerValue (WriteContext context, StructureInstance si, StructureMemberInfo smi, object? value)
+		{
+			// Structure members decorated with the [NativePointer] attribute cannot have a
+			// value other than `null`, unless they are strings or references to symbols
+
+			if (smi.Info.PointsToSymbol (out string? symbolName)) {
+				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
+					if (si.Info.DataProvider == null) {
+						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{si.Info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
+					}
+					symbolName = si.Info.DataProvider.GetPointedToSymbolName (si.Obj, smi.Info.Name);
+				}
+
+				if (String.IsNullOrEmpty (symbolName)) {
+					context.Output.Write ("null");
+				} else {
+					context.Output.Write ('@');
+					context.Output.Write (symbolName);
+				}
+				return true;
+			}
+
+			if (smi.MemberType != typeof(string)) {
+				context.Output.Write ("null");
+				return true;
+			}
+
+			return false;
 		}
 
 		void WriteValue (WriteContext context, Type type, object? value)
@@ -542,7 +571,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				context.Output.Write (' ');
 
 				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
-				WriteValue (context, smi, value);
+				WriteValue (context, instance, smi, value);
 
 				if (i < lastMember) {
 					context.Output.Write (", ");
@@ -567,7 +596,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write ('}');
 		}
 
-		void WriteArray (WriteContext context, LlvmIrVariable variable)
+		void WriteArrayValue (WriteContext context, LlvmIrVariable variable)
 		{
 			context.Output.WriteLine ('[');
 			context.IncreaseIndent ();
@@ -586,25 +615,47 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			Type elementType = variable.Type.GetArrayElementType ();
 			bool first = true;
+			bool writeIndices = (variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayWriteIndexComments) == LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 			ulong counter = 0;
+			string? prevItemComment = null;
 			foreach (object entry in entries) {
 				if (!first) {
-					context.Output.WriteLine (',');
+					context.Output.Write (',');
+					WritePrevItemCommentOrNewline ();
 				} else {
 					first = false;
 				}
-				context.Output.Write (context.CurrentIndent);
-				WriteCommentLine (context, $" {counter++}");
 
+				prevItemComment = null;
+				if (variable.GetArrayItemCommentCallback != null) {
+					prevItemComment = variable.GetArrayItemCommentCallback (variable, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
+				}
+
+				if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
+					prevItemComment = $" {counter}";
+				}
+
+				counter++;
 				context.Output.Write (context.CurrentIndent);
 				WriteType (context, elementType, entry, out _);
+
 				context.Output.Write (' ');
 				WriteValue (context, elementType, entry);
 			}
-			context.Output.WriteLine ();
+			WritePrevItemCommentOrNewline ();
 
 			context.DecreaseIndent ();
 			context.Output.Write (']');
+
+			void WritePrevItemCommentOrNewline ()
+			{
+				if (!String.IsNullOrEmpty (prevItemComment)) {
+					context.Output.Write (' ');
+					WriteCommentLine (context, prevItemComment);
+				} else {
+					context.Output.WriteLine ();
+				}
+			}
 		}
 
 		void WriteLinkage (WriteContext context, LlvmIrLinkage linkage)

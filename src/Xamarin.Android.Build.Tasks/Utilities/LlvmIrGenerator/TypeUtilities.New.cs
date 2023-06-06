@@ -76,9 +76,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public static bool ImplementsInterface (this Type type, Type requiredIfaceType)
 		{
-			Console.WriteLine ($"{type}.ImplementsInterface ({requiredIfaceType})");
 			if (type == null || requiredIfaceType == null) {
-				Console.WriteLine ("  nope #1");
 				return false;
 			}
 
@@ -87,28 +85,22 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			bool generic = requiredIfaceType.IsGenericType;
-			Console.WriteLine ($"  required iface is generic? {generic}");
 			foreach (Type iface in type.GetInterfaces ()) {
-				Console.WriteLine ($" impl: {iface}");
 				if (iface == requiredIfaceType) {
-					Console.WriteLine ("  yep #1");
 					return true;
 				}
 
 				if (generic) {
 					if (!iface.IsGenericType) {
-						Console.WriteLine ("  not generic");
 						continue;
 					}
 
 					if (iface.GetGenericTypeDefinition () == requiredIfaceType.GetGenericTypeDefinition ()) {
-						Console.WriteLine ("  yep #2");
 						return true;
 					}
 				}
 			}
 
-			Console.WriteLine ("  nope #2");
 			return false;
 		}
 

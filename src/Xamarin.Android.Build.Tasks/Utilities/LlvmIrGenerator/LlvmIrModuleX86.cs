@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public override string Triple => "i686-unknown-linux-android21";
 		public override AndroidTargetArch TargetArch => AndroidTargetArch.X86;
 		public override uint NativePointerSize => 4;
-		public override bool Is64Bit => true;
+		public override bool Is64Bit => false;
 
 		public LlvmIrModuleX86 ()
 		{
