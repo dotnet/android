@@ -18,19 +18,19 @@ steps:
       projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
         arguments: >-
-        -c $(XA.Build.Configuration) -t:"InstallAvdImage;AcquireAndroidTarget"
-        -p:TestDeviceName=${{ parameters.deviceName }}
-        -p:TestAvdApiLevel=${{ parameters.avdApiLevel }}
-        -p:TestAvdAbi=${{ parameters.avdAbi }}
-        -p:TestAvdType=${{ parameters.avdType }}
-        ${{ parameters.emulatorMSBuildArgs }}
-        -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-        -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
+          -c $(XA.Build.Configuration) -t:"InstallAvdImage;AcquireAndroidTarget"
+          -p:TestDeviceName=${{ parameters.deviceName }}
+          -p:TestAvdApiLevel=${{ parameters.avdApiLevel }}
+          -p:TestAvdAbi=${{ parameters.avdAbi }}
+          -p:TestAvdType=${{ parameters.avdType }}
+          ${{ parameters.emulatorMSBuildArgs }}
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
       ${{ else }}:
         arguments: >-
-        -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
-        -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
-        -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+          -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
 - ${{ if eq(parameters.command, 'stop') }}:
   - task: DotNetCoreCLI@2
