@@ -581,6 +581,11 @@ namespace Xamarin.Android.Tasks
 						continue;
 					if (reader.IsStartElement ()) {
 						var elementName = reader.Name;
+						var elementNS = reader.NamespaceURI;
+						if (!string.IsNullOrEmpty (elementNS)) {
+							if (elementNS != "http://schemas.android.com/apk/res/android")
+								continue;
+						}
 						if (reader.HasAttributes) {
 							CodeTypeDeclaration customClass = null;
 							string name = null;
