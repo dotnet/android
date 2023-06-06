@@ -146,10 +146,6 @@ In this message, the term "constants" refers to class or interface members that 
     <value>Beklenmeyen 'global::' belirtimi. Bu hata, örneğin Metadata.xml dönüşüm dosyasında 'global::' belirtilirse oluşur.</value>
     <comment>The following are literal names and should not be translated: global::, Metadata.xml.</comment>
   </data>
-  <data name="Generator_BG4500" xml:space="preserve">
-    <value>'lang-features=default-interface-methods', 'codegen-target=xamarinandroid' ile uyumlu değil.</value>
-    <comment>The following are literal command line arguments and should not be translated: 'lang-features=default-interface-methods', 'codegen-target=xamarinandroid'.</comment>
-  </data>
   <data name="Generator_BG8101" xml:space="preserve">
     <value>Beklenmeyen sınıf alt öğesi: {0}.</value>
     <comment>{0} - The unexpected child class.</comment>
