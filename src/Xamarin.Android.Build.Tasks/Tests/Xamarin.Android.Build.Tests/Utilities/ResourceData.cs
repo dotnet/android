@@ -23,6 +23,8 @@ namespace Xamarin.Android.Build.Tests
 		static Lazy<byte []> remapActivityXml = new Lazy<byte []> (() => GetResourceData ("RemapActivity.xml"));
 		static Lazy<byte []> idmStaticMethodsInterface = new Lazy<byte []> (() => GetResourceData ("StaticMethodsInterface.java"));
 
+		static Lazy<byte []> rtxt = new Lazy<byte []> (() => GetResourceData ("R.txt"));
+
 		public  static  byte[]  JavaSourceJarTestJar            => javaSourceJarTestJar.Value;
 		public  static  byte[]  JavaSourceJarTestSourcesJar     => javaSourceJarTestSourcesJar.Value;
 		public  static  byte[]  JavaSourceJarTestJavadocJar     => javaSourceJarTestJavadocJar.Value;
@@ -36,6 +38,8 @@ namespace Xamarin.Android.Build.Tests
 		public  static  string RemapActivityJava => Encoding.UTF8.GetString (remapActivityJava.Value);
 		public  static  string RemapActivityXml => Encoding.UTF8.GetString (remapActivityXml.Value);
 		public  static  string IdmStaticMethodsInterface => Encoding.UTF8.GetString (idmStaticMethodsInterface.Value);
+
+		public  static  string RTxt => Encoding.UTF8.GetString (rtxt.Value);
 
 		static byte[] GetResourceData (string name)
 		{

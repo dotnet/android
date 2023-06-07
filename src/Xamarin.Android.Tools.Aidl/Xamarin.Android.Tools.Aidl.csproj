@@ -6,6 +6,7 @@
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
+    <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Xamarin.Android.Cecil">

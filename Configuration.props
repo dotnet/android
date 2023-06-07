@@ -252,7 +252,7 @@
 
   <!-- Don't analyze code from external repos -->
   <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
-    <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
   </PropertyGroup>
 
   <!-- The .NET 6+ versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
@@ -265,5 +265,4 @@
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RoslynAnalyzers.projitems" Condition=" '$(EnableRoslynAnalyzers)' == 'true' " />
 </Project>
