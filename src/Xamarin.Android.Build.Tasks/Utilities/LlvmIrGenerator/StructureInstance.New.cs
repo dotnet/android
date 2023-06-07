@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		protected StructureInstance (StructureInfo info, object? instance)
 		{
 			if (instance != null && !info.Type.IsAssignableFrom (instance.GetType ())) {
-				throw new ArgumentException ($"must be and instance of, or derived from, the {info.Type} type, or `null`", nameof (instance));
+				throw new ArgumentException ($"must be an instance of, or derived from, the {info.Type} type, or `null` (was {instance})", nameof (instance));
 			}
 
 			this.info = info;

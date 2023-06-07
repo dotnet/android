@@ -211,9 +211,8 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var generator = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
-			generator.Init ();
-			GenerateNativeAssembly (generator, outputDirectory);
+			var composer = new New.TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
@@ -243,9 +242,8 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var generator = new TypeMappingDebugNativeAssemblyGenerator (data);
-			generator.Init ();
-			GenerateNativeAssembly (generator, outputDirectory);
+			var composer = new New.TypeMappingDebugNativeAssemblyGenerator (data);
+			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
@@ -414,8 +412,8 @@ namespace Xamarin.Android.Tasks
 			NativeTypeMappingData data;
 			data = new NativeTypeMappingData (logger, modules);
 
-			var generatorNew = new New.TypeMappingReleaseNativeAssemblyGenerator (data);
-			GenerateNativeAssembly (generatorNew, generatorNew.Construct (), outputDirectory);
+			var composer = new New.TypeMappingReleaseNativeAssemblyGenerator (data);
+			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
@@ -425,7 +423,7 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		void GenerateNativeAssembly (New.TypeMappingReleaseNativeAssemblyGenerator generator, LLVM.IR.LlvmIrModule typeMapModule, string baseFileName)
+		void GenerateNativeAssembly (LLVM.IR.LlvmIrComposer composer, LLVM.IR.LlvmIrModule typeMapModule, string baseFileName)
 		{
 			AndroidTargetArch arch;
 			foreach (string abi in supportedAbis) {
@@ -434,7 +432,7 @@ namespace Xamarin.Android.Tasks
 				string outputFile = $"{baseFileName}.{abi}.ll";
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						generator.Generate (typeMapModule, arch, sw, outputFile);
+						composer.Generate (typeMapModule, arch, sw, outputFile);
 					} catch {
 						throw;
 					} finally {

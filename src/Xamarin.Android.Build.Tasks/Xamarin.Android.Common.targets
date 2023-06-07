@@ -1401,8 +1401,8 @@ because xbuild doesn't support framework reference assemblies.
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
   <PropertyGroup>
-    <_UseStockTypeManager Condition=" '$(_UseNativeStackTraces)' == 'True' And '$(_AndroidUseMarshalMethods)' != 'True' ">true</_UseStockTypeManager>
-    <_UseStockTypeManager Condition=" '$(_UseStockTypeManager)' == '' ">false</_UseStockTypeManager>
+    <_UseStockTypeManager Condition=" '$(_UseStockTypeManager)' == '' ">true</_UseStockTypeManager>
+    <_UseStockTypeManager Condition=" '$(_UseNativeStackTraces)' == 'True' And '$(_AndroidUseMarshalMethods)' == 'True' ">false</_UseStockTypeManager>
   </PropertyGroup>
 
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
