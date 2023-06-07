@@ -29,6 +29,7 @@ steps:
       ${{ else }}:
         arguments: >-
           -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
+          ${{ parameters.emulatorMSBuildArgs }}
           -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
           -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
