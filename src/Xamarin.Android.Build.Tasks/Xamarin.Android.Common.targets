@@ -1400,11 +1400,6 @@ because xbuild doesn't support framework reference assemblies.
 		Inputs="$(MonoPlatformJarPath);$(_AndroidBuildPropertiesCache)"
 		Outputs="$(_AndroidStaticResourcesFlag)"
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
-  <PropertyGroup>
-    <_UseStockTypeManager Condition=" '$(_UseStockTypeManager)' == '' ">true</_UseStockTypeManager>
-    <_UseStockTypeManager Condition=" '$(_UseNativeStackTraces)' == 'True' And '$(_AndroidUseMarshalMethods)' == 'True' ">false</_UseStockTypeManager>
-  </PropertyGroup>
-
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
       Condition=" '$(_AndroidApiLevel)' &gt;= '21' "
@@ -1417,7 +1412,7 @@ because xbuild doesn't support framework reference assemblies.
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CreateTypeManagerJava
-      Condition=" '$(_UseStockTypeManager)' != 'True' "
+      Condition=" '$(_AndroidUseMarshalMethods)' == 'True' "
       CallTracingEnabled="$(_UseNativeStackTraces)"
       MarshalMethodsEnabled="$(_AndroidUseMarshalMethods)"
       ResourceName="JavaInteropTypeManager.java"
@@ -1425,7 +1420,7 @@ because xbuild doesn't support framework reference assemblies.
   />
 
   <Copy
-    Condition=" '$(_UseStockTypeManager)' == 'True' "
+    Condition=" '$(_AndroidUseMarshalMethods)' != 'True' "
     SourceFiles="$(MonoPlatformJarPath)"
     DestinationFiles="$(IntermediateOutputPath)android\bin\mono.android.jar"
     SkipUnchangedFiles="true" />

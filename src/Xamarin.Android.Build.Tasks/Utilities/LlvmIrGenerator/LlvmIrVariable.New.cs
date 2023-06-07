@@ -21,8 +21,8 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	public string? Name                            { get; protected set; }
 	public Type Type                               { get; protected set; }
 	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
-	public virtual object? Value                   { get; set; }
-	public virtual string? Comment                 { get; set; }
+	public object? Value                           { get; set; }
+	public string? Comment                         { get; set; }
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function
@@ -205,4 +205,17 @@ class LlvmIrStringVariable : LlvmIrGlobalVariable
 	{
 		Value = value;
 	}
+}
+
+/// <summary>
+/// This is to address my dislike to have single-line variables separated by empty lines :P.
+/// When an instance of this "variable" is first encountered, it enables variable grouping, that is
+/// they will be followed by just a single newline.  The next instance of this "variable" turns
+/// grouping off, meaning the following variables will be followed by two newlines.
+/// </summary>
+class LlvmIrGroupDelimiterVariable : LlvmIrGlobalVariable
+{
+	public LlvmIrGroupDelimiterVariable ()
+		: base (typeof(void), ".:!GroupDelimiter!:.", LlvmIrVariableOptions.LocalConstant)
+	{}
 }

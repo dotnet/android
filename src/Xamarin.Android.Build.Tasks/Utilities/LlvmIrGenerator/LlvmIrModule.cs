@@ -126,6 +126,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			throw new InvalidOperationException ("Internal error: this overload is ONLY for adding string or array-of-string variables");
 		}
 
+		public void Add (IList<LlvmIrGlobalVariable> variables)
+		{
+			foreach (LlvmIrGlobalVariable variable in variables) {
+				Add (variable);
+			}
+		}
+
 		public void Add (LlvmIrGlobalVariable variable)
 		{
 			EnsureValidGlobalVariableType (variable);

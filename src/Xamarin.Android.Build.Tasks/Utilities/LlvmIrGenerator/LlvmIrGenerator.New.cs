@@ -48,6 +48,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			public readonly LlvmIrModule Module;
 			public readonly LlvmIrMetadataManager MetadataManager;
 			public string CurrentIndent { get; private set; } = String.Empty;
+			public bool InVariableGroup { get; set; }
 
 			public WriteContext (TextWriter writer, LlvmIrModule module, LlvmIrMetadataManager metadataManager)
 			{
@@ -187,8 +188,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			context.Output.WriteLine ();
 			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
+				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
+					context.InVariableGroup = !context.InVariableGroup;
+					if (context.InVariableGroup) {
+						context.Output.WriteLine ();
+					}
+					continue;
+				}
+
 				if (gv.BeforeWriteCallback != null) {
 					gv.BeforeWriteCallback (gv, target, gv.BeforeWriteCallbackCallerState);
 				}
@@ -215,7 +223,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		void WriteGlobalVariable (WriteContext context, LlvmIrGlobalVariable variable)
 		{
-			context.Output.WriteLine ();
+			if (!context.InVariableGroup) {
+				context.Output.WriteLine ();
+			}
+
 			WriteGlobalVariableStart (context, variable);
 			WriteTypeAndValue (context, variable, out LlvmTypeInfo typeInfo);
 			context.Output.Write (", align ");
@@ -552,7 +563,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		void WriteStructureValue (WriteContext context, StructureInstance? instance)
 		{
-			if (instance == null) {
+			if (instance == null || instance.IsZeroInitialized) {
 				context.Output.Write ("zeroinitializer");
 				return;
 			}

@@ -473,12 +473,6 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				// using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				// 	appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
-				// 	sw.Flush ();
-				// 	Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
-				// }
-
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
 					sw.Flush ();

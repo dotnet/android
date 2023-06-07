@@ -15,9 +15,22 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public Type Type  => info.Type;
 		public StructureInfo Info => info;
 
-		protected StructureInstance (StructureInfo info, object? instance)
+		/// <summary>
+		/// This is a cludge to support zero-initialized structures.  In order to output proper variable type
+		/// when a structure is used, the generator must be able to read the structure descrption, which is
+		/// provided in the <see cref="Info"/> property and, thus, it requires a variable of structural type to
+		/// **always** have a non-null value.  To support zero initialization of such structures, this property
+		/// can be set to <c>true</c>
+		/// </summary>
+		public bool IsZeroInitialized { get; set; }
+
+		protected StructureInstance (StructureInfo info, object instance)
 		{
-			if (instance != null && !info.Type.IsAssignableFrom (instance.GetType ())) {
+			if (instance == null) {
+				throw new ArgumentNullException (nameof (instance));
+			}
+
+			if (!info.Type.IsAssignableFrom (instance.GetType ())) {
 				throw new ArgumentException ($"must be an instance of, or derived from, the {info.Type} type, or `null` (was {instance})", nameof (instance));
 			}
 
@@ -58,7 +71,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	{
 		public T? Instance => (T)Obj;
 
-		public StructureInstance (StructureInfo info, T? instance)
+		public StructureInstance (StructureInfo info, T instance)
 			: base (info, instance)
 		{}
 	}
