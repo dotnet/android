@@ -110,10 +110,10 @@ namespace UnnamedProject
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				string apiLevel;
 				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
+				proj.SupportedOSPlatformVersion = "24.0";
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""${proj.PackageName}"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";

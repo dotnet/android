@@ -267,12 +267,12 @@
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.DefaultOutputPaths.targets" />
   </ItemGroup>
   <ItemGroup>
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative.pdb" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative.pdb" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative.dll" />
-    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative.pdb" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative-*.dll" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x86\libZipSharpNative-*.pdb" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative-*.dll" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)x64\libZipSharpNative-*.pdb" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.dll" />
+    <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)arm64\libZipSharpNative-*.pdb" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)aapt2.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\as.exe" />
     <_MSBuildFilesWin Include="$(MicrosoftAndroidSdkOutDir)binutils\bin\ld.exe" />
@@ -324,7 +324,7 @@
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)lib\host-$(HostOS)\libmonosgen-2.0.$(LibExtension)"          ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)lib\host-$(HostOS)\libxamarin-app.$(LibExtension)"           ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)lib\host-$(HostOS)\libxa-internal-api.$(LibExtension)"       ExcludeFromAndroidNETSdk="true" />
-    <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative.$(LibExtension)" />
+    <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libZipSharpNative-*.$(LibExtension)" />
     <_MSBuildFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)libMono.Unix.$(LibExtension)" />
   </ItemGroup>
   <!-- Allow us to exclude mono bundle files for PR builds -->

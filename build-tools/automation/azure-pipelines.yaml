@@ -81,9 +81,9 @@ variables:
   - name: MacBuildPoolImage
     value: ''
   - name: LinuxBuildPoolName
-    value: Azure Pipelines
+    value: android-devdiv-ubuntu-vmss-pr
   - name: LinuxBuildPoolImage
-    value: ubuntu-22.04
+    value: ''
   - name: DisablePipelineConfigDetector
     value: true
 
@@ -260,7 +260,7 @@ stages:
   - job: linux_tests_smoke
     displayName: Linux > Tests > MSBuild
     pool:
-      vmImage: ubuntu-22.04
+      name: android-devdiv-ubuntu-vmss-pr
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -457,73 +457,6 @@ stages:
         artifactName: Prepare Release - Push Internal
         includeBuildResults: true
 
-# .NET 6 VS Insertion Stage
-# Check - "Xamarin.Android (VS Insertion - Wait For Approval)"
-# Check - "Xamarin.Android (VS Insertion - Create VS Drop and Open PR)"
-- template: vs-insertion/stage/v1.yml@yaml-templates
-  parameters:
-    dependsOn: dotnet_prepare_release
-    symbolArtifactName: nuget-signed
-    symbolArtifactPatterns: |
-      !*Darwin*
-    pushToShippingFeed: true
-    nupkgArtifactName: nuget-signed
-    msiNupkgArtifactName: vs-msi-nugets
-    condition: eq(variables['MicroBuildSignType'], 'Real')
-
-- stage: push_nugets_to_nuget_org
-  displayName: Push to NuGet.org
-  dependsOn: dotnet_prepare_release
-  condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
-  jobs:
-  - job: wait_for_nuget_org_approval
-    displayName: Wait For NuGet.org Approval
-    timeoutInMinutes: 60 # The job timeout should be longer than the task timeout.
-    pool: server
-    steps:
-    - task: ManualValidation@0
-      timeoutInMinutes: 30 # The stage can be re-ran if needed.
-      inputs:
-        instructions: 'Press "Resume" to push .NET 6 packages to NuGet.org.'
-        onTimeout: reject
-      continueOnError: true
-
-  - job: push_to_nuget_org
-    displayName: Push to NuGet.org
-    pool: $(VSEngMicroBuildPool)
-    dependsOn: wait_for_nuget_org_approval
-    condition: eq(dependencies.wait_for_nuget_org_approval.result, 'Succeeded')
-    steps:
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: nuget-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: nuget-linux-signed
-        downloadPath: $(System.DefaultWorkingDirectory)\nuget-signed
-
-    - task: NuGetCommand@2
-      displayName: push nupkgs
-      inputs:
-        command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)\nuget-signed\*.nupkg
-        nuGetFeedType: external
-        publishFeedCredentials: Xamarin nuget.org - xamarinc
-
-    - task: DownloadPipelineArtifact@2
-      inputs:
-        artifactName: vs-msi-nugets
-        downloadPath: $(System.DefaultWorkingDirectory)\vs-msi-nugets
-
-    - task: NuGetCommand@2
-      displayName: push msi nupkgs
-      inputs:
-        command: push
-        packagesToPush: $(System.DefaultWorkingDirectory)\vs-msi-nugets\*.nupkg
-        nuGetFeedType: external
-        publishFeedCredentials: Xamarin nuget.org - xamarinc
 
 - stage: post_build
   displayName: Post Build

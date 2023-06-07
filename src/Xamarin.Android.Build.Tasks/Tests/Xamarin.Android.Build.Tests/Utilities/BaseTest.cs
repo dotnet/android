@@ -3,6 +3,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -274,7 +275,7 @@ namespace Xamarin.Android.Build.Tests
 			List<ApiInfo> defaults = new List<ApiInfo> ();
 			for (int i = 10; i < 26; i++) {
 				defaults.Add (new ApiInfo () {
-					Id = i.ToString (),
+					Id = i.ToString (CultureInfo.InvariantCulture),
 				});
 			}
 			foreach (var level in apiLevels ?? defaults.ToArray ()) {

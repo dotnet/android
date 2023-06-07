@@ -720,6 +720,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1036" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion“{0}”与项目文件中的 $(SupportedOSPlatformVersion) 值“{1}”不匹配(如果项目文件中没有 $(SupportedOSPlatformVersion) 值，则已假定默认值)。]D;]A;请更改 AndroidManifest.xml 中的值以匹配 $(SupportedOSPlatformVersion) 值，或者移除 AndroidManifest.xml 中的值(并将 $(SupportedOSPlatformVersion) 值添加到项目文件 [如果尚不存在]5D;)。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
@@ -935,9 +944,21 @@
       </Item>
       <Item ItemId=";XA4216_MinSdkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Androidmanifest.xml//uses-sdk/@android: minSdkVersion“{0}”小于 API-{1}，此配置不受支持。]]></Val>
+            <Val><![CDATA[部署目标“{0}”不受支持(最小值为“{1}”)。请增加(或移除) AndroidManifest.xml 中的 //uses-sdk/@android:minSdkVersion 值。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4216_SupportedOSPlatformVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[部署目标“{0}”不受支持(最小值为“{1}”)。请增加项目文件中的 $(SupportedOSPlatformVersion) 属性值。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1403,19 +1424,25 @@
       </Item>
       <Item ItemId=";XA5300_Android_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[找不到 Android SDK 目录。请检查 Visual Studio 中的 Android SDK 管理器是否显示有效的安装。若要使用命令行生成的自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
+            <Val><![CDATA[找不到 Android SDK 目录。按照以下说明安装 Android SDK: https://aka.ms/dotnet-android-install-sdk]D;]A;若要对命令行生成使用自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the 'AndroidSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5300_Java_SDK" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          <Val><![CDATA[The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk]D;]A;To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[找不到 Java SDK 目录。请确保 Visual Studio 选项的 Android 部分配置了有效的 Java SDK 目录。若要使用命令行生成的自定义 SDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
+            <Val><![CDATA[找不到 Java SDK 目录。按照以下说明安装 Java SDK: https://aka.ms/dotnet-android-install-sdk]D;]A;若要对命令行生成使用自定义 JDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the 'JavaSdkDirectory' MSBuild property to the custom path.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

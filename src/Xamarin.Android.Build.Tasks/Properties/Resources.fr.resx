@@ -497,6 +497,13 @@ Veuillez remplacer la valeur par un nom de type qualifié par l’assembly qui h
     <value>La propriété « BundleAssemblies » est déconseillée et n’a aucun effet sur la build de l’application. La fonctionnalité équivalente est implémentée par les propriétés « AndroidUseAssemblyStore » et « AndroidEnableAssemblyCompression ».</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Utilisation de AppDomain.CreateDomain() détectée dans l'assembly : {0}. .NET 6 et les versions ultérieures prend uniquement en charge un seul AppDomain. Cette API ne sera donc plus disponible dans Xamarin.Android après la publication de .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Veuillez remplacer la valeur par un nom de type qualifié par l’assembly qui h
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' est inférieur à API-{1}, cette configuration n'est pas prise en charge.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' est inférieur à API-{1}, cette configuration n'est pas prise en charge.</value>
@@ -881,11 +894,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Le répertoire du kit Android SDK est introuvable. Vérifiez que le Gestionnaire SDK Android de Visual Studio montre que l'installation est valide. Pour utiliser un chemin de kit SDK personnalisé dans une build à partir de la ligne de commande, affectez le chemin personnalisé à la propriété MSBuild 'AndroidSdkDirectory'.</value>
+    <value>Le répertoire Android SDK est introuvable. Installez le Android SDK en suivant les instructions fournies à l’adresse suivante : https://aka.ms/dotnet-android-install-sdk
+Pour utiliser un chemin d’accès SDK personnalisé pour une build de ligne de commande, définissez la propriété MSBuild « AndroidSdkDirectory » sur le chemin personnalisé.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Le répertoire du kit SDK Java est introuvable. Vérifiez que la section Android des options de Visual Studio comporte des informations de configuration valides pour le répertoire du kit SDK Java. Pour utiliser un chemin de kit SDK personnalisé dans une build à partir de la ligne de commande, affectez le chemin personnalisé à la propriété MSBuild 'JavaSdkDirectory'.</value>
+    <value>Le répertoire du Kit de développement logiciel (SDK) Java est introuvable. Installez le Kit de développement logiciel (SDK) Java en suivant les instructions fournies dans : https://aka.ms/dotnet-android-install-sdk
+Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, définissez la propriété MSBuild « JavaSdkDirectory » sur le chemin personnalisé.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

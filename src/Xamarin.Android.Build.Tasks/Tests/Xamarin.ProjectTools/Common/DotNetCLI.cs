@@ -96,6 +96,12 @@ namespace Xamarin.ProjectTools
 			return Execute (arguments.ToArray ());
 		}
 
+		public bool Restore (string target = null, string runtimeIdentifier = null, string [] parameters = null)
+		{
+			var arguments = GetDefaultCommandLineArgs ("restore", target, runtimeIdentifier, parameters);
+			return Execute (arguments.ToArray ());
+		}
+
 		public bool Build (string target = null, string runtimeIdentifier = null, string [] parameters = null)
 		{
 			var arguments = GetDefaultCommandLineArgs ("build", target, runtimeIdentifier, parameters);

@@ -5,6 +5,7 @@ parameters:
   avdApiLevel:            # Device API level, like '30', required if 'specificImage' is 'true'
   avdAbi:                 # Device ABI, like 'x86', required if 'specificImage' is 'true'
   avdType:                # Device AVD, like 'android-wear', required if 'specificImage' is 'true'
+  emulatorMSBuildArgs:    # Extra args to pass to the emulator configuration like '-p:TestAvdExtraBootArgs=-writable-system', optional
   launchTimeoutMin: 20    # Minutes to wait for the emulator to start
   xaSourcePath: $(System.DefaultWorkingDirectory) # working directory
 
@@ -16,9 +17,21 @@ steps:
     inputs:
       projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
-        arguments: -c $(XA.Build.Configuration) -t:"InstallAvdImage;AcquireAndroidTarget" -p:TestDeviceName=${{ parameters.deviceName }} -p:TestAvdApiLevel=${{ parameters.avdApiLevel }} -p:TestAvdAbi=${{ parameters.avdAbi }} -p:TestAvdType=${{ parameters.avdType }} -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
+        arguments: >-
+          -c $(XA.Build.Configuration) -t:"InstallAvdImage;AcquireAndroidTarget"
+          -p:TestDeviceName=${{ parameters.deviceName }}
+          -p:TestAvdApiLevel=${{ parameters.avdApiLevel }}
+          -p:TestAvdAbi=${{ parameters.avdAbi }}
+          -p:TestAvdType=${{ parameters.avdType }}
+          ${{ parameters.emulatorMSBuildArgs }}
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-${{ parameters.avdApiLevel }}.binlog
       ${{ else }}:
-        arguments: -c $(XA.Build.Configuration) -t:AcquireAndroidTarget -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
+        arguments: >-
+          -c $(XA.Build.Configuration) -t:AcquireAndroidTarget
+          ${{ parameters.emulatorMSBuildArgs }}
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/start-emulator.binlog
 
 - ${{ if eq(parameters.command, 'stop') }}:
   - task: DotNetCoreCLI@2
@@ -28,6 +41,16 @@ steps:
     inputs:
       projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
-        arguments: -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget" -p:TestDeviceName=${{ parameters.deviceName }} -p:TestAvdApiLevel=${{ parameters.avdApiLevel }} -p:TestAvdAbi=${{ parameters.avdAbi }} -p:TestAvdType=${{ parameters.avdType }} -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+        arguments: >-
+          -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget"
+          -p:TestDeviceName=${{ parameters.deviceName }}
+          -p:TestAvdApiLevel=${{ parameters.avdApiLevel }}
+          -p:TestAvdAbi=${{ parameters.avdAbi }}
+          -p:TestAvdType=${{ parameters.avdType }}
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
       ${{ else }}:
-        arguments: -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget" -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }} -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
+        arguments: >-
+          -c $(XA.Build.Configuration) -t:"AcquireAndroidTarget,ReleaseAndroidTarget"
+          -p:AvdLaunchTimeoutMinutes=${{ parameters.launchTimeoutMin }}
+          -bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog

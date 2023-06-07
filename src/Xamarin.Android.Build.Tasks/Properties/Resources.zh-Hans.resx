@@ -497,6 +497,13 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>“BundleAssemblies” 属性已弃用，它对应用程序生成没有影响。将由 “AndroidUseAssemblyStore” 和 “AndroidEnableAssemblyCompression” 属性实现等效功能。</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>在程序集 {0} 中检测到使用了 AppDomain.CreateDomain()。.NET 6 及更高版本将仅支持一个 AppDomain，因此 .NET 6 发布后，将无法再在 Xamarin.Android 中使用此 API。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>Androidmanifest.xml//uses-sdk/@android: minSdkVersion“{0}”小于 API-{1}，此配置不受支持。</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>Androidmanifest.xml//uses-sdk/@android: targetSdkVersion“{0}”小于 API-{1}，此配置不受支持。</value>
@@ -881,11 +894,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>找不到 Android SDK 目录。请检查 Visual Studio 中的 Android SDK 管理器是否显示有效的安装。若要使用命令行生成的自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。</value>
+    <value>找不到 Android SDK 目录。按照以下说明安装 Android SDK: https://aka.ms/dotnet-android-install-sdk
+若要对命令行生成使用自定义 SDK 路径，请将 "AndroidSdkDirectory" MSBuild 属性设置为自定义路径。</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>找不到 Java SDK 目录。请确保 Visual Studio 选项的 Android 部分配置了有效的 Java SDK 目录。若要使用命令行生成的自定义 SDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。</value>
+    <value>找不到 Java SDK 目录。按照以下说明安装 Java SDK: https://aka.ms/dotnet-android-install-sdk
+若要对命令行生成使用自定义 JDK 路径，请将 "JavaSdkDirectory" MSBuild 属性设置为自定义路径。</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

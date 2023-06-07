@@ -497,6 +497,13 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
     <value>Właściwość „BundleAssemblies” jest przestarzała i nie ma wpływu na kompilację aplikacji. Równoważna funkcjonalność jest implementowana przez właściwości „AndroidUseAssemblyStore” i „AndroidEnableAssemblyCompression”.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Wykryto użycie metody AppDomain.CreateDomain() w zestawie: {0}. Platforma .NET 6 lub nowsza wersja obsługuje tylko jedną domenę aplikacji, dlatego ten interfejs API nie będzie już dostępny w rozszerzeniu Xamarin.Android po wydaniu platformy .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>Wersja //uses-sdk/@android:minSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>Wersja //uses-sdk/@android:targetSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
@@ -881,11 +894,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Nie odnaleziono katalogu zestawu SDK systemu Android. Sprawdź, czy jest wyświetlana prawidłowa instalacja w menedżerze zestawu SDK systemu Android w programie Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „AndroidSdkDirectory”.</value>
+    <value>Nie można odnaleźć katalogu zestawu Android SDK. Zainstaluj zestaw Android SDK, postępując zgodnie z instrukcjami w temacie: https://aka.ms/dotnet-android-install-sdk
+Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji wiersza polecenia, ustaw ścieżkę niestandardową właściwości "AndroidSdkDirectory" programu MSBuild.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Nie odnaleziono katalogu zestawu SDK języka Java. Sprawdź, czy jest skonfigurowany prawidłowy katalog zestawu SDK języka Java w sekcji systemu Android w opcjach programu Visual Studio. Aby użyć niestandardowej ścieżki zestawu SDK dla kompilacji w wierszu polecenia, ustaw tę ścieżkę we właściwości programu MSBuild „JavaSdkDirectory”.</value>
+    <value>Nie można odnaleźć katalogu zestawu Java SDK. Zainstaluj zestaw Java SDK, postępując zgodnie z instrukcjami na stronie https://aka.ms/dotnet-android-install-sdk
+Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza polecenia, ustaw właściwości „JavaSdkDirectory” programu MSBuild na ścieżkę niestandardową.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

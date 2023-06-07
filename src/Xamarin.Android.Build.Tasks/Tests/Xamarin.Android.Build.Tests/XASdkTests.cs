@@ -79,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => XamarinAndroidApplicationProject.icon_binary_mdpi,
 					},
 					new AndroidItem.ProguardConfiguration ("proguard.txt") {
-						TextContent = () => @"-ignorewarnings",
+						TextContent = () => "# LibraryC",
 					},
 				}
 			};
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 			FileAssert.Exists (aarPath);
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/bar/bar.txt");
-				aar.AssertContainsEntry (aarPath, "proguard.txt");
+				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryC");
 			}
 
 			var libB = new XASdkProject (outputType: "Library") {
@@ -139,7 +139,7 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => ResourceData.JavaSourceTestExtension,
 					},
 					new AndroidItem.ProguardConfiguration ("proguard.txt") {
-						TextContent = () => @"-ignorewarnings",
+						TextContent = () => "# LibraryB",
 					},
 				}
 			};
@@ -185,6 +185,8 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
 				aar.AssertContainsEntry (aarPath, "jni/x86/libfoo.so");
+				// proguard.txt from Library C should not flow to Library B and "double"
+				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryB");
 			}
 
 			// Check EmbeddedResource files do not exist
@@ -806,36 +808,6 @@ public class FooA {
 			}
 		}
 
-
-		// TODO: <uses-sdk android:minSdkVersion="32" android:targetSdkVersion="32" />
-		// Causes warning: D8 : warning : An API level of 32 is not supported by this compiler. Please use an API level of 31 or earlier
-		// Add a 32 parameter here when we get a newer version of r8.
-		[Test]
-		public void SupportedOSPlatformVersion ([Values (21, 31)] int minSdkVersion)
-		{
-			var proj = new XASdkProject {
-				SupportedOSPlatformVersion = minSdkVersion.ToString (),
-			};
-			// Call AccessibilityTraversalAfter from API level 22
-			// https://developer.android.com/reference/android/view/View#getAccessibilityTraversalAfter()
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("button!.Click", "button!.AccessibilityTraversalAfter.ToString ();\nbutton!.Click");
-
-			var dotnet = CreateDotNetBuilder (proj);
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-
-			if (minSdkVersion < 22) {
-				StringAssertEx.Contains ("warning CA1416", dotnet.LastBuildOutput, "Should get warning about Android 22 API");
-			} else {
-				dotnet.AssertHasNoWarnings ();
-			}
-
-			var manifestPath = Path.Combine (FullProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
-			FileAssert.Exists (manifestPath);
-			var manifest = XDocument.Load (manifestPath);
-			XNamespace ns = "http://schemas.android.com/apk/res/android";
-			Assert.AreEqual (minSdkVersion.ToString (), manifest.Root.Element ("uses-sdk").Attribute (ns + "minSdkVersion").Value);
-		}
-
 		[Test]
 		public void DotNetBuildXamarinForms ([Values (true, false)] bool useInterpreter)
 		{
@@ -1296,6 +1268,17 @@ public abstract class Foo<TVirtualView, TNativeView> : ViewHandler<TVirtualView,
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
 			var builder = CreateDotNetBuilder (proj);
 			Assert.AreEqual (expected, builder.Build (), $"{proj.ProjectName} should {(expected ? "succeed" : "fail")}");
+		}
+
+		[Test]
+		public void EolFrameworks()
+		{
+			var library = new XASdkProject (outputType: "Library") {
+				TargetFramework = "net6.0-android",
+			};
+			var dotnet = CreateDotNetBuilder (library);
+			Assert.IsFalse (dotnet.Restore (), $"{library.ProjectName} should fail");
+			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, "NETSDK1202"), $"{dotnet.BuildLogFile} should have NETSDK1202.");
 		}
 
 		DotNetCLI CreateDotNetBuilder (string relativeProjectDir = null)

@@ -46,6 +46,7 @@ namespace Xamarin.ProjectTools
 				SetProperty (KnownProperties.ImplicitUsings, "enable");
 				SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
+				SupportedOSPlatformVersion = "21.0";
 
 				// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
 				Imports.Add (new Import (() => "Directory.Build.targets") {
@@ -66,8 +67,8 @@ namespace Xamarin.ProjectTools
 				SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
 				SetProperty (DebugProperties, KnownProperties.EmbedAssembliesIntoApk, "False", "'$(EmbedAssembliesIntoApk)' == ''");
 				SetProperty (ReleaseProperties, KnownProperties.EmbedAssembliesIntoApk, "True", "'$(EmbedAssembliesIntoApk)' == ''");
+				MinSdkVersion = "19";
 			}
-
 			AndroidManifest = default_android_manifest;
 			if (Builder.UseDotNet) {
 				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
@@ -99,9 +100,17 @@ namespace Xamarin.ProjectTools
 		public string TargetSdkVersion { get; set; }
 
 		/// <summary>
-		/// Defaults to API 19
+		/// Set this to add the `android:minSdkVersion` attribute to the AndroidManifest.xml file
 		/// </summary>
-		public string MinSdkVersion { get; set; } = "19";
+		public string MinSdkVersion { get; set; }
+
+		/// <summary>
+		/// Defaults to 21.0
+		/// </summary>
+		public string SupportedOSPlatformVersion {
+			get { return GetProperty (KnownProperties.SupportedOSPlatformVersion); }
+			set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
+		}
 
 		string AotAssembliesPropertyName => Builder.UseDotNet ? KnownProperties.RunAOTCompilation : KnownProperties.AotAssemblies;
 

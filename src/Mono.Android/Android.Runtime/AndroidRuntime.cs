@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
@@ -165,7 +166,7 @@ namespace Android.Runtime {
 
 		public override void WriteGlobalReferenceLine (string format, params object?[] args)
 		{
-			RuntimeNativeMethods._monodroid_gref_log (string.Format (format, args));
+			RuntimeNativeMethods._monodroid_gref_log (string.Format (CultureInfo.InvariantCulture, format, args));
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference value)
@@ -530,7 +531,7 @@ namespace Android.Runtime {
 								}
 
 							if (minfo == null)
-								throw new InvalidOperationException (String.Format ("Specified managed method '{0}' was not found. Signature: {1}", mname.ToString (), signature.ToString ()));
+								throw new InvalidOperationException (FormattableString.Invariant ($"Specified managed method '{mname.ToString ()}' was not found. Signature: {signature.ToString ()}"));
 							callback = CreateDynamicCallback (minfo);
 							needToRegisterNatives = true;
 						} else {
@@ -659,9 +660,8 @@ namespace Android.Runtime {
 					if (JniEnvironment.Types.IsSameObject (value.PeerReference, target!.PeerReference)) {
 						found = true;
 						if (Logger.LogGlobalRef) {
-							Logger.Log (LogLevel.Info, "monodroid-gref",
-									string.Format ("warning: not replacing previous registered handle {0} with handle {1} for key_handle 0x{2}",
-										target.PeerReference.ToString (), reference.ToString (), hash.ToString ("x")));
+							Logger.Log (LogLevel.Info, "monodroid-gref", FormattableString.Invariant (
+								$"warning: not replacing previous registered handle {target.PeerReference} with handle {reference} for key_handle 0x{hash:x}"));
 						}
 					}
 				}
@@ -704,10 +704,9 @@ namespace Android.Runtime {
 			}
 
 			if (Logger.LogGlobalRef) {
-				RuntimeNativeMethods._monodroid_gref_log ("handle 0x" + handleField.ToString ("x") +
-						"; key_handle 0x" + hash.ToString ("x") +
-						": Java Type: `" + JNIEnv.GetClassNameFromInstance (handleField) + "`; " +
-						"MCW type: `" + value.GetType ().FullName + "`\n");
+				RuntimeNativeMethods._monodroid_gref_log (
+					FormattableString.Invariant (
+						$"handle 0x{handleField:x}; key_handle 0x{hash:x}: Java Type: `{JNIEnv.GetClassNameFromInstance (handleField)}`; MCW type: `{value.GetType ().FullName}`\n"));
 			}
 		}
 

@@ -79,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				MinSdkVersion = "23",
+				SupportedOSPlatformVersion = "23",
 				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
@@ -959,10 +959,10 @@ namespace Styleable.Library {
 				b.ThrowOnBuildFailure = false;
 				string apiLevel;
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
+				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";
@@ -996,10 +996,10 @@ namespace Styleable.Library {
 				app.AndroidUseAapt2 = useAapt2;
 				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
+				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";

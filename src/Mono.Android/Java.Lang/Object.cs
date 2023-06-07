@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -221,7 +222,7 @@ namespace Java.Lang {
 
 			if (Logger.LogGlobalRef) {
 				RuntimeNativeMethods._monodroid_gref_log (
-						string.Format ("Disposing handle 0x{0}\n", handle.ToString ("x")));
+						FormattableString.Invariant ($"Disposing handle 0x{handle:x}\n"));
 			}
 
 			JNIEnvInit.AndroidValueManager?.RemovePeer (instance, key_handle);
@@ -380,7 +381,7 @@ namespace Java.Lang {
 
 		public static explicit operator bool (Java.Lang.Object value)
 		{
-			return Convert.ToBoolean (value);
+			return Convert.ToBoolean (value, CultureInfo.InvariantCulture);
 		}
 
 		[Obsolete ("Use `(byte)(sbyte) value`", error: true)]
@@ -391,12 +392,12 @@ namespace Java.Lang {
 
 		public static explicit operator sbyte (Java.Lang.Object value)
 		{
-			return Convert.ToSByte (value);
+			return Convert.ToSByte (value, CultureInfo.InvariantCulture);
 		}
 
 		public static explicit operator char (Java.Lang.Object value)
 		{
-			return Convert.ToChar (value);
+			return Convert.ToChar (value, CultureInfo.InvariantCulture);
 		}
 
 		[Obsolete ("Use `(uint)(int) value`", error: true)]
@@ -407,7 +408,7 @@ namespace Java.Lang {
 
 		public static explicit operator int (Java.Lang.Object value)
 		{
-			return Convert.ToInt32 (value);
+			return Convert.ToInt32 (value, CultureInfo.InvariantCulture);
 		}
 
 		[Obsolete ("Use `(ulong)(long) value`", error: true)]
@@ -418,24 +419,24 @@ namespace Java.Lang {
 
 		public static explicit operator long (Java.Lang.Object value)
 		{
-			return Convert.ToInt64 (value);
+			return Convert.ToInt64 (value, CultureInfo.InvariantCulture);
 		}
 
 		public static explicit operator float (Java.Lang.Object value)
 		{
-			return Convert.ToSingle (value);
+			return Convert.ToSingle (value, CultureInfo.InvariantCulture);
 		}
 
 		public static explicit operator double (Java.Lang.Object value)
 		{
-			return Convert.ToDouble (value);
+			return Convert.ToDouble (value, CultureInfo.InvariantCulture);
 		}
 
 		public static explicit operator string? (Java.Lang.Object? value)
 		{
 			if (value == null)
 				return null;
-			return Convert.ToString (value);
+			return Convert.ToString (value, CultureInfo.InvariantCulture);
 		}
 
 		[return: NotNullIfNotNull ("value")]

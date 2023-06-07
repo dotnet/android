@@ -154,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 				// Set //uses-sdk/@android:minSdkVersion so that LLVM uses the right libc.so
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:minSdkVersion=""{Xamarin.Android.Tools.XABuildConfig.NDKMinimumApiAvailable}"" />
+	<uses-sdk android:minSdkVersion=""{Xamarin.Android.Tools.XABuildConfig.AndroidMinimumDotNetApiLevel}"" />
 	<application android:label=""{proj.ProjectName}"">
 	</application>
 </manifest>";

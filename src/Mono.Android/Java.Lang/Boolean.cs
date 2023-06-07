@@ -75,7 +75,7 @@ namespace Java.Lang {
 
 		string IConvertible.ToString (IFormatProvider? provider)
 		{
-			return Convert.ToString (BooleanValue ());
+			return Convert.ToString (BooleanValue (), provider);
 		}
 
 		object IConvertible.ToType (Type conversionType, IFormatProvider? provider)

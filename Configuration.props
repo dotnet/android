@@ -22,7 +22,7 @@
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
     <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">26</AndroidJavaRuntimeApiLevel>
-    <!-- The min API level supported by Microsoft.Android.Sdk, should refactor/remove when this value is the same as $(AndroidFirstApiLevel) -->
+    <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
     <AndroidLatestStableApiLevel Condition="'$(AndroidLatestStableApiLevel)' == ''">33</AndroidLatestStableApiLevel>
@@ -42,7 +42,7 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.56</AndroidNet7Version>
+    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.68</AndroidNet7Version>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
@@ -248,7 +248,7 @@
 
   <!-- Don't analyze code from external repos -->
   <PropertyGroup Condition=" !$(MSBuildProjectDirectory.Contains ('external')) and !$(MSBuildProjectDirectory.Contains ('NUnitLite')) ">
-    <XAShouldAnalyzeAssembly>True</XAShouldAnalyzeAssembly>
+    <EnableNETAnalyzers>True</EnableNETAnalyzers>
   </PropertyGroup>
 
   <!-- The .NET 6+ versions of these analyzers are stricter and require overloads not available in .NET Framework, so start with just .NET Framework -->
@@ -261,5 +261,4 @@
   </PropertyGroup>
 
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\Ndk.targets" />
-  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RoslynAnalyzers.projitems" Condition=" '$(EnableRoslynAnalyzers)' == 'true' " />
 </Project>

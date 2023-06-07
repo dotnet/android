@@ -497,6 +497,13 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'BundleAssemblies' 속성은 사용되지 않으며 애플리케이션 빌드에 영향을 주지 않습니다. 동일한 기능이 'AndroidUseAssemblyStore' 및 'AndroidEnableAssemblyCompression' 속성에 의해 구현됩니다.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>어셈블리에서 AppDomain.CreateDomain()의 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 Xamarin.Android에서 더 이상 사용할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}'이(가) API-{1}보다 작으므로 이 구성은 지원되지 않습니다.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}'이(가) API-{1}보다 작으므로 이 구성은 지원되지 않습니다.</value>
@@ -881,11 +894,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Android SDK 디렉터리를 찾을 수 없습니다. Visual Studio의 Android SDK 관리자에서 유효한 설치를 표시하는지 확인합니다. 명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'AndroidSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.</value>
+    <value>Android SDK 디렉터리를 찾을 수 없습니다. 다음 지침에 따라 Android SDK 설치하세요. https://aka.ms/dotnet-android-install-sdk
+명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'AndroidSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Java SDK 디렉터리를 찾을 수 없습니다. Visual Studio 옵션의 Android 섹션에 유효한 Java SDK 디렉터리가 구성되어 있는지 확인하세요. 명령줄 빌드에 사용자 지정 SDK 경로를 사용하려면 'JavaSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.</value>
+    <value>Java SDK 디렉터리를 찾을 수 없습니다. 다음 지침에 따라 Java SDK를 설치하세요. https://aka.ms/dotnet-android-install-sdk
+명령줄 빌드에 사용자 지정 JDK 경로를 사용하려면 'JavaSdkDirectory' MSBuild 속성을 사용자 지정 경로로 설정합니다.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

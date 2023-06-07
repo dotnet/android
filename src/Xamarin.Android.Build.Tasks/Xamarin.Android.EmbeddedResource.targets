@@ -38,6 +38,7 @@ This file is used by all project types, including binding projects.
       Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
     <ResolveLibraryProjectImports
         ContinueOnError="$(DesignTimeBuild)"
+        AndroidApplication="$(AndroidApplication)"
         CacheFile="$(_AndroidLibraryProjectImportsCache)"
         DesignTimeBuild="$(DesignTimeBuild)"
         Assemblies="@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths)"

@@ -42,7 +42,7 @@ namespace Mono.CodeGeneration
 				if (members [i] == null)
 					members [i] = attributeType.GetProperty (namedArgNames [i]);
 				if (members [i] == null)
-					throw new ArgumentException (String.Format ("Named argument {0} was not found in attribute type {1}", namedArgNames [i], attributeType));
+					throw new ArgumentException (FormattableString.Invariant ($"Named argument {namedArgNames [i]} was not found in attribute type {attributeType}"));
 			}
 
 			CodeLiteral [] args = new CodeLiteral [ctorArgs.Length];
@@ -64,7 +64,7 @@ namespace Mono.CodeGeneration
 			ArrayList fvalues = new ArrayList ();
 			for (int i = 0; i < members.Length; i++) {
 				if (members [i] == null)
-					throw new ArgumentException (String.Format ("MemberInfo at {0} was null for type {1}.", i, attributeType));
+					throw new ArgumentException (FormattableString.Invariant ($"MemberInfo at {i} was null for type {attributeType}."));
 				if (members [i] is PropertyInfo) {
 					props.Add ((PropertyInfo) members [i]);
 					pvalues.Add (values [i].Value);

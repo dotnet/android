@@ -497,6 +497,13 @@ Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönü
     <value>'BundleAssemblies' özelliği kullanım dışıdır ve uygulama derlemesi üzerinde etkisi yoktur. Eşdeğer işlev 'AndroidUseAssemblyStore' ve 'AndroidEnableAssemblyCompression' özellikleri ile uygulanmalıdır.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönü
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}', API-{1} değerinden küçük, bu yapılandırma desteklenmiyor.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}', API-{1} değerinden küçük, bu yapılandırma desteklenmiyor.</value>
@@ -881,11 +894,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Android SDK dizini bulunamadı. Visual Studio Android SDK Yöneticisi'nde geçerli bir yükleme gösterilip gösterilmediğini denetleyin. Komut satırı derlemesi için özel bir SDK yolu kullanmak üzere 'AndroidSdkDirectory' MSBuild özelliğini özel yola ayarlayın.</value>
+    <value>Android SDK dizini bulunamadı. https://aka.ms/dotnet-android-install-sdk adresindeki yönergeleri izleyerek Android SDK’yi yükleyin.
+Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'AndroidSdkDirectory' MSBuild özelliğini özel yola ayarlayın.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Java SDK dizini bulunamadı. Visual Studio seçeneklerindeki Android bölümünde geçerli bir Java SDK dizininin yapılandırıldığından emin olun. Komut satırı derlemesi için özel bir SDK yolu kullanmak üzere 'JavaSdkDirectory' MSBuild özelliğini özel yola ayarlayın.</value>
+    <value>Java SDK dizini bulunamadı. https://aka.ms/dotnet-android-install-sdk adresindeki yönergeleri izleyerek Java SDK’yi yükleyin.
+Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDirectory' MSBuild özelliğini özel yola ayarlayın.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">
