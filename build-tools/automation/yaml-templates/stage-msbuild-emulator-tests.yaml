@@ -11,6 +11,7 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   usesCleanImages: true
+  shouldFailOnIssue: true
   prepareSteps: []
 
 stages:
@@ -47,7 +48,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
     - template: start-stop-emulator.yaml
       parameters:
@@ -55,7 +56,7 @@ stages:
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
@@ -71,6 +72,8 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
+      paramters:
+        condition: ${{ parameters.shouldFailOnIssue }}
 
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
@@ -106,7 +109,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
     - template: start-stop-emulator.yaml
       parameters:
@@ -120,7 +123,7 @@ stages:
     - template: run-sliced-nunit-tests.yaml
       parameters:
         testRunTitle: WearOS On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat = WearOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
@@ -142,3 +145,5 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
+      paramters:
+        condition: ${{ parameters.shouldFailOnIssue }}

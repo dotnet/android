@@ -8,6 +8,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
+  shouldFailOnIssue: true
   prepareSteps: []
 
 stages:
@@ -26,6 +27,7 @@ stages:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
+      shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
       prepareSteps: ${{ parameters.prepareSteps }}
 
   - template: run-msbuild-tests.yaml
@@ -38,4 +40,5 @@ stages:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
+      shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
       prepareSteps: ${{ parameters.prepareSteps }}

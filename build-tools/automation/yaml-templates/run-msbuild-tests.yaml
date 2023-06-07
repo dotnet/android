@@ -7,6 +7,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
+  shouldFailOnIssue: true
   prepareSteps: []
 
 jobs:
@@ -59,3 +60,5 @@ jobs:
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: fail-on-issue.yaml
+    paramters:
+      condition: ${{ parameters.shouldFailOnIssue }}
