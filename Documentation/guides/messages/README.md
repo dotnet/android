@@ -224,7 +224,7 @@ and `NNN` is a 3 digit number indicating the type of the unhandled `Exception`.
 
 ## XA8xxx: Linker Step Errors
 
-+ [XA8000/IL8000](xa8000.md): Could not find an 'AndroidResource' for '{0}'. To Fix this issue add the required 'AndroidResource' item to your project.
++ [XA8000/IL8000](xa8000.md): Could not find Android Resource '@anim/enterfromright'. Please update @(AndroidResource) to add the missing resource.
 
 **Tasks:**
 * `A2C` - `Aapt2Compile`

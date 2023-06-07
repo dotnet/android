@@ -124,6 +124,17 @@ namespace MonoDroid.Tuner
 			return output;
 		}
 
+		string GetNativeTypeNameFromManagedTypeName (string name)
+		{
+			switch (name) {
+				case "Animation": return "anim";
+				case "Attribute": return "attr";
+				case "Boolean": return "bool";
+				case "Dimension": return "dimen";
+				default: return name.ToLower ();
+			}
+		}
+
 		protected override void FixBody (MethodBody body, TypeDefinition designer)
 		{
 			// replace
@@ -149,9 +160,12 @@ namespace MonoDroid.Tuner
 					} else {
 						LogMessage ($"DEBUG! Failed to find {key}!");
 						// The 'key' in this case will be something like Layout::Toolbar.
-						// We want format this into Layout/Toolbar so its easier to understand
+						// We want format this into @layout/Toolbar so its easier to understand
 						// for the user.
-						var msg = string.Format (CultureInfo.CurrentCulture, Resources.XA_Fixup_Designer_Error, key.Replace ("::", "/"));
+						var index = key.IndexOf ("::");
+						var typeName = GetNativeTypeNameFromManagedTypeName (key.Substring (0, index));
+						var identifier = key.Substring (index + 2);
+						var msg = string.Format (CultureInfo.CurrentCulture, Resources.XA8000, $"@{typeName}/{identifier}");
 						LogError (8000, msg);
 					}
 				}

@@ -119,9 +119,9 @@ namespace Xamarin.Android.Tasks.Properties {
         /// <summary>
         ///   Looks up a localized string similar to Could not find an 'AndroidResource' for 'anim'.
         /// </summary>
-        public static string XA_Fixup_Designer_Error {
+        public static string XA8000 {
             get {
-                return ResourceManager.GetString("XA_Fixup_Designer_Error", resourceCulture);
+                return ResourceManager.GetString("XA8000", resourceCulture);
             }
         }
 

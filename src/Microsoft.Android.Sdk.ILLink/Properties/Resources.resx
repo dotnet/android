@@ -122,8 +122,8 @@
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
-  <data name="XA_Fixup_Designer_Error" xml:space="preserve">
-    <value>Could not find an 'AndroidResource' for '{0}'. To Fix this issue add the required 'AndroidResource' item to your project.</value>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
