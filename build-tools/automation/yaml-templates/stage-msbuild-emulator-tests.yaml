@@ -72,7 +72,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
-      paramters:
+      parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
 
   - job: wear_tests
@@ -145,5 +145,5 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
-      paramters:
+      parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
