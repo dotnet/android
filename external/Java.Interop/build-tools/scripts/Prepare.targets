@@ -20,6 +20,7 @@
     <JdkInfo
         JdksRoot="$(JdksRoot)"
         MakeFragmentFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\JdkInfo.mk"
+        MinimumJdkVersion="11"
         MaximumJdkVersion="$(_MaxJdk)"
         DotnetToolPath="$(DotnetToolPath)"
         PropertyFile="$(_TopDir)\bin\Build$(Configuration)\JdkInfo.props">
