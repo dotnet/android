@@ -994,7 +994,7 @@ public class FooA {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
+		public void XamarinLegacySdk ([Values ("net7.0-android34.0", "net8.0-android34.0")] string dotnetTargetFramework)
 		{
 			var proj = new XamarinAndroidLibraryProject {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
@@ -1006,7 +1006,8 @@ public class FooA {
 				}
 			};
 
-			var legacyTargetFrameworkVersion = "13.0";
+			using var b = new Builder ();
+			var legacyTargetFrameworkVersion = "14.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");

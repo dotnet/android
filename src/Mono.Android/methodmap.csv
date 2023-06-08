@@ -1023,7 +1023,7 @@
 0, android.provider, MediaStore.Video.Thumbnails, getThumbnail, kind, Android.Provider.VideoThumbnailKind
 0, android.provider, SearchRecentSuggestions, ctor, mode, Android.Content.DatabaseMode
 
-0, android.bluetooth, BluetoothAdapter, closeProfileProxy, profile, Android.Bluetooth.ProfileType
+0, android.bluetooth, BluetoothAdapter, closeProfileProxy, unusedProfile, Android.Bluetooth.ProfileType
 0, android.bluetooth, BluetoothAdapter, getProfileConnectionState, profile, Android.Bluetooth.ProfileType
 0, android.bluetooth, BluetoothAdapter, getProfileProxy, profile, Android.Bluetooth.ProfileType
 0, android.bluetooth, [Interface]BluetoothProfile.ServiceListener, onServiceConnected, profile, Android.Bluetooth.ProfileType
