@@ -5,7 +5,6 @@ using System.Globalization;
 using System.Linq;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,9 +69,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 				SetAdbLogcatBufferSize (64);
 				CreateGuestUser (GuestUserName);
-			}
-			if (string.IsNullOrEmpty (DeviceAbi)) {
-				DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
 			}
 		}
 

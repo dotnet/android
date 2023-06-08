@@ -1,5 +1,5 @@
 parameters:
-  condition: succeededOrFailed()
+  condition: succeeded()
 
 steps:
 - powershell: |
