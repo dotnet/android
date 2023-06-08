@@ -11,8 +11,7 @@ namespace Xamarin.ProjectTools
 		public static string Configuration = Environment.GetEnvironmentVariable ("CONFIGURATION") ?? "Release";
 		#endif
 
-		// if in the megapipeline, we do know the root, else find it based on the assembly
-		public static string TopDirectory = GetTopDirRecursive (Environment.GetEnvironmentVariable ("MEGAPIPELINE_ANDROID_DIR") ?? Path.GetFullPath (
+		public static string TopDirectory = GetTopDirRecursive (Path.GetFullPath (
 			Path.GetDirectoryName (new Uri (typeof (XamarinProject).Assembly.CodeBase).LocalPath)));
 
 		public static readonly string PrefixDirectory = Path.Combine (TopDirectory, "bin", Configuration);

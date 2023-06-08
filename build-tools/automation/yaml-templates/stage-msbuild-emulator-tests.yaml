@@ -12,7 +12,7 @@ parameters:
   commit: ''
   usesCleanImages: true
   shouldFailOnIssue: true
-  prepareSteps: []
+  emulatorStartContinueOnError: false
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -43,7 +43,6 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
-        prepareSteps: ${{ parameters.prepareSteps }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -53,6 +52,7 @@ stages:
     - template: start-stop-emulator.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
@@ -104,7 +104,6 @@ stages:
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
         xaprepareScenario: EmulatorTestDependencies
-        prepareSteps: ${{ parameters.prepareSteps }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -119,6 +118,7 @@ stages:
         avdAbi: $(avdAbi)
         avdType: $(avdType)
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:

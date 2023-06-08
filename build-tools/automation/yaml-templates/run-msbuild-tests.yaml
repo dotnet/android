@@ -8,7 +8,6 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
-  prepareSteps: []
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -39,7 +38,6 @@ jobs:
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
-      prepareSteps: ${{ parameters.prepareSteps }}
 
   - task: DownloadPipelineArtifact@2
     inputs:

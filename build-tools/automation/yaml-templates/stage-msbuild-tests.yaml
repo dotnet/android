@@ -9,7 +9,6 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
-  prepareSteps: []
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -28,7 +27,6 @@ stages:
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
-      prepareSteps: ${{ parameters.prepareSteps }}
 
   - template: run-msbuild-tests.yaml
     parameters:
@@ -41,4 +39,3 @@ stages:
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
-      prepareSteps: ${{ parameters.prepareSteps }}
