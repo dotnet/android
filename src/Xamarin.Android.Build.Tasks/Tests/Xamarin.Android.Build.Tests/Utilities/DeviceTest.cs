@@ -64,16 +64,15 @@ namespace Xamarin.Android.Build.Tests
 						if (DeviceAbi.Contains (",")) {
 							DeviceAbi = DeviceAbi.Split (',')[0];
 						}
-
-						if (string.IsNullOrEmpty (DeviceAbi)) {
-							DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
-						}
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
 				SetAdbLogcatBufferSize (64);
 				CreateGuestUser (GuestUserName);
+			}
+			if (string.IsNullOrEmpty (DeviceAbi)) {
+				DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
 			}
 		}
 
