@@ -21,6 +21,15 @@ namespace MonoDroid.Tuner  {
 			Context.LogMessage (message);
 		}
 
+		public virtual void LogError (int code, string error)
+		{
+#if ILLINK
+			Context.LogMessage (MessageContainer.CreateCustomErrorMessage (error, code, origin: new MessageOrigin ()));
+#else   // !ILLINK
+			Console.Error.WriteLine ($"error XA{code}: {error}");
+#endif  // !ILLINK
+		}
+
 		public virtual AssemblyDefinition Resolve (AssemblyNameReference name)
 		{
 			return Context.Resolve (name);

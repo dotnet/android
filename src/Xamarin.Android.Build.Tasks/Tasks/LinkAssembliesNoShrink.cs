@@ -142,6 +142,11 @@ namespace Xamarin.Android.Tasks
 				logger.LogDebugMessage ("{0}", message);
 			}
 
+			public override void LogError (int code, string message)
+			{
+				logger.LogCodedError ($"XA{code}", message);
+			}
+
 			public override AssemblyDefinition Resolve (AssemblyNameReference name)
 			{
 				return resolver.Resolve (name);
