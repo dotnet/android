@@ -7,6 +7,7 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
+  shouldFailOnIssue: true
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -41,17 +42,21 @@ jobs:
   - task: DownloadPipelineArtifact@2
     inputs:
       artifactName: $(TestAssembliesArtifactName)
-      downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+      downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
   - template: run-sliced-nunit-tests.yaml
     parameters:
-      testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+      testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       retryFailedTests: false
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: upload-results.yaml
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
   - template: fail-on-issue.yaml
+    parameters:
+      condition: ${{ parameters.shouldFailOnIssue }}

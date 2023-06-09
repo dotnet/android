@@ -11,6 +11,8 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   usesCleanImages: true
+  shouldFailOnIssue: true
+  emulatorStartContinueOnError: false
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -45,13 +47,16 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
     - template: start-stop-emulator.yaml
+      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
@@ -59,12 +64,16 @@ stages:
       - template: start-stop-emulator.yaml
         parameters:
           command: stop
+          xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
+      parameters:
+        condition: ${{ parameters.shouldFailOnIssue }}
 
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
@@ -99,7 +108,7 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
-        downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
+        downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
     - template: start-stop-emulator.yaml
       parameters:
@@ -108,12 +117,15 @@ stages:
         avdApiLevel: $(avdApiLevel)
         avdAbi: $(avdAbi)
         avdType: $(avdType)
+        xaSourcePath: ${{ parameters.xaSourcePath }}
+        startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
     - template: run-sliced-nunit-tests.yaml
       parameters:
         testRunTitle: WearOS On Device - macOS
-        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
+        testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: cat = WearOS
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
       - template: start-stop-emulator.yaml
@@ -124,10 +136,14 @@ stages:
           avdApiLevel: $(avdApiLevel)
           avdAbi: $(avdAbi)
           avdType: $(avdType)
+          xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
+        xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - template: fail-on-issue.yaml
+      parameters:
+        condition: ${{ parameters.shouldFailOnIssue }}

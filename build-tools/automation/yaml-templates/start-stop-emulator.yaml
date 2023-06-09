@@ -7,13 +7,14 @@ parameters:
   avdType:                # Device AVD, like 'android-wear', required if 'specificImage' is 'true'
   emulatorMSBuildArgs:    # Extra args to pass to the emulator configuration like '-p:TestAvdExtraBootArgs=-writable-system', optional
   launchTimeoutMin: 20    # Minutes to wait for the emulator to start
+  startContinueOnError: false    # If 'true', do not mark the step as failed if starting the emulator fails
   xaSourcePath: $(System.DefaultWorkingDirectory) # working directory
 
 steps:
 - ${{ if eq(parameters.command, 'start') }}:
   - task: DotNetCoreCLI@2
     displayName: Start emulator
-    continueOnError: false
+    continueOnError: ${{ parameters.startContinueOnError }}
     inputs:
       projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Emulator.csproj
       ${{ if eq(parameters.specificImage, true) }}:
