@@ -280,12 +280,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net7.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net7.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				"android33",
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net8.0",
@@ -842,7 +842,7 @@ public class FooA {
 			new object[] {
 				"net7.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net8.0",
