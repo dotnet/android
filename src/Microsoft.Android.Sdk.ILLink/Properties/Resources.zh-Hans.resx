@@ -122,4 +122,10 @@
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>找不到 Android 资源“{0}”。请更新 @(AndroidResource)以添加缺少的资源。</value>
+    <comment>
+{0} - An Android Resource Identifier.
+    </comment>
+  </data>
 </root>

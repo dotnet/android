@@ -498,8 +498,8 @@ Cambie el valor a un nombre de tipo de ensamblado que herede de "{1}" o quite la
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
-Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' no coincide con el valor $(SupportedOSPlatformVersion) '{1}' en el archivo de proyecto (si no hay ningún valor $(SupportedOSPlatformVersion) en el archivo de proyecto, se supone un valor predeterminado).
+Cambie el valor de AndroidManifest.xml para que coincida con el valor $(SupportedOSPlatformVersion) o quite el valor de AndroidManifest.xml (y agregue un valor $(SupportedOSPlatformVersion) al archivo de proyecto si aún no existe).</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
@@ -616,13 +616,13 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {1} - The managed type name</comment>
   </data>
   <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <value>No se admite el destino de implementación '{0}' (el mínimo es {1}''). Aumente el valor de la propiedad $(SupportedOSPlatformVersion) en el archivo del proyecto.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
 {0} - The value of $(SupportedOSPlatformVersion)
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <value>No se admite el destino de implementación '{0}' (el mínimo es '{1}'). Aumente (o quite) el valor //uses-sdk/@android:minSdkVersion en androidManifest.xmlen su AndroidManifest.xml.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
 {0} - The value of //uses-sdk/@android:minSdkVersion
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
@@ -931,6 +931,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>No se encontró el recurso de Android '{0}'. Actualice @(AndroidResource) para agregar el recurso que falta.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>
