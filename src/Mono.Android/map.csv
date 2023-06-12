@@ -1,3 +1,4 @@
+// Action,API Level,JNI Signature,Enum Value,C# Enum Type,C# Member Name,Field Action,Is Flags,Deprecated Since
 E,30,android/accessibilityservice/AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERNAL_ERROR,1,Android.Accessibilityservice.AccessibilityService.TakeScreenshotError,InternalError,remove,
 E,30,android/accessibilityservice/AccessibilityService.ERROR_TAKE_SCREENSHOT_INTERVAL_TIME_SHORT,3,Android.Accessibilityservice.AccessibilityService.TakeScreenshotError,IntervalTimeShort,remove,
 E,30,android/accessibilityservice/AccessibilityService.ERROR_TAKE_SCREENSHOT_INVALID_DISPLAY,4,Android.Accessibilityservice.AccessibilityService.TakeScreenshotError,InvalidDisplay,remove,
@@ -736,11 +737,11 @@ E,21,android/app/usage/UsageStatsManager.INTERVAL_DAILY,0,Android.App.Usage.Usag
 E,21,android/app/usage/UsageStatsManager.INTERVAL_MONTHLY,2,Android.App.Usage.UsageStatsInterval,Monthly,keep,
 E,21,android/app/usage/UsageStatsManager.INTERVAL_WEEKLY,1,Android.App.Usage.UsageStatsInterval,Weekly,keep,
 E,21,android/app/usage/UsageStatsManager.INTERVAL_YEARLY,3,Android.App.Usage.UsageStatsInterval,Yearly,keep,
+A,30,,45,Android.App.Usage.StandbyBucket,Restricted,remove,
 E,28,android/app/usage/UsageStatsManager.STANDBY_BUCKET_ACTIVE,10,Android.App.Usage.StandbyBucket,Active,remove,
 E,28,android/app/usage/UsageStatsManager.STANDBY_BUCKET_FREQUENT,30,Android.App.Usage.StandbyBucket,Frequent,remove,
 E,28,android/app/usage/UsageStatsManager.STANDBY_BUCKET_RARE,40,Android.App.Usage.StandbyBucket,Rare,remove,
 E,30,android/app/usage/UsageStatsManager.STANDBY_BUCKET_RESTRICTED,45,Android.App.Usage.UsageStatsInterval,Restricted,remove,,-1
-A,30,,45,Android.App.Usage.StandbyBucket,Restricted,remove,,
 E,28,android/app/usage/UsageStatsManager.STANDBY_BUCKET_WORKING_SET,20,Android.App.Usage.StandbyBucket,WorkingSet,remove,
 E,31,android/app/WallpaperColors.HINT_SUPPORTS_DARK_TEXT,1,Android.App.WallpaperColorsHint,SupportsDarkText,remove,flags
 E,31,android/app/WallpaperColors.HINT_SUPPORTS_DARK_THEME,2,Android.App.WallpaperColorsHint,SupportsDarkTheme,remove,flags
@@ -3686,6 +3687,9 @@ E,24,android/location/GnssMeasurementsEvent$Callback.STATUS_READY,1,Android.Loca
 E,24,android/location/GnssNavigationMessage.STATUS_PARITY_PASSED,1,Android.Locations.GnssNavigationStatus,ParityPassed,remove,
 E,24,android/location/GnssNavigationMessage.STATUS_PARITY_REBUILT,2,Android.Locations.GnssNavigationStatus,ParityRebuilt,remove,
 E,24,android/location/GnssNavigationMessage.STATUS_UNKNOWN,0,Android.Locations.GnssNavigationStatus,Unknown,remove,
+A,30,,513,Android.Locations.GnssNavigationType,Sbs,remove,
+A,30,,1025,Android.Locations.GnssNavigationType,QzsL1ca,remove,
+A,30,,1793,Android.Locations.GnssNavigationType,IrnL5ca,remove,
 E,30,android/location/GnssNavigationMessage.TYPE_BDS_CNAV1,1283,Android.Locations.GnssNavigationType,BdsCnav1,remove,
 E,30,android/location/GnssNavigationMessage.TYPE_BDS_CNAV2,1284,Android.Locations.GnssNavigationType,BdsCnav2,remove,
 E,24,android/location/GnssNavigationMessage.TYPE_BDS_D1,1281,Android.Locations.GnssNavigationType,BdsD1,remove,
@@ -3697,9 +3701,6 @@ E,24,android/location/GnssNavigationMessage.TYPE_GPS_CNAV2,260,Android.Locations
 E,24,android/location/GnssNavigationMessage.TYPE_GPS_L1CA,257,Android.Locations.GnssNavigationType,GpsL1ca,remove,
 E,24,android/location/GnssNavigationMessage.TYPE_GPS_L2CNAV,258,Android.Locations.GnssNavigationType,GpsL2cnav,remove,
 E,24,android/location/GnssNavigationMessage.TYPE_GPS_L5CNAV,259,Android.Locations.GnssNavigationType,GpsL5cnav,remove,
-A,30,,1793,Android.Locations.GnssNavigationType,IrnL5ca,remove,,
-A,30,,1025,Android.Locations.GnssNavigationType,QzsL1ca,remove,,
-A,30,,513,Android.Locations.GnssNavigationType,Sbs,remove,,
 E,30,android/location/GnssNavigationMessage.TYPE_IRN_L5CA,1793,Android.Locations.GnssNavigationStatus,IrnL5ca,remove,,-1
 E,30,android/location/GnssNavigationMessage.TYPE_QZS_L1CA,1025,Android.Locations.GnssNavigationStatus,QzsL1ca,remove,,-1
 E,30,android/location/GnssNavigationMessage.TYPE_SBS,513,Android.Locations.GnssNavigationStatus,Sbs,remove,,-1
