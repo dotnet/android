@@ -123,7 +123,7 @@
 {0} - The name of the assembly</comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Не удалось найти ресурс Android "{0}". Обновите @(AndroidResource), чтобы добавить отсутствующий ресурс.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>

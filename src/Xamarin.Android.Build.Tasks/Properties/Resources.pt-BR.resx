@@ -934,7 +934,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Não foi possível encontrar o recurso Android '{0}'. Atualize @(AndroidResource) para adicionar o recurso ausente.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>

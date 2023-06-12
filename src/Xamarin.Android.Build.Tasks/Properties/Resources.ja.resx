@@ -935,7 +935,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Android リソース '{0}' が見つかりませんでした。不足しているリソースを追加するには、@(AndroidResource) を更新してください。</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>

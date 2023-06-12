@@ -934,7 +934,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>No se encontró el recurso de Android '{0}'. Actualice @(AndroidResource) para agregar el recurso que falta.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
