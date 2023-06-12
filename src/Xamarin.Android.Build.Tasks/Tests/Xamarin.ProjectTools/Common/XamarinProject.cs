@@ -88,7 +88,7 @@ namespace Xamarin.ProjectTools
 			Packages = new List<Package> ();
 			Imports = new List<Import> ();
 
-			if (UseDotNet) {
+			if (Builder.UseDotNet) {
 				//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
 				Imports.Add (new Import ("Directory.Build.props") {
 					TextContent = () =>
@@ -114,7 +114,10 @@ $@"<Project>
 			References.Add (new BuildItem.ProjectReference (include, other.ProjectName, other.ProjectGuid));
 		}
 
-		protected virtual bool UseDotNet => Builder.UseDotNet;
+		public string TargetFramework {
+			get { return GetProperty ("TargetFramework"); }
+			set { SetProperty ("TargetFramework", value); }
+		}
 
 		public string GetProperty (string name)
 		{

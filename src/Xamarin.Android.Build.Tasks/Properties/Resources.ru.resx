@@ -497,6 +497,13 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>Свойство "BundleAssemblies" устарело и не взаимодействует со сборкой приложения. Эквивалентная функциональность реализована свойствами "AndroidUseAssemblyStore" и "AndroidEnableAssemblyCompression".</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>Значение //uses-sdk/@android:minSdkVersion "{0}" в файле AndroidManifest.xml не совпадает со значением $(SupportedOSPlatformVersion) "{1}" в файле проекта (если в файле проекта значение $(SupportedOSPlatformVersion) отсутствует, предполагается значение по умолчанию).
+Измените значение в файле AndroidManifest.xml так, чтобы оно совпадало со значением $(SupportedOSPlatformVersion), или удалите значение из файла AndroidManifest.xml (и добавьте значение $(SupportedOSPlatformVersion) в файл проекта, если этого значения еще нет в этом файле).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>В сборке обнаружено использование AppDomain.CreateDomain(): {0}. .NET 6 и более поздние версии будут поддерживать только один домен AppDomain, поэтому этот API больше не будет доступен в Xamarin.Android после выпуска .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>Целевой объект развертывания "{0}" не поддерживается (минимальная версия: "{1}"). Увеличьте значение свойства $(SupportedOSPlatformVersion) в файле проекта.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>Версия AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" ниже версии API-{1}, эта конфигурация не поддерживается.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>Целевой объект развертывания "{0}" не поддерживается (минимальная версия: "{1}". Увеличьте или удалите значение //uses-sdk/@android:minSdkVersion в файле AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>Версия AndroidManifest.xml //uses-sdk/@android:targetSdkVersion "{0}" ниже версии API-{1}, эта конфигурация не поддерживается.</value>
@@ -918,6 +931,12 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Не удалось найти ресурс Android "{0}". Обновите @(AndroidResource), чтобы добавить отсутствующий ресурс.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

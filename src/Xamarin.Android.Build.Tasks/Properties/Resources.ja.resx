@@ -497,6 +497,14 @@ In this message, the term "binding" means a piece of generated code that makes i
     <value>'BundleAssemblies' プロパティは非推奨であり、アプリケーションのビルドには影響しません。同等の機能は、'AndroidUseAssemblyStore' プロパティと 'AndroidEnableAssemblyCompression' プロパティによって実装されます。</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' は、プロジェクト ファイルの $(SupportedOSPlatformVersion) 値 '{1}' と一致しません (プロジェクト ファイルに $(SupportedOSPlatformVersion) 値がない場合は、既定値が想定されています)。
+
+$(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml の値を変更するか、AndroidManifest.xml の値を削除します (まだ存在しない場合は、$(SupportedOSPlatformVersion) 値をプロジェクト ファイルに追加します)。</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>アセンブリ {0} で AppDomain.CreateDomain() が使用されていることが検出されました。.NET 6 以降では単一の AppDomain のみがサポートされる予定のため、.NET 6 がリリースされるとこの API は Xamarin.Android では使用できなくなります。</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +616,17 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>デプロイ ターゲット '{0}' はサポートされていません (最小値は '{1}' です)。プロジェクト ファイルの $(SupportedOSPlatformVersion) プロパティ値を大きくしてください。</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' が API-{1} よりも小さいため、この構成はサポートされていません。</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>デプロイ ターゲット '{0}' はサポートされていません (最小値は '{1}' です)。AndroidManifest.xml の //uses-sdk/@android:minSdkVersion 値を増やす(または削除)してください。</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' が API-{1} よりも小さいため、この構成はサポートされません。</value>
@@ -918,6 +932,12 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Android リソース '{0}' が見つかりませんでした。不足しているリソースを追加するには、@(AndroidResource) を更新してください。</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

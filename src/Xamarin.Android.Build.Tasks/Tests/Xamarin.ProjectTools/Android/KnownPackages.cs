@@ -593,6 +593,14 @@ namespace Xamarin.ProjectTools
 			Id = "Mono.AotProfiler.Android",
 			Version = "7.0.0-preview1",
 		};
+		public static Package SkiaSharp = new Package () {
+			Id = "SkiaSharp",
+			Version = "2.88.3",
+		};
+		public static Package SkiaSharp_Views = new Package () {
+			Id = "SkiaSharp.Views",
+			Version = "2.88.3",
+		};
 	}
 }
 

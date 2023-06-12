@@ -497,6 +497,13 @@ Cambie el valor a un nombre de tipo de ensamblado que herede de "{1}" o quite la
     <value>La propiedad "BundleAssemblies" está en desuso y no tiene ningún efecto en la compilación de la aplicación. Las propiedades "AndroidUseAssemblyStore" y "AndroidEnableAssemblyCompression" implementan una funcionalidad equivalente.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' no coincide con el valor $(SupportedOSPlatformVersion) '{1}' en el archivo de proyecto (si no hay ningún valor $(SupportedOSPlatformVersion) en el archivo de proyecto, se supone un valor predeterminado).
+Cambie el valor de AndroidManifest.xml para que coincida con el valor $(SupportedOSPlatformVersion) o quite el valor de AndroidManifest.xml (y agregue un valor $(SupportedOSPlatformVersion) al archivo de proyecto si aún no existe).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Se detectó el uso de AppDomain.CreateDomain() en el ensamblado: {0}. En .NET 6 y versiones posteriores solo se admitirá una instancia de AppDomain, por lo que esta API ya no estará disponible en Xamarin.Android una vez que se haya lanzado .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Cambie el valor a un nombre de tipo de ensamblado que herede de "{1}" o quite la
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>No se admite el destino de implementación '{0}' (el mínimo es {1}''). Aumente el valor de la propiedad $(SupportedOSPlatformVersion) en el archivo del proyecto.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" es anterior a la versión de la API-{1}; no se admite esta configuración.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>No se admite el destino de implementación '{0}' (el mínimo es '{1}'). Aumente (o quite) el valor //uses-sdk/@android:minSdkVersion en androidManifest.xmlen su AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion "{0}" es anterior a la versión de la API-{1}; esta configuración no se admite.</value>
@@ -918,6 +931,12 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>No se encontró el recurso de Android '{0}'. Actualice @(AndroidResource) para agregar el recurso que falta.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

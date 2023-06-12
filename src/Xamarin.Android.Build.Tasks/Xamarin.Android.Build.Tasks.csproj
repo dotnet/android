@@ -19,7 +19,7 @@
     <SignAssembly>false</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <!-- Causes issues with linker files imported from Mono -->
-    <NoWarn>$(NoWarn);CA1310</NoWarn>
+    <NoWarn>$(NoWarn);CA1310;CA1305</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

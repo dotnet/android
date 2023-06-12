@@ -79,7 +79,7 @@ namespace Xamarin.Android.Build.Tests
 
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				MinSdkVersion = "23",
+				SupportedOSPlatformVersion = "23",
 				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
@@ -914,6 +914,122 @@ namespace Styleable.Library {
 			}, Path.Combine (Root, builder.ProjectDirectory, "button-logcat.log")), "Button Should have been Clicked.");
 		}
 
+		[Test]
+		public void SkiaSharpCanvasBasedAppRuns ([Values (true, false)] bool isRelease, [Values (true, false)] bool addResource)
+		{
+			var app = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				PackageName = "Xamarin.SkiaSharpCanvasTest",
+				PackageReferences = {
+					KnownPackages.SkiaSharp,
+					KnownPackages.SkiaSharp_Views,
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.AndroidXAppCompatResources,
+				},
+			};
+			app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\styles.xml") {
+				TextContent = () => @"<resources><style name='AppTheme' parent='Theme.AppCompat.Light.DarkActionBar'/></resources>",
+			});
+			// begin Remove these lines when the new fixed SkiaSharp is released.
+			if (addResource) {
+				app.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\attrs.xml") {
+					TextContent = () => @"<resources><declare-styleable name='SKCanvasView'>
+		<attr name='ignorePixelScaling' format='boolean'/>
+	</declare-styleable></resources>",
+				});
+			}
+			// end
+			app.LayoutMain = app.LayoutMain.Replace ("<LinearLayout", @"<FrameLayout
+	xmlns:android='http://schemas.android.com/apk/res/android'
+	xmlns:app='http://schemas.android.com/apk/res-auto'
+	android:layout_width='match_parent'
+	android:layout_height='match_parent'>
+	<SkiaSharp.Views.Android.SKCanvasView
+		android:layout_width='match_parent'
+		android:layout_height='match_parent'
+		android:id='@+id/skiaView' />")
+				.Replace ("</LinearLayout>", "</FrameLayout>");
+			app.MainActivity = @"using Android.App;
+using Android.OS;
+using AndroidX.AppCompat.App;
+
+using SkiaSharp;
+using SkiaSharp.Views.Android;
+
+namespace UnnamedProject
+{
+	[Activity(MainLauncher = true, Theme = ""@style/AppTheme"")]
+	public class MainActivity : AppCompatActivity
+	{
+		private SKCanvasView skiaView;
+
+		protected override void OnCreate(Bundle savedInstanceState)
+		{
+			base.OnCreate(savedInstanceState);
+
+			SetContentView(Resource.Layout.Main);
+
+			skiaView = FindViewById<SKCanvasView>(Resource.Id.skiaView);
+		}
+
+		protected override void OnResume()
+		{
+			base.OnResume();
+
+			skiaView.PaintSurface += OnPaintSurface;
+		}
+
+		protected override void OnPause()
+		{
+			skiaView.PaintSurface -= OnPaintSurface;
+
+			base.OnPause();
+		}
+
+		private void OnPaintSurface(object sender, SKPaintSurfaceEventArgs e)
+		{
+			// the the canvas and properties
+			var canvas = e.Surface.Canvas;
+
+			// make sure the canvas is blank
+			canvas.Clear(SKColors.White);
+
+			// draw some text
+			var paint = new SKPaint
+			{
+				Color = SKColors.Black,
+				IsAntialias = true,
+				Style = SKPaintStyle.Fill,
+				TextAlign = SKTextAlign.Center,
+				TextSize = 24
+			};
+			var coord = new SKPoint(e.Info.Width / 2, (e.Info.Height + paint.TextSize) / 2);
+			canvas.DrawText(""SkiaSharp"", coord, paint);
+		}
+	}
+}
+";
+			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
+				b.BuildLogFile = "build1.log";
+				b.ThrowOnBuildFailure = false;
+				if (!addResource) {
+					Assert.IsFalse (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have failed.");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText (isRelease ? "IL8000" : "XA8000"));
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView"), "Expected '@styleable/SKCanvasView' in build output.");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ("@styleable/SKCanvasView_ignorePixelScaling"), "Expected '@styleable/SKCanvasView_ignorePixelScaling' in build output.");
+					return;
+				}
+				Assert.IsTrue (b.Build (app, doNotCleanupOnUpdate: true), $"Build of {app.ProjectName} should have succeeded.");
+				b.BuildLogFile = "install1.log";
+				Assert.IsTrue (b.Install (app, doNotCleanupOnUpdate: true), "Install should have suceeded.");
+				AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+				WaitForPermissionActivity (Path.Combine (Root, b.ProjectDirectory, "permission-logcat.log"));
+				ClearAdbLogcat ();
+				WaitForActivityToStart (app.PackageName, "MainActivity",
+					Path.Combine (Root, b.ProjectDirectory, "startup-logcat.log"), 15);
+			}
+		}
+
 
 		[Test]
 		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
@@ -959,10 +1075,10 @@ namespace Styleable.Library {
 				b.ThrowOnBuildFailure = false;
 				string apiLevel;
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
+				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";
@@ -996,10 +1112,10 @@ namespace Styleable.Library {
 				app.AndroidUseAapt2 = useAapt2;
 				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
-
+				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
-	<uses-sdk android:minSdkVersion=""24"" android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest> ";

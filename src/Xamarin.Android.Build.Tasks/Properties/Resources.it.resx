@@ -497,6 +497,13 @@ Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{
     <value>La proprietà 'BundleAssemblies' è deprecata e non ha alcun effetto sul build dell'applicazione. La funzione equivalente è implementata dalle proprietà 'AndroidUseAssemblyStore' e 'AndroidEnableAssemblyCompression'.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' non corrisponde al valore $(SupportedOSPlatformVersion) '{1}' nel file di progetto (se non è presente alcun valore $(SupportedOSPlatformVersion) nel file di progetto, viene considerato un valore predefinito. 
+Modificare il valore in AndroidManifest.xml in modo che corrisponda al valore $(SupportedOSPlatformVersion) oppure rimuovere il valore in AndroidManifest.xml (e aggiungere un valore $(SupportedOSPlatformVersion) al file di progetto, se non esiste già).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>È stato rilevato l'uso di AppDomain.CreateDomain() nell'assembly: {0}. .NET 6 e versioni successive supporteranno solo un singolo AppDomain, quindi questa API non sarà più disponibile in Xamarin.Android dopo il rilascio di .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>La destinazione di distribuzione '{0}' non è supportata (il valore minimo è '{1}'). Aumentare il valore della proprietà $(SupportedOSPlatformVersion) nel file di progetto.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>La versione //uses-sdk/@android:minSdkVersion '{0}' di AndroidManifest.xml è precedente all'API {1}. Questa configurazione non è supportata.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>La destinazione di distribuzione '{0}' non è supportata (il valore minimo è '{1}'). Aumentare (o rimuovere) il valore //uses-sdk/@android:minSdkVersion in AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>La versione //uses-sdk/@android:targetSdkVersion '{0}' di AndroidManifest.xml è precedente all'API {1}. Questa configurazione non è supportata.</value>
@@ -918,6 +931,12 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

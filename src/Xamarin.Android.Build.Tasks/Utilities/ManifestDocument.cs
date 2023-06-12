@@ -117,14 +117,19 @@ namespace Xamarin.Android.Tasks {
 
 		public bool HasVersionCode => doc.Root.Attribute (versionCodeAttributeName) != null;
 
+		// If MinSdkVersionName can't be parsed, set it to XABuildConfig.AndroidMinimumDotNetApiLevel
+		string TryParseMinSdkVersionName ()
+		{
+			int minSdkVersion;
+			if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
+				minSdkVersion = XABuildConfig.AndroidMinimumDotNetApiLevel;
+			return minSdkVersion.ToString ();
+		}
+
 		public string GetMinimumSdk () {
-			int defaultMinSdkVersion = MonoAndroidHelper.SupportedVersions.MinStableVersion.ApiLevel;
 			var minAttr = doc.Root.Element ("uses-sdk")?.Attribute (androidNs + "minSdkVersion");
 			if (minAttr == null) {
-				int minSdkVersion;
-				if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
-					minSdkVersion = defaultMinSdkVersion;
-				return Math.Min (minSdkVersion, defaultMinSdkVersion).ToString ();
+				return TryParseMinSdkVersionName ();
 			}
 			return minAttr.Value;
 		}
@@ -295,24 +300,20 @@ namespace Xamarin.Android.Tasks {
 					app.Add (new XElement ("meta-data", new XAttribute (androidNs + "name", "com.google.android.wearable.beta.app"), new XAttribute (androidNs + "resource", "@xml/wearable_app_desc")));
 			}
 
-			// If no <uses-sdk> is specified, add it with both minSdkVersion and
-			// targetSdkVersion set to TargetFrameworkVersion
+			string minSdkVersionString = TryParseMinSdkVersionName ();
+
+			// If no <uses-sdk> is specified, add it with both minSdkVersion and targetSdkVersion
 			if (!manifest.Elements ("uses-sdk").Any ()) {
 				manifest.AddFirst (
 						new XElement ("uses-sdk",
-							new XAttribute (androidNs + "minSdkVersion", MinSdkVersionName),
+							new XAttribute (androidNs + "minSdkVersion", minSdkVersionString),
 							new XAttribute (androidNs + "targetSdkVersion", TargetSdkVersionName)));
 			}
 
-			// If no minSdkVersion is specified, set it to TargetFrameworkVersion
+			// If no minSdkVersion is specified, set it
 			var uses = manifest.Element ("uses-sdk");
-
 			if (uses.Attribute (androidNs + "minSdkVersion") == null) {
-				int minSdkVersion;
-				if (!int.TryParse (MinSdkVersionName, out minSdkVersion))
-					minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
-				minSdkVersion = Math.Min (minSdkVersion, XABuildConfig.NDKMinimumApiAvailable);
-				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersion.ToString ());
+				uses.SetAttributeValue (androidNs + "minSdkVersion", minSdkVersionString);
 			}
 
 			string targetSdkVersion;

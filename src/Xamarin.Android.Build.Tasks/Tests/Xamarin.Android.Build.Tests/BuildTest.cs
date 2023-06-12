@@ -1748,27 +1748,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		}
 
 		[Test]
-		public void WarningForMinSdkVersion ()
-		{
-			int minSdkVersion = XABuildConfig.NDKMinimumApiAvailable;
-			int tooLowSdkVersion = minSdkVersion - 1;
-			var proj = new XamarinAndroidApplicationProject {
-				MinSdkVersion = tooLowSdkVersion.ToString (),
-				TargetSdkVersion = null,
-			};
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (
-					StringAssertEx.ContainsText (
-						b.LastBuildOutput,
-						$"warning XA4216: AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{tooLowSdkVersion}' is less than API-{minSdkVersion}, this configuration is not supported."
-					),
-					$"Should receive a warning when //uses-sdk/@android:minSdkVersion=\"{tooLowSdkVersion}\""
-				);
-			}
-		}
-
-		[Test]
 		public void RemoveOldMonoPackageManager ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -2313,7 +2292,7 @@ namespace UnnamedProject
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
-				proj.MinSdkVersion = "24";
+				proj.SupportedOSPlatformVersion = "24";
 				proj.TargetSdkVersion = apiLevel;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				StringAssertEx.DoesNotContain ("XA0102", b.LastBuildOutput, "Output should not contain any XA0102 warnings");

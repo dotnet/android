@@ -720,6 +720,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1036" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion“{0}”与项目文件中的 $(SupportedOSPlatformVersion) 值“{1}”不匹配(如果项目文件中没有 $(SupportedOSPlatformVersion) 值，则已假定默认值)。]D;]A;请更改 AndroidManifest.xml 中的值以匹配 $(SupportedOSPlatformVersion) 值，或者移除 AndroidManifest.xml 中的值(并将 $(SupportedOSPlatformVersion) 值添加到项目文件 [如果尚不存在]5D;)。]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
@@ -935,9 +944,21 @@
       </Item>
       <Item ItemId=";XA4216_MinSdkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Androidmanifest.xml//uses-sdk/@android: minSdkVersion“{0}”小于 API-{1}，此配置不受支持。]]></Val>
+            <Val><![CDATA[部署目标“{0}”不受支持(最小值为“{1}”)。请增加(或移除) AndroidManifest.xml 中的 //uses-sdk/@android:minSdkVersion 值。]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4216_SupportedOSPlatformVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[部署目标“{0}”不受支持(最小值为“{1}”)。请增加项目文件中的 $(SupportedOSPlatformVersion) 属性值。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1439,6 +1460,15 @@
           <Val><![CDATA[Two processes may be building this project at once. Lock file exists at path: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[可同时生成此项目的两个进程。以下路径中存在锁定文件: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA8000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[找不到 Android 资源“{0}”。请更新 @(AndroidResource)以添加缺少的资源。]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

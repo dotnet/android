@@ -497,6 +497,13 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
     <value>Właściwość „BundleAssemblies” jest przestarzała i nie ma wpływu na kompilację aplikacji. Równoważna funkcjonalność jest implementowana przez właściwości „AndroidUseAssemblyStore” i „AndroidEnableAssemblyCompression”.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>Plik AndroidManifest.xml //uses-sdk/@android:minSdkVersion „{0}” nie pasuje do wartości $ (SupportedOSPlatformVersion) „{1}” w pliku projektu (jeśli w pliku projektu nie ma wartości $ (SupportedOSPlatformVersion), oznacza to, że została ustawiona wartość domyślna tak jak przyjęto).
+Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(SupportedOSPlatformVersion) lub usuń wartość w pliku AndroidManifest.xml (i dodaj wartość $(SupportedOSPlatformVersion) do pliku projektu, jeśli jeszcze nie istnieje).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Wykryto użycie metody AppDomain.CreateDomain() w zestawie: {0}. Platforma .NET 6 lub nowsza wersja obsługuje tylko jedną domenę aplikacji, dlatego ten interfejs API nie będzie już dostępny w rozszerzeniu Xamarin.Android po wydaniu platformy .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Zmień wartość na nazwę typu kwalifikowalnego zestawu, która dziedziczy po �
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>Cel wdrożenia „{0}” nie jest obsługiwany (minimalna wartość to „{1}”). Zwiększ wartość właściwości $(SupportedOSPlatformVersion) w pliku projektu.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>Wersja //uses-sdk/@android:minSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>Cel wdrożenia „{0}” nie jest obsługiwany (minimalna wartość to „{1}”). Zwiększ (lub usuń) wartość //uses-sdk/@android:minSdkVersion w pliku AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>Wersja //uses-sdk/@android:targetSdkVersion w pliku AndroidManifest.xml „{0}” jest niższa niż API-{1}. Taka konfiguracja nie jest obsługiwana.</value>
@@ -918,6 +931,12 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

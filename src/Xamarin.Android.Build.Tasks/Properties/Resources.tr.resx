@@ -497,6 +497,13 @@ Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönü
     <value>'BundleAssemblies' özelliği kullanım dışıdır ve uygulama derlemesi üzerinde etkisi yoktur. Eşdeğer işlev 'AndroidUseAssemblyStore' ve 'AndroidEnableAssemblyCompression' özellikleri ile uygulanmalıdır.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}', proje dosyasındaki $(SupportedOSPlatformVersion) değeri '{1}' ile eşleşmiyor. Eğer proje dosyasında $(SupportedOSPlatformVersion) değeri yoksa bir varsayılan değer alınır.
+AndroidManifest.xml dosyasındaki değeri $(SupportedOSPlatformVersion) değeriyle eşleşecek şekilde değiştirin veya AndroidManifest.xml dosyasındaki değeri kaldırın ve yoksa, proje dosyasına bir $(SupportedOSPlatformVersion) değeri ekleyin.</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Lütfen değeri '{1}' türünden devralan derlemeye uygun bir tür adına dönü
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>Dağıtım hedefi '{0}' desteklenmiyor (en düşük değer '{1}'. Lütfen proje dosyanızdaki $(SupportedOSPlatformVersion) özellik değerini artırın.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}', API-{1} değerinden küçük, bu yapılandırma desteklenmiyor.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>Dağıtım hedefi '{0}' desteklenmiyor (en düşük değer '{1}'. Lütfen AndroidManifest.xml dosyanızdaki //uses-sdk/@android:minSdkVersion değerini artırın (veya kaldırın).</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}', API-{1} değerinden küçük, bu yapılandırma desteklenmiyor.</value>
@@ -918,6 +931,12 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>'{0}' Android Kaynağı bulunamadı. Lütfen eksik kaynağı eklemek için @(AndroidResource) kaynağını güncelleştirin.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

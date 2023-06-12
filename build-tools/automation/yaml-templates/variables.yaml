@@ -40,3 +40,11 @@ variables:
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
+- name: IsRelOrTargetingRel
+  value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
+- name: DotNetNUnitCategories
+  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != StaticProject & TestCategory != SystemApplication'
+- name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
+  value: 33,UpsideDownCake
+- name: ExcludedNUnitCategories
+  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != StaticProject & cat != SystemApplication'

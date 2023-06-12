@@ -2,6 +2,7 @@ parameters:
   testAssembly:           # NUnit test assembly to run
   testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   testRunTitle:           # Title of the test run
+  xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
 
 steps:
@@ -22,6 +23,7 @@ steps:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
       testAssembly: ${{ parameters.testAssembly }}
       dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
+      xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.retryFailedTests, 'true') }}:
   # We need a custom dotnet test invocation here that does not trigger a task failure on failed tests
@@ -34,13 +36,15 @@ steps:
         -- NUnit.NumberOfTestWorkers=$(NUnit.NumberOfTestWorkers)
     displayName: Run tests
     ignoreLASTEXITCODE: true
-      
+    workingDirectory: ${{ parameters.xaSourcePath }}
+
   - pwsh: |
       dotnet-test-slicer `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
+    workingDirectory: ${{ parameters.xaSourcePath }}
 
     # dotnet-test-slicer removed the failed tests from our results file, so it's safe to publish it now
   - task: PublishTestResults@2
@@ -49,8 +53,16 @@ steps:
       testResultsFiles: $(Agent.TempDirectory)/*.trx
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
 
+  - task: DotNetCoreCLI@2
+    displayName: Shut down existing dotnet daemons
+    inputs:
+      command: custom
+      custom: build-server
+      arguments: shutdown
+
   - template: run-nunit-tests.yaml
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
       testAssembly: ${{ parameters.testAssembly }}
       dotNetTestExtraArgs: --settings "${{ parameters.testAssembly }}.runsettings"
+      xaSourcePath: ${{ parameters.xaSourcePath }}

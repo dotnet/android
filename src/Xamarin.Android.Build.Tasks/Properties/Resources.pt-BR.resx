@@ -497,6 +497,13 @@ Altere o valor para um nome de tipo qualificado por assembly que herda de "{1}" 
     <value>A propriedade "BundleAssemblies" foi preterida e não tem efeito sobre a compilação do aplicativo. A funcionalidade equivalente é implementada pelas propriedades "AndroidUseAssemblyStore" e "AndroidEnableAssemblyCompression".</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion ''{0}'' não corresponde ao valor ''{1}'' $(SupportedOSPlatformVersion) no arquivo de projeto (se não houver o valor $(SupportedOSPlatformVersion) no arquivo de projeto, então um valor padrão será assumido).
+Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPlatformVersion) ou remova o valor no AndroidManifest.xml (e adicione um valor $(SupportedOSPlatformVersion) ao arquivo de projeto, caso ainda não exista).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>O uso de AppDomain.CreateDomain() foi detectado no assembly: {0}. O .NET 6 e superior dará suporte apenas a um único AppDomain, portanto, esta API não estará mais disponível no Xamarin.Android quando o .NET 6 for lançado.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Altere o valor para um nome de tipo qualificado por assembly que herda de "{1}" 
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>O destino de implantação ''{0}'' não tem suporte (o mínimo é ''{1}''). Aumente o valor da propriedade $(SupportedOSPlatformVersion) no seu arquivo de projeto.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' é menor que a API-{1}, essa configuração não tem suporte.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>O destino de implantação ''{0}'' não tem suporte (o mínimo é ''{1}''). Aumente (ou remova) o valor //uses-sdk/@android:minSdkVersion em seu AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' é menor que a API-{1}, essa configuração não tem suporte.</value>
@@ -918,6 +931,12 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Não foi possível encontrar o recurso Android '{0}'. Atualize @(AndroidResource) para adicionar o recurso ausente.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

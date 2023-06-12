@@ -497,6 +497,13 @@ Změňte hodnotu na název typu kvalifikovaného sestavení, který dědí z: {1
     <value>Vlastnost BundleAssemblies je zastaralá a nemá žádný vliv na sestavení aplikace. Ekvivalentní funkce jsou implementovány vlastnostmi AndroidUseAssemblyStore a AndroidEnableAssemblyCompression.</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion „{0}“ neodpovídá hodnotě $(SupportedOSPlatformVersion) „{1}“ v souboru projektu (pokud v souboru projektu není žádná hodnota $(SupportedOSPlatformVersion), předpokládá se výchozí hodnota).
+Buď změňte hodnotu v souboru AndroidManifest.xml tak, aby odpovídala hodnotě $(SupportedOSPlatformVersion), nebo odeberte hodnotu v souboru AndroidManifest.xml (a přidejte do souboru projektu hodnotu $(SupportedOSPlatformVersion), pokud ještě neexistuje).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Použití funkce AppDomain.CreateDomain() zjištěné v sestavení: {0}. .NET 6 a vyšší bude podporovat jenom jednu doménu AppDomain, takže toto rozhraní API už nebude dostupné v Xamarin.Android po vydání .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Změňte hodnotu na název typu kvalifikovaného sestavení, který dědí z: {1
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>Cíl nasazení „{0}“ se nepodporuje (minimum je „{1}“). Zvyšte hodnotu vlastnosti $(SupportedOSPlatformVersion) ve vašem souboru projektu.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion {0} je méně než API-{1}, tato konfigurace se nepodporuje.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>Cíl nasazení „{0}“ se nepodporuje (minimum je „{1}“). Zvyšte (nebo odeberte) hodnotu //uses-sdk/@android:minSdkVersion ve vašem souboru AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion {0} je méně než API-{1}, tato konfigurace se nepodporuje.</value>
@@ -918,6 +931,12 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

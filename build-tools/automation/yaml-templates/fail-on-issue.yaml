@@ -8,3 +8,4 @@ steps:
         Write-Host "##vso[task.complete result=Failed;]DONE"
     }
   displayName: fail if any issues occurred
+  condition: ${{ parameters.condition }}

@@ -50,7 +50,7 @@ stages:
 
     - template: yaml-templates/commercial-build.yaml
       parameters:
-        makeMSBuildArgs: /p:EnableRoslynAnalyzers=true /p:EnableNativeAnalyzers=true
+        makeMSBuildArgs: /p:EnableNativeAnalyzers=true
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -110,12 +110,10 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
-        configuration: $(XA.Build.Configuration)
-
-    - template: yaml-templates/run-xaprepare.yaml
-      parameters:
-        displayName: install emulator
-        arguments: --s=EmulatorTestDependencies
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
+        xaprepareScenario: EmulatorTestDependencies
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -127,12 +125,12 @@ stages:
     - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
       displayName: set Java8SdkDirectory
 
-    - task: MSBuild@1
-      displayName: install and launch emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:InstallAvdImage;AcquireAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/install-emulator-$(avdApiLevel).binlog
+    - template: yaml-templates/start-stop-emulator.yaml
+      parameters:
+        specificImage: true
+        avdApiLevel: $(avdApiLevel)
+        avdAbi: $(avdAbi)
+        avdType: $(avdType)
 
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
@@ -143,14 +141,6 @@ stages:
         extraBuildArgs: -p:TestsFlavor=$(avdApiLevel) -p:TestAvdApiLevel=$(avdApiLevel) -p:TestAvdAbi=$(avdAbi) -p:TestAvdType=$(avdType)
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: Mono.Android-$(XA.Build.Configuration)-$(avdApiLevel)
-
-    - task: MSBuild@1
-      displayName: shut down emulator
-      inputs:
-        solution: tests/Mono.Android-Tests/Mono.Android-Tests.csproj
-        configuration: $(XA.Build.Configuration)
-        msbuildArguments: /t:AcquireAndroidTarget,ReleaseAndroidTarget /p:TestAvdApiLevel=$(avdApiLevel) /p:TestAvdAbi=$(avdAbi) /p:TestAvdType=$(avdType) /bl:$(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/shutdown-emulator.binlog
-      condition: always()
 
     - template: yaml-templates/upload-results.yaml
       parameters:

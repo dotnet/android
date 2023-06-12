@@ -497,6 +497,13 @@ Veuillez remplacer la valeur par un nom de type qualifié par l’assembly qui h
     <value>La propriété « BundleAssemblies » est déconseillée et n’a aucun effet sur la build de l’application. La fonctionnalité équivalente est implémentée par les propriétés « AndroidUseAssemblyStore » et « AndroidEnableAssemblyCompression ».</value>
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
+  <data name="XA1036" xml:space="preserve">
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' ne correspond pas à la valeur $(SupportedOSPlatformVersion) '{1}' dans le fichier de projet (s’il n’y a pas de valeur $(SupportedOSPlatformVersion) dans le fichier de projet, une valeur par défaut a été prise).
+Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la valeur $(SupportedOSPlatformVersion), ou supprimez la valeur dans AndroidManifest.xml (et ajoutez une valeur $(SupportedOSPlatformVersion) au fichier de projet si elle n’existe pas déjà).</value>
+    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
+{0} - The minimum SDK version number
+{1} - The SupportedOSPlatformVersion property value</comment>
+  </data>
   <data name="XA2000" xml:space="preserve">
     <value>Utilisation de AppDomain.CreateDomain() détectée dans l'assembly : {0}. .NET 6 et les versions ultérieures prend uniquement en charge un seul AppDomain. Cette API ne sera donc plus disponible dans Xamarin.Android après la publication de .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
@@ -608,11 +615,17 @@ Veuillez remplacer la valeur par un nom de type qualifié par l’assembly qui h
 {0} - The generated Java type name
 {1} - The managed type name</comment>
   </data>
+  <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
+    <value>La cible de déploiement '{0}' n’est pas prise en charge (la valeur minimale est '{1}'). Augmentez la valeur de propriété $(SupportedOSPlatformVersion) dans votre fichier projet.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
+{0} - The value of $(SupportedOSPlatformVersion)
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
+  </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' est inférieur à API-{1}, cette configuration n'est pas prise en charge.</value>
-    <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion,  API-{1}
-{0} - The minimum SDK version number
-{1} - The API version number</comment>
+    <value>La cible de déploiement '{0}' n’est pas prise en charge (la valeur minimale est '{1}'). Augmentez (ou supprimez) la valeur //uses-sdk/@android:minSdkVersion dans votre AndroidManifest.xml.</value>
+    <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
+{0} - The value of //uses-sdk/@android:minSdkVersion
+{1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_TargetSdkVersion" xml:space="preserve">
     <value>AndroidManifest.xml //uses-sdk/@android:targetSdkVersion '{0}' est inférieur à API-{1}, cette configuration n'est pas prise en charge.</value>
@@ -918,6 +931,12 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

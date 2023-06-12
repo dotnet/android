@@ -720,6 +720,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1036" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).]D;]A;Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" stimmt nicht mit dem $(SupportedOSPlatformVersion)-Wert "{1}" in der Projektdatei überein (wenn in der Projektdatei kein $(SupportedOSPlatformVersion)-Wert vorhanden ist, wurde ein Standardwert angenommen).]D;]A;Ändern Sie entweder den Wert in "AndroidManifest.xml" so, dass er mit dem Wert $(SupportedOSPlatformVersion) übereinstimmt, oder entfernen Sie den Wert in der Datei "AndroidManifest.xml" (und fügen Sie der Projektdatei einen $(SupportedOSPlatformVersion)-Wert hinzu, falls er noch nicht vorhanden ist.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
@@ -935,9 +944,21 @@
       </Item>
       <Item ItemId=";XA4216_MinSdkVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion "{0}" ist niedriger als API-{1}, diese Konfiguration wird nicht unterstützt.]]></Val>
+            <Val><![CDATA[Das Bereitstellungsziel "{0}" wird nicht unterstützt (der Mindestwert ist "{1}"). Erhöhen (oder entfernen) Sie den Wert von "//uses-sdk/@android:minSdkVersion" in Ihrer Datei "AndroidManifest.xml".]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' is less than API-{1}, this configuration is not supported.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4216_SupportedOSPlatformVersion" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Das Bereitstellungsziel "{0}" wird nicht unterstützt (der Mindestwert ist "{1}"). Erhöhen Sie den $(SupportedOSPlatformVersion)-Eigenschaftswert in Ihrer Projektdatei.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1439,6 +1460,15 @@
           <Val><![CDATA[Two processes may be building this project at once. Lock file exists at path: {0}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Möglicherweise wird dieses Projekt von zwei Prozessen gleichzeitig kompiliert. Im Pfad ist eine Sperrdatei vorhanden: {0}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA8000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Android-Ressource "{0}" wurde nicht gefunden. Aktualisieren Sie @(AndroidResource), um die fehlende Ressource hinzuzufügen.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
