@@ -132,13 +132,13 @@
       For some reason, the URL for platform-tools/build-tools 32.0.0 is prefixed with what appears to be a GIT commit hash or some other checksum...
       Linux packages don't have any prefix, but this forces us to have *some* mechanism to handle this...
     -->
-    <XABuildToolsPackagePrefixMacOS>5219cc671e844de73762e969ace287c29d2e14cd.</XABuildToolsPackagePrefixMacOS>
-    <XABuildToolsPackagePrefixWindows>210b77e4bc623bd4cdda4dae790048f227972bd2.</XABuildToolsPackagePrefixWindows>
+    <XABuildToolsPackagePrefixMacOS></XABuildToolsPackagePrefixMacOS>
+    <XABuildToolsPackagePrefixWindows></XABuildToolsPackagePrefixWindows>
     <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>32</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">32.0.0</XABuildToolsFolder>
+    <XABuildToolsVersion>34</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">34.0.0</XABuildToolsFolder>
     <!-- build-tools 30, for DX tests -->
     <XABuildTools30PackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildTools30PackagePrefixMacOS>
     <XABuildTools30PackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildTools30PackagePrefixWindows>
