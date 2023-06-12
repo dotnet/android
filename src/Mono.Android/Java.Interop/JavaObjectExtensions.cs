@@ -52,8 +52,7 @@ namespace Java.Interop {
 			return _JavaCast<TResult> (instance);
 		}
 
-		[return: MaybeNull]
-		internal static TResult _JavaCast<TResult> (this IJavaObject? instance)
+		internal static TResult? _JavaCast<TResult> (this IJavaObject? instance)
 		{
 			if (instance == null)
 				return default (TResult);
@@ -69,7 +68,7 @@ namespace Java.Interop {
 				return (TResult) CastClass (instance, resultType);
 			}
 			else if (resultType.IsInterface) {
-				return (TResult) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
+				return (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
 			}
 			else
 				throw new NotSupportedException (FormattableString.Invariant ($"Unable to convert type '{instance.GetType ().FullName}' to '{resultType.FullName}'."));

@@ -66,7 +66,7 @@ namespace System.Drawing {
 			return base.CanConvertTo (context, destinationType);
 		}
 
-		public override object ConvertFrom (ITypeDescriptorContext context,
+		public override object? ConvertFrom (ITypeDescriptorContext context,
 						    CultureInfo culture,
 						    object value)
 		{
@@ -79,7 +79,10 @@ namespace System.Drawing {
 			Int32Converter converter = new Int32Converter ();
 			int[] numSubs = new int[subs.Length];
 			for (int i = 0; i < numSubs.Length; i++) {
-				numSubs[i] = (int) converter.ConvertFromString (context, culture, subs[i]);
+				if (converter.ConvertFromString (context, culture, subs[i]) is int num)
+					numSubs[i] = num;
+				else
+					throw new ArgumentException ($"Could not parse string '{subs[i]}' as integer");
 			}
 
 			if (subs.Length != 4)
@@ -88,7 +91,7 @@ namespace System.Drawing {
 			return new Rectangle (numSubs[0], numSubs[1], numSubs[2], numSubs[3]);
 		}
 
-		public override object ConvertTo (ITypeDescriptorContext context,
+		public override object? ConvertTo (ITypeDescriptorContext context,
 						  CultureInfo culture,
 						  object value,
 						  Type destinationType)
@@ -144,7 +147,7 @@ namespace System.Drawing {
 			return true;
 		}
 
-		public override PropertyDescriptorCollection GetProperties (
+		public override PropertyDescriptorCollection? GetProperties (
 							ITypeDescriptorContext context,
 							object value, Attribute[] attributes)
 		{

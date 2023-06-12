@@ -22,8 +22,7 @@ namespace Android.Views {
 		}
 #endif
 
-		[return: MaybeNull]
-		public T FindViewById<T> (int id)
+		public T? FindViewById<T> (int id)
 			where T : Android.Views.View
 		{
 			return this.FindViewById (id).JavaCast<T> ();
