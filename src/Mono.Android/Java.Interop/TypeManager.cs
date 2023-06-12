@@ -324,7 +324,11 @@ namespace Java.Interop {
 		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
 
-		internal static object CreateProxy ([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)] Type type, IntPtr handle, JniHandleOwnership transfer)
+		internal static object CreateProxy (
+				[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type type,
+				IntPtr handle,
+				JniHandleOwnership transfer)
 		{
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.

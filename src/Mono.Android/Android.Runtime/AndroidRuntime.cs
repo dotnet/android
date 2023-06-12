@@ -480,13 +480,20 @@ namespace Android.Runtime {
 			}
 		}
 
-		public override void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, string? methods) =>
+		public override void RegisterNativeMembers (
+				JniType nativeClass,
+				[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
+				Type type,
+				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
-		public void RegisterNativeMembers (JniType nativeClass, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type, ReadOnlySpan<char> methods)
+		public void RegisterNativeMembers (
+				JniType nativeClass,
+				[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+				ReadOnlySpan<char> methods)
 		{
 			try {
 				if (methods.IsEmpty) {
