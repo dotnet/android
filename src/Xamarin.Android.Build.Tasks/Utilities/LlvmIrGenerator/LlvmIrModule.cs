@@ -172,6 +172,17 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		void PrepareStructure (StructureInstance structure)
 		{
 			foreach (StructureMemberInfo smi in structure.Info.Members) {
+				if (smi.IsIRStruct ()) {
+					object? instance = structure.Obj == null ? null : smi.GetValue (structure.Obj);
+					if (instance == null) {
+						continue;
+					}
+
+					StructureInfo si = GetStructureInfo (smi.MemberType);
+					PrepareStructure (new GeneratorStructureInstance (si, instance));
+					continue;
+				}
+
 				if (smi.MemberType != typeof(string)) {
 					continue;
 				}
@@ -424,7 +435,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return (StructureInfo)sinfo;
 			}
 
-			var ret = new StructureInfo (this, typeof(T));
+			var ret = new StructureInfo (this, t);
 			structures.Add (t, ret);
 
 			return ret;

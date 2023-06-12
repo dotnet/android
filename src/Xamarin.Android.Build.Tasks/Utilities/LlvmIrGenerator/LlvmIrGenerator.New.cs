@@ -18,6 +18,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	using LlvmIrWritability = LLVMIR.LlvmIrWritability;
 	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
 
+	sealed class GeneratorStructureInstance : StructureInstance
+	{
+		public GeneratorStructureInstance (StructureInfo info, object instance)
+			: base (info, instance)
+		{}
+	}
+
 	partial class LlvmIrGenerator
 	{
 		const char IndentChar = '\t';
@@ -311,7 +318,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteType (context, variable.Type, variable.Value, out typeInfo, variable as LlvmIrGlobalVariable);
 		}
 
-		void WriteType (WriteContext context, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
+		void WriteType (WriteContext context, StructureInstance si, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
 		{
 			if (memberInfo.IsNativePointer) {
 				typeInfo = new LlvmTypeInfo (
@@ -331,7 +338,31 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (memberInfo.IsIRStruct ()) {
+				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
+				WriteStructureType (context, sim, out typeInfo);
+				return;
+			}
+
 			WriteType (context, memberInfo.MemberType, value: null, out typeInfo);
+		}
+
+		void WriteStructureType (WriteContext context, StructureInstance si, out LlvmTypeInfo typeInfo)
+		{
+			ulong alignment = GetStructureMaxFieldAlignment (si.Info);
+
+			typeInfo = new LlvmTypeInfo (
+				isPointer: false,
+				isAggregate: false,
+				isStructure: true,
+				size: si.Info.Size,
+				maxFieldAlignment: alignment
+			);
+
+			context.Output.Write ('%');
+			context.Output.Write (si.Info.NativeTypeDesignator);
+			context.Output.Write ('.');
+			context.Output.Write (si.Info.Name);
 		}
 
 		void WriteType (WriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
@@ -341,21 +372,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					throw new ArgumentException ("must not be null for structure instances", nameof (value));
 				}
 
-				var si = (StructureInstance)value;
-				ulong alignment = GetStructureMaxFieldAlignment (si.Info);
-
-				typeInfo = new LlvmTypeInfo (
-					isPointer: false,
-					isAggregate: false,
-					isStructure: true,
-					size: si.Info.Size,
-					maxFieldAlignment: alignment
-				);
-
-				context.Output.Write ('%');
-				context.Output.Write (si.Info.NativeTypeDesignator);
-				context.Output.Write ('.');
-				context.Output.Write (si.Info.Name);
+				WriteStructureType (context, (StructureInstance)value, out typeInfo);
 				return;
 			}
 
@@ -482,6 +499,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
 			}
 
+			if (smi.IsIRStruct ()) {
+				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
+				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
+				return;
+			}
+
 			WriteValue (context, smi.MemberType, value);
 		}
 
@@ -578,7 +601,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				StructureMemberInfo smi = info.Members[i];
 
 				context.Output.Write (context.CurrentIndent);
-				WriteType (context, smi, out _);
+				WriteType (context, instance, smi, out _);
 				context.Output.Write (' ');
 
 				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);

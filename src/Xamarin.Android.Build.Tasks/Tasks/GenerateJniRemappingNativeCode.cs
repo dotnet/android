@@ -54,13 +54,13 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new JniRemappingAssemblyGenerator (), typeReplacementsCount: 0);
+			Generate (new New.JniRemappingAssemblyGenerator (), typeReplacementsCount: 0);
 		}
 
 		void Generate ()
 		{
-			var typeReplacements = new List<JniRemappingTypeReplacement> ();
-			var methodReplacements = new List<JniRemappingMethodReplacement> ();
+			var typeReplacements = new List<New.JniRemappingTypeReplacement> ();
+			var methodReplacements = new List<New.JniRemappingMethodReplacement> ();
 
 			var readerSettings = new XmlReaderSettings {
 				XmlResolver = null,
@@ -74,19 +74,19 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Generate (new JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
+			Generate (new New.JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
 		}
 
-		void Generate (JniRemappingAssemblyGenerator jniRemappingGenerator, int typeReplacementsCount)
+		void Generate (New.JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
 		{
-			jniRemappingGenerator.Init ();
+			LLVM.IR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (OutputDirectory, $"jni_remap.{abi.ToLowerInvariant ()}");
 				string llFilePath  = $"{baseAsmFilePath}.ll";
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					jniRemappingGenerator.Write (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
+					jniRemappingComposer.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}
@@ -94,12 +94,12 @@ namespace Xamarin.Android.Tasks
 
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (
 				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
-				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingGenerator.ReplacementMethodIndexEntryCount),
+				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingComposer.ReplacementMethodIndexEntryCount),
 				RegisteredTaskObjectLifetime.Build
 			);
 		}
 
-		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+		void ReadXml (XmlReader reader, List<New.JniRemappingTypeReplacement> typeReplacements, List<New.JniRemappingMethodReplacement> methodReplacements)
 		{
 			bool haveAllAttributes;
 
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
+					typeReplacements.Add (new New.JniRemappingTypeReplacement (from, to));
 				} else if (String.Compare ("replace-method", reader.LocalName, StringComparison.Ordinal) == 0) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
 					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
@@ -135,7 +135,7 @@ namespace Xamarin.Android.Tasks
 
 					string sourceMethodSignature = reader.GetAttribute ("source-method-signature");
 					methodReplacements.Add (
-						new JniRemappingMethodReplacement (
+						new New.JniRemappingMethodReplacement (
 							sourceType, sourceMethodName, sourceMethodSignature,
 							targetType, targetMethodName, isStatic
 						)
