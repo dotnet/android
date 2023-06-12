@@ -9,7 +9,7 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public static void SetAndroidSupportedAbis (this IShortFormProject project, params string [] abis)
 		{
-			if (Builder.UseDotNet || project is XASdkProject) {
+			if (Builder.UseDotNet) {
 				project.SetRuntimeIdentifiers (abis);
 			} else {
 				project.SetAndroidSupportedAbis (string.Join (";", abis));
@@ -22,7 +22,7 @@ namespace Xamarin.ProjectTools
 		/// <param name="abis">A semi-colon-delimited list of ABIs</param>
 		public static void SetAndroidSupportedAbis (this IShortFormProject project, string abis)
 		{
-			if (Builder.UseDotNet || project is XASdkProject) {
+			if (Builder.UseDotNet) {
 				project.SetRuntimeIdentifiers (abis.Split (';'));
 			} else {
 				project.SetProperty (KnownProperties.AndroidSupportedAbis, abis);

@@ -31,20 +31,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty ("PackageTargetFallback", value); }
 		}
 
-		/// <summary>
-		/// Projects targeting net7.0 require ref/runtime packs on NuGet.org or dotnet6/dotnet7
-		/// </summary>
-		public void AddNuGetSourcesForOlderTargetFrameworks (string targetFramework = null)
-		{
-			targetFramework ??= TargetFramework;
-			if (targetFramework.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
-				ExtraNuGetConfigSources = new List<string> {
-					"https://api.nuget.org/v3/index.json",
-					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json",
-				};
-			}
-		}
-
 		public string Sdk { get; set; }
 
 		public IList<BuildItem> OtherBuildItems { get; private set; }
