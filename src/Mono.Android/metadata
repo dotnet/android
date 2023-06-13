@@ -1805,6 +1805,9 @@
   <attr api-since="34" path="/api/package[@name='android.location.altitude']" name="managedName">Android.Locations.Altitude</attr>
   <attr api-since="34" path="/api/package[@name='java.lang.runtime']" name="managedName">Java.Lang.Runtimes</attr>
 
+  <!-- 2 conflicting copies of ErrorEventArgs -->
+  <attr api-since="34" path="/api/package[@name='android.speech']/interface[@name='ModelDownloadListener']/method[@name='onError' and count(parameter)=1 and parameter[1][@type='int']]" name="argsType">ModelDownloadErrorEventArgs</attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
