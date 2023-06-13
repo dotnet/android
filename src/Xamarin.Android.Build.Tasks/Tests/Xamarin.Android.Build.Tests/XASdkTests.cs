@@ -1006,8 +1006,8 @@ public class FooA {
 				}
 			};
 
-			using var b = new Builder ();
-			var legacyTargetFrameworkVersion = "14.0";
+			// NOTE: keep this on the latest Xamarin.Android shipped
+			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");
 			proj.SetProperty ("TargetFrameworks", value: $"{dotnetTargetFramework};{legacyTargetFramework}");
