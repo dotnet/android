@@ -22,17 +22,22 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 			// We need to grab the latest API level *before* changing env vars
 			var apiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
-			var old = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
+			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
+			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			try {
 				string sdkPath = Path.Combine (Root, "temp", TestName, "android-sdk");
+				string jdkPath = Path.Combine (Root, "temp", TestName, "android-jdk");
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", sdkPath);
-				if (Directory.Exists (sdkPath))
-					Directory.Delete (sdkPath, true);
-				Directory.CreateDirectory (sdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", jdkPath);
+				foreach (var path in new [] { sdkPath, jdkPath }) {
+					if (Directory.Exists (path))
+						Directory.Delete (path, recursive: true);
+					Directory.CreateDirectory (path);
+				}
 				var proj = new XamarinAndroidApplicationProject {
 					TargetSdkVersion = apiLevel.ToString (),
 				};
-				const string ExpectedPlatformToolsVersion = "34.0.1";
+				const string ExpectedPlatformToolsVersion = "34.0.3";
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
@@ -61,10 +66,13 @@ namespace Xamarin.Android.Build.Tests
 						}
 					}
 					Assert.IsTrue (usedNewDir, $"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`.");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
+						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`.");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"), $"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`.");
 				}
 			} finally {
-				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", old);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
+				Environment.SetEnvironmentVariable ("TEST_ANDROID_JDK_PATH", oldJdkPath);
 			}
 		}
 

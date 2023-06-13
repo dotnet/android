@@ -850,11 +850,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Android SDK ディレクトリが見つかりませんでした。Visual Studio の Android SDK マネージャーで正常にインストールされていることを確認します。コマンド ライン ビルドにカスタムの SDK パスを使用するには、'AndroidSdkDirectory' MSBuild プロパティをカスタム パスに設定します。</value>
+    <value>Android SDK ディレクトリが見つかりませんでした。Android SDK をインストールするには、次にしたがってください: https://aka.ms/dotnet-android-install-sdk
+コマンド ライン ビルドにカスタム SDK パスを使用するには、'AndroidSdkDirectory' MSBuild プロパティをカスタム パスに設定します。</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Java SDK ディレクトリが見つかりませんでした。Visual Studio オプションの Android セクションで、Java SDK ディレクトリが適切に構成されていることを確認します。コマンド ライン ビルドにカスタムの SDK パスを使用するには、'JavaSdkDirectory' MSBuild プロパティをカスタム パスに設定します。</value>
+    <value>Java SDK ディレクトリが見つかりませんでした。Java SDK をインストールするには、次にしたがってください: https://aka.ms/dotnet-android-install-sdk
+コマンド ライン ビルドにカスタム JDK パスを使用するには、'JavaSdkDirectory' MSBuild プロパティをカスタム パスに設定します。</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

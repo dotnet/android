@@ -55,6 +55,19 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[DebuggerHidden]
+		public static void AssertEntryEquals (this ZipArchive zip, string zipPath, string archivePath, string expected)
+		{
+			zip.AssertContainsEntry (zipPath, archivePath);
+
+			var entry = zip.ReadEntry (archivePath);
+			using var stream = new MemoryStream ();
+			entry.Extract (stream);
+			stream.Position = 0;
+			using var reader = new StreamReader (stream);
+			Assert.AreEqual (expected, reader.ReadToEnd ().Trim ());
+		}
+
+		[DebuggerHidden]
 		public static void AssertContainsEntry (this ZipArchive zip, string zipPath, string archivePath)
 		{
 			Assert.IsTrue (zip.ContainsEntry (archivePath), $"{zipPath} should contain {archivePath}");

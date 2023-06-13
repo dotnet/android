@@ -850,11 +850,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Das Android SDK-Verzeichnis wurde nicht gefunden. Überprüfen Sie, ob der Android SDK-Manager in Visual Studio eine gültige Installation anzeigt. Legen Sie die MSBuild-Eigenschaft "AndroidSdkDirectory" auf den benutzerdefinierten Pfad fest, um einen benutzerdefinierten SDK-Pfad für einen Befehlszeilenbuild zu verwenden.</value>
+    <value>Das Android SDK Verzeichnis wurde nicht gefunden. Installieren Sie die Android SDK, indem Sie den folgenden Anweisungen folgen: https://aka.ms/dotnet-android-install-sdk
+Um einen benutzerdefinierten SDK-Pfad für einen Befehlszeilenbuild zu verwenden, legen Sie die MSBuild-Eigenschaft "AndroidSdkDirectory" auf den benutzerdefinierten Pfad fest.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Das Java SDK-Verzeichnis wurde nicht gefunden. Überprüfen Sie, ob im Abschnitt "Android" der Visual Studio-Optionen ein gültiges Java SDK-Verzeichnis konfiguriert ist. Legen Sie die MSBuild-Eigenschaft "JavaSdkDirectory" auf den benutzerdefinierten Pfad fest, um einen benutzerdefinierten SDK-Pfad für einen Befehlszeilenbuild zu verwenden.</value>
+    <value>Das Java SDK-Verzeichnis wurde nicht gefunden. Installieren Sie das Java SDK, indem Sie den folgenden Anweisungen folgen: https://aka.ms/dotnet-android-install-sdk
+Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden, legen Sie die MSBuild-Eigenschaft "JavaSdkDirectory" auf den benutzerdefinierten Pfad fest.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

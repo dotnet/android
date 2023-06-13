@@ -923,8 +923,48 @@ public class Test
 				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
 				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsFalse (zip.ContainsEntry ("Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
 				}
+			}
+		}
+
+		[Test]
+		[TestCase (1, -1)]
+		[TestCase (5, -1)]
+		[TestCase (50, -1)]
+		[TestCase (100, -1)]
+		[TestCase (512, -1)]
+		[TestCase (1024, -1)]
+		[TestCase (-1, 1)]
+		[TestCase (-1, 5)]
+		[TestCase (-1, 10)]
+		[TestCase (-1, 100)]
+		[TestCase (-1, 200)]
+		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
+		{
+			var proj = new XamarinAndroidApplicationProject  {
+				IsRelease = false,
+				PackageReferences = {
+					KnownPackages.SupportDesign_27_0_2_1,
+					KnownPackages.SupportV7CardView_27_0_2_1,
+					KnownPackages.AndroidSupportV4_27_0_2_1,
+					KnownPackages.SupportCoreUtils_27_0_2_1,
+					KnownPackages.SupportMediaCompat_27_0_2_1,
+					KnownPackages.SupportFragment_27_0_2_1,
+					KnownPackages.SupportCoreUI_27_0_2_1,
+					KnownPackages.SupportCompat_27_0_2_1,
+					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.SupportV7MediaRouter_27_0_2_1,
+				},
+			};
+			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
+			if (filesLimit > 0)
+				proj.SetProperty ("_ZipFlushFilesLimit", filesLimit.ToString ());
+			if (sizeLimit > 0)
+				proj.SetProperty ("_ZipFlushSizeLimit", (sizeLimit * 1024 * 1024).ToString ());
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
 			}
 		}
 

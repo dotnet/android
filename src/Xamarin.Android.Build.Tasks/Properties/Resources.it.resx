@@ -850,11 +850,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>Non è stato possibile trovare la directory di Android SDK. Verificare che in Gestione Android SDK in Visual Studio sia indicata un'installazione valida. Per usare un percorso SDK personalizzato per una compilazione avviata tramite riga di comando, impostare la proprietà 'AndroidSdkDirectory' di MSBuild sul percorso personalizzato.</value>
+    <value>Impossibile trovare la directory di Android SDK. Installare Android SDK seguendo le istruzioni riportate in: https://aka.ms/dotnet-android-install-sdk
+Per usare un percorso SDK personalizzato per una compilazione della riga di comando, impostare la proprietà MSBuild 'AndroidSdkDirectory' sul percorso personalizzato.</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>Non è stato possibile trovare la directory di Java SDK. Assicurarsi che nella sezione Android nelle opzioni di Visual Studio sia stata configurata una directory valida per Java SDK. Per usare un percorso SDK personalizzato per una compilazione avviata tramite riga di comando, impostare la proprietà 'JavaSdkDirectory' di MSBuild sul percorso personalizzato.</value>
+    <value>Impossibile trovare la directory di Java SDK. Installare Java SDK seguendo le istruzioni riportate in: https://aka.ms/dotnet-android-install-sdk
+Per usare un percorso JDK personalizzato per una compilazione della riga di comando, impostare la proprietà MSBuild 'JavaSdkDirectory' sul percorso personalizzato.</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">

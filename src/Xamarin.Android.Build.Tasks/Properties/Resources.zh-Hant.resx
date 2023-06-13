@@ -850,11 +850,13 @@ In this message, the term "handheld app" means "app for handheld devices."
 {3} - The Android SDK installer program name</comment>
   </data>
   <data name="XA5300_Android_SDK" xml:space="preserve">
-    <value>找不到 Android SDK 目錄。請檢查 Visual Studio 中 Android SDK 管理員是否顯示有效的安裝。若要使用自訂的 SDK 路徑建置命令列，請將 'AndroidSdkDirectory' MSBuild 屬性設定為自訂路徑。</value>
+    <value>找不到 Android SDK 目錄。請遵循下列指示安裝 Android SDK: https://aka.ms/dotnet-android-install-sdk
+若要在命令列組建中使用自訂 SDK 路徑，請將 'AndroidSdkDirectory' MSBuild 屬性設定為自訂路徑。</value>
     <comment>The following terms should not be translated: AndroidSdkDirectory</comment>
   </data>
   <data name="XA5300_Java_SDK" xml:space="preserve">
-    <value>找不到 Java SDK 目錄。請確認 Visual Studio 選項 Android 區段已設定有效的 Java SDK 目錄。若要使用自訂的 SDK 路徑建置命令列，請將 'JavaSdkDirectory' MSBuild 屬性設定為自訂路徑。</value>
+    <value>找不到 JAVA SDK 目錄。請遵循下列指示安裝 JAVA SDK: https://aka.ms/dotnet-android-install-sdk
+若要在命令列組建中使用自訂 JDK 路徑，請將 'JavaSdkDirectory' MSBuild 屬性設定為自訂路徑。</value>
     <comment>The following terms should not be translated: JavaSdkDirectory</comment>
   </data>
   <data name="XA5301" xml:space="preserve">
