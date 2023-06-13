@@ -934,7 +934,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Nie można odnaleźć zasobu systemu Android „{0}”. Zaktualizuj element @(AndroidResource), aby dodać brakujący zasób.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
