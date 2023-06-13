@@ -66,7 +66,7 @@ namespace System.Drawing
 			return base.CanConvertTo (context, destinationType);
 		}
 
-		public override object ConvertFrom (ITypeDescriptorContext context, CultureInfo culture, object value)
+		public override object? ConvertFrom (ITypeDescriptorContext context, CultureInfo culture, object value)
 		{
 			var s = value as string;
 			if (s == null)
@@ -77,7 +77,10 @@ namespace System.Drawing
 			SingleConverter converter = new SingleConverter ();
 			float[] numSubs = new float[subs.Length];
 			for (int i = 0; i < numSubs.Length; i++) {
-				numSubs[i] = (float) converter.ConvertFromString (context, culture, subs[i]);
+				if (converter.ConvertFromString (context, culture, subs[i]) is float num)
+					numSubs[i] = num;
+				else
+					throw new ArgumentException ($"Could not parse string '{subs[i]}' as float");
 			}
 
 			if (subs.Length != 2)
@@ -87,7 +90,7 @@ namespace System.Drawing
 
 		}
 
-		public override object ConvertTo (ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
+		public override object? ConvertTo (ITypeDescriptorContext context, CultureInfo culture, object value, Type destinationType)
 		{
 			if (value is SizeF) {
 				SizeF size = (SizeF) value;
@@ -115,7 +118,7 @@ namespace System.Drawing
 			return true;
 		}
 
-		public override PropertyDescriptorCollection GetProperties (ITypeDescriptorContext context, object value, Attribute[] attributes)
+		public override PropertyDescriptorCollection? GetProperties (ITypeDescriptorContext context, object value, Attribute[] attributes)
 		{
 			if (value is SizeF)
 				return TypeDescriptor.GetProperties (value, attributes);

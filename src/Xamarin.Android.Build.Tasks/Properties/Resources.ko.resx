@@ -498,8 +498,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'BundleAssemblies', 'AndroidUseAssemblyStore', 'AndroidEnableAssemblyCompression'</comment>
   </data>
   <data name="XA1036" xml:space="preserve">
-    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}' does not match the $(SupportedOSPlatformVersion) value '{1}' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
-Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).</value>
+    <value>AndroidManifest.xml //uses-sdk/@android:minSdkVersion '{0}'이(가) 프로젝트 파일의 $(SupportedOSPlatformVersion) 값 '{1}'과(와) 일치하지 않습니다(프로젝트 파일에 $(SupportedOSPlatformVersion) 값이 없으면 기본값을 전제로 합니다).
+AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변경하거나 AndroidManifest.xml의 값을 제거하세요(없는 경우, $(SupportedOSPlatformVersion) 값을 프로젝트 파일에 추가합니다).</value>
     <comment>The following are literal names and should not be translated: AndroidManifest.xml, //uses-sdk/@android:minSdkVersion, $(SupportedOSPlatformVersion)
 {0} - The minimum SDK version number
 {1} - The SupportedOSPlatformVersion property value</comment>
@@ -616,13 +616,13 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 {1} - The managed type name</comment>
   </data>
   <data name="XA4216_SupportedOSPlatformVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase the $(SupportedOSPlatformVersion) property value in your project file.</value>
+    <value>배포 대상 '{0}'은(는) 지원되지 않습니다(최소값은 '{1}'). 프로젝트 파일에서 $(SupportedOSPlatformVersion) 속성 값을 늘리세요.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, $(SupportedOSPlatformVersion)
 {0} - The value of $(SupportedOSPlatformVersion)
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
   </data>
   <data name="XA4216_MinSdkVersion" xml:space="preserve">
-    <value>The deployment target '{0}' is not supported (the minimum is '{1}'). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml.</value>
+    <value>배포 대상 '{0}'은(는) 지원되지 않습니다(최솟값은 '{1}'). AndroidManifest.xml에서 //uses-sdk/@android:minSdkVersion 값을 늘리거나 제거하세요.</value>
     <comment>The following are literal names and should not be translated: Microsoft.Android, //uses-sdk/@android:minSdkVersion, AndroidManifest.xml
 {0} - The value of //uses-sdk/@android:minSdkVersion
 {1} - The minimum $(SupportedOSPlatformVersion) supported by this version of the SDK</comment>
@@ -931,6 +931,12 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>
 {0} - A Directory Path.
 {1} - A Filename.
+    </comment>
+  </data>
+  <data name="XA8000" xml:space="preserve">
+    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <comment>
+{0} - An Android Resource Identifier.
     </comment>
   </data>
 </root>

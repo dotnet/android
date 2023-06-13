@@ -16,19 +16,12 @@ namespace Xamarin.ProjectTools
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }
 
-		readonly XASdkProject project;
 		readonly string projectOrSolution;
 
 		public DotNetCLI (string projectOrSolution)
 		{
 			this.projectOrSolution = projectOrSolution;
 			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
-		}
-
-		public DotNetCLI (XASdkProject project, string projectOrSolution)
-			: this (projectOrSolution)
-		{
-			this.project = project;
 		}
 
 		/// <summary>
@@ -38,8 +31,10 @@ namespace Xamarin.ProjectTools
 		/// <returns>Whether or not the command succeeded.</returns>
 		protected bool Execute (params string [] args)
 		{
-			if (string.IsNullOrEmpty (ProcessLogFile))
-				ProcessLogFile = Path.Combine (XABuildPaths.TestOutputDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+			if (string.IsNullOrEmpty (ProcessLogFile)) {
+				Directory.CreateDirectory (ProjectDirectory);
+				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+			}
 
 			var procOutput = new StringBuilder ();
 			bool succeeded;
@@ -161,9 +156,6 @@ namespace Xamarin.ProjectTools
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
-			}
-			if (project != null) {
-				arguments.Add ($"/p:Configuration={project.Configuration}");
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
 				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");

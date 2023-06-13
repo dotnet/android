@@ -310,7 +310,7 @@ namespace Xamarin.Android.Net
 		}
 
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
-		object GetUnderlyingHandler ()
+		object? GetUnderlyingHandler ()
 		{
 			var fieldName = "_nativeHandler";
 			FieldInfo? field = null;

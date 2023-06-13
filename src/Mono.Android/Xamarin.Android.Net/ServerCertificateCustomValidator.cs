@@ -74,10 +74,10 @@ namespace Xamarin.Android.Net
 			}
 
 			public void CheckClientTrusted (JavaX509Certificate[] chain, string authType)
-				=> _internalTrustManager.CheckClientTrusted (chain, authType);
+				=> _internalTrustManager?.CheckClientTrusted (chain, authType);
 
 			public JavaX509Certificate[] GetAcceptedIssuers ()
-				=> _internalTrustManager.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
+				=> _internalTrustManager?.GetAcceptedIssuers () ?? Array.Empty<JavaX509Certificate> ();
 
 			private bool VerifyHostname (JavaX509Certificate[] javaChain)
 			{
@@ -158,8 +158,11 @@ namespace Xamarin.Android.Net
 			public bool Verify (string? hostname, ISSLSession? session) => true;
 		}
 
-		private static IX509TrustManager? FindX509TrustManager(ITrustManager[] trustManagers)
+		private static IX509TrustManager? FindX509TrustManager(ITrustManager[]? trustManagers)
 		{
+			if (trustManagers is null)
+				return null;
+
 			foreach (var trustManager in trustManagers) {
 				if (trustManager is IX509TrustManager tm)
 					return tm;

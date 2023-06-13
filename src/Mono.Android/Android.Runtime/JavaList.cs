@@ -727,8 +727,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
-		[return: MaybeNull]
-		internal unsafe T InternalGet (int location)
+		internal unsafe T? InternalGet (int location)
 		{
 			const string id = "get.(I)Ljava/lang/Object;";
 			JniObjectReference obj;
@@ -880,8 +879,7 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
-		[return: MaybeNull]
-		public IEnumerator<T> GetEnumerator ()
+		public IEnumerator<T?> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());
 		}

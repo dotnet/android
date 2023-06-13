@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
@@ -166,7 +167,7 @@ namespace Java.Interop {
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
-				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType);
+				var newobj = RuntimeHelpers.GetUninitializedObject (cinfo.DeclaringType!);
 				if (newobj is Java.Lang.Object o) {
 					o.handle = jobject;
 				} else if (newobj is Java.Lang.Throwable throwable) {
@@ -177,7 +178,7 @@ namespace Java.Interop {
 				cinfo.Invoke (newobj, parms);
 			} catch (Exception e) {
 				var m = FormattableString.Invariant (
-					$"Could not activate JNI Handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}) of Java type '{JNIEnv.GetClassNameFromInstance (jobject)}' as managed type '{cinfo.DeclaringType.FullName}'.");
+					$"Could not activate JNI Handle 0x{jobject:x} (key_handle 0x{JNIEnv.IdentityHash (jobject):x}) of Java type '{JNIEnv.GetClassNameFromInstance (jobject)}' as managed type '{cinfo?.DeclaringType?.FullName}'.");
 				Logger.Log (LogLevel.Warn, "monodroid", m);
 				Logger.Log (LogLevel.Warn, "monodroid", CreateJavaLocationException ().ToString ());
 
@@ -240,7 +241,7 @@ namespace Java.Interop {
 			Type? type = null;
 			int ls = class_name.LastIndexOf ('/');
 			var package = ls >= 0 ? class_name.Substring (0, ls) : "";
-			if (packageLookup.TryGetValue (package, out var mappers)) {
+			if (packageLookup!.TryGetValue (package, out var mappers)) {
 				foreach (Converter<string, Type?> c in mappers) {
 					type = c (class_name);
 					if (type == null)
@@ -362,6 +363,7 @@ namespace Java.Interop {
 
 		static Dictionary<string, List<Converter<string, Type?>>>? packageLookup;
 
+		[MemberNotNull (nameof (packageLookup))]
 		static void LazyInitPackageLookup ()
 		{
 			if (packageLookup == null)

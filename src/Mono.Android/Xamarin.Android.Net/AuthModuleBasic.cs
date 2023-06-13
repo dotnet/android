@@ -34,7 +34,7 @@ namespace Xamarin.Android.Net
 			if (request == null || credentials == null)
 				return null;
 
-			NetworkCredential cred = credentials.GetCredential (new Uri (request.URL?.ToString ()!), AuthenticationType.ToLowerInvariant ());
+			NetworkCredential? cred = credentials.GetCredential (new Uri (request.URL?.ToString ()!), AuthenticationType.ToLowerInvariant ());
 			if (cred == null)
 				return null;
 

@@ -40,8 +40,7 @@ namespace System.Linq {
 				}
 		}
 
-		[return: MaybeNull]
-		public static IEnumerable<T> ToEnumerable<T> (this Java.Lang.IIterable source)
+		public static IEnumerable<T?> ToEnumerable<T> (this Java.Lang.IIterable source)
 		{
 			if (source == null)
 				throw new ArgumentNullException ("source");
@@ -53,7 +52,6 @@ namespace System.Linq {
 				}
 		}
 
-		[return: MaybeNull]
 		internal static IEnumerator<T> ToEnumerator_Dispose<T> (this Java.Util.IIterator source)
 		{
 			using (source)

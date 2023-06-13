@@ -88,9 +88,8 @@ namespace Android.OS {
 		}
 
 		static IntPtr id_get;
-		[return: MaybeNull]
 		[Register ("get", "()Ljava/lang/Object;", "")]
-		public TResult GetResult ()
+		public TResult? GetResult ()
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (class_ref, "get", "()Ljava/lang/Object;");

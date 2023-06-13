@@ -263,10 +263,9 @@ namespace Java.Lang {
 			return peeked;
 		}
 
-		[return: MaybeNull]
-		internal static T PeekObject <T> (IntPtr handle)
+		internal static T? PeekObject <T> (IntPtr handle)
 		{
-			return (T)PeekObject (handle, typeof (T));
+			return (T?)PeekObject (handle, typeof (T));
 		}
 
 		public static T? GetObject<T> (IntPtr jnienv, IntPtr handle, JniHandleOwnership transfer)
@@ -282,13 +281,12 @@ namespace Java.Lang {
 			return _GetObject<T>(handle, transfer);
 		}
 
-		[return: MaybeNull]
-		internal static T _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
+		internal static T? _GetObject<T> (IntPtr handle, JniHandleOwnership transfer)
 		{
 			if (handle == IntPtr.Zero)
 				return default (T);
 
-			return (T) GetObject (handle, transfer, typeof (T));
+			return (T?) GetObject (handle, transfer, typeof (T));
 		}
 
 		internal static IJavaPeerable? GetObject (IntPtr handle, JniHandleOwnership transfer, Type? type = null)
@@ -306,8 +304,7 @@ namespace Java.Lang {
 		}
 
 		[EditorBrowsable (EditorBrowsableState.Never)]
-		[return: MaybeNull]
-		public T[] ToArray<T>()
+		public T[]? ToArray<T>()
 		{
 			return JNIEnv.GetArray<T>(Handle);
 		}

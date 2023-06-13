@@ -15,6 +15,7 @@ using Xamarin.ProjectTools;
 #if !NET472
 namespace Xamarin.Android.Build.Tests
 {
+	[Obsolete ("De-dupe and migrate these tests to InstallAndRunTests.cs")]
 	[TestFixture]
 	[Category ("UsesDevice"), Category ("WearOS")]
 	public class XASdkDeployTests : DeviceTest
@@ -61,42 +62,35 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (DotNetInstallAndRunSource))]
 		public void DotNetInstallAndRun (bool isRelease, bool xamarinForms, string targetFramework)
 		{
-			XASdkProject proj;
+			XamarinAndroidApplicationProject proj;
 			if (xamarinForms) {
-				proj = new XamarinFormsXASdkProject {
-					IsRelease = isRelease
+				proj = new XamarinFormsAndroidApplicationProject {
+					IsRelease = isRelease,
+					EnableDefaultItems = true,
 				};
 			} else {
-				proj = new XASdkProject {
-					IsRelease = isRelease
+				proj = new XamarinAndroidApplicationProject {
+					IsRelease = isRelease,
+					EnableDefaultItems = true,
 				};
 			}
 			proj.TargetFramework = targetFramework;
-			proj.AddNuGetSourcesForOlderTargetFrameworks ();
-			proj.SetRuntimeIdentifier (DeviceAbi);
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
 
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir     = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
-
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
-			WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
 			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"), 30);
-			RunAdbCommand ($"uninstall {proj.PackageName}");
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
 		[Test]
 		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
 		{
-			var proj = new XASdkProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
+				EnableDefaultItems = true,
 				OtherBuildItems = {
 					new AndroidItem._AndroidRemapMembers ("RemapActivity.xml") {
 						Encoding = Encoding.UTF8,
@@ -112,22 +106,13 @@ namespace Xamarin.Android.Build.Tests
 				},
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
-			proj.SetRuntimeIdentifier (DeviceAbi);
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir     = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
-
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
-
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"));
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
 			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
-			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
 			StringAssert.Contains (
 					"RemapActivity.onMyCreate() invoked!",
@@ -144,13 +129,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void SupportDesugaringStaticInterfaceMethods ()
 		{
-			AssertHasDevices ();
-			if (!Builder.UseDotNet) {
-				Assert.Ignore ("Skipping. Test not relevant under Classic.");
-			}
-
-			var proj = new XASdkProject () {
+			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
+				EnableDefaultItems = true,
 				OtherBuildItems = {
 					new AndroidItem.AndroidJavaSource ("StaticMethodsInterface.java") {
 						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
@@ -165,27 +146,18 @@ namespace Xamarin.Android.Build.Tests
 			// Note: To properly test, Desugaring must be *enabled*, which requires that
 			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
 			// but set this explicitly anyway just so that this implicit requirement is explicit.
-			proj.SetProperty (proj.ReleaseProperties, "SupportedOSPlatformVersion", "21");
+			proj.SupportedOSPlatformVersion = "21";
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
 ");
-			proj.SetRuntimeIdentifier (DeviceAbi);
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir     = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
-
-			Assert.IsTrue (dotnet.Build (), "`dotnet build` should succeed");
-			Assert.IsTrue (dotnet.Run (), "`dotnet run` should succeed");
-
-			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (fullProjDir, "logcat.log"));
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
 			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
-			var logcatOutput = File.ReadAllText (Path.Combine (fullProjDir, "logcat.log"));
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
 
 			StringAssert.Contains (
 					"IStaticMethodsInterface.Value=3",
@@ -201,20 +173,16 @@ namespace Xamarin.Android.Build.Tests
 		{
 			AssertCommercialBuild ();
 
-			var proj = new XASdkProject ();
-			proj.TargetFramework = targetFramework;
-			proj.AddNuGetSourcesForOlderTargetFrameworks ();
+			var proj = new XamarinAndroidApplicationProject () {
+				EnableDefaultItems = true,
+				TargetFramework = targetFramework,
+			};
 			proj.SetRuntimeIdentifier (DeviceAbi);
 			string runtimeId = proj.GetProperty (KnownProperties.RuntimeIdentifier);
 
-			var relativeProjDir = Path.Combine ("temp", TestName);
-			var fullProjDir = Path.Combine (Root, relativeProjDir);
-			TestOutputDirectories [TestContext.CurrentContext.Test.ID] = fullProjDir;
-			var files = proj.Save ();
-			proj.Populate (relativeProjDir, files);
-			proj.CopyNuGetConfig (relativeProjDir);
-			var dotnet = new DotNetCLI (proj, Path.Combine (fullProjDir, proj.ProjectFilePath));
-			Assert.IsTrue (dotnet.Build ("Install"), "`dotnet build` should succeed");
+			var builder = CreateApkBuilder ();
+
+			Assert.IsTrue (builder.Install (proj), "Install should succeed.");
 
 			bool breakpointHit = false;
 			ManualResetEvent resetEvent = new ManualResetEvent (false);
@@ -223,7 +191,7 @@ namespace Xamarin.Android.Build.Tests
 			var session = new SoftDebuggerSession ();
 			try {
 				session.Breakpoints = new BreakpointStore {
-					{ Path.Combine (Root, dotnet.ProjectDirectory, "MainActivity.cs"), 10 },
+					{ Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs"), 10 },
 				};
 				session.TargetHitBreakpoint += (sender, e) => {
 					Console.WriteLine ($"BREAK {e.Type}");
@@ -237,20 +205,20 @@ namespace Xamarin.Android.Build.Tests
 					MaxConnectionAttempts = 10,
 				};
 				var startInfo = new SoftDebuggerStartInfo (args) {
-					WorkingDirectory = Path.Combine (dotnet.ProjectDirectory, proj.IntermediateOutputPath, runtimeId, "android", "assets"),
+					WorkingDirectory = Path.Combine (builder.ProjectDirectory, proj.IntermediateOutputPath, runtimeId, "android", "assets"),
 				};
 				var options = new DebuggerSessionOptions () {
 					EvaluationOptions = EvaluationOptions.DefaultOptions,
 				};
 				options.EvaluationOptions.UseExternalTypeResolver = true;
-				dotnet.BuildLogFile = Path.Combine (Root, dotnet.ProjectDirectory, "run.log");
-				Assert.True (dotnet.Build ("Run", parameters: new [] {
+				builder.BuildLogFile = Path.Combine (Root, builder.ProjectDirectory, "run.log");
+				Assert.True (builder.RunTarget (proj, "Run", parameters: new [] {
 					$"AndroidSdbTargetPort={port}",
 					$"AndroidSdbHostPort={port}",
 					"AndroidAttachDebugger=True",
 				}), "Project should have run.");
-				WaitForPermissionActivity (Path.Combine (Root, dotnet.ProjectDirectory, "permission-logcat.log"));
-				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, dotnet.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
+				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+				Assert.IsTrue (WaitForDebuggerToStart (Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 120), "Activity should have started");
 				// we need to give a bit of time for the debug server to start up.
 				WaitFor (2000);
 				session.LogWriter += (isStderr, text) => { Console.WriteLine (text); };
