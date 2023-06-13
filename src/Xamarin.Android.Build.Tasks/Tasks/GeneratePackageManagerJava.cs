@@ -375,38 +375,7 @@ namespace Xamarin.Android.Tasks
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), RegisteredTaskObjectLifetime.Build);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
-			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
-				UsesMonoAOT = usesMonoAOT,
-				UsesMonoLLVM = EnableLLVM,
-				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
-				MonoAOTMode = aotMode.ToString ().ToLowerInvariant (),
-				AotEnableLazyLoad = AndroidAotEnableLazyLoad,
-				AndroidPackageName = AndroidPackageName,
-				BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
-				PackageNamingPolicy = pnp,
-				BoundExceptionType = boundExceptionType,
-				InstantRunEnabled = InstantRunEnabled,
-				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
-				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-				NumberOfAssembliesInApk = assemblyCount,
-				BundledAssemblyNameWidth = assemblyNameWidth,
-				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
-				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
-				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
-				// and in the same order.
-				MonoComponents = monoComponents,
-				NativeLibraries = uniqueNativeLibraries,
-				HaveAssemblyStore = UseAssemblyStore,
-				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
-				JNIEnvInitializeToken = jnienv_initialize_method_token,
-				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
-				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
-				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
-				MarshalMethodsEnabled = EnableMarshalMethods,
-			};
-			appConfigAsmGen.Init ();
-
-			var appConfigAsmGenNew = new New.ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
+			var appConfigAsmGen = new New.ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
 				UsesMonoLLVM = EnableLLVM,
 				UsesAssemblyPreload = environmentParser.UsesAssemblyPreload,
@@ -435,10 +404,11 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 			};
-			LLVM.IR.LlvmIrModule appConfigModule = appConfigAsmGenNew.Construct ();
+			LLVM.IR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
 			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
+			New.MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGenNew;
 
 			if (enableMarshalMethods) {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
@@ -448,10 +418,20 @@ namespace Xamarin.Android.Tasks
 					Log,
 					mmTracingMode
 				);
+
+				marshalMethodsAsmGenNew = new New.MarshalMethodsNativeAssemblyGenerator (
+					assemblyCount,
+					uniqueAssemblyNames,
+					marshalMethodsState?.MarshalMethods,
+					Log,
+					mmTracingMode
+				);
 			} else {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
+				marshalMethodsAsmGenNew = new New.MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
 			}
 			marshalMethodsAsmGen.Init ();
+			LLVM.IR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGenNew.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
@@ -459,17 +439,28 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
+				string marshalMethodsLlFilePathNew = $"{marshalMethodsBaseAsmFilePath}-new.ll";
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					//string newEnvironmentLlFilePath = Path.Combine (Path.GetDirectoryName (environmentLlFilePath), $"new-{Path.GetFileName (environmentLlFilePath)}");
 					try {
-						appConfigAsmGenNew.Generate (appConfigModule, targetArch, sw, environmentLlFilePath);
+						appConfigAsmGen.Generate (appConfigModule, targetArch, sw, environmentLlFilePath);
 					} catch {
 						throw;
 					} finally {
 						sw.Flush ();
 						Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+					}
+				}
+
+				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+					try {
+						marshalMethodsAsmGenNew.Generate (marshalMethodsModule, targetArch, sw, marshalMethodsLlFilePathNew);
+					} catch {
+						throw;
+					} finally {
+						sw.Flush ();
+						Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePathNew);
 					}
 				}
 

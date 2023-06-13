@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				}
 
 				string? value = smi.GetValue (structure.Obj) as string;
-				if (!String.IsNullOrEmpty (value)) {
+				if (value != null) {
 					RegisterString (value, stringGroupName: structure.Info.Name, symbolSuffix: smi.Info.Name);
 				}
 			}
@@ -333,6 +333,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			Type elementType = variable.Type.GetArrayElementType ();
 			return typeof(StructureInstance).IsAssignableFrom (elementType);
+		}
+
+		bool IsPointerArrayVariable (LlvmIrGlobalVariable variable)
+		{
+			if (!variable.Type.IsArray ()) {
+				return false;
+			}
+
+			Type elementType = variable.Type.GetArrayElementType ();
+			return elementType == typeof(IntPtr) || elementType == typeof(UIntPtr);
 		}
 
 		bool IsStructureVariable (LlvmIrGlobalVariable variable)

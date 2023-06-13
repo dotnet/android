@@ -222,7 +222,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			var oldState = savedState as SignatureState;
 			if (oldState == null) {
-				throw new InvalidOperationException ("Internal error: savedState not an instance of {nameof(SignatureState)}");
+				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(SignatureState)}");
 			}
 
 			if (oldState.Owner != this) {
@@ -299,6 +299,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			public FunctionState (LlvmIrFunction owner, ILlvmIrFunctionSignatureState signatureState)
 			{
 				Owner = owner;
+				SignatureState = signatureState;
 			}
 		}
 
@@ -359,7 +360,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			var oldState = savedState as FunctionState;
 			if (oldState == null) {
-				throw new InvalidOperationException ("Internal error: savedState not an instance of {nameof(FunctionState)}");
+				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(FunctionState)}");
 			}
 
 			if (oldState.Owner != this) {

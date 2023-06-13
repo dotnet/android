@@ -266,13 +266,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			if (variable.Value == null) {
-				if (typeInfo.IsPointer) {
-					context.Output.Write ("null");
+				// Order of checks is important here. Aggregates can contain pointer types, in which case typeInfo.IsPointer
+				// will be `true` and the aggregate would be incorrectly initialized with `null` instead of the correct
+				// `zeroinitializer`
+				if (typeInfo.IsAggregate) {
+					WriteValue (context, valueType, variable);
 					return;
 				}
 
-				if (typeInfo.IsAggregate) {
-					WriteValue (context, valueType, variable);
+				if (typeInfo.IsPointer) {
+					context.Output.Write ("null");
 					return;
 				}
 
@@ -648,10 +651,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			Type elementType = variable.Type.GetArrayElementType ();
-			bool first = true;
 			bool writeIndices = (variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayWriteIndexComments) == LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 			ulong counter = 0;
 			string? prevItemComment = null;
+			uint stride;
+
+			if ((variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayFormatInRows) == LlvmIrVariableWriteOptions.ArrayFormatInRows) {
+				stride = variable.ArrayStride > 0 ? variable.ArrayStride : 1;
+			} else {
+				stride = 1;
+			}
+
+			bool first = true;
+
+			// TODO: implement output in rows
 			foreach (object entry in entries) {
 				if (!first) {
 					context.Output.Write (',');
@@ -662,7 +675,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 				prevItemComment = null;
 				if (variable.GetArrayItemCommentCallback != null) {
-					prevItemComment = variable.GetArrayItemCommentCallback (variable, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
+					prevItemComment = variable.GetArrayItemCommentCallback (variable, target, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
 				}
 
 				if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
@@ -1018,7 +1031,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					targetSet.Add (privateTargetSet);
 				}
 
-				context.Output.WriteLine ($"attributes #{targetSet.Number} {{ {targetSet.Render ()} }}");
+				context.Output.WriteLine ($"attributes #{targetSet.Number} = {{ {targetSet.Render ()} }}");
 			}
 		}
 

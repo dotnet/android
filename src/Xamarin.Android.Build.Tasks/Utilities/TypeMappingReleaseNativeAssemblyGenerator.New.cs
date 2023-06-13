@@ -254,7 +254,7 @@ namespace Xamarin.Android.Tasks.New
 			}
 		}
 
-		string? GetJavaHashesItemComment (LlvmIrVariable v, ulong index, object? value, object? callerState)
+		string? GetJavaHashesItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
 		{
 			var cs = callerState as ConstructionState;
 			if (cs == null) {
@@ -291,16 +291,6 @@ namespace Xamarin.Android.Tasks.New
 			}
 
 			gv.OverrideValueAndType (listType, hashes);
-		}
-
-		LlvmIrGlobalVariable EnsureGlobalVariable (LlvmIrVariable variable)
-		{
-			var gv = variable as LlvmIrGlobalVariable;
-			if (gv == null) {
-				throw new InvalidOperationException ("Internal error: global variable expected");
-			}
-
-			return gv;
 		}
 
 		ConstructionState EnsureConstructionState (object? callerState)

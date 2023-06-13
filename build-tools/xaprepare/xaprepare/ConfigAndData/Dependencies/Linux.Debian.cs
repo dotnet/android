@@ -25,6 +25,8 @@ namespace Xamarin.Android.Prepare
 		static readonly Dictionary<string, string> DebianUnstableVersionMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 			{ "bookworm", "12" },
 			{ "bookworm/sid", "12" },
+			{ "trixie", "13" },
+			{ "trixie/sid", "13" },
 		};
 
 		protected Version DebianRelease { get; private set; } = new Version (0, 0);
@@ -56,6 +58,7 @@ namespace Xamarin.Android.Prepare
 			return
 				version!.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
@@ -75,7 +78,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0;
+			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
+			       debian_version!.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		protected override bool EnsureVersionInformation (Context context)

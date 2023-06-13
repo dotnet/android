@@ -11,6 +11,7 @@ enum LlvmIrVariableWriteOptions
 {
 	None                    = 0x0000,
 	ArrayWriteIndexComments = 0x0001,
+	ArrayFormatInRows       = 0x0002,
 }
 
 abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
@@ -21,6 +22,13 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	public string? Name                            { get; protected set; }
 	public Type Type                               { get; protected set; }
 	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
+
+	/// <summary>
+	/// Number of columns an array that is written in rows should have.  By default, arrays are written one item in a line, but
+	/// when the <see cref="LlvmIrVariableWriteOptions.ArrayFormatInRows"/> flag is set in <see cref="WriteOptions"/>, then
+	/// the value of this property dictates how many items are to be placed in a single row.
+	/// </summary>
+	public uint ArrayStride                        { get; set; } = 8;
 	public object? Value                           { get; set; }
 	public string? Comment                         { get; set; }
 
@@ -73,7 +81,7 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	/// can return an empty string or <c>null</c>, in which case no comment is written.
 	/// </para>
 	/// </summary>
-	public Func<LlvmIrVariable, ulong, object?, object?, string?>? GetArrayItemCommentCallback { get; set; }
+	public Func<LlvmIrVariable, LlvmIrModuleTarget, ulong, object?, object?, string?>? GetArrayItemCommentCallback { get; set; }
 
 	/// <summary>
 	/// Object passed to the <see cref="GetArrayItemCommentCallback"/> method, if any, as the caller state.

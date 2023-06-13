@@ -43,5 +43,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			return (ulong)XxHash32.HashToUInt32 (stringBytes);
 		}
+
+		protected LlvmIrGlobalVariable EnsureGlobalVariable (LlvmIrVariable variable)
+		{
+			var gv = variable as LlvmIrGlobalVariable;
+			if (gv == null) {
+				throw new InvalidOperationException ("Internal error: global variable expected");
+			}
+
+			return gv;
+		}
 	}
 }
