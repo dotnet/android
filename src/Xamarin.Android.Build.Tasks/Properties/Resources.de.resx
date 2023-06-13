@@ -934,7 +934,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Die Android-Ressource "{0}" wurde nicht gefunden. Aktualisieren Sie @(AndroidResource), um die fehlende Ressource hinzuzufügen.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
