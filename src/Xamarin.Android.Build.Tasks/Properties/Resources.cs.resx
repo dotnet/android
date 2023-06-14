@@ -934,7 +934,7 @@ Pokud chcete pro sestavení z příkazového řádku použít vlastní cestu JDK
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Nepovedlo se najít prostředek Androidu {0}. Pokud chcete přidat chybějící prostředek, aktualizujte prosím @(AndroidResource).</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>

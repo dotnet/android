@@ -934,7 +934,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     </comment>
   </data>
   <data name="XA8000" xml:space="preserve">
-    <value>Could not find Android Resource '{0}'. Please update @(AndroidResource) to add the missing resource.</value>
+    <value>Non è stato possibile trovare la risorsa Android '{0}'. Aggiorna @(AndroidResource) per aggiungere la risorsa mancante.</value>
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
