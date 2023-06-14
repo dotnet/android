@@ -12,11 +12,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
 	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
 
-	interface ILlvmIrFunctionParameterState {}
+	interface ILlvmIrSavedFunctionParameterState {}
 
 	class LlvmIrFunctionParameter : LlvmIrLocalVariable
 	{
-		sealed class ParameterState : ILlvmIrFunctionParameterState
+		sealed class SavedParameterState : ILlvmIrSavedFunctionParameterState
 		{
 			public readonly LlvmIrFunctionParameter Owner;
 
@@ -31,13 +31,26 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			public bool? SignExt;
 			public bool? ZeroExt;
 
-			public ParameterState (LlvmIrFunctionParameter owner)
+			public SavedParameterState (LlvmIrFunctionParameter owner, SavedParameterState? previousState = null)
 			{
 				Owner = owner;
+				if (previousState == null) {
+					return;
+				}
+
+				Align = previousState.Align;
+				AllocPtr = previousState.AllocPtr;
+				Dereferenceable = previousState.Dereferenceable;
+				ImmArg = previousState.ImmArg;
+				NoCapture = previousState.NoCapture;
+				NonNull = previousState.NonNull;
+				ReadNone = previousState.ReadNone;
+				SignExt = previousState.SignExt;
+				ZeroExt = previousState.ZeroExt;
 			}
 		}
 
-		ParameterState state;
+		SavedParameterState state;
 
 		// To save on time, we declare only attributes that are actually used in our generated code.  More will be added, as needed.
 
@@ -125,7 +138,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			: base (type, name)
 		{
 			NameMatters = false;
-			state = new ParameterState (this);
+			state = new SavedParameterState (this);
 		}
 
 		/// <summary>
@@ -135,19 +148,19 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// Instances are **still** shared and thus different threads would step on each other's toes should they saved and restored
 		/// state without synchronization.
 		/// </summary>
-		public ILlvmIrFunctionParameterState SaveState ()
+		public ILlvmIrSavedFunctionParameterState SaveState ()
 		{
-			ILlvmIrFunctionParameterState ret = state;
-			state = new ParameterState (this);
+			SavedParameterState ret = state;
+			state = new SavedParameterState (this, ret);
 			return ret;
 		}
 
 		/// <summary>
 		/// Restore (opaque) state. <see cref="SaveState()"/> for more info
 		/// </summary>
-		public void RestoreState (ILlvmIrFunctionParameterState savedState)
+		public void RestoreState (ILlvmIrSavedFunctionParameterState savedState)
 		{
-			var oldState = savedState as ParameterState;
+			var oldState = savedState as SavedParameterState;
 			if (oldState == null) {
 				throw new InvalidOperationException ("Internal error: savedState not an instance of ParameterState");
 			}
@@ -160,16 +173,16 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 	}
 
-	interface ILlvmIrFunctionSignatureState {}
+	interface ILlvmIrSavedFunctionSignatureState {}
 
 	class LlvmIrFunctionSignature : IEquatable<LlvmIrFunctionSignature>
 	{
-		sealed class SignatureState : ILlvmIrFunctionSignatureState
+		sealed class SavedSignatureState : ILlvmIrSavedFunctionSignatureState
 		{
 			public readonly LlvmIrFunctionSignature Owner;
-			public readonly IList<ILlvmIrFunctionParameterState> ParameterStates;
+			public readonly IList<ILlvmIrSavedFunctionParameterState> ParameterStates;
 
-			public SignatureState (LlvmIrFunctionSignature owner, IList<ILlvmIrFunctionParameterState> parameterStates)
+			public SavedSignatureState (LlvmIrFunctionSignature owner, IList<ILlvmIrSavedFunctionParameterState> parameterStates)
 			{
 				Owner = owner;
 				ParameterStates = parameterStates;
@@ -203,26 +216,26 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// Save (opaque) signature state.  This includes states of all the parameters. <see cref="LlvmIrFunctionParameter.SaveState()"/>
 		/// for more information.
 		/// </summary>
-		public ILlvmIrFunctionSignatureState SaveState ()
+		public ILlvmIrSavedFunctionSignatureState SaveState ()
 		{
-			var list = new List<ILlvmIrFunctionParameterState> ();
+			var list = new List<ILlvmIrSavedFunctionParameterState> ();
 
 			foreach (LlvmIrFunctionParameter parameter in Parameters) {
 				list.Add (parameter.SaveState ());
 			}
 
-			return new SignatureState (this, list.AsReadOnly ());
+			return new SavedSignatureState (this, list.AsReadOnly ());
 		}
 
 		/// <summary>
-		/// Restore (opaque) signature state.  This includes states of all the parameters. <see cref="LlvmIrFunctionParameter.RestoreState(ILlvmIrFunctionParameterState)"/>
+		/// Restore (opaque) signature state.  This includes states of all the parameters. <see cref="LlvmIrFunctionParameter.RestoreState(ILlvmIrSavedFunctionParameterState)"/>
 		/// for more information.
 		/// </summary>
-		public void RestoreState (ILlvmIrFunctionSignatureState savedState)
+		public void RestoreState (ILlvmIrSavedFunctionSignatureState savedState)
 		{
-			var oldState = savedState as SignatureState;
+			var oldState = savedState as SavedSignatureState;
 			if (oldState == null) {
-				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(SignatureState)}");
+				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(SavedSignatureState)}");
 			}
 
 			if (oldState.Owner != this) {
@@ -230,7 +243,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			for (int i = 0; i < oldState.ParameterStates.Count; i++) {
-				ILlvmIrFunctionParameterState parameterState = oldState.ParameterStates[i];
+				ILlvmIrSavedFunctionParameterState parameterState = oldState.ParameterStates[i];
 				Parameters[i].RestoreState (parameterState);
 
 			}
@@ -283,7 +296,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 	}
 
-	interface ILlvmIrFunctionState {}
+	interface ILlvmIrSavedFunctionState {}
 
 	/// <summary>
 	/// Describes a native function to be emitted or declared and keeps code emitting state between calls to various generator.
@@ -291,17 +304,56 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 	/// </summary>
 	class LlvmIrFunction : IEquatable<LlvmIrFunction>
 	{
-		sealed class FunctionState : ILlvmIrFunctionState
+		public class FunctionState
+		{
+			// Counter shared by unnamed local variables (including function parameters) and unnamed labels.
+			ulong unnamedTemporaryCounter = 0;
+
+			// Implicit unnamed label at the start of the function
+			ulong? startingBlockNumber;
+
+			public ulong StartingBlockNumber {
+				get {
+					if (startingBlockNumber.HasValue) {
+						return startingBlockNumber.Value;
+					}
+
+					throw new InvalidOperationException ($"Internal error: starting block number not set");
+				}
+			}
+
+			public FunctionState ()
+			{}
+
+			public ulong NextTemporary ()
+			{
+				ulong ret = unnamedTemporaryCounter++;
+				return ret;
+			}
+
+			public void ConfigureStartingBlockNumber ()
+			{
+				if (startingBlockNumber.HasValue) {
+					return;
+				}
+
+				startingBlockNumber = unnamedTemporaryCounter++;
+			}
+		}
+
+		sealed class SavedFunctionState : ILlvmIrSavedFunctionState
 		{
 			public readonly LlvmIrFunction Owner;
-			public readonly ILlvmIrFunctionSignatureState SignatureState;
+			public readonly ILlvmIrSavedFunctionSignatureState SignatureState;
 
-			public FunctionState (LlvmIrFunction owner, ILlvmIrFunctionSignatureState signatureState)
+			public SavedFunctionState (LlvmIrFunction owner, ILlvmIrSavedFunctionSignatureState signatureState)
 			{
 				Owner = owner;
 				SignatureState = signatureState;
 			}
 		}
+
+		FunctionState functionState;
 
 		public LlvmIrFunctionSignature Signature             { get; }
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.LocalUnnamed;
@@ -309,26 +361,24 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public LlvmIrLinkage Linkage                         { get; set; } = LlvmIrLinkage.Default;
 		public LlvmIrRuntimePreemption RuntimePreemption     { get; set; } = LlvmIrRuntimePreemption.Default;
 		public LlvmIrVisibility Visibility                   { get; set; } = LlvmIrVisibility.Default;
-
-		// Counter shared by unnamed local variables (including function parameters) and unnamed labels.
-		uint unnamedTemporaryCounter = 0;
-
-		// Implicit unnamed label at the start of the function
-		readonly uint startingBlockNumber;
+		public LlvmIrFunctionBody Body                       { get; }
 
 		public LlvmIrFunction (LlvmIrFunctionSignature signature, LlvmIrFunctionAttributeSet? attributeSet = null)
 		{
 			Signature = signature;
 			AttributeSet = attributeSet;
 
+			functionState = new FunctionState ();
 			foreach (LlvmIrFunctionParameter parameter in signature.Parameters) {
 				if (!String.IsNullOrEmpty (parameter.Name)) {
 					continue;
 				}
 
-				parameter.AssignNumber (unnamedTemporaryCounter++);
+				parameter.AssignNumber (functionState.NextTemporary ());
 			}
-			startingBlockNumber = unnamedTemporaryCounter++;
+			functionState.ConfigureStartingBlockNumber ();
+
+			Body = new LlvmIrFunctionBody (this, functionState);
 		}
 
 		/// <summary>
@@ -347,20 +397,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// Save (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.SaveState()"/>
 		/// for more information.
 		/// </summary>
-		public ILlvmIrFunctionState SaveState ()
+		public ILlvmIrSavedFunctionState SaveState ()
 		{
-			return new FunctionState (this, Signature.SaveState ());
+			return new SavedFunctionState (this, Signature.SaveState ());
 		}
 
 		/// <summary>
-		/// Restore (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.RestoreState(ILlvmIrFunctionSignatureState)"/>
+		/// Restore (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.RestoreState(ILlvmIrSavedFunctionSignatureState)"/>
 		/// for more information.
 		/// </summary>
-		public void RestoreState (ILlvmIrFunctionState savedState)
+		public void RestoreState (ILlvmIrSavedFunctionState savedState)
 		{
-			var oldState = savedState as FunctionState;
+			var oldState = savedState as SavedFunctionState;
 			if (oldState == null) {
-				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(FunctionState)}");
+				throw new InvalidOperationException ($"Internal error: savedState not an instance of {nameof(SavedFunctionState)}");
 			}
 
 			if (oldState.Owner != this) {

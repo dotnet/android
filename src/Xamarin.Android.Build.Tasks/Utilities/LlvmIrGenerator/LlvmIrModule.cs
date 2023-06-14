@@ -19,6 +19,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public static readonly Type NameValueArrayType = typeof(IDictionary<string, string>);
 
 		public IList<LlvmIrFunction>? ExternalFunctions         { get; private set; }
+		public IList<LlvmIrFunction>? Functions                 { get; private set; }
 		public IList<LlvmIrFunctionAttributeSet>? AttributeSets { get; private set; }
 		public IList<StructureInfo>? Structures                 { get; private set; }
 		public IList<LlvmIrGlobalVariable>? GlobalVariables     { get; private set; }
@@ -26,6 +27,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		Dictionary<LlvmIrFunctionAttributeSet, LlvmIrFunctionAttributeSet>? attributeSets;
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? externalFunctions;
+		Dictionary<LlvmIrFunction, LlvmIrFunction>? functions;
 		Dictionary<Type, StructureInfo>? structures;
 		LlvmIrStringManager? stringManager;
 		LlvmIrMetadataManager metadataManager;
@@ -64,6 +66,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				ExternalFunctions = list.AsReadOnly ();
 			}
 
+			if (functions != null) {
+				List<LlvmIrFunction> list = functions.Values.ToList ();
+				// TODO: sort or not?
+				Functions = list.AsReadOnly ();
+			}
+
 			if (attributeSets != null) {
 				List<LlvmIrFunctionAttributeSet> list = attributeSets.Values.ToList ();
 				list.Sort ((LlvmIrFunctionAttributeSet a, LlvmIrFunctionAttributeSet b) => a.Number.CompareTo (b.Number));
@@ -81,6 +89,19 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			GlobalVariables = globalVariables?.AsReadOnly ();
+		}
+
+		public void Add (LlvmIrFunction func)
+		{
+			if (functions == null) {
+				functions = new Dictionary<LlvmIrFunction, LlvmIrFunction> ();
+			}
+
+			if (functions.TryGetValue (func, out LlvmIrFunction existingFunc)) {
+				throw new InvalidOperationException ($"Internal error: identical function has already been added (\"{func.Signature.Name}\")");
+			}
+
+			functions.Add (func, func);
 		}
 
 		/// <summary>

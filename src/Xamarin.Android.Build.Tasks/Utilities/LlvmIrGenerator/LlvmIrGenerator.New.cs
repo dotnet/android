@@ -151,8 +151,9 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.WriteLine ($"target triple = \"{target.Triple}\"");
 			WriteStructureDeclarations (context);
 			WriteGlobalVariables (context);
+			WriteFunctions (context);
 
-			// Bottom of file
+			// Bottom of the file
 			WriteStrings (context);
 			WriteExternalFunctionDeclarations (context);
 			WriteAttributeSets (context);
@@ -847,6 +848,56 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		//
 		// Functions syntax: https://llvm.org/docs/LangRef.html#functions
 		//
+		void WriteFunctions (WriteContext context)
+		{
+			if (context.Module.Functions == null || context.Module.Functions.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteComment (context, " Functions");
+
+			foreach (LlvmIrFunction function in context.Module.Functions) {
+				context.Output.WriteLine ();
+
+				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags
+				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "define");
+				WriteFunctionDefinitionLeadingDecorations (context, function);
+				WriteFunctionSignature (context, function, writeParameterNames: true);
+				WriteFunctionDefinitionTrailingDecorations (context, function);
+				WriteFunctionBody (context, function);
+				function.RestoreState (funcState);
+			}
+		}
+
+		void WriteFunctionBody (WriteContext context, LlvmIrFunction function)
+		{
+			context.Output.WriteLine ();
+			context.Output.WriteLine ('{');
+			context.IncreaseIndent ();
+
+			// TODO: body here
+
+			context.DecreaseIndent ();
+			context.Output.WriteLine ();
+			context.Output.WriteLine ('}');
+		}
+
+		ILlvmIrSavedFunctionState WriteFunctionPreamble (WriteContext context, LlvmIrFunction function, string keyword)
+		{
+			ILlvmIrSavedFunctionState funcState = function.SaveState ();
+
+			foreach (LlvmIrFunctionParameter parameter in function.Signature.Parameters) {
+				target.SetParameterFlags (parameter);
+			}
+
+			WriteFunctionAttributesComment (context, function);
+			context.Output.Write (keyword);
+			context.Output.Write (' ');
+
+			return funcState;
+		}
+
 		void WriteExternalFunctionDeclarations (WriteContext context)
 		{
 			if (context.Module.ExternalFunctions == null || context.Module.ExternalFunctions.Count == 0) {
@@ -854,22 +905,17 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			context.Output.WriteLine ();
-			foreach (LlvmIrFunction func in context.Module.ExternalFunctions) {
-				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags)
-				ILlvmIrFunctionState funcState = func.SaveState ();
-
-				foreach (LlvmIrFunctionParameter parameter in func.Signature.Parameters) {
-					target.SetParameterFlags (parameter);
-				}
-
-				WriteFunctionAttributesComment (context, func);
-				context.Output.Write ("declare ");
-				WriteFunctionDeclarationLeadingDecorations (context, func);
-				WriteFunctionSignature (context, func, writeParameterNames: false);
-				WriteFunctionDeclarationTrailingDecorations (context, func);
+			WriteComment (context, " External functions");
+			foreach (LlvmIrFunction function in context.Module.ExternalFunctions) {
 				context.Output.WriteLine ();
 
-				func.RestoreState (funcState);
+				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags)
+				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "declare");
+				WriteFunctionDeclarationLeadingDecorations (context, function);
+				WriteFunctionSignature (context, function, writeParameterNames: false);
+				WriteFunctionDeclarationTrailingDecorations (context, function);
+
+				function.RestoreState (funcState);
 			}
 		}
 

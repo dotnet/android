@@ -22,6 +22,8 @@ namespace Xamarin.Android.Tasks.New
 
 	partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
+		const string GetFunctionPointerVariableName = "get_function_pointer";
+
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
 		{}
@@ -578,12 +580,61 @@ namespace Xamarin.Android.Tasks.New
 			module.AddGlobalVariable ("mm_class_names", mm_class_names, LLVMIR.LlvmIrVariableOptions.GlobalConstant, comment: " Names of classes in which marshal methods reside");
 
 			AddMarshalMethodNames (module, acs);
+
+			AddXamarinAppInitFunction (module);
 		}
 
 		void MapStructures (LlvmIrModule module)
 		{
 			marshalMethodsManagedClassStructureInfo = module.MapStructure<MarshalMethodsManagedClass> ();
 			marshalMethodNameStructureInfo = module.MapStructure<MarshalMethodName> ();
+		}
+
+		void AddXamarinAppInitFunction (LlvmIrModule module)
+		{
+			module.AddGlobalVariable (typeof(IntPtr), GetFunctionPointerVariableName, null, LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+
+			var init_params = new List<LlvmIrFunctionParameter> {
+				new (typeof(_JNIEnv), "env") {
+					NoCapture = true,
+					NoUndef = true,
+					ReadNone = true,
+				},
+				new (typeof(IntPtr), "fn") {
+					NoUndef = true,
+				},
+			};
+
+			var init_signature = new LlvmIrFunctionSignature (
+				name: "xamarin_app_init",
+				returnType: typeof(void),
+				parameters: init_params
+			);
+
+			LlvmIrFunctionAttributeSet attrSet = module.AddAttributeSet (MakeXamarinAppInitAttributeSet (module));
+			var xamarin_app_init = new LlvmIrFunction (init_signature, attrSet);
+			module.Add (xamarin_app_init);
+		}
+
+		LlvmIrFunctionAttributeSet MakeXamarinAppInitAttributeSet (LlvmIrModule module)
+		{
+			return new LlvmIrFunctionAttributeSet {
+				new MustprogressFunctionAttribute (),
+				new NofreeFunctionAttribute (),
+				new NorecurseFunctionAttribute (),
+				new NosyncFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new WillreturnFunctionAttribute (),
+				new MemoryFunctionAttribute {
+					Default = MemoryAttributeAccessKind.Write,
+					Argmem = MemoryAttributeAccessKind.None,
+					InaccessibleMem = MemoryAttributeAccessKind.None,
+				},
+				new UwtableFunctionAttribute (),
+				new MinLegalVectorWidthFunctionAttribute (0),
+				new NoTrappingMathFunctionAttribute (true),
+				new StackProtectorBufferSizeFunctionAttribute (8),
+			};
 		}
 
 		void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)

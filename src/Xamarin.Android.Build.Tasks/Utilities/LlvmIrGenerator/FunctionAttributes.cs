@@ -461,6 +461,87 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{}
 	}
 
+	enum MemoryAttributeAccessKind
+	{
+		None,
+		Read,
+		Write,
+		ReadWrite,
+	}
+
+	class MemoryFunctionAttribute : LlvmIrFunctionAttribute
+	{
+		public MemoryAttributeAccessKind? Default         { get; set; }
+		public MemoryAttributeAccessKind? Argmem          { get; set; }
+		public MemoryAttributeAccessKind? InaccessibleMem { get; set; }
+
+		public MemoryFunctionAttribute ()
+			: base ("memory", quoted: false, supportsParams: true, optionalParams: true, hasValueAssignment: false)
+		{}
+
+		protected override bool HasOptionalParams ()
+		{
+			// All of them are optional, but at least one of them must be specified
+			bool ret = Default.HasValue || Argmem.HasValue || InaccessibleMem.HasValue;
+			if (!ret) {
+				throw new InvalidOperationException ("Internal error: at least one access kind must be specified");
+			}
+
+			return ret;
+		}
+
+		protected override void RenderParams (StringBuilder sb)
+		{
+			bool haveSomething = false;
+
+			if (Default.HasValue) {
+				AppendParam (GetAccessKindString (Default));
+			}
+
+			if (Argmem.HasValue) {
+				AppendParam ($"argmem: {GetAccessKindString (Argmem)}");
+			}
+
+			if (InaccessibleMem.HasValue) {
+				AppendParam ($"inaccessiblemem: {GetAccessKindString (InaccessibleMem)}");
+			}
+
+			void AppendParam (string text)
+			{
+				if (haveSomething) {
+					sb.Append (", ");
+				}
+				sb.Append (text);
+				haveSomething = true;
+			}
+		}
+
+		string GetAccessKindString (MemoryAttributeAccessKind? kind)
+		{
+			return kind.Value switch {
+				MemoryAttributeAccessKind.None      => "none",
+				MemoryAttributeAccessKind.Read      => "read",
+				MemoryAttributeAccessKind.Write     => "write",
+				MemoryAttributeAccessKind.ReadWrite => "readwrite",
+				_ => throw new InvalidOperationException ($"Internal error: unsupported access kind {kind}")
+			};
+		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as MemoryFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return Default == attr.Default && Argmem == attr.Argmem && InaccessibleMem == attr.InaccessibleMem;
+		}
+	}
+
 	class MinsizeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public MinsizeFunctionAttribute ()

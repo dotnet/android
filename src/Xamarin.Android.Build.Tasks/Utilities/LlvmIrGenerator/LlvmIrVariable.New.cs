@@ -143,7 +143,7 @@ class LlvmIrLocalVariable : LlvmIrVariable
 		: base (type, name)
 	{}
 
-	public void AssignNumber (uint n)
+	public void AssignNumber (ulong n)
 	{
 		Name = n.ToString (CultureInfo.InvariantCulture);
 	}
