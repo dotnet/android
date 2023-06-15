@@ -163,12 +163,6 @@ namespace Xamarin.Android.Build.Tests
 				/* packageFormat */      "aab",
 			},
 			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
@@ -356,28 +350,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* packageFormat */      "aab",
 			},
 			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  false,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  true,
-				/* user */		 null,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  false,
-				/* user */		 DeviceTest.GuestUserName,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
