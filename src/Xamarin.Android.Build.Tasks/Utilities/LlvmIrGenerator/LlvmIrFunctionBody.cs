@@ -16,6 +16,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// the generated code (e.g. the starting block label)
 		/// </summary>
 		public bool SkipInOutput { get; protected set; }
+		public abstract void Write (GeneratorWriteContext context);
 	}
 
 	/// <summary>
@@ -91,21 +92,39 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			SetName (state.NextTemporary ());
 		}
+
+		public override void Write (GeneratorWriteContext context)
+		{
+			context.DecreaseIndent ();
+
+			context.Output.Write (context.CurrentIndent);
+			context.Output.Write (Name);
+			context.Output.WriteLine (':');
+
+			context.IncreaseIndent ();
+		}
 	}
 
 	class LlvmIrFunctionBodyComment : LlvmIrFunctionBodyItem
 	{
-		public string Text { get; }
+		public string Text     { get; }
 
 		public LlvmIrFunctionBodyComment (string comment)
 		{
 			Text = comment;
 		}
+
+		public override void Write (GeneratorWriteContext context)
+		{
+			context.Output.Write (context.CurrentIndent);
+			context.Output.Write (';');
+			context.Output.WriteLine (Text);
+		}
 	}
 
 	class LlvmIrFunctionBody
 	{
-		class LlvmIrFunctionImplicitStartLabel : LlvmIrFunctionLabelItem
+		sealed class LlvmIrFunctionImplicitStartLabel : LlvmIrFunctionLabelItem
 		{
 			public LlvmIrFunctionImplicitStartLabel (ulong num)
 			{
@@ -114,7 +133,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		class LlvmIrFunctionParameterItem : LlvmIrFunctionLocalItem
+		sealed class LlvmIrFunctionParameterItem : LlvmIrFunctionLocalItem
 		{
 			public LlvmIrFunctionParameter Parameter { get; }
 
@@ -124,14 +143,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				Parameter = parameter;
 				SkipInOutput = true;
 			}
+
+			public override void Write (GeneratorWriteContext context)
+			{
+				throw new NotSupportedException ("Internal error: writing not supported for this item");
+			}
 		}
 
 		List<LlvmIrFunctionBodyItem> items;
 		HashSet<string> definedLabels;
 		LlvmIrFunction function;
 		LlvmIrFunction.FunctionState functionState;
+		LlvmIrFunctionLabelItem implicitStartBlock;
 
-		public bool IsEmpty => items.Count == 0;
+		public IList<LlvmIrFunctionBodyItem> Items => items.AsReadOnly ();
 
 		public LlvmIrFunctionBody (LlvmIrFunction func, LlvmIrFunction.FunctionState functionState)
 		{
@@ -139,7 +164,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			this.functionState = functionState;
 			definedLabels = new HashSet<string> (StringComparer.Ordinal);
 			items = new List<LlvmIrFunctionBodyItem> ();
-			items.Add (new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber));
+			implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
 		}
 
 		public void Add (LlvmIrFunctionLabelItem label)

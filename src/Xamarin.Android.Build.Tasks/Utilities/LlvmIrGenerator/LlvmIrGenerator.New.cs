@@ -25,10 +25,46 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{}
 	}
 
-	partial class LlvmIrGenerator
+	sealed class GeneratorWriteContext
 	{
 		const char IndentChar = '\t';
 
+		int currentIndentLevel = 0;
+
+		public readonly TextWriter Output;
+		public readonly LlvmIrModule Module;
+		public readonly LlvmIrModuleTarget Target;
+		public readonly LlvmIrMetadataManager MetadataManager;
+		public string CurrentIndent { get; private set; } = String.Empty;
+		public bool InVariableGroup { get; set; }
+
+		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager)
+		{
+			Output = writer;
+			Module = module;
+			Target = target;
+			MetadataManager = metadataManager;
+		}
+
+		public void IncreaseIndent ()
+		{
+			currentIndentLevel++;
+			CurrentIndent = MakeIndentString ();
+		}
+
+		public void DecreaseIndent ()
+		{
+			if (currentIndentLevel > 0) {
+				currentIndentLevel--;
+			}
+			CurrentIndent = MakeIndentString ();
+		}
+
+		string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
+	}
+
+	partial class LlvmIrGenerator
+	{
 		sealed class LlvmTypeInfo
 		{
 			public readonly bool IsPointer;
@@ -45,40 +81,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				Size = size;
 				MaxFieldAlignment = maxFieldAlignment;
 			}
-		}
-
-		sealed class WriteContext
-		{
-			int currentIndentLevel = 0;
-
-			public readonly TextWriter Output;
-			public readonly LlvmIrModule Module;
-			public readonly LlvmIrMetadataManager MetadataManager;
-			public string CurrentIndent { get; private set; } = String.Empty;
-			public bool InVariableGroup { get; set; }
-
-			public WriteContext (TextWriter writer, LlvmIrModule module, LlvmIrMetadataManager metadataManager)
-			{
-				Output = writer;
-				Module = module;
-				MetadataManager = metadataManager;
-			}
-
-			public void IncreaseIndent ()
-			{
-				currentIndentLevel++;
-				CurrentIndent = MakeIndentString ();
-			}
-
-			public void DecreaseIndent ()
-			{
-				if (currentIndentLevel > 0) {
-					currentIndentLevel--;
-				}
-				CurrentIndent = MakeIndentString ();
-			}
-
-			string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
 		}
 
 		sealed class BasicType
@@ -141,7 +143,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
 			target.AddTargetSpecificMetadata (metadataManager);
 
-			var context = new WriteContext (writer, module, metadataManager);
+			var context = new GeneratorWriteContext (writer, module, target, metadataManager);
 			if (!String.IsNullOrEmpty (FilePath)) {
 				WriteCommentLine (context, $" ModuleID = '{FileName}'");
 				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
@@ -160,7 +162,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteMetadata (context);
 		}
 
-		void WriteStrings (WriteContext context)
+		void WriteStrings (GeneratorWriteContext context)
 		{
 			if (context.Module.Strings == null || context.Module.Strings.Count == 0) {
 				return;
@@ -190,7 +192,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteGlobalVariables (WriteContext context)
+		void WriteGlobalVariables (GeneratorWriteContext context)
 		{
 			if (context.Module.GlobalVariables == null || context.Module.GlobalVariables.Count == 0) {
 				return;
@@ -212,7 +214,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteGlobalVariableStart (WriteContext context, LlvmIrGlobalVariable variable)
+		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
 			if (!String.IsNullOrEmpty (variable.Comment)) {
 				WriteCommentLine (context, variable.Comment);
@@ -229,7 +231,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteWritability (context, options.Writability);
 		}
 
-		void WriteGlobalVariable (WriteContext context, LlvmIrGlobalVariable variable)
+		void WriteGlobalVariable (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
 			if (!context.InVariableGroup) {
 				context.Output.WriteLine ();
@@ -254,7 +256,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.WriteLine (alignment.ToString (CultureInfo.InvariantCulture));
 		}
 
-		void WriteTypeAndValue (WriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
+		void WriteTypeAndValue (GeneratorWriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
 		{
 			WriteType (context, variable, out typeInfo);
 			context.Output.Write (' ');
@@ -317,12 +319,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			throw new InvalidOperationException ($"Internal error: should never get here");
 		}
 
-		void WriteType (WriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
+		void WriteType (GeneratorWriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
 		{
 			WriteType (context, variable.Type, variable.Value, out typeInfo, variable as LlvmIrGlobalVariable);
 		}
 
-		void WriteType (WriteContext context, StructureInstance si, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
+		void WriteType (GeneratorWriteContext context, StructureInstance si, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
 		{
 			if (memberInfo.IsNativePointer) {
 				typeInfo = new LlvmTypeInfo (
@@ -351,7 +353,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteType (context, memberInfo.MemberType, value: null, out typeInfo);
 		}
 
-		void WriteStructureType (WriteContext context, StructureInstance si, out LlvmTypeInfo typeInfo)
+		void WriteStructureType (GeneratorWriteContext context, StructureInstance si, out LlvmTypeInfo typeInfo)
 		{
 			ulong alignment = GetStructureMaxFieldAlignment (si.Info);
 
@@ -369,7 +371,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (si.Info.Name);
 		}
 
-		void WriteType (WriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
+		void WriteType (GeneratorWriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
 		{
 			if (IsStructureInstance (type)) {
 				if (value == null) {
@@ -403,7 +405,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (irType);
 		}
 
-		void WriteArrayType (WriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
+		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
 		{
 			string irType;
 			ulong size;
@@ -447,7 +449,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		bool IsStructureInstance (Type t) => typeof(StructureInstance).IsAssignableFrom (t);
 
-		void WriteValue (WriteContext context, Type valueType, LlvmIrVariable variable)
+		void WriteValue (GeneratorWriteContext context, Type valueType, LlvmIrVariable variable)
 		{
 			if (variable.Type.IsArray ()) {
 				bool zeroInitialize = false;
@@ -478,7 +480,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{si.Info.Name}', expected {expectedLength}, found {length}");
 		}
 
-		void WriteValue (WriteContext context, StructureInstance structInstance, StructureMemberInfo smi, object? value)
+		void WriteValue (GeneratorWriteContext context, StructureInstance structInstance, StructureMemberInfo smi, object? value)
 		{
 			if (smi.IsNativePointer) {
 				if (WriteNativePointerValue (context, structInstance, smi, value)) {
@@ -512,7 +514,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteValue (context, smi.MemberType, value);
 		}
 
-		bool WriteNativePointerValue (WriteContext context, StructureInstance si, StructureMemberInfo smi, object? value)
+		bool WriteNativePointerValue (GeneratorWriteContext context, StructureInstance si, StructureMemberInfo smi, object? value)
 		{
 			// Structure members decorated with the [NativePointer] attribute cannot have a
 			// value other than `null`, unless they are strings or references to symbols
@@ -542,7 +544,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return false;
 		}
 
-		void WriteValue (WriteContext context, Type type, object? value)
+		void WriteValue (GeneratorWriteContext context, Type type, object? value)
 		{
 			if (value is LlvmIrVariable variableRef) {
 				context.Output.Write (variableRef.Reference);
@@ -588,7 +590,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
 		}
 
-		void WriteStructureValue (WriteContext context, StructureInstance? instance)
+		void WriteStructureValue (GeneratorWriteContext context, StructureInstance? instance)
 		{
 			if (instance == null || instance.IsZeroInitialized) {
 				context.Output.Write ("zeroinitializer");
@@ -634,7 +636,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write ('}');
 		}
 
-		void WriteArrayValue (WriteContext context, LlvmIrVariable variable)
+		void WriteArrayValue (GeneratorWriteContext context, LlvmIrVariable variable)
 		{
 			context.Output.WriteLine ('[');
 			context.IncreaseIndent ();
@@ -706,7 +708,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteLinkage (WriteContext context, LlvmIrLinkage linkage)
+		void WriteLinkage (GeneratorWriteContext context, LlvmIrLinkage linkage)
 		{
 			if (linkage == LlvmIrLinkage.Default) {
 				return;
@@ -719,7 +721,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteWritability (WriteContext context, LlvmIrWritability writability)
+		void WriteWritability (GeneratorWriteContext context, LlvmIrWritability writability)
 		{
 			try {
 				WriteAttribute (context, llvmWritability[writability]);
@@ -728,7 +730,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteAddressSignificance (WriteContext context, LlvmIrAddressSignificance addressSignificance)
+		void WriteAddressSignificance (GeneratorWriteContext context, LlvmIrAddressSignificance addressSignificance)
 		{
 			if (addressSignificance == LlvmIrAddressSignificance.Default) {
 				return;
@@ -741,7 +743,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteVisibility (WriteContext context, LlvmIrVisibility visibility)
+		void WriteVisibility (GeneratorWriteContext context, LlvmIrVisibility visibility)
 		{
 			if (visibility == LlvmIrVisibility.Default) {
 				return;
@@ -754,7 +756,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WritePreemptionSpecifier (WriteContext context, LlvmIrRuntimePreemption preemptionSpecifier)
+		void WritePreemptionSpecifier (GeneratorWriteContext context, LlvmIrRuntimePreemption preemptionSpecifier)
 		{
 			if (preemptionSpecifier == LlvmIrRuntimePreemption.Default) {
 				return;
@@ -770,13 +772,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// <summary>
 		/// Write attribute named in <paramref ref="attr"/> followed by a single space
 		/// </summary>
-		void WriteAttribute (WriteContext context, string attr)
+		void WriteAttribute (GeneratorWriteContext context, string attr)
 		{
 			context.Output.Write (attr);
 			context.Output.Write (' ');
 		}
 
-		void WriteStructureDeclarations (WriteContext context)
+		void WriteStructureDeclarations (GeneratorWriteContext context)
 		{
 			if (context.Module.Structures == null || context.Module.Structures.Count == 0) {
 				return;
@@ -788,7 +790,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteStructureDeclaration (WriteContext context, StructureInfo si)
+		void WriteStructureDeclaration (GeneratorWriteContext context, StructureInfo si)
 		{
 			// $"%{typeDesignator}.{name} = type "
 			context.Output.Write ('%');
@@ -848,7 +850,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		//
 		// Functions syntax: https://llvm.org/docs/LangRef.html#functions
 		//
-		void WriteFunctions (WriteContext context)
+		void WriteFunctions (GeneratorWriteContext context)
 		{
 			if (context.Module.Functions == null || context.Module.Functions.Count == 0) {
 				return;
@@ -870,20 +872,21 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteFunctionBody (WriteContext context, LlvmIrFunction function)
+		void WriteFunctionBody (GeneratorWriteContext context, LlvmIrFunction function)
 		{
 			context.Output.WriteLine ();
 			context.Output.WriteLine ('{');
 			context.IncreaseIndent ();
 
-			// TODO: body here
+			foreach (LlvmIrFunctionBodyItem item in function.Body.Items) {
+				item.Write (context);
+			}
 
 			context.DecreaseIndent ();
-			context.Output.WriteLine ();
 			context.Output.WriteLine ('}');
 		}
 
-		ILlvmIrSavedFunctionState WriteFunctionPreamble (WriteContext context, LlvmIrFunction function, string keyword)
+		ILlvmIrSavedFunctionState WriteFunctionPreamble (GeneratorWriteContext context, LlvmIrFunction function, string keyword)
 		{
 			ILlvmIrSavedFunctionState funcState = function.SaveState ();
 
@@ -898,7 +901,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return funcState;
 		}
 
-		void WriteExternalFunctionDeclarations (WriteContext context)
+		void WriteExternalFunctionDeclarations (GeneratorWriteContext context)
 		{
 			if (context.Module.ExternalFunctions == null || context.Module.ExternalFunctions.Count == 0) {
 				return;
@@ -919,7 +922,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteFunctionAttributesComment (WriteContext context, LlvmIrFunction func)
+		void WriteFunctionAttributesComment (GeneratorWriteContext context, LlvmIrFunction func)
 		{
 			if (func.AttributeSet == null) {
 				return;
@@ -929,17 +932,17 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			WriteCommentLine (context, $"Function attributes: {func.AttributeSet.Render ()}");
 		}
 
-		void WriteFunctionDeclarationLeadingDecorations (WriteContext context, LlvmIrFunction func)
+		void WriteFunctionDeclarationLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
 		{
 			WriteFunctionLeadingDecorations (context, func, declaration: true);
 		}
 
-		void WriteFunctionDefinitionLeadingDecorations (WriteContext context, LlvmIrFunction func)
+		void WriteFunctionDefinitionLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
 		{
 			WriteFunctionLeadingDecorations (context, func, declaration: false);
 		}
 
-		void WriteFunctionLeadingDecorations (WriteContext context, LlvmIrFunction func, bool declaration)
+		void WriteFunctionLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func, bool declaration)
 		{
 			if (func.Linkage != LlvmIrLinkage.Default) {
 				context.Output.Write (llvmLinkage[func.Linkage]);
@@ -957,17 +960,17 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteFunctionDeclarationTrailingDecorations (WriteContext context, LlvmIrFunction func)
+		void WriteFunctionDeclarationTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
 		{
 			WriteFunctionTrailingDecorations (context, func, declaration: true);
 		}
 
-		void WriteFunctionDefinitionTrailingDecorations (WriteContext context, LlvmIrFunction func)
+		void WriteFunctionDefinitionTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
 		{
 			WriteFunctionTrailingDecorations (context, func, declaration: false);
 		}
 
-		void WriteFunctionTrailingDecorations (WriteContext context, LlvmIrFunction func, bool declaration)
+		void WriteFunctionTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func, bool declaration)
 		{
 			if (func.AddressSignificance != LlvmIrAddressSignificance.Default) {
 				context.Output.Write ($" {llvmAddressSignificance[func.AddressSignificance]}");
@@ -978,7 +981,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteFunctionSignature (WriteContext context, LlvmIrFunction func, bool writeParameterNames)
+		void WriteFunctionSignature (GeneratorWriteContext context, LlvmIrFunction func, bool writeParameterNames)
 		{
 			context.Output.Write (MapToIRType (func.Signature.ReturnType));
 			context.Output.Write (" @");
@@ -1007,7 +1010,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (')');
 		}
 
-		void WriteParameterAttributes (WriteContext context, LlvmIrFunctionParameter parameter)
+		void WriteParameterAttributes (GeneratorWriteContext context, LlvmIrFunctionParameter parameter)
 		{
 			var attributes = new List<string> ();
 			if (AttributeIsSet (parameter.ImmArg)) {
@@ -1060,7 +1063,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
 		}
 
-		void WriteAttributeSets (WriteContext context)
+		void WriteAttributeSets (GeneratorWriteContext context)
 		{
 			if (context.Module.AttributeSets == null || context.Module.AttributeSets.Count == 0) {
 				return;
@@ -1081,7 +1084,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteMetadata (WriteContext context)
+		void WriteMetadata (GeneratorWriteContext context)
 		{
 			if (context.MetadataManager.Items.Count == 0) {
 				return;
@@ -1094,13 +1097,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteComment (WriteContext context, string comment)
+		void WriteComment (GeneratorWriteContext context, string comment)
 		{
 			context.Output.Write (';');
 			context.Output.Write (comment);
 		}
 
-		void WriteCommentLine (WriteContext context, string comment)
+		void WriteCommentLine (GeneratorWriteContext context, string comment)
 		{
 			WriteComment (context, comment);
 			context.Output.WriteLine ();
@@ -1159,7 +1162,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		static bool IsNumeric (Type type) => basicTypeMap.TryGetValue (type, out BasicType typeDesc) && typeDesc.IsNumeric;
 
-		object? GetTypedMemberValue (WriteContext context, StructureInfo info, StructureMemberInfo smi, StructureInstance instance, Type expectedType, object? defaultValue = null)
+		object? GetTypedMemberValue (GeneratorWriteContext context, StructureInfo info, StructureMemberInfo smi, StructureInstance instance, Type expectedType, object? defaultValue = null)
 		{
 			object? value = smi.GetValue (instance.Obj);
 			if (value == null) {
@@ -1186,6 +1189,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public static string MapToIRType (Type type, out ulong size)
 		{
 			return MapToIRType (type, out size, out _);
+		}
+
+		public static string MapToIRType (Type type, out bool isPointer)
+		{
+			return MapToIRType (type, out _, out isPointer);
 		}
 
 		/// <summary>

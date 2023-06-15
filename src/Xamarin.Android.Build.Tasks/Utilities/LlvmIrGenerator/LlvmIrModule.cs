@@ -25,12 +25,21 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public IList<LlvmIrGlobalVariable>? GlobalVariables     { get; private set; }
 		public IList<LlvmIrStringGroup>? Strings                { get; private set; }
 
+		/// <summary>
+		/// TBAA stands for "Type Based Alias Analysis" and is used by LLVM to implemente a description of
+		/// a higher level language typesystem to LLVM IR (in which memory doesn't have types).  This metadata
+		/// item describes pointer usage for certain instructions we output and is common enough to warrant
+		/// a shortcut property like that.  More information about TBAA can be found at https://llvm.org/docs/LangRef.html#tbaa-metadata
+		/// </summary>
+		public LlvmIrMetadataItem TbaaAnyPointer                => tbaaAnyPointer;
+
 		Dictionary<LlvmIrFunctionAttributeSet, LlvmIrFunctionAttributeSet>? attributeSets;
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? externalFunctions;
 		Dictionary<LlvmIrFunction, LlvmIrFunction>? functions;
 		Dictionary<Type, StructureInfo>? structures;
 		LlvmIrStringManager? stringManager;
 		LlvmIrMetadataManager metadataManager;
+		LlvmIrMetadataItem tbaaAnyPointer;
 
 		List<LlvmIrGlobalVariable>? globalVariables;
 
@@ -46,6 +55,21 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			LlvmIrMetadataItem ident = metadataManager.Add (LlvmIrKnownMetadata.LlvmIdent);
 			LlvmIrMetadataItem identValue = metadataManager.AddNumbered ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
 			ident.AddReferenceField (identValue.Name);
+
+			tbaaAnyPointer = metadataManager.AddNumbered ();
+			LlvmIrMetadataItem anyPointer = metadataManager.AddNumbered ("any pointer");
+			LlvmIrMetadataItem omnipotentChar = metadataManager.AddNumbered ("omnipotent char");
+			LlvmIrMetadataItem simpleCppTBAA = metadataManager.AddNumbered ("Simple C++ TBAA");
+
+			anyPointer.AddReferenceField (omnipotentChar.Name);
+			anyPointer.AddField ((ulong)0);
+
+			omnipotentChar.AddReferenceField (simpleCppTBAA);
+			omnipotentChar.AddField ((ulong)0);
+
+			tbaaAnyPointer.AddReferenceField (anyPointer);
+			tbaaAnyPointer.AddReferenceField (anyPointer);
+			tbaaAnyPointer.AddField ((ulong)0);
 		}
 
 		/// <summary>

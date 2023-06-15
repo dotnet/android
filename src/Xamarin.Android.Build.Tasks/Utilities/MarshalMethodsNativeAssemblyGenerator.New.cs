@@ -592,7 +592,7 @@ namespace Xamarin.Android.Tasks.New
 
 		void AddXamarinAppInitFunction (LlvmIrModule module)
 		{
-			module.AddGlobalVariable (typeof(IntPtr), GetFunctionPointerVariableName, null, LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (typeof(IntPtr), GetFunctionPointerVariableName, null, LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr);
 
 			var init_params = new List<LlvmIrFunctionParameter> {
 				new (typeof(_JNIEnv), "env") {
@@ -613,6 +613,13 @@ namespace Xamarin.Android.Tasks.New
 
 			LlvmIrFunctionAttributeSet attrSet = module.AddAttributeSet (MakeXamarinAppInitAttributeSet (module));
 			var xamarin_app_init = new LlvmIrFunction (init_signature, attrSet);
+			xamarin_app_init.Body.Add (
+				new LlvmIrInstructions.Store (init_params[1], getFunctionPtrVariable) {
+					TBAA = module.TbaaAnyPointer,
+				}
+			);
+			xamarin_app_init.Body.Add (new LlvmIrInstructions.Ret (typeof(void)));
+
 			module.Add (xamarin_app_init);
 		}
 
@@ -625,11 +632,12 @@ namespace Xamarin.Android.Tasks.New
 				new NosyncFunctionAttribute (),
 				new NounwindFunctionAttribute (),
 				new WillreturnFunctionAttribute (),
-				new MemoryFunctionAttribute {
-					Default = MemoryAttributeAccessKind.Write,
-					Argmem = MemoryAttributeAccessKind.None,
-					InaccessibleMem = MemoryAttributeAccessKind.None,
-				},
+				// TODO: LLVM 16+ feature, enable when we switch to this version
+				// new MemoryFunctionAttribute {
+				// 	Default = MemoryAttributeAccessKind.Write,
+				// 	Argmem = MemoryAttributeAccessKind.None,
+				// 	InaccessibleMem = MemoryAttributeAccessKind.None,
+				// },
 				new UwtableFunctionAttribute (),
 				new MinLegalVectorWidthFunctionAttribute (0),
 				new NoTrappingMathFunctionAttribute (true),
