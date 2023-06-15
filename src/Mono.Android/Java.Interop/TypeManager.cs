@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -117,6 +118,7 @@ namespace Java.Interop {
 		}
 #endif	// !JAVA_INTEROP
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'signature'.")]
 		static Type[] GetParameterTypes (string? signature)
 		{
 			if (String.IsNullOrEmpty (signature))
@@ -128,6 +130,7 @@ namespace Java.Interop {
 			return result;
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type.GetType() can never statically know the string value from parameter 'typename_ptr'.")]
 		static void n_Activate (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 		{
 			var o   = Java.Lang.Object.PeekObject (jobject);
@@ -164,6 +167,7 @@ namespace Java.Interop {
 			Activate (jobject, cinfo, parms);
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "RuntimeHelpers.GetUninitializedObject() does not statically know the return value from ConstructorInfo.DeclaringType.")]
 		internal static void Activate (IntPtr jobject, ConstructorInfo cinfo, object? []? parms)
 		{
 			try {
@@ -260,6 +264,8 @@ namespace Java.Interop {
 			return CreateInstance (handle, transfer, null);
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Type? type = null;
@@ -321,7 +327,11 @@ namespace Java.Interop {
 		static  readonly    Type[]  XAConstructorSignature  = new Type [] { typeof (IntPtr), typeof (JniHandleOwnership) };
 		static  readonly    Type[]  JIConstructorSignature  = new Type [] { typeof (JniObjectReference).MakeByRefType (), typeof (JniObjectReferenceOptions) };
 
-		internal static object CreateProxy (Type type, IntPtr handle, JniHandleOwnership transfer)
+		internal static object CreateProxy (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type type,
+				IntPtr handle,
+				JniHandleOwnership transfer)
 		{
 			// Skip Activator.CreateInstance() as that requires public constructors,
 			// and we want to hide some constructors for sanity reasons.

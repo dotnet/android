@@ -100,10 +100,11 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
+				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (DirectoryAssemblyResolver res = MakeResolver ()) {
-					Run (res, useMarshalMethods: !Debug && EnableMarshalMethods);
+				using (DirectoryAssemblyResolver res = MakeResolver (useMarshalMethods)) {
+					Run (res, useMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
@@ -121,12 +122,13 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		DirectoryAssemblyResolver MakeResolver ()
+		DirectoryAssemblyResolver MakeResolver (bool useMarshalMethods)
 		{
-			var readerParams = new ReaderParameters {
-				ReadWrite = true,
-				InMemory = true,
-			};
+			var readerParams = new ReaderParameters();
+			if (useMarshalMethods) {
+				readerParams.ReadWrite = true;
+				readerParams.InMemory = true;
+			}
 
 			var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams);
 			foreach (var dir in FrameworkDirectories) {
