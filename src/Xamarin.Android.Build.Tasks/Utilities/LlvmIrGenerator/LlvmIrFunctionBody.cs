@@ -68,6 +68,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			Name = num.ToString (CultureInfo.InvariantCulture);
 		}
+
+		protected bool NameIsSet () => !String.IsNullOrEmpty (name);
 	}
 
 	class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
@@ -86,7 +88,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 		public void WillAddToBody (LlvmIrFunctionBody functionBody, LlvmIrFunction.FunctionState state)
 		{
-			if (!String.IsNullOrEmpty (Name)) {
+			if (NameIsSet ()) {
 				return;
 			}
 

@@ -111,7 +111,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 
 		/// <summary>
-		/// <c>noundef</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1420"/>
+		/// <c>readnone</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1420"/>
 		/// </summary>
 		public bool? ReadNone {
 			get => state.ReadNone;
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 
 		/// <summary>
-		/// <c>zeroext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1094"/>
+		/// <c>signext</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1094"/>
 		/// </summary>
 		public bool? SignExt {
 			get => state.SignExt;
@@ -139,6 +139,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		{
 			NameMatters = false;
 			state = new SavedParameterState (this);
+
+			// TODO: check why it doesn't work as expected - can't see the flags set in the output
+			if (type == typeof(sbyte) || type == typeof (short)) {
+				SignExt = true;
+			} else if (type == typeof(byte) || type == typeof (ushort)) {
+				ZeroExt = true;
+			}
 		}
 
 		/// <summary>
@@ -362,6 +369,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public LlvmIrRuntimePreemption RuntimePreemption     { get; set; } = LlvmIrRuntimePreemption.Default;
 		public LlvmIrVisibility Visibility                   { get; set; } = LlvmIrVisibility.Default;
 		public LlvmIrFunctionBody Body                       { get; }
+		public string? Comment                               { get; set; }
 
 		public LlvmIrFunction (LlvmIrFunctionSignature signature, LlvmIrFunctionAttributeSet? attributeSet = null)
 		{
@@ -392,6 +400,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public LlvmIrFunction (string name, Type returnType, List<LlvmIrFunctionParameter>? parameters = null, LlvmIrFunctionAttributeSet? attributeSet = null)
 			: this (new LlvmIrFunctionSignature (name, returnType, parameters), attributeSet)
 		{}
+
+		/// <summary>
+		/// Creates a local variable which, if <paramref name="name"/> is <c>null</c> or empty, is assinged the correct
+		/// name based on a counter local to the function.
+		/// </summary>
+		public LlvmIrLocalVariable CreateLocalVariable (Type type, string? name = null)
+		{
+			var ret = new LlvmIrLocalVariable (type, name);
+			if (String.IsNullOrEmpty (name)) {
+				ret.AssignNumber (functionState.NextTemporary ());
+			}
+
+			return ret;
+		}
 
 		/// <summary>
 		/// Save (opaque) function state.  This includes signature state. <see cref="LlvmIrFunctionSignature.SaveState()"/>

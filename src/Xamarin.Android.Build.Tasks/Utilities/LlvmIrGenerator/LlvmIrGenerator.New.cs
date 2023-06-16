@@ -200,6 +200,12 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
+					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
+						context.Output.WriteLine ();
+						context.Output.Write (context.CurrentIndent);
+						WriteComment (context, groupDelimiter.Comment);
+					}
+
 					context.InVariableGroup = !context.InVariableGroup;
 					if (context.InVariableGroup) {
 						context.Output.WriteLine ();
@@ -862,6 +868,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			foreach (LlvmIrFunction function in context.Module.Functions) {
 				context.Output.WriteLine ();
 
+				if (!String.IsNullOrEmpty (function.Comment)) {
+					foreach (string commentLine in function.Comment.Split ('\n')) {
+						context.Output.Write (context.CurrentIndent);
+						WriteCommentLine (context, commentLine);
+					}
+				}
+
 				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags
 				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "define");
 				WriteFunctionDefinitionLeadingDecorations (context, function);
@@ -928,8 +941,10 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
-			context.Output.WriteLine ();
-			WriteCommentLine (context, $"Function attributes: {func.AttributeSet.Render ()}");
+			if (String.IsNullOrEmpty (func.Comment)) {
+				context.Output.WriteLine ();
+			}
+			WriteCommentLine (context, $" Function attributes: {func.AttributeSet.Render ()}");
 		}
 
 		void WriteFunctionDeclarationLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
