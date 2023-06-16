@@ -136,21 +136,37 @@ namespace Xamarin.Android.Build.Tests
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     false,
+				/* packageFormat */      "apk",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
 			},
 		};
 #pragma warning restore 414
@@ -158,7 +174,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
 		[Retry(5)]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts, string packageFormat)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -175,6 +191,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("MyApplication.cs") {
 				TextContent = () => proj.ProcessSourceTemplate (@"using System;
@@ -281,42 +298,63 @@ namespace ${ROOT_NAMESPACE} {
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "apk",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "aab",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "aab",
 			},
 		};
 #pragma warning restore 414
@@ -324,7 +362,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string packageFormat)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -367,6 +405,7 @@ namespace ${ROOT_NAMESPACE} {
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
+			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
 			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
