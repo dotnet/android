@@ -271,9 +271,15 @@ namespace Xamarin.Android.Tasks
 			{
 				// Ignore this error. It occurs when the Task is cancelled.
 			}
-			aapt2.StandardInput.WriteLine ("quit");
-			aapt2.StandardInput.WriteLine ();
-			aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
+			try {
+				aapt2.StandardInput.WriteLine ("quit");
+				aapt2.StandardInput.WriteLine ();
+				aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
+			}
+			catch (IOException)
+			{
+				// Ignore this error. It occurs when the Build it cancelled.
+			}
 		}
 
 		bool IsAapt2Warning (string singleLine)
