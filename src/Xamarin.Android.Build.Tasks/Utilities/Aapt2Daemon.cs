@@ -275,9 +275,7 @@ namespace Xamarin.Android.Tasks
 				aapt2.StandardInput.WriteLine ("quit");
 				aapt2.StandardInput.WriteLine ();
 				aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
-			}
-			catch (IOException)
-			{
+			} catch (IOException) {
 				// Ignore this error. It occurs when the Build it cancelled.
 			}
 		}
