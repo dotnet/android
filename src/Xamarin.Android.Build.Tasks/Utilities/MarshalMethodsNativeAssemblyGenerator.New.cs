@@ -175,6 +175,39 @@ namespace Xamarin.Android.Tasks.New
 			public List<uint> Indices64;
 		}
 
+		sealed class MarshalMethodsWriteState
+		{
+			public AssemblyCacheState AssemblyCacheState;
+			public LlvmIrFunctionAttributeSet AttributeSet;
+			public Dictionary<string, ulong> UniqueAssemblyId;
+			public Dictionary<string, LlvmIrVariable> UsedBackingFields;
+			public LlvmIrVariable GetFunctionPtrVariable;
+			public LlvmIrFunction GetFunctionPtrFunction;
+		}
+
+		sealed class MarshalMethodAssemblyIndexValuePlaceholder : LlvmIrInstructionArgumentValuePlaceholder
+		{
+			MarshalMethodInfo mmi;
+			AssemblyCacheState acs;
+
+			public MarshalMethodAssemblyIndexValuePlaceholder (MarshalMethodInfo mmi, AssemblyCacheState acs)
+			{
+				this.mmi = mmi;
+				this.acs = acs;
+			}
+
+			public override object? GetValue (LlvmIrModuleTarget target)
+			{
+				// What a monstrosity...
+				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				Dictionary<string, uint> asmNameToIndex = target.Is64Bit ? acs.AsmNameToIndexData64 : acs.AsmNameToIndexData32;
+				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
+					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
+				}
+				return asmIndex;
+			}
+		}
+
 		static readonly Dictionary<char, Type> jniSimpleTypeMap = new Dictionary<char, Type> {
 			{ 'Z', typeof(bool) },
 			{ 'B', typeof(byte) },
@@ -580,9 +613,9 @@ namespace Xamarin.Android.Tasks.New
 			module.AddGlobalVariable ("mm_class_names", mm_class_names, LLVMIR.LlvmIrVariableOptions.GlobalConstant, comment: " Names of classes in which marshal methods reside");
 
 			AddMarshalMethodNames (module, acs);
-			LlvmIrVariable getFunctionPtrVariable = AddXamarinAppInitFunction (module);
+			(LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
 
-			AddMarshalMethods (module, getFunctionPtrVariable);
+			AddMarshalMethods (module, acs, getFunctionPtrVariable, getFunctionPtrFunction);
 		}
 
 		void MapStructures (LlvmIrModule module)
@@ -591,7 +624,7 @@ namespace Xamarin.Android.Tasks.New
 			marshalMethodNameStructureInfo = module.MapStructure<MarshalMethodName> ();
 		}
 
-		void AddMarshalMethods (LlvmIrModule module, LlvmIrVariable getFunctionPtrVariable)
+		void AddMarshalMethods (LlvmIrModule module, AssemblyCacheState acs, LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction)
 		{
 			if (generateEmptyCode || methods == null || methods.Count == 0) {
 				return;
@@ -604,32 +637,37 @@ namespace Xamarin.Android.Tasks.New
 				}
 			);
 
-			LlvmIrFunctionAttributeSet attrSet = MakeMarshalMethodAttributeSet (module);
-			var usedBackingFields = new Dictionary<string, LlvmIrVariable> (StringComparer.Ordinal);
-			var uniqueAssemblyId = new Dictionary<string, ulong> (StringComparer.OrdinalIgnoreCase);
+			var writeState = new MarshalMethodsWriteState {
+				AssemblyCacheState = acs,
+				AttributeSet = MakeMarshalMethodAttributeSet (module),
+				UsedBackingFields = new Dictionary<string, LlvmIrVariable> (StringComparer.Ordinal),
+				UniqueAssemblyId = new Dictionary<string, ulong> (StringComparer.OrdinalIgnoreCase),
+				GetFunctionPtrVariable = getFunctionPtrVariable,
+				GetFunctionPtrFunction = getFunctionPtrFunction,
+			};
 			foreach (MarshalMethodInfo mmi in methods) {
 				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallback;
 				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
 
-				if (!uniqueAssemblyId.TryGetValue (asmName, out ulong asmId)) {
-					asmId = (ulong)uniqueAssemblyId.Count;
-					uniqueAssemblyId.Add (asmName, asmId);
+				if (!writeState.UniqueAssemblyId.TryGetValue (asmName, out ulong asmId)) {
+					asmId = (ulong)writeState.UniqueAssemblyId.Count;
+					writeState.UniqueAssemblyId.Add (asmName, asmId);
 				}
 
-				AddMarshalMethod (module, mmi, asmId, attrSet, usedBackingFields, getFunctionPtrVariable);
+				AddMarshalMethod (module, mmi, asmId, writeState);
 			}
 
 			module.Add (new LlvmIrGroupDelimiterVariable ());
 		}
 
-		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, LlvmIrFunctionAttributeSet attrSet, Dictionary<string, LlvmIrVariable> usedBackingFields, LlvmIrVariable getFunctionPtrVariable)
+		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
 			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 
-			if (!usedBackingFields.TryGetValue (backingFieldName, out LlvmIrVariable backingField)) {
+			if (!writeState.UsedBackingFields.TryGetValue (backingFieldName, out LlvmIrVariable backingField)) {
 				backingField = module.AddGlobalVariable (typeof(IntPtr), backingFieldName, null, LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr);
-				usedBackingFields.Add (backingFieldName, backingField);
+				writeState.UsedBackingFields.Add (backingFieldName, backingField);
 			}
 
 			var funcComment = new StringBuilder (" Method: ");
@@ -639,7 +677,7 @@ namespace Xamarin.Android.Tasks.New
 			funcComment.Append (" Registered: ");
 			funcComment.AppendLine (method.Method.RegisteredMethod?.FullName ?? "none");
 
-			var func = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters, attrSet) {
+			var func = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters, writeState.AttributeSet) {
 				Comment = funcComment.ToString (),
 			};
 
@@ -661,12 +699,20 @@ namespace Xamarin.Android.Tasks.New
 			func.Body.Add (callbackIsNullLabel);
 			LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr));
 			func.Body.Add (
-				new LlvmIrInstructions.Load (getFunctionPtrVariable, getFuncPtrResult) {
+				new LlvmIrInstructions.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult) {
 					TBAA = module.TbaaAnyPointer,
 				}
 			);
-			func.Body.Add (new LlvmIrFunctionBodyComment (" TODO: call get_function_pointer here"));
 
+			var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+			func.Body.Add (
+				new LlvmIrInstructions.Call (
+					writeState.GetFunctionPtrFunction,
+					arguments: new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField }
+				) {
+					FuncPointer = getFuncPtrResult,
+				}
+			);
 			LlvmIrLocalVariable loadedCallback = func.CreateLocalVariable (typeof(IntPtr));
 			func.Body.Add (
 				new LlvmIrInstructions.Load (backingField, loadedCallback) {
@@ -695,9 +741,57 @@ namespace Xamarin.Android.Tasks.New
 			return module.AddAttributeSet (attrSet);
 		}
 
-		LlvmIrVariable AddXamarinAppInitFunction (LlvmIrModule module)
+		(LlvmIrVariable getFuncPtrVariable, LlvmIrFunction getFuncPtrFunction) AddXamarinAppInitFunction (LlvmIrModule module)
 		{
-			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (typeof(IntPtr), GetFunctionPointerVariableName, null, LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+			var getFunctionPtrParams = new List<LlvmIrFunctionParameter> {
+				new (typeof(uint), "mono_image_index") {
+					NoUndef = true,
+				},
+				new (typeof(uint), "class_index") {
+					NoUndef = true,
+				},
+				new (typeof(uint), "method_token") {
+					NoUndef = true,
+				},
+				new (typeof(IntPtr), "target_ptr") {
+					NoUndef = true,
+					NonNull = true,
+					Align = 0, // 0 means use natural pointer alignment
+					Dereferenceable = 0, // ditto 👆
+					IsCplusPlusReference = true,
+				},
+			};
+
+			var getFunctionPtrComment = new StringBuilder (" ");
+			getFunctionPtrComment.Append (GetFunctionPointerVariableName);
+			getFunctionPtrComment.Append (" (");
+			for (int i = 0; i < getFunctionPtrParams.Count; i++) {
+				if (i > 0) {
+					getFunctionPtrComment.Append (", ");
+				}
+				LlvmIrFunctionParameter parameter = getFunctionPtrParams[i];
+				getFunctionPtrComment.Append (LlvmIrGenerator.MapManagedTypeToNative (parameter.Type));
+				if (parameter.IsCplusPlusReference.HasValue && parameter.IsCplusPlusReference.Value) {
+				 	getFunctionPtrComment.Append ('&');
+				}
+				getFunctionPtrComment.Append (' ');
+				getFunctionPtrComment.Append (parameter.Name);
+			}
+			getFunctionPtrComment.Append (')');
+
+			LlvmIrFunction getFunctionPtrFunc = new LlvmIrFunction (
+				name: GetFunctionPointerVariableName,
+				returnType: typeof(void),
+				parameters: getFunctionPtrParams
+			);
+
+			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (
+				typeof(IntPtr),
+				GetFunctionPointerVariableName,
+				null,
+				LLVMIR.LlvmIrVariableOptions.LocalWritableInsignificantAddr,
+				getFunctionPtrComment.ToString ()
+			);
 
 			var init_params = new List<LlvmIrFunctionParameter> {
 				new (typeof(_JNIEnv), "env") {
@@ -727,7 +821,7 @@ namespace Xamarin.Android.Tasks.New
 
 			module.Add (xamarin_app_init);
 
-			return getFunctionPtrVariable;
+			return (getFunctionPtrVariable, getFunctionPtrFunc);
 		}
 
 		LlvmIrFunctionAttributeSet MakeXamarinAppInitAttributeSet (LlvmIrModule module)

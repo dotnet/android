@@ -867,13 +867,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			foreach (LlvmIrFunction function in context.Module.Functions) {
 				context.Output.WriteLine ();
-
-				if (!String.IsNullOrEmpty (function.Comment)) {
-					foreach (string commentLine in function.Comment.Split ('\n')) {
-						context.Output.Write (context.CurrentIndent);
-						WriteCommentLine (context, commentLine);
-					}
-				}
+				WriteFunctionComment (context, function);
 
 				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags
 				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "define");
@@ -882,6 +876,18 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				WriteFunctionDefinitionTrailingDecorations (context, function);
 				WriteFunctionBody (context, function);
 				function.RestoreState (funcState);
+			}
+		}
+
+		void WriteFunctionComment (GeneratorWriteContext context, LlvmIrFunction function)
+		{
+			if (String.IsNullOrEmpty (function.Comment)) {
+				return;
+			}
+
+			foreach (string commentLine in function.Comment.Split ('\n')) {
+				context.Output.Write (context.CurrentIndent);
+				WriteCommentLine (context, commentLine);
 			}
 		}
 
@@ -1025,7 +1031,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (')');
 		}
 
-		void WriteParameterAttributes (GeneratorWriteContext context, LlvmIrFunctionParameter parameter)
+		public static void WriteParameterAttributes (GeneratorWriteContext context, LlvmIrFunctionParameter parameter)
 		{
 			var attributes = new List<string> ();
 			if (AttributeIsSet (parameter.ImmArg)) {
@@ -1061,11 +1067,11 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			if (parameter.Align.HasValue) {
-				attributes.Add ($"align({parameter.Align.Value})");
+				attributes.Add ($"align({ValueOrPointerSize (parameter.Align.Value)})");
 			}
 
 			if (parameter.Dereferenceable.HasValue) {
-				attributes.Add ($"dereferenceable({parameter.Dereferenceable.Value})");
+				attributes.Add ($"dereferenceable({ValueOrPointerSize (parameter.Dereferenceable.Value)})");
 			}
 
 			if (attributes.Count == 0) {
@@ -1076,6 +1082,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (String.Join (" ", attributes));
 
 			bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
+
+			uint ValueOrPointerSize (uint? value)
+			{
+				if (value.Value == 0) {
+					return context.Target.NativePointerSize;
+				}
+
+				return value.Value;
+			}
 		}
 
 		void WriteAttributeSets (GeneratorWriteContext context)
@@ -1138,7 +1153,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		/// Map a managed <paramref name="type"/> to its <c>C++</c> counterpart. Only primitive types,
 		/// <c>string</c> and <c>IntPtr</c> are supported.
 		/// </summary>
-		static string MapManagedTypeToNative (Type type)
+		public static string MapManagedTypeToNative (Type type)
 		{
 			Type baseType = GetActualType (type);
 
@@ -1241,6 +1256,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			return ret;
+		}
+
+		public static bool IsFirstClassNonPointerType (Type type)
+		{
+			if (type == typeof(void)) {
+				return false;
+			}
+
+			return basicTypeMap.ContainsKey (type);
 		}
 
 		public static string QuoteStringNoEscape (string s)

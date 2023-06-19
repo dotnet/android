@@ -30,6 +30,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			public bool? ReadNone;
 			public bool? SignExt;
 			public bool? ZeroExt;
+			public bool? IsCplusPlusReference;
 
 			public SavedParameterState (LlvmIrFunctionParameter owner, SavedParameterState? previousState = null)
 			{
@@ -55,7 +56,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		// To save on time, we declare only attributes that are actually used in our generated code.  More will be added, as needed.
 
 		/// <summary>
-		/// <c>align(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1239"/>
+		/// <c>align(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1239"/>.
+		/// As a special case for us, a value of <c>0</c> means use the natural target pointer alignment.
 		/// </summary>
 		public uint? Align {
 			get => state.Align;
@@ -71,7 +73,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		}
 
 		/// <summary>
-		/// <c>dereferenceable(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1324"/>
+		/// <c>dereferenceable(n)</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1324"/>.
+		/// As a special case for us, a value of <c>0</c> means use the natural target pointer alignment.
 		/// </summary>
 		public uint? Dereferenceable {
 			get => state.Dereferenceable;
@@ -132,6 +135,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public bool? ZeroExt {
 			get => state.ZeroExt;
 			set => state.ZeroExt = value;
+		}
+
+		/// <summary>
+		/// This serves a purely documentational purpose, when generating comments about types.  It describes a parameter that is a C++ reference, something we can't
+		/// reflect on the managed side.
+		/// </summary>
+		public bool? IsCplusPlusReference {
+			get => state.IsCplusPlusReference;
+			set => state.IsCplusPlusReference = value;
 		}
 
 		public LlvmIrFunctionParameter (Type type, string? name = null)
