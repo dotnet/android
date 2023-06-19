@@ -19,13 +19,13 @@ namespace Xamarin.Android.Tasks
 
 		internal static object RegisterTaskObjectKey => TypeFullName;
 
-		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
+		public static Aapt2Daemon GetInstance (IBuildEngine4 engine, Action<string> log, string aapt2, int numberOfInstances, int initalNumberOfDaemons, bool registerInDomain = false)
 		{
 			var area = registerInDomain ? RegisteredTaskObjectLifetime.AppDomain : RegisteredTaskObjectLifetime.Build;
 			var daemon = engine.GetRegisteredTaskObjectAssemblyLocal<Aapt2Daemon> (RegisterTaskObjectKey, area);
 			if (daemon == null)
 			{
-				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons);
+				daemon = new Aapt2Daemon (aapt2, numberOfInstances, initalNumberOfDaemons, log);
 				engine.RegisterTaskObjectAssemblyLocal (RegisterTaskObjectKey, daemon, area, allowEarlyCollection: false);
 			}
 			return daemon;
@@ -66,6 +66,7 @@ namespace Xamarin.Android.Tasks
 		long jobsRunning = 0;
 		long jobId = 0;
 		int maxInstances = 0;
+		Action<string> logger = null;
 
 		public CancellationToken Token => tcs.Token;
 
@@ -86,10 +87,11 @@ namespace Xamarin.Android.Tasks
 
 		public int CurrentInstances => daemons.Count;
 
-		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons)
+		public Aapt2Daemon (string aapt2, int maxNumberOfInstances, int initalNumberOfDaemons, Action<string> log)
 		{
 			Aapt2 = aapt2;
 			maxInstances = maxNumberOfInstances;
+			logger = log;
 			for (int i = 0; i < initalNumberOfDaemons; i++) {
 				SpawnAapt2Daemon ();
 			}
@@ -277,6 +279,7 @@ namespace Xamarin.Android.Tasks
 				aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 			} catch (IOException) {
 				// Ignore this error. It occurs when the Build it cancelled.
+				logger?.Invoke ("Aapt2Daemon: Ignoring IOException. Build was cancelled.");
 			}
 		}
 
