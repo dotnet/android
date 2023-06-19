@@ -29,6 +29,11 @@ namespace Xamarin.Android.Build.Tests
 
 		// Disable split by language
 		const string BuildConfig = @"{
+	""compression"": {
+		""uncompressedGlob"": [
+			""assets/*.data""
+		]
+	},
 	""optimizations"": {
 		""splits_config"": {
 			""split_dimension"": [
@@ -75,6 +80,9 @@ namespace Xamarin.Android.Build.Tests
 				BinaryContent = () => bytes,
 			});
 			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.wav") {
+				BinaryContent = () => bytes,
+			});
+			app.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("foo.data") {
 				BinaryContent = () => bytes,
 			});
 			app.OtherBuildItems.Add (new BuildItem ("None", "buildConfig.json") {
@@ -324,6 +332,7 @@ namespace Xamarin.Android.Build.Tests
 				var uncompressed = new List<string> {
 					".bar",
 					".wav",
+					".data",
 				};
 
 				if (usesAssemblyBlobs) {

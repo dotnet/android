@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 				});
 
 				var mergeSettings = new JsonMergeSettings () {
-					MergeArrayHandling = MergeArrayHandling.Replace,
+					MergeArrayHandling = MergeArrayHandling.Union,
 					MergeNullValueHandling = MergeNullValueHandling.Ignore
 				};
 				json.Merge (jsonAddition, mergeSettings);
