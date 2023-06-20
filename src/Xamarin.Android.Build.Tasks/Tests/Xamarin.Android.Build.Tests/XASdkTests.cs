@@ -875,6 +875,18 @@ public class FooA {
 		}
 
 		[Test]
+		public void DotNetPublishDefaultValues([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease
+			};
+			var builder = CreateDllBuilder ();
+			builder.Save (proj);
+			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
+			Assert.IsTrue (dotnet.Publish (), "`dotnet publish` should succeed");
+		}
+
+		[Test]
 		public void DotNetPublish ([Values (false, true)] bool isRelease, [ValueSource(nameof(DotNetTargetFrameworks))] object[] data)
 		{
 			var dotnetVersion = (string)data[0];
