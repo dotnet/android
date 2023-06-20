@@ -70,9 +70,7 @@ namespace Xamarin.ProjectTools
 				MinSdkVersion = "19";
 			}
 			AndroidManifest = default_android_manifest;
-			if (Builder.UseDotNet) {
-				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
-			} else {
+			if (!Builder.UseDotNet) {
 				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			}
 			LayoutMain = default_layout_main;
