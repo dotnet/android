@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 
 using Xamarin.Android.Tools;
 
@@ -40,6 +41,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		LlvmIrStringManager? stringManager;
 		LlvmIrMetadataManager metadataManager;
 		LlvmIrMetadataItem tbaaAnyPointer;
+		LlvmIrBufferManager? bufferManager;
 
 		List<LlvmIrGlobalVariable>? globalVariables;
 
@@ -228,6 +230,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					continue;
 				}
 
+				if (smi.Info.IsNativePointerToPreallocatedBuffer (out ulong bufferSize)) {
+					if (bufferSize == 0) {
+						bufferSize = structure.Info.GetBufferSizeFromProvider (smi, structure);
+					}
+
+					AddAutomaticBuffer (structure, smi, bufferSize);
+					continue;
+				}
+
 				if (smi.MemberType != typeof(string)) {
 					continue;
 				}
@@ -237,6 +248,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 					RegisterString (value, stringGroupName: structure.Info.Name, symbolSuffix: smi.Info.Name);
 				}
 			}
+		}
+
+		void AddAutomaticBuffer (StructureInstance structure, StructureMemberInfo smi, ulong bufferSize)
+		{
+			if (bufferManager == null) {
+				bufferManager = new LlvmIrBufferManager ();
+			}
+
+			string bufferName = bufferManager.Allocate (structure, smi, bufferSize);
+			var buffer = new LlvmIrGlobalVariable (typeof(List<byte>), bufferName, LLVMIR.LlvmIrVariableOptions.LocalWritable) {
+				ZeroInitializeArray = true,
+				ArrayItemCount = bufferSize,
+			};
+			Add (buffer);
 		}
 
 		void AddStandardGlobalVariable (LlvmIrGlobalVariable variable)
@@ -277,16 +302,36 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			// For simplicity we support only arrays with homogenous entry types
 			StructureInfo? info = null;
+			ulong index = 0;
+
 			foreach (StructureInstance structure in (IEnumerable<StructureInstance>)variable.Value) {
 				if (info == null) {
 					info = structure.Info;
+					if (info.HasPreAllocatedBuffers) {
+						// let's group them...
+						Add (new LlvmIrGroupDelimiterVariable ());
+					}
 				}
 
 				if (structure.Type != info.Type) {
 					throw new InvalidOperationException ($"Internal error: only arrays with homogenous element types are currently supported.  All entries were expected to be of type '{info.Type}', but the '{structure.Type}' type was encountered.");
 				}
 
+				// This is a bit of a kludge to make a specific corner case work seamlessly from the LlvmIrModule user's point of view.
+				// The scenario is used in ApplicationConfigNativeAssemblyGenerator and it involves an array of structures where each
+				// array index contains the same object in structure.Obj but each instance needs to allocate a unique buffer at runtime.
+				// LlvmIrBufferManager makes it possible, but it must be able to uniquely identify each instance, which in this scenario
+				// wouldn't be possible if we had to rely only on the StructureInstance contents.  Enter `StructureInstance.IndexInArray`,
+				// which is used to create unique buffers and unambiguously assign them to each structure instance.
+				//
+				// See LlvmIrBufferManager for how it is used.
+				structure.IndexInArray = index++;
+
 				PrepareStructure (structure);
+			}
+
+			if (info != null && info.HasPreAllocatedBuffers) {
+				Add (new LlvmIrGroupDelimiterVariable ());
 			}
 
 			AddStandardGlobalVariable (variable);
@@ -424,6 +469,20 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			return sv;
+		}
+
+		public string LookupRequiredBufferVariableName (StructureInstance structure, StructureMemberInfo smi)
+		{
+			if (bufferManager == null) {
+				throw new InvalidOperationException ("Internal error: no buffer variables have been registed with the buffer manager");
+			}
+
+			string? variableName = bufferManager.GetBufferVariableName (structure, smi);
+			if (String.IsNullOrEmpty (variableName)) {
+				throw new InvalidOperationException ($"Internal error: buffer for member '{smi.Info.Name}' of structure '{structure.Info.Name}' (index {structure.IndexInArray}) not found");
+			}
+
+			return variableName;
 		}
 
 		/// <summary>

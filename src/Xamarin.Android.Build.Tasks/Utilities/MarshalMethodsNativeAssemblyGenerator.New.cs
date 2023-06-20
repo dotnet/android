@@ -7,7 +7,6 @@ using System.Text;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
-using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks.LLVM.IR;
 
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
@@ -681,51 +680,58 @@ namespace Xamarin.Android.Tasks.New
 				Comment = funcComment.ToString (),
 			};
 
-			LlvmIrLocalVariable callback = func.CreateLocalVariable (typeof(IntPtr));
-			func.Body.Add (
-				new LlvmIrInstructions.Load (backingField, callback) {
-					TBAA = module.TbaaAnyPointer,
-				}
-			);
+			WriteBody (func.Body);
+			module.Add (func);
 
-			LlvmIrLocalVariable callbackIsNullResult = func.CreateLocalVariable (typeof(bool));
-			func.Body.Add (new LlvmIrInstructions.Icmp (LLVMIR.LlvmIrIcmpCond.Equal, callback, null, callbackIsNullResult));
+			void WriteBody (LlvmIrFunctionBody body)
+			{
+				LlvmIrLocalVariable callback = func.CreateLocalVariable (typeof(IntPtr));
+				body.Load (backingField, callback, tbaa: module.TbaaAnyPointer);
 
-			var callbackIsNullLabel = new LlvmIrFunctionLabelItem ();
-			var callbackNotNullLabel = new LlvmIrFunctionLabelItem ();
-			func.Body.Add (new LlvmIrInstructions.Br (callbackIsNullResult, callbackIsNullLabel, callbackNotNullLabel));
+				LlvmIrLocalVariable callbackIsNullResult = func.CreateLocalVariable (typeof(bool));
+				body.Icmp (LLVMIR.LlvmIrIcmpCond.Equal, callback, null, callbackIsNullResult);
 
-			// Callback variable was null
-			func.Body.Add (callbackIsNullLabel);
-			LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr));
-			func.Body.Add (
-				new LlvmIrInstructions.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult) {
-					TBAA = module.TbaaAnyPointer,
-				}
-			);
+				var callbackIsNullLabel = new LlvmIrFunctionLabelItem ();
+				var callbackNotNullLabel = new LlvmIrFunctionLabelItem ();
+				body.Br (callbackIsNullResult, callbackIsNullLabel, callbackNotNullLabel);
 
-			var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
-			func.Body.Add (
-				new LlvmIrInstructions.Call (
+				// Callback variable was null
+				body.Add (callbackIsNullLabel);
+
+				LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr));
+				body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: module.TbaaAnyPointer);
+
+				var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+				LlvmIrInstructions.Call call = body.Call (
 					writeState.GetFunctionPtrFunction,
 					arguments: new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField }
-				) {
-					FuncPointer = getFuncPtrResult,
+				);
+				call.FuncPointer = getFuncPtrResult;
+
+				LlvmIrLocalVariable newlySetCallback = func.CreateLocalVariable (typeof(IntPtr));
+				body.Load (backingField, newlySetCallback, tbaa: module.TbaaAnyPointer);
+				body.Br (callbackNotNullLabel);
+
+				// Callback variable has just been set or it wasn't null
+				body.Add (callbackNotNullLabel);
+				LlvmIrLocalVariable selectedCallback = func.CreateLocalVariable (typeof(IntPtr));
+
+				// Preceding blocks are ordered from the newest to the oldest, so we need to pass the variables referring to our callback in "reverse" order
+				body.Phi (selectedCallback, newlySetCallback, body.PrecedingBlock1, callback, body.PrecedingBlock2);
+
+				var nativeFunc = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters);
+				nativeFunc.Signature.ReturnAttributes.NoUndef = true;
+
+				var arguments = new List<object?> ();
+				foreach (LlvmIrFunctionParameter parameter in nativeFunc.Signature.Parameters) {
+					arguments.Add (new LlvmIrLocalVariable (parameter.Type, parameter.Name));
 				}
-			);
-			LlvmIrLocalVariable loadedCallback = func.CreateLocalVariable (typeof(IntPtr));
-			func.Body.Add (
-				new LlvmIrInstructions.Load (backingField, loadedCallback) {
-					TBAA = module.TbaaAnyPointer,
-				}
-			);
+				LlvmIrLocalVariable? result = nativeFunc.ReturnsValue ? func.CreateLocalVariable (nativeFunc.Signature.ReturnType) : null;
+				call = body.Call (nativeFunc, result, arguments);
+				call.CallMarker = LlvmIrCallMarker.Tail;
 
-			func.Body.Add (new LlvmIrInstructions.Br (callbackNotNullLabel));
-
-			// Callback variable has just been set or it wasn't null
-			func.Body.Add (callbackNotNullLabel);
-
-			module.Add (func);
+				body.Ret (nativeFunc.Signature.ReturnType, result);
+			}
 		}
 
 		LlvmIrFunctionAttributeSet MakeMarshalMethodAttributeSet (LlvmIrModule module)

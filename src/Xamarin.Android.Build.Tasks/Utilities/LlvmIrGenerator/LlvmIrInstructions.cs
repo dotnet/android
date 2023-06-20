@@ -29,7 +29,7 @@ abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 		Mnemonic = mnemonic;
 	}
 
-	public override void Write (GeneratorWriteContext context)
+	protected override void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator)
 	{
 		context.Output.Write (context.CurrentIndent);
 		WriteValueAssignment (context);
@@ -47,7 +47,10 @@ abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 			context.Output.Write (" #");
 			context.Output.Write (AttributeSet.Number.ToString (CultureInfo.InvariantCulture));
 		}
-		context.Output.WriteLine ();
+
+		if (!String.IsNullOrEmpty (Comment)) {
+			generator.WriteComment (context, Comment);
+		}
 	}
 
 	/// <summary>
@@ -224,6 +227,10 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
+			if (function.ReturnsValue) {
+				LlvmIrGenerator.WriteReturnAttributes (context, function.Signature.ReturnAttributes);
+			}
+
 			context.Output.Write (LlvmIrGenerator.MapToIRType (function.Signature.ReturnType));
 			if (FuncPointer == null) {
 				context.Output.Write (" @");
@@ -366,6 +373,51 @@ sealed class LlvmIrInstructions
 			context.Output.Write (", ptr ");
 			WriteValue (context, result.Type, source, isPointer);
 			WriteAlignment (context, size, isPointer);
+		}
+	}
+
+	public class Phi : LlvmIrInstruction
+	{
+		LlvmIrVariable result;
+		LlvmIrVariable val1;
+		LlvmIrFunctionLabelItem label1;
+		LlvmIrVariable val2;
+		LlvmIrFunctionLabelItem label2;
+
+		/// <summary>
+		/// Represents the `phi` instruction form we use the most throughout marshal methods generator - one which refers to an if/else block and where
+		/// **both** value:label pairs are **required**.  Parameters <paramref name="label1"/> and <paramref name="label2"/> are nullable because, in theory,
+		/// it is possible that <see cref="LlvmIrFunctionBody"/> hasn't had the required blocks defined prior to adding the `phi` instruction and, thus,
+		/// we must check for the possibility here.
+		/// </summary>
+		public Phi (LlvmIrVariable result, LlvmIrVariable val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariable val2, LlvmIrFunctionLabelItem? label2)
+			: base ("phi")
+		{
+			this.result = result;
+			this.val1 = val1;
+			this.label1 = label1 ?? throw new ArgumentNullException (nameof (label1));
+			this.val2 = val2;
+			this.label2 = label2 ?? throw new ArgumentNullException (nameof (label2));
+		}
+
+		protected override void WriteValueAssignment (GeneratorWriteContext context)
+		{
+			context.Output.Write (result.Reference);
+			context.Output.Write (" = ");
+		}
+
+		protected override void WriteBody (GeneratorWriteContext context)
+		{
+			context.Output.Write (LlvmIrGenerator.MapToIRType (result.Type));
+			context.Output.Write (" [");
+			context.Output.Write (val1.Reference);
+			context.Output.Write (", %");
+			context.Output.Write (label1.Name);
+			context.Output.Write ("], [");
+			context.Output.Write (val2.Reference);
+			context.Output.Write (", %");
+			context.Output.Write (label2.Name);
+			context.Output.Write (']');
 		}
 	}
 

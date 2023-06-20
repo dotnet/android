@@ -45,6 +45,15 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			return ret;
 		}
 
+		public ulong GetBufferSizeFromProvider (StructureMemberInfo smi, StructureInstance instance)
+		{
+			if (DataProvider == null) {
+				return 0;
+			}
+
+			return DataProvider.GetBufferSize (instance.Obj, smi.Info.Name);
+		}
+
 		ulong GatherMembers (Type type, LlvmIrModule module, bool storeMembers = true)
 		{
 			ulong size = 0;

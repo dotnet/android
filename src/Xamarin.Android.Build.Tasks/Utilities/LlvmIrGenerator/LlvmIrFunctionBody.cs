@@ -1,187 +1,282 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Text;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVM.IR;
+
+// TODO: remove these aliases once the refactoring is done
+using LlvmIrIcmpCond = LLVMIR.LlvmIrIcmpCond;
+using LlvmIrCallMarker = LLVMIR.LlvmIrCallMarker;
+
+/// <summary>
+/// Abstract class from which all of the items (labels, function parameters,
+/// local variables and instructions) derive.
+/// </summary>
+abstract class LlvmIrFunctionBodyItem
 {
 	/// <summary>
-	/// Abstract class from which all of the items (labels, function parameters,
-	/// local variables and instructions) derive.
+	/// If an item has this property set to <c>true</c>, it won't be written to output when
+	/// code is generated.  This is used for implicit items that don't need to be part of
+	/// the generated code (e.g. the starting block label)
 	/// </summary>
-	abstract class LlvmIrFunctionBodyItem
+	public bool SkipInOutput { get; protected set; }
+	public string? Comment   { get; set; }
+
+	public void Write (GeneratorWriteContext context, LlvmIrGenerator generator)
 	{
-		/// <summary>
-		/// If an item has this property set to <c>true</c>, it won't be written to output when
-		/// code is generated.  This is used for implicit items that don't need to be part of
-		/// the generated code (e.g. the starting block label)
-		/// </summary>
-		public bool SkipInOutput { get; protected set; }
-		public abstract void Write (GeneratorWriteContext context);
+		DoWrite (context, generator);
+		if (!String.IsNullOrEmpty (Comment)) {
+			context.Output.Write (' ');
+			generator.WriteComment (context, Comment);
+		}
+		context.Output.WriteLine ();
+	}
+
+	protected abstract void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator);
+}
+
+/// <summary>
+/// Base class for function labels and local variables (including parameters), which
+/// obtain automatic names derived from a shared counter, unless explicitly named.
+/// </summary>
+abstract class LlvmIrFunctionLocalItem : LlvmIrFunctionBodyItem
+{
+	string? name;
+
+	public string Name {
+		get {
+			if (String.IsNullOrEmpty (name)) {
+				throw new InvalidOperationException ("Internal error: name hasn't been set yet");
+			}
+			return name;
+		}
+
+		protected set {
+			if (String.IsNullOrEmpty (value)) {
+				throw new InvalidOperationException ("Internal error: value must not be null or empty");
+			}
+			name = value;
+		}
+	}
+
+	protected LlvmIrFunctionLocalItem (string? name)
+	{
+		if (name != null) {
+			Name = name;
+		}
+	}
+
+	protected LlvmIrFunctionLocalItem (LlvmIrFunction.FunctionState state, string? name)
+	{
+		if (name != null) {
+			if (name.Length == 0) {
+				throw new ArgumentException ("must not be an empty string", nameof (name));
+			}
+
+			Name = name;
+			return;
+		}
+
+		SetName (state.NextTemporary ());
+	}
+
+	protected void SetName (ulong num)
+	{
+		Name = num.ToString (CultureInfo.InvariantCulture);
+	}
+
+	protected bool NameIsSet () => !String.IsNullOrEmpty (name);
+}
+
+class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
+{
+	/// <summary>
+	/// Labels are a bit peculiar in that they must not have their name set to the automatic value (based on
+	/// a counter shared with function parameters) at creation time, but only when they are actually added to
+	/// the function body.  The reason is that LLVM IR requires all the unnamed temporaries (function parameters and
+	/// labels) to be named sequentially, but sometimes a label must be referenced before it is added to the instruction
+	/// stream, e.g. in the <c>br</c> instruction.  On the other hand, it is perfectly fine to assign label a name that
+	/// isn't an integer at **instantiation** time, which is why we have the <paramref name="name"/> parameter here.
+	/// </summary>
+	public LlvmIrFunctionLabelItem (string? name = null)
+		: base (name)
+	{}
+
+	public void WillAddToBody (LlvmIrFunctionBody functionBody, LlvmIrFunction.FunctionState state)
+	{
+		if (NameIsSet ()) {
+			return;
+		}
+
+		SetName (state.NextTemporary ());
+	}
+
+	protected override void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator)
+	{
+		context.DecreaseIndent ();
+
+		context.Output.Write (context.CurrentIndent);
+		context.Output.Write (Name);
+		context.Output.Write (':');
+
+		context.IncreaseIndent ();
+	}
+}
+
+class LlvmIrFunctionBodyComment : LlvmIrFunctionBodyItem
+{
+	public string Text     { get; }
+
+	public LlvmIrFunctionBodyComment (string comment)
+	{
+		Text = comment;
+	}
+
+	protected override void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator)
+	{
+		context.Output.Write (context.CurrentIndent);
+		generator.WriteCommentLine (context, Text);
+	}
+}
+
+class LlvmIrFunctionBody
+{
+	sealed class LlvmIrFunctionImplicitStartLabel : LlvmIrFunctionLabelItem
+	{
+		public LlvmIrFunctionImplicitStartLabel (ulong num)
+		{
+			SetName (num);
+			SkipInOutput = true;
+		}
+	}
+
+	sealed class LlvmIrFunctionParameterItem : LlvmIrFunctionLocalItem
+	{
+		public LlvmIrFunctionParameter Parameter { get; }
+
+		public LlvmIrFunctionParameterItem (LlvmIrFunction.FunctionState state, LlvmIrFunctionParameter parameter)
+			: base (state, parameter.Name)
+		{
+			Parameter = parameter;
+			SkipInOutput = true;
+		}
+
+		protected override void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator)
+		{
+			throw new NotSupportedException ("Internal error: writing not supported for this item");
+		}
+	}
+
+	List<LlvmIrFunctionBodyItem> items;
+	HashSet<string> definedLabels;
+	LlvmIrFunction function;
+	LlvmIrFunction.FunctionState functionState;
+	LlvmIrFunctionLabelItem implicitStartBlock;
+
+	LlvmIrFunctionLabelItem? precedingBlock1;
+	LlvmIrFunctionLabelItem? precedingBlock2;
+	LlvmIrFunctionLabelItem? previousLabel;
+
+	public IList<LlvmIrFunctionBodyItem> Items => items.AsReadOnly ();
+	public LlvmIrFunctionLabelItem? PrecedingBlock1 => precedingBlock1;
+	public LlvmIrFunctionLabelItem? PrecedingBlock2 => precedingBlock2;
+
+	public LlvmIrFunctionBody (LlvmIrFunction func, LlvmIrFunction.FunctionState functionState)
+	{
+		function = func;
+		this.functionState = functionState;
+		definedLabels = new HashSet<string> (StringComparer.Ordinal);
+		items = new List<LlvmIrFunctionBodyItem> ();
+		previousLabel = implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
+	}
+
+	public LlvmIrInstructions.Br Br (LlvmIrFunctionLabelItem label)
+	{
+		var ret = new LlvmIrInstructions.Br (label);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Br Br (LlvmIrVariable cond, LlvmIrFunctionLabelItem ifTrue, LlvmIrFunctionLabelItem ifFalse)
+	{
+		var ret = new LlvmIrInstructions.Br (cond, ifTrue, ifFalse);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Call Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null)
+	{
+		var ret = new LlvmIrInstructions.Call (function, result, arguments);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Icmp Icmp (LlvmIrIcmpCond cond, LlvmIrVariable op1, object? op2, LlvmIrVariable result)
+	{
+		var ret = new LlvmIrInstructions.Icmp (cond, op1, op2, result);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Load Load (LlvmIrVariable source, LlvmIrVariable result, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Load (source, result) {
+			TBAA = tbaa,
+		};
+		Add (ret);
+		return ret;
 	}
 
 	/// <summary>
-	/// Base class for function labels and local variables (including parameters), which
-	/// obtain automatic names derived from a shared counter, unless explicitly named.
+	/// Creates the `phi` instruction form we use the most throughout marshal methods generator - one which refers to an if/else block and where
+	/// **both** value:label pairs are **required**.  Parameters <paramref name="label1"/> and <paramref name="label2"/> are nullable because, in theory,
+	/// it is possible that <see cref="LlvmIrFunctionBody"/> hasn't had the required blocks defined prior to adding the `phi` instruction and, thus,
+	/// we must check for the possibility here.
 	/// </summary>
-	abstract class LlvmIrFunctionLocalItem : LlvmIrFunctionBodyItem
+	public LlvmIrInstructions.Phi Phi (LlvmIrVariable result, LlvmIrVariable val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariable val2, LlvmIrFunctionLabelItem? label2)
 	{
-		string? name;
-
-		public string Name {
-			get {
-				if (String.IsNullOrEmpty (name)) {
-					throw new InvalidOperationException ("Internal error: name hasn't been set yet");
-				}
-				return name;
-			}
-
-			protected set {
-				if (String.IsNullOrEmpty (value)) {
-					throw new InvalidOperationException ("Internal error: value must not be null or empty");
-				}
-				name = value;
-			}
-		}
-
-		protected LlvmIrFunctionLocalItem (string? name)
-		{
-			if (name != null) {
-				Name = name;
-			}
-		}
-
-		protected LlvmIrFunctionLocalItem (LlvmIrFunction.FunctionState state, string? name)
-		{
-			if (name != null) {
-				if (name.Length == 0) {
-					throw new ArgumentException ("must not be an empty string", nameof (name));
-				}
-
-				Name = name;
-				return;
-			}
-
-			SetName (state.NextTemporary ());
-		}
-
-		protected void SetName (ulong num)
-		{
-			Name = num.ToString (CultureInfo.InvariantCulture);
-		}
-
-		protected bool NameIsSet () => !String.IsNullOrEmpty (name);
+		var ret = new LlvmIrInstructions.Phi (result, val1, label1, val2, label2);
+		Add (ret);
+		return ret;
 	}
 
-	class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
+	public LlvmIrInstructions.Ret Ret (Type retvalType, object? retval = null)
 	{
-		/// <summary>
-		/// Labels are a bit peculiar in that they must not have their name set to the automatic value (based on
-		/// a counter shared with function parameters) at creation time, but only when they are actually added to
-		/// the function body.  The reason is that LLVM IR requires all the unnamed temporaries (function parameters and
-		/// labels) to be named sequentially, but sometimes a label must be referenced before it is added to the instruction
-		/// stream, e.g. in the <c>br</c> instruction.  On the other hand, it is perfectly fine to assign label a name that
-		/// isn't an integer at **instantiation** time, which is why we have the <paramref name="name"/> parameter here.
-		/// </summary>
-		public LlvmIrFunctionLabelItem (string? name = null)
-			: base (name)
-		{}
-
-		public void WillAddToBody (LlvmIrFunctionBody functionBody, LlvmIrFunction.FunctionState state)
-		{
-			if (NameIsSet ()) {
-				return;
-			}
-
-			SetName (state.NextTemporary ());
-		}
-
-		public override void Write (GeneratorWriteContext context)
-		{
-			context.DecreaseIndent ();
-
-			context.Output.Write (context.CurrentIndent);
-			context.Output.Write (Name);
-			context.Output.WriteLine (':');
-
-			context.IncreaseIndent ();
-		}
+		var ret = new LlvmIrInstructions.Ret (retvalType, retval);
+		Add (ret);
+		return ret;
 	}
 
-	class LlvmIrFunctionBodyComment : LlvmIrFunctionBodyItem
+	public void Add (LlvmIrFunctionLabelItem label)
 	{
-		public string Text     { get; }
+		label.WillAddToBody (this, functionState);
+		if (definedLabels.Contains (label.Name)) {
+			throw new InvalidOperationException ($"Internal error: label with name '{label.Name}' already added to function '{function.Signature.Name}' body");
+		}
+		items.Add (label);
+		definedLabels.Add (label.Name);
 
-		public LlvmIrFunctionBodyComment (string comment)
-		{
-			Text = comment;
+		// Rotate preceding blocks
+		if (precedingBlock2 != null) {
+			precedingBlock2 = null;
 		}
 
-		public override void Write (GeneratorWriteContext context)
-		{
-			context.Output.Write (context.CurrentIndent);
-			context.Output.Write (';');
-			context.Output.WriteLine (Text);
+		precedingBlock2 = precedingBlock1;
+		precedingBlock1 = previousLabel;
+		previousLabel = label;
+
+		var comment = new StringBuilder (" preds = %");
+		comment.Append (precedingBlock1.Name);
+		if (precedingBlock2 != null) {
+			comment.Append (", %");
+			comment.Append (precedingBlock2.Name);
 		}
+		label.Comment = comment.ToString ();
 	}
 
-	class LlvmIrFunctionBody
+	public void Add (LlvmIrFunctionBodyItem item)
 	{
-		sealed class LlvmIrFunctionImplicitStartLabel : LlvmIrFunctionLabelItem
-		{
-			public LlvmIrFunctionImplicitStartLabel (ulong num)
-			{
-				SetName (num);
-				SkipInOutput = true;
-			}
-		}
-
-		sealed class LlvmIrFunctionParameterItem : LlvmIrFunctionLocalItem
-		{
-			public LlvmIrFunctionParameter Parameter { get; }
-
-			public LlvmIrFunctionParameterItem (LlvmIrFunction.FunctionState state, LlvmIrFunctionParameter parameter)
-				: base (state, parameter.Name)
-			{
-				Parameter = parameter;
-				SkipInOutput = true;
-			}
-
-			public override void Write (GeneratorWriteContext context)
-			{
-				throw new NotSupportedException ("Internal error: writing not supported for this item");
-			}
-		}
-
-		List<LlvmIrFunctionBodyItem> items;
-		HashSet<string> definedLabels;
-		LlvmIrFunction function;
-		LlvmIrFunction.FunctionState functionState;
-		LlvmIrFunctionLabelItem implicitStartBlock;
-
-		public IList<LlvmIrFunctionBodyItem> Items => items.AsReadOnly ();
-
-		public LlvmIrFunctionBody (LlvmIrFunction func, LlvmIrFunction.FunctionState functionState)
-		{
-			function = func;
-			this.functionState = functionState;
-			definedLabels = new HashSet<string> (StringComparer.Ordinal);
-			items = new List<LlvmIrFunctionBodyItem> ();
-			implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
-		}
-
-		public void Add (LlvmIrFunctionLabelItem label)
-		{
-			label.WillAddToBody (this, functionState);
-			if (definedLabels.Contains (label.Name)) {
-				throw new InvalidOperationException ($"Internal error: label with name '{label.Name}' already added to function '{function.Signature.Name}' body");
-			}
-			items.Add (label);
-			definedLabels.Add (label.Name);
-		}
-
-		public void Add (LlvmIrFunctionBodyItem item)
-		{
-			items.Add (item);
-		}
+		items.Add (item);
 	}
 }

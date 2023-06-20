@@ -517,6 +517,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return;
 			}
 
+			if (smi.Info.IsNativePointerToPreallocatedBuffer (out _)) {
+				string bufferVariableName = context.Module.LookupRequiredBufferVariableName (structInstance, smi);
+				context.Output.Write ('@');
+				context.Output.Write (bufferVariableName);
+				return;
+			}
+
 			WriteValue (context, smi.MemberType, value);
 		}
 
@@ -898,7 +905,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.IncreaseIndent ();
 
 			foreach (LlvmIrFunctionBodyItem item in function.Body.Items) {
-				item.Write (context);
+				item.Write (context, this);
 			}
 
 			context.DecreaseIndent ();
@@ -1002,8 +1009,27 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
+		public static void WriteReturnAttributes (GeneratorWriteContext context, LlvmIrFunctionSignature.ReturnTypeAttributes returnAttrs)
+		{
+			if (AttributeIsSet (returnAttrs.NoUndef)) {
+				context.Output.Write ("noundef ");
+			}
+
+			if (AttributeIsSet (returnAttrs.SignExt)) {
+				context.Output.Write ("signext ");
+			}
+
+			if (AttributeIsSet (returnAttrs.ZeroExt)) {
+				context.Output.Write ("zeroext ");
+			}
+		}
+
 		void WriteFunctionSignature (GeneratorWriteContext context, LlvmIrFunction func, bool writeParameterNames)
 		{
+			if (func.ReturnsValue) {
+				WriteReturnAttributes (context, func.Signature.ReturnAttributes);
+			}
+
 			context.Output.Write (MapToIRType (func.Signature.ReturnType));
 			context.Output.Write (" @");
 			context.Output.Write (func.Signature.Name);
@@ -1081,8 +1107,6 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			context.Output.Write (' ');
 			context.Output.Write (String.Join (" ", attributes));
 
-			bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
-
 			uint ValueOrPointerSize (uint? value)
 			{
 				if (value.Value == 0) {
@@ -1092,6 +1116,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				return value.Value;
 			}
 		}
+
+		static bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
 
 		void WriteAttributeSets (GeneratorWriteContext context)
 		{
@@ -1127,13 +1153,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 		}
 
-		void WriteComment (GeneratorWriteContext context, string comment)
+		public void WriteComment (GeneratorWriteContext context, string comment)
 		{
 			context.Output.Write (';');
 			context.Output.Write (comment);
 		}
 
-		void WriteCommentLine (GeneratorWriteContext context, string comment)
+		public void WriteCommentLine (GeneratorWriteContext context, string comment)
 		{
 			WriteComment (context, comment);
 			context.Output.WriteLine ();

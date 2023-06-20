@@ -16,6 +16,13 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public StructureInfo Info => info;
 
 		/// <summary>
+		/// Do **not** set this property, it is used internally by <see cref="LlvmIrModule.AddStructureArrayGlobalVariable"/>,
+		/// <see cref="LlvmIrBufferManager"/> and <see cref="LlvmIrGenerator"/> when dealing with arrays of objects where each
+		/// array index contains the same object instance
+		/// </summary>
+		internal ulong IndexInArray { get; set; }
+
+		/// <summary>
 		/// This is a cludge to support zero-initialized structures.  In order to output proper variable type
 		/// when a structure is used, the generator must be able to read the structure descrption, which is
 		/// provided in the <see cref="Info"/> property and, thus, it requires a variable of structural type to

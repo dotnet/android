@@ -196,23 +196,47 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 	class LlvmIrFunctionSignature : IEquatable<LlvmIrFunctionSignature>
 	{
+		public sealed class ReturnTypeAttributes
+		{
+			public bool? InReg;
+			public bool? NoUndef;
+			public bool? SignExt;
+			public bool? ZeroExt;
+
+			public ReturnTypeAttributes ()
+			{}
+
+			public ReturnTypeAttributes (ReturnTypeAttributes other)
+			{
+				InReg = other.InReg;
+				NoUndef = other.NoUndef;
+				SignExt = other.SignExt;
+				ZeroExt = other.ZeroExt;
+			}
+		}
+
 		sealed class SavedSignatureState : ILlvmIrSavedFunctionSignatureState
 		{
 			public readonly LlvmIrFunctionSignature Owner;
 			public readonly IList<ILlvmIrSavedFunctionParameterState> ParameterStates;
+			public readonly ReturnTypeAttributes ReturnAttributes;
 
-			public SavedSignatureState (LlvmIrFunctionSignature owner, IList<ILlvmIrSavedFunctionParameterState> parameterStates)
+			public SavedSignatureState (LlvmIrFunctionSignature owner, IList<ILlvmIrSavedFunctionParameterState> parameterStates, ReturnTypeAttributes returnAttributes)
 			{
 				Owner = owner;
 				ParameterStates = parameterStates;
+				ReturnAttributes = returnAttributes;
 			}
 		}
 
+		ReturnTypeAttributes returnAttributes;
+
 		public string Name                               { get; }
 		public Type ReturnType                           { get; }
+		public ReturnTypeAttributes ReturnAttributes     => returnAttributes;
 		public IList<LlvmIrFunctionParameter> Parameters { get; }
 
-		public LlvmIrFunctionSignature (string name, Type returnType, IList<LlvmIrFunctionParameter>? parameters = null)
+		public LlvmIrFunctionSignature (string name, Type returnType, IList<LlvmIrFunctionParameter>? parameters = null, ReturnTypeAttributes? returnAttributes = null)
 		{
 			if (String.IsNullOrEmpty (name)) {
 				throw new ArgumentException ("must not be null or empty", nameof (name));
@@ -220,6 +244,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 
 			Name = name;
 			ReturnType = returnType;
+			this.returnAttributes = returnAttributes ?? new ReturnTypeAttributes ();
 			Parameters = parameters ?? new List<LlvmIrFunctionParameter> ();
 		}
 
@@ -243,7 +268,9 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 				list.Add (parameter.SaveState ());
 			}
 
-			return new SavedSignatureState (this, list.AsReadOnly ());
+			var ret = new SavedSignatureState (this, list.AsReadOnly (), returnAttributes);
+			returnAttributes = new ReturnTypeAttributes (returnAttributes);
+			return ret;
 		}
 
 		/// <summary>
@@ -264,8 +291,8 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			for (int i = 0; i < oldState.ParameterStates.Count; i++) {
 				ILlvmIrSavedFunctionParameterState parameterState = oldState.ParameterStates[i];
 				Parameters[i].RestoreState (parameterState);
-
 			}
+			returnAttributes = new ReturnTypeAttributes (oldState.ReturnAttributes);
 		}
 
 		public override int GetHashCode ()
@@ -382,6 +409,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 		public LlvmIrVisibility Visibility                   { get; set; } = LlvmIrVisibility.Default;
 		public LlvmIrFunctionBody Body                       { get; }
 		public string? Comment                               { get; set; }
+		public bool ReturnsValue                             => Signature.ReturnType != typeof(void);
 
 		public LlvmIrFunction (LlvmIrFunctionSignature signature, LlvmIrFunctionAttributeSet? attributeSet = null)
 		{

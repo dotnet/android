@@ -407,18 +407,9 @@ namespace Xamarin.Android.Tasks
 			LLVM.IR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
-			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
 			New.MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGenNew;
 
 			if (enableMarshalMethods) {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
-					assemblyCount,
-					uniqueAssemblyNames,
-					marshalMethodsState?.MarshalMethods,
-					Log,
-					mmTracingMode
-				);
-
 				marshalMethodsAsmGenNew = new New.MarshalMethodsNativeAssemblyGenerator (
 					assemblyCount,
 					uniqueAssemblyNames,
@@ -427,10 +418,8 @@ namespace Xamarin.Android.Tasks
 					mmTracingMode
 				);
 			} else {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
 				marshalMethodsAsmGenNew = new New.MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
 			}
-			marshalMethodsAsmGen.Init ();
 			LLVM.IR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGenNew.Construct ();
 
 			foreach (string abi in SupportedAbis) {
@@ -439,7 +428,6 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
-				string marshalMethodsLlFilePathNew = $"{marshalMethodsBaseAsmFilePath}-new.ll";
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
@@ -455,19 +443,13 @@ namespace Xamarin.Android.Tasks
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						marshalMethodsAsmGenNew.Generate (marshalMethodsModule, targetArch, sw, marshalMethodsLlFilePathNew);
+						marshalMethodsAsmGenNew.Generate (marshalMethodsModule, targetArch, sw, marshalMethodsLlFilePath);
 					} catch {
 						throw;
 					} finally {
 						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePathNew);
+						Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
 					}
-				}
-
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
 				}
 			}
 
