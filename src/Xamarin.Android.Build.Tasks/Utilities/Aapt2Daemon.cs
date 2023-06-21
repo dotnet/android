@@ -279,7 +279,12 @@ namespace Xamarin.Android.Tasks
 				aapt2.WaitForExit ((int)TimeSpan.FromSeconds (5).TotalMilliseconds);
 			} catch (IOException) {
 				// Ignore this error. It occurs when the Build it cancelled.
-				logger?.Invoke ($"{nameof (Aapt2Daemon)}: Ignoring IOException. Build was cancelled.");
+				try {
+					logger?.Invoke ($"{nameof (Aapt2Daemon)}: Ignoring IOException. Build was cancelled.");
+				} catch  {
+					// The Logger might not exist if the daemon exits after the logger has been
+					// collected.
+				}
 			}
 		}
 
