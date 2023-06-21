@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public static readonly LlvmIrVariableOptions GlobalWritable = new LlvmIrVariableOptions {
 			Writability = LlvmIrWritability.Writable,
+			AddressSignificance = LlvmIrAddressSignificance.LocalUnnamed,
 		};
 
 		/// <summary>
@@ -57,6 +58,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Linkage = LlvmIrLinkage.Private,
 			Writability = LlvmIrWritability.Constant,
 			AddressSignificance = LlvmIrAddressSignificance.Unnamed,
+			RuntimePreemption = LlvmIrRuntimePreemption.Default,
 		};
 
 		/// <summary>
@@ -83,7 +85,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		};
 
 		public LlvmIrLinkage Linkage { get; set; } = LlvmIrLinkage.Default;
-		public LlvmIrRuntimePreemption RuntimePreemption { get; set; } = LlvmIrRuntimePreemption.Default;
+		public LlvmIrRuntimePreemption RuntimePreemption { get; set; } = LlvmIrRuntimePreemption.DSOLocal;
 		public LlvmIrVisibility Visibility { get; set; } = LlvmIrVisibility.Default;
 		public LlvmIrAddressSignificance AddressSignificance { get; set; } = LlvmIrAddressSignificance.Default;
 		public LlvmIrWritability Writability { get; set; } = LlvmIrWritability.Writable;

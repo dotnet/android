@@ -10,6 +10,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public string Contents { get; }
 		public bool IsReference { get; }
 
+		public LlvmIrMetadataField (LlvmIrMetadataField other)
+		{
+			Contents = other.Contents;
+			IsReference = other.IsReference;
+		}
+
 		public LlvmIrMetadataField (string value, bool isReference = false)
 		{
 			if (isReference) {
@@ -35,7 +41,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return QuoteString ((string)value);
 			}
 
-			string irType = LlvmIrGenerator.MapManagedTypeToIR (vt);
+			string irType = LlvmIrGenerator.MapToIRType (vt);
 			return $"{irType} {MonoAndroidHelper.CultureInvariantToString (value)}";
 		}
 
@@ -50,6 +56,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		List<LlvmIrMetadataField> fields;
 
 		public string Name { get; }
+
+		public LlvmIrMetadataItem (LlvmIrMetadataItem other)
+		{
+			Name = other.Name;
+			fields = new List<LlvmIrMetadataField> ();
+			foreach (LlvmIrMetadataField field in other.fields) {
+				fields.Add (new LlvmIrMetadataField (field));
+			}
+		}
 
 		public LlvmIrMetadataItem (string name)
 		{
@@ -66,9 +81,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			fields.Add (new LlvmIrMetadataField (referenceName, isReference: true));
 		}
 
+		public void AddReferenceField (LlvmIrMetadataItem referencedItem)
+		{
+			AddReferenceField (referencedItem.Name);
+		}
+
 		public void AddField (object value)
 		{
-			fields.Add (new LlvmIrMetadataField (value));
+			AddField (new LlvmIrMetadataField (value));
+		}
+
+		public void AddField (LlvmIrMetadataField field)
+		{
+			fields.Add (field);
 		}
 
 		public string Render ()
@@ -96,11 +121,29 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	{
 		ulong counter = 0;
 		List<LlvmIrMetadataItem> items = new List<LlvmIrMetadataItem> ();
+		Dictionary<string, LlvmIrMetadataItem> nameToItem = new Dictionary<string, LlvmIrMetadataItem> (StringComparer.Ordinal);
 
 		public List<LlvmIrMetadataItem> Items => items;
 
+		public LlvmIrMetadataManager ()
+		{}
+
+		public LlvmIrMetadataManager (LlvmIrMetadataManager other)
+		{
+			foreach (LlvmIrMetadataItem item in other.items) {
+				var newItem = new LlvmIrMetadataItem (item);
+				items.Add (newItem);
+				nameToItem.Add (newItem.Name, newItem);
+			}
+			counter = other.counter;
+		}
+
 		public LlvmIrMetadataItem Add (string name, params object[]? values)
 		{
+			if (nameToItem.ContainsKey (name)) {
+				throw new InvalidOperationException ($"Internal error: metadata item '{name}' has already been added");
+			}
+
 			var ret = new LlvmIrMetadataItem (name);
 
 			if (values != null && values.Length > 0) {
@@ -110,6 +153,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 			items.Add (ret);
 
+			nameToItem.Add (name, ret);
 			return ret;
 		}
 
@@ -118,6 +162,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			string name = counter.ToString (CultureInfo.InvariantCulture);
 			counter++;
 			return Add (name, values);
+		}
+
+		public LlvmIrMetadataItem? GetItem (string name)
+		{
+			if (nameToItem.TryGetValue (name, out LlvmIrMetadataItem? item)) {
+				return item;
+			}
+
+			return null;
 		}
 	}
 }
