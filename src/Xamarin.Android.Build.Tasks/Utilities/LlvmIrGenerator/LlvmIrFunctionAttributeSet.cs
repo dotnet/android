@@ -69,17 +69,6 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 		list.Add (attr);
 	}
 
-	public void Add (LlvmIrFunctionAttributeSet sourceSet)
-	{
-		if (sourceSet == null) {
-			throw new ArgumentNullException (nameof (sourceSet));
-		}
-
-		foreach (LlvmIrFunctionAttribute attr in sourceSet) {
-			Add (attr);
-		}
-	}
-
 	public string Render ()
 	{
 		List<LlvmIrFunctionAttribute> list = attributes.ToList ();

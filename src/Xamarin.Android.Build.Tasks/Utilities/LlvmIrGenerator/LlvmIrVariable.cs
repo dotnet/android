@@ -13,8 +13,8 @@ enum LlvmIrVariableWriteOptions
 
 abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 {
-	public abstract bool Global { get; }
-	public abstract string NamePrefix { get; }
+	public abstract bool Global                    { get; }
+	public abstract string NamePrefix              { get; }
 
 	public string? Name                            { get; protected set; }
 	public Type Type                               { get; protected set; }

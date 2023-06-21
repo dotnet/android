@@ -256,11 +256,11 @@ class LlvmIrDataLayout
 	public uint? StackAlignment                                               { get; set; }
 
 	public LlvmIrDataLayoutAggregateObjectAlignment? AggregateObjectAlignment { get; set; }
-	public List<LlvmIrDataLayoutFloatAlignment>? FloatAlignment                     { get; set; }
+	public List<LlvmIrDataLayoutFloatAlignment>? FloatAlignment               { get; set; }
 	public LlvmIrDataLayoutFunctionPointerAlignment? FunctionPointerAlignment { get; set; }
-	public List<LlvmIrDataLayoutIntegerAlignment>? IntegerAlignment                 { get; set; }
-	public List<LlvmIrDataLayoutVectorAlignment>? VectorAlignment                   { get; set; }
-	public List<LlvmIrDataLayoutPointerSize>? PointerSize                           { get; set; }
+	public List<LlvmIrDataLayoutIntegerAlignment>? IntegerAlignment           { get; set; }
+	public List<LlvmIrDataLayoutVectorAlignment>? VectorAlignment             { get; set; }
+	public List<LlvmIrDataLayoutPointerSize>? PointerSize                     { get; set; }
 
 	public List<uint>? NativeIntegerWidths                                    { get; set; }
 	public List<uint>? NonIntegralPointerTypeAddressSpaces                    { get; set; }

@@ -6,7 +6,6 @@ namespace Xamarin.Android.Tasks.LLVMIR;
 
 abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 {
-	// TODO: add support for metadata
 	public string Mnemonic                          { get; }
 	public LlvmIrFunctionAttributeSet? AttributeSet { get; set; }
 

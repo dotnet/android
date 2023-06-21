@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 using Xamarin.Android.Tools;
 
@@ -419,16 +418,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			Type elementType = variable.Type.GetArrayElementType ();
 			return typeof(StructureInstance).IsAssignableFrom (elementType);
-		}
-
-		bool IsPointerArrayVariable (LlvmIrGlobalVariable variable)
-		{
-			if (!variable.Type.IsArray ()) {
-				return false;
-			}
-
-			Type elementType = variable.Type.GetArrayElementType ();
-			return elementType == typeof(IntPtr) || elementType == typeof(UIntPtr);
 		}
 
 		bool IsStructureVariable (LlvmIrGlobalVariable variable)

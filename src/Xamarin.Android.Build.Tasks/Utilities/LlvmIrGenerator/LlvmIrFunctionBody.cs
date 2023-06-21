@@ -148,23 +148,6 @@ class LlvmIrFunctionBody
 		}
 	}
 
-	sealed class LlvmIrFunctionParameterItem : LlvmIrFunctionLocalItem
-	{
-		public LlvmIrFunctionParameter Parameter { get; }
-
-		public LlvmIrFunctionParameterItem (LlvmIrFunction.FunctionState state, LlvmIrFunctionParameter parameter)
-			: base (state, parameter.Name)
-		{
-			Parameter = parameter;
-			SkipInOutput = true;
-		}
-
-		protected override void DoWrite (GeneratorWriteContext context, LlvmIrGenerator generator)
-		{
-			throw new NotSupportedException ("Internal error: writing not supported for this item");
-		}
-	}
-
 	List<LlvmIrFunctionBodyItem> items;
 	HashSet<string> definedLabels;
 	LlvmIrFunction ownerFunction;
