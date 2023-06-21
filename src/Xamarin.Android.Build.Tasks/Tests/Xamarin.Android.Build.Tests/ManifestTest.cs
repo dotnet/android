@@ -665,11 +665,14 @@ namespace Bug12935
 	    <Namespace Prefix=""android"" Uri=""http://schemas.android.com/apk/res/android"" />
 	</Namespace>
 </PropertyGroup>
+<ItemGroup>
+	<_Permissions Include=""&lt;uses-permission android:name=&quot;android.permission.READ_CONTACTS&quot; /&gt;"" />
+</ItemGroup>
 <Target Name=""_Foo"">
 	<XmlPoke
 		XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml""
-		Value=""12345""
-		Query=""/manifest/@android:versionCode""
+		Value=""@(_Permissions)""
+		Query=""/manifest""
 		Namespaces=""$(Namespace)""
 	/>
 </Target>
@@ -681,7 +684,7 @@ namespace Bug12935
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var manifest = builder.Output.GetIntermediaryAsText (Root, Path.Combine ("android", "AndroidManifest.xml"));
-				Assert.IsTrue (manifest.Contains ("12345"), $"Manifest should contain versionCode=12345");
+				Assert.IsTrue (manifest.Contains ("READ_CONTACTS"), $"Manifest should contain the READ_CONTACTS");
 			}
 		}
 
