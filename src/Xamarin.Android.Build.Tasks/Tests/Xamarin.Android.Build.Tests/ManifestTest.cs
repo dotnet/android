@@ -669,9 +669,12 @@ namespace Bug12935
 	<_Permissions Include=""&lt;uses-permission android:name=&quot;android.permission.READ_CONTACTS&quot; /&gt;"" />
 </ItemGroup>
 <Target Name=""_Foo"">
+	<XmlPeek Query=""/manifest/*"" XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml"">
+		<Output TaskParameter=""Result"" ItemName=""_XmlNodes"" />
+	</XmlPeek>
 	<XmlPoke
 		XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml""
-		Value=""@(_Permissions)""
+		Value=""@(_XmlNodes->'%(Identity)', ' ')@(_Permissions)""
 		Query=""/manifest""
 		Namespaces=""$(Namespace)""
 	/>
