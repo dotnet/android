@@ -16,6 +16,9 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class DebuggingTest : DeviceTest
 	{
+		const int DEBUGGER_MAX_CONNECTIONS = 100;
+		const int DEBUGGER_CONNECTION_TIMEOUT = 3000;
+
 		[TearDown]
 		public void ClearDebugProperties ()
 		{
@@ -242,7 +245,8 @@ namespace ${ROOT_NAMESPACE} {
 					int port = rnd.Next (10000, 20000);
 					TestContext.Out.WriteLine ($"{port}");
 					var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-						MaxConnectionAttempts = 2000, // we need a long delay here to get a reliable connection
+						MaxConnectionAttempts = DEBUGGER_MAX_CONNECTIONS, // we need a long delay here to get a reliable connection
+						TimeBetweenConnectionAttempts = DEBUGGER_CONNECTION_TIMEOUT,
 					};
 					var startInfo = new SoftDebuggerStartInfo (args) {
 						WorkingDirectory = Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
@@ -299,6 +303,15 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -306,6 +319,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -313,6 +327,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -320,6 +335,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -327,6 +343,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -334,6 +351,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
@@ -341,6 +359,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -348,6 +367,7 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -355,14 +375,15 @@ namespace ${ROOT_NAMESPACE} {
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
 			},
 		};
 #pragma warning restore 414
 
-		[Test, Category ("Debugger")]
+		[Test, Category ("Debugger"), Category ("WearOS")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string packageFormat)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string packageFormat, bool useLatestSdk)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -405,6 +426,10 @@ namespace ${ROOT_NAMESPACE} {
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
+			if (!useLatestSdk) {
+				lib.TargetFramework = "net7.0-android";
+				app.TargetFramework = "net7.0-android";
+			}
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
@@ -465,7 +490,8 @@ namespace ${ROOT_NAMESPACE} {
 					int port = rnd.Next (10000, 20000);
 					TestContext.Out.WriteLine ($"{port}");
 					var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-						MaxConnectionAttempts = 2000,
+						MaxConnectionAttempts = DEBUGGER_MAX_CONNECTIONS,
+						TimeBetweenConnectionAttempts = DEBUGGER_CONNECTION_TIMEOUT,
 					};
 					var startInfo = new SoftDebuggerStartInfo (args) {
 						WorkingDirectory = Path.Combine (appBuilder.ProjectDirectory, app.IntermediateOutputPath, "android", "assets"),

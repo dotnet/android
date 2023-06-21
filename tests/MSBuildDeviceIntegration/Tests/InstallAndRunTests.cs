@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
@@ -1135,6 +1136,107 @@ namespace UnnamedProject
 				node = ui.XPathSelectElement ($"//node[contains(@resource-id,'myButton')]");
 				StringAssert.AreEqualIgnoringCase ("Click Me! One", node.Attribute ("text").Value, "Text of Button myButton should have been \"Click Me! One\"");
 			}
+		}
+
+		[Test]
+		[Category ("WearOS")]
+		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject () {
+				TargetFramework = "net7.0-android",
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+			};
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
+		[Test]
+		public void TypeAndMemberRemapping ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new AndroidItem._AndroidRemapMembers ("RemapActivity.xml") {
+						Encoding = Encoding.UTF8,
+						TextContent = () => ResourceData.RemapActivityXml,
+					},
+					new AndroidItem.AndroidJavaSource ("RemapActivity.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.RemapActivityJava,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": global::Example.RemapActivity");
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
+			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+
+			StringAssert.Contains (
+					"RemapActivity.onMyCreate() invoked!",
+					logcatOutput,
+					"Activity.onCreate() wasn't remapped to RemapActivity.onMyCreate()!"
+			);
+			StringAssert.Contains (
+					"ViewHelper.mySetOnClickListener() invoked!",
+					logcatOutput,
+					"View.setOnClickListener() wasn't remapped to ViewHelper.mySetOnClickListener()!"
+			);
+		}
+
+		[Test]
+		public void SupportDesugaringStaticInterfaceMethods ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new AndroidItem.AndroidJavaSource ("StaticMethodsInterface.java") {
+						Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+						TextContent = () => ResourceData.IdmStaticMethodsInterface,
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+				},
+			};
+
+			// Note: To properly test, Desugaring must be *enabled*, which requires that
+			// `$(SupportedOSPlatformVersion)` be *less than* 23.  21 is currently the default,
+			// but set this explicitly anyway just so that this implicit requirement is explicit.
+			proj.SupportedOSPlatformVersion = "21";
+
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine ($""# jonp static interface default method invocation; IStaticMethodsInterface.Value={Example.IStaticMethodsInterface.Value}"");
+");
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", appStartupLogcatFile);
+			Assert.IsTrue (didLaunch, "MainActivity should have launched!");
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+
+			StringAssert.Contains (
+					"IStaticMethodsInterface.Value=3",
+					logcatOutput,
+					"Was IStaticMethodsInterface.Value executed?"
+			);
 		}
 
 	}
