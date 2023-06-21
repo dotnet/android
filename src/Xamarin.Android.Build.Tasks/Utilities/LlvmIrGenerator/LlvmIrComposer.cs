@@ -7,75 +7,51 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
-	/// <summary>
-	/// Base class for all classes which "compose" LLVM IR assembly.
-	/// <summary>
 	abstract class LlvmIrComposer
 	{
-		protected AndroidTargetArch TargetArch { get; }
+		bool constructed;
 
-		protected LlvmIrComposer ()
-		{}
+		protected abstract void Construct (LlvmIrModule module);
 
-		public void Write (AndroidTargetArch arch, StreamWriter output, string fileName)
+		public LlvmIrModule Construct ()
 		{
-			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, output, fileName);
+			var module = new LlvmIrModule ();
+			Construct (module);
+			module.AfterConstruction ();
+			constructed = true;
 
-			InitGenerator (generator);
-			MapStructures (generator);
-			generator.WriteFileTop ();
-			generator.WriteStructureDeclarations ();
-			Write (generator);
-			generator.WriteFunctionDeclarations ();
-			generator.WriteFileEnd ();
+			return module;
 		}
 
-		protected static string GetAbiName (AndroidTargetArch arch)
+		public void Generate (LlvmIrModule module, AndroidTargetArch arch, StreamWriter output, string fileName)
 		{
-			return arch switch {
-				AndroidTargetArch.Arm => "armeabi-v7a",
-				AndroidTargetArch.Arm64 => "arm64-v8a",
-				AndroidTargetArch.X86 => "x86",
-				AndroidTargetArch.X86_64 => "x86_64",
-				_ => throw new InvalidOperationException ($"Unsupported Android architecture: {arch}"),
-			};
-		}
-
-		protected ulong HashName (string name, bool is64Bit)
-		{
-			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
-			if (is64Bit) {
-				return XxHash64.HashToUInt64 (nameBytes);
+			if (!constructed) {
+				throw new InvalidOperationException ($"Internal error: module not constructed yet. Was Constrict () called?");
 			}
 
-			return (ulong)XxHash32.HashToUInt32 (nameBytes);
+			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
+			generator.Generate (output, module);
+			output.Flush ();
 		}
 
-		protected virtual void InitGenerator (LlvmIrGenerator generator)
-		{}
+		public static ulong GetXxHash (string str, bool is64Bit)
+		{
+			byte[] stringBytes = Encoding.UTF8.GetBytes (str);
+			if (is64Bit) {
+				return XxHash64.HashToUInt64 (stringBytes);
+			}
 
-		/// <summary>
-		/// Initialize the composer. It needs to allocate and populate all the structures that
-		/// are used by the composer, before they can be mapped by the generator. The code here
-		/// should initialize only the architecture-independent fields of structures etc to
-		/// write. The composer is reused between architectures, and only the Write method is
-		/// aware of which architecture is targetted.
-		/// </summary>
-		public abstract void Init ();
+			return (ulong)XxHash32.HashToUInt32 (stringBytes);
+		}
 
-		/// <summary>
-		/// Maps all the structures used to internal LLVM IR representation. Every structure MUST
-		/// be mapped.
-		/// </summary>
-		protected abstract void MapStructures (LlvmIrGenerator generator);
+		protected LlvmIrGlobalVariable EnsureGlobalVariable (LlvmIrVariable variable)
+		{
+			var gv = variable as LlvmIrGlobalVariable;
+			if (gv == null) {
+				throw new InvalidOperationException ("Internal error: global variable expected");
+			}
 
-		/// <summary>
-		/// Generate LLVM IR code from data structures initialized by <see cref="Init"/>.  This is
-		/// called once per ABI, with the appropriate <paramref name="generator"/> for the target
-		/// ABI.  If any ABI-specific initialization must be performed on the data structures to
-		/// be written, it has to be done here (applies to e.g. constructs that require to know the
-		/// native pointer size).
-		/// </summary>
-		protected abstract void Write (LlvmIrGenerator generator);
+			return gv;
+		}
 	}
 }

@@ -74,11 +74,8 @@ namespace Xamarin.Android.Tasks
 
 			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)
 			{
-				var llvmAsmgen = new CompressedAssembliesNativeAssemblyGenerator (dict);
-				llvmAsmgen.Init ();
-
-				var composer = new New.CompressedAssembliesNativeAssemblyGenerator (dict);
-				LLVM.IR.LlvmIrModule compressedAssemblies = composer.Construct ();
+				var composer = new CompressedAssembliesNativeAssemblyGenerator (dict);
+				LLVMIR.LlvmIrModule compressedAssemblies = composer.Construct ();
 
 				foreach (string abi in SupportedAbis) {
 					string baseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"compressed_assemblies.{abi.ToLowerInvariant ()}");

@@ -5,12 +5,8 @@ using System.Text;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVMIR
 {
-	// TODO: remove these aliases once the refactoring is done
-	using LlvmIrVariableOptions = LLVMIR.LlvmIrVariableOptions;
-	using LlvmIrModuleMergeBehavior = LLVMIR.LlvmIrModuleMergeBehavior;
-
 	partial class LlvmIrModule
 	{
 		/// <summary>
@@ -257,7 +253,7 @@ namespace Xamarin.Android.Tasks.LLVM.IR
 			}
 
 			string bufferName = bufferManager.Allocate (structure, smi, bufferSize);
-			var buffer = new LlvmIrGlobalVariable (typeof(List<byte>), bufferName, LLVMIR.LlvmIrVariableOptions.LocalWritable) {
+			var buffer = new LlvmIrGlobalVariable (typeof(List<byte>), bufferName, LlvmIrVariableOptions.LocalWritable) {
 				ZeroInitializeArray = true,
 				ArrayItemCount = bufferSize,
 			};

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Tasks.LLVM.IR;
+namespace Xamarin.Android.Tasks.LLVMIR;
 
 sealed class LlvmIrStringGroup
 {

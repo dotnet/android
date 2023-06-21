@@ -1,5 +1,6 @@
 using System;
 using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -9,193 +10,1156 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
-	/// <summary>
-	/// Base class for all classes which implement architecture-specific code generators.
-	/// </summary>
-	abstract partial class LlvmIrGenerator
+	sealed class GeneratorStructureInstance : StructureInstance
 	{
-		internal sealed class StructureBodyWriterOptions
-		{
-			public readonly bool WriteFieldComment;
-			public readonly string FieldIndent;
-			public readonly string StructIndent;
-			public readonly TextWriter? StructureOutput;
-			public readonly TextWriter? StringsOutput;
-			public readonly TextWriter? BuffersOutput;
+		public GeneratorStructureInstance (StructureInfo info, object instance)
+			: base (info, instance)
+		{}
+	}
 
-			public StructureBodyWriterOptions (bool writeFieldComment, string fieldIndent = "", string structIndent = "",
-			                                   TextWriter? structureOutput = null, TextWriter? stringsOutput = null, TextWriter? buffersOutput = null)
+	sealed class GeneratorWriteContext
+	{
+		const char IndentChar = '\t';
+
+		int currentIndentLevel = 0;
+
+		public readonly TextWriter Output;
+		public readonly LlvmIrModule Module;
+		public readonly LlvmIrModuleTarget Target;
+		public readonly LlvmIrMetadataManager MetadataManager;
+		public string CurrentIndent { get; private set; } = String.Empty;
+		public bool InVariableGroup { get; set; }
+
+		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager)
+		{
+			Output = writer;
+			Module = module;
+			Target = target;
+			MetadataManager = metadataManager;
+		}
+
+		public void IncreaseIndent ()
+		{
+			currentIndentLevel++;
+			CurrentIndent = MakeIndentString ();
+		}
+
+		public void DecreaseIndent ()
+		{
+			if (currentIndentLevel > 0) {
+				currentIndentLevel--;
+			}
+			CurrentIndent = MakeIndentString ();
+		}
+
+		string MakeIndentString () => currentIndentLevel > 0 ? new String (IndentChar, currentIndentLevel) : String.Empty;
+	}
+
+	partial class LlvmIrGenerator
+	{
+		sealed class LlvmTypeInfo
+		{
+			public readonly bool IsPointer;
+			public readonly bool IsAggregate;
+			public readonly bool IsStructure;
+			public readonly ulong Size;
+			public readonly ulong MaxFieldAlignment;
+
+			public LlvmTypeInfo (bool isPointer, bool isAggregate, bool isStructure, ulong size, ulong maxFieldAlignment)
 			{
-				WriteFieldComment = writeFieldComment;
-				FieldIndent = fieldIndent;
-				StructIndent = structIndent;
-				StructureOutput = structureOutput;
-				StringsOutput = stringsOutput;
-				BuffersOutput = buffersOutput;
+				IsPointer = isPointer;
+				IsAggregate = isAggregate;
+				IsStructure = isStructure;
+				Size = size;
+				MaxFieldAlignment = maxFieldAlignment;
 			}
 		}
 
-		sealed class PackedStructureMember<T>
+		sealed class BasicType
 		{
-			public readonly string ValueIRType;
-			public readonly string? PaddingIRType;
-			public readonly object? Value;
-			public readonly bool IsPadded;
-			public readonly StructureMemberInfo<T> MemberInfo;
+			public readonly string Name;
+			public readonly ulong Size;
+			public readonly bool IsNumeric;
 
-			public PackedStructureMember (StructureMemberInfo<T> memberInfo, object? value, string? valueIRType = null, string? paddingIRType = null)
+			public BasicType (string name, ulong size, bool isNumeric = true)
 			{
-				ValueIRType = valueIRType ?? memberInfo.IRType;
-				Value = value;
-				MemberInfo = memberInfo;
-				PaddingIRType = paddingIRType;
-				IsPadded = !String.IsNullOrEmpty (paddingIRType);
+				Name = name;
+				Size = size;
+				IsNumeric = isNumeric;
 			}
 		}
 
-		static readonly Dictionary<Type, string> typeMap = new Dictionary<Type, string> {
-			{ typeof (bool), "i8" },
-			{ typeof (byte), "i8" },
-			{ typeof (char), "i16" },
-			{ typeof (sbyte), "i8" },
-			{ typeof (short), "i16" },
-			{ typeof (ushort), "i16" },
-			{ typeof (int), "i32" },
-			{ typeof (uint), "i32" },
-			{ typeof (long), "i64" },
-			{ typeof (ulong), "i64" },
-			{ typeof (float), "float" },
-			{ typeof (double), "double" },
-			{ typeof (string), "i8*" },
-			{ typeof (IntPtr), "i8*" },
-			{ typeof (void), "void" },
+		public const string IRPointerType = "ptr";
+
+		static readonly Dictionary<Type, BasicType> basicTypeMap = new Dictionary<Type, BasicType> {
+			{ typeof (bool),   new ("i8",     1, isNumeric: false) },
+			{ typeof (byte),   new ("i8",     1) },
+			{ typeof (char),   new ("i16",    2) },
+			{ typeof (sbyte),  new ("i8",     1) },
+			{ typeof (short),  new ("i16",    2) },
+			{ typeof (ushort), new ("i16",    2) },
+			{ typeof (int),    new ("i32",    4) },
+			{ typeof (uint),   new ("i32",    4) },
+			{ typeof (long),   new ("i64",    8) },
+			{ typeof (ulong),  new ("i64",    8) },
+			{ typeof (float),  new ("float",  4) },
+			{ typeof (double), new ("double", 8) },
+			{ typeof (void),   new ("void",   0, isNumeric: false) },
 		};
 
-		// https://llvm.org/docs/LangRef.html#single-value-types
-		static readonly Dictionary<Type, ulong> typeSizes = new Dictionary<Type, ulong> {
-			{ typeof (bool), 1 },
-			{ typeof (byte), 1 },
-			{ typeof (char), 2 },
-			{ typeof (sbyte), 1 },
-			{ typeof (short), 2 },
-			{ typeof (ushort), 2 },
-			{ typeof (int), 4 },
-			{ typeof (uint), 4 },
-			{ typeof (long), 8 },
-			{ typeof (ulong), 8 },
-			{ typeof (float), 4 }, // floats are 32-bit
-			{ typeof (double), 8 }, // doubles are 64-bit
-		};
+		public string FilePath           { get; }
+		public string FileName           { get; }
 
-		// https://llvm.org/docs/LangRef.html#linkage-types
-		static readonly Dictionary<LlvmIrLinkage, string> llvmLinkage = new Dictionary<LlvmIrLinkage, string> {
-			{ LlvmIrLinkage.Default, String.Empty },
-			{ LlvmIrLinkage.Private, "private" },
-			{ LlvmIrLinkage.Internal, "internal" },
-			{ LlvmIrLinkage.AvailableExternally, "available_externally" },
-			{ LlvmIrLinkage.LinkOnce, "linkonce" },
-			{ LlvmIrLinkage.Weak, "weak" },
-			{ LlvmIrLinkage.Common, "common" },
-			{ LlvmIrLinkage.Appending, "appending" },
-			{ LlvmIrLinkage.ExternWeak, "extern_weak" },
-			{ LlvmIrLinkage.LinkOnceODR, "linkonce_odr" },
-			{ LlvmIrLinkage.External, "external" },
-		};
+		LlvmIrModuleTarget target;
 
-		// https://llvm.org/docs/LangRef.html#runtime-preemption-specifiers
-		static readonly Dictionary<LlvmIrRuntimePreemption, string> llvmRuntimePreemption = new Dictionary<LlvmIrRuntimePreemption, string> {
-			{ LlvmIrRuntimePreemption.Default, String.Empty },
-			{ LlvmIrRuntimePreemption.DSOPreemptable, "dso_preemptable" },
-			{ LlvmIrRuntimePreemption.DSOLocal, "dso_local" },
-		};
-
-		// https://llvm.org/docs/LangRef.html#visibility-styles
-		static readonly Dictionary<LlvmIrVisibility, string> llvmVisibility = new Dictionary<LlvmIrVisibility, string> {
-			{ LlvmIrVisibility.Default, "default" },
-			{ LlvmIrVisibility.Hidden, "hidden" },
-			{ LlvmIrVisibility.Protected, "protected" },
-		};
-
-		// https://llvm.org/docs/LangRef.html#global-variables
-		static readonly Dictionary<LlvmIrAddressSignificance, string> llvmAddressSignificance = new Dictionary<LlvmIrAddressSignificance, string> {
-			{ LlvmIrAddressSignificance.Default, String.Empty },
-			{ LlvmIrAddressSignificance.Unnamed, "unnamed_addr" },
-			{ LlvmIrAddressSignificance.LocalUnnamed, "local_unnamed_addr" },
-		};
-
-		// https://llvm.org/docs/LangRef.html#global-variables
-		static readonly Dictionary<LlvmIrWritability, string> llvmWritability = new Dictionary<LlvmIrWritability, string> {
-			{ LlvmIrWritability.Constant, "constant" },
-			{ LlvmIrWritability.Writable, "global" },
-		};
-
-		static readonly LlvmIrVariableOptions preAllocatedBufferVariableOptions = new LlvmIrVariableOptions {
-			Writability = LlvmIrWritability.Writable,
-			Linkage = LlvmIrLinkage.Internal,
-		};
-
-		string fileName;
-		ulong stringCounter = 0;
-		ulong structStringCounter = 0;
-		ulong structBufferCounter = 0;
-
-		List<IStructureInfo> structures = new List<IStructureInfo> ();
-		Dictionary<string, StringSymbolInfo> stringSymbolCache = new Dictionary<string, StringSymbolInfo> (StringComparer.Ordinal);
-		LlvmIrMetadataItem llvmModuleFlags;
-
-		public const string Indent = "\t";
-
-		protected abstract string DataLayout { get; }
-		public abstract int PointerSize { get; }
-		protected abstract string Triple { get; }
-
-		public bool Is64Bit { get; }
-		public TextWriter Output { get; }
-		public AndroidTargetArch TargetArch { get; }
-
-		protected LlvmIrMetadataManager MetadataManager { get; }
-		protected LlvmIrStringManager StringManager { get; }
-
-		protected LlvmIrGenerator (AndroidTargetArch arch, TextWriter output, string fileName)
+		protected LlvmIrGenerator (string filePath, LlvmIrModuleTarget target)
 		{
-			Output = output;
-			MetadataManager = new LlvmIrMetadataManager ();
-			StringManager = new LlvmIrStringManager ();
-			TargetArch = arch;
-			Is64Bit = arch == AndroidTargetArch.X86_64 || arch == AndroidTargetArch.Arm64;
-			this.fileName = fileName;
+			FilePath = Path.GetFullPath (filePath);
+			FileName = Path.GetFileName (filePath);
+			this.target = target;
+		}
+
+		public static LlvmIrGenerator Create (AndroidTargetArch arch, string fileName)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm    => new LlvmIrGenerator (fileName, new LlvmIrModuleArmV7a ()),
+				AndroidTargetArch.Arm64  => new LlvmIrGenerator (fileName, new LlvmIrModuleAArch64 ()),
+				AndroidTargetArch.X86    => new LlvmIrGenerator (fileName, new LlvmIrModuleX86 ()),
+				AndroidTargetArch.X86_64 => new LlvmIrGenerator (fileName, new LlvmIrModuleX64 ()),
+				_ => throw new InvalidOperationException ($"Unsupported Android target ABI {arch}")
+			};
+		}
+
+		public void Generate (TextWriter writer, LlvmIrModule module)
+		{
+			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
+			target.AddTargetSpecificMetadata (metadataManager);
+
+			var context = new GeneratorWriteContext (writer, module, target, metadataManager);
+			if (!String.IsNullOrEmpty (FilePath)) {
+				WriteCommentLine (context, $" ModuleID = '{FileName}'");
+				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
+			}
+
+			context.Output.WriteLine (target.DataLayout.Render ());
+			context.Output.WriteLine ($"target triple = \"{target.Triple}\"");
+			WriteStructureDeclarations (context);
+			WriteGlobalVariables (context);
+			WriteFunctions (context);
+
+			// Bottom of the file
+			WriteStrings (context);
+			WriteExternalFunctionDeclarations (context);
+			WriteAttributeSets (context);
+			WriteMetadata (context);
+		}
+
+		void WriteStrings (GeneratorWriteContext context)
+		{
+			if (context.Module.Strings == null || context.Module.Strings.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteComment (context, " Strings");
+
+			foreach (LlvmIrStringGroup group in context.Module.Strings) {
+				context.Output.WriteLine ();
+
+				if (!String.IsNullOrEmpty (group.Comment)) {
+					WriteCommentLine (context, group.Comment);
+				}
+
+				foreach (LlvmIrStringVariable info in group.Strings) {
+					string s = QuoteString ((string)info.Value, out ulong size);
+
+					WriteGlobalVariableStart (context, info);
+					context.Output.Write ('[');
+					context.Output.Write (size.ToString (CultureInfo.InvariantCulture));
+					context.Output.Write (" x i8] c");
+					context.Output.Write (s);
+					context.Output.Write (", align ");
+					context.Output.WriteLine (target.GetAggregateAlignment (1, size).ToString (CultureInfo.InvariantCulture));
+				}
+			}
+		}
+
+		void WriteGlobalVariables (GeneratorWriteContext context)
+		{
+			if (context.Module.GlobalVariables == null || context.Module.GlobalVariables.Count == 0) {
+				return;
+			}
+
+			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
+				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
+					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
+						context.Output.WriteLine ();
+						context.Output.Write (context.CurrentIndent);
+						WriteComment (context, groupDelimiter.Comment);
+					}
+
+					context.InVariableGroup = !context.InVariableGroup;
+					if (context.InVariableGroup) {
+						context.Output.WriteLine ();
+					}
+					continue;
+				}
+
+				if (gv.BeforeWriteCallback != null) {
+					gv.BeforeWriteCallback (gv, target, gv.BeforeWriteCallbackCallerState);
+				}
+				WriteGlobalVariable (context, gv);
+			}
+		}
+
+		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
+		{
+			if (!String.IsNullOrEmpty (variable.Comment)) {
+				WriteCommentLine (context, variable.Comment);
+			}
+			context.Output.Write ('@');
+			context.Output.Write (variable.Name);
+			context.Output.Write (" = ");
+
+			LlvmIrVariableOptions options = variable.Options ?? LlvmIrGlobalVariable.DefaultOptions;
+			WriteLinkage (context, options.Linkage);
+			WritePreemptionSpecifier (context, options.RuntimePreemption);
+			WriteVisibility (context, options.Visibility);
+			WriteAddressSignificance (context, options.AddressSignificance);
+			WriteWritability (context, options.Writability);
+		}
+
+		void WriteGlobalVariable (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
+		{
+			if (!context.InVariableGroup) {
+				context.Output.WriteLine ();
+			}
+
+			WriteGlobalVariableStart (context, variable);
+			WriteTypeAndValue (context, variable, out LlvmTypeInfo typeInfo);
+			context.Output.Write (", align ");
+
+			ulong alignment;
+			if (typeInfo.IsAggregate) {
+				ulong count = GetAggregateValueElementCount (variable);
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, count * typeInfo.Size);
+			} else if (typeInfo.IsStructure) {
+				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, typeInfo.Size);
+			} else if (typeInfo.IsPointer) {
+				alignment = target.NativePointerSize;
+			} else {
+				alignment = typeInfo.Size;
+			}
+
+			context.Output.WriteLine (alignment.ToString (CultureInfo.InvariantCulture));
+		}
+
+		void WriteTypeAndValue (GeneratorWriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
+		{
+			WriteType (context, variable, out typeInfo);
+			context.Output.Write (' ');
+
+			Type valueType;
+			if (variable.Value is LlvmIrVariable referencedVariable) {
+				valueType = referencedVariable.Type;
+			} else {
+				valueType = variable.Value?.GetType () ?? variable.Type;
+			}
+
+			if (variable.Value == null) {
+				// Order of checks is important here. Aggregates can contain pointer types, in which case typeInfo.IsPointer
+				// will be `true` and the aggregate would be incorrectly initialized with `null` instead of the correct
+				// `zeroinitializer`
+				if (typeInfo.IsAggregate) {
+					WriteValue (context, valueType, variable);
+					return;
+				}
+
+				if (typeInfo.IsPointer) {
+					context.Output.Write ("null");
+					return;
+				}
+
+				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
+			}
+
+			if (valueType != variable.Type && !LlvmIrModule.NameValueArrayType.IsAssignableFrom (variable.Type)) {
+				throw new InvalidOperationException ($"Internal error: variable type '{variable.Type}' is different to its value type, '{valueType}'");
+			}
+
+			WriteValue (context, valueType, variable);
+		}
+
+		ulong GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value, variable as LlvmIrGlobalVariable);
+
+		ulong GetAggregateValueElementCount (Type type, object? value, LlvmIrGlobalVariable? globalVariable = null)
+		{
+			if (!type.IsArray ()) {
+				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
+			}
+
+			if (value == null) {
+				if (globalVariable != null) {
+					return globalVariable.ArrayItemCount;
+				}
+				return 0;
+			}
+
+			// TODO: use caching here
+			if (type.ImplementsInterface (typeof(IDictionary<string, string>))) {
+				return (uint)((IDictionary<string, string>)value).Count * 2;
+			}
+
+			if (type.ImplementsInterface (typeof(ICollection))) {
+				return (uint)((ICollection)value).Count;
+			}
+
+			throw new InvalidOperationException ($"Internal error: should never get here");
+		}
+
+		void WriteType (GeneratorWriteContext context, LlvmIrVariable variable, out LlvmTypeInfo typeInfo)
+		{
+			WriteType (context, variable.Type, variable.Value, out typeInfo, variable as LlvmIrGlobalVariable);
+		}
+
+		void WriteType (GeneratorWriteContext context, StructureInstance si, StructureMemberInfo memberInfo, out LlvmTypeInfo typeInfo)
+		{
+			if (memberInfo.IsNativePointer) {
+				typeInfo = new LlvmTypeInfo (
+					isPointer: true,
+					isAggregate: false,
+					isStructure: false,
+					size: target.NativePointerSize,
+					maxFieldAlignment: target.NativePointerSize
+				);
+
+				context.Output.Write (IRPointerType);
+				return;
+			}
+
+			if (memberInfo.IsInlineArray) {
+				WriteArrayType (context, memberInfo.MemberType.GetArrayElementType (), memberInfo.ArrayElements, out typeInfo);
+				return;
+			}
+
+			if (memberInfo.IsIRStruct ()) {
+				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
+				WriteStructureType (context, sim, out typeInfo);
+				return;
+			}
+
+			WriteType (context, memberInfo.MemberType, value: null, out typeInfo);
+		}
+
+		void WriteStructureType (GeneratorWriteContext context, StructureInstance si, out LlvmTypeInfo typeInfo)
+		{
+			ulong alignment = GetStructureMaxFieldAlignment (si.Info);
+
+			typeInfo = new LlvmTypeInfo (
+				isPointer: false,
+				isAggregate: false,
+				isStructure: true,
+				size: si.Info.Size,
+				maxFieldAlignment: alignment
+			);
+
+			context.Output.Write ('%');
+			context.Output.Write (si.Info.NativeTypeDesignator);
+			context.Output.Write ('.');
+			context.Output.Write (si.Info.Name);
+		}
+
+		void WriteType (GeneratorWriteContext context, Type type, object? value, out LlvmTypeInfo typeInfo, LlvmIrGlobalVariable? globalVariable = null)
+		{
+			if (IsStructureInstance (type)) {
+				if (value == null) {
+					throw new ArgumentException ("must not be null for structure instances", nameof (value));
+				}
+
+				WriteStructureType (context, (StructureInstance)value, out typeInfo);
+				return;
+			}
+
+			string irType;
+			ulong size;
+			bool isPointer;
+
+			if (type.IsArray ()) {
+				Type elementType = type.GetArrayElementType ();
+				ulong elementCount = GetAggregateValueElementCount (type, value, globalVariable);
+
+				WriteArrayType (context, elementType, elementCount, out typeInfo);
+				return;
+			}
+
+			irType = GetIRType (type, out size, out isPointer);
+			typeInfo = new LlvmTypeInfo (
+				isPointer: isPointer,
+				isAggregate: false,
+				isStructure: false,
+				size: size,
+				maxFieldAlignment: size
+			);
+			context.Output.Write (irType);
+		}
+
+		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
+		{
+			string irType;
+			ulong size;
+			ulong maxFieldAlignment;
+			bool isPointer;
+
+			if (elementType.IsStructureInstance (out Type? structureType)) {
+				StructureInfo si = context.Module.GetStructureInfo (structureType);
+
+				irType = $"%{si.NativeTypeDesignator}.{si.Name}";
+				size = si.Size;
+				maxFieldAlignment = GetStructureMaxFieldAlignment (si);
+				isPointer = false;
+			} else {
+				irType = GetIRType (elementType, out size, out isPointer);
+				maxFieldAlignment = size;
+			}
+			typeInfo = new LlvmTypeInfo (
+				isPointer: isPointer,
+				isAggregate: true,
+				isStructure: false,
+				size: size,
+				maxFieldAlignment: maxFieldAlignment
+			);
+
+			context.Output.Write ('[');
+			context.Output.Write (elementCount.ToString (CultureInfo.InvariantCulture));
+			context.Output.Write (" x ");
+			context.Output.Write (irType);
+			context.Output.Write (']');
+		}
+
+		ulong GetStructureMaxFieldAlignment (StructureInfo si)
+		{
+			if (si.HasPointers && target.NativePointerSize > si.MaxFieldAlignment) {
+				return target.NativePointerSize;
+			}
+
+			return si.MaxFieldAlignment;
+		}
+
+		bool IsStructureInstance (Type t) => typeof(StructureInstance).IsAssignableFrom (t);
+
+		void WriteValue (GeneratorWriteContext context, Type valueType, LlvmIrVariable variable)
+		{
+			if (variable.Type.IsArray ()) {
+				bool zeroInitialize = false;
+				if (variable is LlvmIrGlobalVariable gv) {
+					zeroInitialize = gv.ZeroInitializeArray || variable.Value == null;
+				} else {
+					zeroInitialize = GetAggregateValueElementCount (variable) == 0;
+				}
+
+				if (zeroInitialize) {
+					context.Output.Write ("zeroinitializer");
+					return;
+				}
+
+				WriteArrayValue (context, variable);
+				return;
+			}
+
+			WriteValue (context, valueType, variable.Value);
+		}
+
+		void AssertArraySize (StructureInstance si, StructureMemberInfo smi, ulong length, ulong expectedLength)
+		{
+			if (length == expectedLength) {
+				return;
+			}
+
+			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{si.Info.Name}', expected {expectedLength}, found {length}");
+		}
+
+		void WriteValue (GeneratorWriteContext context, StructureInstance structInstance, StructureMemberInfo smi, object? value)
+		{
+			if (smi.IsNativePointer) {
+				if (WriteNativePointerValue (context, structInstance, smi, value)) {
+					return;
+				}
+			}
+
+			if (smi.IsInlineArray) {
+				Array a = (Array)value;
+				ulong length = smi.ArrayElements == 0 ? (ulong)a.Length : smi.ArrayElements;
+
+				if (smi.MemberType == typeof(byte[])) {
+					var bytes = (byte[])value;
+
+					// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
+					AssertArraySize (structInstance, smi, length, smi.ArrayElements);
+					context.Output.Write ('c');
+					context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
+					return;
+				}
+
+				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
+			}
+
+			if (smi.IsIRStruct ()) {
+				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
+				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
+				return;
+			}
+
+			if (smi.Info.IsNativePointerToPreallocatedBuffer (out _)) {
+				string bufferVariableName = context.Module.LookupRequiredBufferVariableName (structInstance, smi);
+				context.Output.Write ('@');
+				context.Output.Write (bufferVariableName);
+				return;
+			}
+
+			WriteValue (context, smi.MemberType, value);
+		}
+
+		bool WriteNativePointerValue (GeneratorWriteContext context, StructureInstance si, StructureMemberInfo smi, object? value)
+		{
+			// Structure members decorated with the [NativePointer] attribute cannot have a
+			// value other than `null`, unless they are strings or references to symbols
+
+			if (smi.Info.PointsToSymbol (out string? symbolName)) {
+				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
+					if (si.Info.DataProvider == null) {
+						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{si.Info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
+					}
+					symbolName = si.Info.DataProvider.GetPointedToSymbolName (si.Obj, smi.Info.Name);
+				}
+
+				if (String.IsNullOrEmpty (symbolName)) {
+					context.Output.Write ("null");
+				} else {
+					context.Output.Write ('@');
+					context.Output.Write (symbolName);
+				}
+				return true;
+			}
+
+			if (smi.MemberType != typeof(string)) {
+				context.Output.Write ("null");
+				return true;
+			}
+
+			return false;
+		}
+
+		void WriteValue (GeneratorWriteContext context, Type type, object? value)
+		{
+			if (value is LlvmIrVariable variableRef) {
+				context.Output.Write (variableRef.Reference);
+				return;
+			}
+
+			if (IsNumeric (type)) {
+				context.Output.Write (MonoAndroidHelper.CultureInvariantToString (value));
+				return;
+			}
+
+			if (type == typeof(bool)) {
+				context.Output.Write ((bool)value ? '1' : '0');
+				return;
+			}
+
+			if (IsStructureInstance (type)) {
+				WriteStructureValue (context, (StructureInstance?)value);
+				return;
+			}
+
+			if (type == typeof(IntPtr)) {
+				// Pointers can only be `null` or a reference to variable
+				context.Output.Write ("null");
+				return;
+			}
+
+			if (type == typeof(string)) {
+				if (value == null) {
+					context.Output.Write ("null");
+					return;
+				}
+
+				LlvmIrStringVariable sv = context.Module.LookupRequiredVariableForString ((string)value);
+				context.Output.Write (sv.Reference);
+				return;
+			}
+
+			if (type.IsInlineArray ()) {
+
+			}
+
+			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
+		}
+
+		void WriteStructureValue (GeneratorWriteContext context, StructureInstance? instance)
+		{
+			if (instance == null || instance.IsZeroInitialized) {
+				context.Output.Write ("zeroinitializer");
+				return;
+			}
+
+			context.Output.WriteLine ('{');
+			context.IncreaseIndent ();
+
+			StructureInfo info = instance.Info;
+			int lastMember = info.Members.Count - 1;
+
+			for (int i = 0; i < info.Members.Count; i++) {
+				StructureMemberInfo smi = info.Members[i];
+
+				context.Output.Write (context.CurrentIndent);
+				WriteType (context, instance, smi, out _);
+				context.Output.Write (' ');
+
+				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
+				WriteValue (context, instance, smi, value);
+
+				if (i < lastMember) {
+					context.Output.Write (", ");
+				}
+
+				string? comment = info.GetCommentFromProvider (smi, instance);
+				if (String.IsNullOrEmpty (comment)) {
+					var sb = new StringBuilder (" ");
+					sb.Append (MapManagedTypeToNative (smi));
+					sb.Append (' ');
+					sb.Append (smi.Info.Name);
+					if (value != null && smi.MemberType.IsPrimitive && smi.MemberType != typeof(bool)) {
+						sb.Append ($" (0x{value:x})");
+					}
+					comment = sb.ToString ();
+				}
+				WriteCommentLine (context, comment);
+			}
+
+			context.DecreaseIndent ();
+			context.Output.Write (context.CurrentIndent);
+			context.Output.Write ('}');
+		}
+
+		void WriteArrayValue (GeneratorWriteContext context, LlvmIrVariable variable)
+		{
+			ICollection entries;
+			if (variable.Type.ImplementsInterface (typeof(IDictionary<string, string>))) {
+				var list = new List<string> ();
+				foreach (var kvp in (IDictionary<string, string>)variable.Value) {
+					list.Add (kvp.Key);
+					list.Add (kvp.Value);
+				}
+				entries = list;
+			} else {
+				entries = (ICollection)variable.Value;
+			}
+
+			if (entries.Count == 0) {
+				context.Output.Write ("zeroinitializer");
+				return;
+			}
+
+			context.Output.WriteLine ('[');
+			context.IncreaseIndent ();
+
+			Type elementType = variable.Type.GetArrayElementType ();
+			bool writeIndices = (variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayWriteIndexComments) == LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
+			ulong counter = 0;
+			string? prevItemComment = null;
+			uint stride;
+
+			if ((variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayFormatInRows) == LlvmIrVariableWriteOptions.ArrayFormatInRows) {
+				stride = variable.ArrayStride > 0 ? variable.ArrayStride : 1;
+			} else {
+				stride = 1;
+			}
+
+			bool first = true;
+
+			// TODO: implement output in rows
+			foreach (object entry in entries) {
+				if (!first) {
+					context.Output.Write (',');
+					WritePrevItemCommentOrNewline ();
+				} else {
+					first = false;
+				}
+
+				prevItemComment = null;
+				if (variable.GetArrayItemCommentCallback != null) {
+					prevItemComment = variable.GetArrayItemCommentCallback (variable, target, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
+				}
+
+				if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
+					prevItemComment = $" {counter}";
+				}
+
+				counter++;
+				context.Output.Write (context.CurrentIndent);
+				WriteType (context, elementType, entry, out _);
+
+				context.Output.Write (' ');
+				WriteValue (context, elementType, entry);
+			}
+			WritePrevItemCommentOrNewline ();
+
+			context.DecreaseIndent ();
+			context.Output.Write (']');
+
+			void WritePrevItemCommentOrNewline ()
+			{
+				if (!String.IsNullOrEmpty (prevItemComment)) {
+					context.Output.Write (' ');
+					WriteCommentLine (context, prevItemComment);
+				} else {
+					context.Output.WriteLine ();
+				}
+			}
+		}
+
+		void WriteLinkage (GeneratorWriteContext context, LlvmIrLinkage linkage)
+		{
+			if (linkage == LlvmIrLinkage.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (context, llvmLinkage[linkage]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported writability '{linkage}'", ex);
+			}
+		}
+
+		void WriteWritability (GeneratorWriteContext context, LlvmIrWritability writability)
+		{
+			try {
+				WriteAttribute (context, llvmWritability[writability]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported writability '{writability}'", ex);
+			}
+		}
+
+		void WriteAddressSignificance (GeneratorWriteContext context, LlvmIrAddressSignificance addressSignificance)
+		{
+			if (addressSignificance == LlvmIrAddressSignificance.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (context, llvmAddressSignificance[addressSignificance]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported address significance '{addressSignificance}'", ex);
+			}
+		}
+
+		void WriteVisibility (GeneratorWriteContext context, LlvmIrVisibility visibility)
+		{
+			if (visibility == LlvmIrVisibility.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (context, llvmVisibility[visibility]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported visibility '{visibility}'", ex);
+			}
+		}
+
+		void WritePreemptionSpecifier (GeneratorWriteContext context, LlvmIrRuntimePreemption preemptionSpecifier)
+		{
+			if (preemptionSpecifier == LlvmIrRuntimePreemption.Default) {
+				return;
+			}
+
+			try {
+				WriteAttribute (context, llvmRuntimePreemption[preemptionSpecifier]);
+			} catch (Exception ex) {
+				throw new InvalidOperationException ($"Internal error: unsupported preemption specifier '{preemptionSpecifier}'", ex);
+			}
 		}
 
 		/// <summary>
-		/// Create architecture-specific generator for the given <paramref name="arch"/>. Contents are written
-		// to the <paramref name="output"/> stream and <paramref name="fileName"/> is used mostly for error
-		// reporting.
+		/// Write attribute named in <paramref ref="attr"/> followed by a single space
 		/// </summary>
-		public static LlvmIrGenerator Create (AndroidTargetArch arch, StreamWriter output, string fileName)
+		void WriteAttribute (GeneratorWriteContext context, string attr)
 		{
-			LlvmIrGenerator ret = Instantiate ();
-			ret.Init ();
-			return ret;
+			context.Output.Write (attr);
+			context.Output.Write (' ');
+		}
 
-			LlvmIrGenerator Instantiate ()
-			{
-				return arch switch {
-					AndroidTargetArch.Arm => new Arm32LlvmIrGenerator (arch, output, fileName),
-					AndroidTargetArch.Arm64 => new Arm64LlvmIrGenerator (arch, output, fileName),
-					AndroidTargetArch.X86 => new X86LlvmIrGenerator (arch, output, fileName),
-					AndroidTargetArch.X86_64 => new X64LlvmIrGenerator (arch, output, fileName),
-					_ => throw new InvalidOperationException ($"Unsupported Android target ABI {arch}")
-				};
+		void WriteStructureDeclarations (GeneratorWriteContext context)
+		{
+			if (context.Module.Structures == null || context.Module.Structures.Count == 0) {
+				return;
+			}
+
+			foreach (StructureInfo si in context.Module.Structures) {
+				context.Output.WriteLine ();
+				WriteStructureDeclaration (context, si);
 			}
 		}
 
-		static string EnsureIrType (Type type)
+		void WriteStructureDeclaration (GeneratorWriteContext context, StructureInfo si)
 		{
-			if (!typeMap.TryGetValue (type, out string irType)) {
-				throw new InvalidOperationException ($"Unsupported managed type {type}");
+			// $"%{typeDesignator}.{name} = type "
+			context.Output.Write ('%');
+			context.Output.Write (si.NativeTypeDesignator);
+			context.Output.Write ('.');
+			context.Output.Write (si.Name);
+			context.Output.Write (" = type ");
+
+			if (si.IsOpaque) {
+				context.Output.WriteLine ("opaque");
+			} else {
+				context.Output.WriteLine ('{');
 			}
 
-			return irType;
+			if (si.IsOpaque) {
+				return;
+			}
+
+			context.IncreaseIndent ();
+			for (int i = 0; i < si.Members.Count; i++) {
+				StructureMemberInfo info = si.Members[i];
+				string nativeType = MapManagedTypeToNative (info.MemberType);
+
+				// TODO: nativeType can be an array, update to indicate that (and get the size)
+				string arraySize;
+				if (info.IsNativeArray) {
+					arraySize = $"[{info.ArrayElements}]";
+				} else {
+					arraySize = String.Empty;
+				}
+
+				var comment = $" {nativeType} {info.Info.Name}{arraySize}";
+				WriteStructureDeclarationField (info.IRType, comment, i == si.Members.Count - 1);
+			}
+			context.DecreaseIndent ();
+
+			context.Output.WriteLine ('}');
+
+			void WriteStructureDeclarationField (string typeName, string comment, bool last)
+			{
+				context.Output.Write (context.CurrentIndent);
+				context.Output.Write (typeName);
+				if (!last) {
+					context.Output.Write (", ");
+				} else {
+					context.Output.Write (' ');
+				}
+
+				if (!String.IsNullOrEmpty (comment)) {
+					WriteCommentLine (context, comment);
+				} else {
+					context.Output.WriteLine ();
+				}
+			}
+		}
+
+		//
+		// Functions syntax: https://llvm.org/docs/LangRef.html#functions
+		//
+		void WriteFunctions (GeneratorWriteContext context)
+		{
+			if (context.Module.Functions == null || context.Module.Functions.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteComment (context, " Functions");
+
+			foreach (LlvmIrFunction function in context.Module.Functions) {
+				context.Output.WriteLine ();
+				WriteFunctionComment (context, function);
+
+				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags
+				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "define");
+				WriteFunctionDefinitionLeadingDecorations (context, function);
+				WriteFunctionSignature (context, function, writeParameterNames: true);
+				WriteFunctionDefinitionTrailingDecorations (context, function);
+				WriteFunctionBody (context, function);
+				function.RestoreState (funcState);
+			}
+		}
+
+		void WriteFunctionComment (GeneratorWriteContext context, LlvmIrFunction function)
+		{
+			if (String.IsNullOrEmpty (function.Comment)) {
+				return;
+			}
+
+			foreach (string commentLine in function.Comment.Split ('\n')) {
+				context.Output.Write (context.CurrentIndent);
+				WriteCommentLine (context, commentLine);
+			}
+		}
+
+		void WriteFunctionBody (GeneratorWriteContext context, LlvmIrFunction function)
+		{
+			context.Output.WriteLine ();
+			context.Output.WriteLine ('{');
+			context.IncreaseIndent ();
+
+			foreach (LlvmIrFunctionBodyItem item in function.Body.Items) {
+				item.Write (context, this);
+			}
+
+			context.DecreaseIndent ();
+			context.Output.WriteLine ('}');
+		}
+
+		ILlvmIrSavedFunctionState WriteFunctionPreamble (GeneratorWriteContext context, LlvmIrFunction function, string keyword)
+		{
+			ILlvmIrSavedFunctionState funcState = function.SaveState ();
+
+			foreach (LlvmIrFunctionParameter parameter in function.Signature.Parameters) {
+				target.SetParameterFlags (parameter);
+			}
+
+			WriteFunctionAttributesComment (context, function);
+			context.Output.Write (keyword);
+			context.Output.Write (' ');
+
+			return funcState;
+		}
+
+		void WriteExternalFunctionDeclarations (GeneratorWriteContext context)
+		{
+			if (context.Module.ExternalFunctions == null || context.Module.ExternalFunctions.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteComment (context, " External functions");
+			foreach (LlvmIrFunction function in context.Module.ExternalFunctions) {
+				context.Output.WriteLine ();
+
+				// Must preserve state between calls, different targets may modify function state differently (e.g. set different parameter flags)
+				ILlvmIrSavedFunctionState funcState = WriteFunctionPreamble (context, function, "declare");
+				WriteFunctionDeclarationLeadingDecorations (context, function);
+				WriteFunctionSignature (context, function, writeParameterNames: false);
+				WriteFunctionDeclarationTrailingDecorations (context, function);
+
+				function.RestoreState (funcState);
+			}
+		}
+
+		void WriteFunctionAttributesComment (GeneratorWriteContext context, LlvmIrFunction func)
+		{
+			if (func.AttributeSet == null) {
+				return;
+			}
+
+			if (String.IsNullOrEmpty (func.Comment)) {
+				context.Output.WriteLine ();
+			}
+			WriteCommentLine (context, $" Function attributes: {func.AttributeSet.Render ()}");
+		}
+
+		void WriteFunctionDeclarationLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
+		{
+			WriteFunctionLeadingDecorations (context, func, declaration: true);
+		}
+
+		void WriteFunctionDefinitionLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
+		{
+			WriteFunctionLeadingDecorations (context, func, declaration: false);
+		}
+
+		void WriteFunctionLeadingDecorations (GeneratorWriteContext context, LlvmIrFunction func, bool declaration)
+		{
+			if (func.Linkage != LlvmIrLinkage.Default) {
+				context.Output.Write (llvmLinkage[func.Linkage]);
+				context.Output.Write (' ');
+			}
+
+			if (!declaration && func.RuntimePreemption != LlvmIrRuntimePreemption.Default) {
+				context.Output.Write (llvmRuntimePreemption[func.RuntimePreemption]);
+				context.Output.Write (' ');
+			}
+
+			if (func.Visibility != LlvmIrVisibility.Default) {
+				context.Output.Write (llvmVisibility[func.Visibility]);
+				context.Output.Write (' ');
+			}
+		}
+
+		void WriteFunctionDeclarationTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
+		{
+			WriteFunctionTrailingDecorations (context, func, declaration: true);
+		}
+
+		void WriteFunctionDefinitionTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
+		{
+			WriteFunctionTrailingDecorations (context, func, declaration: false);
+		}
+
+		void WriteFunctionTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func, bool declaration)
+		{
+			if (func.AddressSignificance != LlvmIrAddressSignificance.Default) {
+				context.Output.Write ($" {llvmAddressSignificance[func.AddressSignificance]}");
+			}
+
+			if (func.AttributeSet != null) {
+				context.Output.Write ($" #{func.AttributeSet.Number}");
+			}
+		}
+
+		public static void WriteReturnAttributes (GeneratorWriteContext context, LlvmIrFunctionSignature.ReturnTypeAttributes returnAttrs)
+		{
+			if (AttributeIsSet (returnAttrs.NoUndef)) {
+				context.Output.Write ("noundef ");
+			}
+
+			if (AttributeIsSet (returnAttrs.SignExt)) {
+				context.Output.Write ("signext ");
+			}
+
+			if (AttributeIsSet (returnAttrs.ZeroExt)) {
+				context.Output.Write ("zeroext ");
+			}
+		}
+
+		void WriteFunctionSignature (GeneratorWriteContext context, LlvmIrFunction func, bool writeParameterNames)
+		{
+			if (func.ReturnsValue) {
+				WriteReturnAttributes (context, func.Signature.ReturnAttributes);
+			}
+
+			context.Output.Write (MapToIRType (func.Signature.ReturnType));
+			context.Output.Write (" @");
+			context.Output.Write (func.Signature.Name);
+			context.Output.Write ('(');
+
+			bool first = true;
+			foreach (LlvmIrFunctionParameter parameter in func.Signature.Parameters) {
+				if (!first) {
+					context.Output.Write (", ");
+				} else {
+					first = false;
+				}
+
+				context.Output.Write (MapToIRType (parameter.Type));
+				WriteParameterAttributes (context, parameter);
+				if (writeParameterNames) {
+					if (String.IsNullOrEmpty (parameter.Name)) {
+						throw new InvalidOperationException ($"Internal error: parameter must have a name");
+					}
+					context.Output.Write (" %"); // Function arguments are always local variables
+					context.Output.Write (parameter.Name);
+				}
+			}
+
+			context.Output.Write (')');
+		}
+
+		public static void WriteParameterAttributes (GeneratorWriteContext context, LlvmIrFunctionParameter parameter)
+		{
+			var attributes = new List<string> ();
+			if (AttributeIsSet (parameter.ImmArg)) {
+				attributes.Add ("immarg");
+			}
+
+			if (AttributeIsSet (parameter.AllocPtr)) {
+				attributes.Add ("allocptr");
+			}
+
+			if (AttributeIsSet (parameter.NoCapture)) {
+				attributes.Add ("nocapture");
+			}
+
+			if (AttributeIsSet (parameter.NonNull)) {
+				attributes.Add ("nonnull");
+			}
+
+			if (AttributeIsSet (parameter.NoUndef)) {
+				attributes.Add ("noundef");
+			}
+
+			if (AttributeIsSet (parameter.ReadNone)) {
+				attributes.Add ("readnone");
+			}
+
+			if (AttributeIsSet (parameter.SignExt)) {
+				attributes.Add ("signext");
+			}
+
+			if (AttributeIsSet (parameter.ZeroExt)) {
+				attributes.Add ("zeroext");
+			}
+
+			if (parameter.Align.HasValue) {
+				attributes.Add ($"align({ValueOrPointerSize (parameter.Align.Value)})");
+			}
+
+			if (parameter.Dereferenceable.HasValue) {
+				attributes.Add ($"dereferenceable({ValueOrPointerSize (parameter.Dereferenceable.Value)})");
+			}
+
+			if (attributes.Count == 0) {
+				return;
+			}
+
+			context.Output.Write (' ');
+			context.Output.Write (String.Join (" ", attributes));
+
+			uint ValueOrPointerSize (uint? value)
+			{
+				if (value.Value == 0) {
+					return context.Target.NativePointerSize;
+				}
+
+				return value.Value;
+			}
+		}
+
+		static bool AttributeIsSet (bool? attr) => attr.HasValue && attr.Value;
+
+		void WriteAttributeSets (GeneratorWriteContext context)
+		{
+			if (context.Module.AttributeSets == null || context.Module.AttributeSets.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			foreach (LlvmIrFunctionAttributeSet attrSet in context.Module.AttributeSets) {
+				// Must not modify the original set, it is shared with other targets.
+				var targetSet = new LlvmIrFunctionAttributeSet (attrSet);
+				target.AddTargetSpecificAttributes (targetSet);
+
+				IList<LlvmIrFunctionAttribute>? privateTargetSet = attrSet.GetPrivateTargetAttributes (target.TargetArch);
+				if (privateTargetSet != null) {
+					targetSet.Add (privateTargetSet);
+				}
+
+				context.Output.WriteLine ($"attributes #{targetSet.Number} = {{ {targetSet.Render ()} }}");
+			}
+		}
+
+		void WriteMetadata (GeneratorWriteContext context)
+		{
+			if (context.MetadataManager.Items.Count == 0) {
+				return;
+			}
+
+			context.Output.WriteLine ();
+			WriteCommentLine (context, " Metadata");
+			foreach (LlvmIrMetadataItem metadata in context.MetadataManager.Items) {
+				context.Output.WriteLine (metadata.Render ());
+			}
+		}
+
+		public void WriteComment (GeneratorWriteContext context, string comment)
+		{
+			context.Output.Write (';');
+			context.Output.Write (comment);
+		}
+
+		public void WriteCommentLine (GeneratorWriteContext context, string comment)
+		{
+			WriteComment (context, comment);
+			context.Output.WriteLine ();
 		}
 
 		static Type GetActualType (Type type)
@@ -206,52 +1170,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			return type;
-		}
-
-		/// <summary>
-		/// Map managed <paramref name="type"/> to its LLVM IR counterpart. Only primitive types,
-		/// <c>string</c> and <c>IntPtr</c> are supported.
-		/// </summary>
-		public static string MapManagedTypeToIR (Type type)
-		{
-			return EnsureIrType (GetActualType (type));
-		}
-
-		/// <summary>
-		/// Map managed type to its LLVM IR counterpart. Only primitive types, <c>string</c> and
-		/// <c>IntPtr</c> are supported.  Additionally, return the native type size (in bytes) in
-		/// <paramref name="size"/>
-		/// </summary>
-		public string MapManagedTypeToIR (Type type, out ulong size)
-		{
-			Type actualType = GetActualType (type);
-			string irType = EnsureIrType (actualType);
-			size = GetTypeSize (actualType);
-
-			return irType;
-		}
-
-		ulong GetTypeSize (Type actualType)
-		{
-			if (!typeSizes.TryGetValue (actualType, out ulong size)) {
-				if (actualType == typeof (string) || actualType == typeof (IntPtr) || actualType == typeof (LlvmNativeFunctionSignature)) {
-					size = (ulong)PointerSize;
-				} else {
-					throw new InvalidOperationException ($"Unsupported managed type {actualType}");
-				}
-			}
-
-			return size;
-		}
-
-		/// <summary>
-		/// Map managed type <typeparamref name="T"/> to its LLVM IR counterpart. Only primitive types,
-		/// <c>string</c> and <c>IntPtr</c> are supported.  Additionally, return the native type size
-		/// (in bytes) in <paramref name="size"/>
-		/// </summary>
-		public string MapManagedTypeToIR<T> (out ulong size)
-		{
-			return MapManagedTypeToIR (typeof(T), out size);
 		}
 
 		/// <summary>
@@ -280,1210 +1198,96 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return type.GetShortName ();
 		}
 
-		public string GetIRType<T> (out ulong size, T? value = default)
+		static string MapManagedTypeToNative (StructureMemberInfo smi)
 		{
-			if (typeof(T) == typeof(LlvmNativeFunctionSignature)) {
-				if (value == null) {
-					throw new ArgumentNullException (nameof (value));
-				}
-
-				size = (ulong)PointerSize;
-				return RenderFunctionSignature ((LlvmNativeFunctionSignature)(object)value);
+			string nativeType = MapManagedTypeToNative (smi.MemberType);
+			// Silly, but effective
+			if (nativeType[nativeType.Length - 1] == '*') {
+				return nativeType;
 			}
 
-			return MapManagedTypeToIR<T> (out size);
+			if (!smi.IsNativePointer) {
+				return nativeType;
+			}
+
+			return $"{nativeType}*";
 		}
 
-		public string GetKnownIRType (Type type)
-		{
-			if (type == null) {
-				throw new ArgumentNullException (nameof (type));
-			}
+		static bool IsNumeric (Type type) => basicTypeMap.TryGetValue (type, out BasicType typeDesc) && typeDesc.IsNumeric;
 
-			if (type.IsNativeClass ()) {
-				IStructureInfo si = GetStructureInfo (type);
-				return $"%{si.NativeTypeDesignator}.{si.Name}";
-			}
-
-			return MapManagedTypeToIR (type);
-		}
-
-		public string GetValue<T> (T value)
-		{
-			if (typeof(T) == typeof(LlvmNativeFunctionSignature)) {
-				if (value == null) {
-					throw new ArgumentNullException (nameof (value));
-				}
-
-				var v = (LlvmNativeFunctionSignature)(object)value;
-				if (v.FieldValue != null) {
-					return MonoAndroidHelper.CultureInvariantToString (v.FieldValue);
-				}
-
-				return MonoAndroidHelper.CultureInvariantToString (v);
-			}
-
-			return MonoAndroidHelper.CultureInvariantToString (value) ?? String.Empty;
-		}
-
-		/// <summary>
-		/// Initialize the generator.  It involves adding required LLVM IR module metadata (such as data model specification,
-		/// code generation flags etc)
-		/// </summary>
-		protected virtual void Init ()
-		{
-			llvmModuleFlags = MetadataManager.Add ("llvm.module.flags");
-			LlvmIrMetadataItem ident = MetadataManager.Add ("llvm.ident");
-
-			var flagsFields = new List<LlvmIrMetadataItem> ();
-			AddModuleFlagsMetadata (flagsFields);
-
-			foreach (LlvmIrMetadataItem item in flagsFields) {
-				llvmModuleFlags.AddReferenceField (item.Name);
-			}
-
-			LlvmIrMetadataItem identValue = MetadataManager.AddNumbered ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
-			ident.AddReferenceField (identValue.Name);
-		}
-
-		protected void AddLlvmModuleFlag (LlvmIrMetadataItem flag)
-		{
-			llvmModuleFlags.AddReferenceField (flag.Name);
-		}
-
-		/// <summary>
-		/// Since LLVM IR is strongly typed, it requires each structure to be properly declared before it is
-		/// used throughout the code.  This method uses reflection to scan the managed type <typeparamref name="T"/>
-		/// and record the information for future use.  The returned <see cref="StructureInfo<T>"/> structure contains
-		/// the description.  It is used later on not only to declare the structure in output code, but also to generate
-		/// data from instances of <typeparamref name="T"/>.  This method is typically called from the <see cref="LlvmIrGenerator.MapStructures"/>
-		/// method.
-		/// </summary>
-		public StructureInfo<T> MapStructure<T> ()
-		{
-			Type t = typeof(T);
-			if (!t.IsClass && !t.IsValueType) {
-				throw new InvalidOperationException ($"{t} must be a class or a struct");
-			}
-
-			var ret = new StructureInfo<T> (this);
-			structures.Add (ret);
-
-			return ret;
-		}
-
-		internal IStructureInfo GetStructureInfo (Type type)
-		{
-			IStructureInfo? ret = null;
-
-			foreach (IStructureInfo si in structures) {
-				if (si.Type != type) {
-					continue;
-				}
-
-				ret = si;
-				break;
-			}
-
-			if (ret == null) {
-				throw new InvalidOperationException ($"Unmapped structure {type}");
-			}
-
-			return ret;
-		}
-
-		TextWriter EnsureOutput (TextWriter? output)
-		{
-			return output ?? Output;
-		}
-
-		void WriteGlobalSymbolStart (string symbolName, LlvmIrVariableOptions options, TextWriter? output = null)
-		{
-			output = EnsureOutput (output);
-
-			output.Write ('@');
-			output.Write (symbolName);
-			output.Write (" = ");
-
-			string linkage = llvmLinkage [options.Linkage];
-			if (!string.IsNullOrEmpty (linkage)) {
-				output.Write (linkage);
-				output.Write (' ');
-			}
-			if (options.AddressSignificance != LlvmIrAddressSignificance.Default) {
-				output.Write (llvmAddressSignificance[options.AddressSignificance]);
-				output.Write (' ');
-			}
-
-			output.Write (llvmWritability[options.Writability]);
-			output.Write (' ');
-		}
-
-		object? GetTypedMemberValue<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, Type expectedType, object? defaultValue = null)
+		object? GetTypedMemberValue (GeneratorWriteContext context, StructureInfo info, StructureMemberInfo smi, StructureInstance instance, Type expectedType, object? defaultValue = null)
 		{
 			object? value = smi.GetValue (instance.Obj);
 			if (value == null) {
 				return defaultValue;
 			}
 
-			if (value.GetType () != expectedType) {
+			Type valueType = value.GetType ();
+			if (valueType != expectedType) {
 				throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should have a value of '{expectedType}' type, instead it had a '{value.GetType ()}'");
 			}
 
-			if (expectedType == typeof(bool)) {
-				return (bool)value ? 1 : 0;
+			if (valueType == typeof(string)) {
+				return context.Module.LookupRequiredVariableForString ((string)value);
 			}
 
 			return value;
 		}
 
-		bool MaybeWriteStructureString<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter? output = null)
+		public static string MapToIRType (Type type)
 		{
-			if (smi.MemberType != typeof(string)) {
+			return MapToIRType (type, out _, out _);
+		}
+
+		public static string MapToIRType (Type type, out ulong size)
+		{
+			return MapToIRType (type, out size, out _);
+		}
+
+		public static string MapToIRType (Type type, out bool isPointer)
+		{
+			return MapToIRType (type, out _, out isPointer);
+		}
+
+		/// <summary>
+		/// Maps managed type to equivalent IR type.  Puts type size in <paramref name="size"/> and whether or not the type
+		/// is a pointer in <paramref name="isPointer"/>.  When a type is determined to be a pointer, <paramref name="size"/>
+		/// will be set to <c>0</c>, because this method doesn't have access to the generator target.  In order to adjust pointer
+		/// size, the instance method <see cref="GetIRType"/> must be called (private to the generator as other classes should not
+		/// have any need to know the pointer size).
+		/// </summary>
+		public static string MapToIRType (Type type, out ulong size, out bool isPointer)
+		{
+			type = GetActualType (type);
+			if (!type.IsNativePointer () && basicTypeMap.TryGetValue (type, out BasicType typeDesc)) {
+				size = typeDesc.Size;
+				isPointer = false;
+				return typeDesc.Name;
+			}
+
+			// if it's not a basic type, then it's an opaque pointer
+			size = 0; // Will be determined by the specific target architecture class
+			isPointer = true;
+			return IRPointerType;
+		}
+
+		string GetIRType (Type type, out ulong size, out bool isPointer)
+		{
+			string ret = MapToIRType (type, out size, out isPointer);
+			if (isPointer && size == 0) {
+				size = target.NativePointerSize;
+			}
+
+			return ret;
+		}
+
+		public static bool IsFirstClassNonPointerType (Type type)
+		{
+			if (type == typeof(void)) {
 				return false;
 			}
 
-			output = EnsureOutput (output);
-			string? str = (string?)GetTypedMemberValue (info, smi, instance, typeof(string), null);
-			if (str == null) {
-				instance.AddPointerData (smi, null, 0);
-				return false;
-			}
-
-			StringSymbolInfo stringSymbol = StringManager.Add (str, groupName: info.Name, symbolSuffix: smi.Info.Name);//WriteUniqueString ($"__{info.Name}_{smi.Info.Name}", str, ref structStringCounter);
-			instance.AddPointerData (smi, stringSymbol.SymbolName, stringSymbol.Size);
-
-			return true;
-		}
-
-		bool MaybeWritePreAllocatedBuffer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter? output = null)
-		{
-			if (!smi.Info.IsNativePointerToPreallocatedBuffer (out ulong bufferSize)) {
-				return false;
-			}
-
-			if (smi.Info.UsesDataProvider ()) {
-				bufferSize = info.GetBufferSizeFromProvider (smi, instance);
-			}
-
-			output = EnsureOutput (output);
-			string irType = MapManagedTypeToIR (smi.MemberType);
-			string variableName = $"__{info.Name}_{smi.Info.Name}_{structBufferCounter.ToString (CultureInfo.InvariantCulture)}";
-			structBufferCounter++;
-
-			WriteGlobalSymbolStart (variableName, preAllocatedBufferVariableOptions, output);
-			ulong size = bufferSize * smi.BaseTypeSize;
-
-			// WriteLine $"[{bufferSize} x {irType}] zeroinitializer, align {GetAggregateAlignment ((int)smi.BaseTypeSize, size)}"
-			output.Write ('[');
-			output.Write (bufferSize.ToString (CultureInfo.InvariantCulture));
-			output.Write (" x ");
-			output.Write (irType);
-			output.Write ("] zeroinitializer, align ");
-			output.WriteLine (GetAggregateAlignment ((int) smi.BaseTypeSize, size).ToString (CultureInfo.InvariantCulture));
-
-			instance.AddPointerData (smi, variableName, size);
-			return true;
-		}
-
-		bool WriteStructureArrayStart<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options, string? symbolName = null, string? initialComment = null, TextWriter? output = null)
-		{
-			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
-				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
-			}
-
-			bool named = !String.IsNullOrEmpty (symbolName);
-			if (named || !String.IsNullOrEmpty (initialComment)) {
-				WriteEOL (output: output);
-				WriteEOL (initialComment ?? symbolName, output);
-			}
-
-			if (named) {
-				WriteGlobalSymbolStart (symbolName, options, output);
-			}
-
-			return named;
-		}
-
-		void WriteStructureArrayEnd<T> (StructureInfo<T> info, string? symbolName, ulong count, bool named, bool skipFinalComment = false, TextWriter? output = null, bool isArrayOfPointers = false)
-		{
-			output = EnsureOutput (output);
-
-			int alignment = isArrayOfPointers ? PointerSize : GetAggregateAlignment (info.MaxFieldAlignment, info.Size * count);
-			output.Write (", align ");
-			output.Write (alignment.ToString (CultureInfo.InvariantCulture));
-			if (named && !skipFinalComment) {
-				WriteEOL ($"end of '{symbolName!}' array", output);
-			} else {
-				WriteEOL (output: output);
-			}
-		}
-
-		/// <summary>
-		/// Writes an array of <paramref name="count"/> zero-initialized entries.  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
-		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
-		{
-			bool named = WriteStructureArrayStart<T> (info, null, options, symbolName, initialComment);
-
-			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}{pointerAsterisk}] zeroinitializer"
-			Output.Write ('[');
-			Output.Write (count.ToString (CultureInfo.InvariantCulture));
-			Output.Write (" x %");
-			Output.Write (info.NativeTypeDesignator);
-			Output.Write ('.');
-			Output.Write (info.Name);
-			if (isArrayOfPointers)
-				Output.Write ('*');
-			Output.Write ("] zeroinitializer");
-
-			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: true, isArrayOfPointers: isArrayOfPointers);
-		}
-
-		/// <summary>
-		/// Writes an array of <paramref name="count"/> zero-initialized entries. The array will be generated as a local, writable symbol.
-		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, ulong count, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null, bool isArrayOfPointers = false)
-		{
-			WriteStructureArray<T> (info, count, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment, isArrayOfPointers);
-		}
-
-		/// <summary>
-		/// Writes an array of managed type <typeparamref name="T"/>, with data optionally specified in <paramref name="instances"/> (if it's <c>null</c>, the array
-		/// will be zero-initialized).  <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
-		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, LlvmIrVariableOptions options,
-		                                    string? symbolName = null, bool writeFieldComment = true, string? initialComment = null,
-		                                    Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
-		{
-			var arrayOutput = new StringWriter ();
-			bool named = WriteStructureArrayStart<T> (info, instances, options, symbolName, initialComment, arrayOutput);
-			int count = instances != null ? instances.Count : 0;
-
-			// $"[{count} x %{info.NativeTypeDesignator}.{info.Name}] "
-			arrayOutput.Write ('[');
-			arrayOutput.Write (count.ToString (CultureInfo.InvariantCulture));
-			arrayOutput.Write (" x %");
-			arrayOutput.Write (info.NativeTypeDesignator);
-			arrayOutput.Write ('.');
-			arrayOutput.Write (info.Name);
-			arrayOutput.Write ("] ");
-
-			if (instances != null) {
-				var bodyWriterOptions = new StructureBodyWriterOptions (
-					writeFieldComment: true,
-					fieldIndent: $"{Indent}{Indent}",
-					structIndent: Indent,
-					structureOutput: arrayOutput,
-					stringsOutput: info.HasStrings ? new StringWriter () : null,
-					buffersOutput: info.HasPreAllocatedBuffers ? new StringWriter () : null
-				);
-
-				arrayOutput.WriteLine ('[');
-				for (int i = 0; i < count; i++) {
-					StructureInstance<T> instance = instances[i];
-
-					arrayOutput.Write (Indent);
-					arrayOutput.Write ("; ");
-					arrayOutput.WriteLine (i.ToString (CultureInfo.InvariantCulture));
-					WriteStructureBody (info, instance, bodyWriterOptions, nestedStructureWriter);
-					if (i < count - 1) {
-						arrayOutput.Write (", ");
-					}
-					WriteEOL (output: arrayOutput);
-				}
-				arrayOutput.Write (']');
-
-				WriteBufferToOutput (bodyWriterOptions.StringsOutput);
-				WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
-			} else {
-				arrayOutput.Write ("zeroinitializer");
-			}
-
-			WriteStructureArrayEnd<T> (info, symbolName, (ulong)count, named, skipFinalComment: instances == null, output: arrayOutput);
-			WriteBufferToOutput (arrayOutput);
-		}
-
-		/// <summary>
-		/// Writes an array of managed type <typeparamref name="T"/>, with data optionally specified in <paramref name="instances"/> (if it's <c>null</c>, the array
-		/// will be zero-initialized).  The array will be generated as a local, writable symbol.
-		/// </summary>
-		public void WriteStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>>? instances, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
-		{
-			WriteStructureArray<T> (info, instances, LlvmIrVariableOptions.Default, symbolName, writeFieldComment, initialComment);
-		}
-
-		public void WriteArray (IList<string> values, string symbolName, string? initialComment = null)
-		{
-			WriteEOL ();
-			WriteEOL (initialComment ?? symbolName);
-
-			var strings = new List<StringSymbolInfo> ();
-			foreach (string s in values) {
-				StringSymbolInfo symbol = StringManager.Add (s, groupName: symbolName);
-				strings.Add (symbol);
-			}
-
-			if (strings.Count > 0) {
-				Output.WriteLine ();
-			}
-
-			WriteStringArray (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer, strings);
-		}
-
-		public void WriteArray<T> (IList<T> values, LlvmIrVariableOptions options, string symbolName, Func<int, T, string?>? commentProvider = null) where T: struct
-		{
-			bool optimizeOutput = commentProvider == null;
-
-			WriteGlobalSymbolStart (symbolName, options);
-			string elementType = MapManagedTypeToIR (typeof (T), out ulong size);
-
-			// WriteLine $"[{values.Count} x {elementType}] ["
-			Output.Write ('[');
-			Output.Write (values.Count.ToString (CultureInfo.InvariantCulture));
-			Output.Write (" x ");
-			Output.Write (elementType);
-			Output.WriteLine ("] [");
-
-			Output.Write (Indent);
-			for (int i = 0; i < values.Count; i++) {
-				if (i != 0) {
-					if (optimizeOutput) {
-						Output.Write (',');
-						if (i % 8 == 0) {
-							Output.Write (" ; ");
-							Output.Write (i - 8);
-							Output.Write ("..");
-							Output.WriteLine (i - 1);
-
-							Output.Write (Indent);
-						} else {
-							Output.Write (' ');
-						}
-					} else {
-						Output.Write (Indent);
-					}
-				}
-
-				Output.Write (elementType);
-				Output.Write (' ');
-				Output.Write (MonoAndroidHelper.CultureInvariantToString (values [i]));
-
-				if (!optimizeOutput) {
-					bool last = i == values.Count - 1;
-					if (!last) {
-						Output.Write (',');
-					}
-
-					string? comment = commentProvider (i, values[i]);
-					if (!String.IsNullOrEmpty (comment)) {
-						Output.Write (" ; ");
-						Output.Write (comment);
-					}
-
-					if (!last) {
-						Output.WriteLine ();
-					}
-				}
-			}
-			if (optimizeOutput && values.Count / 8 != 0) {
-				int idx = values.Count - (values.Count % 8);
-				Output.Write (" ; ");
-				Output.Write (idx);
-				Output.Write ("..");
-				Output.Write (values.Count - 1);
-			}
-
-			Output.WriteLine ();
-			Output.Write ("], align ");
-			Output.WriteLine (GetAggregateAlignment ((int) size, size * (ulong) values.Count).ToString (CultureInfo.InvariantCulture));
-		}
-
-		void AssertArraySize<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, ulong length, ulong expectedLength)
-		{
-			if (length == expectedLength) {
-				return;
-			}
-
-			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{info.Name}', expected {expectedLength}, found {length}");
-		}
-
-		void RenderArray<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, byte[] bytes, TextWriter output, ulong? expectedArraySize = null)
-		{
-			// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
-			AssertArraySize (info, smi, expectedArraySize ?? (ulong)bytes.Length, smi.ArrayElements);
-			output.Write ('c');
-			output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
-		}
-
-		void MaybeWriteStructureStringsAndBuffers<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options)
-		{
-			if (options.StringsOutput != null) {
-				MaybeWriteStructureString<T> (info, smi, instance, options.StringsOutput);
-			}
-
-			if (options.BuffersOutput != null) {
-				MaybeWritePreAllocatedBuffer<T> (info, smi, instance, options.BuffersOutput);
-			}
-		}
-
-		void WriteStructureField<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureMemberInfo<T> smi, int fieldIndex,
-		                             StructureBodyWriterOptions options, TextWriter output, object? valueOverride = null, ulong? expectedArraySize = null,
-		                             Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
-		{
-			object? value = null;
-
-			if (smi.IsIRStruct ()) {
-				if (nestedStructureWriter == null) {
-					throw new InvalidOperationException ($"Nested structure found in type {typeof(T)}, field {smi.Info.Name} but no nested structure writer provided");
-				}
-				nestedStructureWriter (this, options, smi.MemberType, valueOverride ?? GetTypedMemberValue (info, smi, instance, smi.MemberType));
-			} else if (smi.IsNativePointer) {
-				output.Write (options.FieldIndent);
-				WritePointer (info, smi, instance, output);
-			} else if (smi.IsNativeArray) {
-				if (!smi.IsInlineArray) {
-					throw new InvalidOperationException ($"Out of line arrays aren't supported at this time (structure '{info.Name}', field '{smi.Info.Name}')");
-				}
-
-				output.Write (options.FieldIndent);
-				output.Write (smi.IRType);
-				output.Write (" ");
-				value = valueOverride ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
-
-				if (smi.MemberType == typeof(byte[])) {
-					RenderArray (info, smi, (byte[])value, output, expectedArraySize);
-				} else {
-					throw new InvalidOperationException ($"Arrays of type '{smi.MemberType}' aren't supported at this point (structure '{info.Name}', field '{smi.Info.Name}')");
-				}
-			} else {
-				value = valueOverride;
-				output.Write (options.FieldIndent);
-				WritePrimitiveField (info, smi, instance, output);
-			}
-
-			FinishStructureField (info, smi, instance, options, fieldIndex, value, output);
-		}
-
-		void WriteStructureBody<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions options, Action<LlvmIrGenerator, StructureBodyWriterOptions, Type, object>? nestedStructureWriter = null)
-		{
-			TextWriter structureOutput = EnsureOutput (options.StructureOutput);
-
-			// $"{options.StructIndent}%{info.NativeTypeDesignator}.{info.Name} "
-			structureOutput.Write (options.StructIndent);
-			structureOutput.Write ('%');
-			structureOutput.Write (info.NativeTypeDesignator);
-			structureOutput.Write ('.');
-			structureOutput.Write (info.Name);
-			structureOutput.Write (' ');
-
-			if (instance != null) {
-				structureOutput.WriteLine ('{');
-				for (int i = 0; i < info.Members.Count; i++) {
-					StructureMemberInfo<T> smi = info.Members[i];
-
-					MaybeWriteStructureStringsAndBuffers (info, smi, instance, options);
-					WriteStructureField (info, instance, smi, i, options, structureOutput, nestedStructureWriter: nestedStructureWriter);
-				}
-
-				structureOutput.Write (options.StructIndent);
-				structureOutput.Write ('}');
-			} else {
-				structureOutput.Write ("zeroinitializer");
-			}
-		}
-
-		void MaybeWriteFieldComment<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options, object? value, TextWriter output)
-		{
-			if (!options.WriteFieldComment) {
-				return;
-			}
-
-			string? comment = info.GetCommentFromProvider (smi, instance);
-			if (String.IsNullOrEmpty (comment)) {
-				var sb = new StringBuilder (smi.Info.Name);
-				if (value != null && smi.MemberType.IsPrimitive && smi.MemberType != typeof(bool)) {
-					sb.Append (" (0x");
-					sb.Append ($"{value:x}");
-					sb.Append (')');
-				}
-				comment = sb.ToString ();
-			}
-			WriteComment (output, comment);
-		}
-
-		void FinishStructureField<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, StructureBodyWriterOptions options, int fieldIndex, object? value, TextWriter output)
-		{
-			if (fieldIndex < info.Members.Count - 1) {
-				output.Write (", ");
-			}
-			MaybeWriteFieldComment (info, smi, instance, options, value, output);
-			WriteEOL (output);
-		}
-
-		void WritePrimitiveField<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter output, object? overrideValue = null)
-		{
-			object? value = overrideValue ?? GetTypedMemberValue (info, smi, instance, smi.MemberType);
-			output.Write (smi.IRType);
-			output.Write (' ');
-			output.Write (MonoAndroidHelper.CultureInvariantToString (value));
-		}
-
-		void WritePointer<T> (StructureInfo<T> info, StructureMemberInfo<T> smi, StructureInstance<T> instance, TextWriter output, object? overrideValue = null)
-		{
-			if (info.HasStrings) {
-				StructurePointerData? spd = instance.GetPointerData (smi);
-				if (spd != null) {
-					WriteGetStringPointer (spd.VariableName, spd.Size, indent: false, output: output);
-					return;
-				}
-			}
-
-			if (info.HasPreAllocatedBuffers) {
-				StructurePointerData? spd = instance.GetPointerData (smi);
-				if (spd != null) {
-					WriteGetBufferPointer (spd.VariableName, smi.IRType, spd.Size, indent: false, output: output);
-					return;
-				}
-			}
-
-			if (smi.Info.PointsToSymbol (out string? symbolName)) {
-				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
-					if (info.DataProvider == null) {
-						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
-					}
-					symbolName = info.DataProvider.GetPointedToSymbolName (instance.Obj, smi.Info.Name);
-				}
-
-				if (String.IsNullOrEmpty (symbolName)) {
-					WriteNullPointer (smi, output);
-					return;
-				}
-
-				ulong bufferSize = info.GetBufferSizeFromProvider (smi, instance);
-				WriteGetBufferPointer (symbolName, smi.IRType, bufferSize, indent: false, output: output);
-				return;
-			}
-
-			object? value = overrideValue ?? smi.GetValue (instance.Obj);
-			if (value == null || ((value is IntPtr) && (IntPtr)value == IntPtr.Zero)) {
-				WriteNullPointer (smi, output);
-				return;
-			}
-
-			if (value.GetType ().IsPrimitive) {
-				ulong v = Convert.ToUInt64 (value);
-				if (v == 0) {
-					WriteNullPointer (smi, output);
-					return;
-				}
-			}
-
-			throw new InvalidOperationException ($"While processing field '{smi.Info.Name}' of type '{info.Name}': non-null pointers to objects of managed type '{smi.MemberType}' (IR type '{smi.IRType}') currently not supported (value: {value})");
-		}
-
-		void WriteNullPointer<T> (StructureMemberInfo<T> smi, TextWriter output)
-		{
-			output.Write (smi.IRType);
-			output.Write (" null");
-		}
-
-		// In theory, functionality implemented here should be folded into WriteStructureArray, but in practice it would slow processing for most of the structures we
-		// write, thus we'll keep this one separate, even at the cost of some code duplication
-		//
-		// This code is extremely ugly, one day it should be made look nicer (right... :D)
-		//
-		public void WritePackedStructureArray<T> (StructureInfo<T> info, IList<StructureInstance<T>> instances, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true, string? initialComment = null)
-		{
-			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment, fieldIndent: $"{Indent}{Indent}");
-			TextWriter structureOutput = EnsureOutput (bodyWriterOptions.StructureOutput);
-			var structureBodyOutput = new StringWriter ();
-			var structureTypeOutput = new StringWriter ();
-
-			bool firstInstance = true;
-			var members = new List<PackedStructureMember<T>> ();
-			var instanceType = new StringBuilder ();
-			foreach (StructureInstance<T> instance in instances) {
-				members.Clear ();
-				bool hasPaddedFields = false;
-
-				if (!firstInstance) {
-					structureTypeOutput.WriteLine (',');
-					structureBodyOutput.WriteLine (',');
-				} else {
-					firstInstance = false;
-				}
-
-				foreach (StructureMemberInfo<T> smi in info.Members) {
-					object? value = GetTypedMemberValue (info, smi, instance, smi.MemberType);
-
-					if (!smi.NeedsPadding) {
-						members.Add (new PackedStructureMember<T> (smi, value));
-						continue;
-					}
-
-					if (smi.MemberType != typeof(byte[])) {
-						throw new InvalidOperationException ($"Only byte arrays are supported currently (field '{smi.Info.Name}' of structure '{info.Name}')");
-					}
-
-					var array = (byte[])value;
-					var arrayLength = (ulong)array.Length;
-
-					if (arrayLength > smi.ArrayElements) {
-						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{info.Name}' should not have more than {smi.ArrayElements} elements");
-					}
-
-					ulong padding = smi.ArrayElements - arrayLength;
-					if (padding == 0) {
-						members.Add (new PackedStructureMember<T> (smi, value));
-						continue;
-					}
-
-					if (padding < 8) {
-						var paddedValue = new byte[arrayLength + padding];
-						Array.Copy (array, paddedValue, array.Length);
-						for (int i = (int)arrayLength; i < paddedValue.Length; i++) {
-							paddedValue[i] = 0;
-						}
-						members.Add (new PackedStructureMember<T> (smi, paddedValue));
-						continue;
-					}
-
-					members.Add (new PackedStructureMember<T> (smi, value, valueIRType: $"[{arrayLength} x i8]", paddingIRType: $"[{padding} x i8]"));
-					hasPaddedFields = true;
-				}
-
-				bool firstField;
-				instanceType.Clear ();
-				if (!hasPaddedFields) {
-					instanceType.Append ("\t%");
-					instanceType.Append (info.NativeTypeDesignator);
-					instanceType.Append ('.');
-					instanceType.Append (info.Name);
-				} else {
-					instanceType.Append ("\t{ ");
-
-					firstField = true;
-					foreach (PackedStructureMember<T> psm in members) {
-						if (!firstField) {
-							instanceType.Append (", ");
-						} else {
-							firstField = false;
-						}
-
-						if (!psm.IsPadded) {
-							instanceType.Append (psm.ValueIRType);
-							continue;
-						}
-
-						// $"<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}>"
-						instanceType.Append ("<{ ");
-						instanceType.Append (psm.ValueIRType);
-						instanceType.Append (", ");
-						instanceType.Append (psm.PaddingIRType);
-						instanceType.Append (" }>");
-					}
-
-					instanceType.Append (" }");
-				}
-				structureTypeOutput.Write (instanceType.ToString ());
-
-				structureBodyOutput.Write (instanceType.ToString ());
-				structureBodyOutput.WriteLine (" {");
-
-				firstField = true;
-				bool previousFieldWasPadded = false;
-				for (int i = 0; i < members.Count; i++) {
-					PackedStructureMember<T> psm = members[i];
-
-					if (firstField) {
-						firstField = false;
-					}
-
-					if (!psm.IsPadded) {
-						previousFieldWasPadded = false;
-						ulong? expectedArraySize = psm.MemberInfo.IsNativeArray ? (ulong)((byte[])psm.Value).Length : null;
-						WriteStructureField (info, instance, psm.MemberInfo, i, bodyWriterOptions, structureBodyOutput, valueOverride: psm.Value, expectedArraySize: expectedArraySize);
-						continue;
-					}
-
-					if (!firstField && previousFieldWasPadded) {
-						structureBodyOutput.Write (", ");
-					}
-
-					// $"{bodyWriterOptions.FieldIndent}<{{ {psm.ValueIRType}, {psm.PaddingIRType} }}> <{{ {psm.ValueIRType} c{QuoteString ((byte[])psm.Value)}, {psm.PaddingIRType} zeroinitializer }}> "
-					structureBodyOutput.Write (bodyWriterOptions.FieldIndent);
-					structureBodyOutput.Write ("<{ ");
-					structureBodyOutput.Write (psm.ValueIRType);
-					structureBodyOutput.Write (", ");
-					structureBodyOutput.Write (psm.PaddingIRType);
-					structureBodyOutput.Write (" }> <{ ");
-					structureBodyOutput.Write (psm.ValueIRType);
-					structureBodyOutput.Write (" c");
-					structureBodyOutput.Write (QuoteString ((byte []) psm.Value));
-					structureBodyOutput.Write (", ");
-					structureBodyOutput.Write (psm.PaddingIRType);
-					structureBodyOutput.Write (" zeroinitializer }> ");
-
-					MaybeWriteFieldComment (info, psm.MemberInfo, instance, bodyWriterOptions, value: null, output: structureBodyOutput);
-					previousFieldWasPadded = true;
-				}
-				structureBodyOutput.WriteLine ();
-				structureBodyOutput.Write (Indent);
-				structureBodyOutput.Write ('}');
-			}
-
-			structureOutput.WriteLine ("<{");
-			structureOutput.Write (structureTypeOutput);
-			structureOutput.WriteLine ();
-			structureOutput.WriteLine ("}>");
-
-			structureOutput.WriteLine ("<{");
-			structureOutput.Write (structureBodyOutput);
-			structureOutput.WriteLine ();
-			structureOutput.Write ("}>");
-
-			FinishStructureWrite (info, bodyWriterOptions);
-		}
-
-		StructureBodyWriterOptions InitStructureWrite<T> (StructureInfo<T> info, LlvmIrVariableOptions options, string? symbolName, bool writeFieldComment, string? fieldIndent = null)
-		{
-			if (options.IsGlobal && String.IsNullOrEmpty (symbolName)) {
-				throw new ArgumentException ("must not be null or empty for global symbols", nameof (symbolName));
-			}
-
-			var structureOutput = new StringWriter ();
-			bool named = !String.IsNullOrEmpty (symbolName);
-			if (named) {
-				WriteEOL (output: structureOutput);
-				WriteEOL (symbolName, structureOutput);
-
-				WriteGlobalSymbolStart (symbolName, options, structureOutput);
-			}
-
-			return new StructureBodyWriterOptions (
-				writeFieldComment: writeFieldComment,
-				fieldIndent: fieldIndent ?? Indent,
-				structureOutput: structureOutput,
-				stringsOutput: info.HasStrings ? new StringWriter () : null,
-				buffersOutput: info.HasPreAllocatedBuffers ? new StringWriter () : null
-			);
-		}
-
-		void FinishStructureWrite<T> (StructureInfo<T> info, StructureBodyWriterOptions bodyWriterOptions)
-		{
-			bodyWriterOptions.StructureOutput.Write (", align ");
-			bodyWriterOptions.StructureOutput.WriteLine (info.MaxFieldAlignment.ToString (CultureInfo.InvariantCulture));
-
-			WriteBufferToOutput (bodyWriterOptions.StringsOutput);
-			WriteBufferToOutput (bodyWriterOptions.BuffersOutput);
-			WriteBufferToOutput (bodyWriterOptions.StructureOutput);
-		}
-
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, StructureBodyWriterOptions bodyWriterOptions, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
-		{
-			WriteStructureBody (info, instance, bodyWriterOptions);
-			FinishStructureWrite (info, bodyWriterOptions);
-		}
-
-		public void WriteNestedStructure<T> (StructureInfo<T> info, StructureInstance<T> instance, StructureBodyWriterOptions bodyWriterOptions)
-		{
-			var options = new StructureBodyWriterOptions (
-				bodyWriterOptions.WriteFieldComment,
-				bodyWriterOptions.FieldIndent + Indent,
-				bodyWriterOptions.FieldIndent, // structure indent should start at the original struct's field column
-				bodyWriterOptions.StructureOutput,
-				bodyWriterOptions.StringsOutput,
-				bodyWriterOptions.BuffersOutput
-			);
-			WriteStructureBody (info, instance, options);
-		}
-
-		/// <summary>
-		/// Write a structure represented by managed type <typeparamref name="T"/>, with optional data passed in <paramref name="instance"/> (if <c>null</c>, the structure
-		/// is zero-initialized). <paramref name="options"/> specifies the symbol attributes (visibility, writeability etc)
-		/// </summary>
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, LlvmIrVariableOptions options, string? symbolName = null, bool writeFieldComment = true)
-		{
-			StructureBodyWriterOptions bodyWriterOptions = InitStructureWrite (info, options, symbolName, writeFieldComment);
-			WriteStructure (info, instance, bodyWriterOptions, options, symbolName, writeFieldComment);
-		}
-
-		/// <summary>
-		/// Write a structure represented by managed type <typeparamref name="T"/>, with optional data passed in <paramref name="instance"/> (if <c>null</c>, the structure
-		/// is zero-initialized).  The structure will be generated as a local, writable symbol.
-		/// </summary>
-		public void WriteStructure<T> (StructureInfo<T> info, StructureInstance<T>? instance, string? symbolName = null, bool writeFieldComment = true)
-		{
-			WriteStructure<T> (info, instance, LlvmIrVariableOptions.Default, symbolName, writeFieldComment);
-		}
-
-		void WriteBufferToOutput (TextWriter? writer)
-		{
-			if (writer == null) {
-				return;
-			}
-
-			writer.Flush ();
-			string text = writer.ToString ();
-			if (text.Length > 0) {
-				Output.WriteLine (text);
-			}
-		}
-
-		void WriteGetStringPointer (string? variableName, ulong size, bool indent = true, TextWriter? output = null, bool detectBitness = false, bool skipPointerType = false)
-		{
-			WriteGetBufferPointer (variableName, "i8*", size, indent, output, detectBitness, skipPointerType);
-		}
-
-		void WriteGetBufferPointer (string? variableName, string irType, ulong size, bool indent = true, TextWriter? output = null, bool detectBitness = false, bool skipPointerType = false)
-		{
-			output = EnsureOutput (output);
-			if (indent) {
-				output.Write (Indent);
-			}
-
-			if (String.IsNullOrEmpty (variableName)) {
-				output.Write (irType);
-				output.Write (" null");
-			} else {
-				string irBaseType;
-				if (irType[irType.Length - 1] == '*') {
-					irBaseType = irType.Substring (0, irType.Length - 1);
-				} else {
-					irBaseType = irType;
-				}
-
-				string indexType = detectBitness && Is64Bit ? "i64" : "i32";
-				// $"{irType} getelementptr inbounds ([{size} x {irBaseType}], [{size} x {irBaseType}]* @{variableName}, i32 0, i32 0)"
-				if (!skipPointerType) {
-					output.Write (irType);
-				}
-
-				string sizeStr = size.ToString (CultureInfo.InvariantCulture);
-				output.Write (" getelementptr inbounds ([");
-				output.Write (sizeStr);
-				output.Write (" x ");
-				output.Write (irBaseType);
-				output.Write ("], [");
-				output.Write (sizeStr);
-				output.Write (" x ");
-				output.Write (irBaseType);
-				output.Write ("]* @");
-				output.Write (variableName);
-				output.Write (", ");
-				output.Write (indexType);
-				output.Write (" 0, ");
-				output.Write (indexType);
-				output.Write (" 0)");
-			}
-		}
-
-		/// <summary>
-		/// Write an array of name/value pairs.  The array symbol will be global and non-writable.
-		/// </summary>
-		public void WriteNameValueArray (string symbolName, IDictionary<string, string> arrayContents)
-		{
-			WriteEOL ();
-			WriteEOL (symbolName);
-
-			var strings = new List<StringSymbolInfo> ();
-			long i = 0;
-
-			foreach (var kvp in arrayContents) {
-				string name = kvp.Key;
-				string value = kvp.Value;
-				string iStr = i.ToString (CultureInfo.InvariantCulture);
-
-				WriteArrayString (name, $"n_{iStr}");
-				WriteArrayString (value, $"v_{iStr}");
-				i++;
-			}
-
-			if (strings.Count > 0) {
-				Output.WriteLine ();
-			}
-
-			WriteStringArray (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer, strings);
-
-			void WriteArrayString (string str, string symbolSuffix)
-			{
-				StringSymbolInfo symbol = StringManager.Add (str, groupName: symbolName, symbolSuffix: symbolSuffix);
-				strings.Add (symbol);
-			}
-		}
-
-		void WriteStringArray (string symbolName, LlvmIrVariableOptions options, List<StringSymbolInfo> strings)
-		{
-			WriteGlobalSymbolStart (symbolName, options);
-
-			// $"[{strings.Count} x i8*]"
-			Output.Write ('[');
-			Output.Write (strings.Count.ToString (CultureInfo.InvariantCulture));
-			Output.Write (" x i8*]");
-
-			if (strings.Count > 0) {
-				Output.WriteLine (" [");
-
-				for (int j = 0; j < strings.Count; j++) {
-					ulong size = strings[j].Size;
-					string varName = strings[j].SymbolName;
-
-					//
-					// Syntax: https://llvm.org/docs/LangRef.html#getelementptr-instruction
-					// the two indices following {varName} have the following meanings:
-					//
-					//  - The first index is into the **pointer** itself
-					//  - The second index is into the **pointed to** value
-					//
-					// Better explained here: https://llvm.org/docs/GetElementPtr.html#id4
-					//
-					WriteGetStringPointer (varName, size);
-					if (j < strings.Count - 1) {
-						Output.WriteLine (',');
-					}
-				}
-				WriteEOL ();
-			} else {
-				Output.Write (" zeroinitializer");
-			}
-
-			var arraySize = (ulong)(strings.Count * PointerSize);
-			if (strings.Count > 0) {
-				Output.Write (']');
-			}
-			Output.Write (", align ");
-			Output.WriteLine (GetAggregateAlignment (PointerSize, arraySize).ToString (CultureInfo.InvariantCulture));
-		}
-
-		/// <summary>
-		/// Wries a global, constant variable
-		/// </summary>
-		public void WriteVariable<T> (string symbolName, T value)
-		{
-			WriteVariable (symbolName, value, LlvmIrVariableOptions.GlobalConstant);
-		}
-
-		public void WriteVariable<T> (string symbolName, T value, LlvmIrVariableOptions options)
-		{
-			if (typeof(T) == typeof(string)) {
-				WriteString (symbolName, (string)(object)value, options);
-				return;
-			}
-
-			WriteEOL ();
-			string irType = GetIRType<T> (out ulong size, value);
-			WriteGlobalSymbolStart (symbolName, options);
-
-			Output.Write (irType);
-			Output.Write (' ');
-			Output.Write (GetValue (value));
-			Output.Write (", align ");
-			Output.WriteLine (size);
-		}
-
-		/// <summary>
-		/// Writes a global, C++ constexpr style string
-		/// </summary>
-		public string WriteString (string symbolName, string value)
-		{
-			return WriteString (symbolName, value, LlvmIrVariableOptions.GlobalConstexprString);
-		}
-
-		/// <summary>
-		/// <para>
-		/// Writes a string with symbol options (writeability, visibility) options specified in the <paramref name="options"/> parameter.
-		/// </para>
-		/// <para>
-		/// If symbol is local, as per <paramref name="options"/>, then <paramref name="symbolName"/> is used as a common prefix for a group of strings, with unique symbol
-		/// names assigned to each string added to the group.
-		/// </para>
-		/// </summary>
-		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options)
-		{
-			return WriteString (symbolName, value, options, out _);
-		}
-
-		/// <summary>
-		/// <para>
-		/// Writes a string with specified <paramref name="symbolName"/>, and symbol options (writeability, visibility etc) specified in the <paramref name="options"/>
-		/// parameter.  Places string size (in bytes) in <paramref name="stringSize"/>.
-		/// </para>
-		/// <para>
-		/// If symbol is local, as per <paramref name="options"/>, then <paramref name="symbolName"/> is used as a common prefix for a group of strings, with unique symbol
-		/// names assigned to each string added to the group.
-		/// </para>
-		/// </summary>
-		/// <returns>Name of the native symbol which refers to the written string.</returns>
-		public string WriteString (string symbolName, string value, LlvmIrVariableOptions options, out ulong stringSize)
-		{
-			StringSymbolInfo info = AddString (value, groupName: symbolName);
-			stringSize = info.Size;
-			if (!options.IsGlobal) {
-				return info.SymbolName;
-			}
-
-			string indexType = Is64Bit ? "i64" : "i32";
-			WriteGlobalSymbolStart (symbolName, LlvmIrVariableOptions.GlobalConstantStringPointer);
-			WriteGetStringPointer (info.SymbolName, info.Size, indent: false, detectBitness: true);
-			Output.Write (", align ");
-			Output.WriteLine (GetAggregateAlignment (PointerSize, stringSize).ToString (CultureInfo.InvariantCulture));
-
-			return symbolName;
-		}
-
-		public StringSymbolInfo AddString (string value, string? groupName = null)
-		{
-			return StringManager.Add (value, groupName: groupName);
-		}
-
-		public void WriteFileTop ()
-		{
-			WriteCommentLine ($"ModuleID = '{fileName}'");
-			WriteDirective ("source_filename", QuoteStringNoEscape (fileName));
-			WriteDirective ("target datalayout", QuoteStringNoEscape (DataLayout));
-			WriteDirective ("target triple", QuoteStringNoEscape (Triple));
-		}
-
-		public virtual void WriteFileEnd ()
-		{
-			Output.WriteLine ();
-			StringManager.Flush (this);
-
-			Output.WriteLine ();
-			WriteAttributeSets ();
-
-			foreach (LlvmIrMetadataItem metadata in MetadataManager.Items) {
-				Output.WriteLine (metadata.Render ());
-			}
-		}
-
-		public void WriteStructureDeclarations ()
-		{
-			if (structures.Count == 0) {
-				return;
-			}
-
-			Output.WriteLine ();
-			foreach (IStructureInfo si in structures) {
-				si.RenderDeclaration (this);
-			}
-		}
-
-		public void WriteStructureDeclarationStart (string typeDesignator, string name, bool forOpaqueType = false)
-		{
-			WriteEOL ();
-
-			// $"%{typeDesignator}.{name} = type "
-			Output.Write ('%');
-			Output.Write (typeDesignator);
-			Output.Write ('.');
-			Output.Write (name);
-			Output.Write (" = type ");
-
-			if (forOpaqueType) {
-				Output.WriteLine ("opaque");
-			} else {
-				Output.WriteLine ("{");
-			}
-		}
-
-		public void WriteStructureDeclarationEnd ()
-		{
-			Output.WriteLine ('}');
-		}
-
-		public void WriteStructureDeclarationField (string typeName, string comment, bool last)
-		{
-			Output.Write (Indent);
-			Output.Write (typeName);
-			if (!last) {
-				Output.Write (",");
-			}
-
-			if (!String.IsNullOrEmpty (comment)) {
-				WriteCommentLine (comment);
-			} else {
-				WriteEOL ();
-			}
-		}
-
-		protected virtual void AddModuleFlagsMetadata (List<LlvmIrMetadataItem> flagsFields)
-		{
-			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Error, "wchar_size", 4));
-			flagsFields.Add (MetadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Max, "PIC Level", 2));
-		}
-
-		// Alignment for arrays, structures and unions
-		protected virtual int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
-		{
-			return maxFieldAlignment;
-		}
-
-		public void WriteCommentLine (string? comment = null, bool indent = false)
-		{
-			WriteCommentLine (Output, comment, indent);
-		}
-
-		public void WriteComment (TextWriter writer, string? comment = null, bool indent = false)
-		{
-			if (indent) {
-				writer.Write (Indent);
-			}
-
-			writer.Write (';');
-
-			if (!String.IsNullOrEmpty (comment)) {
-				writer.Write (' ');
-				writer.Write (comment);
-			}
-		}
-
-		public void WriteCommentLine (TextWriter writer, string? comment = null, bool indent = false)
-		{
-			WriteComment (writer, comment, indent);
-			writer.WriteLine ();
-		}
-
-		public void WriteEOL (string? comment = null, TextWriter? output = null)
-		{
-			WriteEOL (EnsureOutput (output), comment);
-		}
-
-		public void WriteEOL (TextWriter writer, string? comment = null)
-		{
-			if (!String.IsNullOrEmpty (comment)) {
-				WriteCommentLine (writer, comment);
-				return;
-			}
-			writer.WriteLine ();
-		}
-
-		public void WriteDirectiveWithComment (TextWriter writer, string name, string? comment, string? value)
-		{
-			writer.Write (name);
-
-			if (!String.IsNullOrEmpty (value)) {
-				writer.Write (" = ");
-				writer.Write (value);
-			}
-
-			WriteEOL (writer, comment);
-		}
-
-		public void WriteDirectiveWithComment (string name, string? comment, string? value)
-		{
-			WriteDirectiveWithComment (name, comment, value);
-		}
-
-		public void WriteDirective (TextWriter writer, string name, string? value)
-		{
-			WriteDirectiveWithComment (writer, name, comment: null, value: value);
-		}
-
-		public void WriteDirective (string name, string value)
-		{
-			WriteDirective (Output, name, value);
+			return basicTypeMap.ContainsKey (type);
 		}
 
 		public static string QuoteStringNoEscape (string s)

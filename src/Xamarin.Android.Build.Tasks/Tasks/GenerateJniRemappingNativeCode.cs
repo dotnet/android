@@ -54,13 +54,13 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new New.JniRemappingAssemblyGenerator (), typeReplacementsCount: 0);
+			Generate (new JniRemappingAssemblyGenerator (), typeReplacementsCount: 0);
 		}
 
 		void Generate ()
 		{
-			var typeReplacements = new List<New.JniRemappingTypeReplacement> ();
-			var methodReplacements = new List<New.JniRemappingMethodReplacement> ();
+			var typeReplacements = new List<JniRemappingTypeReplacement> ();
+			var methodReplacements = new List<JniRemappingMethodReplacement> ();
 
 			var readerSettings = new XmlReaderSettings {
 				XmlResolver = null,
@@ -74,12 +74,12 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Generate (new New.JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
+			Generate (new JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
 		}
 
-		void Generate (New.JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
+		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
 		{
-			LLVM.IR.LlvmIrModule module =  jniRemappingComposer.Construct ();
+			LLVMIR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (OutputDirectory, $"jni_remap.{abi.ToLowerInvariant ()}");
@@ -99,7 +99,7 @@ namespace Xamarin.Android.Tasks
 			);
 		}
 
-		void ReadXml (XmlReader reader, List<New.JniRemappingTypeReplacement> typeReplacements, List<New.JniRemappingMethodReplacement> methodReplacements)
+		void ReadXml (XmlReader reader, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
 		{
 			bool haveAllAttributes;
 
@@ -116,7 +116,7 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					typeReplacements.Add (new New.JniRemappingTypeReplacement (from, to));
+					typeReplacements.Add (new JniRemappingTypeReplacement (from, to));
 				} else if (String.Compare ("replace-method", reader.LocalName, StringComparison.Ordinal) == 0) {
 					haveAllAttributes &= GetRequiredAttribute ("source-type", out string sourceType);
 					haveAllAttributes &= GetRequiredAttribute ("source-method-name", out string sourceMethodName);
@@ -135,7 +135,7 @@ namespace Xamarin.Android.Tasks
 
 					string sourceMethodSignature = reader.GetAttribute ("source-method-signature");
 					methodReplacements.Add (
-						new New.JniRemappingMethodReplacement (
+						new JniRemappingMethodReplacement (
 							sourceType, sourceMethodName, sourceMethodSignature,
 							targetType, targetMethodName, isStatic
 						)

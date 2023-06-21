@@ -2,7 +2,7 @@ using System;
 using System.Text;
 using System.Globalization;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVMIR
 {
 	// Not all attributes are currently used throughout the code, but we define them call for potential future use.
 	// Documentation can be found here: https://llvm.org/docs/LangRef.html#function-attributes

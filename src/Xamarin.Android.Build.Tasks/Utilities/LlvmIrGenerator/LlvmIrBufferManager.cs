@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace Xamarin.Android.Tasks.LLVM.IR;
+namespace Xamarin.Android.Tasks.LLVMIR;
 
 partial class LlvmIrModule
 {

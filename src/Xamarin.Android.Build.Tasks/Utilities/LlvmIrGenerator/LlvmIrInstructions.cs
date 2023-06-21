@@ -2,11 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Xamarin.Android.Tasks.LLVM.IR;
-
-// TODO: remove these aliases once the refactoring is done
-using LlvmIrIcmpCond = LLVMIR.LlvmIrIcmpCond;
-using LlvmIrCallMarker = LLVMIR.LlvmIrCallMarker;
+namespace Xamarin.Android.Tasks.LLVMIR;
 
 abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 {
@@ -169,13 +165,20 @@ sealed class LlvmIrInstructions
 		LlvmIrVariable? result;
 
 		public LlvmIrCallMarker CallMarker { get; set; } = LlvmIrCallMarker.None;
+
+		/// <summary>
+		/// This needs to be set if we want to call a function via a local or global variable.  <see cref="LlvmIrFunction"/> passed
+		/// to the constructor is then used only to generate a type safe call, while function address comes from the variable assigned
+		/// to this property.
+		/// </summary>
 		public LlvmIrVariable? FuncPointer { get; set; }
 
-		public Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null)
+		public Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null, LlvmIrVariable? funcPointer = null)
 			: base ("call")
 		{
 			this.function = function;
 			this.result = result;
+			this.FuncPointer = funcPointer;
 
 			if (function.Signature.ReturnType != typeof(void)) {
 				if (result == null) {

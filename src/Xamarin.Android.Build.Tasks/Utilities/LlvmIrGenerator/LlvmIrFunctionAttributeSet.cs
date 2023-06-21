@@ -5,131 +5,130 @@ using System.Linq;
 
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVMIR;
+
+class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
 {
-	class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
+	public uint Number { get; set; } = 0;
+
+	HashSet<LlvmIrFunctionAttribute> attributes;
+	Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;
+
+	public LlvmIrFunctionAttributeSet ()
 	{
-		public uint Number { get; set; } = 0;
+		attributes = new HashSet<LlvmIrFunctionAttribute> ();
+	}
 
-		HashSet<LlvmIrFunctionAttribute> attributes;
-		Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;
+	public LlvmIrFunctionAttributeSet (LlvmIrFunctionAttributeSet other)
+	{
+		attributes = new HashSet<LlvmIrFunctionAttribute> (other);
+		Number = other.Number;
+	}
 
-		public LlvmIrFunctionAttributeSet ()
-		{
-			attributes = new HashSet<LlvmIrFunctionAttribute> ();
+	public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch)
+	{
+		if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
+			return null;
 		}
 
-		public LlvmIrFunctionAttributeSet (LlvmIrFunctionAttributeSet other)
-		{
-			attributes = new HashSet<LlvmIrFunctionAttribute> (other);
-			Number = other.Number;
+		return list.AsReadOnly ();
+	}
+
+	public void Add (LlvmIrFunctionAttribute attr)
+	{
+		if (attr == null) {
+			throw new ArgumentNullException (nameof (attr));
 		}
 
-		public IList<LlvmIrFunctionAttribute>? GetPrivateTargetAttributes (AndroidTargetArch targetArch)
-		{
-			if (privateTargetSpecificAttributes == null || !privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
-				return null;
-			}
+		if (!attributes.Contains (attr)) {
+			attributes.Add (attr);
+		}
+	}
 
-			return list.AsReadOnly ();
+	public void Add (IList<LlvmIrFunctionAttribute> attrList)
+	{
+		foreach (LlvmIrFunctionAttribute attr in attrList) {
+			Add (attr);
+		}
+	}
+
+	/// <summary>
+	/// Add architecture-specific attributes, private to the module generator (as opposed to arch-specific attributes which are common
+	/// between all attribute sets.
+	/// </summary>
+	public void Add (AndroidTargetArch targetArch, LlvmIrFunctionAttribute attr)
+	{
+		if (privateTargetSpecificAttributes == null) {
+			privateTargetSpecificAttributes = new Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>> ();
 		}
 
-		public void Add (LlvmIrFunctionAttribute attr)
-		{
-			if (attr == null) {
-				throw new ArgumentNullException (nameof (attr));
-			}
-
-			if (!attributes.Contains (attr)) {
-				attributes.Add (attr);
-			}
+		if (!privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
+			list = new List<LlvmIrFunctionAttribute> ();
 		}
 
-		public void Add (IList<LlvmIrFunctionAttribute> attrList)
-		{
-			foreach (LlvmIrFunctionAttribute attr in attrList) {
-				Add (attr);
-			}
+		list.Add (attr);
+	}
+
+	public void Add (LlvmIrFunctionAttributeSet sourceSet)
+	{
+		if (sourceSet == null) {
+			throw new ArgumentNullException (nameof (sourceSet));
 		}
 
-		/// <summary>
-		/// Add architecture-specific attributes, private to the module generator (as opposed to arch-specific attributes which are common
-		/// between all attribute sets.
-		/// </summary>
-		public void Add (AndroidTargetArch targetArch, LlvmIrFunctionAttribute attr)
-		{
-			if (privateTargetSpecificAttributes == null) {
-				privateTargetSpecificAttributes = new Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>> ();
-			}
+		foreach (LlvmIrFunctionAttribute attr in sourceSet) {
+			Add (attr);
+		}
+	}
 
-			if (!privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
-				list = new List<LlvmIrFunctionAttribute> ();
-			}
+	public string Render ()
+	{
+		List<LlvmIrFunctionAttribute> list = attributes.ToList ();
+		list.Sort ((LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b) => a.Name.CompareTo (b.Name));
 
-			list.Add (attr);
+		return String.Join (" ", list.Select (a => a.Render ()));
+	}
+
+	public IEnumerator<LlvmIrFunctionAttribute> GetEnumerator () => attributes.GetEnumerator ();
+
+	IEnumerator IEnumerable.GetEnumerator () => GetEnumerator ();
+
+	public bool Equals (LlvmIrFunctionAttributeSet other)
+	{
+		if (other == null) {
+			return false;
 		}
 
-		public void Add (LlvmIrFunctionAttributeSet sourceSet)
-		{
-			if (sourceSet == null) {
-				throw new ArgumentNullException (nameof (sourceSet));
-			}
-
-			foreach (LlvmIrFunctionAttribute attr in sourceSet) {
-				Add (attr);
-			}
+		if (attributes.Count != other.attributes.Count) {
+			return false;
 		}
 
-		public string Render ()
-		{
-			List<LlvmIrFunctionAttribute> list = attributes.ToList ();
-			list.Sort ((LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b) => a.Name.CompareTo (b.Name));
-
-			return String.Join (" ", list.Select (a => a.Render ()));
-		}
-
-		public IEnumerator<LlvmIrFunctionAttribute> GetEnumerator () => attributes.GetEnumerator ();
-
-		IEnumerator IEnumerable.GetEnumerator () => GetEnumerator ();
-
-		public bool Equals (LlvmIrFunctionAttributeSet other)
-		{
-			if (other == null) {
+		foreach (LlvmIrFunctionAttribute attr in attributes) {
+			if (!other.attributes.Contains (attr)) {
 				return false;
 			}
-
-			if (attributes.Count != other.attributes.Count) {
-				return false;
-			}
-
-			foreach (LlvmIrFunctionAttribute attr in attributes) {
-				if (!other.attributes.Contains (attr)) {
-					return false;
-				}
-			}
-
-			return true;
 		}
 
-		public override bool Equals (object obj)
-		{
-			var attrSet = obj as LlvmIrFunctionAttributeSet;
-			if (attrSet == null) {
-				return false;
-			}
+		return true;
+	}
 
-			return Equals (attrSet);
+	public override bool Equals (object obj)
+	{
+		var attrSet = obj as LlvmIrFunctionAttributeSet;
+		if (attrSet == null) {
+			return false;
 		}
 
-		public override int GetHashCode()
-		{
-			int hc = 0;
+		return Equals (attrSet);
+	}
 
-			foreach (LlvmIrFunctionAttribute attr in attributes) {
-				hc ^= attr?.GetHashCode () ?? 0;
-			}
+	public override int GetHashCode()
+	{
+		int hc = 0;
 
-			return hc;
+		foreach (LlvmIrFunctionAttribute attr in attributes) {
+			hc ^= attr?.GetHashCode () ?? 0;
 		}
-    }
+
+		return hc;
+	}
 }

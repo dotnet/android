@@ -211,7 +211,7 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var composer = new New.TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -242,7 +242,7 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var composer = new New.TypeMappingDebugNativeAssemblyGenerator (data);
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (data);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -412,7 +412,7 @@ namespace Xamarin.Android.Tasks
 			NativeTypeMappingData data;
 			data = new NativeTypeMappingData (logger, modules);
 
-			var composer = new New.TypeMappingReleaseNativeAssemblyGenerator (data);
+			var composer = new TypeMappingReleaseNativeAssemblyGenerator (data);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -423,7 +423,7 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		void GenerateNativeAssembly (LLVM.IR.LlvmIrComposer composer, LLVM.IR.LlvmIrModule typeMapModule, string baseFileName)
+		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
 			AndroidTargetArch arch;
 			foreach (string abi in supportedAbis) {
@@ -439,40 +439,6 @@ namespace Xamarin.Android.Tasks
 						sw.Flush ();
 						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
 					}
-				}
-			}
-		}
-
-		void GenerateNativeAssembly (TypeMappingAssemblyGenerator generator, string baseFileName)
-		{
-			AndroidTargetArch arch;
-			foreach (string abi in supportedAbis) {
-				switch (abi.Trim ()) {
-					case "armeabi-v7a":
-						arch = AndroidTargetArch.Arm;
-						break;
-
-					case "arm64-v8a":
-						arch = AndroidTargetArch.Arm64;
-						break;
-
-					case "x86":
-						arch = AndroidTargetArch.X86;
-						break;
-
-					case "x86_64":
-						arch = AndroidTargetArch.X86_64;
-						break;
-
-					default:
-						throw new InvalidOperationException ($"Unknown ABI {abi}");
-				}
-
-				string outputFile = $"{baseFileName}.{abi}.ll";
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter (outputEncoding)) {
-					generator.Write (arch, sw, outputFile);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
 				}
 			}
 		}

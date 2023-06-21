@@ -12,13 +12,12 @@ using Xamarin.Android.Tasks.LLVMIR;
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
 using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
 
-// TODO: generate code to check for pending Java exceptions (maybe?)
-// TODO: check whether delegates not converted to marshal methods work correctly.  It's possible something isn't called when it should be and that's
-//      why Blazor hangs.
 namespace Xamarin.Android.Tasks
 {
 	partial class MarshalMethodsNativeAssemblyGenerator : LlvmIrComposer
 	{
+		const string GetFunctionPointerVariableName = "get_function_pointer";
+
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoClass
 		{}
@@ -95,8 +94,8 @@ namespace Xamarin.Android.Tasks
 				}
 				NativeSymbolName = nativeSymbolName;
 				Parameters = new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof (_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
-					new LlvmIrFunctionParameter (typeof (_jclass), "klass", isNativePointer: true), // jclass klass
+					new LlvmIrFunctionParameter (typeof (_JNIEnv), "env"), // JNIEnv *env
+					new LlvmIrFunctionParameter (typeof (_jclass), "klass"), // jclass klass
 				};
 				ClassCacheIndex = (uint)classCacheIndex;
 			}
@@ -109,7 +108,7 @@ namespace Xamarin.Android.Tasks
 				var klass = EnsureType<MarshalMethodsManagedClass> (data);
 
 				if (String.Compare ("token", fieldName, StringComparison.Ordinal) == 0) {
-					return $"token 0x{klass.token:x}; class name: {klass.ClassName}";
+					return $" token 0x{klass.token:x}; class name: {klass.ClassName}";
 				}
 
 				return String.Empty;
@@ -136,7 +135,7 @@ namespace Xamarin.Android.Tasks
 				var methodName = EnsureType<MarshalMethodName> (data);
 
 				if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
-					return $"id 0x{methodName.id:x}; name: {methodName.name}";
+					return $" id 0x{methodName.id:x}; name: {methodName.name}";
 				}
 
 				return String.Empty;
@@ -146,9 +145,61 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodNameDataProvider))]
 		sealed class MarshalMethodName
 		{
+			[NativeAssembler (Ignore = true)]
+			public ulong Id32;
+
+			[NativeAssembler (Ignore = true)]
+			public ulong Id64;
+
 			[NativeAssembler (UsesDataProvider = true)]
 			public ulong  id;
 			public string name;
+		}
+
+		sealed class AssemblyCacheState
+		{
+			public Dictionary<string, uint>? AsmNameToIndexData32;
+			public Dictionary<uint, (string name, uint index)> Hashes32;
+			public List<uint> Keys32;
+			public List<uint> Indices32;
+
+			public Dictionary<string, uint>? AsmNameToIndexData64;
+			public Dictionary<ulong, (string name, uint index)> Hashes64;
+			public List<ulong> Keys64;
+			public List<uint> Indices64;
+		}
+
+		sealed class MarshalMethodsWriteState
+		{
+			public AssemblyCacheState AssemblyCacheState;
+			public LlvmIrFunctionAttributeSet AttributeSet;
+			public Dictionary<string, ulong> UniqueAssemblyId;
+			public Dictionary<string, LlvmIrVariable> UsedBackingFields;
+			public LlvmIrVariable GetFunctionPtrVariable;
+			public LlvmIrFunction GetFunctionPtrFunction;
+		}
+
+		sealed class MarshalMethodAssemblyIndexValuePlaceholder : LlvmIrInstructionArgumentValuePlaceholder
+		{
+			MarshalMethodInfo mmi;
+			AssemblyCacheState acs;
+
+			public MarshalMethodAssemblyIndexValuePlaceholder (MarshalMethodInfo mmi, AssemblyCacheState acs)
+			{
+				this.mmi = mmi;
+				this.acs = acs;
+			}
+
+			public override object? GetValue (LlvmIrModuleTarget target)
+			{
+				// What a monstrosity...
+				string asmName = mmi.Method.NativeCallback.DeclaringType.Module.Assembly.Name.Name;
+				Dictionary<string, uint> asmNameToIndex = target.Is64Bit ? acs.AsmNameToIndexData64 : acs.AsmNameToIndexData32;
+				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
+					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
+				}
+				return asmIndex;
+			}
 		}
 
 		static readonly Dictionary<char, Type> jniSimpleTypeMap = new Dictionary<char, Type> {
@@ -179,25 +230,8 @@ namespace Xamarin.Android.Tasks
 		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		TaskLoggingHelper logger;
 
-		StructureInfo<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> monoImage;
-		StructureInfo<MarshalMethodsManagedClass> marshalMethodsClass;
-		StructureInfo<MarshalMethodName> marshalMethodName;
-		StructureInfo<MonoClass> monoClass;
-		StructureInfo<_JNIEnv> _jniEnvSI;
-		StructureInfo<_jobject> _jobjectSI;
-		StructureInfo<_jclass> _jclassSI;
-		StructureInfo<_jstring> _jstringSI;
-		StructureInfo<_jthrowable> _jthrowableSI;
-		StructureInfo<_jarray> _jarraySI;
-		StructureInfo<_jobjectArray> _jobjectArraySI;
-		StructureInfo<_jbooleanArray> _jbooleanArraySI;
-		StructureInfo<_jbyteArray> _jbyteArraySI;
-		StructureInfo<_jcharArray> _jcharArraySI;
-		StructureInfo<_jshortArray> _jshortArraySI;
-		StructureInfo<_jintArray> _jintArraySI;
-		StructureInfo<_jlongArray> _jlongArraySI;
-		StructureInfo<_jfloatArray> _jfloatArraySI;
-		StructureInfo<_jdoubleArray> _jdoubleArraySI;
+		StructureInfo marshalMethodsManagedClassStructureInfo;
+		StructureInfo marshalMethodNameStructureInfo;
 
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
@@ -205,7 +239,6 @@ namespace Xamarin.Android.Tasks
 		LlvmIrCallMarker defaultCallMarker;
 
 		readonly bool generateEmptyCode;
-		readonly MarshalMethodsTracingMode tracingMode;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
@@ -233,7 +266,7 @@ namespace Xamarin.Android.Tasks
 			defaultCallMarker = tracingMode != MarshalMethodsTracingMode.None ? LlvmIrCallMarker.None : LlvmIrCallMarker.Tail;
 		}
 
-		public override void Init ()
+		void Init ()
 		{
 			if (generateEmptyCode || marshalMethods == null || marshalMethods.Count == 0) {
 				return;
@@ -363,7 +396,7 @@ namespace Xamarin.Android.Tasks
 					ClassName = klass,
 				};
 
-				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (mc));
+				classes.Add (new StructureInstance<MarshalMethodsManagedClass> (marshalMethodsManagedClassStructureInfo, mc));
 			}
 
 			// Methods with `IsSpecial == true` are "synthetic" methods - they contain only the callback reference
@@ -550,65 +583,296 @@ namespace Xamarin.Android.Tasks
 				}
 
 				// Every parameter which isn't a primitive type becomes a pointer
-				parameters.Add (new LlvmIrFunctionParameter (type, implementedMethod.Parameters[parameters.Count].Name, isNativePointer: type.IsNativeClass ()));
+				parameters.Add (new LlvmIrFunctionParameter (type, implementedMethod.Parameters[parameters.Count].Name));
 			}
 		}
 
-		protected override void InitGenerator (LlvmIrGenerator generator)
+		protected override void Construct (LlvmIrModule module)
 		{
-			generator.InitCodeOutput ();
-		}
+			MapStructures (module);
 
-		protected override void MapStructures (LlvmIrGenerator generator)
-		{
-			monoImage = generator.MapStructure<TypeMappingReleaseNativeAssemblyGenerator.MonoImage> ();
-			monoClass = generator.MapStructure<MonoClass> ();
-			marshalMethodsClass = generator.MapStructure<MarshalMethodsManagedClass> ();
-			marshalMethodName = generator.MapStructure<MarshalMethodName> ();
-			_jniEnvSI = generator.MapStructure<_JNIEnv> ();
-			_jobjectSI = generator.MapStructure<_jobject> ();
-			_jclassSI = generator.MapStructure<_jclass> ();
-			_jstringSI = generator.MapStructure<_jstring> ();
-			_jthrowableSI = generator.MapStructure<_jthrowable> ();
-			_jarraySI = generator.MapStructure<_jarray> ();
-			_jobjectArraySI = generator.MapStructure<_jobjectArray> ();
-			_jbooleanArraySI = generator.MapStructure<_jbooleanArray> ();
-			_jbyteArraySI = generator.MapStructure<_jbyteArray> ();
-			_jcharArraySI = generator.MapStructure<_jcharArray> ();
-			_jshortArraySI = generator.MapStructure<_jshortArray> ();
-			_jintArraySI = generator.MapStructure<_jintArray> ();
-			_jlongArraySI = generator.MapStructure<_jlongArray> ();
-			_jfloatArraySI = generator.MapStructure<_jfloatArray> ();
-			_jdoubleArraySI = generator.MapStructure<_jdoubleArray> ();
-		}
+			Init ();
+			// InitTracing (module);
+			AddAssemblyImageCache (module, out AssemblyCacheState acs);
 
-		protected override void Write (LlvmIrGenerator generator)
-		{
-			WriteAssemblyImageCache (generator, out Dictionary<string, uint> asmNameToIndex);
-			WriteClassCache (generator);
-			InitializeTracing (generator);
-			LlvmIrVariableReference get_function_pointer_ref = WriteXamarinAppInitFunction (generator);
-			WriteNativeMethods (generator, asmNameToIndex, get_function_pointer_ref);
+			// class cache
+			module.AddGlobalVariable ("marshal_methods_number_of_classes", (uint)classes.Count, LlvmIrVariableOptions.GlobalConstant);
+			module.AddGlobalVariable ("marshal_methods_class_cache", classes, LlvmIrVariableOptions.GlobalWritable);
 
+			// Marshal methods class names
 			var mm_class_names = new List<string> ();
 			foreach (StructureInstance<MarshalMethodsManagedClass> klass in classes) {
-				mm_class_names.Add (klass.Obj.ClassName);
+				mm_class_names.Add (klass.Instance.ClassName);
 			}
-			generator.WriteArray (mm_class_names, "mm_class_names", "Names of classes in which marshal methods reside");
+			module.AddGlobalVariable ("mm_class_names", mm_class_names, LlvmIrVariableOptions.GlobalConstant, comment: " Names of classes in which marshal methods reside");
 
-			var uniqueMethods = new Dictionary<ulong, MarshalMethodInfo> ();
+			AddMarshalMethodNames (module, acs);
+			(LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction) = AddXamarinAppInitFunction (module);
+
+			AddMarshalMethods (module, acs, getFunctionPtrVariable, getFunctionPtrFunction);
+		}
+
+		void MapStructures (LlvmIrModule module)
+		{
+			marshalMethodsManagedClassStructureInfo = module.MapStructure<MarshalMethodsManagedClass> ();
+			marshalMethodNameStructureInfo = module.MapStructure<MarshalMethodName> ();
+		}
+
+		void AddMarshalMethods (LlvmIrModule module, AssemblyCacheState acs, LlvmIrVariable getFunctionPtrVariable, LlvmIrFunction getFunctionPtrFunction)
+		{
+			if (generateEmptyCode || methods == null || methods.Count == 0) {
+				return;
+			}
+
+			// This will make all the backing fields to appear in a block without empty lines separating them.
+			module.Add (
+				new LlvmIrGroupDelimiterVariable () {
+					Comment = " Marshal methods backing fields, pointers to native functions"
+				}
+			);
+
+			var writeState = new MarshalMethodsWriteState {
+				AssemblyCacheState = acs,
+				AttributeSet = MakeMarshalMethodAttributeSet (module),
+				UsedBackingFields = new Dictionary<string, LlvmIrVariable> (StringComparer.Ordinal),
+				UniqueAssemblyId = new Dictionary<string, ulong> (StringComparer.OrdinalIgnoreCase),
+				GetFunctionPtrVariable = getFunctionPtrVariable,
+				GetFunctionPtrFunction = getFunctionPtrFunction,
+			};
+			foreach (MarshalMethodInfo mmi in methods) {
+				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallback;
+				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
+
+				if (!writeState.UniqueAssemblyId.TryGetValue (asmName, out ulong asmId)) {
+					asmId = (ulong)writeState.UniqueAssemblyId.Count;
+					writeState.UniqueAssemblyId.Add (asmName, asmId);
+				}
+
+				AddMarshalMethod (module, mmi, asmId, writeState);
+			}
+
+			module.Add (new LlvmIrGroupDelimiterVariable ());
+		}
+
+		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
+		{
+			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
+			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
+
+			if (!writeState.UsedBackingFields.TryGetValue (backingFieldName, out LlvmIrVariable backingField)) {
+				backingField = module.AddGlobalVariable (typeof(IntPtr), backingFieldName, null, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
+				writeState.UsedBackingFields.Add (backingFieldName, backingField);
+			}
+
+			var funcComment = new StringBuilder (" Method: ");
+			funcComment.AppendLine (nativeCallback.FullName);
+			funcComment.Append (" Assembly: ");
+			funcComment.AppendLine (nativeCallback.Module.Assembly.Name.FullName);
+			funcComment.Append (" Registered: ");
+			funcComment.AppendLine (method.Method.RegisteredMethod?.FullName ?? "none");
+
+			var func = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters, writeState.AttributeSet) {
+				Comment = funcComment.ToString (),
+			};
+
+			WriteBody (func.Body);
+			module.Add (func);
+
+			void WriteBody (LlvmIrFunctionBody body)
+			{
+				LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
+				body.Load (backingField, cb1, tbaa: module.TbaaAnyPointer);
+
+				LlvmIrLocalVariable isNullResult = func.CreateLocalVariable (typeof(bool), "isNull");
+				body.Icmp (LlvmIrIcmpCond.Equal, cb1, null, isNullResult);
+
+				var loadCallbackLabel = new LlvmIrFunctionLabelItem ("loadCallback");
+				var callbackLoadedLabel = new LlvmIrFunctionLabelItem ("callbackLoaded");
+				body.Br (isNullResult, loadCallbackLabel, callbackLoadedLabel);
+
+				// Callback variable was null
+				body.Add (loadCallbackLabel);
+
+				LlvmIrLocalVariable getFuncPtrResult = func.CreateLocalVariable (typeof(IntPtr), "get_func_ptr");
+				body.Load (writeState.GetFunctionPtrVariable, getFuncPtrResult, tbaa: module.TbaaAnyPointer);
+
+				var placeholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
+				LlvmIrInstructions.Call call = body.Call (
+					writeState.GetFunctionPtrFunction,
+					arguments: new List<object?> { placeholder, method.ClassCacheIndex, nativeCallback.MetadataToken.ToUInt32 (), backingField },
+					funcPointer: getFuncPtrResult
+				);
+
+				LlvmIrLocalVariable cb2 = func.CreateLocalVariable (typeof(IntPtr), "cb2");
+				body.Load (backingField, cb2, tbaa: module.TbaaAnyPointer);
+				body.Br (callbackLoadedLabel);
+
+				// Callback variable has just been set or it wasn't null
+				body.Add (callbackLoadedLabel);
+				LlvmIrLocalVariable fn = func.CreateLocalVariable (typeof(IntPtr), "fn");
+
+				// Preceding blocks are ordered from the newest to the oldest, so we need to pass the variables referring to our callback in "reverse" order
+				body.Phi (fn, cb2, body.PrecedingBlock1, cb1, body.PrecedingBlock2);
+
+				var nativeFunc = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters);
+				nativeFunc.Signature.ReturnAttributes.NoUndef = true;
+
+				var arguments = new List<object?> ();
+				foreach (LlvmIrFunctionParameter parameter in nativeFunc.Signature.Parameters) {
+					arguments.Add (new LlvmIrLocalVariable (parameter.Type, parameter.Name));
+				}
+				LlvmIrLocalVariable? result = nativeFunc.ReturnsValue ? func.CreateLocalVariable (nativeFunc.Signature.ReturnType) : null;
+				call = body.Call (nativeFunc, result, arguments, funcPointer: fn);
+				call.CallMarker = LlvmIrCallMarker.Tail;
+
+				body.Ret (nativeFunc.Signature.ReturnType, result);
+			}
+		}
+
+		LlvmIrFunctionAttributeSet MakeMarshalMethodAttributeSet (LlvmIrModule module)
+		{
+			var attrSet = new LlvmIrFunctionAttributeSet {
+				new MustprogressFunctionAttribute (),
+				new UwtableFunctionAttribute (),
+				new MinLegalVectorWidthFunctionAttribute (0),
+				new NoTrappingMathFunctionAttribute (true),
+				new StackProtectorBufferSizeFunctionAttribute (8),
+			};
+
+			return module.AddAttributeSet (attrSet);
+		}
+
+		(LlvmIrVariable getFuncPtrVariable, LlvmIrFunction getFuncPtrFunction) AddXamarinAppInitFunction (LlvmIrModule module)
+		{
+			var getFunctionPtrParams = new List<LlvmIrFunctionParameter> {
+				new (typeof(uint), "mono_image_index") {
+					NoUndef = true,
+				},
+				new (typeof(uint), "class_index") {
+					NoUndef = true,
+				},
+				new (typeof(uint), "method_token") {
+					NoUndef = true,
+				},
+				new (typeof(IntPtr), "target_ptr") {
+					NoUndef = true,
+					NonNull = true,
+					Align = 0, // 0 means use natural pointer alignment
+					Dereferenceable = 0, // ditto 👆
+					IsCplusPlusReference = true,
+				},
+			};
+
+			var getFunctionPtrComment = new StringBuilder (" ");
+			getFunctionPtrComment.Append (GetFunctionPointerVariableName);
+			getFunctionPtrComment.Append (" (");
+			for (int i = 0; i < getFunctionPtrParams.Count; i++) {
+				if (i > 0) {
+					getFunctionPtrComment.Append (", ");
+				}
+				LlvmIrFunctionParameter parameter = getFunctionPtrParams[i];
+				getFunctionPtrComment.Append (LlvmIrGenerator.MapManagedTypeToNative (parameter.Type));
+				if (parameter.IsCplusPlusReference.HasValue && parameter.IsCplusPlusReference.Value) {
+				 	getFunctionPtrComment.Append ('&');
+				}
+				getFunctionPtrComment.Append (' ');
+				getFunctionPtrComment.Append (parameter.Name);
+			}
+			getFunctionPtrComment.Append (')');
+
+			LlvmIrFunction getFunctionPtrFunc = new LlvmIrFunction (
+				name: GetFunctionPointerVariableName,
+				returnType: typeof(void),
+				parameters: getFunctionPtrParams
+			);
+
+			LlvmIrVariable getFunctionPtrVariable = module.AddGlobalVariable (
+				typeof(IntPtr),
+				GetFunctionPointerVariableName,
+				null,
+				LlvmIrVariableOptions.LocalWritableInsignificantAddr,
+				getFunctionPtrComment.ToString ()
+			);
+
+			var init_params = new List<LlvmIrFunctionParameter> {
+				new (typeof(_JNIEnv), "env") {
+					NoCapture = true,
+					NoUndef = true,
+					ReadNone = true,
+				},
+				new (typeof(IntPtr), "fn") {
+					NoUndef = true,
+				},
+			};
+
+			var init_signature = new LlvmIrFunctionSignature (
+				name: "xamarin_app_init",
+				returnType: typeof(void),
+				parameters: init_params
+			);
+
+			LlvmIrFunctionAttributeSet attrSet = MakeXamarinAppInitAttributeSet (module);
+			var xamarin_app_init = new LlvmIrFunction (init_signature, attrSet);
+			xamarin_app_init.Body.Add (
+				new LlvmIrInstructions.Store (init_params[1], getFunctionPtrVariable) {
+					TBAA = module.TbaaAnyPointer,
+				}
+			);
+			xamarin_app_init.Body.Add (new LlvmIrInstructions.Ret (typeof(void)));
+
+			module.Add (xamarin_app_init);
+
+			return (getFunctionPtrVariable, getFunctionPtrFunc);
+		}
+
+		LlvmIrFunctionAttributeSet MakeXamarinAppInitAttributeSet (LlvmIrModule module)
+		{
+			var attrSet = new LlvmIrFunctionAttributeSet {
+				new MustprogressFunctionAttribute (),
+				new NofreeFunctionAttribute (),
+				new NorecurseFunctionAttribute (),
+				new NosyncFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new WillreturnFunctionAttribute (),
+				// TODO: LLVM 16+ feature, enable when we switch to this version
+				// new MemoryFunctionAttribute {
+				// 	Default = MemoryAttributeAccessKind.Write,
+				// 	Argmem = MemoryAttributeAccessKind.None,
+				// 	InaccessibleMem = MemoryAttributeAccessKind.None,
+				// },
+				new UwtableFunctionAttribute (),
+				new MinLegalVectorWidthFunctionAttribute (0),
+				new NoTrappingMathFunctionAttribute (true),
+				new StackProtectorBufferSizeFunctionAttribute (8),
+			};
+
+			return module.AddAttributeSet (attrSet);
+		}
+
+		void AddMarshalMethodNames (LlvmIrModule module, AssemblyCacheState acs)
+		{
+			var uniqueMethods = new Dictionary<ulong, (MarshalMethodInfo mmi, ulong id32, ulong id64)> ();
+
 			if (!generateEmptyCode && methods != null) {
 				foreach (MarshalMethodInfo mmi in methods) {
 					string asmName = Path.GetFileName (mmi.Method.NativeCallback.Module.Assembly.MainModule.FileName);
-					if (!asmNameToIndex.TryGetValue (asmName, out uint idx)) {
-						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to cache array index");
+
+					if (!acs.AsmNameToIndexData32.TryGetValue (asmName, out uint idx32)) {
+						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 32-bit cache array index");
 					}
 
-					ulong id = ((ulong)idx << 32) | (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
-					if (uniqueMethods.ContainsKey (id)) {
+					if (!acs.AsmNameToIndexData64.TryGetValue (asmName, out uint idx64)) {
+						throw new InvalidOperationException ($"Internal error: failed to match assembly name '{asmName}' to 64-bit cache array index");
+					}
+
+					ulong methodToken = (ulong)mmi.Method.NativeCallback.MetadataToken.ToUInt32 ();
+					ulong id32 = ((ulong)idx32 << 32) | methodToken;
+					if (uniqueMethods.ContainsKey (id32)) {
 						continue;
 					}
-					uniqueMethods.Add (id, mmi);
+
+					ulong id64 = ((ulong)idx64 << 32) | methodToken;
+					uniqueMethods.Add (id32, (mmi, id32, id64));
 				}
 			}
 
@@ -617,25 +881,35 @@ namespace Xamarin.Android.Tasks
 			var mm_method_names = new List<StructureInstance<MarshalMethodName>> ();
 			foreach (var kvp in uniqueMethods) {
 				ulong id = kvp.Key;
-				MarshalMethodInfo mmi = kvp.Value;
+				(MarshalMethodInfo mmi, ulong id32, ulong id64) = kvp.Value;
 
 				RenderMethodNameWithParams (mmi.Method.NativeCallback, methodName);
 				name = new MarshalMethodName {
+					Id32 = id32,
+					Id64 = id64,
+
 					// Tokens are unique per assembly
-					id = id,
+					id = 0,
 					name = methodName.ToString (),
 				};
-				mm_method_names.Add (new StructureInstance<MarshalMethodName> (name));
+				mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
 			}
 
 			// Must terminate with an "invalid" entry
 			name = new MarshalMethodName {
+				Id32 = 0,
+				Id64 = 0,
+
 				id = 0,
 				name = String.Empty,
 			};
-			mm_method_names.Add (new StructureInstance<MarshalMethodName> (name));
+			mm_method_names.Add (new StructureInstance<MarshalMethodName> (marshalMethodNameStructureInfo, name));
 
-			generator.WriteStructureArray (marshalMethodName, mm_method_names, LlvmIrVariableOptions.GlobalConstant, "mm_method_names");
+			var mm_method_names_variable = new LlvmIrGlobalVariable (mm_method_names, "mm_method_names", LlvmIrVariableOptions.GlobalConstant) {
+				BeforeWriteCallback = UpdateMarshalMethodNameIds,
+				BeforeWriteCallbackCallerState = acs,
+			};
+			module.Add (mm_method_names_variable);
 
 			void RenderMethodNameWithParams (CecilMethodDefinition md, StringBuilder buffer)
 			{
@@ -660,217 +934,150 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		void WriteNativeMethods (LlvmIrGenerator generator, Dictionary<string, uint> asmNameToIndex, LlvmIrVariableReference get_function_pointer_ref)
+		void UpdateMarshalMethodNameIds (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
 		{
-			if (generateEmptyCode || methods == null || methods.Count == 0) {
-				return;
+			var mm_method_names = (List<StructureInstance<MarshalMethodName>>)variable.Value;
+			bool is64Bit = target.Is64Bit;
+
+			foreach (StructureInstance<MarshalMethodName> mmn in mm_method_names) {
+				mmn.Instance.id = is64Bit ? mmn.Instance.Id64 : mmn.Instance.Id32;
 			}
-
-			var usedBackingFields = new HashSet<string> (StringComparer.Ordinal);
-			foreach (MarshalMethodInfo mmi in methods) {
-				CecilMethodDefinition nativeCallback = mmi.Method.NativeCallback;
-				string asmName = nativeCallback.DeclaringType.Module.Assembly.Name.Name;
-				if (!asmNameToIndex.TryGetValue (asmName, out uint asmIndex)) {
-					throw new InvalidOperationException ($"Unable to translate assembly name '{asmName}' to its index");
-				}
-				mmi.AssemblyCacheIndex = asmIndex;
-				WriteMarshalMethod (generator, mmi, get_function_pointer_ref, usedBackingFields);
-			}
-		}
-
-		void WriteMarshalMethod (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrVariableReference get_function_pointer_ref, HashSet<string> usedBackingFields)
-		{
-			var backingFieldSignature = new LlvmNativeFunctionSignature (
-				returnType: method.ReturnType,
-				parameters: method.Parameters
-			) {
-				FieldValue = "null",
-			};
-
-			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
-			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{method.AssemblyCacheIndex}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
-			var backingFieldRef = new LlvmIrVariableReference (backingFieldSignature, backingFieldName, isGlobal: true, isNativePointer: true);
-
-			if (!usedBackingFields.Contains (backingFieldName)) {
-				generator.WriteVariable (backingFieldName, backingFieldSignature, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
-				usedBackingFields.Add (backingFieldName);
-			}
-
-			var func = new LlvmIrFunction (
-				name: method.NativeSymbolName,
-				returnType: method.ReturnType,
-				attributeSetID: LlvmIrGenerator.FunctionAttributesJniMethods,
-				parameters: method.Parameters
-			);
-
-			generator.WriteFunctionStart (func, $"Method: {nativeCallback.FullName}\nAssembly: {nativeCallback.Module.Assembly.Name}\nRegistered: {method.Method.RegisteredMethod?.FullName}");
-
-			TracingState? tracingState = WriteMarshalMethodTracingTop (generator, method, func);
-			LlvmIrFunctionLocalVariable callbackVariable1 = generator.EmitLoadInstruction (func, backingFieldRef, "cb1");
-			var callbackVariable1Ref = new LlvmIrVariableReference (callbackVariable1, isGlobal: false);
-
-			LlvmIrFunctionLocalVariable isNullVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.Equal, callbackVariable1Ref, expectedValue: "null", resultVariableName: "isNull");
-			var isNullVariableRef = new LlvmIrVariableReference (isNullVariable, isGlobal: false);
-
-			const string loadCallbackLabel = "loadCallback";
-			const string callbackLoadedLabel = "callbackLoaded";
-
-			generator.EmitBrInstruction (func, isNullVariableRef, loadCallbackLabel, callbackLoadedLabel);
-			generator.EmitLabel (func, loadCallbackLabel);
-
-			LlvmIrFunctionLocalVariable getFunctionPointerVariable = generator.EmitLoadInstruction (func, get_function_pointer_ref, "get_func_ptr");
-			var getFunctionPtrRef = new LlvmIrVariableReference (getFunctionPointerVariable, isGlobal: false);
-
-			generator.EmitCall (
-				func,
-				getFunctionPtrRef,
-				new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (get_function_pointer_params[0], method.AssemblyCacheIndex),
-					new LlvmIrFunctionArgument (get_function_pointer_params[1], method.ClassCacheIndex),
-					new LlvmIrFunctionArgument (get_function_pointer_params[2], nativeCallback.MetadataToken.ToUInt32 ()),
-					new LlvmIrFunctionArgument (backingFieldRef),
-				},
-				marker: defaultCallMarker
-			);
-
-			LlvmIrFunctionLocalVariable callbackVariable2 = generator.EmitLoadInstruction (func, backingFieldRef, "cb2");
-			var callbackVariable2Ref = new LlvmIrVariableReference (callbackVariable2, isGlobal: false);
-
-			generator.EmitBrInstruction (func, callbackLoadedLabel);
-			generator.EmitLabel (func, callbackLoadedLabel);
-
-			LlvmIrFunctionLocalVariable fnVariable = generator.EmitPhiInstruction (
-				func,
-				backingFieldRef,
-				new List<(LlvmIrVariableReference variableRef, string label)> {
-					(callbackVariable1Ref, func.PreviousBlockStartLabel),
-					(callbackVariable2Ref, func.PreviousBlockEndLabel),
-				},
-				resultVariableName: "fn"
-			);
-			var fnVariableRef = new LlvmIrVariableReference (fnVariable, isGlobal: false);
-
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (
-				func,
-				fnVariableRef,
-				func.ParameterVariables.Select (pv => new LlvmIrFunctionArgument (pv)).ToList (),
-				marker: defaultCallMarker
-			);
-
-			WriteMarshalMethodTracingBottom (tracingState, generator, func, result);
-			if (result != null) {
-				generator.EmitReturnInstruction (func, result);
-			}
-
-			generator.WriteFunctionEnd (func);
-		}
-
-		LlvmIrVariableReference WriteXamarinAppInitFunction (LlvmIrGenerator generator)
-		{
-			get_function_pointer_params = new List<LlvmIrFunctionParameter> {
-				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
-				new LlvmIrFunctionParameter (typeof(IntPtr), "target_ptr", isNativePointer: true, isCplusPlusReference: true)
-			};
-
-			var get_function_pointer_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: get_function_pointer_params
-			) {
-				FieldValue = "null",
-			};
-
-			const string GetFunctionPointerFieldName = "get_function_pointer";
-			generator.WriteVariable (GetFunctionPointerFieldName, get_function_pointer_sig, LlvmIrVariableOptions.LocalWritableInsignificantAddr);
-
-			var fnParameter = new LlvmIrFunctionParameter (get_function_pointer_sig, "fn");
-			var func = new LlvmIrFunction (
-				name: "xamarin_app_init",
-				returnType: typeof (void),
-				attributeSetID: LlvmIrGenerator.FunctionAttributesXamarinAppInit,
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
-					fnParameter,
-				}
-			);
-
-			generator.WriteFunctionStart (func);
-			generator.EmitStoreInstruction (func, fnParameter, new LlvmIrVariableReference (get_function_pointer_sig, GetFunctionPointerFieldName, isGlobal: true));
-
-			WriteTracingInit (generator, func);
-
-			generator.WriteFunctionEnd (func);
-
-			return new LlvmIrVariableReference (get_function_pointer_sig, GetFunctionPointerFieldName, isGlobal: true);
-		}
-
-		void WriteClassCache (LlvmIrGenerator generator)
-		{
-			uint marshal_methods_number_of_classes = (uint)classes.Count;
-
-			generator.WriteVariable (nameof (marshal_methods_number_of_classes), marshal_methods_number_of_classes);
-			generator.WriteStructureArray (marshalMethodsClass, classes,  LlvmIrVariableOptions.GlobalWritable, "marshal_methods_class_cache");
 		}
 
 		// TODO: this should probably be moved to a separate writer, since not only marshal methods use the cache
-		void WriteAssemblyImageCache (LlvmIrGenerator generator, out Dictionary<string, uint> asmNameToIndex)
+		void AddAssemblyImageCache (LlvmIrModule module, out AssemblyCacheState acs)
 		{
-			bool is64Bit = generator.Is64Bit;
-			generator.WriteStructureArray (monoImage, (ulong)numberOfAssembliesInApk, "assembly_image_cache", isArrayOfPointers: true);
+			var assembly_image_cache = new LlvmIrGlobalVariable (typeof(List<IntPtr>), "assembly_image_cache", LlvmIrVariableOptions.GlobalWritable) {
+				ZeroInitializeArray = true,
+				ArrayItemCount = (ulong)numberOfAssembliesInApk,
+			};
+			module.Add (assembly_image_cache);
 
-			var asmNameToIndexData = new Dictionary<string, uint> (StringComparer.Ordinal);
-			if (is64Bit) {
-				WriteHashes<ulong> ();
+			acs = new AssemblyCacheState {
+				AsmNameToIndexData32 = new Dictionary<string, uint> (StringComparer.Ordinal),
+				Indices32 = new List<uint> (),
+
+				AsmNameToIndexData64 = new Dictionary<string, uint> (StringComparer.Ordinal),
+				Indices64 = new List<uint> (),
+			};
+
+			acs.Hashes32 = new Dictionary<uint, (string name, uint index)> ();
+			acs.Hashes64 = new Dictionary<ulong, (string name, uint index)> ();
+			uint index = 0;
+
+			foreach (string name in uniqueAssemblyNames) {
+				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
+				string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
+				ulong hashFull32 = GetXxHash (name, is64Bit: false);
+				ulong hashClipped32 = GetXxHash (clippedName, is64Bit: false);
+				ulong hashFull64 = GetXxHash (name, is64Bit: true);
+				ulong hashClipped64 = GetXxHash (clippedName, is64Bit: true);
+
+				//
+				// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
+				// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
+				//
+				acs.Hashes32.Add ((uint)Convert.ChangeType (hashFull32, typeof(uint)), (name, index));
+				acs.Hashes32.Add ((uint)Convert.ChangeType (hashClipped32, typeof(uint)), (clippedName, index));
+				acs.Hashes64.Add (hashFull64, (name, index));
+				acs.Hashes64.Add (hashClipped64, (clippedName, index));
+
+				index++;
+			}
+
+			acs.Keys32 = acs.Hashes32.Keys.ToList ();
+			acs.Keys32.Sort ();
+			for (int i = 0; i < acs.Keys32.Count; i++) {
+				(string name, uint idx) = acs.Hashes32[acs.Keys32[i]];
+				acs.Indices32.Add (idx);
+				acs.AsmNameToIndexData32.Add (name, idx);
+			}
+
+			acs.Keys64 = acs.Hashes64.Keys.ToList ();
+			acs.Keys64.Sort ();
+			for (int i = 0; i < acs.Keys64.Count; i++) {
+				(string name, uint idx) = acs.Hashes64[acs.Keys64[i]];
+				acs.Indices64.Add (idx);
+				acs.AsmNameToIndexData64.Add (name, idx);
+			}
+
+			var assembly_image_cache_hashes = new LlvmIrGlobalVariable (typeof(List<ulong>), "assembly_image_cache_hashes", LlvmIrVariableOptions.GlobalConstant) {
+				Comment = " Each entry maps hash of an assembly name to an index into the `assembly_image_cache` array",
+				BeforeWriteCallback = UpdateAssemblyImageCacheHashes,
+				BeforeWriteCallbackCallerState = acs,
+				GetArrayItemCommentCallback = GetAssemblyImageCacheItemComment,
+				GetArrayItemCommentCallbackCallerState = acs,
+			};
+			module.Add (assembly_image_cache_hashes);
+
+			var assembly_image_cache_indices = new LlvmIrGlobalVariable (typeof(List<uint>), "assembly_image_cache_indices", LlvmIrVariableOptions.GlobalConstant) {
+				WriteOptions = LlvmIrVariableWriteOptions.ArrayWriteIndexComments | LlvmIrVariableWriteOptions.ArrayFormatInRows,
+				BeforeWriteCallback = UpdateAssemblyImageCacheIndices,
+				BeforeWriteCallbackCallerState = acs,
+			};
+			module.Add (assembly_image_cache_indices);
+		}
+
+		void UpdateAssemblyImageCacheHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
+		{
+			AssemblyCacheState acs = EnsureAssemblyCacheState (callerState);
+			object value;
+			Type type;
+
+			if (target.Is64Bit) {
+				value = acs.Keys64;
+				type = typeof(List<ulong>);
 			} else {
-				WriteHashes<uint> ();
+				value = acs.Keys32;
+				type = typeof(List<uint>);
 			}
 
-			asmNameToIndex = asmNameToIndexData;
+			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
+			gv.OverrideValueAndType (type, value);
+		}
 
-			void WriteHashes<T> () where T: struct
-			{
-				var hashes = new Dictionary<T, (string name, uint index)> ();
-				uint index = 0;
+		string? GetAssemblyImageCacheItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+		{
+			AssemblyCacheState acs = EnsureAssemblyCacheState (callerState);
 
-				foreach (string name in uniqueAssemblyNames) {
-					// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
-					string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
-					ulong hashFull = HashName (name, is64Bit);
-					ulong hashClipped = HashName (clippedName, is64Bit);
-
-					//
-					// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
-					// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
-					//
-					hashes.Add ((T)Convert.ChangeType (hashFull, typeof(T)), (name, index));
-					hashes.Add ((T)Convert.ChangeType (hashClipped, typeof(T)), (clippedName, index));
-
-					index++;
-				}
-				List<T> keys = hashes.Keys.ToList ();
-				keys.Sort ();
-
-				generator.WriteCommentLine ("Each entry maps hash of an assembly name to an index into the `assembly_image_cache` array");
-				generator.WriteArray (
-					keys,
-					LlvmIrVariableOptions.GlobalConstant,
-					"assembly_image_cache_hashes",
-					(int idx, T value) => $"{idx}: {hashes[value].name} => 0x{value:x} => {hashes[value].index}"
-				);
-
-				var indices = new List<uint> ();
-				for (int i = 0; i < keys.Count; i++) {
-					(string name, uint idx) = hashes[keys[i]];
-					indices.Add (idx);
-					asmNameToIndexData.Add (name, idx);
-				}
-				generator.WriteArray (
-					indices,
-					LlvmIrVariableOptions.GlobalConstant,
-					"assembly_image_cache_indices"
-				);
+			string name;
+			uint i;
+			if (target.Is64Bit) {
+				var v64 = (ulong)value;
+				name = acs.Hashes64[v64].name;
+				i = acs.Hashes64[v64].index;
+			} else {
+				var v32 = (uint)value;
+				name = acs.Hashes32[v32].name;
+				i = acs.Hashes32[v32].index;
 			}
+
+			return $" {index}: {name} => 0x{value:x} => {i}";
+		}
+
+		void UpdateAssemblyImageCacheIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
+		{
+			AssemblyCacheState acs = EnsureAssemblyCacheState (callerState);
+			object value;
+
+			if (target.Is64Bit) {
+				value = acs.Indices64;
+			} else {
+				value = acs.Indices32;
+			}
+
+			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
+			gv.OverrideValueAndType (variable.Type, value);
+		}
+
+		AssemblyCacheState EnsureAssemblyCacheState (object? callerState)
+		{
+			var acs = callerState as AssemblyCacheState;
+			if (acs == null) {
+				throw new InvalidOperationException ("Internal error: construction state expected but not found");
+			}
+
+			return acs;
 		}
 	}
 }

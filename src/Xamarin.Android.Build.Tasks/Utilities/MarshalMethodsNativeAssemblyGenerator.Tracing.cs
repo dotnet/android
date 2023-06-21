@@ -1,658 +1,95 @@
 using System;
-using System.Text;
 using System.Collections.Generic;
 
+using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks.LLVMIR;
-using System.Collections;
 
 namespace Xamarin.Android.Tasks
 {
-	using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
-	using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
-
 	partial class MarshalMethodsNativeAssemblyGenerator
 	{
-		const string mm_trace_init_name                  = "_mm_trace_init";
-		const string mm_trace_func_enter_name            = "_mm_trace_func_enter";
-		const string mm_trace_func_leave_name            = "_mm_trace_func_leave";
-		const string mm_trace_get_class_name_name        = "_mm_trace_get_class_name";
-		const string mm_trace_get_object_class_name_name = "_mm_trace_get_object_class_name";
-		const string mm_trace_get_c_string_name          = "_mm_trace_get_c_string";
-		const string mm_trace_get_boolean_string_name    = "_mm_trace_get_boolean_string";
-		const string asprintf_name                       = "asprintf";
-		const string free_name                           = "free";
+		readonly MarshalMethodsTracingMode tracingMode;
 
-		enum TracingRenderArgumentFunction
+		LlvmIrFunction? mm_trace_func_enter;
+		LlvmIrFunction? mm_trace_func_leave;
+		LlvmIrFunction? llvm_lifetime_start;
+		LlvmIrFunction? llvm_lifetime_end;
+
+		void InitTracing (LlvmIrModule module)
 		{
-			None,
-			GetClassName,
-			GetObjectClassname,
-			GetCString,
-			GetBooleanString,
-		}
+			var llvmFunctionsAttributeSet = module.AddAttributeSet (MakeLlvmIntrinsicFunctionsAttributeSet (module));
+			var traceFunctionsAttributeSet = module.AddAttributeSet (MakeTraceFunctionsAttributeSet (module));
 
-		sealed class AsprintfParameterOperation
-		{
-			public readonly Type? Upcast;
-			public readonly TracingRenderArgumentFunction RenderFunction = TracingRenderArgumentFunction.None;
-			public readonly bool MustBeFreed;
-
-			public AsprintfParameterOperation (Type? upcast, TracingRenderArgumentFunction renderFunction)
-			{
-				Upcast = upcast;
-				RenderFunction = renderFunction;
-			}
-
-			public AsprintfParameterOperation (Type upcast)
-				: this (upcast, TracingRenderArgumentFunction.None)
-			{}
-
-			public AsprintfParameterOperation (TracingRenderArgumentFunction renderFunction, bool mustBeFreed)
-				: this (null, renderFunction)
-			{
-				MustBeFreed = mustBeFreed;
-			}
-
-			public AsprintfParameterOperation ()
-				: this (null, TracingRenderArgumentFunction.None)
-			{}
-		}
-
-		sealed class AsprintfParameterTransform : IEnumerable<AsprintfParameterOperation>
-		{
-			public List<AsprintfParameterOperation> Operations { get; } = new List<AsprintfParameterOperation> ();
-
-			public void Add (AsprintfParameterOperation parameterOp)
-			{
-				Operations.Add (parameterOp);
-			}
-
-			public IEnumerator<AsprintfParameterOperation> GetEnumerator ()
-			{
-				return ((IEnumerable<AsprintfParameterOperation>)Operations).GetEnumerator ();
-			}
-
-			IEnumerator IEnumerable.GetEnumerator ()
-			{
-				return ((IEnumerable)Operations).GetEnumerator ();
-			}
-		}
-
-		sealed class AsprintfCallState
-		{
-			public readonly string Format;
-			public readonly List<AsprintfParameterTransform?> ParameterTransforms;
-			public readonly List<LlvmIrVariableReference> VariablesToFree = new List<LlvmIrVariableReference> ();
-			public readonly List<LlvmIrVariableReference> VariadicArgsVariables = new List<LlvmIrVariableReference> ();
-
-			public AsprintfCallState (string format, List<AsprintfParameterTransform?> parameterTransforms)
-			{
-				Format = format;
-				ParameterTransforms = parameterTransforms;
-			}
-		}
-
-		sealed class TracingState
-		{
-			public List<LlvmIrFunctionArgument>? trace_enter_leave_args            = null;
-			public LlvmIrFunctionLocalVariable? tracingParamsStringLifetimeTracker = null;
-			public List<LlvmIrFunctionArgument>? asprintfVariadicArgs              = null;
-			public LlvmIrVariableReference? asprintfAllocatedStringAccessorRef     = null;
-			public LlvmIrVariableReference? asprintfAllocatedStringVarRef          = null;
-		}
-
-		List<LlvmIrFunctionParameter>? mm_trace_func_enter_or_leave_params;
-		int mm_trace_func_enter_leave_extra_info_param_index = -1;
-		List<LlvmIrFunctionParameter>? get_function_pointer_params;
-		LlvmIrVariableReference? mm_trace_init_ref;
-		LlvmIrVariableReference? mm_trace_func_enter_ref;
-		LlvmIrVariableReference? mm_trace_func_leave_ref;
-		LlvmIrVariableReference? mm_trace_get_class_name_ref;
-		LlvmIrVariableReference? mm_trace_get_object_class_name_ref;
-		LlvmIrVariableReference? mm_trace_get_c_string_ref;
-		LlvmIrVariableReference? mm_trace_get_boolean_string_ref;
-		LlvmIrVariableReference? asprintf_ref;
-		LlvmIrVariableReference? free_ref;
-
-		void InitializeTracing (LlvmIrGenerator generator)
-		{
-			if (tracingMode == MarshalMethodsTracingMode.None) {
-				return;
-			}
-
-			// Function names and declarations must match those in src/monodroid/jni/marshal-methods-tracing.hh
-			mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
-				new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true), // JNIEnv *env
-				new LlvmIrFunctionParameter (typeof(int), "tracing_mode"),
-				new LlvmIrFunctionParameter (typeof(uint), "mono_image_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "class_index"),
-				new LlvmIrFunctionParameter (typeof(uint), "method_token"),
-				new LlvmIrFunctionParameter (typeof(string), "native_method_name"),
-				new LlvmIrFunctionParameter (typeof(string), "method_extra_info"),
+			var llvm_lifetime_params = new List<LlvmIrFunctionParameter> {
+				new (typeof(ulong), "size"),
+				new (typeof(IntPtr), "pointer"),
 			};
-			mm_trace_func_enter_leave_extra_info_param_index = mm_trace_func_enter_or_leave_params.Count - 1;
 
-			var mm_trace_func_enter_sig = new LlvmNativeFunctionSignature (
+			var lifetime_sig = new LlvmIrFunctionSignature (
+				name: "llvm.lifetime.start",
 				returnType: typeof(void),
-				parameters: mm_trace_func_enter_or_leave_params
-
+				parameters: llvm_lifetime_params
 			);
-			mm_trace_func_enter_ref = new LlvmIrVariableReference (mm_trace_func_enter_sig, mm_trace_func_enter_name, isGlobal: true);
 
-			var mm_trace_func_leave_sig = new LlvmNativeFunctionSignature (
+			llvm_lifetime_start = module.DeclareExternalFunction (
+				new LlvmIrFunction (lifetime_sig, llvmFunctionsAttributeSet) {
+					AddressSignificance = LlvmIrAddressSignificance.Default
+				}
+			);
+			llvm_lifetime_start = module.DeclareExternalFunction (
+				new LlvmIrFunction ("llvm.lifetime.end", lifetime_sig, llvmFunctionsAttributeSet) {
+					AddressSignificance = LlvmIrAddressSignificance.Default
+				}
+			);
+
+			 // Function names and declarations must match those in src/monodroid/jni/marshal-methods-tracing.hh
+			var mm_trace_func_enter_or_leave_params = new List<LlvmIrFunctionParameter> {
+				new (typeof(IntPtr), "env"), // JNIEnv *env
+				new (typeof(int), "tracing_mode"),
+				new (typeof(uint), "mono_image_index"),
+				new (typeof(uint), "class_index"),
+				new (typeof(uint), "method_token"),
+				new (typeof(string), "native_method_name"),
+				new (typeof(string), "method_extra_info"),
+			};
+
+			var mm_trace_func_enter_leave_sig = new LlvmIrFunctionSignature (
+				name: "_mm_trace_func_enter",
 				returnType: typeof(void),
 				parameters: mm_trace_func_enter_or_leave_params
 			);
-			mm_trace_func_leave_ref = new LlvmIrVariableReference (mm_trace_func_leave_sig, mm_trace_func_leave_name, isGlobal: true);
 
-			var asprintf_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(int),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(string), isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(string)) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(void)) {
-						IsVarargs = true,
-					}
-				}
-			);
-			asprintf_ref = new LlvmIrVariableReference (asprintf_sig, asprintf_name, isGlobal: true);
-
-			var free_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(string)) {
-						NoCapture = true,
-						NoUndef = true,
-					},
-				}
-			);
-			free_ref = new LlvmIrVariableReference (free_sig, free_name, isGlobal: true);
-
-			var mm_trace_init_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(void),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true) {
-						NoUndef = true,
-					},
-				}
-			);
-			mm_trace_init_ref = new LlvmIrVariableReference (mm_trace_init_sig, mm_trace_init_name, isGlobal: true);
-
-			var mm_trace_get_class_name_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(string),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(_jclass), "v") {
-						NoUndef = true,
-					},
-				}
-			);
-			mm_trace_get_class_name_ref = new LlvmIrVariableReference (mm_trace_get_class_name_sig, mm_trace_get_class_name_name, isGlobal: true);
-
-			var mm_trace_get_object_class_name_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(string),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(_jobject), "v") {
-						NoUndef = true,
-					},
-				}
-			);
-			mm_trace_get_object_class_name_ref = new LlvmIrVariableReference (mm_trace_get_object_class_name_sig, mm_trace_get_object_class_name_name, isGlobal: true);
-
-			var mm_trace_get_c_string_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(string),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(_jstring), "v") {
-						NoUndef = true,
-					},
-				}
-			);
-			mm_trace_get_c_string_ref = new LlvmIrVariableReference (mm_trace_get_c_string_sig, mm_trace_get_c_string_name, isGlobal: true);
-
-			var mm_trace_get_boolean_string_sig = new LlvmNativeFunctionSignature (
-				returnType: typeof(string),
-				parameters: new List<LlvmIrFunctionParameter> {
-					new LlvmIrFunctionParameter (typeof(_JNIEnv), "env", isNativePointer: true) {
-						NoUndef = true,
-					},
-					new LlvmIrFunctionParameter (typeof(byte), "v") {
-						NoUndef = true,
-					},
-				}
-			);
-			mm_trace_get_boolean_string_ref = new LlvmIrVariableReference (mm_trace_get_boolean_string_sig, mm_trace_get_boolean_string_name, isGlobal: true);
-
-			AddTraceFunctionDeclaration (asprintf_name, asprintf_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (free_name, free_sig, LlvmIrGenerator.FunctionAttributesLibcFree);
-			AddTraceFunctionDeclaration (mm_trace_init_name, mm_trace_init_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_func_enter_name, mm_trace_func_enter_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_func_leave_name, mm_trace_func_leave_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_get_class_name_name, mm_trace_get_class_name_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_get_object_class_name_name, mm_trace_get_object_class_name_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_get_c_string_name, mm_trace_get_c_string_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-			AddTraceFunctionDeclaration (mm_trace_get_boolean_string_name, mm_trace_get_boolean_string_sig, LlvmIrGenerator.FunctionAttributesJniMethods);
-
-			void AddTraceFunctionDeclaration (string name, LlvmNativeFunctionSignature sig, int attributeSetID)
-			{
-				var func = new LlvmIrFunction (
-					name: name,
-					returnType: sig.ReturnType,
-					attributeSetID: attributeSetID,
-					parameters: sig.Parameters
-				);
-				generator.AddExternalFunction (func);
-			}
+			mm_trace_func_enter = module.DeclareExternalFunction (new LlvmIrFunction (mm_trace_func_enter_leave_sig, traceFunctionsAttributeSet));
+			mm_trace_func_leave = module.DeclareExternalFunction (new LlvmIrFunction ("_mm_trace_func_leave", mm_trace_func_enter_leave_sig, traceFunctionsAttributeSet));
 		}
 
-		void AddPrintfFormatAndTransforms (StringBuilder sb, Type type, List<AsprintfParameterTransform?> parameterTransforms, out bool isNativePointer)
+		LlvmIrFunctionAttributeSet MakeLlvmIntrinsicFunctionsAttributeSet (LlvmIrModule module)
 		{
-			string format;
-			AsprintfParameterTransform? transform = null;
-			isNativePointer = false;
+			return new LlvmIrFunctionAttributeSet {
+				new ArgmemonlyFunctionAttribute (),
+				new MustprogressFunctionAttribute (),
+				new NocallbackFunctionAttribute (),
+				new NofreeFunctionAttribute (),
+				new NosyncFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new WillreturnFunctionAttribute (),
+			};
+		}
 
-			if (type == typeof(string)) {
-				format = "\"%s\"";
-				isNativePointer = true;
-			} else if (type == typeof(_jclass)) {
-				format = "%s @%p";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (TracingRenderArgumentFunction.GetClassName, mustBeFreed: true),
-					new AsprintfParameterOperation (),
-				};
-				isNativePointer = true;
-			} else if (type == typeof(_jobject)) {
-				format = "%s @%p";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (TracingRenderArgumentFunction.GetObjectClassname, mustBeFreed: true),
-					new AsprintfParameterOperation (),
-				};
-				isNativePointer = true;
-			} else if (type == typeof(_jstring)) {
-				format = "\"%s\"";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (TracingRenderArgumentFunction.GetCString, mustBeFreed: true),
-					new AsprintfParameterOperation (),
-				};
-				isNativePointer = true;
-			} else if (type == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (type) || type == typeof(_JNIEnv)) {
-				format = "%p";
-				isNativePointer = true;
-			} else if (type == typeof(bool)) {
-				format = "%s";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (TracingRenderArgumentFunction.GetBooleanString, mustBeFreed: false),
-				};
-				isNativePointer = true;
-			} else if (type == typeof(byte) || type == typeof(ushort)) {
-				format = "%u";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (typeof(uint)),
-				};
-			} else if (type == typeof(sbyte) || type == typeof(short)) {
-				format = "%d";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (typeof(int)),
-				};
-			} else if (type == typeof(char)) {
-				format = "'\\%x'";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (typeof(uint)),
-				};
-			} else if (type == typeof(int)) {
-				format = "%d";
-			} else if (type == typeof(uint)) {
-				format = "%u";
-			} else if (type == typeof(long)) {
-				format = "%ld";
-			} else if (type == typeof(ulong)) {
-				format = "%lu";
-			} else if (type == typeof(float)) {
-				format = "%g";
-				transform = new AsprintfParameterTransform {
-					new AsprintfParameterOperation (typeof(double)),
-				};
-			} else if (type == typeof(double)) {
-				format = "%g";
-			} else {
-				throw new InvalidOperationException ($"Unsupported type '{type}'");
+		LlvmIrFunctionAttributeSet MakeTraceFunctionsAttributeSet (LlvmIrModule module)
+		{
+			var ret = new LlvmIrFunctionAttributeSet {
+				new NounwindFunctionAttribute (),
+				new NoTrappingMathFunctionAttribute (true),
+				new StackProtectorBufferSizeFunctionAttribute (8),
 			};
 
-			parameterTransforms.Add (transform);
-			sb.Append (format);
-		}
-
-		(StringBuilder sb, List<AsprintfParameterTransform?> parameterOps) InitPrintfState (string startChars = "(")
-		{
-			return (new StringBuilder (startChars), new List<AsprintfParameterTransform?> ());
-		}
-
-		AsprintfCallState FinishPrintfState (StringBuilder sb, List<AsprintfParameterTransform?> parameterTransforms, string endChars = ")")
-		{
-			sb.Append (endChars);
-			return new AsprintfCallState (sb.ToString (), parameterTransforms);
-		}
-
-		AsprintfCallState GetPrintfStateForFunctionParams (MarshalMethodInfo method, LlvmIrFunction func)
-		{
-			(StringBuilder ret, List<AsprintfParameterTransform?> parameterOps) = InitPrintfState ();
-			bool first = true;
-
-			List<LlvmIrFunctionParameter> nativeMethodParameters = method.Parameters;
-			Mono.Collections.Generic.Collection<CecilParameterDefinition>? managedMethodParameters = method.Method.RegisteredMethod?.Parameters;
-
-			int expectedRegisteredParamCount = nativeMethodParameters.Count - 2;
-			if (managedMethodParameters != null && managedMethodParameters.Count != expectedRegisteredParamCount) {
-				throw new InvalidOperationException ($"Internal error: unexpected number of registered method parameters. Should be {expectedRegisteredParamCount}, but is {managedMethodParameters.Count}");
-			}
-
-			if (nativeMethodParameters.Count != func.Parameters.Count) {
-				throw new InvalidOperationException ($"Internal error: number of native method parameter ({nativeMethodParameters.Count}) doesn't match the number of marshal method parameters ({func.Parameters.Count})");
-			}
-
-			var variadicArgs = new List<LlvmIrVariableReference> ();
-			for (int i = 0; i < nativeMethodParameters.Count; i++) {
-				LlvmIrFunctionParameter parameter = nativeMethodParameters[i];
-				if (!first) {
-					ret.Append (", ");
-				} else {
-					first = false;
-				}
-
-				// Native method will have two more parameters than its managed counterpart - one for JNIEnv* and another for jclass.  They always are the first two
-				// parameters, so we start looking at the managed parameters only once the first two are out of the way
-				AddPrintfFormatAndTransforms (ret, VerifyAndGetActualParameterType (parameter, i >= 2 ? managedMethodParameters[i - 2] : null), parameterOps, out bool isNativePointer);
-				variadicArgs.Add (new LlvmIrVariableReference (func.ParameterVariables[i], isGlobal: false, isNativePointer: isNativePointer));
-			}
-
-			AsprintfCallState state = FinishPrintfState (ret, parameterOps);
-			state.VariadicArgsVariables.AddRange (variadicArgs);
-			return state;
-
-			Type VerifyAndGetActualParameterType (LlvmIrFunctionParameter nativeParameter, CecilParameterDefinition? managedParameter)
-			{
-				if (managedParameter == null) {
-					return nativeParameter.Type;
-				}
-
-				if (nativeParameter.Type == typeof(byte) && String.Compare ("System.Boolean", managedParameter.Name, StringComparison.Ordinal) == 0) {
-					// `bool`, as a non-blittable type, is mapped to `byte` by the marshal method rewriter
-					return typeof(bool);
-				}
-
-				return nativeParameter.Type;
-			}
-		}
-
-		AsprintfCallState GetPrintfStateForReturnValue (LlvmIrFunctionLocalVariable localVariable)
-		{
-			(StringBuilder ret, List<AsprintfParameterTransform?> parameterTransforms) = InitPrintfState ("=>[");
-
-			AddPrintfFormatAndTransforms (ret, localVariable.Type, parameterTransforms, out bool isNativePointer);
-
-			return FinishPrintfState (ret, parameterTransforms, "]");
-		}
-
-		LlvmIrVariableReference DoWriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, List<LlvmIrFunctionArgument> variadicArgs, AsprintfCallState asprintfState, TracingState tracingState)
-		{
-			LlvmIrGenerator.StringSymbolInfo asprintfFormatSym = generator.AddString (asprintfState.Format, $"asprintf_fmt_{func.Name}");
-
-			var asprintfArgs = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (tracingState.asprintfAllocatedStringVarRef) {
-					NonNull = true,
-					NoUndef = true,
-				},
-				new LlvmIrFunctionArgument (asprintfFormatSym) {
-					NoUndef = true,
-				},
-			};
-			asprintfArgs.AddRange (variadicArgs);
-
-			generator.WriteEOL ();
-			generator.WriteCommentLine ($"Format: {asprintfState.Format}", indent: true);
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, asprintf_ref, asprintfArgs, marker: defaultCallMarker, AttributeSetID: -1);
-			LlvmIrVariableReference? resultRef = new LlvmIrVariableReference (result, isGlobal: false);
-
-			// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
-			LlvmIrFunctionLocalVariable asprintfResultVariable = generator.EmitIcmpInstruction (func, LlvmIrIcmpCond.SignedLessThan, resultRef, "0");
-			var asprintfResultVariableRef = new LlvmIrVariableReference (asprintfResultVariable, isGlobal: false);
-
-			string asprintfIfThenLabel = func.MakeUniqueLabel ("if.then");
-			string asprintfIfElseLabel = func.MakeUniqueLabel ("if.else");
-			string ifElseDoneLabel = func.MakeUniqueLabel ("if.done");
-
-			generator.EmitBrInstruction (func, asprintfResultVariableRef, asprintfIfThenLabel, asprintfIfElseLabel);
-
-			// Condition is true if asprintf **failed**
-			generator.EmitLabel (func, asprintfIfThenLabel);
-			generator.EmitStoreInstruction<string> (func, tracingState.asprintfAllocatedStringVarRef, null);
-			generator.EmitBrInstruction (func, ifElseDoneLabel);
-
-			generator.EmitLabel (func, asprintfIfElseLabel);
-			LlvmIrFunctionLocalVariable bufferPointerVar = generator.EmitLoadInstruction (func, tracingState.asprintfAllocatedStringVarRef);
-			LlvmIrVariableReference bufferPointerVarRef = new LlvmIrVariableReference (bufferPointerVar, isGlobal: false);
-			generator.EmitBrInstruction (func, ifElseDoneLabel);
-
-			generator.EmitLabel (func, ifElseDoneLabel);
-			LlvmIrFunctionLocalVariable allocatedStringValueVar = generator.EmitPhiInstruction (
-				func,
-				tracingState.asprintfAllocatedStringVarRef,
-				new List<(LlvmIrVariableReference? variableRef, string label)> {
-					(null, func.PreviousBlockStartLabel),
-					(bufferPointerVarRef, func.PreviousBlockEndLabel),
-				}
-			);
-
-			return new LlvmIrVariableReference (allocatedStringValueVar, isGlobal: false, isNativePointer: true);
-		}
-
-		LlvmIrVariableReference? WriteTransformFunctionCall (LlvmIrGenerator generator, LlvmIrFunction func, AsprintfCallState asprintfState, AsprintfParameterOperation paramOp, LlvmIrVariableReference paramVar)
-		{
-			if (paramOp.RenderFunction == TracingRenderArgumentFunction.None) {
-				return null;
-			}
-
-			var transformerArgs = new List<LlvmIrFunctionArgument> ();
-			LlvmIrVariableReference transformerFunc;
-
-			switch (paramOp.RenderFunction) {
-				case TracingRenderArgumentFunction.GetClassName:
-					transformerFunc = mm_trace_get_class_name_ref;
-					AddJNIEnvArgument ();
-					break;
-
-				case TracingRenderArgumentFunction.GetObjectClassname:
-					transformerFunc = mm_trace_get_object_class_name_ref;
-					AddJNIEnvArgument ();
-					break;
-
-				case TracingRenderArgumentFunction.GetCString:
-					transformerFunc = mm_trace_get_c_string_ref;
-					AddJNIEnvArgument ();
-					break;
-
-				case TracingRenderArgumentFunction.GetBooleanString:
-					transformerFunc = mm_trace_get_boolean_string_ref;
-					break;
-
-				default:
-					throw new InvalidOperationException ($"Internal error: unsupported transformer function {paramOp.RenderFunction}");
-			};
-			transformerArgs.Add (new LlvmIrFunctionArgument (paramVar) { NoUndef = true });
-
-			LlvmIrFunctionLocalVariable? result = generator.EmitCall (func, transformerFunc, transformerArgs, marker: defaultCallMarker, AttributeSetID: -1);
-			if (result == null) {
-				return null;
-			}
-
-			if (paramOp.MustBeFreed) {
-				asprintfState.VariablesToFree.Add (new LlvmIrVariableReference (result, isGlobal: false));
-			}
-
-			return new LlvmIrVariableReference (result, isGlobal: false, isNativePointer: true);
-
-			void AddJNIEnvArgument ()
-			{
-				transformerArgs.Add (new LlvmIrFunctionArgument (func.ParameterVariables[0]) { NoUndef = true });
-			}
-		}
-
-		void AddAsprintfArgument (LlvmIrGenerator generator, LlvmIrFunction func, AsprintfCallState asprintfState, List<LlvmIrFunctionArgument> asprintfArgs, List<AsprintfParameterOperation>? paramOps, LlvmIrVariableReference paramVar)
-		{
-			if (paramOps == null || paramOps.Count == 0) {
-				asprintfArgs.Add (new LlvmIrFunctionArgument (paramVar) { NoUndef = true });
-				return;
-			}
-
-			foreach (AsprintfParameterOperation paramOp in paramOps) {
-				LlvmIrVariableReference? paramRef = WriteTransformFunctionCall (generator, func, asprintfState, paramOp, paramVar);
-
-				if (paramOp.Upcast != null) {
-					LlvmIrFunctionLocalVariable upcastVar = generator.EmitUpcast (func, paramRef == null ? paramVar : paramRef, paramOp.Upcast);
-					paramRef = new LlvmIrVariableReference (upcastVar, isGlobal: false);
-				}
-
-				if (paramRef == null) {
-					paramRef = paramVar;
-				}
-
-				asprintfArgs.Add (
-					new LlvmIrFunctionArgument (paramRef) {
-						NoUndef = true,
-					}
-				);
-			}
-		}
-
-		LlvmIrVariableReference WriteAsprintfCall (LlvmIrGenerator generator, LlvmIrFunction func, AsprintfCallState asprintfState, TracingState tracingState)
-		{
-			if (asprintfState.VariadicArgsVariables.Count != asprintfState.ParameterTransforms.Count) {
-				throw new ArgumentException (nameof (asprintfState), $"Number of transforms ({asprintfState.ParameterTransforms.Count}) is not equal to the number of variadic arguments ({asprintfState.VariadicArgsVariables.Count})");
-			}
-
-			var asprintfArgs = new List<LlvmIrFunctionArgument> ();
-
-			for (int i = 0; i < asprintfState.VariadicArgsVariables.Count; i++) {
-				AddAsprintfArgument (generator, func, asprintfState, asprintfArgs, asprintfState.ParameterTransforms[i]?.Operations, asprintfState.VariadicArgsVariables[i]);
-			}
-
-			return DoWriteAsprintfCall (generator, func, asprintfArgs, asprintfState, tracingState);
-		}
-
-		TracingState? WriteMarshalMethodTracingTop (LlvmIrGenerator generator, MarshalMethodInfo method, LlvmIrFunction func)
-		{
-			if (tracingMode == MarshalMethodsTracingMode.None) {
-				return null;
-			}
-
-			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
-			const string paramsLocalVarName = "func_params_render";
-
-			var state = new TracingState ();
-			generator.WriteCommentLine ("Tracing code start", indent: true);
-			(LlvmIrFunctionLocalVariable asprintfAllocatedStringVar, state.tracingParamsStringLifetimeTracker) = generator.EmitAllocStackVariable (func, typeof(string), paramsLocalVarName);
-			state.asprintfAllocatedStringVarRef = new LlvmIrVariableReference (asprintfAllocatedStringVar, isGlobal: false);
-			generator.EmitStoreInstruction<string> (func, state.asprintfAllocatedStringVarRef, null);
-
-			state.asprintfVariadicArgs = new List<LlvmIrFunctionArgument> ();
-			foreach (LlvmIrFunctionLocalVariable lfv in func.ParameterVariables) {
-				state.asprintfVariadicArgs.Add (
-					new LlvmIrFunctionArgument (lfv) {
-						NoUndef = true,
-					}
-				);
-			}
-
-			AsprintfCallState asprintfState = GetPrintfStateForFunctionParams (method, func);
-			state.asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfState, state);
-
-			state.trace_enter_leave_args = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
-				new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[1], (int)tracingMode),
-				new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[2], method.AssemblyCacheIndex),
-				new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[3], method.ClassCacheIndex),
-				new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[4], nativeCallback.MetadataToken.ToUInt32 ()),
-				new LlvmIrFunctionArgument (mm_trace_func_enter_or_leave_params[5], method.NativeSymbolName),
-				new LlvmIrFunctionArgument (state.asprintfAllocatedStringAccessorRef),
-			};
-
-			generator.EmitCall (func, mm_trace_func_enter_ref, state.trace_enter_leave_args, marker: defaultCallMarker);
-			asprintfAllocatedStringVar = generator.EmitLoadInstruction (func, state.asprintfAllocatedStringVarRef);
-
-			generator.EmitCall (
-				func,
-				free_ref,
-				new List<LlvmIrFunctionArgument> {
-					new LlvmIrFunctionArgument (asprintfAllocatedStringVar) {
-						NoUndef = true,
-					},
-				},
-				marker: defaultCallMarker
-			);
-			generator.WriteCommentLine ("Tracing code end", indent: true);
-			generator.WriteEOL ();
-
-			return state;
-		}
-
-		void WriteMarshalMethodTracingBottom (TracingState? state, LlvmIrGenerator generator, LlvmIrFunction func, LlvmIrFunctionLocalVariable? result)
-		{
-			if (tracingMode == MarshalMethodsTracingMode.None) {
-				return;
-			}
-
-			if (state == null) {
-				throw new InvalidOperationException ("Internal error: tracing state is required.");
-			}
-
-			generator.WriteCommentLine ("Tracing code start", indent: true);
-
-			LlvmIrFunctionArgument extraInfoArg;
-			if (result != null) {
-				AsprintfCallState asprintfState = GetPrintfStateForReturnValue (result);
-				state.asprintfAllocatedStringAccessorRef = WriteAsprintfCall (generator, func, asprintfState, state);
-				extraInfoArg = new LlvmIrFunctionArgument (state.asprintfAllocatedStringAccessorRef) {
-					NoUndef = true,
-				};
-			} else {
-				extraInfoArg = new LlvmIrFunctionArgument (state.asprintfAllocatedStringVarRef, isNull: true) {
-					NoUndef = true,
-				};
-			}
-
-			if (mm_trace_func_enter_leave_extra_info_param_index < 0) {
-				throw new InvalidOperationException ("Internal error: index of the extra info parameter is unknown");
-			}
-			state.trace_enter_leave_args[mm_trace_func_enter_leave_extra_info_param_index] = extraInfoArg;
-
-			generator.EmitCall (func, mm_trace_func_leave_ref, state.trace_enter_leave_args, marker: defaultCallMarker);
-			generator.EmitDeallocStackVariable (func, state.tracingParamsStringLifetimeTracker);
-
-			generator.WriteCommentLine ("Tracing code end", indent: true);
-		}
-
-		void WriteTracingInit (LlvmIrGenerator generator, LlvmIrFunction func)
-		{
-			if (tracingMode == MarshalMethodsTracingMode.None) {
-				return;
-			}
-
-			var trace_init_args = new List<LlvmIrFunctionArgument> {
-				new LlvmIrFunctionArgument (func.ParameterVariables[0]), // JNIEnv* env
-			};
-
-			generator.EmitCall (func, mm_trace_init_ref, trace_init_args, marker: defaultCallMarker);
+			ret.Add (AndroidTargetArch.Arm64, new FramePointerFunctionAttribute ("non-leaf"));
+			ret.Add (AndroidTargetArch.Arm, new FramePointerFunctionAttribute ("all"));
+			ret.Add (AndroidTargetArch.X86, new FramePointerFunctionAttribute ("none"));
+			ret.Add (AndroidTargetArch.X86_64, new FramePointerFunctionAttribute ("none"));
+
+			return ret;
 		}
 	}
 }

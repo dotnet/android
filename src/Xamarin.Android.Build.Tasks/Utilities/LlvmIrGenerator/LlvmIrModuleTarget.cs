@@ -1,74 +1,73 @@
 using Xamarin.Android.Tools;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVMIR;
+
+abstract class LlvmIrModuleTarget
 {
-	abstract class LlvmIrModuleTarget
+	public abstract LlvmIrDataLayout DataLayout  { get; }
+	public abstract string Triple                { get; }
+	public abstract AndroidTargetArch TargetArch { get; }
+	public abstract uint NativePointerSize       { get; }
+	public abstract bool Is64Bit                 { get; }
+
+	/// <summary>
+	/// Adds target-specific attributes which are common to many attribute sets. Usually this specifies CPU type, tuning and
+	/// features.
+	/// </summary>
+	public virtual void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
+	{}
+
+	public virtual void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
+	{}
+
+	public virtual void SetParameterFlags (LlvmIrFunctionParameter parameter)
 	{
-		public abstract LlvmIrDataLayout DataLayout  { get; }
-		public abstract string Triple                { get; }
-		public abstract AndroidTargetArch TargetArch { get; }
-		public abstract uint NativePointerSize       { get; }
-		public abstract bool Is64Bit                 { get; }
+		if (!parameter.NoUndef.HasValue) {
+			parameter.NoUndef = true;
+		}
+	}
 
-		/// <summary>
-		/// Adds target-specific attributes which are common to many attribute sets. Usually this specifies CPU type, tuning and
-		/// features.
-		/// </summary>
-		public virtual void AddTargetSpecificAttributes (LlvmIrFunctionAttributeSet attrSet)
-		{}
-
-		public virtual void AddTargetSpecificMetadata (LlvmIrMetadataManager manager)
-		{}
-
-		public virtual void SetParameterFlags (LlvmIrFunctionParameter parameter)
+	/// <summary>
+	/// Sets the <c>zeroext</c> or <c>signext</c> attributes on the parameter, if not set previously and if
+	/// the parameter is a small integral type.  Out of our supported architectures, all except AArch64 set
+	/// the flags, thus the reason to put this method in the base class.
+	/// </summary>
+	protected void SetIntegerParameterUpcastFlags (LlvmIrFunctionParameter parameter)
+	{
+		if (parameter.Type == typeof(bool) ||
+		    parameter.Type == typeof(byte) ||
+		    parameter.Type == typeof(char) ||
+		    parameter.Type == typeof(ushort))
 		{
-			if (!parameter.NoUndef.HasValue) {
-				parameter.NoUndef = true;
+			if (!parameter.ZeroExt.HasValue) {
+				parameter.ZeroExt = true;
+				parameter.SignExt = false;
 			}
+			return;
 		}
 
-		/// <summary>
-		/// Sets the <c>zeroext</c> or <c>signext</c> attributes on the parameter, if not set previously and if
-		/// the parameter is a small integral type.  Out of our supported architectures, all except AArch64 set
-		/// the flags, thus the reason to put this method in the base class.
-		/// </summary>
-		protected void SetIntegerParameterUpcastFlags (LlvmIrFunctionParameter parameter)
+		if (parameter.Type == typeof(sbyte) ||
+		    parameter.Type == typeof(short))
 		{
-			if (parameter.Type == typeof(bool) ||
-			    parameter.Type == typeof(byte) ||
-			    parameter.Type == typeof(char) ||
-			    parameter.Type == typeof(ushort))
-			{
-				if (!parameter.ZeroExt.HasValue) {
-					parameter.ZeroExt = true;
-					parameter.SignExt = false;
-				}
-				return;
-			}
-
-			if (parameter.Type == typeof(sbyte) ||
-			    parameter.Type == typeof(short))
-			{
-				if (!parameter.SignExt.HasValue) {
-					parameter.SignExt = true;
-					parameter.ZeroExt = false;
-				}
+			if (!parameter.SignExt.HasValue) {
+				parameter.SignExt = true;
+				parameter.ZeroExt = false;
 			}
 		}
+	}
 
-		public virtual int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
-		{
-			return maxFieldAlignment;
+	public virtual int GetAggregateAlignment (int maxFieldAlignment, ulong dataSize)
+	{
+		return maxFieldAlignment;
+	}
+
+	protected LlvmIrMetadataItem GetFlagsMetadata (LlvmIrMetadataManager manager)
+	{
+		LlvmIrMetadataItem? flags = manager.GetItem (LlvmIrKnownMetadata.LlvmModuleFlags);
+		if (flags == null) {
+			flags = manager.Add (LlvmIrKnownMetadata.LlvmModuleFlags);
 		}
 
-		protected LlvmIrMetadataItem GetFlagsMetadata (LlvmIrMetadataManager manager)
-		{
-			LlvmIrMetadataItem? flags = manager.GetItem (LlvmIrKnownMetadata.LlvmModuleFlags);
-			if (flags == null) {
-				flags = manager.Add (LlvmIrKnownMetadata.LlvmModuleFlags);
-			}
-
-			return flags;
-		}
+		return flags;
 	}
 }

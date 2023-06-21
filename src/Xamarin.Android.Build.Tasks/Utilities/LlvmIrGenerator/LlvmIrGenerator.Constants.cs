@@ -1,15 +1,8 @@
 using System;
 using System.Collections.Generic;
 
-namespace Xamarin.Android.Tasks.LLVM.IR
+namespace Xamarin.Android.Tasks.LLVMIR
 {
-	// TODO: remove these aliases once everything is migrated to the LLVM.IR namespace
-	using LlvmIrAddressSignificance = LLVMIR.LlvmIrAddressSignificance;
-	using LlvmIrLinkage = LLVMIR.LlvmIrLinkage;
-	using LlvmIrRuntimePreemption = LLVMIR.LlvmIrRuntimePreemption;
-	using LlvmIrVisibility = LLVMIR.LlvmIrVisibility;
-	using LlvmIrWritability = LLVMIR.LlvmIrWritability;
-
 	partial class LlvmIrGenerator
 	{
 		// https://llvm.org/docs/LangRef.html#linkage-types

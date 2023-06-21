@@ -3,11 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 
-namespace Xamarin.Android.Tasks.LLVM.IR;
-
-// TODO: remove these aliases once the refactoring is done
-using LlvmIrIcmpCond = LLVMIR.LlvmIrIcmpCond;
-using LlvmIrCallMarker = LLVMIR.LlvmIrCallMarker;
+namespace Xamarin.Android.Tasks.LLVMIR;
 
 /// <summary>
 /// Abstract class from which all of the items (labels, function parameters,
@@ -116,6 +112,7 @@ class LlvmIrFunctionLabelItem : LlvmIrFunctionLocalItem
 	{
 		context.DecreaseIndent ();
 
+		context.Output.WriteLine ();
 		context.Output.Write (context.CurrentIndent);
 		context.Output.Write (Name);
 		context.Output.Write (':');
@@ -170,7 +167,7 @@ class LlvmIrFunctionBody
 
 	List<LlvmIrFunctionBodyItem> items;
 	HashSet<string> definedLabels;
-	LlvmIrFunction function;
+	LlvmIrFunction ownerFunction;
 	LlvmIrFunction.FunctionState functionState;
 	LlvmIrFunctionLabelItem implicitStartBlock;
 
@@ -184,7 +181,7 @@ class LlvmIrFunctionBody
 
 	public LlvmIrFunctionBody (LlvmIrFunction func, LlvmIrFunction.FunctionState functionState)
 	{
-		function = func;
+		ownerFunction = func;
 		this.functionState = functionState;
 		definedLabels = new HashSet<string> (StringComparer.Ordinal);
 		items = new List<LlvmIrFunctionBodyItem> ();
@@ -205,9 +202,9 @@ class LlvmIrFunctionBody
 		return ret;
 	}
 
-	public LlvmIrInstructions.Call Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null)
+	public LlvmIrInstructions.Call Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null, LlvmIrVariable? funcPointer = null)
 	{
-		var ret = new LlvmIrInstructions.Call (function, result, arguments);
+		var ret = new LlvmIrInstructions.Call (function, result, arguments, funcPointer);
 		Add (ret);
 		return ret;
 	}
@@ -252,7 +249,7 @@ class LlvmIrFunctionBody
 	{
 		label.WillAddToBody (this, functionState);
 		if (definedLabels.Contains (label.Name)) {
-			throw new InvalidOperationException ($"Internal error: label with name '{label.Name}' already added to function '{function.Signature.Name}' body");
+			throw new InvalidOperationException ($"Internal error: label with name '{label.Name}' already added to function '{ownerFunction.Signature.Name}' body");
 		}
 		items.Add (label);
 		definedLabels.Add (label.Name);

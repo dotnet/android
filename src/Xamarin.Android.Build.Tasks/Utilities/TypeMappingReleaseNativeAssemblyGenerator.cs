@@ -1,14 +1,14 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO.Hashing;
-using System.Linq;
 using System.Text;
 
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	partial class TypeMappingReleaseNativeAssemblyGenerator : TypeMappingAssemblyGenerator
+	partial class TypeMappingReleaseNativeAssemblyGenerator : LlvmIrComposer
 	{
 		sealed class TypeMapModuleContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
@@ -17,11 +17,11 @@ namespace Xamarin.Android.Tasks
 				var map_module = EnsureType<TypeMapModule> (data);
 
 				if (String.Compare ("module_uuid", fieldName, StringComparison.Ordinal) == 0) {
-					return $"module_uuid: {map_module.MVID}";
+					return $" module_uuid: {map_module.MVID}";
 				}
 
 				if (String.Compare ("assembly_name", fieldName, StringComparison.Ordinal) == 0) {
-					return $"assembly_name: {map_module.assembly_name}";
+					return $" assembly_name: {map_module.assembly_name}";
 				}
 
 				return String.Empty;
@@ -58,14 +58,6 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		sealed class JavaNameHashComparer : IComparer<StructureInstance<TypeMapJava>>
-		{
-			public int Compare (StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b)
-			{
-				return a.Obj.JavaNameHash.CompareTo (b.Obj.JavaNameHash);
-			}
-		}
-
 		// This is here only to generate strongly-typed IR
 		internal sealed class MonoImage
 		{}
@@ -74,6 +66,9 @@ namespace Xamarin.Android.Tasks
 		// src/monodroid/jni/xamarin-app.hh TypeMapModuleEntry structure
 		sealed class TypeMapModuleEntry
 		{
+			[NativeAssembler (Ignore = true)]
+			public TypeMapJava JavaTypeMapEntry;
+
 			public uint type_token_id;
 			public uint java_map_index;
 		}
@@ -125,7 +120,10 @@ namespace Xamarin.Android.Tasks
 			public string JavaName;
 
 			[NativeAssembler (Ignore = true)]
-			public ulong JavaNameHash;
+			public uint JavaNameHash32;
+
+			[NativeAssembler (Ignore = true)]
+			public ulong JavaNameHash64;
 
 			public uint module_index;
 			public uint type_token_id;
@@ -144,62 +142,195 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		sealed class JavaNameHash32Comparer : IComparer<StructureInstance<TypeMapJava>>
+		{
+			public int Compare (StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b)
+			{
+				return a.Instance.JavaNameHash32.CompareTo (b.Instance.JavaNameHash32);
+			}
+		}
+
+		sealed class JavaNameHash64Comparer : IComparer<StructureInstance<TypeMapJava>>
+		{
+			public int Compare (StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b)
+			{
+				return a.Instance.JavaNameHash64.CompareTo (b.Instance.JavaNameHash64);
+			}
+		}
+
+		sealed class ConstructionState
+		{
+			public List<StructureInstance<TypeMapModule>> MapModules;
+			public Dictionary<string, TypeMapJava> JavaTypesByName;
+			public List<string> JavaNames;
+			public List<StructureInstance<TypeMapJava>> JavaMap;
+			public List<ModuleMapData> AllModulesData;
+		}
+
 		readonly NativeTypeMappingData mappingData;
-		StructureInfo<TypeMapJava> typeMapJavaStructureInfo;
-		StructureInfo<TypeMapModule> typeMapModuleStructureInfo;
-		StructureInfo<TypeMapModuleEntry> typeMapModuleEntryStructureInfo;
-		List<StructureInstance<TypeMapModule>> mapModules;
-		List<StructureInstance<TypeMapJava>> javaMap;
-		Dictionary<string, TypeMapJava> javaTypesByName;
-		List<string> javaNames;
-		JavaNameHashComparer javaNameHashComparer;
+		StructureInfo typeMapJavaStructureInfo;
+		StructureInfo typeMapModuleStructureInfo;
+		StructureInfo typeMapModuleEntryStructureInfo;
+		JavaNameHash32Comparer javaNameHash32Comparer;
+		JavaNameHash64Comparer javaNameHash64Comparer;
 
 		ulong moduleCounter = 0;
 
 		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
-			mapModules = new List<StructureInstance<TypeMapModule>> ();
-			javaMap = new List<StructureInstance<TypeMapJava>> ();
-			javaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
-			javaNameHashComparer = new JavaNameHashComparer ();
-			javaNames = new List<string> ();
+			javaNameHash32Comparer = new JavaNameHash32Comparer ();
+			javaNameHash64Comparer = new JavaNameHash64Comparer ();
 		}
 
-		public override void Init ()
+		protected override void Construct (LlvmIrModule module)
 		{
-			InitMapModules ();
-			InitJavaMap ();
+			MapStructures (module);
+
+			var cs = new ConstructionState ();
+			cs.JavaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
+			cs.JavaNames = new List<string> ();
+			InitJavaMap (cs);
+			InitMapModules (cs);
+			HashJavaNames (cs);
+			PrepareModules (cs);
+
+			module.AddGlobalVariable ("map_module_count", mappingData.MapModuleCount);
+			module.AddGlobalVariable ("java_type_count", cs.JavaMap.Count);
+
+			var map_modules = new LlvmIrGlobalVariable (cs.MapModules, "map_modules", LlvmIrVariableOptions.GlobalWritable) {
+				Comment = " Managed modules map",
+			};
+			module.Add (map_modules);
+
+			// Java hashes are output bafore Java type map **and** managed modules, because they will also sort the Java map for us.
+			// This is not strictly necessary, as we could do the sorting in the java map BeforeWriteCallback, but this way we save
+			// time sorting only once.
+			var map_java_hashes = new LlvmIrGlobalVariable (typeof(List<ulong>), "map_java_hashes") {
+				Comment = " Java types name hashes",
+				BeforeWriteCallback = GenerateAndSortJavaHashes,
+				BeforeWriteCallbackCallerState = cs,
+				GetArrayItemCommentCallback = GetJavaHashesItemComment,
+				GetArrayItemCommentCallbackCallerState = cs,
+			};
+			map_java_hashes.WriteOptions &= ~LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
+			module.Add (map_java_hashes);
+
+			foreach (ModuleMapData mmd in cs.AllModulesData) {
+				var mmdVar = new LlvmIrGlobalVariable (mmd.Entries, mmd.SymbolLabel, LlvmIrVariableOptions.LocalConstant) {
+					BeforeWriteCallback = UpdateJavaIndexes,
+					BeforeWriteCallbackCallerState = cs,
+				};
+				module.Add (mmdVar);
+			}
+
+			module.AddGlobalVariable ("map_java", cs.JavaMap, LlvmIrVariableOptions.GlobalConstant, " Java to managed map");
+			module.AddGlobalVariable ("java_type_names", cs.JavaNames, LlvmIrVariableOptions.GlobalConstant, " Java type names");
 		}
 
-		void InitJavaMap ()
+		void UpdateJavaIndexes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
 		{
+			ConstructionState cs = EnsureConstructionState (callerState);
+			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
+			IComparer<StructureInstance<TypeMapJava>> hashComparer = target.Is64Bit ? javaNameHash64Comparer : javaNameHash32Comparer;
+
+			var entries = (List<StructureInstance<TypeMapModuleEntry>>)variable.Value;
+			foreach (StructureInstance<TypeMapModuleEntry> entry in entries) {
+				entry.Instance.java_map_index = GetJavaEntryIndex (entry.Instance.JavaTypeMapEntry);
+			}
+
+			uint GetJavaEntryIndex (TypeMapJava javaEntry)
+			{
+				var key = new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, javaEntry);
+				int idx = cs.JavaMap.BinarySearch (key, hashComparer);
+				if (idx < 0) {
+					throw new InvalidOperationException ($"Could not map entry '{javaEntry.JavaName}' to array index");
+				}
+
+				return (uint)idx;
+			}
+		}
+
+		string? GetJavaHashesItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+		{
+			var cs = callerState as ConstructionState;
+			if (cs == null) {
+				throw new InvalidOperationException ("Internal error: construction state expected but not found");
+			}
+
+			return $" {index}: 0x{value:x} => {cs.JavaMap[(int)index].Instance.JavaName}";
+		}
+
+		void GenerateAndSortJavaHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
+		{
+			ConstructionState cs = EnsureConstructionState (callerState);
+			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
+			Type listType;
+			IList hashes;
+			if (target.Is64Bit) {
+				listType = typeof(List<ulong>);
+				cs.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Instance.JavaNameHash64.CompareTo (b.Instance.JavaNameHash64));
+
+				var list = new List<ulong> ();
+				foreach (StructureInstance<TypeMapJava> si in cs.JavaMap) {
+					list.Add (si.Instance.JavaNameHash64);
+				}
+				hashes = list;
+			} else {
+				listType = typeof(List<uint>);
+				cs.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Instance.JavaNameHash32.CompareTo (b.Instance.JavaNameHash32));
+
+				var list = new List<uint> ();
+				foreach (StructureInstance<TypeMapJava> si in cs.JavaMap) {
+					list.Add (si.Instance.JavaNameHash32);
+				}
+				hashes = list;
+			}
+
+			gv.OverrideValueAndType (listType, hashes);
+		}
+
+		ConstructionState EnsureConstructionState (object? callerState)
+		{
+			var cs = callerState as ConstructionState;
+			if (cs == null) {
+				throw new InvalidOperationException ("Internal error: construction state expected but not found");
+			}
+
+			return cs;
+		}
+
+		void InitJavaMap (ConstructionState cs)
+		{
+			cs.JavaMap = new List<StructureInstance<TypeMapJava>> ();
 			TypeMapJava map_entry;
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				javaNames.Add (entry.JavaName);
+				cs.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
 					module_index = (uint)entry.ModuleIndex, // UInt32.MaxValue,
 					type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token,
-					java_name_index = (uint)(javaNames.Count - 1),
+					java_name_index = (uint)(cs.JavaNames.Count - 1),
 					JavaName = entry.JavaName,
 				};
 
-				javaMap.Add (new StructureInstance<TypeMapJava> (map_entry));
-				javaTypesByName.Add (map_entry.JavaName, map_entry);
+				cs.JavaMap.Add (new StructureInstance<TypeMapJava> (typeMapJavaStructureInfo, map_entry));
+				cs.JavaTypesByName.Add (map_entry.JavaName, map_entry);
 			}
 		}
 
-		void InitMapModules ()
+		void InitMapModules (ConstructionState cs)
 		{
+			cs.MapModules = new List<StructureInstance<TypeMapModule>> ();
 			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
 				string mapName = $"module{moduleCounter++}_managed_to_java";
 				string duplicateMapName;
 
-				if (data.DuplicateTypes.Count == 0)
+				if (data.DuplicateTypes.Count == 0) {
 					duplicateMapName = String.Empty;
-				else
+				} else {
 					duplicateMapName = $"{mapName}_duplicates";
+				}
 
 				var map_module = new TypeMapModule {
 					MVID = data.Mvid,
@@ -214,85 +345,69 @@ namespace Xamarin.Android.Tasks
 					java_name_width = 0,
 				};
 
-				mapModules.Add (new StructureInstance<TypeMapModule> (map_module));
+				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
 			}
 		}
 
-		protected override void MapStructures (LlvmIrGenerator generator)
+		void MapStructures (LlvmIrModule module)
 		{
-			generator.MapStructure<MonoImage> ();
-			typeMapJavaStructureInfo = generator.MapStructure<TypeMapJava> ();
-			typeMapModuleStructureInfo = generator.MapStructure<TypeMapModule> ();
-			typeMapModuleEntryStructureInfo = generator.MapStructure<TypeMapModuleEntry> ();
+			typeMapJavaStructureInfo = module.MapStructure<TypeMapJava> ();
+			typeMapModuleStructureInfo = module.MapStructure<TypeMapModule> ();
+			typeMapModuleEntryStructureInfo = module.MapStructure<TypeMapModuleEntry> ();
 		}
 
-		// Prepare module map entries by sorting them on the managed token, and then mapping each entry to its corresponding Java type map index.
-		// Requires that `javaMap` is sorted on the type name hash.
-		void PrepareMapModuleData (string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, List<ModuleMapData> allModulesData)
+		void PrepareMapModuleData (string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, ConstructionState cs)
 		{
 			var mapModuleEntries = new List<StructureInstance<TypeMapModuleEntry>> ();
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in moduleEntries) {
+				if (!cs.JavaTypesByName.TryGetValue (entry.JavaName, out TypeMapJava javaType)) {
+					throw new InvalidOperationException ($"Internal error: Java type '{entry.JavaName}' not found in cache");
+				}
+
 				var map_entry = new TypeMapModuleEntry {
+					JavaTypeMapEntry = javaType,
 					type_token_id = entry.Token,
-					java_map_index = GetJavaEntryIndex (entry.JavaName),
+					java_map_index = UInt32.MaxValue, // will be set later, when the target is known
 				};
-				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (map_entry));
+				mapModuleEntries.Add (new StructureInstance<TypeMapModuleEntry> (typeMapModuleEntryStructureInfo, map_entry));
 			}
 
-			mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Obj.type_token_id.CompareTo (b.Obj.type_token_id));
-			allModulesData.Add (new ModuleMapData (moduleDataSymbolLabel, mapModuleEntries));
+			mapModuleEntries.Sort ((StructureInstance<TypeMapModuleEntry> a, StructureInstance<TypeMapModuleEntry> b) => a.Instance.type_token_id.CompareTo (b.Instance.type_token_id));
+			cs.AllModulesData.Add (new ModuleMapData (moduleDataSymbolLabel, mapModuleEntries));
+		}
 
-			uint GetJavaEntryIndex (string javaTypeName)
-			{
-				if (!javaTypesByName.TryGetValue (javaTypeName, out TypeMapJava javaType)) {
-					throw new InvalidOperationException ($"INTERNAL ERROR: Java type '{javaTypeName}' not found in cache");
+		void PrepareModules (ConstructionState cs)
+		{
+			cs.AllModulesData = new List<ModuleMapData> ();
+			foreach (StructureInstance<TypeMapModule> moduleInstance in cs.MapModules) {
+				TypeMapModule module = moduleInstance.Instance;
+				PrepareMapModuleData (module.MapSymbolName, module.Data.Types, cs);
+				if (module.Data.DuplicateTypes.Count > 0) {
+					PrepareMapModuleData (module.DuplicateMapSymbolName, module.Data.DuplicateTypes, cs);
 				}
-
-				var key = new StructureInstance<TypeMapJava> (javaType);
-				int idx = javaMap.BinarySearch (key, javaNameHashComparer);
-				if (idx < 0) {
-					throw new InvalidOperationException ($"Could not map entry '{javaTypeName}' to array index");
-				}
-
-				return (uint)idx;
 			}
 		}
 
-		// Generate hashes for all Java type names, then sort javaMap on the name hash.  This has to be done in the writing phase because hashes
-		// will depend on architecture (or, actually, on its bitness) and may differ between architectures (they will be the same for all architectures
-		// with the same bitness)
-		(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) PrepareMapsForWriting (LlvmIrGenerator generator)
+		void HashJavaNames (ConstructionState cs)
 		{
-			bool is64Bit = generator.Is64Bit;
+			// We generate both 32-bit and 64-bit hashes at the construction time.  Which set will be used depends on the target.
+			// Java map list will also be sorted when the target is known
+			var hashes32 = new HashSet<uint> ();
+			var hashes64 = new HashSet<ulong> ();
 
 			// Generate Java type name hashes...
-			for (int i = 0; i < javaMap.Count; i++) {
-				TypeMapJava entry = javaMap[i].Obj;
-				entry.JavaNameHash = HashName (entry.JavaName);
+			for (int i = 0; i < cs.JavaMap.Count; i++) {
+				TypeMapJava entry = cs.JavaMap[i].Instance;
+
+				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
+				entry.JavaNameHash32 = (uint)HashName (entry.JavaName, is64Bit: false);
+				hashes32.Add (entry.JavaNameHash32);
+
+				entry.JavaNameHash64 = HashName (entry.JavaName, is64Bit: true);
+				hashes64.Add (entry.JavaNameHash64);
 			}
 
-			// ...sort them...
-			javaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Obj.JavaNameHash.CompareTo (b.Obj.JavaNameHash));
-
-			var allMapModulesData = new List<ModuleMapData> ();
-
-			// ...and match managed types to Java...
-			foreach (StructureInstance<TypeMapModule> moduleInstance in mapModules) {
-				TypeMapModule module = moduleInstance.Obj;
-				PrepareMapModuleData (module.MapSymbolName, module.Data.Types, allMapModulesData);
-				if (module.Data.DuplicateTypes.Count > 0) {
-					PrepareMapModuleData (module.DuplicateMapSymbolName, module.Data.DuplicateTypes, allMapModulesData);
-				}
-			}
-
-			var javaMapHashes = new HashSet<ulong> ();
-			foreach (StructureInstance<TypeMapJava> entry in javaMap) {
-				javaMapHashes.Add (entry.Obj.JavaNameHash);
-			}
-
-			return (allMapModulesData, javaMapHashes.ToList ());
-
-			ulong HashName (string name)
+			ulong HashName (string name, bool is64Bit)
 			{
 				if (name.Length == 0) {
 					return UInt64.MaxValue;
@@ -300,10 +415,10 @@ namespace Xamarin.Android.Tasks
 
 				// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
 				// the same
-				return HashBytes (Encoding.Unicode.GetBytes (name));
+				return HashBytes (Encoding.Unicode.GetBytes (name), is64Bit);
 			}
 
-			ulong HashBytes (byte[] bytes)
+			ulong HashBytes (byte[] bytes, bool is64Bit)
 			{
 				if (is64Bit) {
 					return XxHash64.HashToUInt64 (bytes);
@@ -311,80 +426,6 @@ namespace Xamarin.Android.Tasks
 
 				return (ulong)XxHash32.HashToUInt32 (bytes);
 			}
-		}
-
-		protected override void Write (LlvmIrGenerator generator)
-		{
-			generator.WriteVariable ("map_module_count", mappingData.MapModuleCount);
-			generator.WriteVariable ("java_type_count", javaMap.Count); // must include the padding item, if any
-
-			(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) = PrepareMapsForWriting (generator);
-			WriteMapModules (generator, allMapModulesData);
-			WriteJavaMap (generator, javaMapHashes);
-		}
-
-		void WriteJavaMap (LlvmIrGenerator generator, List<ulong> javaMapHashes)
-		{
-			generator.WriteEOL ();
-			generator.WriteEOL ("Java to managed map");
-
-			generator.WriteStructureArray (
-				typeMapJavaStructureInfo,
-				javaMap,
-				LlvmIrVariableOptions.GlobalConstant,
-				"map_java"
-			);
-
-			if (generator.Is64Bit) {
-				WriteHashes (javaMapHashes);
-			} else {
-				// A bit ugly, but simple. We know that hashes are really 32-bit, so we can cast without
-				// worrying.
-				var hashes = new List<uint> (javaMapHashes.Count);
-				foreach (ulong hash in javaMapHashes) {
-					hashes.Add ((uint)hash);
-				}
-				WriteHashes (hashes);
-			}
-
-			generator.WriteArray (javaNames, "java_type_names");
-
-			void WriteHashes<T> (List<T> hashes) where T: struct
-			{
-				generator.WriteArray<T> (
-					hashes,
-					LlvmIrVariableOptions.GlobalConstant,
-					"map_java_hashes",
-					(int idx, T value) => $"{idx}: 0x{value:x} => {javaMap[idx].Obj.JavaName}"
-				);
-			}
-		}
-
-		void WriteMapModules (LlvmIrGenerator generator, List<ModuleMapData> mapModulesData)
-		{
-			if (mapModules.Count == 0) {
-				return;
-			}
-
-			generator.WriteEOL ();
-			generator.WriteEOL ("Map modules data");
-
-			foreach (ModuleMapData mmd in mapModulesData) {
-				generator.WriteStructureArray (
-					typeMapModuleEntryStructureInfo,
-					mmd.Entries,
-					LlvmIrVariableOptions.LocalConstant,
-					mmd.SymbolLabel
-				);
-			}
-
-			generator.WriteEOL ("Map modules");
-			generator.WriteStructureArray (
-				typeMapModuleStructureInfo,
-				mapModules,
-				LlvmIrVariableOptions.GlobalWritable,
-				"map_modules"
-			);
 		}
 	}
 }
