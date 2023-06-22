@@ -104,8 +104,45 @@ abstract class LlvmIrInstructionArgumentValuePlaceholder
 	public abstract object? GetValue (LlvmIrModuleTarget target);
 }
 
+class LlvmIrInstructionPointerSizeArgumentPlaceholder : LlvmIrInstructionArgumentValuePlaceholder
+{
+	public override object? GetValue (LlvmIrModuleTarget target)
+	{
+		return target.NativePointerSize;
+	}
+}
+
 sealed class LlvmIrInstructions
 {
+	public class Alloca : LlvmIrInstruction
+	{
+		LlvmIrVariable result;
+
+		public Alloca (LlvmIrVariable result)
+			: base ("alloca")
+		{
+			this.result = result;
+		}
+
+		protected override void WriteValueAssignment (GeneratorWriteContext context)
+		{
+			if (result == null) {
+				return;
+			}
+
+			context.Output.Write (result.Reference);
+			context.Output.Write (" = ");
+		}
+
+		protected override void WriteBody (GeneratorWriteContext context)
+		{
+			string irType = LlvmIrGenerator.MapToIRType (result.Type, out ulong size, out bool isPointer);
+
+			context.Output.Write (irType);
+			WriteAlignment (context, size, isPointer);
+		}
+	}
+
 	public class Br : LlvmIrInstruction
 	{
 		const string OpName = "br";
@@ -452,13 +489,24 @@ sealed class LlvmIrInstructions
 
 	public class Store : LlvmIrInstruction
 	{
+		const string Opcode = "store";
+
 		object? from;
 		LlvmIrVariable to;
 
 		public Store (LlvmIrVariable from, LlvmIrVariable to)
-			: base ("store")
+			: base (Opcode)
 		{
 			this.from = from;
+			this.to = to;
+		}
+
+		/// <summary>
+		/// Stores `null` in the indicated variable
+		/// </summary>
+		public Store (LlvmIrVariable to)
+			: base (Opcode)
+		{
 			this.to = to;
 		}
 

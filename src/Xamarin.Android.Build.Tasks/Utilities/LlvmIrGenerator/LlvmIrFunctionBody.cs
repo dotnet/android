@@ -171,6 +171,13 @@ class LlvmIrFunctionBody
 		previousLabel = implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
 	}
 
+	public LlvmIrInstructions.Alloca Alloca (LlvmIrVariable result)
+	{
+		var ret = new LlvmIrInstructions.Alloca (result);
+		Add (ret);
+		return ret;
+	}
+
 	public LlvmIrInstructions.Br Br (LlvmIrFunctionLabelItem label)
 	{
 		var ret = new LlvmIrInstructions.Br (label);
@@ -204,6 +211,26 @@ class LlvmIrFunctionBody
 		var ret = new LlvmIrInstructions.Load (source, result) {
 			TBAA = tbaa,
 		};
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Store Store (LlvmIrVariable from, LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Store (from, to) {
+			TBAA = tbaa,
+		};
+
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Store Store (LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Store (to) {
+			TBAA = tbaa,
+		};
+
 		Add (ret);
 		return ret;
 	}

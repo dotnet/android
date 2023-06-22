@@ -9,7 +9,8 @@ namespace Xamarin.Android.Tasks.LLVMIR;
 
 class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttributeSet>
 {
-	public uint Number { get; set; } = 0;
+	public uint Number                           { get; set; } = 0;
+	public bool DoNotAddTargetSpecificAttributes { get; set; }
 
 	HashSet<LlvmIrFunctionAttribute> attributes;
 	Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>>? privateTargetSpecificAttributes;

@@ -592,7 +592,9 @@ namespace Xamarin.Android.Tasks
 			MapStructures (module);
 
 			Init ();
-			// InitTracing (module);
+			if (tracingMode != MarshalMethodsTracingMode.None) {
+				InitTracing (module);
+			}
 			AddAssemblyImageCache (module, out AssemblyCacheState acs);
 
 			// class cache
@@ -680,6 +682,10 @@ namespace Xamarin.Android.Tasks
 
 			void WriteBody (LlvmIrFunctionBody body)
 			{
+				if (tracingMode != MarshalMethodsTracingMode.None) {
+					WriteTracingAtFunctionTop (module, body, func);
+				}
+
 				LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
 				body.Load (backingField, cb1, tbaa: module.TbaaAnyPointer);
 
@@ -813,12 +819,8 @@ namespace Xamarin.Android.Tasks
 
 			LlvmIrFunctionAttributeSet attrSet = MakeXamarinAppInitAttributeSet (module);
 			var xamarin_app_init = new LlvmIrFunction (init_signature, attrSet);
-			xamarin_app_init.Body.Add (
-				new LlvmIrInstructions.Store (init_params[1], getFunctionPtrVariable) {
-					TBAA = module.TbaaAnyPointer,
-				}
-			);
-			xamarin_app_init.Body.Add (new LlvmIrInstructions.Ret (typeof(void)));
+			xamarin_app_init.Body.Store (init_params[1], getFunctionPtrVariable, module.TbaaAnyPointer);
+			xamarin_app_init.Body.Ret (typeof(void));
 
 			module.Add (xamarin_app_init);
 

@@ -192,7 +192,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly char[] splitOnWhitespace = new char[] { ' ', '\t' };
 		static readonly char[] splitOnComma = new char[] { ',' };
-		static readonly Regex assemblerLabelRegex = new Regex ("^[_.a-zA-Z0-9]+:", RegexOptions.Compiled);
+		static readonly Regex assemblerLabelRegex = new Regex ("^[_.$a-zA-Z0-9]+:", RegexOptions.Compiled);
 
 		Dictionary<string, AssemblerSymbol> symbols = new Dictionary<string, AssemblerSymbol> (StringComparer.Ordinal);
 		Dictionary<string, List<SymbolMetadata>> symbolMetadata = new Dictionary<string, List<SymbolMetadata>> (StringComparer.Ordinal);
@@ -238,8 +238,10 @@ namespace Xamarin.Android.Build.Tests
 			AssemblerSection currentSection = null;
 			AssemblerSymbol currentSymbol = null;
 
-			string symbolName;
+			string symbolName = null;
 			ulong lineNumber = 0;
+			bool addedNewSymbol = false;
+
 			foreach (string l in File.ReadLines (sourceFilePath, Encoding.UTF8)) {
 				lineNumber++;
 
@@ -251,6 +253,15 @@ namespace Xamarin.Android.Build.Tests
 				string[] parts = line.Split (splitOnWhitespace, 2, StringSplitOptions.RemoveEmptyEntries);
 				if (parts.Length == 0 || (ignoredDirectives.Contains (parts[0]))) {
 					continue;
+				}
+
+				if (addedNewSymbol) {
+					addedNewSymbol = false;
+					// Some forms of LLVM IR can generate two labels for a single symbol, depending on symbol visibility, attributes and llc parameters.
+					// The exported symbol name 'symbol:' may be followed by another one '.Lsymbol$local:', we need to detect this and ignore the new symbol.
+					if (assemblerLabelRegex.IsMatch (line) && String.Compare (line.Trim (), $".L{symbolName}$local:", StringComparison.Ordinal) == 0) {
+						continue;
+					}
 				}
 
 				if (StartsNewSection (parts, ref currentSection)) {
@@ -265,6 +276,7 @@ namespace Xamarin.Android.Build.Tests
 				if (assemblerLabelRegex.IsMatch (line)) {
 					symbolName = GetSymbolName (line);
 					currentSymbol = AddNewSymbol (symbolName);
+					addedNewSymbol = true;
 					continue;
 				}
 
