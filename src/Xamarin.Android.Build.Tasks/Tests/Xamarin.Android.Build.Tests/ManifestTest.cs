@@ -672,9 +672,13 @@ namespace Bug12935
 	<XmlPeek Query=""/manifest/*"" XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml"">
 		<Output TaskParameter=""Result"" ItemName=""_XmlNodes"" />
 	</XmlPeek>
+	<PropertyGroup>
+		<_ExistingXml>@(_XmlNodes, ' ')</_ExistingXml>
+		<_NewXml>@(_Permissions, ' ')</_NewXml>
+	</PropertyGroup>
 	<XmlPoke
 		XmlInputPath=""$(IntermediateOutputPath)android\AndroidManifest.xml""
-		Value=""@(_XmlNodes->'%(Identity)', ' ')@(_Permissions)""
+		Value=""$(_ExistingXml)$(_NewXml)""
 		Query=""/manifest""
 		Namespaces=""$(Namespace)""
 	/>
