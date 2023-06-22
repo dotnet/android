@@ -81,7 +81,6 @@ namespace Xamarin.Android.Build.Tests
 			proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
-				TargetSdkVersion = null,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
