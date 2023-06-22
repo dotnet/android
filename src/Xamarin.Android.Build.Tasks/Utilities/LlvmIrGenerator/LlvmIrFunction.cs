@@ -22,6 +22,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			public bool? SignExt;
 			public bool? ZeroExt;
 			public bool? IsCplusPlusReference;
+			public bool IsVarArgs;
 
 			public SavedParameterState (LlvmIrFunctionParameter owner, SavedParameterState? previousState = null)
 			{
@@ -39,6 +40,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				ReadNone = previousState.ReadNone;
 				SignExt = previousState.SignExt;
 				ZeroExt = previousState.ZeroExt;
+				IsCplusPlusReference = previousState.IsCplusPlusReference;
+				IsVarArgs = previousState.IsVarArgs;
 			}
 		}
 
@@ -137,6 +140,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			set => state.IsCplusPlusReference = value;
 		}
 
+		/// <summary>
+		/// Indicates that the argument is a C variable arguments placeholder (`...`)
+		/// </summary>
+		public bool IsVarArgs {
+			get => state.IsVarArgs;
+			set => state.IsVarArgs = value;
+		}
+
 		public LlvmIrFunctionParameter (Type type, string? name = null)
 			: base (type, name)
 		{
@@ -193,6 +204,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			public bool? NoUndef;
 			public bool? SignExt;
 			public bool? ZeroExt;
+			public bool? NonNull;
 
 			public ReturnTypeAttributes ()
 			{}
@@ -201,6 +213,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{
 				InReg = other.InReg;
 				NoUndef = other.NoUndef;
+				NonNull = other.NonNull;
 				SignExt = other.SignExt;
 				ZeroExt = other.ZeroExt;
 			}

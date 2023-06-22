@@ -1012,6 +1012,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.Output.Write ("noundef ");
 			}
 
+			if (AttributeIsSet (returnAttrs.NonNull)) {
+				context.Output.Write ("nonnull ");
+			}
+
 			if (AttributeIsSet (returnAttrs.SignExt)) {
 				context.Output.Write ("signext ");
 			}
@@ -1033,15 +1037,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.Output.Write ('(');
 
 			bool first = true;
+			bool varargsFound = false;
+
 			foreach (LlvmIrFunctionParameter parameter in func.Signature.Parameters) {
+				if (varargsFound) {
+					throw new InvalidOperationException ($"Internal error: function '{func.Signature.Name}' has extra parameters following the C varargs parameter. This is not allowed.");
+				}
+
 				if (!first) {
 					context.Output.Write (", ");
 				} else {
 					first = false;
 				}
 
+				if (parameter.IsVarArgs) {
+					context.Output.Write ("...");
+					varargsFound = true;
+					continue;
+				}
+
 				context.Output.Write (MapToIRType (parameter.Type));
 				WriteParameterAttributes (context, parameter);
+
 				if (writeParameterNames) {
 					if (String.IsNullOrEmpty (parameter.Name)) {
 						throw new InvalidOperationException ($"Internal error: parameter must have a name");
@@ -1126,7 +1143,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			foreach (LlvmIrFunctionAttributeSet attrSet in context.Module.AttributeSets) {
 				// Must not modify the original set, it is shared with other targets.
 				var targetSet = new LlvmIrFunctionAttributeSet (attrSet);
-				target.AddTargetSpecificAttributes (targetSet);
+				if (!attrSet.DoNotAddTargetSpecificAttributes) {
+					target.AddTargetSpecificAttributes (targetSet);
+				}
 
 				IList<LlvmIrFunctionAttribute>? privateTargetSet = attrSet.GetPrivateTargetAttributes (target.TargetArch);
 				if (privateTargetSet != null) {
