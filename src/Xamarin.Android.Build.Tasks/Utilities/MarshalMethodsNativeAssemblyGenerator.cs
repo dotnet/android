@@ -682,9 +682,7 @@ namespace Xamarin.Android.Tasks
 
 			void WriteBody (LlvmIrFunctionBody body)
 			{
-				if (tracingMode != MarshalMethodsTracingMode.None) {
-					WriteTracingAtFunctionTop (module, body, func);
-				}
+				WriteTracingAtFunctionTop (module, method, body, func, writeState);
 
 				LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
 				body.Load (backingField, cb1, tbaa: module.TbaaAnyPointer);

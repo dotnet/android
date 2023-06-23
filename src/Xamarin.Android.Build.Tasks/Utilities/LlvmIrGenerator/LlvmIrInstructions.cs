@@ -230,7 +230,11 @@ sealed class LlvmIrInstructions
 					throw new ArgumentNullException ($"Internal error: function '{function.Signature.Name}' requires {argCount} arguments", nameof (arguments));
 				}
 
-				if (arguments.Count != argCount) {
+				if (function.UsesVarArgs) {
+					if (arguments.Count < argCount) {
+						throw new ArgumentException ($"Internal error: varargs function '{function.Signature.Name}' needs at least {argCount} fixed arguments, got {arguments.Count} instead");
+					}
+				} else if (arguments.Count != argCount) {
 					throw new ArgumentException ($"Internal error: function '{function.Signature.Name}' requires {argCount} arguments, but {arguments.Count} were provided", nameof (arguments));
 				}
 
@@ -331,6 +335,53 @@ sealed class LlvmIrInstructions
 			}
 
 			throw new InvalidOperationException ($"Internal error: unsupported type '{value.GetType ()}' in call to function '{function.Signature.Name}'");
+		}
+	}
+
+	public class Ext : LlvmIrInstruction
+	{
+		const string FpextOpCode = "fpext";
+		const string SextOpCode  = "sext";
+		const string ZextOpCode  = "zext";
+
+		LlvmIrVariable result;
+		LlvmIrVariable source;
+		Type targetType;
+
+		public Ext (LlvmIrVariable source, Type targetType, LlvmIrVariable result)
+			: base (GetOpCode (targetType))
+		{
+			this.source = source;
+			this.targetType = targetType;
+			this.result = result;
+		}
+
+		protected override void WriteValueAssignment (GeneratorWriteContext context)
+		{
+			context.Output.Write (result.Reference);
+			context.Output.Write (" = ");
+		}
+
+		protected override void WriteBody (GeneratorWriteContext context)
+		{
+			context.Output.Write (LlvmIrGenerator.MapToIRType (source.Type));
+			context.Output.Write (' ');
+			context.Output.Write (source.Reference);
+			context.Output.Write (" to ");
+			context.Output.Write ( LlvmIrGenerator.MapToIRType (targetType));
+		}
+
+		static string GetOpCode (Type targetType)
+		{
+			if (targetType == typeof(double)) {
+				return FpextOpCode;
+			} else if (targetType == typeof(int)) {
+				return SextOpCode;
+			} else if (targetType == typeof(uint)) {
+				return ZextOpCode;
+			} else {
+				throw new InvalidOperationException ($"Unsupported target type for upcasting: {targetType}");
+			}
 		}
 	}
 

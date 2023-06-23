@@ -171,90 +171,6 @@ class LlvmIrFunctionBody
 		previousLabel = implicitStartBlock = new LlvmIrFunctionImplicitStartLabel (functionState.StartingBlockNumber);
 	}
 
-	public LlvmIrInstructions.Alloca Alloca (LlvmIrVariable result)
-	{
-		var ret = new LlvmIrInstructions.Alloca (result);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Br Br (LlvmIrFunctionLabelItem label)
-	{
-		var ret = new LlvmIrInstructions.Br (label);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Br Br (LlvmIrVariable cond, LlvmIrFunctionLabelItem ifTrue, LlvmIrFunctionLabelItem ifFalse)
-	{
-		var ret = new LlvmIrInstructions.Br (cond, ifTrue, ifFalse);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Call Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null, LlvmIrVariable? funcPointer = null)
-	{
-		var ret = new LlvmIrInstructions.Call (function, result, arguments, funcPointer);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Icmp Icmp (LlvmIrIcmpCond cond, LlvmIrVariable op1, object? op2, LlvmIrVariable result)
-	{
-		var ret = new LlvmIrInstructions.Icmp (cond, op1, op2, result);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Load Load (LlvmIrVariable source, LlvmIrVariable result, LlvmIrMetadataItem? tbaa = null)
-	{
-		var ret = new LlvmIrInstructions.Load (source, result) {
-			TBAA = tbaa,
-		};
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Store Store (LlvmIrVariable from, LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
-	{
-		var ret = new LlvmIrInstructions.Store (from, to) {
-			TBAA = tbaa,
-		};
-
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Store Store (LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
-	{
-		var ret = new LlvmIrInstructions.Store (to) {
-			TBAA = tbaa,
-		};
-
-		Add (ret);
-		return ret;
-	}
-
-	/// <summary>
-	/// Creates the `phi` instruction form we use the most throughout marshal methods generator - one which refers to an if/else block and where
-	/// **both** value:label pairs are **required**.  Parameters <paramref name="label1"/> and <paramref name="label2"/> are nullable because, in theory,
-	/// it is possible that <see cref="LlvmIrFunctionBody"/> hasn't had the required blocks defined prior to adding the `phi` instruction and, thus,
-	/// we must check for the possibility here.
-	/// </summary>
-	public LlvmIrInstructions.Phi Phi (LlvmIrVariable result, LlvmIrVariable val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariable val2, LlvmIrFunctionLabelItem? label2)
-	{
-		var ret = new LlvmIrInstructions.Phi (result, val1, label1, val2, label2);
-		Add (ret);
-		return ret;
-	}
-
-	public LlvmIrInstructions.Ret Ret (Type retvalType, object? retval = null)
-	{
-		var ret = new LlvmIrInstructions.Ret (retvalType, retval);
-		Add (ret);
-		return ret;
-	}
-
 	public void Add (LlvmIrFunctionLabelItem label)
 	{
 		label.WillAddToBody (this, functionState);
@@ -285,5 +201,104 @@ class LlvmIrFunctionBody
 	public void Add (LlvmIrFunctionBodyItem item)
 	{
 		items.Add (item);
+	}
+
+	public void AddComment (string text)
+	{
+		Add (new LlvmIrFunctionBodyComment (text));
+	}
+
+	public LlvmIrInstructions.Alloca Alloca (LlvmIrVariable result)
+	{
+		var ret = new LlvmIrInstructions.Alloca (result);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Br Br (LlvmIrFunctionLabelItem label)
+	{
+		var ret = new LlvmIrInstructions.Br (label);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Br Br (LlvmIrVariable cond, LlvmIrFunctionLabelItem ifTrue, LlvmIrFunctionLabelItem ifFalse)
+	{
+		var ret = new LlvmIrInstructions.Br (cond, ifTrue, ifFalse);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Call Call (LlvmIrFunction function, LlvmIrVariable? result = null, ICollection<object?>? arguments = null, LlvmIrVariable? funcPointer = null)
+	{
+		var ret = new LlvmIrInstructions.Call (function, result, arguments, funcPointer);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Ext Ext (LlvmIrVariable source, Type targetType, LlvmIrVariable result)
+	{
+		var ret = new LlvmIrInstructions.Ext (source, targetType, result);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Icmp Icmp (LlvmIrIcmpCond cond, LlvmIrVariable op1, object? op2, LlvmIrVariable result)
+	{
+		var ret = new LlvmIrInstructions.Icmp (cond, op1, op2, result);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Load Load (LlvmIrVariable source, LlvmIrVariable result, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Load (source, result) {
+			TBAA = tbaa,
+		};
+		Add (ret);
+		return ret;
+	}
+
+	/// <summary>
+	/// Creates the `phi` instruction form we use the most throughout marshal methods generator - one which refers to an if/else block and where
+	/// **both** value:label pairs are **required**.  Parameters <paramref name="label1"/> and <paramref name="label2"/> are nullable because, in theory,
+	/// it is possible that <see cref="LlvmIrFunctionBody"/> hasn't had the required blocks defined prior to adding the `phi` instruction and, thus,
+	/// we must check for the possibility here.
+	/// </summary>
+	public LlvmIrInstructions.Phi Phi (LlvmIrVariable result, LlvmIrVariable val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariable val2, LlvmIrFunctionLabelItem? label2)
+	{
+		var ret = new LlvmIrInstructions.Phi (result, val1, label1, val2, label2);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Ret Ret (Type retvalType, object? retval = null)
+	{
+		var ret = new LlvmIrInstructions.Ret (retvalType, retval);
+		Add (ret);
+		return ret;
+	}
+
+	public LlvmIrInstructions.Store Store (LlvmIrVariable from, LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Store (from, to) {
+			TBAA = tbaa,
+		};
+
+		Add (ret);
+		return ret;
+	}
+
+	/// <summary>
+	/// Stores `null` in the indicated variable
+	/// </summary>
+	public LlvmIrInstructions.Store Store (LlvmIrVariable to, LlvmIrMetadataItem? tbaa = null)
+	{
+		var ret = new LlvmIrInstructions.Store (to) {
+			TBAA = tbaa,
+		};
+
+		Add (ret);
+		return ret;
 	}
 }
