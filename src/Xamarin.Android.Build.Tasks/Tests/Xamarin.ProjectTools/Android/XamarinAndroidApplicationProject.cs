@@ -70,9 +70,7 @@ namespace Xamarin.ProjectTools
 				MinSdkVersion = "19";
 			}
 			AndroidManifest = default_android_manifest;
-			if (Builder.UseDotNet) {
-				TargetSdkVersion = XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString ();
-			} else {
+			if (!Builder.UseDotNet) {
 				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
 			}
 			LayoutMain = default_layout_main;
@@ -201,18 +199,22 @@ namespace Xamarin.ProjectTools
 
 		public virtual string ProcessManifestTemplate ()
 		{
-			var uses_sdk = new StringBuilder ("<uses-sdk ");
+			var uses_sdk = new StringBuilder ();
 			if (!string.IsNullOrEmpty (MinSdkVersion)) {
+				uses_sdk.Append ("<uses-sdk ");
 				uses_sdk.Append ("android:minSdkVersion=\"");
 				uses_sdk.Append (MinSdkVersion);
 				uses_sdk.Append ("\" ");
 			}
 			if (!string.IsNullOrEmpty (TargetSdkVersion)) {
+				if (uses_sdk.Length == 0)
+					uses_sdk.Append ("<uses-sdk ");
 				uses_sdk.Append ("android:targetSdkVersion=\"");
 				uses_sdk.Append (TargetSdkVersion);
 				uses_sdk.Append ("\" ");
 			}
-			uses_sdk.Append ("/>");
+			if (uses_sdk.Length > 0)
+				uses_sdk.Append ("/>");
 
 			return AndroidManifest
 				.Replace ("${PROJECT_NAME}", ProjectName)
