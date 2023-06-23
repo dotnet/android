@@ -279,7 +279,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			RegisterString ((string)variable.Value, stringGroupName, stringGroupComment, symbolSuffix);
 		}
 
-		void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
+		public void RegisterString (string value, string? stringGroupName = null, string? stringGroupComment = null, string? symbolSuffix = null)
 		{
 			if (stringManager == null) {
 				stringManager = new LlvmIrStringManager ();

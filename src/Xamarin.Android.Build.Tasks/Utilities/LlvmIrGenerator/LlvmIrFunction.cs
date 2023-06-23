@@ -414,6 +414,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public LlvmIrFunctionBody Body                       { get; }
 		public string? Comment                               { get; set; }
 		public bool ReturnsValue                             => Signature.ReturnType != typeof(void);
+		public bool UsesVarArgs                              { get; }
 
 		public LlvmIrFunction (LlvmIrFunctionSignature signature, LlvmIrFunctionAttributeSet? attributeSet = null)
 		{
@@ -422,6 +423,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			functionState = new FunctionState ();
 			foreach (LlvmIrFunctionParameter parameter in signature.Parameters) {
+				if (UsesVarArgs) {
+					throw new InvalidOperationException ($"Internal error: function '{signature.Name}' uses variable arguments and it has at least one argument following the varargs (...) one. This is not allowed.");
+				}
+
+				if (parameter.IsVarArgs) {
+					UsesVarArgs = true;
+					continue;
+				}
+
 				if (!String.IsNullOrEmpty (parameter.Name)) {
 					continue;
 				}
