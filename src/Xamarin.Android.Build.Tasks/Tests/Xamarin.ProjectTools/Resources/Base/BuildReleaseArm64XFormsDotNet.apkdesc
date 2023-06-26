@@ -11,130 +11,130 @@
       "Size": 7313
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66576
+      "Size": 66911
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 446254
+      "Size": 469830
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5798
+      "Size": 5818
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3860
+      "Size": 3866
     },
     "assemblies/netstandard.dll": {
-      "Size": 5573
+      "Size": 5578
     },
     "assemblies/rc.bin": {
       "Size": 1235
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 11553
+      "Size": 11561
     },
     "assemblies/System.Collections.dll": {
-      "Size": 15400
+      "Size": 15445
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 7494
+      "Size": 7501
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 1967
+      "Size": 1974
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2588
+      "Size": 2596
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6076
+      "Size": 6083
     },
     "assemblies/System.Console.dll": {
-      "Size": 6609
+      "Size": 6612
     },
     "assemblies/System.Core.dll": {
-      "Size": 1986
+      "Size": 1992
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6584
+      "Size": 6589
     },
     "assemblies/System.dll": {
-      "Size": 2341
+      "Size": 2347
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 1932
+      "Size": 1938
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 12005
+      "Size": 12004
     },
     "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 11217
+      "Size": 11221
     },
     "assemblies/System.IO.Compression.dll": {
       "Size": 15897
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 10006
+      "Size": 9913
     },
     "assemblies/System.Linq.dll": {
-      "Size": 19433
+      "Size": 19490
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 164136
+      "Size": 164335
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 65503
+      "Size": 65557
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 22470
+      "Size": 22482
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3624
+      "Size": 3632
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 8155
+      "Size": 8159
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 832191
+      "Size": 834340
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 191999
+      "Size": 192404
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 42894
+      "Size": 42947
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 215865
+      "Size": 215908
     },
     "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 16669
+      "Size": 16681
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2769
+      "Size": 2775
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3752
+      "Size": 3768
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 1860
+      "Size": 1867
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2512
+      "Size": 2518
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3797
+      "Size": 3802
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 7839
+      "Size": 8065
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 158406
+      "Size": 158997
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1753
+      "Size": 1760
     },
     "assemblies/System.Xml.Linq.dll": {
-      "Size": 1770
+      "Size": 1778
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 5423
+      "Size": 5290
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5942
@@ -203,16 +203,16 @@
       "Size": 42522
     },
     "classes.dex": {
-      "Size": 3127260
+      "Size": 3117140
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 93552
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 380832
+      "Size": 380704
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3160360
+      "Size": 3169800
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
@@ -224,7 +224,7 @@
       "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 333736
+      "Size": 333744
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -338,13 +338,13 @@
       "Size": 1213
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 79441
+      "Size": 76902
     },
     "META-INF/com.google.android.material_material.version": {
       "Size": 10
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 79314
+      "Size": 76775
     },
     "META-INF/proguard/androidx-annotations.pro": {
       "Size": 339
@@ -426,12 +426,6 @@
     },
     "res/anim/btn_radio_to_on_mtrl_ring_outer_path_animation.xml": {
       "Size": 1028
-    },
-    "res/anim/design_bottom_sheet_slide_in.xml": {
-      "Size": 616
-    },
-    "res/anim/design_bottom_sheet_slide_out.xml": {
-      "Size": 616
     },
     "res/anim/design_snackbar_in.xml": {
       "Size": 312
@@ -519,9 +513,6 @@
     },
     "res/color/abc_background_cache_hint_selector_material_light.xml": {
       "Size": 468
-    },
-    "res/color/abc_btn_colored_borderless_text_material.xml": {
-      "Size": 604
     },
     "res/color/abc_btn_colored_text_material.xml": {
       "Size": 604
@@ -1051,15 +1042,6 @@
     "res/drawable-v21/abc_list_divider_material.xml": {
       "Size": 516
     },
-    "res/drawable-v21/abc_ratingbar_indicator_material.xml": {
-      "Size": 704
-    },
-    "res/drawable-v21/abc_ratingbar_material.xml": {
-      "Size": 704
-    },
-    "res/drawable-v21/abc_ratingbar_small_material.xml": {
-      "Size": 704
-    },
     "res/drawable-v21/avd_hide_password.xml": {
       "Size": 660
     },
@@ -1492,9 +1474,6 @@
     "res/drawable/abc_btn_check_material.xml": {
       "Size": 464
     },
-    "res/drawable/abc_btn_colored_material.xml": {
-      "Size": 344
-    },
     "res/drawable/abc_btn_default_mtrl_shape.xml": {
       "Size": 932
     },
@@ -1509,12 +1488,6 @@
     },
     "res/drawable/abc_cab_background_top_material.xml": {
       "Size": 336
-    },
-    "res/drawable/abc_dialog_material_background.xml": {
-      "Size": 716
-    },
-    "res/drawable/abc_edit_text_material.xml": {
-      "Size": 868
     },
     "res/drawable/abc_ic_ab_back_material.xml": {
       "Size": 692
@@ -1543,9 +1516,6 @@
     "res/drawable/abc_item_background_holo_light.xml": {
       "Size": 1012
     },
-    "res/drawable/abc_list_divider_material.xml": {
-      "Size": 480
-    },
     "res/drawable/abc_list_selector_background_transition_holo_dark.xml": {
       "Size": 424
     },
@@ -1559,13 +1529,13 @@
       "Size": 1064
     },
     "res/drawable/abc_ratingbar_indicator_material.xml": {
-      "Size": 664
+      "Size": 704
     },
     "res/drawable/abc_ratingbar_material.xml": {
-      "Size": 664
+      "Size": 704
     },
     "res/drawable/abc_ratingbar_small_material.xml": {
-      "Size": 664
+      "Size": 704
     },
     "res/drawable/abc_seekbar_thumb_material.xml": {
       "Size": 1100
@@ -1618,14 +1588,8 @@
     "res/drawable/btn_radio_on_to_off_mtrl_animation.xml": {
       "Size": 680
     },
-    "res/drawable/design_bottom_navigation_item_background.xml": {
-      "Size": 784
-    },
     "res/drawable/design_fab_background.xml": {
       "Size": 372
-    },
-    "res/drawable/design_password_eye.xml": {
-      "Size": 464
     },
     "res/drawable/design_snackbar_background.xml": {
       "Size": 484
@@ -1696,15 +1660,6 @@
     "res/interpolator/fast_out_slow_in.xml": {
       "Size": 400
     },
-    "res/interpolator/mtrl_fast_out_linear_in.xml": {
-      "Size": 136
-    },
-    "res/interpolator/mtrl_fast_out_slow_in.xml": {
-      "Size": 144
-    },
-    "res/interpolator/mtrl_linear_out_slow_in.xml": {
-      "Size": 136
-    },
     "res/interpolator/mtrl_linear.xml": {
       "Size": 132
     },
@@ -1713,15 +1668,6 @@
     },
     "res/layout-sw600dp-v13/mtrl_layout_snackbar.xml": {
       "Size": 528
-    },
-    "res/layout-v16/notification_template_custom_big.xml": {
-      "Size": 3208
-    },
-    "res/layout-v21/abc_screen_toolbar.xml": {
-      "Size": 1504
-    },
-    "res/layout-v21/fallbacktoolbardonotuse.xml": {
-      "Size": 496
     },
     "res/layout-v21/notification_action_tombstone.xml": {
       "Size": 1228
@@ -1734,9 +1680,6 @@
     },
     "res/layout-v21/notification_template_icon_group.xml": {
       "Size": 988
-    },
-    "res/layout-v21/toolbar.xml": {
-      "Size": 496
     },
     "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
       "Size": 1584
@@ -1820,7 +1763,7 @@
       "Size": 832
     },
     "res/layout/abc_screen_toolbar.xml": {
-      "Size": 1452
+      "Size": 1504
     },
     "res/layout/abc_search_dropdown_item_icons_2line.xml": {
       "Size": 1916
@@ -1892,7 +1835,7 @@
       "Size": 692
     },
     "res/layout/fallbacktoolbardonotuse.xml": {
-      "Size": 452
+      "Size": 496
     },
     "res/layout/flyoutcontent.xml": {
       "Size": 944
@@ -1905,12 +1848,6 @@
     },
     "res/layout/mtrl_layout_snackbar.xml": {
       "Size": 528
-    },
-    "res/layout/notification_action_tombstone.xml": {
-      "Size": 1332
-    },
-    "res/layout/notification_action.xml": {
-      "Size": 1156
     },
     "res/layout/notification_media_action.xml": {
       "Size": 564
@@ -1929,9 +1866,6 @@
     },
     "res/layout/notification_template_big_media.xml": {
       "Size": 1696
-    },
-    "res/layout/notification_template_icon_group.xml": {
-      "Size": 392
     },
     "res/layout/notification_template_lines_media.xml": {
       "Size": 2872
@@ -1970,14 +1904,14 @@
       "Size": 692
     },
     "res/layout/toolbar.xml": {
-      "Size": 452
+      "Size": 496
     },
     "res/xml/splits0.xml": {
       "Size": 8404
     },
     "resources.arsc": {
-      "Size": 341228
+      "Size": 325240
     }
   },
-  "PackageSize": 7877469
+  "PackageSize": 7900078
 }
