@@ -33,7 +33,6 @@ namespace Xamarin.ProjectTools
 		public string GlobalPackagesFolder { get; set; } = FileSystemUtils.FindNugetGlobalPackageFolder ();
 		public IList<string> ExtraNuGetConfigSources { get; set; } = new List<string> ();
 
-		public virtual bool ShouldRestorePackageReferences => PackageReferences?.Count > 0;
 		/// <summary>
 		/// If true, the ProjectDirectory will be deleted and populated on the first build
 		/// </summary>

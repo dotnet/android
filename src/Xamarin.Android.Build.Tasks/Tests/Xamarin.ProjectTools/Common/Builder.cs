@@ -53,16 +53,22 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
-		public string BuildTool {
-			get {
-				if (UseDotNet)
-					return Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+		string _buildTool;
 
-				string xabuild = IsUnix ? XABuildPaths.XABuildScript : XABuildPaths.XABuildExe;
-				if (File.Exists (xabuild) && TestEnvironment.UseLocalBuildOutput)
-					return xabuild;
-				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
-			}
+		public string BuildTool {
+			get => _buildTool ??= FindBuildTool ();
+			set => _buildTool = value;
+		}
+
+		string FindBuildTool ()
+		{
+			if (UseDotNet)
+				return Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+
+			string xabuild = IsUnix ? XABuildPaths.XABuildScript : XABuildPaths.XABuildExe;
+			if (File.Exists (xabuild) && TestEnvironment.UseLocalBuildOutput)
+				return xabuild;
+			return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
 		}
 
 		public bool CrossCompilerAvailable (string supportedAbis)
@@ -186,7 +192,7 @@ namespace Xamarin.ProjectTools
 			RegexOptions.Multiline | RegexOptions.Compiled
 		);
 
-		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true, string binlogName = "msbuild")
+		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, string binlogName = "msbuild")
 		{
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
@@ -204,8 +210,11 @@ namespace Xamarin.ProjectTools
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (BuildTool);
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
+			var isMSBuild = string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "MSBuild", StringComparison.OrdinalIgnoreCase);
 			if (UseDotNet) {
-				args.Append ("build ");
+				if (!isMSBuild) {
+					args.Append ("build ");
+				}
 				if (TestEnvironment.UseLocalBuildOutput) {
 					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
@@ -213,11 +222,11 @@ namespace Xamarin.ProjectTools
 			}
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (UseDotNet) {
+			if (UseDotNet && !isMSBuild) {
 				if (!AutomaticNuGetRestore) {
 					args.Append (" --no-restore");
 				}
-			} else if (AutomaticNuGetRestore && restore) {
+			} else if (AutomaticNuGetRestore) {
 				args.Append (" /restore");
 			}
 

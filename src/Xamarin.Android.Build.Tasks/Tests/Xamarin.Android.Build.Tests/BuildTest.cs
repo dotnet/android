@@ -2577,5 +2577,27 @@ namespace UnnamedProject
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 		}
+
+		/// <summary>
+		/// Build with MSBuild.exe on .NET framework, instead of 'dotnet build'
+		/// </summary>
+		[Test]
+		public void BuildWithMSBuild ([Values (true, false)] bool isRelease)
+		{
+			if (!IsWindows)
+				Assert.Ignore ("Test is only valid on Windows platforms");
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			using var builder = CreateApkBuilder ();
+
+			// Use MSBuild.exe, setting %PATH% to our local 'dotnet' directory
+			builder.BuildTool = TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
+			var environment = new Dictionary<string, string> ();
+			environment ["PATH"] = $"{TestEnvironment.DotNetPreviewDirectory};{Environment.GetEnvironmentVariable ("PATH")}";
+
+			Assert.IsTrue (builder.Build (proj, environmentVariables: environment), "Build should have succeeded.");
+		}
 	}
 }

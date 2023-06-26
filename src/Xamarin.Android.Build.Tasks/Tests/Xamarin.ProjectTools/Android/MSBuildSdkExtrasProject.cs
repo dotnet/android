@@ -20,11 +20,6 @@ namespace Xamarin.ProjectTools
 
 		public string StringsXml { get; set; }
 
-		/// <summary>
-		/// /t:Restore or /restore is always required
-		/// </summary>
-		public override bool ShouldRestorePackageReferences => true;
-
 		public string TargetFrameworks {
 			get => GetProperty (nameof (TargetFrameworks));
 			set => SetProperty (nameof (TargetFrameworks), value);
