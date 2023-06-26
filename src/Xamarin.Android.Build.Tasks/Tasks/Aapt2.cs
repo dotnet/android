@@ -84,7 +84,7 @@ namespace Xamarin.Android.Tasks {
 				DaemonMaxInstanceCount = maxInstances;
 			else
 				DaemonMaxInstanceCount = Math.Min (DaemonMaxInstanceCount, maxInstances);
-			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, GenerateFullPathToTool (),
+			daemon  = Aapt2Daemon.GetInstance (BuildEngine4, LogDebugMessage, GenerateFullPathToTool (),
 				DaemonMaxInstanceCount, GetRequiredDaemonInstances (), registerInDomain: DaemonKeepInDomain);
 			return base.Execute ();
 		}

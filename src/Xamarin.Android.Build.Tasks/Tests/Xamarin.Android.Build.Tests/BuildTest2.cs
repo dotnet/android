@@ -693,10 +693,8 @@ printf ""%d"" x
 		public void DesignTimeBuildHasAndroidDefines ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
-			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
 			var androidDefines = new List<string> ();
-			for (int i = 1; i <= apiLevel; ++i) {
+			for (int i = 1; i <= XABuildConfig.AndroidDefaultTargetDotnetApiLevel; ++i) {
 				androidDefines.Add ($"!__ANDROID_{i}__");
 			}
 			proj.Sources.Add (new BuildItem ("Compile", "IsAndroidDefined.cs") {

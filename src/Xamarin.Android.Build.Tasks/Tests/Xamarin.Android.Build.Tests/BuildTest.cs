@@ -650,28 +650,6 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			}
 		}
 
-		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5+
-		public void CheckTargetFrameworkVersion ([Values (true, false)] bool isRelease)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				TargetSdkVersion = null,
-				MinSdkVersion = null,
-			};
-			proj.SetProperty ("AndroidUseLatestPlatformSdk", "False");
-			using (var builder = CreateApkBuilder ()) {
-				builder.GetTargetFrameworkVersionRange (out var _, out string firstFrameworkVersion, out var _, out string lastFrameworkVersion, out string[] _);
-				proj.SetProperty ("TargetFrameworkVersion", firstFrameworkVersion);
-				if (!Directory.Exists (Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, firstFrameworkVersion)))
-					Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={firstFrameworkVersion}"), $"TargetFrameworkVerson should be {firstFrameworkVersion}");
-				Assert.IsTrue (builder.Build (proj, parameters: new [] { $"TargetFrameworkVersion={lastFrameworkVersion}" }), "Build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"Output Property: TargetFrameworkVersion={lastFrameworkVersion}"), $"TargetFrameworkVersion should be {lastFrameworkVersion}");
-			}
-		}
-
 #pragma warning disable 414
 		public static object [] GeneratorValidateEventNameArgs = new object [] {
 			new object [] { false, true, string.Empty, string.Empty },
