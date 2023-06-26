@@ -817,6 +817,24 @@ namespace Xamarin.Android.Tasks
 
 			LlvmIrFunctionAttributeSet attrSet = MakeXamarinAppInitAttributeSet (module);
 			var xamarin_app_init = new LlvmIrFunction (init_signature, attrSet);
+
+			// If `fn` is nullptr, print a message and abort...
+			//
+			// We must allocate result variables for both the null comparison and puts call here and with names, because
+			// labels and local unnamed variables must be numbered sequentially otherwise and the `AddIfThenElse` call will
+			// allocate up to 3 labels which would have been **defined** after these labels, but **used** before them - and
+			// thus the numbering sequence would be out of order and the .ll file wouldn't build.
+			var fnNullResult = xamarin_app_init.CreateLocalVariable (typeof(bool), "fnIsNull");
+			LlvmIrVariable putsResult = xamarin_app_init.CreateLocalVariable (typeof(int), "putsResult");
+			var ifThenInstructions = new List<LlvmIrInstruction> {
+				module.CreatePuts ("get_function_pointer MUST be specified\n", putsResult),
+				module.CreateAbort (),
+				new LlvmIrInstructions.Unreachable (),
+			};
+
+			module.AddIfThenElse (xamarin_app_init, fnNullResult, LlvmIrIcmpCond.Equal, init_params[1], null, ifThenInstructions);
+
+			// ...otherwise store the pointer and return
 			xamarin_app_init.Body.Store (init_params[1], getFunctionPtrVariable, module.TbaaAnyPointer);
 			xamarin_app_init.Body.Ret (typeof(void));
 

@@ -336,9 +336,9 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		LlvmIrLocalVariable asprintf_failed = func.CreateLocalVariable (typeof(bool), "asprintf_failed");
 		func.Body.Icmp (LlvmIrIcmpCond.SignedLessThan, asprintf_failed, (int)0, asprintf_failed);
 
-		var asprintfIfThenLabel = new LlvmIrFunctionLabelItem ("if.then");
-		var asprintfIfElseLabel = new LlvmIrFunctionLabelItem ("if.else");
-		var ifElseDoneLabel = new LlvmIrFunctionLabelItem ("if.done");
+		var asprintfIfThenLabel = new LlvmIrFunctionLabelItem ();
+		var asprintfIfElseLabel = new LlvmIrFunctionLabelItem ();
+		var ifElseDoneLabel = new LlvmIrFunctionLabelItem ();
 
 		func.Body.Br (asprintf_failed, asprintfIfThenLabel, asprintfIfElseLabel);
 
