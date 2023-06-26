@@ -301,4 +301,12 @@ class LlvmIrFunctionBody
 		Add (ret);
 		return ret;
 	}
+
+	public LlvmIrInstructions.Unreachable Unreachable ()
+	{
+		var ret = new LlvmIrInstructions.Unreachable ();
+
+		Add (ret);
+		return ret;
+	}
 }

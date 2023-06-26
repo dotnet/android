@@ -40,6 +40,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		List<LlvmIrGlobalVariable>? globalVariables;
 
+		LlvmIrFunction? puts;
+		LlvmIrFunction? abort;
+
 		public LlvmIrModule ()
 		{
 			metadataManager = new LlvmIrMetadataManager ();
@@ -123,6 +126,119 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			functions.Add (func, func);
+		}
+
+		public LlvmIrInstructions.Call CreatePuts (string text, LlvmIrVariable result)
+		{
+			EnsurePuts ();
+			RegisterString (text);
+			return new LlvmIrInstructions.Call (puts, result, new List<object?> { text });
+		}
+
+		/// <summary>
+		/// Generate code to call the `puts(3)` C library function to print a simple string to standard output.
+		/// </summary>
+		public LlvmIrInstructions.Call AddPuts (LlvmIrFunction function, string text, LlvmIrVariable result)
+		{
+			EnsurePuts ();
+			RegisterString (text);
+			return function.Body.Call (puts, result, new List<object?> { text });
+		}
+
+		void EnsurePuts ()
+		{
+			if (puts != null) {
+				return;
+			}
+
+			var puts_params = new List<LlvmIrFunctionParameter> {
+				new (typeof(string), "s"),
+			};
+
+			var puts_sig = new LlvmIrFunctionSignature (
+				name: "puts",
+				returnType: typeof(int),
+				parameters: puts_params
+			);
+			puts_sig.ReturnAttributes.NoUndef = true;
+
+			puts = DeclareExternalFunction (puts_sig, MakePutsAttributeSet ());
+		}
+
+		LlvmIrFunctionAttributeSet MakePutsAttributeSet ()
+		{
+			var ret = new LlvmIrFunctionAttributeSet {
+				new NofreeFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+			};
+
+			ret.DoNotAddTargetSpecificAttributes = true;
+			return AddAttributeSet (ret);
+		}
+
+		public LlvmIrInstructions.Call CreateAbort ()
+		{
+			EnsureAbort ();
+			return new LlvmIrInstructions.Call (abort);
+		}
+
+		public LlvmIrInstructions.Call AddAbort (LlvmIrFunction function)
+		{
+			EnsureAbort ();
+			LlvmIrInstructions.Call ret = function.Body.Call (abort);
+			function.Body.Unreachable ();
+
+			return ret;
+		}
+
+		void EnsureAbort ()
+		{
+			if (abort != null) {
+				return;
+			}
+
+			var abort_sig = new LlvmIrFunctionSignature (name: "abort", returnType: typeof(void));
+			abort = DeclareExternalFunction (abort_sig, MakeAbortAttributeSet ());
+		}
+
+		LlvmIrFunctionAttributeSet MakeAbortAttributeSet ()
+		{
+			var ret = new LlvmIrFunctionAttributeSet {
+				new NoreturnFunctionAttribute (),
+				new NounwindFunctionAttribute (),
+				new NoTrappingMathFunctionAttribute (true),
+				new StackProtectorBufferSizeFunctionAttribute (8),
+			};
+
+			return AddAttributeSet (ret);
+		}
+
+		public void AddIfThenElse (LlvmIrFunction function, LlvmIrVariable result, LlvmIrIcmpCond condition, LlvmIrVariable conditionVariable, object? conditionComparand, ICollection<LlvmIrInstruction> codeIfThen, ICollection<LlvmIrInstruction>? codeIfElse = null)
+		{
+			function.Body.Icmp (condition, conditionVariable, conditionComparand, result);
+
+			var labelIfThen = new LlvmIrFunctionLabelItem ();
+			LlvmIrFunctionLabelItem? labelIfElse = codeIfElse != null ? new LlvmIrFunctionLabelItem () : null;
+			var labelIfDone = new LlvmIrFunctionLabelItem ();
+
+			function.Body.Br (result, labelIfThen, labelIfElse == null ? labelIfDone : labelIfElse);
+			function.Body.Add (labelIfThen);
+
+			AddInstructions (codeIfThen);
+
+			if (codeIfElse != null) {
+				function.Body.Add (labelIfElse);
+				AddInstructions (codeIfElse);
+			}
+
+			function.Body.Add (labelIfDone);
+
+			void AddInstructions (ICollection<LlvmIrInstruction> instructions)
+			{
+				foreach (LlvmIrInstruction ins in instructions) {
+					function.Body.Add (ins);
+				}
+			}
 		}
 
 		/// <summary>
@@ -507,6 +623,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			externalFunctions.Add (func, func);
 			return func;
+		}
+
+		public LlvmIrFunction DeclareExternalFunction (LlvmIrFunctionSignature sig, LlvmIrFunctionAttributeSet? attrSet = null)
+		{
+			return DeclareExternalFunction (new LlvmIrFunction (sig, attrSet));
 		}
 
 		/// <summary>

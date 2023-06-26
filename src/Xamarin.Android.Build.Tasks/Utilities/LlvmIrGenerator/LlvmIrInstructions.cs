@@ -575,4 +575,11 @@ sealed class LlvmIrInstructions
 			WriteAlignment (context, size, isPointer);
 		}
 	}
+
+	public class Unreachable : LlvmIrInstruction
+	{
+		public Unreachable ()
+			: base ("unreachable")
+		{}
+	}
 }
