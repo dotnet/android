@@ -133,6 +133,13 @@
         SourceFiles="$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
         DestinationFolder="$(IntermediateOutputPath)mcw\"
     />
+      
+    <!-- Rebind API-33 as API-34 for Classic -->
+    <Copy Condition=" '$(TargetFramework)' == 'monoandroid10' AND '$(AndroidPlatformId)' == '34' "
+        SourceFiles="$(_ApiXmlLocation)api-33.xml"
+        DestinationFiles="$(IntermediateOutputPath)mcw\api-34.xml"
+    />
+
 
   </Target>
   
@@ -166,6 +173,8 @@
       <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
       <_Codegen>--codegen-target=XAJavaInterop1</_Codegen>
       <_Fixup>--fixup=metadata</_Fixup>
+      <_Fixup Condition=" '$(TargetFramework)' == 'monoandroid10' ">$(_Fixup) --fixup=metadata-classic</_Fixup>
+      <_Fixup Condition=" '$(TargetFramework)' != 'monoandroid10' ">$(_Fixup) --fixup=metadata-net</_Fixup>
       <_Enums1>--preserve-enums --enumflags=enumflags --enumfields=map.csv --enummethods=methodmap.csv</_Enums1>
       <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw\enummetadata</_Enums2>
       <_Annotations Condition=" '$(_AnnotationsZip)' != '' ">"--annotations=$(_AnnotationsZip)"</_Annotations>
@@ -264,7 +273,7 @@
   </ItemGroup>
   <Target
       Name="_CheckApiCompatibility"
-      Condition=" '$(DisableApiCompatibilityCheck)' != 'True' "
+      Condition=" '$(DisableApiCompatibilityCheck)' != 'True' AND '$(TargetFramework)' != 'monoandroid10' "
       AfterTargets="CopyFilesToOutputDirectory"
 
       Inputs="$(TargetPath);@(ApiCompatibilityFiles)"

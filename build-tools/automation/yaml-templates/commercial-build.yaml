@@ -57,6 +57,8 @@ steps:
 - script: make all-tests CONFIGURATION=$(XA.Build.Configuration)
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make all-tests
+  env:
+    __XA_LOG_ERRORS__: icanhaz
 
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1

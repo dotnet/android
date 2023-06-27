@@ -1,5 +1,6 @@
 namespace Java.Nio
 {
+#if NET || !ANDROID_34
 	public partial class CharBuffer
 	{
 		// FIXME: these are generator limitation workaround: it should resolve
@@ -19,5 +20,6 @@ namespace Java.Nio
 			return Append (csq, start, end)!;
 		}
 	}
+#endif
 }
 

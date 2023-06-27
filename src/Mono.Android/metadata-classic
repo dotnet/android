@@ -1,0 +1,10 @@
+<metadata>
+
+  <!-- Classic API-34 specific fixes -->
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='append' and count(parameter)=1 and parameter[1][@type='char']]" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='append' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='append' and count(parameter)=3 and parameter[1][@type='java.lang.CharSequence'] and parameter[2][@type='int'] and parameter[3][@type='int']]" name="managedReturn">Java.Lang.IAppendable</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='position' and count(parameter)=1 and parameter[1][@type='long']]" name="managedReturn">Java.Nio.Channels.ISeekableByteChannel</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio.channels']/class[@name='FileChannel']/method[@name='truncate' and count(parameter)=1 and parameter[1][@type='long']]" name="managedReturn">Java.Nio.Channels.ISeekableByteChannel</attr>
+
+</metadata>

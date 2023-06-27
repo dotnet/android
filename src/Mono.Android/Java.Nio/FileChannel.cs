@@ -1,4 +1,4 @@
-#if ANDROID_24
+#if ANDROID_24 && (NET || !ANDROID_34)
 
 using System;
 

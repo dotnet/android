@@ -30,7 +30,7 @@ namespace Java.Lang {
 			return Java.Lang.Object.GetObject<Class> (JNIEnv.FindClass (type), JniHandleOwnership.TransferGlobalRef)!;
 		}
 
-#if ANDROID_34
+#if ANDROID_34 && NET
 		// A new interface (Java.Lang.Invoke.ITypeDescriptor.IOfField) was added to this class in API-34.
 		// The new required ComponentType () method conflicts with our ComponentType property created from
 		// the existing getComponentType method. Explicitly implement this method, which Android has documented
