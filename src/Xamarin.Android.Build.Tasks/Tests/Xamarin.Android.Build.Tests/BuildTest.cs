@@ -2560,5 +2560,22 @@ namespace UnnamedProject
 				StringAssertEx.DoesNotContain (errorFilePath, b.LastBuildOutput, $"Path {errorFilePath} should have been replaced.");
 			}
 		}
+
+		[Test]
+		public void SimilarAndroidXAssemblyNames ([Values(true, false)] bool publishTrimmed)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				AotAssemblies = publishTrimmed,
+				PackageReferences = {
+					new Package { Id = "Xamarin.AndroidX.CustomView", Version = "1.1.0.17" },
+					new Package { Id = "Xamarin.AndroidX.CustomView.PoolingContainer", Version = "1.0.0.4" },
+				}
+			};
+			proj.SetProperty (KnownProperties.PublishTrimmed, publishTrimmed.ToString());
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+		}
 	}
 }
