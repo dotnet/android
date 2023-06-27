@@ -716,7 +716,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android33.0")] string dotnetTargetFramework)
+		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android")] string dotnetTargetFramework)
 		{
 			if (!Builder.UseDotNet) {
 				Assert.Ignore ("Skipping. Test not relevant under Classic.");

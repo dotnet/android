@@ -1695,6 +1695,8 @@
   <attr api-since="26" path="/api/package[@name='android.app.admin']/class[@name='DevicePolicyManager']/method[@name='bindDeviceAdminServiceAsUser' and count(parameter)=5 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='android.content.Intent'] and parameter[3][@type='android.content.ServiceConnection'] and parameter[4][@type='int'] and parameter[5][@type='android.os.UserHandle']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
   <attr path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=3 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='android.content.ServiceConnection'] and parameter[3][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
   <attr api-since="29" path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=4 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int'] and parameter[3][@type='java.util.concurrent.Executor'] and parameter[4][@type='android.content.ServiceConnection']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr api-since="34" path="/api/package[@name='android.media.tv']/class[@name='AdRequest']/constructor[@name='AdRequest' and count(parameter)=7 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='android.net.Uri'] and parameter[4][@type='long'] and parameter[5][@type='long'] and parameter[6][@type='long'] and parameter[7][@type='android.os.Bundle']]/parameter[@name='requestType']" name="enumType">Android.Media.TV.AdRequestType</attr>
+  <attr api-since="34" path="/api/package[@name='android.media.tv']/class[@name='TimelineRequest']/constructor[@name='TimelineRequest' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='java.lang.String']]/parameter[@name='option']" name="enumType">Android.Media.TV.BroadcastInfoRequestOption</attr>
 
   <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
   <attr api-since="33" path="/api/package[@name='android.app']/class[@name='Service']/method[@name='stopForeground' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='notificationBehavior']" name="name">flags</attr>
@@ -1805,6 +1807,9 @@
   <attr api-since="34" path="/api/package[@name='android.location.altitude']" name="managedName">Android.Locations.Altitude</attr>
   <attr api-since="34" path="/api/package[@name='java.lang.runtime']" name="managedName">Java.Lang.Runtimes</attr>
 
+  <!-- 2 conflicting copies of ErrorEventArgs -->
+  <attr api-since="34" path="/api/package[@name='android.speech']/interface[@name='ModelDownloadListener']/method[@name='onError' and count(parameter)=1 and parameter[1][@type='int']]" name="argsType">ModelDownloadErrorEventArgs</attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.

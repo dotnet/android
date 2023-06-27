@@ -25,13 +25,13 @@ namespace Xamarin.Android.Build.Tests
 			ClearDebugProperty ();
 		}
 
-		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder)
+		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder, int? apiLevelOverride)
 		{
 			builder.LatestTargetFrameworkVersion (out string apiLevel);
 			proj.SupportedOSPlatformVersion = "24";
 			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevelOverride?.ToString () ?? apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";
@@ -67,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 				useEmbeddedDex = false;
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				SetTargetFrameworkAndManifest (proj, b);
+				SetTargetFrameworkAndManifest (proj, b, null);
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				SetTargetFrameworkAndManifest (app, appBuilder);
+				SetTargetFrameworkAndManifest (app, appBuilder, null);
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
 				Assert.True (appBuilder.Install (app), "app should have installed.");
 				RunProjectAndAssert (app, appBuilder);
@@ -220,7 +220,7 @@ namespace ${ROOT_NAMESPACE} {
 "),
 			});
 			using (var b = CreateApkBuilder (path)) {
-				SetTargetFrameworkAndManifest (proj, b);
+				SetTargetFrameworkAndManifest (proj, b, null);
 				Assert.True (b.Install (proj), "Project should have installed.");
 
 				int breakcountHitCount = 0;
@@ -430,6 +430,7 @@ namespace ${ROOT_NAMESPACE} {
 				lib.TargetFramework = "net7.0-android";
 				app.TargetFramework = "net7.0-android";
 			}
+
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
@@ -440,7 +441,7 @@ namespace ${ROOT_NAMESPACE} {
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
-				SetTargetFrameworkAndManifest (app, appBuilder);
+				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net7.0-android" ? 33 : null);
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {
