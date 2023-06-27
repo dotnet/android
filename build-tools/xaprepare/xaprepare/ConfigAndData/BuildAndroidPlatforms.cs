@@ -44,6 +44,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "S",                      apiLevel: 31, platformID: "31",  include: "v12.0",   framework: "v12.0"),
 			new AndroidPlatform (apiName: "Sv2",                    apiLevel: 32, platformID: "32",  include: "v12.1",   framework: "v12.1"),
 			new AndroidPlatform (apiName: "Tiramisu",               apiLevel: 33, platformID: "33",  include: "v13.0",   framework: "v13.0"),
+			new AndroidPlatform (apiName: "UpsideDownCake",         apiLevel: 34, platformID: "34",  include: "v14.0",   framework: "v14.0"),
 		};
 
 		public static readonly Dictionary<string, uint> NdkMinimumAPIMap = new Dictionary<string, uint> {

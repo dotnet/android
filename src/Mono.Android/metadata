@@ -1692,6 +1692,11 @@
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveActivity' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveContentProvider' and count(parameter)=2 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
   <attr path="/api/package[@name='android.content.pm']/class[@name='PackageManager']/method[@name='resolveService' and count(parameter)=2 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.PM.PackageInfoFlags</attr>
+  <attr api-since="26" path="/api/package[@name='android.app.admin']/class[@name='DevicePolicyManager']/method[@name='bindDeviceAdminServiceAsUser' and count(parameter)=5 and parameter[1][@type='android.content.ComponentName'] and parameter[2][@type='android.content.Intent'] and parameter[3][@type='android.content.ServiceConnection'] and parameter[4][@type='int'] and parameter[5][@type='android.os.UserHandle']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=3 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='android.content.ServiceConnection'] and parameter[3][@type='int']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr api-since="29" path="/api/package[@name='android.content']/class[@name='Context']/method[@name='bindService' and count(parameter)=4 and parameter[1][@type='android.content.Intent'] and parameter[2][@type='int'] and parameter[3][@type='java.util.concurrent.Executor'] and parameter[4][@type='android.content.ServiceConnection']]/parameter[@name='flags']" name="enumType">Android.Content.Bind</attr>
+  <attr api-since="34" path="/api/package[@name='android.media.tv']/class[@name='AdRequest']/constructor[@name='AdRequest' and count(parameter)=7 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='android.net.Uri'] and parameter[4][@type='long'] and parameter[5][@type='long'] and parameter[6][@type='long'] and parameter[7][@type='android.os.Bundle']]/parameter[@name='requestType']" name="enumType">Android.Media.TV.AdRequestType</attr>
+  <attr api-since="34" path="/api/package[@name='android.media.tv']/class[@name='TimelineRequest']/constructor[@name='TimelineRequest' and count(parameter)=4 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='java.lang.String']]/parameter[@name='option']" name="enumType">Android.Media.TV.BroadcastInfoRequestOption</attr>
 
   <!-- These parameters that we enumify changed names. Change them back so the enumification process can still find them. -->
   <attr api-since="33" path="/api/package[@name='android.app']/class[@name='Service']/method[@name='stopForeground' and count(parameter)=1 and parameter[1][@type='int']]/parameter[@name='notificationBehavior']" name="name">flags</attr>
@@ -1715,6 +1720,96 @@
   <remove-node api-since="33" path="/api/package[@name='java.util.concurrent']/class[@name='TimeUnit']/method[@name='of' and count(parameter)=1 and parameter[1][@type='java.time.temporal.ChronoUnit']]" />
   <remove-node api-since="33" path="/api/package[@name='java.util.concurrent']/class[@name='TimeUnit']/method[@name='toChronoUnit' and count(parameter)=0]" />
 
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='WindowManager.LayoutParams']/field[@name='systemUiVisibility']" name="deprecated-since">0</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='getSystemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='getSystemUiVisibility']" name="deprecated-since">0</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated">This property has an incorrect enumeration type. Use the SystemUiFlags property instead.</attr>
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='View']/method[@name='setSystemUiVisibility']" name="deprecated-since">0</attr>
+
+  <!-- These reabstracted methods with covariant return types need to be manaully marked as 'override'. -->
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer; java/nio/ByteBuffer.slice(II)Ljava/nio/ByteBuffer;</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']" name="skipInvokerMethods">java/nio/Buffer.duplicate()Ljava/nio/Buffer; java/nio/Buffer.slice()Ljava/nio/Buffer; java/nio/Buffer.slice(II)Ljava/nio/Buffer;</attr>
+	
+  <!-- These are new abstract methods in existing classes, so they must be converted to virtual compatible method for back-compat. -->
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='duplicate' and count(parameter)=0]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='slice' and count(parameter)=0]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='Buffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ByteBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='CharBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='DoubleBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='FloatBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='IntBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='LongBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='duplicate' and count(parameter)=0]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=0]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.nio']/class[@name='ShortBuffer']/method[@name='slice' and count(parameter)=2]" name="compatVirtualMethod">true</attr>
+
+  <!-- A new nested class "Request" was added which has a name conflict with existing methods named "Request" -->
+  <attr api-since="34" path="/api/package[@name='android.view']/class[@name='PixelCopy.Request']" name="managedName">PixelCopyRequest</attr>
+
+  <!-- Unsupported covariant return types -->
+  <attr api-since="34" path="/api/package[@name='java.lang']/class[@name='Class']/method[@name='arrayType' and count(parameter)=0]" name="managedReturn">Java.Lang.Object</attr>
+
+  <!-- Existing interface method was given a default implementation, existing implementations need to be changed to override -->
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedElement']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="abstract">false</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/class[@name='Constructor']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="managedOverride">override</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.reflect']/class[@name='Field']/method[@name='isAnnotationPresent' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;? extends java.lang.annotation.Annotation&gt;']]" name="managedOverride">override</attr>
+	
+  <!-- Rename Namespaces -->
+  <attr api-since="34" path="/api/package[@name='android.adservices.adid']" name="managedName">Android.AdServices.AdIds</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.adselection']" name="managedName">Android.AdServices.AdSelection</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.appsetid']" name="managedName">Android.AdServices.AppSetIds</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.common']" name="managedName">Android.AdServices.Common</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.customaudience']" name="managedName">Android.AdServices.CustomAudiences</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.exceptions']" name="managedName">Android.AdServices.Exceptions</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.measurement']" name="managedName">Android.AdServices.Measurement</attr>
+  <attr api-since="34" path="/api/package[@name='android.adservices.topics']" name="managedName">Android.AdServices.Topics</attr>
+  <attr api-since="34" path="/api/package[@name='android.app.appsearch.util']" name="managedName">Android.App.AppSearch.Util</attr>
+  <attr api-since="34" path="/api/package[@name='android.app.sdksandbox.sdkprovider']" name="managedName">Android.App.SdkSandbox.SdkProvider</attr>
+  <attr api-since="34" path="/api/package[@name='android.devicelock']" name="managedName">Android.DeviceLock</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.changelog']" name="managedName">Android.Health.Connect.ChangeLog</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes']" name="managedName">Android.Health.Connect.DataTypes</attr>
+  <attr api-since="34" path="/api/package[@name='android.health.connect.datatypes.units']" name="managedName">Android.Health.Connect.DataTypes.Units</attr>
+  <attr api-since="34" path="/api/package[@name='android.location.altitude']" name="managedName">Android.Locations.Altitude</attr>
+  <attr api-since="34" path="/api/package[@name='java.lang.runtime']" name="managedName">Java.Lang.Runtimes</attr>
+
+  <!-- 2 conflicting copies of ErrorEventArgs -->
+  <attr api-since="34" path="/api/package[@name='android.speech']/interface[@name='ModelDownloadListener']/method[@name='onError' and count(parameter)=1 and parameter[1][@type='int']]" name="argsType">ModelDownloadErrorEventArgs</attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -1733,6 +1828,8 @@
   <attr api-since="32" path="/api/package/interface[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-33.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-34.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1751,6 +1848,8 @@
   <attr api-since="32" path="/api//*[contains(@merge.SourceFile,'api-Sv2.xml.in')]" name="api-since">32</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-33.xml.in')]" name="api-since">33</attr>
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="api-since">33</attr>
+  <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-34.xml.in')]" name="api-since">34</attr>
+  <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="api-since">34</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

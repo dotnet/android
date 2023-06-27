@@ -20,6 +20,18 @@
         "microsoft-net-runtime-android",
         "microsoft-net-runtime-android-aot"
       ]
+    },
+    "android-34": {
+      "description": "Preview support for Android API-34.",
+      "packs": [
+        "Microsoft.Android.Ref.34",
+        "Microsoft.Android.Runtime.34.android-arm",
+        "Microsoft.Android.Runtime.34.android-arm64",
+        "Microsoft.Android.Runtime.34.android-x86",
+        "Microsoft.Android.Runtime.34.android-x64"
+      ],
+      "platforms": [ "win-x64", "linux-x64", "osx-x64", "osx-arm64" ],
+      "extends" : [ "android" ]
     }
   },
   "packs": {
@@ -64,6 +76,26 @@
       "version": "@WORKLOAD_VERSION@"
     },
     "Microsoft.Android.Runtime.33.android-x64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Ref.34": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.34.android-arm": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.34.android-arm64": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.34.android-x86": {
+      "kind": "framework",
+      "version": "@WORKLOAD_VERSION@"
+    },
+    "Microsoft.Android.Runtime.34.android-x64": {
       "kind": "framework",
       "version": "@WORKLOAD_VERSION@"
     },

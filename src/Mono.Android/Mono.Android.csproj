@@ -119,11 +119,13 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
     </Compile>
+    <Compile Include="Android.Graphics\PathIterator.cs" />
     <Compile Include="Android.Icu\ListFormatter.cs" />
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
+    <Compile Include="Java.Lang.Invoke\MethodType.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
@@ -396,7 +398,12 @@
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &lt; '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn></BuildDependsOn>
   </PropertyGroup>
-
+  
+  <!-- Do not build classic for API versions above 33 -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'monoandroid10' And '$(AndroidApiLevel)' &gt; '33'">
+    <BuildDependsOn></BuildDependsOn>
+  </PropertyGroup>
+  
   <PropertyGroup Condition=" '$(TargetFramework)' != 'monoandroid10' And '$(AndroidApiLevel)' &gt;= '$(AndroidDefaultTargetDotnetApiLevel)' ">
     <BuildDependsOn>
       $(BuildDependsOn);
