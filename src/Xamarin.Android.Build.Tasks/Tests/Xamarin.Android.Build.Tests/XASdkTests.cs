@@ -280,12 +280,12 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				"net7.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net7.0",
-				$"android{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				"android33",
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net8.0",
@@ -842,7 +842,7 @@ public class FooA {
 			new object[] {
 				"net7.0",
 				"android",
-				XABuildConfig.AndroidDefaultTargetDotnetApiLevel,
+				33, // TODO: use XABuildConfig.AndroidDefaultTargetDotnetApiLevel when we add 34 to .NET 7
 			},
 			new object[] {
 				"net8.0",
@@ -994,7 +994,7 @@ public class FooA {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android33.0")] string dotnetTargetFramework)
+		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android34.0")] string dotnetTargetFramework)
 		{
 			var proj = new XamarinAndroidLibraryProject {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
@@ -1006,6 +1006,7 @@ public class FooA {
 				}
 			};
 
+			// NOTE: keep this on the latest Xamarin.Android shipped
 			var legacyTargetFrameworkVersion = "13.0";
 			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
 			proj.SetProperty ("TargetFramework",  value: "");

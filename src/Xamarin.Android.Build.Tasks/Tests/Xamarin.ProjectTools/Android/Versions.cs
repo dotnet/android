@@ -4,6 +4,7 @@ namespace Xamarin.ProjectTools
 {
 	public static class Versions
 	{
+		public const string Android14 = "v14.0";
 		public const string Android13 = "v13.0";
 		public const string Android12L = "v12.1";
 		public const string Android12 = "v12.0";
