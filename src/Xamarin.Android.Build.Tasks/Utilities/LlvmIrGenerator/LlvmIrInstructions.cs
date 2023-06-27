@@ -42,10 +42,6 @@ abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 			context.Output.Write (" #");
 			context.Output.Write (AttributeSet.Number.ToString (CultureInfo.InvariantCulture));
 		}
-
-		if (!String.IsNullOrEmpty (Comment)) {
-			generator.WriteComment (context, Comment);
-		}
 	}
 
 	/// <summary>
@@ -284,24 +280,44 @@ sealed class LlvmIrInstructions
 			}
 			context.Output.Write ('(');
 
+			bool isVararg = false;
 			for (int i = 0; i < function.Signature.Parameters.Count; i++) {
 				if (i > 0) {
 					context.Output.Write (", ");
 				}
 
-				WriteArgument (context, function.Signature.Parameters[i], i);
+				LlvmIrFunctionParameter parameter = function.Signature.Parameters[i];
+				if (parameter.IsVarArgs) {
+					isVararg = true;
+				}
+
+				WriteArgument (context, parameter, i, isVararg);
 			}
 
 			context.Output.Write (')');
 		}
 
-		void WriteArgument (GeneratorWriteContext context, LlvmIrFunctionParameter parameter, int index)
+		void WriteArgument (GeneratorWriteContext context, LlvmIrFunctionParameter parameter, int index, bool isVararg)
 		{
-			context.Output.Write (LlvmIrGenerator.MapToIRType (parameter.Type));
+			object? value = arguments[index];
+			string irType;
+
+			if (!isVararg) {
+				irType = LlvmIrGenerator.MapToIRType (parameter.Type);
+			} else {
+				if (value == null) {
+					// We have no way of verifying the vararg parameter type if value is null, so we'll assume it's a pointer.
+					// If our assumption is wrong, llc will fail and signal the error
+					irType = "ptr";
+				} else {
+					irType = LlvmIrGenerator.MapToIRType (value.GetType ());
+				}
+			}
+
+			context.Output.Write (irType);
 			LlvmIrGenerator.WriteParameterAttributes (context, parameter);
 			context.Output.Write (' ');
 
-			object? value = arguments[index];
 			if (value is LlvmIrInstructionArgumentValuePlaceholder placeholder) {
 				value = placeholder.GetValue (context.Target);
 			}

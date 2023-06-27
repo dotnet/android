@@ -330,31 +330,23 @@ partial class MarshalMethodsNativeAssemblyGenerator
 
 		LlvmIrLocalVariable asprintf_ret = func.CreateLocalVariable (typeof(int), "asprintf_ret");
 		LlvmIrInstructions.Call call = func.Body.Call (asprintf, asprintf_ret, asprintfArgs);
-		call.Comment = $"Format: {asprintfState.Format}";
+		call.Comment = $" Format: {asprintfState.Format}";
 
 		// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
 		LlvmIrLocalVariable asprintf_failed = func.CreateLocalVariable (typeof(bool), "asprintf_failed");
-		func.Body.Icmp (LlvmIrIcmpCond.SignedLessThan, asprintf_failed, (int)0, asprintf_failed);
+		func.Body.Icmp (LlvmIrIcmpCond.SignedLessThan, asprintf_ret, (int)0, asprintf_failed);
 
 		var asprintfIfThenLabel = new LlvmIrFunctionLabelItem ();
-		var asprintfIfElseLabel = new LlvmIrFunctionLabelItem ();
-		var ifElseDoneLabel = new LlvmIrFunctionLabelItem ();
+		var asprintfIfDoneLabel = new LlvmIrFunctionLabelItem ();
 
-		func.Body.Br (asprintf_failed, asprintfIfThenLabel, asprintfIfElseLabel);
+		func.Body.Br (asprintf_failed, asprintfIfThenLabel, asprintfIfDoneLabel);
 
 		// Condition is true if asprintf **failed**
 		func.Body.Add (asprintfIfThenLabel);
-		LlvmIrLocalVariable bufferPointerNull = func.CreateLocalVariable (typeof(IntPtr), "bufferPointerNull");
-		func.Body.Store (bufferPointerNull);
-		func.Body.Br (ifElseDoneLabel);
+		func.Body.Store (tracingState.asprintfAllocatedStringVar);
+		func.Body.Br (asprintfIfDoneLabel);
 
-		func.Body.Add (asprintfIfElseLabel);
-		LlvmIrLocalVariable bufferPointerAllocated = func.CreateLocalVariable (typeof(IntPtr), "bufferPointerAllocated");
-		func.Body.Load (tracingState.asprintfAllocatedStringVar, bufferPointerAllocated);
-		func.Body.Br (ifElseDoneLabel);
-
-		func.Body.Add (ifElseDoneLabel);
-		func.Body.Phi (tracingState.asprintfAllocatedStringVar, bufferPointerNull, asprintfIfThenLabel, bufferPointerAllocated, asprintfIfElseLabel);
+		func.Body.Add (asprintfIfDoneLabel);
 	}
 
 	LlvmIrVariable? WriteTransformFunctionCall (LlvmIrFunction func, AsprintfCallState asprintfState, AsprintfParameterOperation paramOp, LlvmIrVariable paramVar)
