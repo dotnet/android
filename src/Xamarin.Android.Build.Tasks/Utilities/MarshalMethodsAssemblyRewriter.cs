@@ -118,11 +118,12 @@ namespace Xamarin.Android.Tasks
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
 				foreach (string path in GetAssemblyPaths (asm)) {
 					var writerParams = new WriterParameters {
-						WriteSymbols = (File.Exists (path + ".mdb") || File.Exists (Path.ChangeExtension (path, ".pdb"))),
+						WriteSymbols = File.Exists (Path.ChangeExtension (path, ".pdb")),
 					};
 
-
-					string output = $"{path}.new";
+					string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+					Directory.CreateDirectory (directory);
+					string output = Path.Combine (directory, Path.GetFileName (path));
 					log.LogDebugMessage ($"Writing new version of assembly: {output}");
 
 					// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
@@ -137,36 +138,23 @@ namespace Xamarin.Android.Tasks
 			// versions around.
 			foreach (string path in newAssemblyPaths) {
 				string? pdb = null;
-				string? mdb = null;
 
-				string source = Path.ChangeExtension (Path.Combine (Path.GetDirectoryName (path), Path.GetFileNameWithoutExtension (path)), ".pdb");
+				string source = Path.ChangeExtension (path, ".pdb");
 				if (File.Exists (source)) {
 					pdb = source;
 				}
 
-				source = $"{path}.mdb";
-				if (File.Exists (source)) {
-					mdb = source;
-				}
-
 				foreach (string targetPath in targetAssemblyPaths) {
-					string target = Path.Combine (targetPath, Path.GetFileNameWithoutExtension (path));
+					string target = Path.Combine (targetPath, Path.GetFileName (path));
 					CopyFile (path, target);
 
 					if (!String.IsNullOrEmpty (pdb)) {
-						target = Path.ChangeExtension (Path.Combine (targetPath, Path.GetFileNameWithoutExtension (pdb)), ".pdb");
-						CopyFile (pdb, target);
-					}
-
-					if (!String.IsNullOrEmpty (mdb)) {
-						target = Path.Combine (targetPath, Path.ChangeExtension (Path.GetFileName (path), ".mdb"));
-						CopyFile (mdb, target);
+						CopyFile (pdb, Path.ChangeExtension (target, ".pdb"));
 					}
 				}
 
 				RemoveFile (path);
 				RemoveFile (pdb);
-				RemoveFile (mdb);
 			}
 
 			void CopyFile (string source, string target)
@@ -182,6 +170,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				try {
+					log.LogDebugMessage ($"Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
 					log.LogWarning ($"Unable to delete source file '{path}'");
