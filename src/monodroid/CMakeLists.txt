@@ -850,9 +850,10 @@ if(ANDROID AND ENABLE_NET AND (NOT ANALYZERS_ENABLED))
       SHARED ${XAMARIN_STUB_LIB_SOURCES}
     )
 
+    string(TOUPPER ${_libname} _libname_uc)
     target_compile_definitions(
       ${_libname}
-      PRIVATE STUB_LIB_NAME=libc
+      PRIVATE STUB_LIB_NAME=lib${_libname} IN_LIB${_libname_uc}
     )
 
     target_compile_options(

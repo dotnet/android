@@ -206,20 +206,20 @@ namespace Xamarin.Android.Tasks
 		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, string runtimeNativeLibStubsDir)
 		{
 			List<string> extraLibraries = null;
+			string RID = MonoAndroidHelper.AbiToRid (abi);
+			AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
+			string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
+			string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
+
+			extraLibraries = new List<string> {
+				$"-L \"{runtimeLibsDir}\"",
+				$"-L \"{libStubsPath}\"",
+				"-lc",
+			};
 
 			if (mmTracingEnabled) {
-				string RID = MonoAndroidHelper.AbiToRid (abi);
-				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
-				string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
-				string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
-
-				extraLibraries = new List<string> {
-					Path.Combine (runtimeLibsDir, "libmarshal-methods-tracing.a"),
-					$"-L \"{runtimeLibsDir}\"",
-					$"-L \"{libStubsPath}\"",
-					"-lxamarin-native-tracing",
-					"-lc",
-				};
+				extraLibraries.Add (Path.Combine (runtimeLibsDir, "libmarshal-methods-tracing.a"));
+				extraLibraries.Add ("-lxamarin-native-tracing");
 			}
 
 			return new InputFiles {

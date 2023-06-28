@@ -31,72 +31,9 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		GetBooleanString,
 	}
 
-	sealed class AsprintfParameterOperation
-	{
-		public readonly Type? UpcastType;
-		public readonly TracingRenderArgumentFunction RenderFunction = TracingRenderArgumentFunction.None;
-		public readonly bool MustBeFreed;
-
-		public AsprintfParameterOperation (Type? upcastType, TracingRenderArgumentFunction renderFunction)
-		{
-			UpcastType = upcastType;
-			RenderFunction = renderFunction;
-		}
-
-		public AsprintfParameterOperation (Type upcastType)
-			: this (upcastType, TracingRenderArgumentFunction.None)
-		{}
-
-		public AsprintfParameterOperation (TracingRenderArgumentFunction renderFunction, bool mustBeFreed)
-			: this (null, renderFunction)
-		{
-			MustBeFreed = mustBeFreed;
-		}
-
-		public AsprintfParameterOperation ()
-			: this (null, TracingRenderArgumentFunction.None)
-		{}
-	}
-
-	sealed class AsprintfParameterTransform : IEnumerable<AsprintfParameterOperation>
-	{
-		public List<AsprintfParameterOperation> Operations { get; } = new List<AsprintfParameterOperation> ();
-
-		public void Add (AsprintfParameterOperation parameterOp)
-		{
-			Operations.Add (parameterOp);
-		}
-
-		public IEnumerator<AsprintfParameterOperation> GetEnumerator ()
-		{
-			return ((IEnumerable<AsprintfParameterOperation>)Operations).GetEnumerator ();
-		}
-
-		IEnumerator IEnumerable.GetEnumerator ()
-		{
-			return ((IEnumerable)Operations).GetEnumerator ();
-		}
-	}
-
-	sealed class AsprintfCallState
-	{
-		public readonly string Format;
-		public readonly List<AsprintfParameterTransform?> ParameterTransforms;
-		public readonly List<LlvmIrVariable> VariablesToFree       = new List<LlvmIrVariable> ();
-		public readonly List<LlvmIrVariable> VariadicArgsVariables = new List<LlvmIrVariable> ();
-
-		public AsprintfCallState (string format, List<AsprintfParameterTransform?> parameterTransforms)
-		{
-			Format = format;
-			ParameterTransforms = parameterTransforms;
-		}
-	}
-
 	sealed class TracingState
 	{
 		public List<object?>? trace_enter_leave_args                   = null;
-		public LlvmIrLocalVariable? tracingParamsStringLifetimeTracker = null;
-		public List<object?>? asprintfVariadicArgs                     = null;
 		public LlvmIrLocalVariable? asprintfAllocatedStringVar         = null;
 	}
 
@@ -115,6 +52,9 @@ partial class MarshalMethodsNativeAssemblyGenerator
 	LlvmIrFunction? mm_trace_get_class_name;
 	LlvmIrFunction? mm_trace_get_object_class_name;
 	LlvmIrFunction? mm_trace_init;
+
+	LlvmIrFunctionAttributeSet? freeCallAttributes;
+	LlvmIrFunctionAttributeSet? asprintfCallAttributes;
 
 	void InitTracing (LlvmIrModule module)
 	{
@@ -146,10 +86,7 @@ partial class MarshalMethodsNativeAssemblyGenerator
 
 		body.Store (tracingState.asprintfAllocatedStringVar, module.TbaaAnyPointer);
 
-		tracingState.asprintfVariadicArgs = new List<object?> (function.Signature.Parameters);
-
-		AsprintfCallState asprintfState = GetPrintfStateForFunctionParams (module, method, function);
-		AddAsprintfCall (function, asprintfState, tracingState);
+		AddAsprintfCall (module, function, method, tracingState);
 
 		CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 		var assemblyCacheIndexPlaceholder = new MarshalMethodAssemblyIndexValuePlaceholder (method, writeState.AssemblyCacheState);
@@ -163,138 +100,71 @@ partial class MarshalMethodsNativeAssemblyGenerator
 			tracingState.asprintfAllocatedStringVar,
 		};
 		body.Call (mm_trace_func_enter, arguments: tracingState.trace_enter_leave_args);
-		body.Call (free, arguments: new List<object?> { tracingState.asprintfAllocatedStringVar });
+		AddFreeCall (function, tracingState.asprintfAllocatedStringVar);
 
 		body.AddComment (" Tracing code end");
 	}
 
-	void AddPrintfFormatAndTransforms (StringBuilder sb, Type type, List<AsprintfParameterTransform?> parameterTransforms, out bool isNativePointer)
+	void AddAsprintfCall (LlvmIrModule module, LlvmIrFunction function, MarshalMethodInfo method, TracingState tracingState)
 	{
-		string format;
-		AsprintfParameterTransform? transform = null;
-		isNativePointer = false;
+		Mono.Collections.Generic.Collection<CecilParameterDefinition>? managedMethodParameters = method.Method.RegisteredMethod?.Parameters ?? method.Method.ImplementedMethod?.Parameters;
 
-		if (type == typeof(string)) {
-			format = "\"%s\"";
-			isNativePointer = true;
-		} else if (type == typeof(_jclass)) {
-			format = "%s @%p";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (TracingRenderArgumentFunction.GetClassName, mustBeFreed: true),
-				new AsprintfParameterOperation (),
-			};
-			isNativePointer = true;
-		} else if (type == typeof(_jobject)) {
-			format = "%s @%p";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (TracingRenderArgumentFunction.GetObjectClassname, mustBeFreed: true),
-				new AsprintfParameterOperation (),
-			};
-			isNativePointer = true;
-		} else if (type == typeof(_jstring)) {
-			format = "\"%s\"";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (TracingRenderArgumentFunction.GetCString, mustBeFreed: true),
-				new AsprintfParameterOperation (),
-			};
-			isNativePointer = true;
-		} else if (type == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (type) || type == typeof(_JNIEnv)) {
-			format = "%p";
-			isNativePointer = true;
-		} else if (type == typeof(bool)) {
-			format = "%s";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (TracingRenderArgumentFunction.GetBooleanString, mustBeFreed: false),
-			};
-			isNativePointer = true;
-		} else if (type == typeof(byte) || type == typeof(ushort)) {
-			format = "%u";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (typeof(uint)),
-			};
-		} else if (type == typeof(sbyte) || type == typeof(short)) {
-			format = "%d";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (typeof(int)),
-			};
-		} else if (type == typeof(char)) {
-			format = "'\\%x'";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (typeof(uint)),
-			};
-		} else if (type == typeof(int)) {
-			format = "%d";
-		} else if (type == typeof(uint)) {
-			format = "%u";
-		} else if (type == typeof(long)) {
-			format = "%ld";
-		} else if (type == typeof(ulong)) {
-			format = "%lu";
-		} else if (type == typeof(float)) {
-			format = "%g";
-			transform = new AsprintfParameterTransform {
-				new AsprintfParameterOperation (typeof(double)),
-			};
-		} else if (type == typeof(double)) {
-			format = "%g";
+		int expectedRegisteredParamCount;
+		int managedParametersOffset;
+		if (managedMethodParameters == null) {
+			// There was no registered nor implemented methods, so we're looking at a native callback - it should have the same number of parameters as our wrapper
+			managedMethodParameters = method.Method.NativeCallback.Parameters;
+			expectedRegisteredParamCount = method.Parameters.Count;
+			managedParametersOffset = 0;
 		} else {
-			throw new InvalidOperationException ($"Unsupported type '{type}'");
-		};
+			// Managed methods get two less parameters (no `env` and `klass`)
+			expectedRegisteredParamCount = method.Parameters.Count - 2;
+			managedParametersOffset = 2;
+		}
 
-		parameterTransforms.Add (transform);
-		sb.Append (format);
-	}
+		if (managedMethodParameters.Count != expectedRegisteredParamCount) {
+			throw new InvalidOperationException ($"Internal error: unexpected number of registered method '{method.Method.NativeCallback.FullName}' parameters. Should be {expectedRegisteredParamCount}, but is {managedMethodParameters.Count}");
+		}
 
-	(StringBuilder sb, List<AsprintfParameterTransform?> parameterOps) InitPrintfState (string startChars = "(")
-	{
-		return (new StringBuilder (startChars), new List<AsprintfParameterTransform?> ());
-	}
+		if (method.Parameters.Count != function.Signature.Parameters.Count) {
+			throw new InvalidOperationException ($"Internal error: number of native method parameter ({method.Parameters.Count}) doesn't match the number of marshal method parameters ({function.Signature.Parameters.Count})");
+		}
 
-	AsprintfCallState FinishPrintfState (LlvmIrModule module, StringBuilder sb, List<AsprintfParameterTransform?> parameterTransforms, string endChars = ")")
-	{
-		sb.Append (endChars);
-		string format = sb.ToString ();
-		module.RegisterString (format);
-		return new AsprintfCallState (format, parameterTransforms);
-	}
-
-	AsprintfCallState GetPrintfStateForFunctionParams (LlvmIrModule module, MarshalMethodInfo method, LlvmIrFunction func)
-	{
-		(StringBuilder ret, List<AsprintfParameterTransform?> parameterOps) = InitPrintfState ();
+		var varargs = new List<object?> ();
+		var variablesToFree = new List<LlvmIrVariable> ();
+		var formatSb = new StringBuilder ('(');
 		bool first = true;
 
-		List<LlvmIrFunctionParameter> nativeMethodParameters = method.Parameters;
-		Mono.Collections.Generic.Collection<CecilParameterDefinition>? managedMethodParameters = method.Method.RegisteredMethod?.Parameters ?? method.Method.ImplementedMethod?.Parameters;
-		int expectedRegisteredParamCount = nativeMethodParameters.Count - 2;
-		if (managedMethodParameters != null && managedMethodParameters.Count != expectedRegisteredParamCount) {
-			throw new InvalidOperationException ($"Internal error: unexpected number of registered method parameters. Should be {expectedRegisteredParamCount}, but is {managedMethodParameters.Count}");
-		}
-
-		if (nativeMethodParameters.Count != func.Signature.Parameters.Count) {
-			throw new InvalidOperationException ($"Internal error: number of native method parameter ({nativeMethodParameters.Count}) doesn't match the number of marshal method parameters ({func.Signature.Parameters.Count})");
-		}
-
-		var variadicArgs = new List<LlvmIrVariable> ();
-		bool haveManagedParams = managedMethodParameters != null;
-		for (int i = 0; i < nativeMethodParameters.Count; i++) {
-			LlvmIrFunctionParameter parameter = nativeMethodParameters[i];
+		for (int i = 0; i < method.Parameters.Count; i++) {
+			LlvmIrFunctionParameter parameter = method.Parameters[i];
 
 			if (!first) {
-				ret.Append (", ");
+				formatSb.Append (", ");
 			} else {
 				first = false;
 			}
 
 			// Native method will have two more parameters than its managed counterpart - one for JNIEnv* and another for jclass.  They always are the first two
 			// parameters, so we start looking at the managed parameters only once the first two are out of the way
-			CecilParameterDefinition? managedParameter = haveManagedParams && i >= 2 ? managedMethodParameters[i - 2] : null;
-			AddPrintfFormatAndTransforms (ret, VerifyAndGetActualParameterType (parameter, managedParameter), parameterOps, out bool isNativePointer);
-			variadicArgs.Add (func.Signature.Parameters[i]);
+			CecilParameterDefinition? managedParameter = i >= managedParametersOffset ? managedMethodParameters[i - managedParametersOffset] : null;
+			Type actualType = VerifyAndGetActualParameterType (parameter, managedParameter);
+			PrepareAsprintfArgument (formatSb, function, parameter, actualType, varargs, variablesToFree);
 		}
 
-		AsprintfCallState state = FinishPrintfState (module, ret, parameterOps);
-		state.VariadicArgsVariables.AddRange (variadicArgs);
-		return state;
+		formatSb.Append (')');
+
+		string format = formatSb.ToString ();
+		var asprintfArgs = new List<object?> {
+			tracingState.asprintfAllocatedStringVar,
+			format,
+		};
+		asprintfArgs.AddRange (varargs);
+
+		DoAddAsprintfCall (asprintfArgs, module, function, format, tracingState);
+
+		foreach (LlvmIrVariable vtf in variablesToFree) {
+			AddFreeCall (function, vtf);
+		}
 
 		Type VerifyAndGetActualParameterType (LlvmIrFunctionParameter nativeParameter, CecilParameterDefinition? managedParameter)
 		{
@@ -311,54 +181,106 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		}
 	}
 
-	AsprintfCallState GetPrintfStateForReturnValue (LlvmIrModule module, LlvmIrLocalVariable localVariable)
+	void PrepareAsprintfArgument (StringBuilder format, LlvmIrFunction function, LlvmIrVariable parameter, Type actualType, List<object?> varargs, List<LlvmIrVariable> variablesToFree)
 	{
-		(StringBuilder ret, List<AsprintfParameterTransform?> parameterTransforms) = InitPrintfState ("=>[");
+		LlvmIrVariable? result = null;
+		if (actualType == typeof(_jclass)) {
+			format.Append ("%s @%p");
+			result = AddTransformFunctionCall (function, TracingRenderArgumentFunction.GetClassName, parameter);
+			varargs.Add (result);
+			variablesToFree.Add (result);
+			varargs.Add (parameter);
+			return;
+		}
 
-		AddPrintfFormatAndTransforms (ret, localVariable.Type, parameterTransforms, out bool isNativePointer);
+		if (actualType == typeof(_jobject)) {
+			format.Append ("%s @%p");
+			result = AddTransformFunctionCall (function, TracingRenderArgumentFunction.GetObjectClassname, parameter);
+			varargs.Add (result);
+			variablesToFree.Add (result);
+			varargs.Add (parameter);
+			return;
+		}
 
-		return FinishPrintfState (module, ret, parameterTransforms, "]");
+		if (actualType == typeof(_jstring)) {
+			format.Append ("\"%s\"");
+			result = AddTransformFunctionCall (function, TracingRenderArgumentFunction.GetCString, parameter);
+			varargs.Add (result);
+			variablesToFree.Add (result);
+			return;
+		}
+
+		if (actualType == typeof(bool)) {
+			format.Append ("%s");
+
+			// No need to free(3) it, returns pointer to a constant
+			result = AddTransformFunctionCall (function, TracingRenderArgumentFunction.GetBooleanString, parameter);
+			varargs.Add (result);
+			return;
+		}
+
+		if (actualType == typeof(byte) || actualType == typeof(ushort)) {
+			format.Append ("%u");
+			AddUpcast<uint> ();
+			return;
+		}
+
+		if (actualType == typeof(sbyte) || actualType == typeof(short)) {
+			format.Append ("%d");
+			AddUpcast<int> ();
+			return;
+		}
+
+		if (actualType == typeof(char)) {
+			format.Append ("'\\%x'");
+			AddUpcast<uint> ();
+			return;
+		}
+
+		if (actualType == typeof(float)) {
+			format.Append ("%g");
+			AddUpcast<double> ();
+			return;
+		}
+
+		if (actualType == typeof(string)) {
+			format.Append ("\"%s\"");
+		} else if (actualType == typeof(IntPtr) || typeof(_jobject).IsAssignableFrom (actualType) || actualType == typeof(_JNIEnv)) {
+			format.Append ("%p");
+		} else if (actualType == typeof(int)) {
+			format.Append ("%d");
+		} else if (actualType == typeof(uint)) {
+			format.Append ("%u");
+		} else if (actualType == typeof(long)) {
+			format.Append ("%ld");
+		} else if (actualType == typeof(ulong)) {
+			format.Append ("%lu");
+		} else if (actualType == typeof(double)) {
+			format.Append ("%g");
+		} else {
+			throw new InvalidOperationException ($"Unsupported type '{actualType}'");
+		}
+
+		varargs.Add (parameter);
+
+		void AddUpcast<T> ()
+		{
+			LlvmIrVariable ret = function.CreateLocalVariable (typeof(T));
+			function.Body.Ext (parameter, typeof(T), ret);
+			varargs.Add (ret);
+		}
 	}
 
-	void DoWriteAsprintfCall (LlvmIrFunction func, List<object?> variadicArgs, AsprintfCallState asprintfState, TracingState tracingState)
+	LlvmIrVariable? AddTransformFunctionCall (LlvmIrFunction function, TracingRenderArgumentFunction renderFunction, LlvmIrVariable paramVar)
 	{
-		var asprintfArgs = new List<object?> {
-			tracingState.asprintfAllocatedStringVar,
-			asprintfState.Format,
-		};
-		asprintfArgs.AddRange (variadicArgs);
-
-		LlvmIrLocalVariable asprintf_ret = func.CreateLocalVariable (typeof(int), "asprintf_ret");
-		LlvmIrInstructions.Call call = func.Body.Call (asprintf, asprintf_ret, asprintfArgs);
-		call.Comment = $" Format: {asprintfState.Format}";
-
-		// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
-		LlvmIrLocalVariable asprintf_failed = func.CreateLocalVariable (typeof(bool), "asprintf_failed");
-		func.Body.Icmp (LlvmIrIcmpCond.SignedLessThan, asprintf_ret, (int)0, asprintf_failed);
-
-		var asprintfIfThenLabel = new LlvmIrFunctionLabelItem ();
-		var asprintfIfDoneLabel = new LlvmIrFunctionLabelItem ();
-
-		func.Body.Br (asprintf_failed, asprintfIfThenLabel, asprintfIfDoneLabel);
-
-		// Condition is true if asprintf **failed**
-		func.Body.Add (asprintfIfThenLabel);
-		func.Body.Store (tracingState.asprintfAllocatedStringVar);
-		func.Body.Br (asprintfIfDoneLabel);
-
-		func.Body.Add (asprintfIfDoneLabel);
-	}
-
-	LlvmIrVariable? WriteTransformFunctionCall (LlvmIrFunction func, AsprintfCallState asprintfState, AsprintfParameterOperation paramOp, LlvmIrVariable paramVar)
-	{
-		if (paramOp.RenderFunction == TracingRenderArgumentFunction.None) {
+		if (renderFunction == TracingRenderArgumentFunction.None) {
 			return null;
 		}
 
 		var transformerArgs = new List<object?> ();
 		LlvmIrFunction transformerFunc;
 
-		switch (paramOp.RenderFunction) {
+		switch (renderFunction) {
 			case TracingRenderArgumentFunction.GetClassName:
 				transformerFunc = mm_trace_get_class_name;
 				AddJNIEnvArgument ();
@@ -379,64 +301,55 @@ partial class MarshalMethodsNativeAssemblyGenerator
 				break;
 
 			default:
-				throw new InvalidOperationException ($"Internal error: unsupported transformer function {paramOp.RenderFunction}");
+				throw new InvalidOperationException ($"Internal error: unsupported transformer function {renderFunction}");
 		};
 		transformerArgs.Add (paramVar);
 
 		if (!transformerFunc.ReturnsValue) {
 			return null;
 		}
-		LlvmIrLocalVariable? result = func.CreateLocalVariable (transformerFunc.Signature.ReturnType);
-		func.Body.Call (transformerFunc, result, transformerArgs);
-
-		if (paramOp.MustBeFreed) {
-			asprintfState.VariablesToFree.Add (result);
-		}
+		LlvmIrLocalVariable? result = function.CreateLocalVariable (transformerFunc.Signature.ReturnType);
+		function.Body.Call (transformerFunc, result, transformerArgs);
 
 		return result;
 
 		void AddJNIEnvArgument ()
 		{
-			transformerArgs.Add (func.Signature.Parameters[0]);
+			transformerArgs.Add (function.Signature.Parameters[0]);
 		}
 	}
 
-	void AddAsprintfArgument (LlvmIrFunction func, AsprintfCallState asprintfState, List<object?> asprintfArgs, List<AsprintfParameterOperation>? paramOps, LlvmIrVariable paramVar)
+	void DoAddAsprintfCall (List<object?> args, LlvmIrModule module, LlvmIrFunction function, string format, TracingState tracingState)
 	{
-		if (paramOps == null || paramOps.Count == 0) {
-			asprintfArgs.Add (paramVar);
-			return;
-		}
+		module.RegisterString (format);
 
-		foreach (AsprintfParameterOperation paramOp in paramOps) {
-			LlvmIrVariable? paramRef = WriteTransformFunctionCall (func, asprintfState, paramOp, paramVar);
+		LlvmIrFunctionBody body = function.Body;
+		LlvmIrLocalVariable asprintf_ret = function.CreateLocalVariable (typeof(int), "asprintf_ret");
+		LlvmIrInstructions.Call call = body.Call (asprintf, asprintf_ret, args);
+		call.AttributeSet = asprintfCallAttributes;
+		call.Comment = $" Format: {format}";
 
-			if (paramOp.UpcastType != null) {
-				LlvmIrLocalVariable upcastVar = func.CreateLocalVariable ((paramRef ?? paramVar).Type);
-				func.Body.Ext (paramRef ?? paramVar, paramOp.UpcastType, upcastVar);
-				paramRef = upcastVar;
-			}
+		// Check whether asprintf returned a negative value (it returns -1 at failure, but we widen the check just in case)
+		LlvmIrLocalVariable asprintf_failed = function.CreateLocalVariable (typeof(bool), "asprintf_failed");
+		body.Icmp (LlvmIrIcmpCond.SignedLessThan, asprintf_ret, (int)0, asprintf_failed);
 
-			if (paramRef == null) {
-				paramRef = paramVar;
-			}
+		var asprintfIfThenLabel = new LlvmIrFunctionLabelItem ();
+		var asprintfIfDoneLabel = new LlvmIrFunctionLabelItem ();
 
-			asprintfArgs.Add (paramRef);
-		}
+		body.Br (asprintf_failed, asprintfIfThenLabel, asprintfIfDoneLabel);
+
+		// Condition is true if asprintf **failed**
+		body.Add (asprintfIfThenLabel);
+		body.Store (tracingState.asprintfAllocatedStringVar);
+		body.Br (asprintfIfDoneLabel);
+
+		body.Add (asprintfIfDoneLabel);
 	}
 
-	void AddAsprintfCall (LlvmIrFunction function, AsprintfCallState asprintfState, TracingState tracingState)
+	void AddFreeCall (LlvmIrFunction function, object? toFree)
 	{
-		if (asprintfState.VariadicArgsVariables.Count != asprintfState.ParameterTransforms.Count) {
-			throw new ArgumentException (nameof (asprintfState), $"Number of transforms ({asprintfState.ParameterTransforms.Count}) is not equal to the number of variadic arguments ({asprintfState.VariadicArgsVariables.Count})");
-		}
-
-		var asprintfArgs = new List<object?> ();
-		for (int i = 0; i < asprintfState.VariadicArgsVariables.Count; i++) {
-			AddAsprintfArgument (function, asprintfState, asprintfArgs, asprintfState.ParameterTransforms[i]?.Operations, asprintfState.VariadicArgsVariables[i]);
-		}
-
-		DoWriteAsprintfCall (function, asprintfArgs, asprintfState, tracingState);
+		LlvmIrInstructions.Call call = function.Body.Call (free, arguments: new List<object?> { toFree });
+		call.AttributeSet = freeCallAttributes;
 	}
 
 	void InitLibcFunctions (LlvmIrModule module, LlvmIrFunctionAttributeSet? attrSet)
@@ -476,6 +389,8 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		);
 
 		free = module.DeclareExternalFunction (new LlvmIrFunction (free_sig, MakeFreeFunctionAttributeSet (module)));
+		freeCallAttributes = MakeFreeCallAttributeSet (module);
+		asprintfCallAttributes = MakeAsprintfCallAttributeSet (module);
 	}
 
 	void InitLlvmFunctions (LlvmIrModule module)
@@ -495,13 +410,13 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		llvm_lifetime_start = module.DeclareExternalFunction (
 			new LlvmIrFunction (lifetime_sig, llvmFunctionsAttributeSet) {
 				AddressSignificance = LlvmIrAddressSignificance.Default
-					}
+			}
 		);
 
 		llvm_lifetime_end = module.DeclareExternalFunction (
 			new LlvmIrFunction ("llvm.lifetime.end", lifetime_sig, llvmFunctionsAttributeSet) {
 				AddressSignificance = LlvmIrAddressSignificance.Default
-					}
+			}
 		);
 	}
 
@@ -633,6 +548,26 @@ partial class MarshalMethodsNativeAssemblyGenerator
 		ret.Add (AndroidTargetArch.X86_64, new FramePointerFunctionAttribute ("none"));
 
 		return ret;
+	}
+
+	LlvmIrFunctionAttributeSet MakeFreeCallAttributeSet (LlvmIrModule module)
+	{
+		var ret = new LlvmIrFunctionAttributeSet {
+			new NounwindFunctionAttribute (),
+		};
+		ret.DoNotAddTargetSpecificAttributes = true;
+
+		return module.AddAttributeSet (ret);
+	}
+
+	LlvmIrFunctionAttributeSet MakeAsprintfCallAttributeSet (LlvmIrModule module)
+	{
+		var ret = new LlvmIrFunctionAttributeSet {
+			new NounwindFunctionAttribute (),
+		};
+		ret.DoNotAddTargetSpecificAttributes = true;
+
+		return module.AddAttributeSet (ret);
 	}
 
 	LlvmIrFunctionAttributeSet MakeFreeFunctionAttributeSet (LlvmIrModule module)

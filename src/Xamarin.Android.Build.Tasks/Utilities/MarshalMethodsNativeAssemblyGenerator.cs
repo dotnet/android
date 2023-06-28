@@ -672,6 +672,8 @@ namespace Xamarin.Android.Tasks
 			funcComment.AppendLine (nativeCallback.Module.Assembly.Name.FullName);
 			funcComment.Append (" Registered: ");
 			funcComment.AppendLine (method.Method.RegisteredMethod?.FullName ?? "none");
+			funcComment.Append (" Implemented: ");
+			funcComment.AppendLine (method.Method.ImplementedMethod?.FullName ?? "none");
 
 			var func = new LlvmIrFunction (method.NativeSymbolName, method.ReturnType, method.Parameters, writeState.AttributeSet) {
 				Comment = funcComment.ToString (),
