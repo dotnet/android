@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tasks
 		{
 			public List<string> ObjectFiles;
 			public string OutputSharedLibrary;
+			public List<string> ExtraLibraries;
 		}
 
 		[Required]
@@ -112,22 +113,23 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetLinkerConfigs ()
 		{
+			string runtimeNativeLibsDir = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "lib"));
+			string runtimeNativeLibStubsDir = Path.GetFullPath (Path.Combine (runtimeNativeLibsDir, "..", "libstubs"));
 			var abis = new Dictionary <string, InputFiles> (StringComparer.Ordinal);
 			ITaskItem[] dsos = ApplicationSharedLibraries;
 			foreach (ITaskItem item in dsos) {
 				string abi = item.GetMetadata ("abi");
-				abis [abi] = GatherFilesForABI(item.ItemSpec, abi, ObjectFiles);
+				abis [abi] = GatherFilesForABI (item.ItemSpec, abi, ObjectFiles, runtimeNativeLibsDir, runtimeNativeLibStubsDir);
 			}
 
 			const string commonLinkerArgs =
-				"--unresolved-symbols=ignore-in-shared-libs " +
+				"--shared " +
+				"--allow-shlib-undefined " +
 				"--export-dynamic " +
 				"-soname libxamarin-app.so " +
 				"-z relro " +
 				"-z noexecstack " +
 				"--enable-new-dtags " +
-				"--eh-frame-hdr " +
-				"-shared " +
 				"--build-id " +
 				"--warn-shared-textrel " +
 				"--fatal-warnings";
@@ -177,6 +179,12 @@ namespace Xamarin.Android.Tasks
 				targetLinkerArgs.Add ("-o");
 				targetLinkerArgs.Add (QuoteFileName (inputs.OutputSharedLibrary));
 
+				if (inputs.ExtraLibraries != null) {
+					foreach (string lib in inputs.ExtraLibraries) {
+						targetLinkerArgs.Add (lib);
+					}
+				}
+
 				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {
 					LinkerPath = ld,
@@ -186,11 +194,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles)
+		InputFiles GatherFilesForABI (string runtimeSharedLibrary, string abi, ITaskItem[] objectFiles, string runtimeNativeLibsDir, string runtimeNativeLibStubsDir)
 		{
+			List<string> extraLibraries = null;
+			string RID = MonoAndroidHelper.AbiToRid (abi);
+			AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
+			string libStubsPath = Path.Combine (runtimeNativeLibStubsDir, RID);
+			string runtimeLibsDir = Path.Combine (runtimeNativeLibsDir, RID);
+
+			extraLibraries = new List<string> {
+				$"-L \"{runtimeLibsDir}\"",
+				$"-L \"{libStubsPath}\"",
+				"-lc",
+			};
+
 			return new InputFiles {
 				OutputSharedLibrary = runtimeSharedLibrary,
 				ObjectFiles = GetItemsForABI (abi, objectFiles),
+				ExtraLibraries = extraLibraries,
 			};
 		}
 

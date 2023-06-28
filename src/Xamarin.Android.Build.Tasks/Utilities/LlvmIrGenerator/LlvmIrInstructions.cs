@@ -271,6 +271,21 @@ sealed class LlvmIrInstructions
 			}
 
 			context.Output.Write (LlvmIrGenerator.MapToIRType (function.Signature.ReturnType));
+
+			if (function.UsesVarArgs) {
+				context.Output.Write (" (");
+				for (int j = 0; j < function.Signature.Parameters.Count; j++) {
+					if (j > 0) {
+						context.Output.Write (", ");
+					}
+
+					LlvmIrFunctionParameter parameter = function.Signature.Parameters[j];
+					string irType = parameter.IsVarArgs ? "..." : LlvmIrGenerator.MapToIRType (parameter.Type);
+					context.Output.Write (irType);
+				}
+				context.Output.Write (')');
+			}
+
 			if (FuncPointer == null) {
 				context.Output.Write (" @");
 				context.Output.Write (function.Signature.Name);
@@ -281,7 +296,8 @@ sealed class LlvmIrInstructions
 			context.Output.Write ('(');
 
 			bool isVararg = false;
-			for (int i = 0; i < function.Signature.Parameters.Count; i++) {
+			int i;
+			for (i = 0; i < function.Signature.Parameters.Count; i++) {
 				if (i > 0) {
 					context.Output.Write (", ");
 				}
@@ -294,16 +310,28 @@ sealed class LlvmIrInstructions
 				WriteArgument (context, parameter, i, isVararg);
 			}
 
+			if (arguments != null) {
+				for (; i < arguments.Count; i++) {
+					context.Output.Write (", ");
+					WriteArgument (context, null, i, isVararg: true);
+				}
+			}
+
 			context.Output.Write (')');
 		}
 
-		void WriteArgument (GeneratorWriteContext context, LlvmIrFunctionParameter parameter, int index, bool isVararg)
+		void WriteArgument (GeneratorWriteContext context, LlvmIrFunctionParameter? parameter, int index, bool isVararg)
 		{
 			object? value = arguments[index];
-			string irType;
+			if (value is LlvmIrInstructionArgumentValuePlaceholder placeholder) {
+				value = placeholder.GetValue (context.Target);
+			}
 
+			string irType;
 			if (!isVararg) {
 				irType = LlvmIrGenerator.MapToIRType (parameter.Type);
+			} else if (value is LlvmIrVariable v1) {
+				irType = LlvmIrGenerator.MapToIRType (v1.Type);
 			} else {
 				if (value == null) {
 					// We have no way of verifying the vararg parameter type if value is null, so we'll assume it's a pointer.
@@ -315,12 +343,10 @@ sealed class LlvmIrInstructions
 			}
 
 			context.Output.Write (irType);
-			LlvmIrGenerator.WriteParameterAttributes (context, parameter);
-			context.Output.Write (' ');
-
-			if (value is LlvmIrInstructionArgumentValuePlaceholder placeholder) {
-				value = placeholder.GetValue (context.Target);
+			if (parameter != null) {
+				LlvmIrGenerator.WriteParameterAttributes (context, parameter);
 			}
+			context.Output.Write (' ');
 
 			if (value == null) {
 				if (!parameter.Type.IsNativePointer ()) {
@@ -331,12 +357,12 @@ sealed class LlvmIrInstructions
 				return;
 			}
 
-			if (value is LlvmIrVariable variable) {
-				context.Output.Write (variable.Reference);
+			if (value is LlvmIrVariable v2) {
+				context.Output.Write (v2.Reference);
 				return;
 			}
 
-			if (!parameter.Type.IsAssignableFrom (value.GetType ())) {
+			if (parameter != null && !parameter.Type.IsAssignableFrom (value.GetType ())) {
 				throw new InvalidOperationException ($"Internal error: value type '{value.GetType ()}' for argument {index} to function '{function.Signature.Name}' is invalid. Expected '{parameter.Type}' or compatible");
 			}
 
