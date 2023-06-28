@@ -114,7 +114,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var newAssemblyPaths = new List<ValueTuple<string, string>> ();
+			var newAssemblyPaths = new List<(string original, string temp)> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
 				foreach (string original in GetAssemblyPaths (asm)) {
 					var writerParams = new WriterParameters {
