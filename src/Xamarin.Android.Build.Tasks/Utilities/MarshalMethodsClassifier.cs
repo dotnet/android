@@ -40,8 +40,8 @@ namespace Xamarin.Android.Tasks
 		public bool IsSpecial                          { get; }
 
 		public MarshalMethodEntry (TypeDefinition declaringType, MethodDefinition nativeCallback, MethodDefinition connector, MethodDefinition
-				registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
-		                string jniName, string jniSignature, bool needsBlittableWorkaround)
+		                           registeredMethod, MethodDefinition implementedMethod, FieldDefinition callbackField, string jniTypeName,
+		                           string jniName, string jniSignature, bool needsBlittableWorkaround)
 		{
 			DeclaringType = declaringType ?? throw new ArgumentNullException (nameof (declaringType));
 			nativeCallbackReal = nativeCallback ?? throw new ArgumentNullException (nameof (nativeCallback));
@@ -65,6 +65,12 @@ namespace Xamarin.Android.Tasks
 			JniMethodSignature = EnsureNonEmpty (jniSignature, nameof (jniSignature));
 			IsSpecial = true;
 		}
+
+		public MarshalMethodEntry (MarshalMethodEntry other, MethodDefinition nativeCallback)
+			: this (other.DeclaringType, nativeCallback, other.Connector, other.RegisteredMethod,
+			        other.ImplementedMethod, other.CallbackField, other.JniTypeName, other.JniMethodName,
+			        other.JniMethodSignature, other.NeedsBlittableWorkaround)
+		{}
 
 		string EnsureNonEmpty (string s, string argName)
 		{
@@ -499,7 +505,6 @@ namespace Xamarin.Android.Tasks
 			// 	method.CallbackField?.DeclaringType.Fields == 'null'
 
 			StoreMethod (
-				registeredMethod,
 				new MarshalMethodEntry (
 					topType,
 					nativeCallbackMethod,
@@ -683,10 +688,16 @@ namespace Xamarin.Android.Tasks
 			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
 		}
 
-		void StoreMethod (MethodDefinition registeredMethod, MarshalMethodEntry entry)
+		public string GetStoreMethodKey (MarshalMethodEntry methodEntry)
 		{
+			MethodDefinition registeredMethod = methodEntry.RegisteredMethod;
 			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
-			string key = $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
+			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
+		}
+
+		void StoreMethod (MarshalMethodEntry entry)
+		{
+			string key = GetStoreMethodKey (entry);
 
 			// Several classes can override the same method, we need to generate the marshal method only once, at the same time
 			// keeping track of overloads
@@ -697,16 +708,23 @@ namespace Xamarin.Android.Tasks
 
 			string registeredName = $"{entry.DeclaringType.FullName}::{entry.ImplementedMethod.Name}";
 			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.ImplementedMethod.FullName, StringComparison.Ordinal) == 0)) {
+				Console.WriteLine ("Storing method:");
+				Console.WriteLine ($"  key: {key}");
+				Console.WriteLine ($"  registeredName: {registeredName}");
+				Console.WriteLine ($"  callback assembly: {entry.NativeCallback.Module.FileName}");
+				Console.WriteLine ();
 				list.Add (entry);
 			}
 		}
 
 		void StoreAssembly (AssemblyDefinition asm)
 		{
+			Console.WriteLine ($"Classifier.StoreAssembly: {asm.FullName} <= {asm.MainModule.FileName}");
 			if (assemblies.Contains (asm)) {
+				Console.WriteLine ("  not storing, already there");
 				return;
 			}
-
+			Console.WriteLine ("  storing new entry");
 			assemblies.Add (asm);
 		}
 	}

@@ -24,14 +24,66 @@ namespace Xamarin.Android.Tasks
 		IDictionary<string, IList<MarshalMethodEntry>> methods;
 		ICollection<AssemblyDefinition> uniqueAssemblies;
 		IDictionary <string, HashSet<string>> assemblyPaths;
+		IDictionary<AssemblyDefinition, string> assemblySourcePaths;
 		TaskLoggingHelper log;
 
-		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths, TaskLoggingHelper log)
+		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblySourcePaths, IDictionary <string, HashSet<string>> assemblyPaths, TaskLoggingHelper log)
 		{
+			this.assemblySourcePaths = assemblySourcePaths;
+
+			Console.WriteLine ("Assembly source paths:");
+			foreach (var kvp in assemblySourcePaths) {
+				Console.WriteLine ($"  {kvp.Key.FullName} => {kvp.Value}");
+			}
+			Console.WriteLine ();
+
+			Console.WriteLine ("Unique assemblies:");
+			foreach (AssemblyDefinition asmdef in uniqueAssemblies) {
+				string filePath = asmdef.MainModule.FileName;
+				if (String.IsNullOrEmpty (filePath)) {
+					filePath = assemblySourcePaths[asmdef.MainModule.Assembly];
+				}
+
+				Console.WriteLine ($"  {asmdef.FullName} => {filePath}");
+			}
+
+			Console.WriteLine ();
+			Console.WriteLine ("Assembly paths:");
+			foreach (var kvp in assemblyPaths) {
+				Console.WriteLine ($"  {kvp.Key}");
+				foreach (string path in kvp.Value) {
+					Console.WriteLine ($"    {path}");
+				}
+			}
+
+			Console.WriteLine ();
+			Console.WriteLine ("Assembly paths from the methods list:");
+			var asmPathsMethods = new HashSet<string> (StringComparer.Ordinal);
+			foreach (var kvp in methods) {
+				foreach (MarshalMethodEntry method in kvp.Value) {
+					string asmFile = GetMethodAssemblyPath (method.NativeCallback);
+					if (asmPathsMethods.Contains (asmFile)) {
+						continue;
+					}
+					asmPathsMethods.Add (asmFile);
+					Console.WriteLine ($"  {asmFile}");
+				}
+			}
+
 			this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
 			this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
 			this.assemblyPaths = assemblyPaths ?? throw new ArgumentNullException (nameof (assemblyPaths));
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
+		}
+
+		string GetMethodAssemblyPath (MethodDefinition method)
+		{
+			string ret = method.Module.FileName;
+			if (!String.IsNullOrEmpty (ret)) {
+				return ret;
+			}
+
+			return assemblySourcePaths[method.Module.Assembly];
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them

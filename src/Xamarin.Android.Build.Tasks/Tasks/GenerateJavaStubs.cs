@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -146,8 +147,10 @@ namespace Xamarin.Android.Tasks
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 			Dictionary<string, HashSet<string>> marshalMethodsAssemblyPaths = null;
+			Dictionary<string, List<ITaskItem>>? abiSpecificAssemblies = null;
 			if (useMarshalMethods) {
 				marshalMethodsAssemblyPaths = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal);
+				abiSpecificAssemblies = new Dictionary<string, List<ITaskItem>> (StringComparer.Ordinal);
 			}
 
 			// Put every assembly we'll need in the resolver
@@ -162,8 +165,20 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				bool addAssembly = false;
 				string fileName = Path.GetFileName (assembly.ItemSpec);
+				if (abiSpecificAssemblies != null) {
+					string? abi = assembly.GetMetadata ("Abi");
+					if (!String.IsNullOrEmpty (abi)) {
+						if (!abiSpecificAssemblies.TryGetValue (fileName, out List<ITaskItem>? items)) {
+							items = new List<ITaskItem> ();
+							abiSpecificAssemblies.Add (fileName, items);
+						}
+
+						items.Add (assembly);
+					}
+				}
+
+				bool addAssembly = false;
 				if (!hasExportReference && String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					hasExportReference = true;
 					addAssembly = true;
@@ -256,7 +271,104 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
+				// Classifier will see only unique assemblies, since that's what's processed by the JI type scanner - even though some assemblies may have
+				// abi-specific features (e.g. inlined IntPtr.Size or processor-specific intrinsics), the **types** and **methods** will all be the same and, thus,
+				// there's no point in scanning all of the additional copies of the same assembly.
+				//
+				// This, however, doesn't work for the rewriter which needs to rewrite all of the copies so that they all have the same generated wrappers.  In
+				// order to do that, we need to go over the list of assemblies found by the classifier, see if they are abi-specific ones and then add all the
+				// marshal methods from the abi-specific assembly copies, so that the rewriter can easily rewrite them all.
+				IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = classifier.MarshalMethods;
+				ICollection<AssemblyDefinition> assemblies = classifier.Assemblies;
+				var newAssemblies = new List<AssemblyDefinition> ();
+				var assemblyPaths = new Dictionary<AssemblyDefinition, string> ();
+
+				foreach (AssemblyDefinition asmdef in assemblies) {
+					string fileName = Path.GetFileName (asmdef.MainModule.FileName);
+					if (!abiSpecificAssemblies.TryGetValue (fileName, out List<ITaskItem>? items)) {
+						continue;
+					}
+
+					var seenNativeCallbacks = new HashSet<MethodDefinition> ();
+					var assemblyMarshalMethods = new List<MarshalMethodEntry> ();
+					foreach (var kvp in marshalMethods) {
+						foreach (MarshalMethodEntry method in kvp.Value) {
+							if (method.NativeCallback.Module.Assembly != asmdef) {
+								continue;
+							}
+
+							// More than one overriden method can use the same native callback method, we're interested only in unique native
+							// callbacks, since that's what gets rewritten.
+							if (seenNativeCallbacks.Contains (method.NativeCallback)) {
+								continue;
+							}
+
+							seenNativeCallbacks.Add (method.NativeCallback);
+							assemblyMarshalMethods.Add (method);
+						}
+					}
+
+					Console.WriteLine ($"ABI SPECIFIC: {fileName}; paths:");
+					foreach (ITaskItem item in items) {
+						Console.WriteLine ($"  {item.ItemSpec}");
+						if (String.Compare (item.ItemSpec, asmdef.MainModule.FileName, StringComparison.Ordinal) == 0) {
+							Console.WriteLine ("    ignoring, already have it");
+							continue;
+						}
+
+						AssemblyDefinition asm = LoadAssembly (item.ItemSpec, res);
+						newAssemblies.Add (asm);
+						assemblyPaths.Add (asm, item.ItemSpec);
+
+						foreach (MarshalMethodEntry methodEntry in assemblyMarshalMethods) {
+							string callbackName = methodEntry.NativeCallback.FullName;
+							Console.WriteLine ($"    {callbackName}");
+
+							TypeDefinition? type = asm.MainModule.FindType (methodEntry.NativeCallback.DeclaringType.FullName);
+							if (type == null) {
+								continue;
+							}
+
+							foreach (MethodDefinition typeNativeCallbackMethod in type.Methods) {
+								if (String.Compare (typeNativeCallbackMethod.FullName, callbackName, StringComparison.Ordinal) != 0) {
+									continue;
+								}
+
+								if (typeNativeCallbackMethod.Parameters.Count != methodEntry.NativeCallback.Parameters.Count) {
+									continue;
+								}
+
+								if (typeNativeCallbackMethod.MetadataToken != methodEntry.NativeCallback.MetadataToken) {
+									throw new InvalidOperationException ($"Internal error: tokens don't match for '{typeNativeCallbackMethod.FullName}'");
+								}
+
+								bool allMatch = true;
+								for (int i = 0; i < typeNativeCallbackMethod.Parameters.Count; i++) {
+									if (String.Compare (typeNativeCallbackMethod.Parameters[i].ParameterType.FullName, methodEntry.NativeCallback.Parameters[i].ParameterType.FullName, StringComparison.Ordinal) != 0) {
+										allMatch = false;
+										break;
+									}
+								}
+
+								if (!allMatch) {
+									continue;
+								}
+
+								Console.WriteLine ($"      found match in {asm.MainModule.FileName}: {typeNativeCallbackMethod.FullName}");
+								string methodKey = classifier.GetStoreMethodKey (methodEntry);
+								marshalMethods[methodKey].Add (new MarshalMethodEntry (methodEntry, typeNativeCallbackMethod));
+							}
+						}
+					}
+				}
+
+				if (newAssemblies.Count > 0) {
+					foreach (AssemblyDefinition asmdef in newAssemblies) {
+						assemblies.Add (asmdef);
+					}
+				}
+
+				var rewriter = new MarshalMethodsAssemblyRewriter (marshalMethods, assemblies, assemblyPaths, marshalMethodsAssemblyPaths, Log);
 				rewriter.Rewrite (res, targetPaths, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
 			}
 
@@ -447,6 +559,36 @@ namespace Xamarin.Android.Tasks
 					default:
 						throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
 				}
+			}
+		}
+
+		AssemblyDefinition LoadAssembly (string path, DirectoryAssemblyResolver resolver)
+		{
+			string pdbPath = Path.ChangeExtension (path, "pdb");
+			var readerParameters = new ReaderParameters {
+				AssemblyResolver                = resolver,
+				InMemory                        = false,
+				ReadingMode                     = ReadingMode.Immediate,
+				ReadSymbols                     = File.Exists (pdbPath),
+				ReadWrite                       = false,
+			};
+
+			MemoryMappedViewStream? viewStream = null;
+			try {
+				// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
+				using var fileStream = new FileStream (path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, false);
+				using var mappedFile = MemoryMappedFile.CreateFromFile (
+					fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, true);
+				viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
+
+				AssemblyDefinition result = ModuleDefinition.ReadModule (viewStream, readerParameters).Assembly;
+
+				// We transferred the ownership of the viewStream to the collection.
+				viewStream = null;
+
+				return result;
+			} finally {
+				viewStream?.Dispose ();
 			}
 		}
 
