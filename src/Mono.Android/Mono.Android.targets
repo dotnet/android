@@ -133,14 +133,6 @@
         SourceFiles="$(_ApiXmlLocation)api-$(AndroidPlatformId).xml"
         DestinationFolder="$(IntermediateOutputPath)mcw\"
     />
-      
-    <!-- Rebind API-33 as API-34 for Classic -->
-    <Copy Condition=" '$(TargetFramework)' == 'monoandroid10' AND '$(AndroidPlatformId)' == '34' "
-        SourceFiles="$(_ApiXmlLocation)api-33.xml"
-        DestinationFiles="$(IntermediateOutputPath)mcw\api-34.xml"
-    />
-
-
   </Target>
   
   <!-- Runs 'generator' -->
