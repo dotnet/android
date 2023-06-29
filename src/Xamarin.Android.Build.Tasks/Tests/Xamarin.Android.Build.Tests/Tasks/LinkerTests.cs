@@ -517,7 +517,7 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void DoNotErrorOnPerArchJavaTypeDuplicates ()
+		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
 		{
 			if (!Builder.UseDotNet)
 				Assert.Ignore ("Test only valid on .NET");
@@ -553,6 +553,7 @@ public abstract class MyRunner {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
+			proj.SetProperty ("AndroidEnableMarshalMethods", enableMarshalMethods.ToString ());
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
