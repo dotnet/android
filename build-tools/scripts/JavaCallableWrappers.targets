@@ -12,14 +12,14 @@
       <_CorlibDir>@(_CorlibPath)</_CorlibDir>
       <OutputPathAbs Condition="$([System.IO.Path]::IsPathRooted($(OutputPath)))">$(OutputPath)</OutputPathAbs>
       <OutputPathAbs Condition=" '$(OutputPathAbs)' == '' ">$(MSBuildProjectDirectory)/$(OutputPath)</OutputPathAbs>
-      <JcwGen>"$(MicrosoftAndroidSdkOutDir)jcw-gen.dll" -v10</JcwGen>
+      <JcwGen>"$(XAInstallPrefix)xbuild/Xamarin/Android/jcw-gen.exe" -v10</JcwGen>
       <_LibDirs>-L "$(OutputPathAbs.TrimEnd('\'))"</_LibDirs>
       <_LibDirs Condition=" '$(TargetFramework)' == 'monoandroid10' ">$(_LibDirs) -L "$(OutputPathAbs)../v1.0" -L "$(OutputPathAbs)../v1.0/Facades"</_LibDirs>
       <_LibDirs Condition=" '$(TargetFramework)' != 'monoandroid10' ">$(_LibDirs) -L "$(_CorlibDir.TrimEnd('\'))"</_LibDirs>
       <_Out>-o "$(MSBuildProjectDirectory)/$(IntermediateOutputPath)jcw/src"</_Out>
     </PropertyGroup>
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; $(JcwGen) $(_Out) $(_LibDirs) &quot;$(JavaCallableWrapperAbsAssembly)&quot;"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(JcwGen) $(_Out) $(_LibDirs) &quot;$(JavaCallableWrapperAbsAssembly)&quot;"
     />
     <ItemGroup>
       <_JavaSources Include="$(IntermediateOutputPath)jcw\src\**\*.java" />

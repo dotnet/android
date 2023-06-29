@@ -25,7 +25,7 @@ by projects that use the Microsoft.Android framework in .NET 6+.
   </PropertyGroup>
 
   <Target Name="_GetTargetingPackItems"
-      DependsOnTargets="_GetLicense">
+      DependsOnTargets="AssembleApiDocs;_GetLicense">
     <PropertyGroup>
       <FrameworkListFile Condition="'$(FrameworkListFile)' == ''">$(IntermediateOutputPath)FrameworkList.xml</FrameworkListFile>
     </PropertyGroup>
