@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[OneTimeTearDown]
-		public void DeviceTearDown ()
+		protected virtual void DeviceTearDown ()
 		{
 			if (IsDeviceAttached ()) {
 				// make sure we are not on a guest user anymore.
@@ -199,9 +199,14 @@ namespace Xamarin.Android.Build.Tests
 				builder.BuildLogFile = logName;
 				Assert.True (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
 			} else {
-				var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-				Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
+				StartActivityAndAssert (proj);
 			}
+		}
+
+		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
+		{
+			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
 		}
 
 		protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)
