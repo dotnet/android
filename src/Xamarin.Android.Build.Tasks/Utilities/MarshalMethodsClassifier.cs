@@ -708,23 +708,15 @@ namespace Xamarin.Android.Tasks
 
 			string registeredName = $"{entry.DeclaringType.FullName}::{entry.ImplementedMethod.Name}";
 			if (list.Count == 0 || !list.Any (me => String.Compare (registeredName, me.ImplementedMethod.FullName, StringComparison.Ordinal) == 0)) {
-				Console.WriteLine ("Storing method:");
-				Console.WriteLine ($"  key: {key}");
-				Console.WriteLine ($"  registeredName: {registeredName}");
-				Console.WriteLine ($"  callback assembly: {entry.NativeCallback.Module.FileName}");
-				Console.WriteLine ();
 				list.Add (entry);
 			}
 		}
 
 		void StoreAssembly (AssemblyDefinition asm)
 		{
-			Console.WriteLine ($"Classifier.StoreAssembly: {asm.FullName} <= {asm.MainModule.FileName}");
 			if (assemblies.Contains (asm)) {
-				Console.WriteLine ("  not storing, already there");
 				return;
 			}
-			Console.WriteLine ("  storing new entry");
 			assemblies.Add (asm);
 		}
 	}
