@@ -23,30 +23,22 @@ namespace Xamarin.Android.Tasks
 
 		IDictionary<string, IList<MarshalMethodEntry>> methods;
 		ICollection<AssemblyDefinition> uniqueAssemblies;
-		IDictionary <string, HashSet<string>> assemblyPaths;
+		IDictionary<AssemblyDefinition, string> assemblyPaths;
 		TaskLoggingHelper log;
 
-		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary <string, HashSet<string>> assemblyPaths, TaskLoggingHelper log)
+		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblyPaths, TaskLoggingHelper log)
 		{
+			this.assemblyPaths = assemblyPaths;
 			this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
 			this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
-			this.assemblyPaths = assemblyPaths ?? throw new ArgumentNullException (nameof (assemblyPaths));
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
-		public void Rewrite (DirectoryAssemblyResolver resolver, List<string> targetAssemblyPaths, bool brokenExceptionTransitions)
+		public void Rewrite (DirectoryAssemblyResolver resolver, bool brokenExceptionTransitions)
 		{
 			if (resolver == null) {
 				throw new ArgumentNullException (nameof (resolver));
-			}
-
-			if (targetAssemblyPaths == null) {
-				throw new ArgumentNullException (nameof (targetAssemblyPaths));
-			}
-
-			if (targetAssemblyPaths.Count == 0) {
-				throw new ArgumentException ("must contain at least one target path", nameof (targetAssemblyPaths));
 			}
 
 			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
@@ -114,47 +106,34 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var newAssemblyPaths = new List<string> ();
 			foreach (AssemblyDefinition asm in uniqueAssemblies) {
-				foreach (string path in GetAssemblyPaths (asm)) {
-					var writerParams = new WriterParameters {
-						WriteSymbols = File.Exists (Path.ChangeExtension (path, ".pdb")),
-					};
+				string path = GetAssemblyPath (asm);
+				string pathPdb = Path.ChangeExtension (path, ".pdb");
+				bool havePdb = File.Exists (pathPdb);
 
-					string directory = Path.Combine (Path.GetDirectoryName (path), "new");
-					Directory.CreateDirectory (directory);
-					string output = Path.Combine (directory, Path.GetFileName (path));
-					log.LogDebugMessage ($"Writing new version of assembly: {output}");
+				var writerParams = new WriterParameters {
+					WriteSymbols = havePdb,
+				};
 
-					// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
-					// since Cecil doesn't update the MVID in the already loaded types
-					//asm.MainModule.Mvid = Guid.NewGuid ();
-					asm.Write (output, writerParams);
-					newAssemblyPaths.Add (output);
-				}
-			}
+				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+				Directory.CreateDirectory (directory);
+				string output = Path.Combine (directory, Path.GetFileName (path));
+				log.LogDebugMessage ($"Writing new version of assembly: {output}");
 
-			// Replace old versions of the assemblies only after we've finished rewriting without issues, otherwise leave the new
-			// versions around.
-			foreach (string path in newAssemblyPaths) {
-				string? pdb = null;
+				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+				// since Cecil doesn't update the MVID in the already loaded types
+				//asm.MainModule.Mvid = Guid.NewGuid ();
+				asm.Write (output, writerParams);
+				CopyFile (output, path);
+				RemoveFile (output);
 
-				string source = Path.ChangeExtension (path, ".pdb");
-				if (File.Exists (source)) {
-					pdb = source;
-				}
-
-				foreach (string targetPath in targetAssemblyPaths) {
-					string target = Path.Combine (targetPath, Path.GetFileName (path));
-					CopyFile (path, target);
-
-					if (!String.IsNullOrEmpty (pdb)) {
-						CopyFile (pdb, Path.ChangeExtension (target, ".pdb"));
+				if (havePdb) {
+					string outputPdb = Path.ChangeExtension (output, ".pdb");
+					if (File.Exists (outputPdb)) {
+						CopyFile (outputPdb, pathPdb);
 					}
+					RemoveFile (pathPdb);
 				}
-
-				RemoveFile (path);
-				RemoveFile (pdb);
 			}
 
 			void CopyFile (string source, string target)
@@ -452,13 +431,15 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		ICollection<string> GetAssemblyPaths (AssemblyDefinition asm)
+		string GetAssemblyPath (AssemblyDefinition asm)
 		{
-			if (!assemblyPaths.TryGetValue (asm.Name.Name, out HashSet<string> paths)) {
-				throw new InvalidOperationException ($"Unable to determine file path for assembly '{asm.Name.Name}'");
+			string filePath = asm.MainModule.FileName;
+			if (!String.IsNullOrEmpty (filePath)) {
+				return filePath;
 			}
 
-			return paths;
+			// No checking on purpose - the assembly **must** be there if its MainModule.FileName property returns a null or empty string
+			return assemblyPaths[asm];
 		}
 
 		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (DirectoryAssemblyResolver resolver)
