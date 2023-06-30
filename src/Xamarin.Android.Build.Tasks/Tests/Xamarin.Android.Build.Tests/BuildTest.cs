@@ -928,43 +928,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // Xamarin.Forms version is too old, uses net45 MSBuild tasks
-		[NonParallelizable]
-		public void CompileBeforeUpgradingNuGet ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
-
-			proj.PackageReferences.Add (KnownPackages.XamarinForms_2_3_4_231);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.ThrowOnBuildFailure = false;
-				var projectDir = Path.Combine (Root, b.ProjectDirectory);
-				if (Directory.Exists (projectDir))
-					Directory.Delete (projectDir, true);
-				Assert.IsTrue (b.DesignTimeBuild (proj), "design-time build should have succeeded.");
-
-				proj.PackageReferences.Clear ();
-				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_4_0_991265);
-				Assert.IsTrue (b.Restore (proj, doNotCleanupOnUpdate: true), "Restore should have worked.");
-				Assert.IsTrue (b.Build (proj, saveProject: true, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Refreshing Xamarin.Android.Support.v7.AppCompat.dll"), "`ResolveLibraryProjectImports` should not skip `Xamarin.Android.Support.v7.AppCompat.dll`!");
-				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "Deleting unknown jar: support-annotations.jar"), "`support-annotations.jar` should be deleted!");
-			}
-		}
-
-		[Test]
 		public void BuildInDesignTimeMode ([Values(false, true)] bool useManagedParser)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -993,71 +956,6 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
-		public void CheckLibraryImportsUpgrade ()
-		{
-			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
-			var libproj = new XamarinAndroidLibraryProject () {
-				IsRelease = true,
-				ProjectName = "Library1"
-			};
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				ProjectName = "App1",
-			};
-			proj.References.Add (new BuildItem ("ProjectReference", $"..\\Library1\\Library1.csproj"));
-			proj.SetProperty ("_AndroidLibrayProjectIntermediatePath", Path.Combine (proj.IntermediateOutputPath, "__library_projects__"));
-			using (var libb = CreateDllBuilder (Path.Combine (path, libproj.ProjectName), false, false)) {
-				Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
-				using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-						"The __library_projects__ directory should exist.");
-					proj.RemoveProperty ("_AndroidLibrayProjectIntermediatePath");
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-						"The __library_projects__ directory should not exist, due to IncrementalClean.");
-					Assert.IsTrue (libb.Clean (libproj), "Clean should have succeeded.");
-					Assert.IsTrue (libb.Build (libproj), "Build should have succeeded.");
-					Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-					var zipFile = libb.Output.GetIntermediaryPath ("__AndroidLibraryProjects__.zip");
-					Assert.IsTrue (File.Exists (zipFile));
-					using (var zip = ZipHelper.OpenZip (zipFile)) {
-						Assert.IsTrue (zip.ContainsEntry ("library_project_imports/__res_name_case_map.txt"), $"{zipFile} should contain a library_project_imports/__res_name_case_map.txt entry");
-					}
-					Assert.IsFalse (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "__library_projects__")),
-						"The __library_projects__ directory should not exist.");
-					Assert.IsTrue (Directory.Exists (Path.Combine (Root, path, proj.ProjectName, proj.IntermediateOutputPath, "lp")),
-						"The lp directory should exist.");
-
-				}
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5+, because it uses 'netcoreapp1.0\pclcrypto.dll'
-		public void ResolveLibraryImportsWithInvalidZip ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				PackageReferences = {
-					KnownPackages.PCLCrypto_Alpha,
-				},
-			};
-			using (var b = CreateApkBuilder ()) {
-				b.Target = "Build";
-				b.ThrowOnBuildFailure = false;
-				if (b.Build (proj)) {
-					//NOTE: `:` in a file path should fail on Windows, but passes on macOS
-					if (IsWindows)
-						Assert.Fail ("Build should have failed.");
-				} else {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, "error XA4303: Error extracting resources from"), "Should receive XA4303 error.");
-				}
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5+, test validates __AndroidLibraryProjects__.zip generation
 		public void AndroidLibraryProjectsZipWithOddPaths ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
@@ -1075,10 +973,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.IntermediateOutputPath, "foo", "__AndroidLibraryProjects__.zip");
+				var zipFile = Path.Combine (Root, b.ProjectDirectory, b.Output.OutputPath, $"{proj.ProjectName}.aar");
 				FileAssert.Exists (zipFile);
 				using (var zip = ZipHelper.OpenZip (zipFile)) {
-					Assert.IsTrue (zip.ContainsEntry ("library_project_imports/res/values/foo.xml"), $"{zipFile} should contain a library_project_imports/res/values/foo.xml entry");
+					Assert.IsTrue (zip.ContainsEntry ("res/values/foo.xml"), $"{zipFile} should contain a res/values/foo.xml entry");
 				}
 			}
 		}
