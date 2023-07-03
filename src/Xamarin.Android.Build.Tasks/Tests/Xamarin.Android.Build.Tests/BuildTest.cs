@@ -995,14 +995,14 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.7.0_101",
 				/*latestSupportedJavaVersion*/ "1.8.0",
-				/*expectedResult*/ false,
+				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v7.1",
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.6.0_101",
 				/*latestSupportedJavaVersion*/ "1.8.0",
-				/*expectedResult*/ false,
+				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v6.0",
@@ -1023,7 +1023,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				/*buildToolsVersion*/ "24.0.0",
 				/*JavaVersion*/ "1.6.0_101",
 				/*latestSupportedJavaVersion*/ "1.8.0",
-				/*expectedResult*/ false,
+				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v5.0",
@@ -1051,7 +1051,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "1.6.0_101",
 				/*latestSupportedJavaVersion*/ "1.8.0",
-				/*expectedResult*/ false,
+				/*expectedResult*/ true,
 			},
 			new object [] {
 				/*targetFrameworkVersion*/ "v7.1",
@@ -1065,14 +1065,13 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				/*buildToolsVersion*/ "24.0.1",
 				/*JavaVersion*/ "9.0.4",
 				/*latestSupportedJavaVersion*/ "1.8.0",
-				/*expectedResult*/ false,
+				/*expectedResult*/ true,
 			},
 		};
 #pragma warning restore 414
 
 		[Test]
 		[TestCaseSource (nameof (validateJavaVersionTestCases))]
-		[Category ("DotNetIgnore")] // n/a under .NET 5+
 		public void ValidateJavaVersion (string targetFrameworkVersion, string buildToolsVersion, string javaVersion, string latestSupportedJavaVersion, bool expectedResult)
 		{
 			var path = Path.Combine ("temp", $"ValidateJavaVersion_{targetFrameworkVersion}_{buildToolsVersion}_{latestSupportedJavaVersion}_{javaVersion}");
@@ -1089,7 +1088,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				//if (!Directory.Exists (Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFrameworkVersion)))
 				//	Assert.Ignore ("This is a Pull Request Build. Ignoring test.");
 				builder.ThrowOnBuildFailure = false;
-				builder.Target = "_SetLatestTargetFrameworkVersion";
+				builder.Target = "_ResolveSdks";
 				Assert.AreEqual (expectedResult, builder.Build (proj, parameters: new string[] {
 					$"JavaSdkDirectory={javaPath}",
 					$"JavaToolExe={javaExe}",
