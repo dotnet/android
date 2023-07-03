@@ -1,15 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
-using System.Linq;
-using System.Text;
+//using System.IO.MemoryMappedFiles;
 
 using Java.Interop.Tools.Cecil;
-using Java.Interop.Tools.Diagnostics;
-using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -20,13 +15,15 @@ namespace Xamarin.Android.Tasks;
 class JavaType
 {
 	public readonly TypeDefinition Type;
-	public IDictionary<AndroidTargetArch, TypeDefinition>? PerAbiTypes { get; }
+	public readonly IDictionary<AndroidTargetArch, TypeDefinition>? PerAbiTypes;
+	public bool IsABiSpecific { get; }
 
 	public JavaType (TypeDefinition type, IDictionary<AndroidTargetArch, TypeDefinition>? perAbiTypes)
 	{
 		Type = type;
 		if (perAbiTypes != null) {
 			PerAbiTypes = new ReadOnlyDictionary<AndroidTargetArch, TypeDefinition> (perAbiTypes);
+			IsABiSpecific = perAbiTypes.Count > 1 || (perAbiTypes.Count == 1 && !perAbiTypes.ContainsKey (AndroidTargetArch.None));
 		}
 	}
 }

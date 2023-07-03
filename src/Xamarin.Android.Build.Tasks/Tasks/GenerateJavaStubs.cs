@@ -221,51 +221,65 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Step 1 - Find all the JLO types
-			var cache = new TypeDefinitionCache ();
-			var scanner = new JavaTypeScanner (this.CreateTaskLogger (), cache) {
-				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
-			};
+			// var cache = new TypeDefinitionCache ();
+			// var scanner = new JavaTypeScanner (this.CreateTaskLogger (), cache) {
+			// 	ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
+			// };
 			var newCache = new TypeDefinitionCache ();
 			var newScanner = new XAJavaTypeScanner (Log, newCache) {
 				ErrorOnCustomJavaObject = ErrorOnCustomJavaObject,
 			};
 			List<JavaType> newAllJavaTypes = newScanner.GetJavaTypes (newAllTypemapAssemblies.Values, res);
-			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies, res);
+			//List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies, res);
 
-			Console.WriteLine ("All java types:");
-			foreach (TypeDefinition td in allJavaTypes) {
-				Console.WriteLine ($"  {td.GetPartialAssemblyQualifiedName (cache)} ({td.Module.FileName})");
-			}
+			// Console.WriteLine ("All java types:");
+			// foreach (TypeDefinition td in allJavaTypes) {
+			// 	Console.WriteLine ($"  {td.GetPartialAssemblyQualifiedName (cache)} ({td.Module.FileName})");
+			// }
 
 			Console.WriteLine ();
 			Console.WriteLine ("NEW all java types:");
 			foreach (JavaType jt in newAllJavaTypes) {
-				Console.Write ($"  {jt.Type.FullName}");
-				if (jt.PerAbiTypes != null) {
-					Console.WriteLine (" (ABI-specific)");
+				if (jt.IsABiSpecific) {
+					Console.WriteLine ($"  {jt.Type.GetPartialAssemblyQualifiedName (newCache)} ((ABI-specific))");
+					foreach (var kvp in jt.PerAbiTypes) {
+						TypeDefinition td = kvp.Value;
+						Console.WriteLine ($"    [{kvp.Key}] {td.Module.FileName} (Type token: 0x{td.MetadataToken.ToUInt32 ():x}; MVID: {td.Module.Mvid}])");
+					}
 				} else {
-					Console.WriteLine ();
+					Console.WriteLine ($"  {jt.Type.GetPartialAssemblyQualifiedName (newCache)} ({jt.Type.Module.FileName})");
 				}
 			}
 
-			var javaTypes = new List<TypeDefinition> ();
-			foreach (TypeDefinition td in allJavaTypes) {
+			// var javaTypes = new List<TypeDefinition> ();
+			// foreach (TypeDefinition td in allJavaTypes) {
+			// 	// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+			// 	// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+			// 	// build and stored in a jar file.
+			// 	if ((!useMarshalMethods && !userAssemblies.ContainsKey (td.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
+			// 		continue;
+			// 	}
+			// 	javaTypes.Add (td);
+			// }
+
+			var newJavaTypes = new List<JavaType> ();
+			foreach (JavaType jt in newAllJavaTypes) {
 				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
-				if ((!useMarshalMethods && !userAssemblies.ContainsKey (td.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
+				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, newCache)) {
 					continue;
 				}
-				javaTypes.Add (td);
+				newJavaTypes.Add (jt);
 			}
 
 			MarshalMethodsClassifier classifier = null;
 			if (useMarshalMethods) {
-				classifier = new MarshalMethodsClassifier (cache, res, Log);
+				classifier = new MarshalMethodsClassifier (newCache, res, Log);
 			}
 
 			// Step 2 - Generate Java stub code
-			var success = CreateJavaSources (javaTypes, cache, classifier, useMarshalMethods);
+			var success = CreateJavaSources (newJavaTypes, newCache, classifier, useMarshalMethods);
 			if (!success)
 				return;
 
@@ -283,21 +297,22 @@ namespace Xamarin.Android.Tasks
 
 			// Step 3 - Generate type maps
 			//   Type mappings need to use all the assemblies, always.
-			WriteTypeMappings (allJavaTypes, cache);
+			WriteTypeMappings (newAllJavaTypes, newCache);
 
 			// We need to save a map of .NET type -> ACW type for resource file fixups
-			var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
-			var java    = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
+			var managed = new Dictionary<string, TypeDefinition> (newJavaTypes.Count, StringComparer.Ordinal);
+			var java    = new Dictionary<string, TypeDefinition> (newJavaTypes.Count, StringComparer.Ordinal);
 
 			var managedConflicts = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
 			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				foreach (TypeDefinition type in javaTypes) {
+				foreach (JavaType jt in newJavaTypes) {
+					TypeDefinition type = jt.Type;
 					string managedKey = type.FullName.Replace ('/', '.');
-					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
+					string javaKey = JavaNativeTypeManager.ToJniName (type, newCache).Replace ('/', '.');
 
-					acw_map.Write (type.GetPartialAssemblyQualifiedName (cache));
+					acw_map.Write (type.GetPartialAssemblyQualifiedName (newCache));
 					acw_map.Write (';');
 					acw_map.Write (javaKey);
 					acw_map.WriteLine ();
@@ -307,16 +322,16 @@ namespace Xamarin.Android.Tasks
 					if (managed.TryGetValue (managedKey, out conflict)) {
 						if (!conflict.Module.Name.Equals (type.Module.Name)) {
 							if (!managedConflicts.TryGetValue (managedKey, out var list))
-								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
-							list.Add (type.GetPartialAssemblyName (cache));
+								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (newCache) });
+							list.Add (type.GetPartialAssemblyName (newCache));
 						}
 						hasConflict = true;
 					}
 					if (java.TryGetValue (javaKey, out conflict)) {
 						if (!conflict.Module.Name.Equals (type.Module.Name)) {
 							if (!javaConflicts.TryGetValue (javaKey, out var list))
-								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
-							list.Add (type.GetAssemblyQualifiedName (cache));
+								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (newCache) });
+							list.Add (type.GetAssemblyQualifiedName (newCache));
 							success = false;
 						}
 						hasConflict = true;
@@ -330,7 +345,7 @@ namespace Xamarin.Android.Tasks
 						acw_map.Write (javaKey);
 						acw_map.WriteLine ();
 
-						acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.'));
+						acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type, newCache).Replace ('/', '.'));
 						acw_map.Write (';');
 						acw_map.Write (javaKey);
 						acw_map.WriteLine ();
@@ -382,7 +397,7 @@ namespace Xamarin.Android.Tasks
 				manifest.ForceExtractNativeLibs = true;
 			}
 
-			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+			var additionalProviders = manifest.Merge (Log, newCache, newAllJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
 
 			// Only write the new manifest if it actually changed
 			if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
@@ -402,15 +417,16 @@ namespace Xamarin.Android.Tasks
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
-			foreach (var type in javaTypes) {
-				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
+			foreach (JavaType jt in newJavaTypes) {
+				TypeDefinition type = jt.Type;
+				if (JavaNativeTypeManager.IsApplication (type, newCache) || JavaNativeTypeManager.IsInstrumentation (type, newCache)) {
 					if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
 						continue;
 					}
 
-					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
+					string javaKey = JavaNativeTypeManager.ToJniName (type, newCache).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
-						type.GetAssemblyQualifiedName (cache), javaKey);
+						type.GetAssemblyQualifiedName (newCache), javaKey);
 				}
 			}
 			regCallsWriter.Close ();
@@ -466,7 +482,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
+		bool CreateJavaSources (IEnumerable<JavaType> newJavaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
 		{
 			if (useMarshalMethods && classifier == null) {
 				throw new ArgumentNullException (nameof (classifier));
@@ -478,7 +494,8 @@ namespace Xamarin.Android.Tasks
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
 
 			bool ok = true;
-			foreach (var t in javaTypes) {
+			foreach (JavaType jt in newJavaTypes) {
+				TypeDefinition t = jt.Type; // JCW generator doesn't care about ABI-specific types or token ids
 				if (t.IsInterface) {
 					// Interfaces are in typemap but they shouldn't have JCW generated for them
 					continue;
@@ -581,11 +598,12 @@ namespace Xamarin.Android.Tasks
 			Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<TypeDefinition> types, TypeDefinitionCache cache)
+		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
 		{
 			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
+			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
+			}
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
 		}
