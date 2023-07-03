@@ -8,6 +8,7 @@
       "Size": 1024
     },
     "assemblies/Java.Interop.dll": {
+<<<<<<< HEAD
       "Size": 58895
     },
     "assemblies/Mono.Android.dll": {
@@ -15,11 +16,21 @@
     },
     "assemblies/Mono.Android.Runtime.dll": {
       "Size": 5575
+=======
+      "Size": 61983
+    },
+    "assemblies/Mono.Android.dll": {
+      "Size": 88120
+    },
+    "assemblies/Mono.Android.Runtime.dll": {
+      "Size": 5819
+>>>>>>> 79b73db1c (Update expected apk sizes.)
     },
     "assemblies/rc.bin": {
       "Size": 1302
     },
     "assemblies/System.Console.dll": {
+<<<<<<< HEAD
       "Size": 6418
     },
     "assemblies/System.Linq.dll": {
@@ -48,18 +59,56 @@
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3184096
+=======
+      "Size": 6448
+    },
+    "assemblies/System.Linq.dll": {
+      "Size": 9135
+    },
+    "assemblies/System.Private.CoreLib.dll": {
+      "Size": 537559
+    },
+    "assemblies/System.Runtime.dll": {
+      "Size": 2629
+    },
+    "assemblies/System.Runtime.InteropServices.dll": {
+      "Size": 3768
+    },
+    "assemblies/UnnamedProject.dll": {
+      "Size": 3221
+    },
+    "classes.dex": {
+      "Size": 19716
+    },
+    "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
+      "Size": 97392
+    },
+    "lib/arm64-v8a/libmonodroid.so": {
+      "Size": 325024
+    },
+    "lib/arm64-v8a/libmonosgen-2.0.so": {
+      "Size": 3177168
+>>>>>>> 79b73db1c (Update expected apk sizes.)
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
+<<<<<<< HEAD
       "Size": 93856
+=======
+      "Size": 94424
+>>>>>>> 79b73db1c (Update expected apk sizes.)
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
+<<<<<<< HEAD
       "Size": 11608
+=======
+      "Size": 16632
+>>>>>>> 79b73db1c (Update expected apk sizes.)
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
@@ -95,5 +144,9 @@
       "Size": 1904
     }
   },
+<<<<<<< HEAD
   "PackageSize": 2787658
+=======
+  "PackageSize": 2693450
+>>>>>>> 79b73db1c (Update expected apk sizes.)
 }
