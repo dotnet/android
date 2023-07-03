@@ -443,30 +443,6 @@ namespace Foo {
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
-		public void JavaDocJar ()
-		{
-			var binding = new XamarinAndroidBindingProject () {
-				AndroidClassParser = "class-parse",
-			};
-			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
-			using (var bindingBuilder = CreateDllBuilder ()) {
-				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
-					BinaryContent = () => ResourceData.JavaSourceJarTestJar,
-				});
-				binding.OtherBuildItems.Add (new BuildItem ("JavaDocJar", "javasourcejartest-javadoc.jar") {
-					BinaryContent = () => ResourceData.JavaSourceJarTestJavadocJar,
-				});
-				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
-
-				var cs_file = bindingBuilder.Output.GetIntermediaryPath (
-					Path.Combine ("generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest.cs"));
-				FileAssert.Exists (cs_file);
-				StringAssert.Contains ("Greet (string name, global::Java.Util.Date date)", File.ReadAllText (cs_file));
-			}
-		}
-
-		[Test]
 		public void JavaSourceJar ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -619,26 +595,6 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] //TODO: @(LibraryProjectProperties) not supported yet in .NET 5+
-		public void BugzillaBug11964 ()
-		{
-			var proj = new XamarinAndroidBindingProject ();
-
-			proj.Sources.Add (new BuildItem ("LibraryProjectProperties", "project.properties") {
-				TextContent = () => ""
-			});
-
-			using (var builder = CreateDllBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ("error XA1019:"));
-				Assert.IsNotNull (error, "Build should have failed with XA1019.");
 			}
 		}
 
