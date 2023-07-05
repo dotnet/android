@@ -1293,7 +1293,6 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 				},
 				PackageReferences = {
 					KnownPackages.Acr_UserDialogs,
-					KnownPackages.Xamarin_Build_Download_0_4_11,
 				}
 			};
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
