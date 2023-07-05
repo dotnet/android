@@ -147,24 +147,10 @@ class XAJavaTypeScanner
 			ReadWrite        = false,
 		};
 
-		return AssemblyDefinition.ReadAssembly (path, readerParameters);
-
-		// MemoryMappedViewStream? viewStream = null;
-		// try {
-		// 	// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
-		// 	using var fileStream = new FileStream (path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, false);
-		// 	using var mappedFile = MemoryMappedFile.CreateFromFile (
-		// 		fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, true);
-		// 	viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
-
-		// 	AssemblyDefinition result = ModuleDefinition.ReadModule (viewStream, readerParameters).Assembly;
-
-		// 	// We transferred the ownership of the viewStream to the collection.
-		// 	viewStream = null;
-
-		// 	return result;
-		// } finally {
-		// 	viewStream?.Dispose ();
-		// }
+		try {
+			return AssemblyDefinition.ReadAssembly (path, readerParameters);
+		} catch (Exception ex) {
+			throw new InvalidOperationException ($"Failed to load assembly: {path}", ex);
+		}
 	}
 }

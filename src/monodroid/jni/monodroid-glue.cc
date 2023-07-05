@@ -830,25 +830,20 @@ MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
 {
-	log_info (LOG_DEFAULT, "#grendel Start: %s", __PRETTY_FUNCTION__);
 	size_t user_assemblies_count   = 0;
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
+
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
+
 #if defined (NET)
 	size_t blob_time_index;
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
 	}
 
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	if (embeddedAssemblies.have_runtime_config_blob ()) {
-		log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 		runtime_config_args.kind = 1;
 		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
-		log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
-		log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	}
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
@@ -874,9 +869,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 #if !defined (NET)
 	if (is_root_domain) {
 #endif // ndef NET
-		log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
-		log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #if !defined (NET)
 	} else {
 		MonoDomain* root_domain = mono_get_root_domain ();
@@ -917,7 +910,6 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		}
 	}
 
-	log_info (LOG_DEFAULT, "#grendel Leave: %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	return domain;
 }
 
@@ -993,7 +985,6 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
-	log_info (LOG_DEFAULT, "#grendel Start: %s", __PRETTY_FUNCTION__);
 	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
 	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
 
@@ -1003,22 +994,16 @@ MonodroidRuntime::init_android_runtime (
 	using j2mFn = MonoReflectionType* (*)(MonoString *java_type);
 	using m2jFn = const char* (*)(MonoReflectionType *type, const uint8_t *mvid);
 
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(static_cast<j2mFn>(EmbeddedAssemblies::typemap_java_to_managed)));
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(static_cast<m2jFn>(EmbeddedAssemblies::typemap_managed_to_java)));
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #else
 	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(typemap_java_to_managed));
 	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(typemap_managed_to_java));
 #endif // def RELEASE && def ANDROID
 
 #if defined (NET)
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_debugger_unhandled_exception", reinterpret_cast<const void*> (monodroid_debugger_unhandled_exception));
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	mono_add_internal_call ("Android.Runtime.RuntimeNativeMethods::monodroid_unhandled_exception", reinterpret_cast<const void*>(monodroid_unhandled_exception));
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #endif // def NET
 
 	struct JnienvInitializeArgs init = {};
@@ -1136,9 +1121,7 @@ MonodroidRuntime::init_android_runtime (
 	}
 
 #if defined (NET) && defined (ANDROID)
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	auto initialize = reinterpret_cast<jnienv_initialize_fn> (mono_method_get_unmanaged_callers_only_ftnptr (method, &error));
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	if (initialize == nullptr) {
 		log_fatal (LOG_DEFAULT, "Failed to get pointer to Initialize. Mono error: %s", mono_error_get_message (&error));
 	}
@@ -1148,9 +1131,7 @@ MonodroidRuntime::init_android_runtime (
 		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
 		mono_error_get_message (&error)
 	);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	initialize (&init);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #else // def NET && def ANDROID
 	void *args [] = {
 		&init,
@@ -1162,7 +1143,6 @@ MonodroidRuntime::init_android_runtime (
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (native_to_managed_index);
 	}
-	log_info (LOG_DEFAULT, "#grendel Leave: %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 }
 
 #if defined (NET)
@@ -1937,9 +1917,7 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
-	log_info (LOG_DEFAULT, "#grendel Start: %s", __PRETTY_FUNCTION__);
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #if defined (ANDROID)
 	// Asserting this on desktop apparently breaks a Designer test
 	abort_unless (domain != nullptr, "Failed to create AppDomain");
@@ -1953,12 +1931,9 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	}
 
 #if defined (NET)
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	default_alc = mono_alc_get_default_gchandle ();
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
 
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	embeddedAssemblies.install_preload_hooks_for_alc ();
 	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
 #endif // def NET
@@ -1970,18 +1945,14 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	bool preload = (androidSystem.is_assembly_preload_enabled () || (is_running_on_desktop && force_preload_assemblies));
 
 #if defined (NET)
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	load_assemblies (default_alc, preload, assemblies);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	init_android_runtime (env, runtimeClass, loader);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 #else // def NET
 	load_assemblies (domain, preload, assemblies);
 	init_android_runtime (domain, env, runtimeClass, loader);
 #endif // ndef NET
 	osBridge.add_monodroid_domain (domain);
 
-	log_info (LOG_DEFAULT, "#grendel Leave: %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	return domain;
 }
 
@@ -2145,8 +2116,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	char *mono_log_level_raw = nullptr;
 
 	init_logging_categories (mono_log_mask_raw, mono_log_level_raw);
-
-	log_info (LOG_DEFAULT, "#grendel Start: %s", __PRETTY_FUNCTION__);
 
 	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
 	std::unique_ptr<char[]> mono_log_level (mono_log_level_raw);
@@ -2340,9 +2309,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		mono_runtime_init_index = internal_timing->start_event (TimingEventKind::MonoRuntimeInit);
 	}
 
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	mono_runtime_init (runtime_args);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (mono_runtime_init_index);
@@ -2351,9 +2318,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_array_wrapper assemblies (env, assembliesJava);
 	jstring_array_wrapper assembliesPaths (env);
 	/* the first assembly is used to initialize the AppDomain name */
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 	create_and_initialize_domain (env, klass, runtimeApks, assemblies, nullptr, assembliesPaths, loader, /*is_root_domain:*/ true, /*force_preload_assemblies:*/ false, haveSplitApks);
-	log_info (LOG_DEFAULT, "#grendel %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 
 #if defined (ANDROID) && !defined (NET)
 	// Mono from mono/mono has a bug which requires us to install the handlers after `mono_init_jit_version` is called
@@ -2393,8 +2358,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	xamarin_app_init (get_function_pointer_at_runtime);
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
-
-	log_info (LOG_DEFAULT, "#grendel Leave: %s [%u]", __PRETTY_FUNCTION__, __LINE__);
 }
 
 #if !defined (NET)

@@ -118,12 +118,13 @@ namespace Xamarin.Android.Tasks
 				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
 				Directory.CreateDirectory (directory);
 				string output = Path.Combine (directory, Path.GetFileName (path));
-				log.LogDebugMessage ($"Writing new version of assembly: {output}");
+				log.LogDebugMessage ($"Writing new version of '{path}' assembly: {output}");
 
 				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
 				// since Cecil doesn't update the MVID in the already loaded types
 				//asm.MainModule.Mvid = Guid.NewGuid ();
 				asm.Write (output, writerParams);
+
 				CopyFile (output, path);
 				RemoveFile (output);
 
@@ -132,14 +133,25 @@ namespace Xamarin.Android.Tasks
 					if (File.Exists (outputPdb)) {
 						CopyFile (outputPdb, pathPdb);
 					}
-					RemoveFile (pathPdb);
+					RemoveFile (outputPdb);
 				}
 			}
 
 			void CopyFile (string source, string target)
 			{
 				log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
+
+				string targetBackup = "${target}.bak";
+				if (File.Exists (target)) {
+					// Try to avoid sharing violations by first renaming the target
+					File.Move (target, targetBackup);
+				}
+
 				File.Copy (source, target, true);
+
+				if (File.Exists (targetBackup)) {
+					File.Delete (targetBackup);
+				}
 			}
 
 			void RemoveFile (string? path)
