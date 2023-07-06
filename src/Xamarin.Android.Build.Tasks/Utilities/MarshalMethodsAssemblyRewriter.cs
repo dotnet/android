@@ -141,7 +141,7 @@ namespace Xamarin.Android.Tasks
 			{
 				log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
 
-				string targetBackup = "${target}.bak";
+				string targetBackup = $"{target}.bak";
 				if (File.Exists (target)) {
 					// Try to avoid sharing violations by first renaming the target
 					File.Move (target, targetBackup);
