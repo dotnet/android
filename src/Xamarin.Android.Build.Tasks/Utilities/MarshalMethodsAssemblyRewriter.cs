@@ -150,7 +150,13 @@ namespace Xamarin.Android.Tasks
 				File.Copy (source, target, true);
 
 				if (File.Exists (targetBackup)) {
-					File.Delete (targetBackup);
+					try {
+						File.Delete (targetBackup);
+					} catch (Exception ex) {
+						// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
+						log.LogDebugMessage ($"While trying to delete '{targetBackup}', exception was thrown: {ex}");
+						log.LogDebugMessage ($"Failed to delete backup file '{targetBackup}', ignoring.");
+					}
 				}
 			}
 
