@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 					if (TempModulesAbiAgnostic == null) {
 						TempModulesAbiAgnostic = dict;
 					}
-					tempModules.Add (AbiToArch (abi), dict);
+					tempModules.Add (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), dict);
 				}
 
 				TempModules = new ReadOnlyDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> (tempModules);
@@ -465,7 +465,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var mappingData = new Dictionary<AndroidTargetArch, NativeTypeMappingData> ();
 			foreach (var kvp in state.TempModules) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<byte[], ModuleReleaseData> tempModules = kvp.Value;
@@ -483,11 +482,9 @@ namespace Xamarin.Android.Tasks
 					module.Types = module.TypesScratch.Values.ToArray ();
 				}
 
-				mappingData.Add (arch, new NativeTypeMappingData (logger, modules));
+				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (logger, modules));
+				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
 			}
-
-			var composer = new TypeMappingReleaseNativeAssemblyGenerator (mappingData);
-			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
@@ -497,34 +494,52 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
+		string GetOutputFilePath (string baseFileName, string abi) => $"{baseFileName}.{abi}.ll";
+
+		void GenerateNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
+		{
+			WriteNativeAssembly (
+				arch,
+				composer,
+				typeMapModule,
+				GetOutputFilePath (baseFileName, ArchToAbi (arch))
+			);
+		}
+
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
-			AndroidTargetArch arch;
 			foreach (string abi in supportedAbis) {
-				arch = GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi);
+				WriteNativeAssembly (
+					GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi),
+					composer,
+					typeMapModule,
+					GetOutputFilePath (baseFileName, abi)
+				);
+			}
+		}
 
-				string outputFile = $"{baseFileName}.{abi}.ll";
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					try {
-						composer.Generate (typeMapModule, arch, sw, outputFile);
-					} catch {
-						throw;
-					} finally {
-						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-					}
+		void WriteNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string outputFile)
+		{
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				try {
+					composer.Generate (typeMapModule, arch, sw, outputFile);
+				} catch {
+					throw;
+				} finally {
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
 				}
 			}
 		}
 
-		static AndroidTargetArch AbiToArch (string abi)
+		static string ArchToAbi (AndroidTargetArch arch)
 		{
-			return abi switch {
-				"armeabi-v7a" => AndroidTargetArch.Arm,
-				"arm64-v8a"   => AndroidTargetArch.Arm64,
-				"x86_64"      => AndroidTargetArch.X86_64,
-				"x86"         => AndroidTargetArch.X86,
-				_             => throw new InvalidOperationException ($"Unknown ABI {abi}")
+			return arch switch {
+				AndroidTargetArch.Arm    => "armeabi-v7a",
+				AndroidTargetArch.Arm64  => "arm64-v8a",
+				AndroidTargetArch.X86_64 => "x86_64",
+				AndroidTargetArch.X86    => "x86",
+				_                        => throw new InvalidOperationException ($"Unknown architecture {arch}")
 			};
 		}
 

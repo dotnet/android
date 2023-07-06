@@ -206,7 +206,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			var typeReplacements = new List<StructureInstance<JniRemappingTypeReplacementEntry>> ();
-			Console.WriteLine ($"Type replacement input count: {typeReplacementsInput.Count}");
 			foreach (JniRemappingTypeReplacement mtr in typeReplacementsInput) {
 				var entry = new JniRemappingTypeReplacementEntry {
 					name = MakeJniRemappingString (mtr.From),

@@ -640,7 +640,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public StructureInfo MapStructure<T> ()
 		{
-			Console.WriteLine ($"Mapping structure: {typeof(T)}");
 			if (structures == null) {
 				structures = new Dictionary<Type, StructureInfo> ();
 			}
