@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 		static EmbeddedDSOTests ()
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "EmbeddedDSOs", "EmbeddedDSO"));
-			TestOutputDir = Path.Combine (SetUp.TestDirectoryRoot, "temp", "EmbeddedDSO");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "EmbeddedDSO");
 
 			produced_binaries = new List <string> {
 				$"{ProjectAssemblyName}.dll",
