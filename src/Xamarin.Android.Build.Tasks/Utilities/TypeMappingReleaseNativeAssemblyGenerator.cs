@@ -5,6 +5,7 @@ using System.IO.Hashing;
 using System.Text;
 
 using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -158,38 +159,55 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		sealed class ConstructionState
+		sealed class ArchGenerationState
 		{
-			public List<StructureInstance<TypeMapModule>> MapModules;
-			public Dictionary<string, TypeMapJava> JavaTypesByName;
-			public List<string> JavaNames;
-			public List<StructureInstance<TypeMapJava>> JavaMap;
+			public readonly List<StructureInstance<TypeMapModule>> MapModules;
+			public readonly List<StructureInstance<TypeMapJava>> JavaMap;
+			public readonly Dictionary<string, TypeMapJava> JavaTypesByName;
+			public readonly List<string> JavaNames;
+			public readonly NativeTypeMappingData MappingData;
+			public ulong ModuleCounter = 0;
+
 			public List<ModuleMapData> AllModulesData;
+
+			public ArchGenerationState (NativeTypeMappingData mappingData)
+			{
+				MapModules = new List<StructureInstance<TypeMapModule>> ();
+				JavaMap = new List<StructureInstance<TypeMapJava>> ();
+				JavaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
+				JavaNames = new List<string> ();
+				MappingData = mappingData;
+			}
 		}
 
-		readonly NativeTypeMappingData mappingData;
+		readonly Dictionary<AndroidTargetArch, NativeTypeMappingData> mappingData;
 		StructureInfo typeMapJavaStructureInfo;
 		StructureInfo typeMapModuleStructureInfo;
 		StructureInfo typeMapModuleEntryStructureInfo;
 		JavaNameHash32Comparer javaNameHash32Comparer;
 		JavaNameHash64Comparer javaNameHash64Comparer;
+		Dictionary<AndroidTargetArch, ArchGenerationState> archState;
 
-		ulong moduleCounter = 0;
-
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (Dictionary<AndroidTargetArch, NativeTypeMappingData> mappingData)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();
 			javaNameHash64Comparer = new JavaNameHash64Comparer ();
+
+			archState = new Dictionary<AndroidTargetArch, ArchGenerationState> (mappingData.Count);
+			foreach (var kvp in mappingData) {
+				if (kvp.Value == null) {
+					throw new ArgumentException ("must not contain null values", nameof (mappingData));
+				}
+
+				archState.Add (kvp.Key, new ArchGenerationState (kvp.Value));
+			}
 		}
 
 		protected override void Construct (LlvmIrModule module)
 		{
 			MapStructures (module);
 
-			var cs = new ConstructionState ();
-			cs.JavaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
-			cs.JavaNames = new List<string> ();
 			InitJavaMap (cs);
 			InitMapModules (cs);
 			HashJavaNames (cs);
@@ -304,8 +322,9 @@ namespace Xamarin.Android.Tasks
 		{
 			cs.JavaMap = new List<StructureInstance<TypeMapJava>> ();
 			TypeMapJava map_entry;
-			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				cs.JavaNames.Add (entry.JavaName);
+
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in state.MappingData.JavaTypes) {
+				state.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
 					module_index = (uint)entry.ModuleIndex, // UInt32.MaxValue,
@@ -345,7 +364,7 @@ namespace Xamarin.Android.Tasks
 					java_name_width = 0,
 				};
 
-				cs.MapModules.Add (new StructureInstance<TypeMapModule> (typeMapModuleStructureInfo, map_module));
+				state.MapModules.Add (new StructureInstance<TypeMapModule> (map_module));
 			}
 		}
 

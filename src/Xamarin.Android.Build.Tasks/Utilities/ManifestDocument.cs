@@ -255,7 +255,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<JavaType> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			var manifest = doc.Root;
 
@@ -330,7 +330,8 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException (string.Format ("The targetSdkVersion ({0}) is not a valid API level", targetSdkVersion));
 			int targetSdkVersionValue = tryTargetSdkVersion.Value;
 
-			foreach (var t in subclasses) {
+			foreach (JavaType jt in subclasses) {
+				TypeDefinition t = jt.Type;
 				if (t.IsAbstract)
 					continue;
 
@@ -567,7 +568,7 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
+		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<JavaType> subclasses, TypeDefinitionCache cache)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -591,7 +592,8 @@ namespace Xamarin.Android.Tasks {
 			List<ApplicationAttribute> typeAttr = new List<ApplicationAttribute> ();
 			List<UsesLibraryAttribute> typeUsesLibraryAttr = new List<UsesLibraryAttribute> ();
 			List<UsesConfigurationAttribute> typeUsesConfigurationAttr = new List<UsesConfigurationAttribute> ();
-			foreach (var t in subclasses) {
+			foreach (JavaType jt in subclasses) {
+				TypeDefinition t = jt.Type;
 				ApplicationAttribute aa = ApplicationAttribute.FromCustomAttributeProvider (t);
 				if (aa == null)
 					continue;
@@ -923,7 +925,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
+		void AddInstrumentations (XElement manifest, IList<JavaType> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
 				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
@@ -936,12 +938,14 @@ namespace Xamarin.Android.Tasks {
 					manifest.Add (ia.ToElement (PackageName, cache));
 			}
 
-			foreach (var type in subclasses)
+			foreach (JavaType jt in subclasses) {
+				TypeDefinition type = jt.Type;
 				if (type.IsSubclassOf ("Android.App.Instrumentation", cache)) {
 					var xe = InstrumentationFromTypeDefinition (type, JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.'), cache);
 					if (xe != null)
 						manifest.Add (xe);
 				}
+			}
 		}
 
 		public bool SaveIfChanged (TaskLoggingHelper log, string filename)
