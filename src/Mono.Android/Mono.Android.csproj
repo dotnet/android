@@ -9,7 +9,7 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
@@ -27,6 +27,7 @@
   <PropertyGroup>
     <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+    <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
@@ -39,6 +40,11 @@
     <NoWarn>$(NoWarn);CA1422;CA1416</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
@@ -336,6 +342,13 @@
     <Compile Include="Xamarin.Android.Net\IAndroidAuthenticationModule.cs" />
     <Compile Include="Xamarin.Android.Net\ServerCertificateCustomValidator.cs" />
     <Compile Include="Xamarin.Android.Net\NegotiateAuthenticationHelper.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
 
   <ItemGroup>
