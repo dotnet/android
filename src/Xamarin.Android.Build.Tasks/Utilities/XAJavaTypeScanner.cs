@@ -64,7 +64,7 @@ class XAJavaTypeScanner
 			AndroidTargetArch arch = GetTargetArch (asmItem);
 
 			stopwatch.Start ();
-			AssemblyDefinition asmdef = LoadAssembly (asmItem.ItemSpec, resolver);
+			AssemblyDefinition asmdef = resolver.GetAssembly (asmItem.ItemSpec);
 			stopwatch.Stop ();
 			log.LogMessage ($"Load of assembly '{asmItem.ItemSpec}', elapsed: {stopwatch.Elapsed}");
 			stopwatch.Reset ();
