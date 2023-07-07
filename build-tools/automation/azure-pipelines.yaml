@@ -469,37 +469,37 @@ stages:
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-signed
-        downloadPath: $(Build.StagingDirectory)\packages\zip
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-linux-signed
-        downloadPath: $(Build.StagingDirectory)\packages\zip
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(WindowsToolchainPdbArtifactName)
-        downloadPath: $(Build.StagingDirectory)\packages\zip
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vs-msi-nugets
-        downloadPath: $(Build.StagingDirectory)\packages\msi
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vsdrop-signed
-        downloadPath: $(Build.StagingDirectory)\packages\msi
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vsdrop-multitarget-signed
-        downloadPath: $(Build.StagingDirectory)\packages\msi
+        downloadPath: $(Build.StagingDirectory)\packages
 
     - powershell: |
-        $filesToExtract = Get-ChildItem -Path $(Build.StagingDirectory)\packages\zip\* -Include "*.zip", "*.nupkg" -Recurse
+        $filesToExtract = Get-ChildItem -Path $(Build.StagingDirectory)\packages\* -Include "*.zip", "*.nupkg" -Exclude "*.Msi.*.nupkg" -Recurse
         if ($filesToExtract.Count -eq 0) {
-            Write-Error "Did not find any files to extract in '(Build.StagingDirectory)\packages\zip\'."
+            Write-Error "Did not find any files to extract in '(Build.StagingDirectory)\packages\'."
             exit -1
         }
         Write-Host "Extracting $($filesToExtract.Count) file(s)..."
