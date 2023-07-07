@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
-//using System.IO.MemoryMappedFiles;
 
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
@@ -60,7 +58,7 @@ class XAJavaTypeScanner
 		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
 		foreach (ITaskItem asmItem in inputAssemblies) {
 			AndroidTargetArch arch = GetTargetArch (asmItem);
-			AssemblyDefinition asmdef = LoadAssembly (asmItem.ItemSpec, resolver);
+			AssemblyDefinition asmdef = resolver.GetAssembly (asmItem.ItemSpec);
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
@@ -134,23 +132,5 @@ class XAJavaTypeScanner
 			"x86_64"      => AndroidTargetArch.X86_64,
 			_             => throw new NotSupportedException ($"Unsupported ABI '{abi}' for assembly {asmItem.ItemSpec}")
 		};
-	}
-
-	AssemblyDefinition LoadAssembly (string path, DirectoryAssemblyResolver resolver)
-	{
-		string pdbPath = Path.ChangeExtension (path, ".pdb");
-		var readerParameters = new ReaderParameters {
-			AssemblyResolver = resolver,
-			InMemory         = true,
-			ReadingMode      = ReadingMode.Immediate,
-			ReadSymbols      = File.Exists (pdbPath),
-			ReadWrite        = false,
-		};
-
-		try {
-			return AssemblyDefinition.ReadAssembly (path, readerParameters);
-		} catch (Exception ex) {
-			throw new InvalidOperationException ($"Failed to load assembly: {path}", ex);
-		}
 	}
 }

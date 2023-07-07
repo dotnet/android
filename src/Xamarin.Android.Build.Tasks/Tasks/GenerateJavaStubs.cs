@@ -156,6 +156,7 @@ namespace Xamarin.Android.Tasks
 			bool haveMonoAndroid = false;
 			var allTypemapAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+
 			foreach (var assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
@@ -211,10 +212,9 @@ namespace Xamarin.Android.Tasks
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-
 			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
-
 			var javaTypes = new List<JavaType> ();
+
 			foreach (JavaType jt in allJavaTypes) {
 				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
