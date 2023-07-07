@@ -482,9 +482,9 @@ stages:
         downloadPath: $(Build.StagingDirectory)\packages\zip
 
     - task: DownloadPipelineArtifact@2
-    inputs:
-      artifactName: vs-msi-nugets
-      downloadPath: $(Build.StagingDirectory)\packages\msi
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(Build.StagingDirectory)\packages\msi
 
     - task: DownloadPipelineArtifact@2
       inputs:
