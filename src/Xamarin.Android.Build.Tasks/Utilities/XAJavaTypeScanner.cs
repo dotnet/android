@@ -1,9 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Diagnostics;
-using System.IO;
-//using System.IO.MemoryMappedFiles;
 
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
@@ -59,25 +56,15 @@ class XAJavaTypeScanner
 	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, DirectoryAssemblyResolver resolver)
 	{
 		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
-		var stopwatch = new Stopwatch ();
 		foreach (ITaskItem asmItem in inputAssemblies) {
 			AndroidTargetArch arch = GetTargetArch (asmItem);
-
-			stopwatch.Start ();
 			AssemblyDefinition asmdef = resolver.GetAssembly (asmItem.ItemSpec);
-			stopwatch.Stop ();
-			log.LogMessage ($"Load of assembly '{asmItem.ItemSpec}', elapsed: {stopwatch.Elapsed}");
-			stopwatch.Reset ();
 
-			stopwatch.Start ();
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
 					AddJavaType (td, types, arch);
 				}
 			}
-			stopwatch.Stop ();
-			log.LogMessage ($"Add all types from assembly '{asmItem.ItemSpec}', elapsed: {stopwatch.Elapsed}");
-			stopwatch.Reset ();
 		}
 
 		var ret = new List<JavaType> ();
@@ -145,23 +132,5 @@ class XAJavaTypeScanner
 			"x86_64"      => AndroidTargetArch.X86_64,
 			_             => throw new NotSupportedException ($"Unsupported ABI '{abi}' for assembly {asmItem.ItemSpec}")
 		};
-	}
-
-	AssemblyDefinition LoadAssembly (string path, DirectoryAssemblyResolver resolver)
-	{
-		string pdbPath = Path.ChangeExtension (path, ".pdb");
-		var readerParameters = new ReaderParameters {
-			AssemblyResolver = resolver,
-			InMemory         = true,
-			ReadingMode      = ReadingMode.Immediate,
-			ReadSymbols      = File.Exists (pdbPath),
-			ReadWrite        = false,
-		};
-
-		try {
-			return AssemblyDefinition.ReadAssembly (path, readerParameters);
-		} catch (Exception ex) {
-			throw new InvalidOperationException ($"Failed to load assembly: {path}", ex);
-		}
 	}
 }

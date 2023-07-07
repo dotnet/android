@@ -105,11 +105,7 @@ namespace Xamarin.Android.Tasks
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
 				using (DirectoryAssemblyResolver res = MakeResolver (useMarshalMethods)) {
-					var runWatch = new Stopwatch ();
-					runWatch.Start ();
 					Run (res, useMarshalMethods);
-					runWatch.Stop ();
-					Log.LogDebugMessage ($"Run took: {runWatch.Elapsed}");
 				}
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
@@ -160,8 +156,7 @@ namespace Xamarin.Android.Tasks
 			bool haveMonoAndroid = false;
 			var allTypemapAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
-			var stopwatch = new Stopwatch ();
-			stopwatch.Start ();
+
 			foreach (var assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
@@ -195,11 +190,7 @@ namespace Xamarin.Android.Tasks
 
 				res.Load (assembly.ItemSpec);
 			}
-			stopwatch.Stop ();
-			Log.LogDebugMessage ($"Stopwatch #1, elapsed: {stopwatch.Elapsed}");
 
-			stopwatch.Reset ();
-			stopwatch.Start ();
 			// However we only want to look for JLO types in user code for Java stub code generation
 			foreach (var asm in ResolvedUserAssemblies) {
 				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
@@ -215,22 +206,15 @@ namespace Xamarin.Android.Tasks
 				if (!userAssemblies.ContainsKey (name))
 					userAssemblies.Add (name, asm.ItemSpec);
 			}
-			stopwatch.Stop ();
-			Log.LogDebugMessage ($"Stopwatch #2, elapsed: {stopwatch.Elapsed}");
 
 			// Step 1 - Find all the JLO types
 			var cache = new TypeDefinitionCache ();
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-
-			stopwatch.Reset ();
-			stopwatch.Start ();
 			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
-			stopwatch.Stop ();
-			Log.LogDebugMessage ($"Stopwatch #3, elapsed: {stopwatch.Elapsed}");
-
 			var javaTypes = new List<JavaType> ();
+
 			foreach (JavaType jt in allJavaTypes) {
 				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
@@ -247,11 +231,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Step 2 - Generate Java stub code
-			stopwatch.Reset ();
-			stopwatch.Start ();
 			var success = CreateJavaSources (javaTypes, cache, classifier, useMarshalMethods);
-			stopwatch.Stop ();
-			Log.LogDebugMessage ($"Stopwatch #4, elapsed: {stopwatch.Elapsed}");
 			if (!success)
 				return;
 
@@ -269,11 +249,7 @@ namespace Xamarin.Android.Tasks
 
 			// Step 3 - Generate type maps
 			//   Type mappings need to use all the assemblies, always.
-			stopwatch.Reset ();
-			stopwatch.Start ();
 			WriteTypeMappings (allJavaTypes, cache);
-			stopwatch.Stop ();
-			Log.LogDebugMessage ($"Stopwatch #5, elapsed: {stopwatch.Elapsed}");
 
 			// We need to save a map of .NET type -> ACW type for resource file fixups
 			var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
