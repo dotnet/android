@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 //using System.IO.MemoryMappedFiles;
 
@@ -58,15 +59,25 @@ class XAJavaTypeScanner
 	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, DirectoryAssemblyResolver resolver)
 	{
 		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
+		var stopwatch = new Stopwatch ();
 		foreach (ITaskItem asmItem in inputAssemblies) {
 			AndroidTargetArch arch = GetTargetArch (asmItem);
-			AssemblyDefinition asmdef = LoadAssembly (asmItem.ItemSpec, resolver);
 
+			stopwatch.Start ();
+			AssemblyDefinition asmdef = LoadAssembly (asmItem.ItemSpec, resolver);
+			stopwatch.Stop ();
+			log.LogMessage ($"Load of assembly '{asmItem.ItemSpec}', elapsed: {stopwatch.Elapsed}");
+			stopwatch.Reset ();
+
+			stopwatch.Start ();
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
 					AddJavaType (td, types, arch);
 				}
 			}
+			stopwatch.Stop ();
+			log.LogMessage ($"Add all types from assembly '{asmItem.ItemSpec}', elapsed: {stopwatch.Elapsed}");
+			stopwatch.Reset ();
 		}
 
 		var ret = new List<JavaType> ();
