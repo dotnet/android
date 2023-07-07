@@ -23,58 +23,9 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
-		[SetUpFixture]
-		public class SetUp
-		{
-			public static string TestDirectoryRoot {
-				get;
-				private set;
-			}
-
-			[OneTimeSetUp]
-			public void BeforeAllTests ()
-			{
-				TestDirectoryRoot = XABuildPaths.TestOutputDirectory;
-			}
-
-			[OneTimeTearDown]
-			public void AfterAllTests ()
-			{
-				if (System.Diagnostics.Debugger.IsAttached)
-					return;
-
-				//NOTE: adb.exe can cause a couple issues on Windows
-				//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
-				//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
-
-				try {
-					RunAdbCommand ("kill-server", true);
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
-				}
-
-				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
-				foreach (var p in Process.GetProcessesByName ("adb.exe"))
-					p.Kill ();
-			}
-
-		}
-
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
-		protected bool IsMacOS => TestEnvironment.IsMacOS;
-
-		protected bool IsLinux => TestEnvironment.IsLinux;
-
-		public string StagingPath {
-			get { return Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments); }
-		}
-
-		public string Root {
-			get {
-				return Path.GetFullPath (SetUp.TestDirectoryRoot);
-			}
-		}
+		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 
 		public static bool CommercialBuildAvailable => TestEnvironment.CommercialBuildAvailable;
 
@@ -567,6 +518,28 @@ namespace Xamarin.Android.Build.Tests
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
 			TestContext.Out.Flush ();
+		}
+
+		[OneTimeTearDown]
+		protected virtual void AfterAllTests ()
+		{
+			if (System.Diagnostics.Debugger.IsAttached)
+				return;
+
+			//NOTE: adb.exe can cause a couple issues on Windows
+			//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
+			//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
+			if (IsWindows) {
+				try {
+					RunAdbCommand ("kill-server", true);
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
+				}
+
+				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
+				foreach (var p in Process.GetProcessesByName ("adb.exe"))
+					p.Kill ();
+			}
 		}
 
 		[TearDown]

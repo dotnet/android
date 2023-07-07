@@ -363,6 +363,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
 </ItemGroup>
 
+<!-- Assets build properties -->
+<PropertyGroup>
+	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
+	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
+</PropertyGroup>
+
 <!--
 *******************************************
           Imports
@@ -439,7 +445,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml">
   <MakeDir
       Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MamJsonToXml
       MappingFiles="@(_AndroidMamMappingFile)"
@@ -464,7 +470,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(_XARemapMembersFilePath)">
   <MakeDir
       Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MergeRemapXml
       InputRemapXmlFiles="@(_AndroidRemapMembers)"
@@ -879,12 +885,6 @@ because xbuild doesn't support framework reference assemblies.
 		JavaSdkPath="$(_JavaSdkDirectory)"
 	/>
 </Target>
-
-<!-- Assets build properties -->
-<PropertyGroup>
-	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
-	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
-</PropertyGroup>
 
 <!-- Assets Build -->
 
