@@ -35,7 +35,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
-		public void Rewrite (DirectoryAssemblyResolver resolver, bool brokenExceptionTransitions)
+		public void Rewrite (XAAssemblyResolver resolver, bool brokenExceptionTransitions)
 		{
 			if (resolver == null) {
 				throw new ArgumentNullException (nameof (resolver));
@@ -460,7 +460,7 @@ namespace Xamarin.Android.Tasks
 			return assemblyPaths[asm];
 		}
 
-		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (DirectoryAssemblyResolver resolver)
+		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (XAAssemblyResolver resolver)
 		{
 			AssemblyDefinition asm = resolver.Resolve ("System.Runtime.InteropServices");
 			TypeDefinition unmanagedCallersOnlyAttribute = null;

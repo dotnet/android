@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks {
 		public string ApplicationLabel { get; set; }
 		public string [] Placeholders { get; set; }
 		public List<string> Assemblies { get; set; }
-		public DirectoryAssemblyResolver Resolver { get; set; }
+		public IAssemblyResolver Resolver { get; set; }
 		public string SdkDir { get; set; }
 		public string TargetSdkVersion { get; set; }
 		public string MinSdkVersion { get; set; }

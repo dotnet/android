@@ -104,7 +104,7 @@ namespace Xamarin.Android.Tasks
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (DirectoryAssemblyResolver res = MakeResolver (useMarshalMethods)) {
+				using (XAAssemblyResolver res = MakeResolver (useMarshalMethods)) {
 					Run (res, useMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
@@ -123,7 +123,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		DirectoryAssemblyResolver MakeResolver (bool useMarshalMethods)
+		XAAssemblyResolver MakeResolver (bool useMarshalMethods)
 		{
 			var readerParams = new ReaderParameters();
 			if (useMarshalMethods) {
@@ -131,17 +131,17 @@ namespace Xamarin.Android.Tasks
 				readerParams.InMemory = true;
 			}
 
-			var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams);
+			var res = new XAAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
 			foreach (var dir in FrameworkDirectories) {
 				if (Directory.Exists (dir.ItemSpec)) {
-					res.SearchDirectories.Add (dir.ItemSpec);
+					res.FrameworkSearchDirectories.Add (dir.ItemSpec);
 				}
 			}
 
 			return res;
 		}
 
-		void Run (DirectoryAssemblyResolver res, bool useMarshalMethods)
+		void Run (XAAssemblyResolver res, bool useMarshalMethods)
 		{
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				res.Load (assembly.ItemSpec);
+				res.Load (MonoAndroidHelper.GetTargetArch (assembly), assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
@@ -197,6 +197,7 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
+				res.Load (MonoAndroidHelper.GetTargetArch (asm), asm.ItemSpec);
 				MaybeAddAbiSpecifcAssembly (asm, Path.GetFileName (asm.ItemSpec));
 				if (!allTypemapAssemblies.ContainsKey (asm.ItemSpec)) {
 					allTypemapAssemblies.Add (asm.ItemSpec, asm);
@@ -421,7 +422,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		AssemblyDefinition LoadAssembly (string path, DirectoryAssemblyResolver? resolver = null)
+		AssemblyDefinition LoadAssembly (string path, XAAssemblyResolver? resolver = null)
 		{
 			string pdbPath = Path.ChangeExtension (path, ".pdb");
 			var readerParameters = new ReaderParameters {
@@ -594,7 +595,7 @@ namespace Xamarin.Android.Tasks
 		/// information is required by <see cref="MarshalMethodsAssemblyRewriter"/> to be available for each <see cref="MarshalMethodEntry"/>
 		/// </para>
 		/// </summary>
-		Dictionary<AssemblyDefinition, string> AddMethodsFromAbiSpecificAssemblies (MarshalMethodsClassifier classifier, DirectoryAssemblyResolver resolver, Dictionary<string, List<ITaskItem>> abiSpecificAssemblies)
+		Dictionary<AssemblyDefinition, string> AddMethodsFromAbiSpecificAssemblies (MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, Dictionary<string, List<ITaskItem>> abiSpecificAssemblies)
 		{
 			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = classifier.MarshalMethods;
 			ICollection<AssemblyDefinition> assemblies = classifier.Assemblies;
@@ -653,7 +654,7 @@ namespace Xamarin.Android.Tasks
 			return assemblyMarshalMethods;
 		}
 
-		void FindMatchingMethodsInAssembly (ITaskItem assemblyItem, MarshalMethodsClassifier classifier, List<MarshalMethodEntry> assemblyMarshalMethods, DirectoryAssemblyResolver resolver, List<AssemblyDefinition> newAssemblies, Dictionary<AssemblyDefinition, string> assemblyPaths)
+		void FindMatchingMethodsInAssembly (ITaskItem assemblyItem, MarshalMethodsClassifier classifier, List<MarshalMethodEntry> assemblyMarshalMethods, XAAssemblyResolver resolver, List<AssemblyDefinition> newAssemblies, Dictionary<AssemblyDefinition, string> assemblyPaths)
 		{
 			AssemblyDefinition asm = LoadAssembly (assemblyItem.ItemSpec, resolver);
 			newAssemblies.Add (asm);

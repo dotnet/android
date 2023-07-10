@@ -53,12 +53,12 @@ class XAJavaTypeScanner
 		this.cache = cache;
 	}
 
-	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, DirectoryAssemblyResolver resolver)
+	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
 		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
 		foreach (ITaskItem asmItem in inputAssemblies) {
-			AndroidTargetArch arch = GetTargetArch (asmItem);
-			AssemblyDefinition asmdef = resolver.GetAssembly (asmItem.ItemSpec);
+			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
+			AssemblyDefinition asmdef = resolver.Load (arch, asmItem.ItemSpec);
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
@@ -116,21 +116,5 @@ class XAJavaTypeScanner
 		foreach (TypeDefinition nested in type.NestedTypes) {
 			AddJavaType (nested, types, arch);
 		}
-	}
-
-	AndroidTargetArch GetTargetArch (ITaskItem asmItem)
-	{
-		string? abi = asmItem.GetMetadata ("Abi");
-		if (String.IsNullOrEmpty (abi)) {
-			return AndroidTargetArch.None;
-		}
-
-		return abi switch {
-			"armeabi-v7a" => AndroidTargetArch.Arm,
-			"arm64-v8a"   => AndroidTargetArch.Arm64,
-			"x86"         => AndroidTargetArch.X86,
-			"x86_64"      => AndroidTargetArch.X86_64,
-			_             => throw new NotSupportedException ($"Unsupported ABI '{abi}' for assembly {asmItem.ItemSpec}")
-		};
 	}
 }
