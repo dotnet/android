@@ -576,6 +576,16 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem)
+		{
+			string? abi = asmItem.GetMetadata ("Abi");
+			if (String.IsNullOrEmpty (abi)) {
+				return AndroidTargetArch.None;
+			}
+
+			return AbiToTargetArch (abi);
+		}
+
 		public static string ArchToRid (AndroidTargetArch arch)
 		{
 			return arch switch {
