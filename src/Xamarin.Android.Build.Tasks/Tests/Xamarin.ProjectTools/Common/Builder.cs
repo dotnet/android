@@ -265,6 +265,7 @@ namespace Xamarin.ProjectTools
 				}
 
 				psi.SetEnvironmentVariable ("MSBUILD", "msbuild");
+				psi.SetEnvironmentVariable ("MSBUILDLOGALLENVIRONMENTVARIABLES", "1"); // So .binlog files contain all env vars
 				sw.WriteLine ($"/bl:\"{Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), $"{binlogName}.binlog"))}\"");
 
 				if (environmentVariables != null) {
