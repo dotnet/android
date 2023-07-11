@@ -465,6 +465,7 @@ stages:
       clean: all
     steps:
     - checkout: self
+      submodules: recursive
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -504,7 +505,7 @@ stages:
         }
         Write-Host "Extracting $($filesToExtract.Count) file(s)..."
         foreach ($archive in $filesToExtract) {
-            $dest = Join-Path $(Build.StagingDirectory)\components $archive.BaseName
+            $dest = Join-Path $(Build.StagingDirectory)\packages $archive.BaseName
             if (Test-Path $dest) {
                 Write-Error "    Unable to extract duplicate file: $($archive.FullName)"
                 exit -1
@@ -519,7 +520,7 @@ stages:
     - template: compliance/sbom/scan.v1.yml@yaml-templates
       parameters:
         dropDirectory: $(Build.StagingDirectory)\packages
-        componentsDirectory: $(Build.StagingDirectory)\components
+        componentsDirectory: $(Build.SourcesDirectory)
         packageName: .NET Android
 
 # Check - "Xamarin.Android (Compliance)"
