@@ -94,6 +94,11 @@ This file contains the .NET 5-specific targets to customize ILLink
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
       />
+      <_TrimmerCustomSteps
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          AfterStep="CleanStep"
+          Type="MonoDroid.Tuner.AddRidMetadataAttributeStep"
+      />
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
