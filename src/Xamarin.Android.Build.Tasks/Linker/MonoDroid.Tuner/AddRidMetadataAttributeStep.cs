@@ -4,6 +4,10 @@ using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
 
+#if ILLINK
+using Microsoft.Android.Sdk.ILLink;
+#endif
+
 namespace MonoDroid.Tuner;
 
 public class AddRidMetadataAttributeStep : BaseStep
@@ -19,6 +23,16 @@ public class AddRidMetadataAttributeStep : BaseStep
 			return;
 		}
 
+		string? rid = null;
+#if ILLINK
+		if (!Context.TryGetCustomData ("XARuntimeIdentifier", out rid)) {
+			throw new InvalidOperationException ("Missing XARuntimeIdentifier custom data");
+		}
+#endif
+		if (String.IsNullOrEmpty (rid)) {
+			throw new InvalidOperationException ("RID must have a non-empty value");
+		}
+
 		AssemblyDefinition corlib = GetCorlib ();
 		MethodDefinition assemblyMetadataAttributeCtor = FindAssemblyMetadataAttributeCtor (corlib);
 		TypeDefinition systemString = GetSystemString (corlib);
@@ -27,7 +41,7 @@ public class AddRidMetadataAttributeStep : BaseStep
 		attr.ConstructorArguments.Add (new CustomAttributeArgument (systemString, "XamarinAndroidAbi")); // key
 
 		// TODO: figure out how to get the RID...
-		attr.ConstructorArguments.Add (new CustomAttributeArgument (systemString, assembly.MainModule.FileName)); // value
+		attr.ConstructorArguments.Add (new CustomAttributeArgument (systemString, rid)); // value
 
 		assembly.CustomAttributes.Add (attr);
 
