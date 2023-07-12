@@ -536,6 +536,26 @@ namespace Xamarin.Android.Tasks
 			return path;
 		}
 
+		public static AndroidTargetArch AbiToTargetArch (string abi)
+		{
+			switch (abi) {
+				case "arm64-v8a":
+					return AndroidTargetArch.Arm64;
+
+				case "armeabi-v7a":
+					return AndroidTargetArch.Arm;
+
+				case "x86":
+					return AndroidTargetArch.X86;
+
+				case "x86_64":
+					return AndroidTargetArch.X86_64;
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+			}
+		}
+
 		public static string? CultureInvariantToString (object? obj)
 		{
 			if (obj == null) {
@@ -560,6 +580,22 @@ namespace Xamarin.Android.Tasks
 				apiLevel = parsedVersion.Major;
 			}
 			return apiLevel;
+		}
+
+		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem)
+		{
+			string? abi = asmItem.GetMetadata ("Abi");
+			if (String.IsNullOrEmpty (abi)) {
+				return AndroidTargetArch.None;
+			}
+
+			return abi switch {
+				"armeabi-v7a" => AndroidTargetArch.Arm,
+					"arm64-v8a"   => AndroidTargetArch.Arm64,
+					"x86"         => AndroidTargetArch.X86,
+					"x86_64"      => AndroidTargetArch.X86_64,
+					_             => throw new NotSupportedException ($"Unsupported ABI '{abi}' for assembly {asmItem.ItemSpec}")
+					};
 		}
 	}
 }

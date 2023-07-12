@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 
 using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -144,56 +145,80 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		readonly NativeTypeMappingData mappingData;
+		sealed class ArchGenerationState
+		{
+			public readonly List<StructureInstance<TypeMapModule>> MapModules;
+			public readonly List<StructureInstance<TypeMapJava>> JavaMap;
+			public readonly Dictionary<string, TypeMapJava> JavaTypesByName;
+			public readonly List<string> JavaNames;
+			public readonly NativeTypeMappingData MappingData;
+			public ulong ModuleCounter = 0;
+
+			public ArchGenerationState (NativeTypeMappingData mappingData)
+			{
+				MapModules = new List<StructureInstance<TypeMapModule>> ();
+				JavaMap = new List<StructureInstance<TypeMapJava>> ();
+				JavaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
+				JavaNames = new List<string> ();
+				MappingData = mappingData;
+			}
+		}
+
 		StructureInfo<TypeMapJava> typeMapJavaStructureInfo;
 		StructureInfo<TypeMapModule> typeMapModuleStructureInfo;
 		StructureInfo<TypeMapModuleEntry> typeMapModuleEntryStructureInfo;
-		List<StructureInstance<TypeMapModule>> mapModules;
-		List<StructureInstance<TypeMapJava>> javaMap;
-		Dictionary<string, TypeMapJava> javaTypesByName;
-		List<string> javaNames;
+		Dictionary<AndroidTargetArch, ArchGenerationState> archState;
+
 		JavaNameHashComparer javaNameHashComparer;
 
-		ulong moduleCounter = 0;
-
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (Dictionary<AndroidTargetArch, NativeTypeMappingData> mappingData)
 		{
-			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
-			mapModules = new List<StructureInstance<TypeMapModule>> ();
-			javaMap = new List<StructureInstance<TypeMapJava>> ();
-			javaTypesByName = new Dictionary<string, TypeMapJava> (StringComparer.Ordinal);
+			if (mappingData == null) {
+				throw new ArgumentNullException (nameof (mappingData));
+			}
+
 			javaNameHashComparer = new JavaNameHashComparer ();
-			javaNames = new List<string> ();
+			archState = new Dictionary<AndroidTargetArch, ArchGenerationState> (mappingData.Count);
+
+			foreach (var kvp in mappingData) {
+				if (kvp.Value == null) {
+					throw new ArgumentException ("must not contain null values", nameof (mappingData));
+				}
+
+				archState.Add (kvp.Key, new ArchGenerationState (kvp.Value));
+			}
 		}
 
 		public override void Init ()
 		{
-			InitMapModules ();
-			InitJavaMap ();
+			foreach (var kvp in archState) {
+				InitMapModules (kvp.Value);
+				InitJavaMap (kvp.Value);
+			}
 		}
 
-		void InitJavaMap ()
+		void InitJavaMap (ArchGenerationState state)
 		{
 			TypeMapJava map_entry;
-			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in mappingData.JavaTypes) {
-				javaNames.Add (entry.JavaName);
+			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in state.MappingData.JavaTypes) {
+				state.JavaNames.Add (entry.JavaName);
 
 				map_entry = new TypeMapJava {
 					module_index = (uint)entry.ModuleIndex, // UInt32.MaxValue,
 					type_token_id = entry.SkipInJavaToManaged ? 0 : entry.Token,
-					java_name_index = (uint)(javaNames.Count - 1),
+					java_name_index = (uint)(state.JavaNames.Count - 1),
 					JavaName = entry.JavaName,
 				};
 
-				javaMap.Add (new StructureInstance<TypeMapJava> (map_entry));
-				javaTypesByName.Add (map_entry.JavaName, map_entry);
+				state.JavaMap.Add (new StructureInstance<TypeMapJava> (map_entry));
+				state.JavaTypesByName.Add (map_entry.JavaName, map_entry);
 			}
 		}
 
-		void InitMapModules ()
+		void InitMapModules (ArchGenerationState state)
 		{
-			foreach (TypeMapGenerator.ModuleReleaseData data in mappingData.Modules) {
-				string mapName = $"module{moduleCounter++}_managed_to_java";
+			foreach (TypeMapGenerator.ModuleReleaseData data in state.MappingData.Modules) {
+				string mapName = $"module{state.ModuleCounter++}_managed_to_java";
 				string duplicateMapName;
 
 				if (data.DuplicateTypes.Count == 0)
@@ -214,7 +239,7 @@ namespace Xamarin.Android.Tasks
 					java_name_width = 0,
 				};
 
-				mapModules.Add (new StructureInstance<TypeMapModule> (map_module));
+				state.MapModules.Add (new StructureInstance<TypeMapModule> (map_module));
 			}
 		}
 
@@ -228,7 +253,7 @@ namespace Xamarin.Android.Tasks
 
 		// Prepare module map entries by sorting them on the managed token, and then mapping each entry to its corresponding Java type map index.
 		// Requires that `javaMap` is sorted on the type name hash.
-		void PrepareMapModuleData (string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, List<ModuleMapData> allModulesData)
+		void PrepareMapModuleData (ArchGenerationState state, string moduleDataSymbolLabel, IEnumerable<TypeMapGenerator.TypeMapReleaseEntry> moduleEntries, List<ModuleMapData> allModulesData)
 		{
 			var mapModuleEntries = new List<StructureInstance<TypeMapModuleEntry>> ();
 			foreach (TypeMapGenerator.TypeMapReleaseEntry entry in moduleEntries) {
@@ -244,12 +269,12 @@ namespace Xamarin.Android.Tasks
 
 			uint GetJavaEntryIndex (string javaTypeName)
 			{
-				if (!javaTypesByName.TryGetValue (javaTypeName, out TypeMapJava javaType)) {
+				if (!state.JavaTypesByName.TryGetValue (javaTypeName, out TypeMapJava javaType)) {
 					throw new InvalidOperationException ($"INTERNAL ERROR: Java type '{javaTypeName}' not found in cache");
 				}
 
 				var key = new StructureInstance<TypeMapJava> (javaType);
-				int idx = javaMap.BinarySearch (key, javaNameHashComparer);
+				int idx = state.JavaMap.BinarySearch (key, javaNameHashComparer);
 				if (idx < 0) {
 					throw new InvalidOperationException ($"Could not map entry '{javaTypeName}' to array index");
 				}
@@ -261,32 +286,32 @@ namespace Xamarin.Android.Tasks
 		// Generate hashes for all Java type names, then sort javaMap on the name hash.  This has to be done in the writing phase because hashes
 		// will depend on architecture (or, actually, on its bitness) and may differ between architectures (they will be the same for all architectures
 		// with the same bitness)
-		(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) PrepareMapsForWriting (LlvmIrGenerator generator)
+		(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) PrepareMapsForWriting (ArchGenerationState state, LlvmIrGenerator generator)
 		{
 			bool is64Bit = generator.Is64Bit;
 
 			// Generate Java type name hashes...
-			for (int i = 0; i < javaMap.Count; i++) {
-				TypeMapJava entry = javaMap[i].Obj;
+			for (int i = 0; i < state.JavaMap.Count; i++) {
+				TypeMapJava entry = state.JavaMap[i].Obj;
 				entry.JavaNameHash = HashName (entry.JavaName);
 			}
 
 			// ...sort them...
-			javaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Obj.JavaNameHash.CompareTo (b.Obj.JavaNameHash));
+			state.JavaMap.Sort ((StructureInstance<TypeMapJava> a, StructureInstance<TypeMapJava> b) => a.Obj.JavaNameHash.CompareTo (b.Obj.JavaNameHash));
 
 			var allMapModulesData = new List<ModuleMapData> ();
 
 			// ...and match managed types to Java...
-			foreach (StructureInstance<TypeMapModule> moduleInstance in mapModules) {
+			foreach (StructureInstance<TypeMapModule> moduleInstance in state.MapModules) {
 				TypeMapModule module = moduleInstance.Obj;
-				PrepareMapModuleData (module.MapSymbolName, module.Data.Types, allMapModulesData);
+				PrepareMapModuleData (state, module.MapSymbolName, module.Data.Types, allMapModulesData);
 				if (module.Data.DuplicateTypes.Count > 0) {
-					PrepareMapModuleData (module.DuplicateMapSymbolName, module.Data.DuplicateTypes, allMapModulesData);
+					PrepareMapModuleData (state, module.DuplicateMapSymbolName, module.Data.DuplicateTypes, allMapModulesData);
 				}
 			}
 
 			var javaMapHashes = new HashSet<ulong> ();
-			foreach (StructureInstance<TypeMapJava> entry in javaMap) {
+			foreach (StructureInstance<TypeMapJava> entry in state.JavaMap) {
 				javaMapHashes.Add (entry.Obj.JavaNameHash);
 			}
 
@@ -315,22 +340,30 @@ namespace Xamarin.Android.Tasks
 
 		protected override void Write (LlvmIrGenerator generator)
 		{
-			generator.WriteVariable ("map_module_count", mappingData.MapModuleCount);
-			generator.WriteVariable ("java_type_count", javaMap.Count); // must include the padding item, if any
+			ArchGenerationState state;
 
-			(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) = PrepareMapsForWriting (generator);
-			WriteMapModules (generator, allMapModulesData);
-			WriteJavaMap (generator, javaMapHashes);
+			try {
+				state = archState[generator.TargetArch];
+			} catch (KeyNotFoundException ex) {
+				throw new InvalidOperationException ($"Internal error: architecture {generator.TargetArch} has not been prepared for writing.", ex);
+			}
+
+			generator.WriteVariable ("map_module_count", state.MappingData.MapModuleCount);
+			generator.WriteVariable ("java_type_count", state.JavaMap.Count); // must include the padding item, if any
+
+			(List<ModuleMapData> allMapModulesData, List<ulong> javaMapHashes) = PrepareMapsForWriting (state, generator);
+			WriteMapModules (state, generator, allMapModulesData);
+			WriteJavaMap (state, generator, javaMapHashes);
 		}
 
-		void WriteJavaMap (LlvmIrGenerator generator, List<ulong> javaMapHashes)
+		void WriteJavaMap (ArchGenerationState state, LlvmIrGenerator generator, List<ulong> javaMapHashes)
 		{
 			generator.WriteEOL ();
 			generator.WriteEOL ("Java to managed map");
 
 			generator.WriteStructureArray (
 				typeMapJavaStructureInfo,
-				javaMap,
+				state.JavaMap,
 				LlvmIrVariableOptions.GlobalConstant,
 				"map_java"
 			);
@@ -347,7 +380,7 @@ namespace Xamarin.Android.Tasks
 				WriteHashes (hashes);
 			}
 
-			generator.WriteArray (javaNames, "java_type_names");
+			generator.WriteArray (state.JavaNames, "java_type_names");
 
 			void WriteHashes<T> (List<T> hashes) where T: struct
 			{
@@ -355,14 +388,14 @@ namespace Xamarin.Android.Tasks
 					hashes,
 					LlvmIrVariableOptions.GlobalConstant,
 					"map_java_hashes",
-					(int idx, T value) => $"{idx}: 0x{value:x} => {javaMap[idx].Obj.JavaName}"
+					(int idx, T value) => $"{idx}: 0x{value:x} => {state.JavaMap[idx].Obj.JavaName}"
 				);
 			}
 		}
 
-		void WriteMapModules (LlvmIrGenerator generator, List<ModuleMapData> mapModulesData)
+		void WriteMapModules (ArchGenerationState state, LlvmIrGenerator generator, List<ModuleMapData> mapModulesData)
 		{
-			if (mapModules.Count == 0) {
+			if (state.MapModules.Count == 0) {
 				return;
 			}
 
@@ -381,7 +414,7 @@ namespace Xamarin.Android.Tasks
 			generator.WriteEOL ("Map modules");
 			generator.WriteStructureArray (
 				typeMapModuleStructureInfo,
-				mapModules,
+				state.MapModules,
 				LlvmIrVariableOptions.GlobalWritable,
 				"map_modules"
 			);
