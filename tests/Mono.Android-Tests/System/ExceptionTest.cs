@@ -25,7 +25,7 @@ namespace Xamarin.Android.RuntimeTests {
 			);
 
 			Assert.AreNotEqual (null, create, "Unable to find the Android.Runtime.JavaProxyThrowable.Create(Exception) method");
-			return create.Invoke (null, new object[] { e });
+			return (Java.Lang.Throwable)create.Invoke (null, new object[] { e });
 		}
 
 		[Test]
