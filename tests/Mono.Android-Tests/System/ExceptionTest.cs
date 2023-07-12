@@ -1,5 +1,6 @@
 using System;
 using System.Globalization;
+using System.Reflection;
 
 using Android.App;
 using Android.Content;
@@ -17,7 +18,14 @@ namespace Xamarin.Android.RuntimeTests {
 			var JavaProxyThrowable_type = typeof (Java.Lang.Object)
 				.Assembly
 				.GetType ("Android.Runtime.JavaProxyThrowable");
-			return (Java.Lang.Throwable) Activator.CreateInstance (JavaProxyThrowable_type, e);
+			MethodInfo? create = JavaProxyThrowable_type.GetMethod (
+				"Create",
+				BindingFlags.Static | BindingFlags.Public,
+				new Type[] { typeof(Exception) }
+			);
+
+			Assert.AreNotEqual (null, create, "Unable to find the Android.Runtime.JavaProxyThrowable.Create(Exception) method");
+			return create.Invoke (null, new object[] { e });
 		}
 
 		[Test]
