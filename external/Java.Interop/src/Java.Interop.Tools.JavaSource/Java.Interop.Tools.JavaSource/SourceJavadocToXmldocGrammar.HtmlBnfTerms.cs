@@ -131,9 +131,17 @@ namespace Java.Interop.Tools.JavaSource {
 					}
 				};
 
-				CodeElementDeclaration.Rule = CreateStartElement ("code", grammar) + InlineDeclarations + CreateEndElement ("code", grammar);
+				CodeElementDeclaration.Rule = CodeElementContentTerm;
 				CodeElementDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					var target = parseNode.ChildNodes [1].AstNode;
+					// Parse the entire <code> element captured in the token
+					var codeElementText = parseNode.ChildNodes [0].Token.Text;
+					int startIndex = codeElementText.IndexOf ('>');
+					int stopIndex = codeElementText.LastIndexOf ('<');
+					if (startIndex == -1 || stopIndex == -1) {
+						parseNode.AstNode = new XText (codeElementText);
+						return;
+					}
+					var target = codeElementText.Substring (startIndex + 1, stopIndex - startIndex - 1);
 					parseNode.AstNode = new XElement ("c", target);
 				};
 			}
@@ -231,6 +239,12 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal PreBlockDeclaration         = new NonTerminal (nameof (PreBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal InlineHyperLinkDeclaration  = new NonTerminal (nameof (InlineHyperLinkDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal CodeElementDeclaration      = new NonTerminal (nameof (CodeElementDeclaration), ConcatChildNodes);
+
+			public  readonly    Terminal    CodeElementContentTerm      = new RegexBasedTerminal ("<code>", $@"(?i)<code\s*[^>]*>(.|\s)*?(<\/code>|<\/null>|<code>)") {
+				AstConfig = new AstNodeConfig {
+					NodeCreator = (context, parseNode) => parseNode.AstNode = "",
+				},
+			};
 
 			public  readonly    Terminal    InlineHyperLinkOpenTerm     = new RegexBasedTerminal ("<a attr=", @"(?i)<a\s*.*=") {
 				AstConfig = new AstNodeConfig {

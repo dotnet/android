@@ -144,16 +144,36 @@ more description here.</para>
 </member>",
 			},
 			new ParseResult {
-				Javadoc = "Something {@link #method}: description, \"<code>declaration</code>\" or \"<code>another declaration</code>\".\n\n@apiSince 1\n",
+				Javadoc = "Something {@link #method}: description, \"<code>declaration</code>\" or <code><pre><p>some content</code></pre></p>.\n\n@apiSince 1\n",
 				FullXml = @"<member>
-  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</summary>
+  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or <c>&lt;pre&gt;&lt;p&gt;some content</c>&lt;/pre&gt;&lt;/p&gt;.</summary>
   <remarks>
-    <para>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</para>
+    <para>Something <c>#method</c>: description, ""<c>declaration</c>"" or <c>&lt;pre&gt;&lt;p&gt;some content</c>&lt;/pre&gt;&lt;/p&gt;.</para>
     <para>Added in API level 1.</para>
   </remarks>
 </member>",
 				IntelliSenseXml = @"<member>
-  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or ""<c>another declaration</c>"".</summary>
+  <summary>Something <c>#method</c>: description, ""<c>declaration</c>"" or <c>&lt;pre&gt;&lt;p&gt;some content</c>&lt;/pre&gt;&lt;/p&gt;.</summary>
+</member>",
+			},
+			new ParseResult {
+				Javadoc = @"The result code will be <code>Activity.RESULT_OK<code> for success,
+  or one of these errors:
+  <code>RESULT_ERROR_GENERIC_FAILURE</code>",
+				FullXml = @"<member>
+  <summary>The result code will be <c>Activity.RESULT_OK</c> for success,
+  or one of these errors:
+  <c>RESULT_ERROR_GENERIC_FAILURE</c></summary>
+  <remarks>
+    <para>The result code will be <c>Activity.RESULT_OK</c> for success,
+  or one of these errors:
+  <c>RESULT_ERROR_GENERIC_FAILURE</c></para>
+  </remarks>
+</member>",
+				IntelliSenseXml = @"<member>
+  <summary>The result code will be <c>Activity.RESULT_OK</c> for success,
+  or one of these errors:
+  <c>RESULT_ERROR_GENERIC_FAILURE</c></summary>
 </member>",
 			},
 			new ParseResult {
