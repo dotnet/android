@@ -96,6 +96,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
       />
       <_TrimmerCustomSteps
+          Condition=" '$(_AndroidAddRuntimeIdentifierToAssemblies)' == 'true' "
           Include="$(_AndroidLinkerCustomStepAssembly)"
           AfterStep="CleanStep"
           Type="MonoDroid.Tuner.AddRidMetadataAttributeStep"
