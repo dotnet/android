@@ -69,7 +69,27 @@ namespace Java.Interop.Tools.JavaSource.Tests
 
 			r = p.Parse ("<a href=\"AutofillService.html#FieldClassification\">field classification</a>");
 			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
-			Assert.AreEqual ("\"AutofillService.html#FieldClassification\"&gt;field classification",
+			Assert.AreEqual ("field classification", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href=https://www.sqlite.org/pragma.html#pragma_journal_mode>here</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<see href=\"https://www.sqlite.org/pragma.html#pragma_journal_mode\">here</see>", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href=\"https://github.com/google/libphonenumber>libphonenumber</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("<see href=\"https://github.com/google/libphonenumber\">libphonenumber</see>", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href=#BROKEN> broken</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual (" broken", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href=\"mailto:nobody@google.com\">nobody</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ("nobody", r.Root.AstNode.ToString ());
+
+			r = p.Parse ("<a href='https://material.io/guidelines/components/progress-activity.html#progress-activity-types-of-indicators'>\nProgress & activity</a>");
+			Assert.IsFalse (r.HasErrors (), DumpMessages (r, p));
+			Assert.AreEqual ($"<see href=\"https://material.io/guidelines/components/progress-activity.html#progress-activity-types-of-indicators\">{Environment.NewLine}Progress &amp; activity</see>",
 					r.Root.AstNode.ToString ());
 		}
 

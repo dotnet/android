@@ -109,15 +109,6 @@ namespace Java.Interop.Tools.JavaSource {
 					}
 				};
 
-				// Inline content may contain reserved characters with no tags or special parsing rules, do not throw when encountering them
-				IgnorableDeclaration.Rule = grammar.ToTerm ("@ ")
-					| grammar.ToTerm ("{")
-					| grammar.ToTerm ("}")
-					;
-				IgnorableDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					parseNode.AstNode = new XText (parseNode.ChildNodes [0].Term.Name.Trim ());
-				};
-
 				InlineParamDeclaration.Rule = grammar.ToTerm ("{@param") + InlineValue + "}";
 				InlineParamDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
 					var target = parseNode.ChildNodes [1].AstNode;
@@ -156,9 +147,38 @@ namespace Java.Interop.Tools.JavaSource {
 			// https://docs.oracle.com/javase/7/docs/technotes/tools/windows/javadoc.html#value
 			public  readonly    NonTerminal ValueDeclaration            = new NonTerminal (nameof (ValueDeclaration));
 
-			public  readonly    NonTerminal IgnorableDeclaration        = new NonTerminal (nameof (IgnorableDeclaration));
-
 			public  readonly    NonTerminal InlineParamDeclaration      = new NonTerminal (nameof (InlineParamDeclaration));
+
+			public  readonly    Terminal    IgnorableDeclaration        = new IgnorableCharTerminal (nameof (IgnorableDeclaration)) {
+				AstConfig = new AstNodeConfig {
+					NodeCreator = (context, parseNode) => parseNode.AstNode = parseNode.Token.Value.ToString (),
+				},
+			};
+
 		}
 	}
+
+	class IgnorableCharTerminal : Terminal
+	{
+		public IgnorableCharTerminal (string name)
+			: base (name)
+		{
+			Priority = TerminalPriority.Low - 1;
+		}
+
+		public override Token? TryMatch (ParsingContext context, ISourceStream source)
+		{
+			var startChar = source.Text [source.Location.Position];
+			if (startChar != '@'
+				&& startChar != '{'
+				&& startChar != '}'
+				) {
+				return null;
+			}
+			source.PreviewPosition += 1;
+			return source.CreateToken (OutputTerminal, startChar);
+		}
+
+	}
+
 }

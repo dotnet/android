@@ -25,7 +25,6 @@ namespace Java.Interop.Tools.JavaSource {
 				AllHtmlTerms.Rule = TopLevelInlineDeclaration
 					| PBlockDeclaration
 					| PreBlockDeclaration
-					| IgnorableElementDeclaration
 					;
 
 				var inlineDeclaration = new NonTerminal ("<html inline decl>", ConcatChildNodes) {
@@ -102,39 +101,34 @@ namespace Java.Interop.Tools.JavaSource {
 
 				InlineHyperLinkDeclaration.Rule = InlineHyperLinkOpenTerm + InlineDeclarations + CreateEndElement ("a", grammar, optional: true);
 				InlineHyperLinkDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					var unparsedAElementValue = string.Empty;
-					foreach (var cn in parseNode.ChildNodes) {
-						if (cn.ChildNodes?.Count > 1) {
-							foreach (var gcn in cn.ChildNodes) {
-								unparsedAElementValue += gcn.AstNode?.ToString ();
-							}
-						} else {
-							unparsedAElementValue += cn.AstNode?.ToString ();
-						}
+					var nodesAsString = GetChildNodesAsString (parseNode);
+					var tokenValue = parseNode.ChildNodes [0].Token.Text;
+					int stopIndex = nodesAsString.IndexOf ('>');
+
+					if (stopIndex == -1 || !tokenValue.Contains ("href", StringComparison.OrdinalIgnoreCase)) {
+						parseNode.AstNode = new XText (nodesAsString);
+						return;
 					}
 
-					var seeElement = TryParseHRef (unparsedAElementValue);
-					if (seeElement == null)
-						seeElement = TryParseHRef (WebUtility.HtmlDecode (unparsedAElementValue), logError: true);
-
-					var hrefValue = seeElement?.Attribute ("href")?.Value ?? string.Empty;
-					if (!string.IsNullOrEmpty (hrefValue) &&
-							(hrefValue.StartsWith ("http", StringComparison.OrdinalIgnoreCase) || hrefValue.StartsWith ("www", StringComparison.OrdinalIgnoreCase))) {
-						parseNode.AstNode = seeElement;
+					var attributeName = parseNode.ChildNodes [0].Term.Name;
+					var attributeValue = nodesAsString.Substring (0, stopIndex).Trim ().Trim ('\'', '"');
+					var elementValue = nodesAsString.Substring (stopIndex + 1);
+					if (!string.IsNullOrEmpty (attributeValue) && attributeValue.StartsWith ("http", StringComparison.OrdinalIgnoreCase)) {
+						var unparsed = $"<see href=\"{attributeValue}\">{elementValue}</see>";
+						XNode? seeElement = TryParseElement (unparsed);
+						if (seeElement == null) {
+							// Try to parse with HTML entities decoded
+							seeElement = TryParseElement (WebUtility.HtmlDecode (unparsed));
+							if (seeElement == null) {
+								// Finally, try to parse with only the element value encoded
+								seeElement = TryParseElement ($"<see href=\"{attributeValue}\">{WebUtility.HtmlEncode (elementValue)}</see>", logError: true);
+							}
+						}
+						parseNode.AstNode = seeElement ?? new XText (nodesAsString);
 					} else {
 						// TODO: Need to convert relative paths or code references to appropriate CREF value.
-						parseNode.AstNode = new XText (unparsedAElementValue);
+						parseNode.AstNode = new XText (elementValue);
 					}
-				};
-
-				// Start to trim out unusable HTML elements/tags, but not any inner values
-				IgnorableElementDeclaration.Rule =
-					CreateStartElementIgnoreAttribute ("a", "name") + InlineDeclarations + CreateEndElement ("a", grammar, optional: true)
-					| CreateStartElementIgnoreAttribute ("a", "id") + InlineDeclarations + CreateEndElement ("a", grammar, optional: true)
-					;
-				IgnorableElementDeclaration.AstConfig.NodeCreator = (context, parseNode) => {
-					var aElementValue = new XText (parseNode.ChildNodes [1].AstNode.ToString () ?? string.Empty);
-					parseNode.AstNode = aElementValue;
 				};
 
 				CodeElementDeclaration.Rule = CreateStartElement ("code", grammar) + InlineDeclarations + CreateEndElement ("code", grammar);
@@ -184,13 +178,28 @@ namespace Java.Interop.Tools.JavaSource {
 				}
 			}
 
-			static XElement? TryParseHRef (string unparsedAElementValue, bool logError = false)
+			static string GetChildNodesAsString (ParseTreeNode parseNode)
+			{
+				var unparsed = string.Empty;
+				foreach (var cn in parseNode.ChildNodes) {
+					if (cn.ChildNodes?.Count > 1) {
+						foreach (var gcn in cn.ChildNodes) {
+							unparsed += gcn.AstNode?.ToString ();
+						}
+					} else {
+						unparsed += cn.AstNode?.ToString ();
+					}
+				}
+				return unparsed;
+			}
+
+			static XElement? TryParseElement (string unparsed, bool logError = false)
 			{
 				try {
-					return XElement.Parse ($"<see href={unparsedAElementValue}</see>");
+					return XElement.Parse (unparsed);
 				} catch (Exception x) {
 					if (logError)
-						Console.Error.WriteLine ($"## Unable to parse HTML element: <see href={unparsedAElementValue}</see>\n{x.GetType ()}: {x.Message}");
+						Console.Error.WriteLine ($"## Unable to parse HTML element: `{unparsed}`\n{x.GetType ()}: {x.Message}");
 					return null;
 				}
 			}
@@ -221,10 +230,9 @@ namespace Java.Interop.Tools.JavaSource {
 			public  readonly    NonTerminal PBlockDeclaration           = new NonTerminal (nameof (PBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal PreBlockDeclaration         = new NonTerminal (nameof (PreBlockDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal InlineHyperLinkDeclaration  = new NonTerminal (nameof (InlineHyperLinkDeclaration), ConcatChildNodes);
-			public  readonly    NonTerminal IgnorableElementDeclaration = new NonTerminal (nameof (IgnorableElementDeclaration), ConcatChildNodes);
 			public  readonly    NonTerminal CodeElementDeclaration      = new NonTerminal (nameof (CodeElementDeclaration), ConcatChildNodes);
 
-			public  readonly    Terminal    InlineHyperLinkOpenTerm     = new RegexBasedTerminal ("<a href=", @"(?i)<a\s*href\s*=") {
+			public  readonly    Terminal    InlineHyperLinkOpenTerm     = new RegexBasedTerminal ("<a attr=", @"(?i)<a\s*.*=") {
 				AstConfig = new AstNodeConfig {
 					NodeCreator = (context, parseNode) => parseNode.AstNode = "",
 				},
