@@ -1120,6 +1120,50 @@ namespace generatortests
 			Assert.AreEqual (true, base_class.Methods [0].IsValid);
 		}
 
+		[Test]
+		public void FixupDeprecatedBaseMethods ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;'>
+			      <method abstract='false' deprecated='deprecated' final='false' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </class>
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+
+			// Override method should be marked deprecated because base method is
+			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
+		}
+
+		[Test]
+		public void FixupDeprecatedSinceBaseMethods ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;'>
+			      <method abstract='false' deprecated='deprecated' final='false' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' deprecated-since='11'></method>
+			    </class>
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract='false' deprecated='not deprecated' final='false' name='DoStuff' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public' deprecated-since='21'></method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+
+			// Override method should match base method's 'deprecated-since'
+			Assert.AreEqual (11, gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").DeprecatedSince);
+		}
+
 		static string StripRegisterAttributes (string str)
 		{
 			// It is hard to test if the [Obsolete] is on the setter/etc due to the [Register], so remove all [Register]s
