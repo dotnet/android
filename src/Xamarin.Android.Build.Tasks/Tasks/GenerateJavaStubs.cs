@@ -412,7 +412,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			foreach (ITaskItem assembly in state.UserAssemblies) {
-				manifest.Assemblies.Add (Path.GetFileNameWithoutExtension (assembly.ItemSpec));
+				manifest.Assemblies.Add (Path.GetFileName (assembly.ItemSpec));
 			}
 
 			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {

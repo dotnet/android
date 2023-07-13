@@ -119,6 +119,7 @@ class XAAssemblyResolver : IAssemblyResolver
 
 	public AssemblyDefinition? Resolve (AssemblyNameReference name, ReaderParameters? parameters)
 	{
+		Console.WriteLine ($"XAAssemblyResolver.Resolve (\"{name}\")");
 		return Resolve (AndroidTargetArch.None, name, parameters);
 	}
 
