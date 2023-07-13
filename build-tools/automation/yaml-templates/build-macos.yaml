@@ -46,8 +46,8 @@ stages:
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
     - powershell: |
-        [IO.Directory]::CreateDirectory($(Build.StagingDirectory)/empty)
-        [IO.Directory]::CreateDirectory($(Build.StagingDirectory)/sbom-components)
+        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
+        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
       displayName: create SBOM directories
       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
