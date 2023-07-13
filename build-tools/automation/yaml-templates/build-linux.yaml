@@ -99,7 +99,6 @@ stages:
         BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
         ManifestDirPath: $(Build.StagingDirectory)/sbom-components
         PackageName: .NET Android
-        PackageVersion: $(Build.BuildId)
         Verbosity: Verbose
 
     - task: PublishBuildArtifacts@1
