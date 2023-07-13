@@ -538,22 +538,13 @@ namespace Xamarin.Android.Tasks
 
 		public static AndroidTargetArch AbiToTargetArch (string abi)
 		{
-			switch (abi) {
-				case "arm64-v8a":
-					return AndroidTargetArch.Arm64;
-
-				case "armeabi-v7a":
-					return AndroidTargetArch.Arm;
-
-				case "x86":
-					return AndroidTargetArch.X86;
-
-				case "x86_64":
-					return AndroidTargetArch.X86_64;
-
-				default:
-					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
-			}
+			return abi switch {
+				"armeabi-v7a" => AndroidTargetArch.Arm,
+				"arm64-v8a"   => AndroidTargetArch.Arm64,
+				"x86_64"      => AndroidTargetArch.X86_64,
+				"x86"         => AndroidTargetArch.X86,
+				_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
+			};
 		}
 
 		public static string? CultureInvariantToString (object? obj)
@@ -589,13 +580,7 @@ namespace Xamarin.Android.Tasks
 				return AndroidTargetArch.None;
 			}
 
-			return abi switch {
-				"armeabi-v7a" => AndroidTargetArch.Arm,
-					"arm64-v8a"   => AndroidTargetArch.Arm64,
-					"x86"         => AndroidTargetArch.X86,
-					"x86_64"      => AndroidTargetArch.X86_64,
-					_             => throw new NotSupportedException ($"Unsupported ABI '{abi}' for assembly {asmItem.ItemSpec}")
-					};
+			return AbiToTargetArch (abi);
 		}
 	}
 }
