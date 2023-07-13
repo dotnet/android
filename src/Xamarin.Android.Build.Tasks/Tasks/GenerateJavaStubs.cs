@@ -242,7 +242,6 @@ namespace Xamarin.Android.Tasks
 			var assemblies = new T ();
 			bool hasExportReference = false;
 			bool haveMonoAndroid = false;
-
 			foreach (ITaskItem assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
@@ -589,6 +588,138 @@ namespace Xamarin.Android.Tasks
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
+		}
+
+		/// <summary>
+		/// <para>
+		/// Classifier will see only unique assemblies, since that's what's processed by the JI type scanner - even though some assemblies may have
+		/// abi-specific features (e.g. inlined `IntPtr.Size` or processor-specific intrinsics), the **types** and **methods** will all be the same and, thus,
+		/// there's no point in scanning all of the additional copies of the same assembly.
+		/// </para>
+		/// <para>
+		/// This, however, doesn't work for the rewriter which needs to rewrite all of the copies so that they all have the same generated wrappers.  In
+		/// order to do that, we need to go over the list of assemblies found by the classifier, see if they are abi-specific ones and then add all the
+		/// marshal methods from the abi-specific assembly copies, so that the rewriter can easily rewrite them all.
+		/// </para>
+		/// <para>
+		/// This method returns a dictionary matching `AssemblyDefinition` instances to the path on disk to the assembly file they were loaded from.  It is necessary
+		/// because <see cref="LoadAssembly"/> uses a stream to load the data, in order to avoid later sharing violation issues when writing the assemblies.  Path
+		/// information is required by <see cref="MarshalMethodsAssemblyRewriter"/> to be available for each <see cref="MarshalMethodEntry"/>
+		/// </para>
+		/// </summary>
+		Dictionary<AssemblyDefinition, string> AddMethodsFromAbiSpecificAssemblies (MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, Dictionary<string, List<ITaskItem>> abiSpecificAssemblies)
+		{
+			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = classifier.MarshalMethods;
+			ICollection<AssemblyDefinition> assemblies = classifier.Assemblies;
+			var newAssemblies = new List<AssemblyDefinition> ();
+			var assemblyPaths = new Dictionary<AssemblyDefinition, string> ();
+
+			foreach (AssemblyDefinition asmdef in assemblies) {
+				string fileName = Path.GetFileName (asmdef.MainModule.FileName);
+				if (!abiSpecificAssemblies.TryGetValue (fileName, out List<ITaskItem>? abiAssemblyItems)) {
+					continue;
+				}
+
+				List<MarshalMethodEntry> assemblyMarshalMethods = FindMarshalMethodsForAssembly (marshalMethods, asmdef);;
+				Log.LogDebugMessage ($"Assembly {fileName} is ABI-specific");
+				foreach (ITaskItem abiAssemblyItem in abiAssemblyItems) {
+					if (String.Compare (abiAssemblyItem.ItemSpec, asmdef.MainModule.FileName, StringComparison.Ordinal) == 0) {
+						continue;
+					}
+
+					Log.LogDebugMessage ($"Looking for matching mashal methods in {abiAssemblyItem.ItemSpec}");
+					FindMatchingMethodsInAssembly (abiAssemblyItem, classifier, assemblyMarshalMethods, resolver, newAssemblies, assemblyPaths);
+				}
+			}
+
+			if (newAssemblies.Count > 0) {
+				foreach (AssemblyDefinition asmdef in newAssemblies) {
+					assemblies.Add (asmdef);
+				}
+			}
+
+			return assemblyPaths;
+		}
+
+		List<MarshalMethodEntry> FindMarshalMethodsForAssembly (IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, AssemblyDefinition asm)
+		{
+			var seenNativeCallbacks = new HashSet<MethodDefinition> ();
+			var assemblyMarshalMethods = new List<MarshalMethodEntry> ();
+
+			foreach (var kvp in marshalMethods) {
+				foreach (MarshalMethodEntry method in kvp.Value) {
+					if (method.NativeCallback.Module.Assembly != asm) {
+						continue;
+					}
+
+					// More than one overriden method can use the same native callback method, we're interested only in unique native
+					// callbacks, since that's what gets rewritten.
+					if (seenNativeCallbacks.Contains (method.NativeCallback)) {
+						continue;
+					}
+
+					seenNativeCallbacks.Add (method.NativeCallback);
+					assemblyMarshalMethods.Add (method);
+				}
+			}
+
+			return assemblyMarshalMethods;
+		}
+
+		void FindMatchingMethodsInAssembly (ITaskItem assemblyItem, MarshalMethodsClassifier classifier, List<MarshalMethodEntry> assemblyMarshalMethods, XAAssemblyResolver resolver, List<AssemblyDefinition> newAssemblies, Dictionary<AssemblyDefinition, string> assemblyPaths)
+		{
+			AssemblyDefinition asm = LoadAssembly (assemblyItem.ItemSpec, resolver);
+			newAssemblies.Add (asm);
+			assemblyPaths.Add (asm, assemblyItem.ItemSpec);
+
+			foreach (MarshalMethodEntry methodEntry in assemblyMarshalMethods) {
+				TypeDefinition wantedType = methodEntry.NativeCallback.DeclaringType;
+				TypeDefinition? type = asm.MainModule.FindType (wantedType.FullName);
+				if (type == null) {
+					throw new InvalidOperationException ($"Internal error: type '{wantedType.FullName}' not found in assembly '{assemblyItem.ItemSpec}', a linker error?");
+				}
+
+				if (type.MetadataToken != wantedType.MetadataToken) {
+					throw new InvalidOperationException ($"Internal error: type '{type.FullName}' in assembly '{assemblyItem.ItemSpec}' has a different token ID than the original type");
+				}
+
+				FindMatchingMethodInType (methodEntry, type, classifier);
+			}
+		}
+
+		void FindMatchingMethodInType (MarshalMethodEntry methodEntry, TypeDefinition type, MarshalMethodsClassifier classifier)
+		{
+			string callbackName = methodEntry.NativeCallback.FullName;
+
+			foreach (MethodDefinition typeNativeCallbackMethod in type.Methods) {
+				if (String.Compare (typeNativeCallbackMethod.FullName, callbackName, StringComparison.Ordinal) != 0) {
+					continue;
+				}
+
+				if (typeNativeCallbackMethod.Parameters.Count != methodEntry.NativeCallback.Parameters.Count) {
+					continue;
+				}
+
+				if (typeNativeCallbackMethod.MetadataToken != methodEntry.NativeCallback.MetadataToken) {
+					throw new InvalidOperationException ($"Internal error: tokens don't match for '{typeNativeCallbackMethod.FullName}'");
+				}
+
+				bool allMatch = true;
+				for (int i = 0; i < typeNativeCallbackMethod.Parameters.Count; i++) {
+					if (String.Compare (typeNativeCallbackMethod.Parameters[i].ParameterType.FullName, methodEntry.NativeCallback.Parameters[i].ParameterType.FullName, StringComparison.Ordinal) != 0) {
+						allMatch = false;
+						break;
+					}
+				}
+
+				if (!allMatch) {
+					continue;
+				}
+
+				Log.LogDebugMessage ($"Found match for '{typeNativeCallbackMethod.FullName}' in {type.Module.FileName}");
+				string methodKey = classifier.GetStoreMethodKey (methodEntry);
+				classifier.MarshalMethods[methodKey].Add (new MarshalMethodEntry (methodEntry, typeNativeCallbackMethod));
+			}
 		}
 	}
 }
