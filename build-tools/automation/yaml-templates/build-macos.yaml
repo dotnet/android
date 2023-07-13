@@ -45,11 +45,18 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
+    - powershell: |
+        [IO.Directory]::CreateDirectory($(Build.StagingDirectory)/empty)
+        [IO.Directory]::CreateDirectory($(Build.StagingDirectory)/sbom-components)
+      displayName: create SBOM directories
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    displayName:
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: generate components SBOM
       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
       inputs:
-        BuildDropPath: ''
+        BuildDropPath: $(Build.StagingDirectory)/empty
         BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
         ManifestDirPath: $(Build.StagingDirectory)/sbom-components
         PackageName: .NET Android
