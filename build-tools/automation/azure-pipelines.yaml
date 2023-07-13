@@ -471,11 +471,13 @@ stages:
       inputs:
         artifactName: nuget-signed
         downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: nuget-linux-signed
         downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -486,33 +488,36 @@ stages:
       inputs:
         artifactName: vs-msi-nugets
         downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vsdrop-signed
         downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: vsdrop-multitarget-signed
         downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: sbom-components-macos
-        downloadPath: $(Build.StagingDirectory)\components\macos
+        downloadPath: $(Build.StagingDirectory)\sbom\components-macos
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: sbom-components-linux
-        downloadPath: $(Build.StagingDirectory)\components\linux
+        downloadPath: $(Build.StagingDirectory)\sbom\components-linux
 
     - template: compliance/sbom/scan.v1.yml@yaml-templates
       parameters:
         dropDirectory: $(Build.StagingDirectory)\packages
-        componentsDirectory: $(Build.StagingDirectory)\components
+        componentsDirectory: $(Build.StagingDirectory)\sbom
+        manifestDirectory: $(Build.StagingDirectory)\sbom
         packageName: .NET Android
-        packageFilter: '*.nupkg;*.msi'
         packageVersionRegex: '(?i)^Microsoft.*\.(?<version>\d+\.\d+\.\d+(-.*)?\.\d+).nupkg$'
 
 # Check - "Xamarin.Android (Compliance)"
