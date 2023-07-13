@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Globalization;
 using System.Reflection;
 
@@ -34,8 +35,27 @@ namespace Xamarin.Android.RuntimeTests {
 			var ex  = new InvalidOperationException ("boo!");
 			using (var source = new Java.Lang.Throwable ("detailMessage", CreateJavaProxyThrowable (ex)))
 			using (var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer)) {
+				CompareStackTraces (ex, source);
 				Assert.AreEqual ("detailMessage", alias.Message);
 				Assert.AreSame (ex, alias.InnerException);
+			}
+		}
+
+		void CompareStackTraces (Exception ex, Java.Lang.Throwable throwable)
+		{
+			var managedTrace = new StackTrace (ex);
+			StackFrame[] managedFrames = managedTrace.GetFrames ();
+			Java.Lang.StackTraceElement[] javaFrames = throwable.GetStackTrace ();
+
+			Assert.AreEqual (managedFrames.Length, javaFrames.Length, "Java and managed stack traces have a different number of frames");
+			for (int i = 0; i < managedFrames.Length; i++) {
+				var mf = managedFrames[i];
+				var jf = javaFrames[i];
+
+				Assert.AreEqual (mf.GetMethod ()?.Name,                   jf.MethodName, $"Frame {i}: method names differ");
+				Assert.AreEqual (mf.GetMethod ()?.DeclaringType.FullName, jf.ClassName,  $"Frame {i}: class names differ");
+				Assert.AreEqual (mf.GetFileName (),                       jf.FileName,   $"Frame {i}: file names differ");
+				Assert.AreEqual (mf.GetFileLineNumber (),                 jf.LineNumber, $"Frame {i}: line numbers differ");
 			}
 		}
 	}

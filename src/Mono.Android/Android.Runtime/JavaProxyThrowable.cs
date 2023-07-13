@@ -6,11 +6,11 @@ using StackTraceElement = Java.Lang.StackTraceElement;
 
 namespace Android.Runtime {
 
-	class JavaProxyThrowable : Java.Lang.Error {
+	sealed class JavaProxyThrowable : Java.Lang.Error {
 
 		public  readonly Exception InnerException;
 
-		protected JavaProxyThrowable (string message, Exception innerException)
+		JavaProxyThrowable (string message, Exception innerException)
 			: base (message)
 		{
 			InnerException  = innerException;
