@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
 using NUnit.Framework;
@@ -17,11 +18,9 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
-		public void InstallAndroidDependenciesTest ()
+		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType)
 		{
 			AssertCommercialBuild ();
-			// We need to grab the latest API level *before* changing env vars
-			var apiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			try {
@@ -34,41 +33,48 @@ namespace Xamarin.Android.Build.Tests
 						Directory.Delete (path, recursive: true);
 					Directory.CreateDirectory (path);
 				}
-				var proj = new XamarinAndroidApplicationProject {
-					TargetSdkVersion = apiLevel.ToString (),
+
+				var proj = new XamarinAndroidApplicationProject ();
+				var buildArgs = new List<string> {
+					"AcceptAndroidSDKLicenses=true",
+					$"AndroidManifestType={manifestType}",
 				};
-				const string ExpectedPlatformToolsVersion = "34.0.4";
+				// When using the default Xamarin manifest, this test should fail if we can't install any of the defaults in Xamarin.Android.Tools.Versions.props
+				// When using the Google manifest, override the platform tools version to the one in their manifest as it only ever contains one version
+				if (manifestType == "GoogleV2") {
+					buildArgs.Add ($"AndroidSdkPlatformToolsVersion={GetCurrentPlatformToolsVersion ()}");
+				}
+
 				using (var b = CreateApkBuilder ()) {
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
 					b.BuildLogFile = "install-deps.log";
-					Assert.IsTrue (b.Build (proj, parameters: new string [] {
-						"AcceptAndroidSDKLicenses=true",
-						"AndroidManifestType=GoogleV2",     // Need GoogleV2 so we can install API-32
-						$"AndroidSdkPlatformToolsVersion={ExpectedPlatformToolsVersion}",
-					}), "InstallAndroidDependencies should have succeeded.");
+					Assert.IsTrue (b.Build (proj, parameters: buildArgs.ToArray ()), "InstallAndroidDependencies should have succeeded.");
+
+					// When dependencies can not be resolved/installed a warning will be present in build output:
+					//    Dependency `platform-tools` should have been installed but could not be resolved.
+					var depFailedMessage = "should have been installed but could not be resolved";
+					bool failedToInstall = b.LastBuildOutput.ContainsText (depFailedMessage);
+					if (failedToInstall) {
+						var sb = new StringBuilder ();
+						foreach (var line in b.LastBuildOutput) {
+							if (line.Contains (depFailedMessage)) {
+								sb.AppendLine (line);
+							}
+						}
+						Assert.Fail ($"A required dependency was not installed, warnings are listed below. Please check the task output in 'install-deps.log'.\n{sb.ToString ()}");
+					}
+
 					b.Target = defaultTarget;
 					b.BuildLogFile = "build.log";
 					Assert.IsTrue (b.Build (proj, true), "build should have succeeded.");
-					bool usedNewDir = b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}");
-					if (!usedNewDir) {
-						// Is this because the platform-tools version changed (again?!)
-						try {
-							var currentPlatformToolsVersion = GetCurrentPlatformToolsVersion ();
-							if (currentPlatformToolsVersion != ExpectedPlatformToolsVersion) {
-								Assert.Fail ($"_AndroidSdkDirectory not set to new SDK path `{sdkPath}`, *probably* because Google's repository has a newer platform-tools package!  " +
-										$"repository2-3.xml contains platform-tools {currentPlatformToolsVersion}; expected {ExpectedPlatformToolsVersion}!");
-							}
-						}
-						catch (Exception e) {
-							TestContext.WriteLine ($"Could not extract platform-tools version from repository2-3.xml: {e}");
-						}
-					}
-					Assert.IsTrue (usedNewDir, $"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`.");
+					Assert.IsTrue ( b.LastBuildOutput.ContainsText ($"Output Property: _AndroidSdkDirectory={sdkPath}"),
+						$"_AndroidSdkDirectory was not set to new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
 					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"Output Property: _JavaSdkDirectory={jdkPath}"),
-						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"), $"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`.");
+						$"_JavaSdkDirectory was not set to new JDK path `{jdkPath}`. Please check the task output in 'install-deps.log'");
+					Assert.IsTrue (b.LastBuildOutput.ContainsText ($"JavaPlatformJarPath={sdkPath}"),
+						$"JavaPlatformJarPath did not contain new SDK path `{sdkPath}`. Please check the task output in 'install-deps.log'");
 				}
 			} finally {
 				Environment.SetEnvironmentVariable ("TEST_ANDROID_SDK_PATH", oldSdkPath);
@@ -90,7 +96,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var revision    = platformToolsPackage.Element ("revision");
 
-			return $"{revision.Element ("major")}.{revision.Element ("minor")}.{revision.Element ("micro")}";
+			return $"{revision.Element ("major")?.Value}.{revision.Element ("minor")?.Value}.{revision.Element ("micro")?.Value}";
 		}
 
 		[Test]
