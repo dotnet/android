@@ -497,31 +497,23 @@ stages:
         artifactName: vsdrop-multitarget-signed
         downloadPath: $(Build.StagingDirectory)\packages
 
-    - powershell: |
-        $filesToExtract = Get-ChildItem -Path $(Build.StagingDirectory)\packages\* -Include "*.zip", "*.nupkg" -Exclude "*.Msi.*.nupkg" -Recurse
-        if ($filesToExtract.Count -eq 0) {
-            Write-Error "Did not find any files to extract in '(Build.StagingDirectory)\packages\'."
-            exit -1
-        }
-        Write-Host "Extracting $($filesToExtract.Count) file(s)..."
-        foreach ($archive in $filesToExtract) {
-            $dest = Join-Path $(Build.StagingDirectory)\packages $archive.BaseName
-            if (Test-Path $dest) {
-                Write-Error "    Unable to extract duplicate file: $($archive.FullName)"
-                exit -1
-            }
-            Write-Host "    $($archive.FullName) => $($dest)"
-            Copy-Item $archive.FullName "$($archive.FullName).zip"
-            Expand-Archive "$($archive.FullName).zip" -DestinationPath $dest
-            Remove-Item "$($archive.FullName).zip"
-        }
-      displayName: Extract NUPKG and ZIP files to $(Build.StagingDirectory)\components
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-macos
+        downloadPath: $(Build.StagingDirectory)\components\macos
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-linux
+        downloadPath: $(Build.StagingDirectory)\components\linux
 
     - template: compliance/sbom/scan.v1.yml@yaml-templates
       parameters:
         dropDirectory: $(Build.StagingDirectory)\packages
-        componentsDirectory: $(Build.SourcesDirectory)
+        componentsDirectory: $(Build.StagingDirectory)\components
         packageName: .NET Android
+        packageFilter: '*.nupkg;*.msi'
+        packageVersionRegex: '(?i)^Microsoft.*\.(?<version>\d+\.\d+\.\d+(-.*)?\.\d+).nupkg$'
 
 # Check - "Xamarin.Android (Compliance)"
 - template: security/full/v0.yml@yaml-templates
