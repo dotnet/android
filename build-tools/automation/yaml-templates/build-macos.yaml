@@ -51,7 +51,6 @@ stages:
       displayName: create SBOM directories
       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-    displayName:
     - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
       displayName: generate components SBOM
       condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
