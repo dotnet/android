@@ -8,6 +8,7 @@ using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -133,7 +134,8 @@ namespace Xamarin.Android.Tasks
 			public string GetAssemblyName (TypeDefinition td) => td.Module.Assembly.FullName;
 		}
 
-		Action<string> logger;
+		AndroidTargetArch targetArch;
+		readonly TaskLoggingHelper Log;
 		Encoding outputEncoding;
 		byte[] moduleMagicString;
 		byte[] typemapIndexMagicString;
@@ -141,11 +143,10 @@ namespace Xamarin.Android.Tasks
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (Action<string> logger, string[] supportedAbis)
+		public TypeMapGenerator (AndroidTargetArch targetArch, TaskLoggingHelper log, string[] supportedAbis)
 		{
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
-			if (supportedAbis == null)
-				throw new ArgumentNullException (nameof (supportedAbis));
+			this.targetArch = targetArch;
+			Log = log;
 			this.supportedAbis = supportedAbis;
 
 			outputEncoding = Files.UTF8withoutBOM;
@@ -485,7 +486,7 @@ namespace Xamarin.Android.Tasks
 					module.Types = module.TypesScratch.Values.ToArray ();
 				}
 
-				mappingData.Add (arch, new NativeTypeMappingData (logger, modules));
+				mappingData.Add (arch, new NativeTypeMappingData (modules));
 			}
 
 			var generator = new TypeMappingReleaseNativeAssemblyGenerator (mappingData);

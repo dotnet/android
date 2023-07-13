@@ -26,6 +26,11 @@ namespace Xamarin.Android.Tasks
 		IDictionary<AssemblyDefinition, string> assemblyPaths;
 		TaskLoggingHelper log;
 
+		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, TaskLoggingHelper log)
+		{
+			throw new NotImplementedException ();
+		}
+
 		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblyPaths, TaskLoggingHelper log)
 		{
 			this.assemblyPaths = assemblyPaths;
