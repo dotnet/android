@@ -468,7 +468,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in state.TempModules) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<byte[], ModuleReleaseData> tempModules = kvp.Value;
-				var modules = tempModules.Values.ToArray ();
+				ModuleReleaseData[] modules = tempModules.Values.ToArray ();
 				Array.Sort (modules, new ModuleUUIDArrayComparer ());
 
 				foreach (ModuleReleaseData module in modules) {
@@ -482,7 +482,7 @@ namespace Xamarin.Android.Tasks
 					module.Types = module.TypesScratch.Values.ToArray ();
 				}
 
-				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (logger, modules));
+				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
 				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
 			}
 
