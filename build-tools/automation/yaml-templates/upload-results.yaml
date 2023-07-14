@@ -3,7 +3,7 @@ parameters:
   configuration: $(XA.Build.Configuration)
   artifactName: results
   includeBuildResults: false
-  condition: ne(variables['Agent.JobStatus'], 'Succeeded')
+  condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
 
 steps:
 - template: run-xaprepare.yaml
