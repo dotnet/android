@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isClassic */              false,
 				/* isRelease */              true,
-				/* marshalMethodsEnabled */  true,
+				/* marshalMethodsEnabled */  false,
 			},
 			new object[] {
 				/* isClassic */              false,
