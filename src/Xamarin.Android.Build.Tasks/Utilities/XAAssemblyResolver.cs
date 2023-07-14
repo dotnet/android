@@ -107,22 +107,22 @@ class XAAssemblyResolver : IAssemblyResolver
 		cache = new Dictionary<string, CacheEntry> (StringComparer.OrdinalIgnoreCase);
 	}
 
-	public AssemblyDefinition Resolve (string fullName, ReaderParameters? parameters = null)
+	public AssemblyDefinition? Resolve (string fullName, ReaderParameters? parameters = null)
 	{
 		return Resolve (AssemblyNameReference.Parse (fullName), parameters);
 	}
 
-	public AssemblyDefinition Resolve (AssemblyNameReference name)
+	public AssemblyDefinition? Resolve (AssemblyNameReference name)
 	{
 		return Resolve (name, null);
 	}
 
-	public AssemblyDefinition Resolve (AssemblyNameReference name, ReaderParameters? parameters)
+	public AssemblyDefinition? Resolve (AssemblyNameReference name, ReaderParameters? parameters)
 	{
 		return Resolve (AndroidTargetArch.None, name, parameters);
 	}
 
-	public AssemblyDefinition Resolve (AndroidTargetArch arch, AssemblyNameReference name, ReaderParameters? parameters = null)
+	public AssemblyDefinition? Resolve (AndroidTargetArch arch, AssemblyNameReference name, ReaderParameters? parameters = null)
 	{
 		string shortName = name.Name;
 		if (cache.TryGetValue (shortName, out CacheEntry? entry)) {
@@ -140,24 +140,16 @@ class XAAssemblyResolver : IAssemblyResolver
 		return FindAndLoadFromDirectories (arch, directories, name, parameters);
 	}
 
-	AssemblyDefinition FindAndLoadFromDirectories (AndroidTargetArch arch, ICollection<string> directories, AssemblyNameReference name, ReaderParameters? parameters)
+	AssemblyDefinition? FindAndLoadFromDirectories (AndroidTargetArch arch, ICollection<string> directories, AssemblyNameReference name, ReaderParameters? parameters)
 	{
 		string? assemblyFile;
-		AssemblyDefinition? candidate = null;
 		foreach (string dir in directories) {
 			if ((assemblyFile = SearchDirectory (name.Name, dir)) != null) {
-				AssemblyDefinition? loaded = Load (arch, assemblyFile);
-				if (Array.Equals (loaded?.Name.MetadataToken, name.MetadataToken)) {
-					return loaded;
-				}
-				candidate = candidate ?? loaded;
+				return Load (arch, assemblyFile, parameters);
 			}
 		}
 
-		if (candidate != null)
-			return candidate;
-
-		throw CreateLoadException (name);
+		return null;
 	}
 
 	static FileNotFoundException CreateLoadException (AssemblyNameReference name)
@@ -179,11 +171,11 @@ class XAAssemblyResolver : IAssemblyResolver
 		return null;
 	}
 
-	public virtual AssemblyDefinition? Load (AndroidTargetArch arch, string filePath, bool forceLoad = false)
+	public virtual AssemblyDefinition? Load (AndroidTargetArch arch, string filePath, ReaderParameters? readerParameters = null)
 	{
 		string name = Path.GetFileNameWithoutExtension (filePath);
 		AssemblyDefinition? assembly;
-		if (!forceLoad && cache.TryGetValue (name, out CacheEntry? entry)) {
+		if (cache.TryGetValue (name, out CacheEntry? entry)) {
 			assembly = SelectAssembly (arch, name, entry, loading: true);
 			if (assembly != null) {
 				return assembly;
@@ -191,7 +183,7 @@ class XAAssemblyResolver : IAssemblyResolver
 		}
 
 		try {
-			assembly = ReadAssembly (filePath);
+			assembly = ReadAssembly (filePath, readerParameters);
 		} catch (Exception e) when (e is FileNotFoundException || e is DirectoryNotFoundException) {
 			// These are ok, we can return null
 			return null;
@@ -207,21 +199,22 @@ class XAAssemblyResolver : IAssemblyResolver
 		return assembly;
 	}
 
-	AssemblyDefinition ReadAssembly (string filePath)
+	AssemblyDefinition ReadAssembly (string filePath, ReaderParameters? readerParametersOverride = null)
 	{
+		ReaderParameters templateParameters = readerParametersOverride ?? this.readerParameters;
 		bool haveDebugSymbols = loadDebugSymbols && File.Exists (Path.ChangeExtension (filePath, ".pdb"));
 		var loadReaderParams = new ReaderParameters () {
-			ApplyWindowsRuntimeProjections  = readerParameters.ApplyWindowsRuntimeProjections,
+			ApplyWindowsRuntimeProjections  = templateParameters.ApplyWindowsRuntimeProjections,
 			AssemblyResolver                = this,
-			MetadataImporterProvider        = readerParameters.MetadataImporterProvider,
-			InMemory                        = readerParameters.InMemory,
-			MetadataResolver                = readerParameters.MetadataResolver,
-			ReadingMode                     = readerParameters.ReadingMode,
+			MetadataImporterProvider        = templateParameters.MetadataImporterProvider,
+			InMemory                        = templateParameters.InMemory,
+			MetadataResolver                = templateParameters.MetadataResolver,
+			ReadingMode                     = templateParameters.ReadingMode,
 			ReadSymbols                     = haveDebugSymbols,
-			ReadWrite                       = readerParameters.ReadWrite,
-			ReflectionImporterProvider      = readerParameters.ReflectionImporterProvider,
-			SymbolReaderProvider            = readerParameters.SymbolReaderProvider,
-			SymbolStream                    = readerParameters.SymbolStream,
+			ReadWrite                       = templateParameters.ReadWrite,
+			ReflectionImporterProvider      = templateParameters.ReflectionImporterProvider,
+			SymbolReaderProvider            = templateParameters.SymbolReaderProvider,
+			SymbolStream                    = templateParameters.SymbolStream,
 		};
 		try {
 			return LoadFromMemoryMappedFile (filePath, loadReaderParams);

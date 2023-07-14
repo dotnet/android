@@ -113,7 +113,7 @@ namespace Xamarin.Android.Tasks
 					if (TempModulesAbiAgnostic == null) {
 						TempModulesAbiAgnostic = dict;
 					}
-					tempModules.Add (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), dict);
+					tempModules.Add (MonoAndroidHelper.AbiToTargetArch (abi), dict);
 				}
 
 				TempModules = new ReadOnlyDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> (tempModules);
