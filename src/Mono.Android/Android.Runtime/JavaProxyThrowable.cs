@@ -16,7 +16,7 @@ namespace Android.Runtime {
 			InnerException  = innerException;
 		}
 
-		public static JavaProxyThrowable Create (Exception? innerException)
+		public static JavaProxyThrowable Create (Exception? innerException, bool appendJavaStackTrace = false)
 		{
 			if (innerException == null) {
 				throw new ArgumentNullException (nameof (innerException));
@@ -25,7 +25,7 @@ namespace Android.Runtime {
 			var proxy = new JavaProxyThrowable (innerException.Message, innerException);
 
 			try {
-				proxy.TranslateStackTrace ();
+				proxy.TranslateStackTrace (appendJavaStackTrace);
 			} catch {
 				// We shouldn't throw here, just try to do the best we can do
 				proxy = new JavaProxyThrowable (innerException.ToString (), innerException);
@@ -34,15 +34,25 @@ namespace Android.Runtime {
 			return proxy;
 		}
 
-		void TranslateStackTrace ()
+		void TranslateStackTrace (bool appendJavaStackTrace)
 		{
 			var trace = new StackTrace (InnerException, fNeedFileInfo: true);
 			if (trace.FrameCount <= 0) {
 				return;
 			}
 
+			StackTraceElement[]? javaTrace = null;
+			if (appendJavaStackTrace) {
+				try {
+					javaTrace = Java.Lang.Thread.CurrentThread ()?.GetStackTrace ();
+				} catch {
+					// Ignore
+				}
+			}
+
 			StackFrame[] frames = trace.GetFrames ();
-			StackTraceElement[] elements = new StackTraceElement[frames.Length];
+			int nElements = frames.Length + (javaTrace?.Length ?? 0);
+			StackTraceElement[] elements = new StackTraceElement[nElements];
 
 			for (int i = 0; i < frames.Length; i++) {
 				StackFrame managedFrame = frames[i];
@@ -56,6 +66,12 @@ namespace Android.Runtime {
 				);
 
 				elements[i] = throwableFrame;
+			}
+
+			if (javaTrace != null) {
+				for (int i = frames.Length; i < nElements; i++) {
+					elements[i] = javaTrace[i - frames.Length];
+				}
 			}
 
 			SetStackTrace (elements);
