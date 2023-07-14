@@ -725,55 +725,39 @@ target_link_libraries(
   )
 
 if(ANDROID AND ENABLE_NET AND (NOT ANALYZERS_ENABLED))
-  add_library(
-    c
-    SHARED ${XAMARIN_STUB_LIB_SOURCES}
-  )
+  macro(xa_add_stub_library _libname)
+    add_library(
+      ${_libname}
+      SHARED ${XAMARIN_STUB_LIB_SOURCES}
+    )
 
-  target_compile_definitions(
-    c
-    PRIVATE STUB_LIB_NAME=libc
-  )
+    string(TOUPPER ${_libname} _libname_uc)
+    target_compile_definitions(
+      ${_libname}
+      PRIVATE STUB_LIB_NAME=lib${_libname} IN_LIB${_libname_uc}
+    )
 
-  target_compile_options(
-    c
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
+    target_compile_options(
+      ${_libname}
+      PRIVATE -nostdlib -fno-exceptions -fno-rtti
+    )
 
-  target_link_options(
-    c
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
+    target_link_options(
+      ${_libname}
+      PRIVATE -nostdlib -fno-exceptions -fno-rtti
+    )
 
-  set_target_properties(
-    c
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
-  )
+    set_target_properties(
+      ${_libname}
+      PROPERTIES
+      LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
+    )
+  endmacro()
 
-  add_library(
-    m
-    SHARED ${XAMARIN_STUB_LIB_SOURCES}
-  )
+  xa_add_stub_library(c)
+  xa_add_stub_library(m)
 
-  target_compile_definitions(
-    m
-    PRIVATE STUB_LIB_NAME=libm
-  )
-
-  target_compile_options(
-    m
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
-
-  target_link_options(
-    m
-    PRIVATE -nostdlib -fno-exceptions -fno-rtti
-  )
-
-  set_target_properties(
-    m
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
-  )
+  # These two are used by the marshal methods tracing library when linking libxamarin-app.so
+  xa_add_stub_library(log)
+  xa_add_stub_library(dl)
 endif()

@@ -390,7 +390,7 @@ namespace Xamarin.Android.Tasks
 				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
 				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
 				// and in the same order.
-				MonoComponents = monoComponents,
+				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
 				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
@@ -400,7 +400,7 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 			};
-			appConfigAsmGen.Init ();
+			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
 			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
 			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
@@ -415,7 +415,7 @@ namespace Xamarin.Android.Tasks
 			} else {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
 			}
-			marshalMethodsAsmGen.Init ();
+			LLVMIR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
@@ -423,18 +423,28 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
-
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
+
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					appConfigAsmGen.Write (targetArch, sw, environmentLlFilePath);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+					try {
+						appConfigAsmGen.Generate (appConfigModule, targetArch, sw, environmentLlFilePath);
+					} catch {
+						throw;
+					} finally {
+						sw.Flush ();
+						Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
+					}
 				}
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					marshalMethodsAsmGen.Write (targetArch, sw, marshalMethodsLlFilePath);
-					sw.Flush ();
-					Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
+					try {
+						marshalMethodsAsmGen.Generate (marshalMethodsModule, targetArch, sw, marshalMethodsLlFilePath);
+					} catch {
+						throw;
+					} finally {
+						sw.Flush ();
+						Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
+					}
 				}
 			}
 

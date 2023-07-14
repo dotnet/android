@@ -77,16 +77,16 @@ namespace Xamarin.Android.Tasks
 			Generate (new JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
 		}
 
-		void Generate (JniRemappingAssemblyGenerator jniRemappingGenerator, int typeReplacementsCount)
+		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
 		{
-			jniRemappingGenerator.Init ();
+			LLVMIR.LlvmIrModule module =  jniRemappingComposer.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string baseAsmFilePath = Path.Combine (OutputDirectory, $"jni_remap.{abi.ToLowerInvariant ()}");
 				string llFilePath  = $"{baseAsmFilePath}.ll";
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					jniRemappingGenerator.Write (GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
+					jniRemappingComposer.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llFilePath);
 					sw.Flush ();
 					Files.CopyIfStreamChanged (sw.BaseStream, llFilePath);
 				}
@@ -94,7 +94,7 @@ namespace Xamarin.Android.Tasks
 
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (
 				ProjectSpecificTaskObjectKey (JniRemappingNativeCodeInfoKey),
-				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingGenerator.ReplacementMethodIndexEntryCount),
+				new JniRemappingNativeCodeInfo (typeReplacementsCount, jniRemappingComposer.ReplacementMethodIndexEntryCount),
 				RegisteredTaskObjectLifetime.Build
 			);
 		}

@@ -5,7 +5,7 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	class TypeMappingDebugNativeAssemblyGenerator : TypeMappingAssemblyGenerator
+	class TypeMappingDebugNativeAssemblyGenerator : LlvmIrComposer
 	{
 		const string JavaToManagedSymbol = "map_java_to_managed";
 		const string ManagedToJavaSymbol = "map_managed_to_java";
@@ -110,8 +110,8 @@ namespace Xamarin.Android.Tasks
 
 		readonly TypeMapGenerator.ModuleDebugData data;
 
-		StructureInfo<TypeMapEntry> typeMapEntryStructureInfo;
-		StructureInfo<TypeMap> typeMapStructureInfo;
+		StructureInfo typeMapEntryStructureInfo;
+		StructureInfo typeMapStructureInfo;
 		List<StructureInstance<TypeMapEntry>> javaToManagedMap;
 		List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 		StructureInstance<TypeMap> type_map;
@@ -124,15 +124,17 @@ namespace Xamarin.Android.Tasks
 			managedToJavaMap = new List<StructureInstance<TypeMapEntry>> ();
 		}
 
-		public override void Init ()
+		protected override void Construct (LlvmIrModule module)
 		{
+			MapStructures (module);
+
 			if (data.ManagedToJavaMap != null && data.ManagedToJavaMap.Count > 0) {
 				foreach (TypeMapGenerator.TypeMapDebugEntry entry in data.ManagedToJavaMap) {
 					var m2j = new TypeMapEntry {
 						from = entry.ManagedName,
 						to = entry.JavaName,
 					};
-					managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (m2j));
+					managedToJavaMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, m2j));
 				}
 			}
 
@@ -144,7 +146,7 @@ namespace Xamarin.Android.Tasks
 						from = entry.JavaName,
 						to = managedEntry.SkipInJavaToManaged ? null : managedEntry.ManagedName,
 					};
-					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (j2m));
+					javaToManagedMap.Add (new StructureInstance<TypeMapEntry> (typeMapEntryStructureInfo, j2m));
 				}
 			}
 
@@ -154,26 +156,22 @@ namespace Xamarin.Android.Tasks
 
 				entry_count = data.EntryCount,
 			};
-			type_map = new StructureInstance<TypeMap> (map);
-		}
+			type_map = new StructureInstance<TypeMap> (typeMapStructureInfo, map);
+			module.AddGlobalVariable (TypeMapSymbol, type_map, LlvmIrVariableOptions.GlobalConstant);
 
-		protected override void MapStructures (LlvmIrGenerator generator)
-		{
-			typeMapEntryStructureInfo = generator.MapStructure<TypeMapEntry> ();
-			typeMapStructureInfo = generator.MapStructure<TypeMap> ();
-		}
-
-		protected override void Write (LlvmIrGenerator generator)
-		{
 			if (managedToJavaMap.Count > 0) {
-				generator.WriteStructureArray (typeMapEntryStructureInfo, managedToJavaMap, LlvmIrVariableOptions.LocalConstant, ManagedToJavaSymbol);
+				module.AddGlobalVariable (ManagedToJavaSymbol, managedToJavaMap, LlvmIrVariableOptions.LocalConstant);
 			}
 
 			if (javaToManagedMap.Count > 0) {
-				generator.WriteStructureArray (typeMapEntryStructureInfo, javaToManagedMap, LlvmIrVariableOptions.LocalConstant, JavaToManagedSymbol);
+				module.AddGlobalVariable (JavaToManagedSymbol, javaToManagedMap, LlvmIrVariableOptions.LocalConstant);
 			}
+		}
 
-			generator.WriteStructure (typeMapStructureInfo, type_map, LlvmIrVariableOptions.GlobalConstant, TypeMapSymbol);
+		void MapStructures (LlvmIrModule module)
+		{
+			typeMapEntryStructureInfo = module.MapStructure<TypeMapEntry> ();
+			typeMapStructureInfo = module.MapStructure<TypeMap> ();
 		}
 	}
 }
