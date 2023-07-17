@@ -42,6 +42,8 @@ namespace Xamarin.ProjectTools
 		{
 			targetFramework ??= TargetFramework;
 			if (targetFramework.IndexOf ("net6.0", StringComparison.OrdinalIgnoreCase) != -1) {
+				// Skip the warning NETSDK1202: The workload 'android' is out of support and will not receive security updates in the future.
+				SetProperty("CheckEolWorkloads", "false");
 				ExtraNuGetConfigSources = new List<string> {
 					"https://api.nuget.org/v3/index.json",
 					"https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json",
