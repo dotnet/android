@@ -42,6 +42,8 @@ stages:
       displayName: set JI_JAVA_HOME
 
     - template: use-dot-net.yaml
+      parameters:
+        remove_dotnet: true
 
     # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
     # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.

@@ -18,9 +18,9 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 7.0.306
-- name: DotNet6SdkVersion
-  value: 6.0.412
+  value: 7.0
+- name: DotNetSdkQuality
+  value: GA
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
