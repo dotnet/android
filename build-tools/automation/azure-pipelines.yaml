@@ -452,12 +452,73 @@ stages:
   - dotnet_prepare_release
   condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
   jobs:
-  - template: compliance/sbom/job.v1.yml@yaml-templates
-    parameters:
-      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      packageName: xamarin-android
-      packageFilter: '*.nupkg;*.msi'
-      GitHub.Token: $(GitHub.Token)
+  - job: sbom
+    displayName: Generate SBOM
+    timeoutInMinutes: 60
+    pool:
+      name: AzurePipelines-EO
+      demands:
+      - ImageOverride -equals AzurePipelinesWindows2022compliant
+    variables:
+      Packaging.EnableSBOMSigning: true
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-linux-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        downloadPath: $(Build.StagingDirectory)\packages
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsdrop-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsdrop-multitarget-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-macos
+        downloadPath: $(Build.StagingDirectory)\sbom\components-macos
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-linux
+        downloadPath: $(Build.StagingDirectory)\sbom\components-linux
+
+    - template: compliance/sbom/scan.v1.yml@yaml-templates
+      parameters:
+        dropDirectory: $(Build.StagingDirectory)\packages
+        componentsDirectory: $(Build.StagingDirectory)\sbom
+        manifestDirectory: $(Build.StagingDirectory)\sbom
+        packageName: .NET Android
+        packageVersionRegex: '(?i)^Microsoft.*\.(?<version>\d+\.\d+\.\d+(-.*)?\.\d+).nupkg$'
 
 # Check - "Xamarin.Android (Compliance)"
 - template: security/full/v0.yml@yaml-templates
