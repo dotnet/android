@@ -22,7 +22,8 @@ namespace Android.Runtime {
 				throw new ArgumentNullException (nameof (innerException));
 			}
 
-			var proxy = new JavaProxyThrowable (innerException.Message, innerException);
+			// We prepend managed exception type to message since Java will see `JavaProxyThrowable` instead.
+			var proxy = new JavaProxyThrowable ($"[{innerException.GetType}]: {innerException.Message}", innerException);
 
 			try {
 				proxy.TranslateStackTrace (appendJavaStackTrace);
