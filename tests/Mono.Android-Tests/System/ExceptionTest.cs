@@ -32,7 +32,13 @@ namespace Xamarin.Android.RuntimeTests {
 		[Test]
 		public void InnerExceptionIsSet ()
 		{
-			var ex  = new InvalidOperationException ("boo!");
+			Exception ex;
+			try {
+				throw new InvalidOperationException ("boo!");
+			} catch (Exception e) {
+				ex = e;
+			}
+
 			using (var source = new Java.Lang.Throwable ("detailMessage", CreateJavaProxyThrowable (ex)))
 			using (var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer)) {
 				CompareStackTraces (ex, source);
