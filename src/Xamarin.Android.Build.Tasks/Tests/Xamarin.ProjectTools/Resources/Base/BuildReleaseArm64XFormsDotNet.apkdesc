@@ -8,22 +8,22 @@
       "Size": 2102
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7313
+      "Size": 7112
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66897
+      "Size": 66908
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 469913
+      "Size": 469884
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5579
+      "Size": 5819
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3866
+      "Size": 3865
     },
     "assemblies/netstandard.dll": {
-      "Size": 5580
+      "Size": 5581
     },
     "assemblies/rc.bin": {
       "Size": 1302
@@ -50,7 +50,7 @@
       "Size": 6616
     },
     "assemblies/System.Core.dll": {
-      "Size": 1992
+      "Size": 1991
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
       "Size": 6593
@@ -119,31 +119,31 @@
       "Size": 2520
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3804
+      "Size": 3805
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 8138
+      "Size": 8133
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 158855
+      "Size": 159004
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1760
+      "Size": 1761
     },
     "assemblies/System.Xml.Linq.dll": {
       "Size": 1778
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 4987
+      "Size": 5300
     },
     "assemblies/Xamarin.AndroidX.Activity.dll": {
       "Size": 5942
     },
     "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
-      "Size": 6261
+      "Size": 6033
     },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 120195
+      "Size": 119847
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
       "Size": 6799
@@ -152,13 +152,13 @@
       "Size": 17257
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 100933
+      "Size": 100666
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 14800
+      "Size": 14631
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 41993
+      "Size": 41733
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
       "Size": 6080
@@ -176,16 +176,16 @@
       "Size": 12923
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 90383
+      "Size": 89997
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
       "Size": 4906
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 10781
+      "Size": 10572
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 18877
+      "Size": 18593
     },
     "assemblies/Xamarin.Forms.Core.dll": {
       "Size": 528450
@@ -200,13 +200,13 @@
       "Size": 60774
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 42522
+      "Size": 42282
     },
     "classes.dex": {
-      "Size": 3117140
+      "Size": 3514720
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 97096
+      "Size": 97392
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 380704
@@ -218,7 +218,7 @@
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 93856
+      "Size": 94424
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 154904
@@ -1913,5 +1913,5 @@
       "Size": 325240
     }
   },
-  "PackageSize": 7912366
+  "PackageSize": 7953326
 }

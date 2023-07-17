@@ -1326,10 +1326,10 @@ namespace UnnamedProject {
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should have failed with XA4212.");
-				StringAssertEx.Contains ($"error XA4", builder.LastBuildOutput, "Error should be XA4212");
+				StringAssertEx.Contains ($"error : XA4", builder.LastBuildOutput, "Error should be XA4212");
 				StringAssertEx.Contains ($"Type `UnnamedProject.MyBadJavaObject` implements `Android.Runtime.IJavaObject`", builder.LastBuildOutput, "Error should mention MyBadJavaObject");
 				Assert.IsTrue (builder.Build (proj, parameters: new [] { "AndroidErrorOnCustomJavaObject=False" }), "Build should have succeeded.");
-				StringAssertEx.Contains ($"warning XA4", builder.LastBuildOutput, "warning XA4212");
+				StringAssertEx.Contains ($"warning : XA4", builder.LastBuildOutput, "warning XA4212");
 			}
 		}
 

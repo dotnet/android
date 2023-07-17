@@ -6,7 +6,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	// Not all attributes are currently used throughout the code, but we define them call for potential future use.
 	// Documentation can be found here: https://llvm.org/docs/LangRef.html#function-attributes
-	abstract class LLVMFunctionAttribute
+	abstract class LlvmIrFunctionAttribute : IComparable, IComparable<LlvmIrFunctionAttribute>, IEquatable<LlvmIrFunctionAttribute>
 	{
 		public string Name { get; }
 		public bool Quoted { get; }
@@ -14,7 +14,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool ParamsAreOptional { get; }
 		public bool HasValueAsignment { get; }
 
-		protected LLVMFunctionAttribute (string name, bool quoted, bool supportsParams, bool optionalParams, bool hasValueAssignment)
+		protected LlvmIrFunctionAttribute (string name, bool quoted, bool supportsParams, bool optionalParams, bool hasValueAssignment)
 		{
 			Name = EnsureNonEmptyParameter (nameof (name), name);
 
@@ -89,16 +89,93 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return value;
 		}
+
+		public int CompareTo (object obj)
+		{
+			var attr = obj as LlvmIrFunctionAttribute;
+			if (obj == null) {
+				return 1;
+			}
+
+			return CompareTo (attr);
+		}
+
+		public int CompareTo (LlvmIrFunctionAttribute other)
+		{
+			return Name.CompareTo (other?.Name);
+		}
+
+		public override int GetHashCode()
+		{
+			int hc = 0;
+			if (Name != null) {
+				hc ^= Name.GetHashCode ();
+			}
+
+			return
+				hc ^
+				Quoted.GetHashCode () ^
+				SupportsParams.GetHashCode () ^
+				ParamsAreOptional.GetHashCode () ^
+				HasValueAsignment.GetHashCode ();
+		}
+
+		public override bool Equals (object obj)
+		{
+			var attr = obj as LlvmIrFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return Equals (attr);
+		}
+
+		public virtual bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (other == null) {
+				return false;
+			}
+
+			if (String.Compare (Name, other.Name, StringComparison.Ordinal) != 0) {
+				return false;
+			}
+
+			return
+				Quoted == other.Quoted &&
+				SupportsParams == other.SupportsParams &&
+				ParamsAreOptional == other.ParamsAreOptional &&
+				HasValueAsignment == other.HasValueAsignment;
+		}
+
+		public static bool operator > (LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b)
+		{
+			return a.CompareTo (b) > 0;
+		}
+
+		public static bool operator < (LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b)
+		{
+			return a.CompareTo (b) < 0;
+		}
+
+		public static bool operator >= (LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b)
+		{
+			return a.CompareTo (b) >= 0;
+		}
+
+		public static bool operator <= (LlvmIrFunctionAttribute a, LlvmIrFunctionAttribute b)
+		{
+			return a.CompareTo (b) <= 0;
+		}
 	}
 
-	abstract class LLVMFlagFunctionAttribute : LLVMFunctionAttribute
+	abstract class LlvmIrFlagFunctionAttribute : LlvmIrFunctionAttribute
 	{
-		protected LLVMFlagFunctionAttribute (string name, bool quoted = false)
+		protected LlvmIrFlagFunctionAttribute (string name, bool quoted = false)
 			: base (name, quoted, supportsParams: false, optionalParams: false, hasValueAssignment: false)
 		{}
 	}
 
-	class AlignstackFunctionAttribute : LLVMFunctionAttribute
+	class AlignstackFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint alignment;
 
@@ -116,9 +193,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			sb.Append (alignment.ToString (CultureInfo.InvariantCulture));
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AlignstackFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return alignment == attr.alignment;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ alignment.GetHashCode ();
+		}
 	}
 
-	class AllocFamilyFunctionAttribute : LLVMFunctionAttribute
+	class AllocFamilyFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string family;
 
@@ -132,9 +228,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			sb.Append (family);
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllocFamilyFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (family, attr.family, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (family?.GetHashCode () ?? 0);
+		}
 	}
 
-	class AllockindFunctionAttribute : LLVMFunctionAttribute
+	class AllockindFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string kind;
 
@@ -150,9 +265,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (kind);
 			sb.Append ('"');
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllockindFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (kind, attr.kind, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (kind?.GetHashCode () ?? 0);
+		}
 	}
 
-	class AllocsizeFunctionAttribute : LLVMFunctionAttribute
+	class AllocsizeFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint elementSize;
 		uint? numberOfElements;
@@ -174,65 +308,84 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (", ");
 			sb.Append (numberOfElements.Value.ToString (CultureInfo.InvariantCulture));
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as AllocsizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return elementSize == attr.elementSize && numberOfElements == attr.numberOfElements;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ elementSize.GetHashCode () ^ (numberOfElements?.GetHashCode () ?? 0);
+		}
 	}
 
-	class AlwaysinlineFunctionAttribute : LLVMFlagFunctionAttribute
+	class AlwaysinlineFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public AlwaysinlineFunctionAttribute ()
 			: base ("alwaysinline")
 		{}
 	}
 
-	class ArgmemonlyFunctionAttribute : LLVMFlagFunctionAttribute
+	class ArgmemonlyFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ArgmemonlyFunctionAttribute ()
 			: base ("argmemonly")
 		{}
 	}
 
-	class BuiltinFunctionAttribute : LLVMFlagFunctionAttribute
+	class BuiltinFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public BuiltinFunctionAttribute ()
 			: base ("builtin")
 		{}
 	}
 
-	class ColdFunctionAttribute : LLVMFlagFunctionAttribute
+	class ColdFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ColdFunctionAttribute ()
 			: base ("cold")
 		{}
 	}
 
-	class ConvergentFunctionAttribute : LLVMFlagFunctionAttribute
+	class ConvergentFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ConvergentFunctionAttribute ()
 			: base ("convergent")
 		{}
 	}
 
-	class DisableSanitizerInstrumentationFunctionAttribute : LLVMFlagFunctionAttribute
+	class DisableSanitizerInstrumentationFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public DisableSanitizerInstrumentationFunctionAttribute ()
 			: base ("disable_sanitizer_instrumentation")
 		{}
 	}
 
-	class DontcallErrorFunctionAttribute : LLVMFlagFunctionAttribute
+	class DontcallErrorFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public DontcallErrorFunctionAttribute ()
 			: base ("dontcall-error", quoted: true)
 		{}
 	}
 
-	class DontcallWarnFunctionAttribute : LLVMFlagFunctionAttribute
+	class DontcallWarnFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public DontcallWarnFunctionAttribute ()
 			: base ("dontcall-warn", quoted: true)
 		{}
 	}
 
-	class FramePointerFunctionAttribute : LLVMFunctionAttribute
+	class FramePointerFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string fpMode;
 
@@ -252,387 +405,494 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (fpMode);
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as FramePointerFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (fpMode, attr.fpMode, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (fpMode?.GetHashCode () ?? 0);
+		}
 	}
 
-	class HotFunctionAttribute : LLVMFlagFunctionAttribute
+	class HotFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public HotFunctionAttribute ()
 			: base ("hot")
 		{}
 	}
 
-	class InaccessiblememonlyFunctionAttribute : LLVMFlagFunctionAttribute
+	class InaccessiblememonlyFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public InaccessiblememonlyFunctionAttribute ()
 			: base ("inaccessiblememonly")
 		{}
 	}
 
-	class InaccessiblememOrArgmemonlyFunctionAttribute : LLVMFlagFunctionAttribute
+	class InaccessiblememOrArgmemonlyFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public InaccessiblememOrArgmemonlyFunctionAttribute ()
 			: base ("inaccessiblemem_or_argmemonly")
 		{}
 	}
 
-	class InlinehintFunctionAttribute : LLVMFlagFunctionAttribute
+	class InlinehintFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public InlinehintFunctionAttribute ()
 			: base ("inlinehint")
 		{}
 	}
 
-	class JumptableFunctionAttribute : LLVMFlagFunctionAttribute
+	class JumptableFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public JumptableFunctionAttribute ()
 			: base ("jumptable")
 		{}
 	}
 
-	class MinsizeFunctionAttribute : LLVMFlagFunctionAttribute
+	enum MemoryAttributeAccessKind
+	{
+		None,
+		Read,
+		Write,
+		ReadWrite,
+	}
+
+	class MemoryFunctionAttribute : LlvmIrFunctionAttribute
+	{
+		public MemoryAttributeAccessKind? Default         { get; set; }
+		public MemoryAttributeAccessKind? Argmem          { get; set; }
+		public MemoryAttributeAccessKind? InaccessibleMem { get; set; }
+
+		public MemoryFunctionAttribute ()
+			: base ("memory", quoted: false, supportsParams: true, optionalParams: true, hasValueAssignment: false)
+		{}
+
+		protected override bool HasOptionalParams ()
+		{
+			// All of them are optional, but at least one of them must be specified
+			bool ret = Default.HasValue || Argmem.HasValue || InaccessibleMem.HasValue;
+			if (!ret) {
+				throw new InvalidOperationException ("Internal error: at least one access kind must be specified");
+			}
+
+			return ret;
+		}
+
+		protected override void RenderParams (StringBuilder sb)
+		{
+			bool haveSomething = false;
+
+			if (Default.HasValue) {
+				AppendParam (GetAccessKindString (Default));
+			}
+
+			if (Argmem.HasValue) {
+				AppendParam ($"argmem: {GetAccessKindString (Argmem)}");
+			}
+
+			if (InaccessibleMem.HasValue) {
+				AppendParam ($"inaccessiblemem: {GetAccessKindString (InaccessibleMem)}");
+			}
+
+			void AppendParam (string text)
+			{
+				if (haveSomething) {
+					sb.Append (", ");
+				}
+				sb.Append (text);
+				haveSomething = true;
+			}
+		}
+
+		string GetAccessKindString (MemoryAttributeAccessKind? kind)
+		{
+			return kind.Value switch {
+				MemoryAttributeAccessKind.None      => "none",
+				MemoryAttributeAccessKind.Read      => "read",
+				MemoryAttributeAccessKind.Write     => "write",
+				MemoryAttributeAccessKind.ReadWrite => "readwrite",
+				_ => throw new InvalidOperationException ($"Internal error: unsupported access kind {kind}")
+			};
+		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as MemoryFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return Default == attr.Default && Argmem == attr.Argmem && InaccessibleMem == attr.InaccessibleMem;
+		}
+	}
+
+	class MinsizeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public MinsizeFunctionAttribute ()
 			: base ("minsize")
 		{}
 	}
 
-	class NakedFunctionAttribute : LLVMFlagFunctionAttribute
+	class NakedFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NakedFunctionAttribute ()
 			: base ("naked")
 		{}
 	}
 
-	class NoInlineLineTablesFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoInlineLineTablesFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoInlineLineTablesFunctionAttribute ()
 			: base ("no-inline-line-tables", quoted: true)
 		{}
 	}
 
-	class NoJumpTablesFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoJumpTablesFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoJumpTablesFunctionAttribute ()
 			: base ("no-jump-tables")
 		{}
 	}
 
-	class NobuiltinFunctionAttribute : LLVMFlagFunctionAttribute
+	class NobuiltinFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NobuiltinFunctionAttribute ()
 			: base ("nobuiltin")
 		{}
 	}
 
-	class NoduplicateFunctionAttribute : LLVMFlagFunctionAttribute
+	class NocallbackFunctionAttribute : LlvmIrFlagFunctionAttribute
+	{
+		public NocallbackFunctionAttribute ()
+			: base ("nocallback")
+		{}
+	}
+
+	class NoduplicateFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoduplicateFunctionAttribute ()
 			: base ("noduplicate")
 		{}
 	}
 
-	class NofreeFunctionAttribute : LLVMFlagFunctionAttribute
+	class NofreeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NofreeFunctionAttribute ()
 			: base ("nofree")
 		{}
 	}
 
-	class NoimplicitfloatFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoimplicitfloatFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoimplicitfloatFunctionAttribute ()
 			: base ("noimplicitfloat")
 		{}
 	}
 
-	class NoinlineFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoinlineFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoinlineFunctionAttribute ()
 			: base ("noinline")
 		{}
 	}
 
-	class NomergeFunctionAttribute : LLVMFlagFunctionAttribute
+	class NomergeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NomergeFunctionAttribute ()
 			: base ("nomerge")
 		{}
 	}
 
-	class NonlazybindFunctionAttribute : LLVMFlagFunctionAttribute
+	class NonlazybindFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NonlazybindFunctionAttribute ()
 			: base ("nonlazybind")
 		{}
 	}
 
-	class NoprofileFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoprofileFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoprofileFunctionAttribute ()
 			: base ("noprofile")
 		{}
 	}
 
-	class NoredzoneFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoredzoneFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoredzoneFunctionAttribute ()
 			: base ("noredzone")
 		{}
 	}
 
-	class IndirectTlsSegRefsFunctionAttribute : LLVMFlagFunctionAttribute
+	class IndirectTlsSegRefsFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public IndirectTlsSegRefsFunctionAttribute ()
 			: base ("indirect-tls-seg-refs")
 		{}
 	}
 
-	class NoreturnFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoreturnFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoreturnFunctionAttribute ()
 			: base ("noreturn")
 		{}
 	}
 
-	class NorecurseFunctionAttribute : LLVMFlagFunctionAttribute
+	class NorecurseFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NorecurseFunctionAttribute ()
 			: base ("norecurse")
 		{}
 	}
 
-	class WillreturnFunctionAttribute : LLVMFlagFunctionAttribute
+	class WillreturnFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public WillreturnFunctionAttribute ()
 			: base ("willreturn")
 		{}
 	}
 
-	class NosyncFunctionAttribute : LLVMFlagFunctionAttribute
+	class NosyncFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NosyncFunctionAttribute ()
 			: base ("nosync")
 		{}
 	}
 
-	class NounwindFunctionAttribute : LLVMFlagFunctionAttribute
+	class NounwindFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NounwindFunctionAttribute ()
 			: base ("nounwind")
 		{}
 	}
 
-	class NosanitizeBoundsFunctionAttribute : LLVMFlagFunctionAttribute
+	class NosanitizeBoundsFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NosanitizeBoundsFunctionAttribute ()
 			: base ("nosanitize_bounds")
 		{}
 	}
 
-	class NosanitizeCoverageFunctionAttribute : LLVMFlagFunctionAttribute
+	class NosanitizeCoverageFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NosanitizeCoverageFunctionAttribute ()
 			: base ("nosanitize_coverage")
 		{}
 	}
 
-	class NullPointerIsValidFunctionAttribute : LLVMFlagFunctionAttribute
+	class NullPointerIsValidFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NullPointerIsValidFunctionAttribute ()
 			: base ("null_pointer_is_valid")
 		{}
 	}
 
-	class OptforfuzzingFunctionAttribute : LLVMFlagFunctionAttribute
+	class OptforfuzzingFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public OptforfuzzingFunctionAttribute ()
 			: base ("optforfuzzing")
 		{}
 	}
 
-	class OptnoneFunctionAttribute : LLVMFlagFunctionAttribute
+	class OptnoneFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public OptnoneFunctionAttribute ()
 			: base ("optnone")
 		{}
 	}
 
-	class OptsizeFunctionAttribute : LLVMFlagFunctionAttribute
+	class OptsizeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public OptsizeFunctionAttribute ()
 			: base ("optsize")
 		{}
 	}
 
-	class PatchableFunctionFunctionAttribute : LLVMFlagFunctionAttribute
+	class PatchableFunctionFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public PatchableFunctionFunctionAttribute ()
 			: base ("patchable-function", quoted: true)
 		{}
 	}
 
-	class ProbeStackFunctionAttribute : LLVMFlagFunctionAttribute
+	class ProbeStackFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ProbeStackFunctionAttribute ()
 			: base ("probe-stack")
 		{}
 	}
 
-	class ReadnoneFunctionAttribute : LLVMFlagFunctionAttribute
+	class ReadnoneFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ReadnoneFunctionAttribute ()
 			: base ("readnone")
 		{}
 	}
 
-	class ReadonlyFunctionAttribute : LLVMFlagFunctionAttribute
+	class ReadonlyFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ReadonlyFunctionAttribute ()
 			: base ("readonly")
 		{}
 	}
 
-	class StackProbeSizeFunctionAttribute : LLVMFlagFunctionAttribute
+	class StackProbeSizeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public StackProbeSizeFunctionAttribute ()
 			: base ("stack-probe-size", quoted: true)
 		{}
 	}
 
-	class NoStackArgProbeFunctionAttribute : LLVMFlagFunctionAttribute
+	class NoStackArgProbeFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NoStackArgProbeFunctionAttribute ()
 			: base ("no-stack-arg-probe")
 		{}
 	}
 
-	class WriteonlyFunctionAttribute : LLVMFlagFunctionAttribute
+	class WriteonlyFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public WriteonlyFunctionAttribute ()
 			: base ("writeonly")
 		{}
 	}
 
-	class ReturnsTwiceFunctionAttribute : LLVMFlagFunctionAttribute
+	class ReturnsTwiceFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ReturnsTwiceFunctionAttribute ()
 			: base ("returns_twice")
 		{}
 	}
 
-	class SafestackFunctionAttribute : LLVMFlagFunctionAttribute
+	class SafestackFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SafestackFunctionAttribute ()
 			: base ("safestack")
 		{}
 	}
 
-	class SanitizeAddressFunctionAttribute : LLVMFlagFunctionAttribute
+	class SanitizeAddressFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SanitizeAddressFunctionAttribute ()
 			: base ("sanitize_address")
 		{}
 	}
 
-	class SanitizeMemoryFunctionAttribute : LLVMFlagFunctionAttribute
+	class SanitizeMemoryFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SanitizeMemoryFunctionAttribute ()
 			: base ("sanitize_memory")
 		{}
 	}
 
-	class SanitizeThreadFunctionAttribute : LLVMFlagFunctionAttribute
+	class SanitizeThreadFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SanitizeThreadFunctionAttribute ()
 			: base ("sanitize_thread")
 		{}
 	}
 
-	class SanitizeHwaddressFunctionAttribute : LLVMFlagFunctionAttribute
+	class SanitizeHwaddressFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SanitizeHwaddressFunctionAttribute ()
 			: base ("sanitize_hwaddress")
 		{}
 	}
 
-	class SanitizeMemtagFunctionAttribute : LLVMFlagFunctionAttribute
+	class SanitizeMemtagFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SanitizeMemtagFunctionAttribute ()
 			: base ("sanitize_memtag")
 		{}
 	}
 
-	class SpeculativeLoadHardeningFunctionAttribute : LLVMFlagFunctionAttribute
+	class SpeculativeLoadHardeningFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SpeculativeLoadHardeningFunctionAttribute ()
 			: base ("speculative_load_hardening")
 		{}
 	}
 
-	class SpeculatableFunctionAttribute : LLVMFlagFunctionAttribute
+	class SpeculatableFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SpeculatableFunctionAttribute ()
 			: base ("speculatable")
 		{}
 	}
 
-	class SspFunctionAttribute : LLVMFlagFunctionAttribute
+	class SspFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SspFunctionAttribute ()
 			: base ("ssp")
 		{}
 	}
 
-	class SspstrongFunctionAttribute : LLVMFlagFunctionAttribute
+	class SspstrongFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SspstrongFunctionAttribute ()
 			: base ("sspstrong")
 		{}
 	}
 
-	class SspreqFunctionAttribute : LLVMFlagFunctionAttribute
+	class SspreqFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public SspreqFunctionAttribute ()
 			: base ("sspreq")
 		{}
 	}
 
-	class StrictfpFunctionAttribute : LLVMFlagFunctionAttribute
+	class StrictfpFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public StrictfpFunctionAttribute ()
 			: base ("strictfp")
 		{}
 	}
 
-	class DenormalFpMathFunctionAttribute : LLVMFlagFunctionAttribute
+	class DenormalFpMathFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public DenormalFpMathFunctionAttribute ()
 			: base ("denormal-fp-math", quoted: true)
 		{}
 	}
 
-	class DenormalFpMathF32FunctionAttribute : LLVMFlagFunctionAttribute
+	class DenormalFpMathF32FunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public DenormalFpMathF32FunctionAttribute ()
 			: base ("denormal-fp-math-f32", quoted: true)
 		{}
 	}
 
-	class ThunkFunctionAttribute : LLVMFlagFunctionAttribute
+	class ThunkFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ThunkFunctionAttribute ()
 			: base ("thunk", quoted: true)
 		{}
 	}
 
-	class TlsLoadHoistFunctionAttribute : LLVMFlagFunctionAttribute
+	class TlsLoadHoistFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public TlsLoadHoistFunctionAttribute ()
 			: base ("tls-load-hoist")
 		{}
 	}
 
-	class UwtableFunctionAttribute : LLVMFunctionAttribute
+	class UwtableFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		bool? isSync;
 
@@ -652,30 +912,49 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			sb.Append (isSync.Value ? "sync" : "async");
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as UwtableFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return isSync == attr.isSync;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (isSync?.GetHashCode () ?? 0);
+		}
 	}
 
-	class NocfCheckFunctionAttribute : LLVMFlagFunctionAttribute
+	class NocfCheckFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public NocfCheckFunctionAttribute ()
 			: base ("nocf_check")
 		{}
 	}
 
-	class ShadowcallstackFunctionAttribute : LLVMFlagFunctionAttribute
+	class ShadowcallstackFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public ShadowcallstackFunctionAttribute ()
 			: base ("shadowcallstack")
 		{}
 	}
 
-	class MustprogressFunctionAttribute : LLVMFlagFunctionAttribute
+	class MustprogressFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public MustprogressFunctionAttribute ()
 			: base ("mustprogress")
 		{}
 	}
 
-	class WarnStackSizeFunctionAttribute : LLVMFunctionAttribute
+	class WarnStackSizeFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint threshold;
 
@@ -686,9 +965,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (threshold);
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as WarnStackSizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return threshold == attr.threshold;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ threshold.GetHashCode ();
+		}
 	}
 
-	class VscaleRangeFunctionAttribute : LLVMFunctionAttribute
+	class VscaleRangeFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint min;
 		uint? max;
@@ -710,9 +1008,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			sb.Append (", ");
 			sb.Append (max.Value.ToString (CultureInfo.InvariantCulture));
 		}
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as VscaleRangeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return min == attr.min && max == attr.max;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ min.GetHashCode () ^ (max?.GetHashCode () ?? 0);
+		}
 	}
 
-	class MinLegalVectorWidthFunctionAttribute : LLVMFunctionAttribute
+	class MinLegalVectorWidthFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint size;
 
@@ -723,9 +1040,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as MinLegalVectorWidthFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return size == attr.size;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ size.GetHashCode ();
+		}
 	}
 
-	class StackProtectorBufferSizeFunctionAttribute : LLVMFunctionAttribute
+	class StackProtectorBufferSizeFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		uint size;
 
@@ -736,9 +1072,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (size.ToString (CultureInfo.InvariantCulture));
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as StackProtectorBufferSizeFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return size == attr.size;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ size.GetHashCode ();
+		}
 	}
 
-	class TargetCpuFunctionAttribute : LLVMFunctionAttribute
+	class TargetCpuFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string cpu;
 
@@ -749,9 +1104,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TargetCpuFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (cpu?.GetHashCode () ?? 0);
+		}
 	}
 
-	class TuneCpuFunctionAttribute : LLVMFunctionAttribute
+	class TuneCpuFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string cpu;
 
@@ -762,9 +1136,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (cpu);
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TuneCpuFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (cpu, attr.cpu, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (cpu?.GetHashCode () ?? 0);
+		}
 	}
 
-	class TargetFeaturesFunctionAttribute : LLVMFunctionAttribute
+	class TargetFeaturesFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		string features;
 
@@ -775,9 +1168,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (features);
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as TargetFeaturesFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return String.Compare (features, attr.features, StringComparison.Ordinal) == 0;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ (features?.GetHashCode () ?? 0);
+		}
 	}
 
-	class NoTrappingMathFunctionAttribute : LLVMFunctionAttribute
+	class NoTrappingMathFunctionAttribute : LlvmIrFunctionAttribute
 	{
 		bool yesno;
 
@@ -788,9 +1200,28 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		}
 
 		protected override void RenderAssignedValue (StringBuilder sb) => sb.Append (yesno.ToString ().ToLowerInvariant ());
+
+		public override bool Equals (LlvmIrFunctionAttribute other)
+		{
+			if (!base.Equals (other)) {
+				return false;
+			}
+
+			var attr = other as NoTrappingMathFunctionAttribute;
+			if (attr == null) {
+				return false;
+			}
+
+			return yesno == attr.yesno;
+		}
+
+		public override int GetHashCode ()
+		{
+			return base.GetHashCode () ^ yesno.GetHashCode ();
+		}
 	}
 
-	class StackrealignFunctionAttribute : LLVMFlagFunctionAttribute
+	class StackrealignFunctionAttribute : LlvmIrFlagFunctionAttribute
 	{
 		public StackrealignFunctionAttribute ()
 			: base ("stackrealign", quoted: true)
