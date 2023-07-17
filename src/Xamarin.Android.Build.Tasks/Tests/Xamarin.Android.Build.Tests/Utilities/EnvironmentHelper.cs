@@ -402,7 +402,7 @@ namespace Xamarin.Android.Build.Tests
 		static string[] GetField (string llvmAssemblerFile, string nativeAssemblerFile, string line, ulong lineNumber)
 		{
 			string[] ret = line?.Trim ()?.Split ('\t');
-			Assert.IsTrue (ret.Length >= 2, $"Invalid assembler field format in file '{nativeAssemblerFile}:{lineNumber}': '{line}'. File generated from '{llvmAssemblerFile}'");
+			Assert.IsTrue (ret != null && ret.Length >= 2, $"Invalid assembler field format in file '{nativeAssemblerFile}:{lineNumber}': '{line}'. File generated from '{llvmAssemblerFile}'");
 
 			return ret;
 		}

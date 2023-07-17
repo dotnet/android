@@ -547,6 +547,37 @@ namespace Xamarin.Android.Tasks
 			};
 		}
 
+		public static string AbiToRid (string abi)
+		{
+			switch (abi) {
+				case "arm64-v8a":
+					return "android-arm64";
+
+				case "armeabi-v7a":
+					return "android-arm";
+
+				case "x86":
+					return "android-x86";
+
+				case "x86_64":
+					return "android-x64";
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
+			}
+		}
+
+		public static string ArchToRid (AndroidTargetArch arch)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm64  => "android-arm64",
+				AndroidTargetArch.Arm    => "android-arm",
+				AndroidTargetArch.X86    => "android-x86",
+				AndroidTargetArch.X86_64 => "android-x64",
+				_                        => throw new InvalidOperationException ($"Internal error: unsupported ABI '{arch}'")
+			};
+		}
+
 		public static string? CultureInvariantToString (object? obj)
 		{
 			if (obj == null) {
@@ -581,6 +612,36 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return AbiToTargetArch (abi);
+		}
+
+		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
+		{
+			// We need to link against libc and libm, but since NDK is not in use, the linker won't be able to find the actual Android libraries.
+			// Therefore, we will use their stubs to satisfy the linker. At runtime they will, of course, use the actual Android libraries.
+			string relPath = Path.Combine ("..", "..");
+			if (!OS.IsWindows) {
+				// the `binutils` directory is one level down (${OS}/binutils) than the Windows one
+				relPath = Path.Combine (relPath, "..");
+			}
+
+			return relPath;
+		}
+
+		public static string GetLibstubsArchDirectoryPath (string androidBinUtilsDirectory, AndroidTargetArch arch)
+		{
+			return Path.Combine (GetLibstubsRootDirectoryPath (androidBinUtilsDirectory), ArchToRid (arch));
+		}
+
+		public static string GetLibstubsRootDirectoryPath (string androidBinUtilsDirectory)
+		{
+			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
+			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
+		}
+
+		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)
+		{
+			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
+			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
 		}
 	}
 }
