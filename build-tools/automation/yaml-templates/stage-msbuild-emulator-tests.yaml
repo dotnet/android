@@ -4,7 +4,7 @@ parameters:
   stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
   dependsOn: mac_build
-  agent_count: 8
+  agent_count: 6
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
@@ -25,12 +25,16 @@ stages:
       parallel: ${{ parameters.agent_count }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
-      vmImage: $(HostedMacImage)
-    timeoutInMinutes: 90
-    cancelTimeoutInMinutes: 5
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals arm64
+    timeoutInMinutes: 120
     workspace:
       clean: all
     steps:
+    - template: agent-cleanser/v1.yml@yaml-templates
+
     - template: setup-test-environment.yaml
       parameters:
         installTestSlicer: true
@@ -77,8 +81,7 @@ stages:
 
   - job: wear_tests
     displayName: macOS > Tests > WearOS 
-    timeoutInMinutes: 180
-    cancelTimeoutInMinutes: 2
+    timeoutInMinutes: 120
     strategy:
       parallel: 1
     variables:
@@ -88,10 +91,15 @@ stages:
       deviceName: wear_square
       androidSdkPlatforms: 33
     pool:
-      vmImage: $(HostedMacImage)
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals arm64
     workspace:
       clean: all
     steps:
+    - template: agent-cleanser/v1.yml@yaml-templates
+
     - template: setup-test-environment.yaml
       parameters:
         installTestSlicer: true

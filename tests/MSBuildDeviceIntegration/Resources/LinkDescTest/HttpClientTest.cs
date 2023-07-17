@@ -11,7 +11,7 @@ public class HttpClientTest
 		{
 			var client = new HttpClient ();
 			var data = new StringContent ("{\"foo\": \"bar\" }", Encoding.UTF8, "application/json");
-			var response = client.PostAsync ("https://httpbin.org/post", data).Result;
+			var response = client.PostAsync ("https://webhook.site/c8e3ec94-673c-45dd-a660-a44779c9ac69/post", data).Result;
 			response.EnsureSuccessStatusCode ();
 			var json = response.Content.ReadAsStringAsync ().Result;
 			return $"[PASS] {nameof (HttpClientTest)}.{nameof (Post)}";

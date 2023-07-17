@@ -106,6 +106,7 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
+    <Touch Files="@(_WLExtractedFiles)" />
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
@@ -140,6 +141,10 @@
         WorkingDirectory="$(_TempDirectory)"
     />
     <RemoveDir Directories="$(_TempDirectory)" />
+    <ItemGroup>
+      <_ExtractedPackContent Include="$(DotNetPreviewPath)packs\Microsoft.Android*\**" />
+    </ItemGroup>
+    <Touch Files="@(_ExtractedPackContent)" />
   </Target>
 
   <Target Name="DeleteExtractedWorkloadPacks" >
