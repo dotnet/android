@@ -179,7 +179,7 @@ namespace Xamarin.Android.Tasks
 
 			LogRunMode ("Debug, no linking");
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
-			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (ArchHere, resolver);
+			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> ((AndroidTargetArch arch) => resolver);
 			throw new NotImplementedException ();
 		}
 
@@ -191,7 +191,7 @@ namespace Xamarin.Android.Tasks
 
 			LogRunMode ("Debug, with linking");
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
-			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (ArchHere, resolver);
+			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> ((AndroidTargetArch arch) => resolver);
 			throw new NotImplementedException ();
 		}
 
@@ -203,15 +203,15 @@ namespace Xamarin.Android.Tasks
 
 			LogRunMode ("Release, no linking");
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
-			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (ArchHere, resolver);
+			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> ((AndroidTargetArch arch) => resolver);
 			var state = new RunState {
-				UseMarshalMethods = useMarshalMethods,
-				AssemblySet = assemblies,
-				JavaTypeAssemblies = assemblies.JavaTypeAssemblies,
-				UserAssemblies = assemblies.UserAssemblies,
+				UseMarshalMethods        = useMarshalMethods,
+				AssemblySet              = assemblies,
+				JavaTypeAssemblies       = assemblies.JavaTypeAssemblies,
+				UserAssemblies           = assemblies.UserAssemblies,
 				GenerateRidAgnosticParts = true,
-				Resolver = resolver,
-				TargetArch = ArchHere,
+				Resolver                 = resolver,
+				TargetArch               = ArchHere,
 			};
 			DoRun (state, out ApplicationConfigTaskState appConfState);
 			RegisterApplicationConfigState (appConfState);
@@ -222,9 +222,37 @@ namespace Xamarin.Android.Tasks
 		void RunReleaseWithLinking (bool useMarshalMethods)
 		{
 			LogRunMode ("Release, with linking");
-			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
-			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (AndroidTargetArch.None, resolver);
-			throw new NotImplementedException ();
+
+			var resolvers = new Dictionary<AndroidTargetArch, XAAssemblyResolver> ();
+			foreach (string abi in SupportedAbis) {
+				// Each ABI gets its own resolver in this mode...
+				XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
+				resolvers.Add (MonoAndroidHelper.AbiToTargetArch (abi), resolver);
+			}
+
+			// We don't check whether we have a resolver for `arch` on purpose, if it throws then it means we have a bug which
+			// should be fixed since there shouldn't be any assemblies passed to this task that belong in ABIs other than those
+			// specified in `SupportedAbis`
+			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> ((AndroidTargetArch arch) => resolvers[arch]);
+			bool first = true;
+
+			foreach (var kvp in resolvers) {
+				var state = new RunState {
+					UseMarshalMethods        = useMarshalMethods,
+					AssemblySet              = assemblies,
+					JavaTypeAssemblies       = assemblies.JavaTypeAssemblies[kvp.Key].Values,
+					UserAssemblies           = assemblies.UserAssemblies[kvp.Key].Values,
+					GenerateRidAgnosticParts = first,
+					Resolver                 = kvp.Value,
+					TargetArch               = kvp.Key,
+				};
+
+				DoRun (state, out ApplicationConfigTaskState appConfState);
+				if (first) {
+					RegisterApplicationConfigState (appConfState);
+					first = false;
+				}
+			}
 		}
 
 		void RegisterApplicationConfigState (ApplicationConfigTaskState appConfState)
@@ -237,11 +265,10 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"GenerateJavaStubs mode: {mode}");
 		}
 
-		T CollectInterestingAssemblies<T> (AndroidTargetArch targetArch, XAAssemblyResolver resolver) where T: InputAssemblySet, new()
+		T CollectInterestingAssemblies<T> (Func<AndroidTargetArch, XAAssemblyResolver> getResolver) where T: InputAssemblySet, new()
 		{
 			var assemblies = new T ();
-			bool hasExportReference = false;
-			bool haveMonoAndroid = false;
+			AndroidTargetArch targetArch;
 			foreach (ITaskItem assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
@@ -251,11 +278,9 @@ namespace Xamarin.Android.Tasks
 
 				bool addAssembly = false;
 				string fileName = Path.GetFileName (assembly.ItemSpec);
-				if (!hasExportReference && String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					hasExportReference = true;
+				if (String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
-				} else if (!haveMonoAndroid && String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					haveMonoAndroid = true;
+				} else if (String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
 				} else if (MonoAndroidHelper.FrameworkAssembliesToTreatAsUserAssemblies.Contains (fileName)) {
 					if (!bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) || !value) {
@@ -269,25 +294,39 @@ namespace Xamarin.Android.Tasks
 					assemblies.AddJavaTypeAssembly (assembly);
 				}
 
-				resolver.Load (targetArch, assembly.ItemSpec);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
-			foreach (ITaskItem asm in ResolvedUserAssemblies) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
+			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
+				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
 					continue;
 				}
 
-				resolver.Load (targetArch, asm.ItemSpec);
-				assemblies.AddJavaTypeAssembly (asm);
-				assemblies.AddUserAssembly (asm);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+
+				assemblies.AddJavaTypeAssembly (assembly);
+				assemblies.AddUserAssembly (assembly);
 			}
 			return assemblies;
 		}
 
 		void DoRun (RunState state, out ApplicationConfigTaskState? appConfState)
 		{
+			Log.LogDebugMessage ($"DoRun for arch {state.TargetArch}");
+			Log.LogDebugMessage ("Java type assemblies:");
+			foreach (ITaskItem assembly in state.JavaTypeAssemblies) {
+				Log.LogDebugMessage ($"  {assembly.ItemSpec}");
+			}
+
+
+			Log.LogDebugMessage ("User assemblies:");
+			foreach (ITaskItem assembly in state.UserAssemblies) {
+				Log.LogDebugMessage ($"  {assembly.ItemSpec}");
+			}
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
@@ -583,6 +622,7 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (AndroidTargetArch targetArch, List<JavaType> types, TypeDefinitionCache cache, out ApplicationConfigTaskState appConfState)
 		{
+			Log.LogDebugMessage ($"Generating typemaps for arch {targetArch}, {types.Count} types");
 			var tmg = new TypeMapGenerator (targetArch, Log, SupportedAbis);
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out appConfState)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
