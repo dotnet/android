@@ -202,7 +202,7 @@ const MarshalMethodName mm_method_names[] = {
 	},
 };
 
-void xamarin_app_init ([[maybe_unused]] get_function_pointer_fn fn) noexcept
+void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
 {
 	// Dummy
 }

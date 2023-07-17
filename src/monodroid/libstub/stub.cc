@@ -6,3 +6,17 @@ void STUB_LIB_NAME ()
 {
 	// no-op
 }
+
+#if defined(IN_LIBC)
+extern "C" {
+	[[gnu::weak]] int puts ([[maybe_unused]] const char *s)
+	{
+		return -1;
+	}
+
+	[[gnu::weak]] void abort ()
+	{
+		// no-op
+	} 
+}
+#endif
