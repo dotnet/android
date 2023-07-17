@@ -26,7 +26,7 @@ namespace Xamarin.Android.RuntimeTests {
 			);
 
 			Assert.AreNotEqual (null, create, "Unable to find the Android.Runtime.JavaProxyThrowable.Create(Exception) method");
-			return (Java.Lang.Throwable)create.Invoke (null, new object[] { e });
+			return (Java.Lang.Throwable)create.Invoke (null, new object[] { e, false }); // Don't append Java stack trace
 		}
 
 		[Test]
@@ -47,7 +47,7 @@ namespace Xamarin.Android.RuntimeTests {
 			StackFrame[] managedFrames = managedTrace.GetFrames ();
 			Java.Lang.StackTraceElement[] javaFrames = throwable.GetStackTrace ();
 
-			Assert.IsTrue (managedFrames.Length <= javaFrames.Length, "Java and managed stack traces have a different number of frames");
+			Assert.AreEqual (managedFrames.Length, javaFrames.Length, "Java and managed stack traces have a different number of frames");
 			for (int i = 0; i < managedFrames.Length; i++) {
 				var mf = managedFrames[i];
 				var jf = javaFrames[i];
