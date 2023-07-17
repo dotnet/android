@@ -3,59 +3,14 @@
 
 parameters:
   version: $(DotNetSdkVersion)
-  quality: $(DotNetSdkQuality)
-  remove_dotnet: false
-  retryCountOnTaskFailure: 3
+  includePreviewVersions: false
 
 steps:
 
-  - pwsh: |
-      $ErrorActionPreference = 'Stop'
-      $ProgressPreference = 'SilentlyContinue'
-      $DotNetRoot = "$env:ProgramFiles\dotnet\"
-      if ("${{ parameters.remove_dotnet }}" -eq $true) {
-          Remove-Item -Recurse $DotNetRoot -Verbose
-      }
-      $currentAttempt = 1
-      $totalAttempts = 5
-      $sleepTime = 5
-      $completed = $false
-      while (-not $completed -and $currentAttempt -le $totalAttempts) {
-          try {
-              $response = Invoke-WebRequest -Uri "https://dot.net/v1/dotnet-install.ps1" -OutFile dotnet-install.ps1 -PassThru
-              if ($response.StatusCode -ne 200) {
-                  throw
-              }
-              $completed = $true
-          } catch {
-              if ($currentAttempt -eq $totalAttempts) {
-                  Write-Host "Unable to download 'dotnet-install.ps1' after $currentAttempt attempts."
-                  throw
-              }
-              Write-Host $_.Exception
-              Write-Host "Retrying after $sleepTime seconds..."
-              Start-Sleep $sleepTime
-              $currentAttempt++
-              $sleepTime = $sleepTime * 2
-          }
-      }
-      & .\dotnet-install.ps1 -Channel ${{ parameters.version }} -Quality ${{ parameters.quality }} -InstallDir $DotNetRoot -SkipNonVersionedFiles -Verbose
-    displayName: install .NET Core ${{ parameters.version }}
-    condition: and(succeeded(), eq(variables['Agent.OS'], 'Windows_NT'))
-    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
-
-  - bash: >
-      DOTNET_ROOT=~/.dotnet/ &&
-      (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
-      curl -L https://dot.net/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
-      chmod +x dotnet-install.sh &&
-      ./dotnet-install.sh --channel ${{ parameters.version }} --quality ${{ parameters.quality }} --install-dir $DOTNET_ROOT --skip-non-versioned-files --verbose &&
-      PATH="$DOTNET_ROOT:$PATH" &&
-      echo "##vso[task.setvariable variable=DOTNET_ROOT]$DOTNET_ROOT" &&
-      echo "##vso[task.setvariable variable=PATH]$PATH"
-    displayName: install .NET Core ${{ parameters.version }}
-    condition: and(succeeded(), ne(variables['agent.os'], 'Windows_NT'))
-    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+  - task: UseDotNet@2
+    inputs:
+      version: ${{ parameters.version }}
+      includePreviewVersions: ${{ parameters.includePreviewVersions }}
 
   - script: dotnet --info
     displayName: display dotnet --info

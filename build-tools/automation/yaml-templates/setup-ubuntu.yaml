@@ -17,8 +17,6 @@ steps:
   displayName: update packages
 
 - template: use-dot-net.yaml
-  parameters:
-    remove_dotnet: true
 
 - task: NuGetToolInstaller@1
   displayName: Use NuGet 5.x

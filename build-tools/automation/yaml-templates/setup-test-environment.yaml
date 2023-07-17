@@ -44,9 +44,7 @@ steps:
 - ${{ if eq(parameters.installLegacyDotNet, true) }}:
   - template: use-dot-net.yaml
     parameters:
-      version: 6.0
-      quality: GA
-      remove_dotnet: ${{ parameters.remove_dotnet }}
+      version: $(DotNet6SdkVersion)
 
 # Install latest .NET
 - template: use-dot-net.yaml

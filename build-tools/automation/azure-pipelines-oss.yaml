@@ -48,8 +48,6 @@ stages:
       submodules: recursive
 
     - template: yaml-templates/use-dot-net.yaml
-      parameters:
-        remove_dotnet: true
 
     - bash: |
         keychains=`security list-keychains`
