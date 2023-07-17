@@ -6,7 +6,6 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -27,17 +26,13 @@ namespace Xamarin.Android.Tasks
 		{
 			public override string GetComment (object data, string fieldName)
 			{
-				var dso_entry = data as DSOCacheEntry;
-				if (dso_entry == null) {
-					throw new InvalidOperationException ("Invalid data type, expected an instance of DSOCacheEntry");
-				}
-
+				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $"hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
-					return $"name: {dso_entry.name}";
+					return $" name: {dso_entry.name}";
 				}
 
 				return String.Empty;
@@ -57,6 +52,7 @@ namespace Xamarin.Android.Tasks
 			public ulong hash;
 			public bool ignore;
 
+			[NativeAssembler (UsesDataProvider = true)]
 			public string name;
 			public IntPtr handle = IntPtr.Zero;
 		}
@@ -131,24 +127,24 @@ namespace Xamarin.Android.Tasks
 			public uint name_length;
 
 			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
-			public char name;
+			public string name;
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
 		const ulong FORMAT_TAG = 0x015E6972616D58;
 
-		SortedDictionary <string, string> environmentVariables;
-		SortedDictionary <string, string> systemProperties;
+		SortedDictionary <string, string>? environmentVariables;
+		SortedDictionary <string, string>? systemProperties;
 		TaskLoggingHelper log;
-		StructureInstance<ApplicationConfig>? application_config;
+		StructureInstance? application_config;
 		List<StructureInstance<DSOCacheEntry>>? dsoCache;
 		List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
 
-		StructureInfo<ApplicationConfig>? applicationConfigStructureInfo;
-		StructureInfo<DSOCacheEntry>? dsoCacheEntryStructureInfo;
-		StructureInfo<XamarinAndroidBundledAssembly>? xamarinAndroidBundledAssemblyStructureInfo;
-		StructureInfo<AssemblyStoreSingleAssemblyRuntimeData> assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
-		StructureInfo<AssemblyStoreRuntimeData> assemblyStoreRuntimeDataStructureInfo;
+		StructureInfo? applicationConfigStructureInfo;
+		StructureInfo? dsoCacheEntryStructureInfo;
+		StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
+		StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
+		StructureInfo? assemblyStoreRuntimeDataStructureInfo;
 
 		public bool UsesMonoAOT { get; set; }
 		public bool UsesMonoLLVM { get; set; }
@@ -188,8 +184,23 @@ namespace Xamarin.Android.Tasks
 			this.log = log;
 		}
 
-		public override void Init ()
+		protected override void Construct (LlvmIrModule module)
 		{
+			MapStructures (module);
+
+			module.AddGlobalVariable ("format_tag", FORMAT_TAG, comment: $" 0x{FORMAT_TAG:x}");
+			module.AddGlobalVariable ("mono_aot_mode_name", MonoAOTMode);
+
+			var envVars = new LlvmIrGlobalVariable (environmentVariables, "app_environment_variables") {
+				Comment = " Application environment variables array, name:value",
+			};
+			module.Add (envVars, stringGroupName: "env", stringGroupComment: " Application environment variables name:value pairs");
+
+			var sysProps = new LlvmIrGlobalVariable (systemProperties, "app_system_properties") {
+				Comment = " System properties defined by the application",
+			};
+			module.Add (sysProps, stringGroupName: "sysprop", stringGroupComment: " System properties name:value pairs");
+
 			dsoCache = InitDSOCache ();
 			var app_cfg = new ApplicationConfig {
 				uses_mono_llvm = UsesMonoLLVM,
@@ -218,7 +229,14 @@ namespace Xamarin.Android.Tasks
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};
-			application_config = new StructureInstance<ApplicationConfig> (app_cfg);
+			application_config = new StructureInstance<ApplicationConfig> (applicationConfigStructureInfo, app_cfg);
+			module.AddGlobalVariable ("application_config", application_config);
+
+			var dso_cache = new LlvmIrGlobalVariable (dsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
+				Comment = " DSO cache entries",
+				BeforeWriteCallback = HashAndSortDSOCache,
+			};
+			module.Add (dso_cache);
 
 			if (!HaveAssemblyStore) {
 				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
@@ -229,13 +247,63 @@ namespace Xamarin.Android.Tasks
 					data_size = 0,
 					data = 0,
 					name_length = (uint)BundledAssemblyNameWidth,
-					name = '\0',
+					name = null,
 				};
 
 				for (int i = 0; i < NumberOfAssembliesInApk; i++) {
-					xamarinAndroidBundledAssemblies.Add (new StructureInstance<XamarinAndroidBundledAssembly> (emptyBundledAssemblyData));
+					xamarinAndroidBundledAssemblies.Add (new StructureInstance<XamarinAndroidBundledAssembly> (xamarinAndroidBundledAssemblyStructureInfo, emptyBundledAssemblyData));
 				}
 			}
+
+			string bundledBuffersSize = xamarinAndroidBundledAssemblies == null ? "empty (unused when assembly stores are enabled)" : $"{BundledAssemblyNameWidth} bytes long";
+			var bundled_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<XamarinAndroidBundledAssembly>>), "bundled_assemblies", LlvmIrVariableOptions.GlobalWritable) {
+				Value = xamarinAndroidBundledAssemblies,
+				Comment = $" Bundled assembly name buffers, all {bundledBuffersSize}",
+			};
+			module.Add (bundled_assemblies);
+
+			AddAssemblyStores (module);
+		}
+
+		void AddAssemblyStores (LlvmIrModule module)
+		{
+			ulong itemCount = (ulong)(HaveAssemblyStore ? NumberOfAssembliesInApk : 0);
+			var assembly_store_bundled_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreSingleAssemblyRuntimeData>>), "assembly_store_bundled_assemblies", LlvmIrVariableOptions.GlobalWritable) {
+				ZeroInitializeArray = true,
+				ArrayItemCount = itemCount,
+			};
+			module.Add (assembly_store_bundled_assemblies);
+
+			itemCount = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
+			var assembly_stores = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreRuntimeData>>), "assembly_stores", LlvmIrVariableOptions.GlobalWritable) {
+				ZeroInitializeArray = true,
+				ArrayItemCount = itemCount,
+			};
+			module.Add (assembly_stores);
+		}
+
+		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+		{
+			var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
+			if (cache == null) {
+				throw new InvalidOperationException ($"Internal error: DSO cache must no be empty");
+			}
+
+			bool is64Bit = target.Is64Bit;
+			foreach (StructureInstance instance in cache) {
+				if (instance.Obj == null) {
+					throw new InvalidOperationException ("Internal error: DSO cache must not contain null entries");
+				}
+
+				var entry = instance.Obj as DSOCacheEntry;
+				if (entry == null) {
+					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
+				}
+
+				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+			}
+
+			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
 		}
 
 		List<StructureInstance<DSOCacheEntry>> InitDSOCache ()
@@ -273,7 +341,7 @@ namespace Xamarin.Android.Tasks
 						name = name,
 					};
 
-					dsoCache.Add (new StructureInstance<DSOCacheEntry> (entry));
+					dsoCache.Add (new StructureInstance<DSOCacheEntry> (dsoCacheEntryStructureInfo, entry));
 				}
 			}
 
@@ -300,56 +368,14 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		protected override void MapStructures (LlvmIrGenerator generator)
+		void MapStructures (LlvmIrModule module)
 		{
-			applicationConfigStructureInfo = generator.MapStructure<ApplicationConfig> ();
-			generator.MapStructure<AssemblyStoreAssemblyDescriptor> ();
-			assemblyStoreSingleAssemblyRuntimeDataStructureinfo = generator.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
-			assemblyStoreRuntimeDataStructureInfo = generator.MapStructure<AssemblyStoreRuntimeData> ();
-			xamarinAndroidBundledAssemblyStructureInfo = generator.MapStructure<XamarinAndroidBundledAssembly> ();
-			dsoCacheEntryStructureInfo = generator.MapStructure<DSOCacheEntry> ();
-		}
-
-		protected override void Write (LlvmIrGenerator generator)
-		{
-			generator.WriteVariable ("format_tag", FORMAT_TAG);
-			generator.WriteString ("mono_aot_mode_name", MonoAOTMode);
-
-			generator.WriteNameValueArray ("app_environment_variables", environmentVariables);
-			generator.WriteNameValueArray ("app_system_properties", systemProperties);
-
-			generator.WriteStructure (applicationConfigStructureInfo, application_config, LlvmIrVariableOptions.GlobalConstant, "application_config");
-
-			WriteDSOCache (generator);
-			WriteBundledAssemblies (generator);
-			WriteAssemblyStoreAssemblies (generator);
-		}
-
-		void WriteAssemblyStoreAssemblies (LlvmIrGenerator generator)
-		{
-			ulong count = (ulong)(HaveAssemblyStore ? NumberOfAssembliesInApk : 0);
-			generator.WriteStructureArray<AssemblyStoreSingleAssemblyRuntimeData> (assemblyStoreSingleAssemblyRuntimeDataStructureinfo, count, "assembly_store_bundled_assemblies", initialComment: "Assembly store individual assembly data");
-
-			count = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
-			generator.WriteStructureArray<AssemblyStoreRuntimeData> (assemblyStoreRuntimeDataStructureInfo, count, "assembly_stores", initialComment: "Assembly store data");
-		}
-
-		void WriteBundledAssemblies (LlvmIrGenerator generator)
-		{
-			generator.WriteStructureArray (xamarinAndroidBundledAssemblyStructureInfo, xamarinAndroidBundledAssemblies, "bundled_assemblies", initialComment: $"Bundled assembly name buffers, all {BundledAssemblyNameWidth} bytes long");
-		}
-
-		void WriteDSOCache (LlvmIrGenerator generator)
-		{
-			bool is64Bit = generator.Is64Bit;
-
-			// We need to hash here, because the hash is architecture-specific
-			foreach (StructureInstance<DSOCacheEntry> entry in dsoCache) {
-				entry.Obj.hash = HashName (entry.Obj.HashedName, is64Bit);
-			}
-			dsoCache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Obj.hash.CompareTo (b.Obj.hash));
-
-			generator.WriteStructureArray (dsoCacheEntryStructureInfo, dsoCache, "dso_cache");
+			applicationConfigStructureInfo = module.MapStructure<ApplicationConfig> ();
+			module.MapStructure<AssemblyStoreAssemblyDescriptor> ();
+			assemblyStoreSingleAssemblyRuntimeDataStructureinfo = module.MapStructure<AssemblyStoreSingleAssemblyRuntimeData> ();
+			assemblyStoreRuntimeDataStructureInfo = module.MapStructure<AssemblyStoreRuntimeData> ();
+			xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
+			dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
 		}
 	}
 }
