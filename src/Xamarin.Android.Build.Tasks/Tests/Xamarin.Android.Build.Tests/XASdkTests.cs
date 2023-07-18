@@ -117,6 +117,10 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidLibrary ("sub\\directory\\bar.aar") {
 						WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar",
 					},
+					new AndroidItem.AndroidLibrary ("sub\\directory\\baz.aar") {
+						WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar",
+						MetadataValues = "Bind=false",
+					},
 					new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
 						Encoding = Encoding.ASCII,
 						TextContent = () => ResourceData.JavaSourceTestExtension,
@@ -134,6 +138,10 @@ namespace Xamarin.Android.Build.Tests
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary ("sub\\directory\\arm64-v8a\\libfoo.so") {
 				BinaryContent = () => Array.Empty<byte> (),
+			});
+			libB.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (default (Func<string>)) {
+				Update = () => "sub\\directory\\baz.aar",
+				MetadataValues = "Bind=false",
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
 				Update = () => "libfoo.so",
@@ -156,6 +164,7 @@ namespace Xamarin.Android.Build.Tests
 			aarPath = Path.Combine (libBOutputPath, $"{libB.ProjectName}.aar");
 			FileAssert.Exists (aarPath);
 			FileAssert.Exists (Path.Combine (libBOutputPath, "bar.aar"));
+			FileAssert.Exists (Path.Combine (libBOutputPath, "baz.aar"));
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/foo/foo.txt");
 				aar.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
@@ -216,6 +225,10 @@ namespace Xamarin.Android.Build.Tests
 			string className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceJarTest;";
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 			className = "Lcom/xamarin/android/test/msbuildtest/JavaSourceTestExtension;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			className = "Lcom/balysv/material/drawable/menu/MaterialMenu;"; // from material-menu-1.1.0.aar
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			className = "Lcom/soundcloud/android/crop/Crop;"; // from android-crop-1.0.1.aar
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
 			// Check environment variable
