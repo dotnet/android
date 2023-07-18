@@ -39,9 +39,10 @@ namespace Xamarin.Android.RuntimeTests {
 				ex = e;
 			}
 
-			using (var source = new Java.Lang.Throwable ("detailMessage", CreateJavaProxyThrowable (ex)))
+			using (Java.Lang.Throwable proxy = CreateJavaProxyThrowable (ex))
+			using (var source = new Java.Lang.Throwable ("detailMessage", proxy))
 			using (var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer)) {
-				CompareStackTraces (ex, source);
+				CompareStackTraces (ex, proxy);
 				Assert.AreEqual ("detailMessage", alias.Message);
 				Assert.AreSame (ex, alias.InnerException);
 			}
@@ -53,18 +54,8 @@ namespace Xamarin.Android.RuntimeTests {
 			StackFrame[] managedFrames = managedTrace.GetFrames ();
 			Java.Lang.StackTraceElement[] javaFrames = throwable.GetStackTrace ();
 
-			System.Console.WriteLine ("Managed stack trace:");
-			foreach (StackFrame sf in managedFrames) {
-				System.Console.WriteLine ($"  {sf}");
-			}
-
-			System.Console.WriteLine ("Java stack trace:");
-			foreach (Java.Lang.StackTraceElement ste in javaFrames) {
-				System.Console.WriteLine ($"  {ste}");
-			}
-
 			// Java
-			Assert.AreEqual (managedFrames.Length, javaFrames.Length - 2, "Java and managed stack traces have a different number of frames");
+			Assert.AreEqual (managedFrames.Length, javaFrames.Length, "Java and managed stack traces have a different number of frames");
 			for (int i = 0; i < managedFrames.Length; i++) {
 				var mf = managedFrames[i];
 				var jf = javaFrames[i];

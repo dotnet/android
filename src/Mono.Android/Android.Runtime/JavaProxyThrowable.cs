@@ -27,8 +27,9 @@ namespace Android.Runtime {
 
 			try {
 				proxy.TranslateStackTrace (appendJavaStackTrace);
-			} catch {
+			} catch (Exception ex) {
 				// We shouldn't throw here, just try to do the best we can do
+				Console.WriteLine ($"JavaProxyThrowable: translation threw an exception: {ex}");
 				proxy = new JavaProxyThrowable (innerException.ToString (), innerException);
 			}
 
@@ -46,8 +47,10 @@ namespace Android.Runtime {
 			if (appendJavaStackTrace) {
 				try {
 					javaTrace = Java.Lang.Thread.CurrentThread ()?.GetStackTrace ();
-				} catch {
-					// Ignore
+				} catch (Exception ex) {
+					// Report...
+					Console.WriteLine ($"JavaProxyThrowable: obtaining Java stack trace threw an exception: {ex}");
+					// ..but ignore
 				}
 			}
 
