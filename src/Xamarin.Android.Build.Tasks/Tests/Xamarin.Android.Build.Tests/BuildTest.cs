@@ -85,6 +85,9 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckWhetherLibcAndLibmAreReferencedInAOTLibraries ()
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				EmbedAssembliesIntoApk = true,
