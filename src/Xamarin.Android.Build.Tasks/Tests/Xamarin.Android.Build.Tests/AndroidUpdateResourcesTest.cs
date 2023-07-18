@@ -1106,9 +1106,6 @@ namespace Lib1 {
 		{
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetSdkVersion = "32",
-				MinSdkVersion = null,
-				UseLatestPlatformSdk = false,
 				IsRelease = true,
 				OtherBuildItems = {
 					new BuildItem.Folder ("Resources\\values-v33\\") {
