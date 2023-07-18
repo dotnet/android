@@ -27,12 +27,12 @@ namespace Xamarin.Android.Tasks
 	{
 		sealed class RunState
 		{
-			public XAAssemblyResolver Resolver               { get; set; }
-			public ICollection<ITaskItem> JavaTypeAssemblies { get; set; }
-			public ICollection<ITaskItem> UserAssemblies     { get; set; }
-			public InputAssemblySet AssemblySet              { get; set; }
-			public bool UseMarshalMethods                    { get; set; }
-			public AndroidTargetArch TargetArch              { get; set; } = AndroidTargetArch.None;
+			public Dictionary<AndroidTargetArch, XAAssemblyResolver> Resolvers { get; set; }
+			public ICollection<ITaskItem> JavaTypeAssemblies                   { get; set; }
+			public ICollection<ITaskItem> UserAssemblies                       { get; set; }
+			public InputAssemblySet AssemblySet                                { get; set; }
+			public bool UseMarshalMethods                                      { get; set; }
+			public AndroidTargetArch TargetArch                                { get; set; } = AndroidTargetArch.None;
 
 			/// <summary>
 			/// If `true`, generate code/data that doesn't depend on a specific RID (e.g. ACW maps or JCWs)
@@ -173,11 +173,9 @@ namespace Xamarin.Android.Tasks
 		// Typemaps don't use MVIDs or metadata tokens
 		void RunDebugNoLinking ()
 		{
-			const AndroidTargetArch ArchHere = AndroidTargetArch.None;
-
 			LogRunMode ("Debug, no linking");
-			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
-			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (allowAbiSpecific: false, (AndroidTargetArch arch) => resolver);
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (includeRidAgnostic: true, useMarshalMethods: false);
+			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (resolvers);
 			throw new NotImplementedException ();
 		}
 
@@ -185,11 +183,9 @@ namespace Xamarin.Android.Tasks
 		// Typemaps don't use MVIDs or metadata tokens
 		void RunDebugWithLinking ()
 		{
-			const AndroidTargetArch ArchHere = AndroidTargetArch.None;
-
 			LogRunMode ("Debug, with linking");
-			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
-			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (allowAbiSpecific: true, (AndroidTargetArch arch) => resolver);
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (includeRidAgnostic: false, useMarshalMethods: false);
+			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (resolvers);
 			throw new NotImplementedException ();
 		}
 
@@ -200,15 +196,15 @@ namespace Xamarin.Android.Tasks
 			const AndroidTargetArch ArchHere = AndroidTargetArch.None;
 
 			LogRunMode ("Release, no linking");
-			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
-			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (allowAbiSpecific: false, (AndroidTargetArch arch) => resolver);
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (includeRidAgnostic: true, useMarshalMethods);
+			var assemblies = CollectInterestingAssemblies<RidAgnosticInputAssemblySet> (resolvers);
 			var state = new RunState {
 				UseMarshalMethods        = useMarshalMethods,
 				AssemblySet              = assemblies,
 				JavaTypeAssemblies       = assemblies.JavaTypeAssemblies,
 				UserAssemblies           = assemblies.UserAssemblies,
 				GenerateRidAgnosticParts = true,
-				Resolver                 = resolver,
+				Resolvers                = resolvers,
 				TargetArch               = ArchHere,
 			};
 			DoRun (state, out ApplicationConfigTaskState appConfState);
@@ -221,17 +217,8 @@ namespace Xamarin.Android.Tasks
 		{
 			LogRunMode ("Release, with linking");
 
-			var resolvers = new Dictionary<AndroidTargetArch, XAAssemblyResolver> ();
-			foreach (string abi in SupportedAbis) {
-				// Each ABI gets its own resolver in this mode...
-				XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
-				resolvers.Add (MonoAndroidHelper.AbiToTargetArch (abi), resolver);
-			}
-
-			// We don't check whether we have a resolver for `arch` on purpose, if it throws then it means we have a bug which
-			// should be fixed since there shouldn't be any assemblies passed to this task that belong in ABIs other than those
-			// specified in `SupportedAbis`
-			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (allowAbiSpecific: true, (AndroidTargetArch arch) => resolvers[arch]);
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (includeRidAgnostic: false, useMarshalMethods);
+			var assemblies = CollectInterestingAssemblies<RidSpecificInputAssemblySet> (resolvers);
 			bool first = true;
 
 			foreach (var kvp in resolvers) {
@@ -241,7 +228,7 @@ namespace Xamarin.Android.Tasks
 					JavaTypeAssemblies       = assemblies.JavaTypeAssemblies[kvp.Key].Values,
 					UserAssemblies           = assemblies.UserAssemblies[kvp.Key].Values,
 					GenerateRidAgnosticParts = first,
-					Resolver                 = kvp.Value,
+					Resolvers                = resolvers,
 					TargetArch               = kvp.Key,
 				};
 
@@ -251,6 +238,22 @@ namespace Xamarin.Android.Tasks
 					first = false;
 				}
 			}
+		}
+
+		Dictionary<AndroidTargetArch, XAAssemblyResolver> MakeResolvers (bool includeRidAgnostic, bool useMarshalMethods)
+		{
+			var resolvers = new Dictionary<AndroidTargetArch, XAAssemblyResolver> ();
+			foreach (string abi in SupportedAbis) {
+				// Each ABI gets its own resolver in this mode...
+				XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
+				resolvers.Add (MonoAndroidHelper.AbiToTargetArch (abi), resolver);
+			}
+
+			if (includeRidAgnostic) {
+				resolvers.Add (AndroidTargetArch.None, MakeResolver (useMarshalMethods));
+			}
+
+			return resolvers;
 		}
 
 		void RegisterApplicationConfigState (ApplicationConfigTaskState appConfState)
@@ -263,7 +266,7 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"GenerateJavaStubs mode: {mode}");
 		}
 
-		T CollectInterestingAssemblies<T> (bool allowAbiSpecific, Func<AndroidTargetArch, XAAssemblyResolver> getResolver) where T: InputAssemblySet, new()
+		T CollectInterestingAssemblies<T> (Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers) where T: InputAssemblySet, new()
 		{
 			var assemblies = new T ();
 			AndroidTargetArch targetArch;
@@ -292,8 +295,12 @@ namespace Xamarin.Android.Tasks
 					assemblies.AddJavaTypeAssembly (assembly);
 				}
 
-				targetArch = GetTargetArch (assembly);
-				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+
+				// We don't check whether we have a resolver for `targetArch` on purpose, if it throws then it means we have a bug which
+				// should be fixed since there shouldn't be any assemblies passed to this task that belong in ABIs other than those
+				// specified in `SupportedAbis` (and, perhaps, a RID-agnostic one)
+				resolvers[targetArch].Load (targetArch, assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
@@ -303,26 +310,19 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				targetArch = GetTargetArch (assembly);
-				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+				resolvers[targetArch].Load (targetArch, assembly.ItemSpec);
 
 				assemblies.AddJavaTypeAssembly (assembly);
 				assemblies.AddUserAssembly (assembly);
 			}
 
 			return assemblies;
-
-			AndroidTargetArch GetTargetArch (ITaskItem assembly)
-			{
-				AndroidTargetArch targetArch = MonoAndroidHelper.GetTargetArch (assembly);
-				if (!allowAbiSpecific && targetArch != AndroidTargetArch.None) {
-					throw new InvalidOperationException ($"Internal error: ABI-specific assemblies are not allowed in this build configuration");
-				}
-
-				return targetArch;
-			}
 		}
 
+		// TODO: a different approach needed... In all the scenarios, there always are going to be RID-specific assemblies
+		// even if it's CoreLib right now.  We MUST expect that even without linking, some assemblies can contain RID-specific
+		// code.
 		void DoRun (RunState state, out ApplicationConfigTaskState? appConfState)
 		{
 			Log.LogDebugMessage ($"DoRun for arch {state.TargetArch}");
