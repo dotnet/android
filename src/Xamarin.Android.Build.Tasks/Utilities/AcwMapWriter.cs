@@ -21,7 +21,7 @@ class AcwMapWriter
 		AcwMapFile = acwMapFile;
 	}
 
-	public void Write (List<JavaType> javaTypes, TypeDefinitionCache cache)
+	public void Write (ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache)
 	{
 		// We need to save a map of .NET type -> ACW type for resource file fixups
 		var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
@@ -31,8 +31,7 @@ class AcwMapWriter
 		var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
 		using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-			foreach (JavaType jt in javaTypes) {
-				TypeDefinition type = jt.Type;
+			foreach (TypeDefinition type in javaTypes) {
 				string managedKey = type.FullName.Replace ('/', '.');
 				string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 

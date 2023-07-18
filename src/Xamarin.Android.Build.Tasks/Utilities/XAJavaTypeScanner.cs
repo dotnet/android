@@ -28,20 +28,6 @@ class JavaType
 
 class XAJavaTypeScanner
 {
-	sealed class TypeData
-	{
-		public readonly TypeDefinition FirstType;
-		public readonly Dictionary<AndroidTargetArch, TypeDefinition> PerAbi;
-
-		public bool IsAbiSpecific => !PerAbi.ContainsKey (AndroidTargetArch.None);
-
-		public TypeData (TypeDefinition firstType)
-		{
-			FirstType = firstType;
-			PerAbi = new Dictionary<AndroidTargetArch, TypeDefinition> ();
-		}
-	}
-
 	public bool ErrorOnCustomJavaObject { get; set; }
 
 	TaskLoggingHelper log;
@@ -53,51 +39,33 @@ class XAJavaTypeScanner
 		this.cache = cache;
 	}
 
-	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
+	public ICollection<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
-		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
+		var types = new Dictionary<string, TypeDefinition> (StringComparer.Ordinal);
 		foreach (ITaskItem asmItem in inputAssemblies) {
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
 			AssemblyDefinition asmdef = resolver.Load (arch, asmItem.ItemSpec);
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
-					AddJavaType (td, types, arch);
+					AddJavaType (td, types);
 				}
 			}
 		}
 
-		var ret = new List<JavaType> ();
-		foreach (var kvp in types) {
-			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.IsAbiSpecific ? kvp.Value.PerAbi : null));
-		}
-
-		return ret;
+		return types.Values;
 	}
 
-	void AddJavaType (TypeDefinition type, Dictionary<string, TypeData> types, AndroidTargetArch arch)
+	void AddJavaType (TypeDefinition type, Dictionary<string, TypeDefinition> types)
 	{
 		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
 			// For subclasses of e.g. Android.App.Activity.
 			string typeName = type.GetPartialAssemblyQualifiedName (cache);
-			if (!types.TryGetValue (typeName, out TypeData typeData)) {
-				typeData = new TypeData (type);
-				types.Add (typeName, typeData);
+			if (types.ContainsKey (typeName)) {
+				return;
 			}
 
-			if (typeData.PerAbi.ContainsKey (AndroidTargetArch.None)) {
-				if (arch == AndroidTargetArch.None) {
-					throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}");
-				}
-
-				throw new InvalidOperationException ($"Previously added type '{type.FullName}' was in ABI-agnostic assembly, new one comes from ABI {arch} assembly");
-			}
-
-			if (typeData.PerAbi.ContainsKey (arch)) {
-				throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}, for ABI {arch}");
-			}
-
-			typeData.PerAbi.Add (arch, type);
+			types.Add (typeName, type);
 		} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 			string message = $"XA4212: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.";
 
@@ -114,7 +82,7 @@ class XAJavaTypeScanner
 		}
 
 		foreach (TypeDefinition nested in type.NestedTypes) {
-			AddJavaType (nested, types, arch);
+			AddJavaType (nested, types);
 		}
 	}
 }
