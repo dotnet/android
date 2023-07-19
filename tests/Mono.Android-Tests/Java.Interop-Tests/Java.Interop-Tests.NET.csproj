@@ -14,8 +14,6 @@
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);NO_MARSHAL_MEMBER_BUILDER_SUPPORT</DefineConstants>
     <JavaInteropTestDirectory>$(JavaInteropSourceDirectory)\tests\Java.Interop-Tests\</JavaInteropTestDirectory>
-    <!-- FIXME: https://github.com/dotnet/runtime/issues/89190 -->
-    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
   </PropertyGroup>
 
   <ItemGroup>
