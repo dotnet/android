@@ -399,21 +399,25 @@ namespace Java.InteropTests {
 	}
 
 	[TestFixture]
+	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
 	public class JniValueMarshaler_NullableBoolean_ContractTests : JniValueMarshalerContractTests<bool?> {
 		protected   override    bool?   Value           {get {return true;}}
 	}
 
 	[TestFixture]
+	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
 	public class JniValueMarshaler_NullableSByte_ContractTests : JniValueMarshalerContractTests<sbyte?> {
 		protected   override    sbyte?  Value           {get {return (sbyte) 2;}}
 	}
 
 	[TestFixture]
+	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
 	public class JniValueMarshaler_NullableChar_ContractTests : JniValueMarshalerContractTests<char?> {
 		protected   override    char?   Value           {get {return '3';}}
 	}
 
 	[TestFixture]
+	[Category("LLVMIgnore")] //FIXME: https://github.com/dotnet/runtime/issues/89190
 	public class JniValueMarshaler_NullableInt16_ContractTests : JniValueMarshalerContractTests<short?> {
 		protected   override    short?  Value           {get {return (short) 4;}}
 	}
