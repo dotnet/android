@@ -2577,5 +2577,38 @@ namespace UnnamedProject
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 		}
+
+		// Combination of class libraries that triggered the problem:
+		// error APT2144: invalid file path 'obj/Release/net8.0-android/lp/86.stamp'.
+		[Test]
+		public void ClassLibraryAarDependencies ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var material = new Package { Id = "Xamarin.Google.Android.Material", Version = "1.9.0.1" };
+			var libraryA = new XamarinAndroidLibraryProject {
+				ProjectName = "LibraryA",
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar { }",
+					},
+				},
+				PackageReferences = { material },
+			};
+			using var builderA = CreateDllBuilder (Path.Combine (path, libraryA.ProjectName));
+			Assert.IsTrue (builderA.Build (libraryA), "Build should have succeeded.");
+
+			var libraryB = new XamarinAndroidLibraryProject {
+				ProjectName = "LibraryB",
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => "public class Foo : Bar { }",
+					}
+				},
+				PackageReferences = { material },
+			};
+			libraryB.AddReference (libraryA);
+			using var builderB = CreateDllBuilder (Path.Combine (path, libraryB.ProjectName));
+			Assert.IsTrue (builderB.Build (libraryB), "Build should have succeeded.");
+		}
 	}
 }
