@@ -25,7 +25,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public static bool PointsToSymbol (this MemberInfo mi, out string? symbolName)
 		{
 			var attr = mi.GetCustomAttribute <NativePointerAttribute> ();
-			if (attr == null) {
+			if (attr == null || attr.PointsToSymbol == null) {
 				symbolName = null;
 				return false;
 			}

@@ -242,57 +242,5 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
 			}
 		}
-
-		static object [] TlsProviderTestCases =
-		{
-			// androidTlsProvider, isRelease, extpected
-			new object[] { "", true, true, },
-			new object[] { "default", true, true, },
-			new object[] { "legacy", true, true, },
-			new object[] { "btls", true, true, }
-		};
-
-		[Test]
-		[Category ("DotNetIgnore")] // .NET 5+ does not use these native libraries
-		[TestCaseSource (nameof (TlsProviderTestCases))]
-		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			var supportedAbis = new string [] { "armeabi-v7a", "arm64-v8a" };
-			proj.SetAndroidSupportedAbis (supportedAbis);
-
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
-				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var outpath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var apk = Path.Combine (outpath, $"{proj.PackageName}-Signed.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					foreach (var abi in supportedAbis) {
-						if (expected) {
-							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-								$"lib/{abi}/libmono-btls-shared.so"),
-								$"lib/{abi}/libmono-btls-shared.so should exist in the apk.");
-						}
-						else {
-							Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-								$"lib/{abi}/libmono-btls-shared.so"),
-								$"lib/{abi}/libmono-btls-shared.so should not exist in the apk.");
-						}
-					}
-				}
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, string.Join (";", supportedAbis), true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.ContainsKey ("XA_TLS_PROVIDER"), "Environment should contain XA_TLS_PROVIDER.");
-				if (androidTlsProvider == string.Empty) {
-					Assert.AreEqual ("btls", envvars["XA_TLS_PROVIDER"], "'XA_TLS_PROVIDER' should have been 'btls' when provider is not set.");
-				} else {
-					Assert.AreEqual (androidTlsProvider, envvars["XA_TLS_PROVIDER"], $"'XA_TLS_PROVIDER' should have been '{androidTlsProvider}'.");
-				}
-			}
-		}
-
 	}
 }

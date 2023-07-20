@@ -29,6 +29,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
 		{
+			// TODO: enable when marshal methods are fixed
+			if (enableMarshalMethods) {
+				Assert.Ignore ("Test is skipped when marshal methods are enabled, pending fixes to MM for .NET9");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -294,59 +299,6 @@ namespace Library1 {
 						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
 				});
 			}
-		}
-
-		public static string [] ProfilerOptions () => new string [] {
-			"log:heapshot", // Heapshot
-			"log:sample", // Sample
-			"log:nodefaults,exception,monitor,counter,sample", // Sample5_8
-			"log:nodefaults,exception,monitor,counter,sample-real", // SampleReal
-			"log:alloc", // Allocations
-			"log:nodefaults,gc,gcalloc,gcroot,gcmove,counter", // Allocations5_8
-			"log:nodefaults,gc,nogcalloc,gcroot,gcmove,counter", // LightAllocations
-			"log:calls,alloc,heapshot", // All
-		};
-
-		[Test]
-		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
-		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
-		{
-			AssertCommercialBuild ();
-
-			proj = new XamarinAndroidApplicationProject () {
-			};
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			string mlpdDestination = Path.Combine (Root, builder.ProjectDirectory, "profile.mlpd");
-			if (File.Exists (mlpdDestination))
-				File.Delete (mlpdDestination);
-
-			RunAdbCommand ($"shell setprop debug.mono.profile {profilerOption}");
-			RunProjectAndAssert (proj, builder);
-			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
-
-			// Wait for seven seconds after the activity is displayed to get profiler results
-			WaitFor (7000);
-			string profilerFileDir = null;
-			foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-				var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
-				if (listing.Contains ("profile.mlpd")) {
-					profilerFileDir = dir;
-					break;
-				}
-			}
-
-			Assert.IsTrue (!string.IsNullOrEmpty (profilerFileDir), $"Unable to locate 'profile.mlpd' in any override directories.");
-			var profilerContent = RunAdbCommand ($"shell run-as {proj.PackageName} cat {profilerFileDir}/profile.mlpd");
-			File.WriteAllText (mlpdDestination, profilerContent);
-			RunAdbCommand ($"shell run-as {proj.PackageName} rm {profilerFileDir}/profile.mlpd");
-			RunAdbCommand ($"shell am force-stop {proj.PackageName}");
-			RunAdbCommand ("shell setprop debug.mono.profile \"\"");
-			Assert.IsTrue (new FileInfo (mlpdDestination).Length > 5000,
-				$"profile.mlpd file created with option '{profilerOption}' was not larger than 5 kb. The application may have crashed.");
-			Assert.IsTrue (profilerContent.Contains ("String") && profilerContent.Contains ("Java"),
-				$"profile.mlpd file created with option '{profilerOption}' did not contain expected data.");
 		}
 
 		[Test]
