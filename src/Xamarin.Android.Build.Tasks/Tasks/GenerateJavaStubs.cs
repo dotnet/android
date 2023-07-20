@@ -224,6 +224,12 @@ namespace Xamarin.Android.Tasks
 			LogRunMode ("Release, no linking");
 
 			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (useMarshalMethods);
+
+			// All the RID-agnostic asseemblies will use resolvers of this architecture. This is because the RidAwareInputAssemblySet does not store
+			// such assemblies separately, but it copies them to **all** the target RIDs. This, in turn, is done because of typemaps and marshal methods
+			// which process data in a way that requires proper sorting of assemblies per MVID and it requires valid type and method token IDs.
+			AndroidTargetArch firstArch = resolvers.First ().Key;
+			resolvers.Add (AndroidTargetArch.None, resolvers[firstArch]);
 			var assemblies = CollectInterestingAssemblies (new RidAwareInputAssemblySet (resolvers.Keys), (AndroidTargetArch arch) => resolvers[arch]);
 			RunReleaseCommon (useMarshalMethods, assemblies, resolvers);
 		}
