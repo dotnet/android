@@ -29,10 +29,7 @@ namespace Xamarin.Android.Tasks
 
 		public override void Generate (string outputDirectory, List<AssemblyStoreIndexEntry> globalIndex, List<string> blobPaths)
 		{
-			if (assemblies.Count == 0) {
-				return;
-			}
-
+			// Always generate this blob, even if there are no assembly entries as this blob contains the global index
 			Generate (Path.Combine (outputDirectory, $"{ApkName}_{BlobPrefix}{BlobExtension}"), assemblies, globalIndex, blobPaths);
 		}
 	}

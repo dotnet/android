@@ -16,6 +16,7 @@ namespace Xamarin.Android.Tasks
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
+		const string AssemblyDSOBase = "assembly_dso";
 
 		public override string TaskPrefix => "PAI";
 
@@ -56,6 +57,8 @@ namespace Xamarin.Android.Tasks
 				baseName = JniRemappingBase;
 			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = MarshalMethodsBase;
+			} else if (String.Compare ("assembly_dsos", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = AssemblyDSOBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;

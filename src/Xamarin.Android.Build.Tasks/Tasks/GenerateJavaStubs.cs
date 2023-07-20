@@ -344,9 +344,6 @@ namespace Xamarin.Android.Tasks
 			return assemblies;
 		}
 
-		// TODO: a different approach needed... In all the scenarios, there always are going to be RID-specific assemblies
-		// even if it's CoreLib right now.  We MUST expect that even without linking, some assemblies can contain RID-specific
-		// code.
 		void DoRun (RunState state, out ApplicationConfigTaskState? appConfState)
 		{
 			Log.LogDebugMessage ($"DoRun for arch {state.TargetArch}");
