@@ -7,8 +7,8 @@ namespace Xamarin.Android.Tasks;
 
 class RidAgnosticInputAssemblySet : InputAssemblySet
 {
-	Dictionary<string, ITaskItem> javaTypeAssemblies = new (StringComparer.OrdinalIgnoreCase);
-	Dictionary<string, ITaskItem> userAssemblies = new (StringComparer.OrdinalIgnoreCase);
+	Dictionary<string, ITaskItem> javaTypeAssemblies = new (AssemblyNameStringComparer);
+	Dictionary<string, ITaskItem> userAssemblies = new (AssemblyNameStringComparer);
 
 	public ICollection<ITaskItem> JavaTypeAssemblies => javaTypeAssemblies.Values;
 	public ICollection<ITaskItem> UserAssemblies     => userAssemblies.Values;

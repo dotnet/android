@@ -451,12 +451,19 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
-			WriteNativeAssembly (
-				targetArch,
-				composer,
-				typeMapModule,
-				GetOutputFilePath (baseFileName, ArchToAbi (targetArch))
-			);
+			if (targetArch != AndroidTargetArch.None) {
+				DoWriteNativeAssembly (targetArch, GetOutputFilePath (baseFileName, ArchToAbi (targetArch)));
+				return;
+			}
+
+			foreach (string abi in supportedAbis) {
+				DoWriteNativeAssembly (MonoAndroidHelper.AbiToTargetArch (abi), GetOutputFilePath (baseFileName, abi));
+			}
+
+			void DoWriteNativeAssembly (AndroidTargetArch arch, string outputFile)
+			{
+				WriteNativeAssembly (arch, composer, typeMapModule, outputFile);
+			}
 		}
 
 		// void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
