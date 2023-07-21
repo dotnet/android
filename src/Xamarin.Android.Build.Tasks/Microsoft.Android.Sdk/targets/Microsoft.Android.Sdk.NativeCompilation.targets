@@ -12,6 +12,7 @@
     <_AndroidUseAssemblySharedLibraries Condition=" '$(_AndroidUseAssemblySharedLibraries)' == '' ">true</_AndroidUseAssemblySharedLibraries>
 
     <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
+    <_CompressedAssembliesOutputDir>$(IntermediateOutputPath)android\lz4-2</_CompressedAssembliesOutputDir>
   </PropertyGroup>
 
   <!-- Native code preparation targets -->
@@ -129,8 +130,16 @@
   <!-- Native source code generation targets -->
   <Target Name="_GenerateAssemblyDsoNativeSourceFiles"
           DependsOnTargets="_PrepareAssemblySharedLibrariesItems"
-          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' ">
-
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
+          Inputs="@(_ShrunkUserAssemblies);@(_ShrunkFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+          Outputs="@(_AssemblyDSOSource)">
+    <GenerateAssemblyDsoNativeSourceFiles
+        SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
+        CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        Assemblies="@(_ShrunkUserAssemblies);@(_ShrunkFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+    />
   </Target>
 
   <Target Name="_GenerateEmptyAndroidRemapNativeCode"

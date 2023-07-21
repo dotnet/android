@@ -16,7 +16,7 @@ namespace Xamarin.Android.Tasks
 		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
-		const string AssemblyDSOBase = "assembly_dso";
+		public const string AssemblyDSOBase = "assembly_dso";
 
 		public override string TaskPrefix => "PAI";
 
@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tasks
 
 			TaskItem item;
 			foreach (string abi in BuildTargetAbis) {
-				item = new TaskItem (Path.Combine (NativeSourcesDir, $"{baseName}.{abi}.ll"));
+				item = new TaskItem (Path.Combine (NativeSourcesDir, MonoAndroidHelper.MakeNativeAssemblyFileName (baseName, abi)));
 				item.SetMetadata ("abi", abi);
 				sources.Add (item);
 			}

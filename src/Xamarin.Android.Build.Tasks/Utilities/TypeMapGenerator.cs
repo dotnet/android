@@ -447,17 +447,15 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		string GetOutputFilePath (string baseFileName, string abi) => $"{baseFileName}.{abi}.ll";
-
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
 			if (targetArch != AndroidTargetArch.None) {
-				DoWriteNativeAssembly (targetArch, GetOutputFilePath (baseFileName, ArchToAbi (targetArch)));
+				DoWriteNativeAssembly (targetArch, MonoAndroidHelper.MakeNativeAssemblyFileName (baseFileName, ArchToAbi (targetArch)));
 				return;
 			}
 
 			foreach (string abi in supportedAbis) {
-				DoWriteNativeAssembly (MonoAndroidHelper.AbiToTargetArch (abi), GetOutputFilePath (baseFileName, abi));
+				DoWriteNativeAssembly (MonoAndroidHelper.AbiToTargetArch (abi), MonoAndroidHelper.MakeNativeAssemblyFileName (baseFileName, abi));
 			}
 
 			void DoWriteNativeAssembly (AndroidTargetArch arch, string outputFile)

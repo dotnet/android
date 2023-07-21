@@ -643,5 +643,7 @@ namespace Xamarin.Android.Tasks
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
 		}
+
+		public static string MakeNativeAssemblyFileName (string baseName, string abi) => $"{baseName}.{abi}.ll";
 	}
 }

@@ -365,8 +365,6 @@ namespace Xamarin.Android.Tasks
 		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			string sourcePath;
-			AssemblyCompression.AssemblyData compressedAssembly = null;
-			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 			AssemblyStoreGenerator storeGenerator;
 
 			if (UseAssemblyStore) {
@@ -389,6 +387,12 @@ namespace Xamarin.Android.Tasks
 			const string DefaultBaseApkName = "base";
 			if (String.IsNullOrEmpty (assemblyStoreApkName)) {
 				assemblyStoreApkName = DefaultBaseApkName;
+			}
+
+			AssemblyCompression? assemblyCompressor = null;
+			if (compress) {
+				string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
+				assemblyCompressor = new AssemblyCompression (Log, compressedOutputDir);
 			}
 
 			// Add user assemblies
@@ -482,57 +486,13 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
-			}
-
 			string CompressAssembly (ITaskItem assembly)
 			{
-				if (!compress) {
+				if (!compress || assemblyCompressor == null) {
 					return assembly.ItemSpec;
 				}
 
-				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipCompression"), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping compression of {assembly.ItemSpec} due to 'AndroidSkipCompression' == 'true' ");
-					return assembly.ItemSpec;
-				}
-
-				var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
-				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
-					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
-					string assemblyOutputDir;
-					string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-					if (!String.IsNullOrEmpty (subDirectory))
-						assemblyOutputDir = Path.Combine (compressedOutputDir, subDirectory);
-					else
-						assemblyOutputDir = compressedOutputDir;
-					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
-					if (result != AssemblyCompression.CompressionResult.Success) {
-						switch (result) {
-							case AssemblyCompression.CompressionResult.EncodingFailed:
-								Log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
-								break;
-
-							case AssemblyCompression.CompressionResult.InputTooBig:
-								Log.LogMessage ($"Input assembly {assembly.ItemSpec} exceeds maximum input size");
-								break;
-
-							default:
-								Log.LogMessage ($"Unknown error compressing {assembly.ItemSpec}");
-								break;
-						}
-						return assembly.ItemSpec;
-					}
-					return compressedAssembly.DestinationPath;
-				} else {
-					Log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
-				}
-
-				return assembly.ItemSpec;
+				return assemblyCompressor.CompressAssembly (assembly, compressedAssembliesInfo);
 			}
 		}
 
