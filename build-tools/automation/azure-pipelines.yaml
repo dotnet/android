@@ -365,8 +365,8 @@ stages:
       displayName: Install MAUI workload packs
       retryCountOnTaskFailure: 3
       inputs:
-        projects: $(Build.SourcesDirectory)/xamarin-android/build-tools/create-packs/Microsoft.Android.Sdk.proj
-        arguments: -t:ExtractMauiWorkloadPacks -c $(XA.Build.Configuration) -v:n -bl:$(Build.StagingDirectory)/logs/extract-workloads.binlog
+        projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:

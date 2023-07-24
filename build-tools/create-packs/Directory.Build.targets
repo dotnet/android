@@ -165,49 +165,6 @@
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
-  <Target Name="ExtractMauiWorkloadPacks" >
-    <PropertyGroup>
-      <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(XamarinAndroidSourcePath)..\maui</MauiSourcePath>
-      <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
-      <_SdkManifestsFolder>$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\</_SdkManifestsFolder>
-    </PropertyGroup>
-    <ItemGroup>
-      <_WLManifest Include="$(MauiPackagePath)/Microsoft.NET.Sdk.Maui.Manifest-$(DotNetSdkManifestsFolder.Substring (0,3))*.nupkg" />
-    </ItemGroup>
-    <Unzip
-        SourceFiles="@(_WLManifest)"
-        DestinationFolder="$(_SdkManifestsFolder)temp"
-    />
-    <ItemGroup>
-      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
-      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
-    </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.maui" />
-    <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
-
-    <XmlPeek
-        XmlInputPath="$(MauiSourcePath)\NuGet.config"
-        Query="/configuration/packageSources/add/@value">
-      <Output TaskParameter="Result" ItemName="_NuGetSources" />
-    </XmlPeek>
-    <PropertyGroup>
-      <_TempDirectory>$(IntermediateOutputPath).workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
-    </PropertyGroup>
-    <ItemGroup>
-      <_NuGetSources Include="$(MauiPackagePath.TrimEnd('\'))" />
-      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
-      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
-      <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
-    </ItemGroup>
-    <MakeDir Directories="$(_TempDirectory)" />
-    <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install maui --skip-manifest-update --skip-sign-check --verbosity diag --temp-dir &quot;$(_TempDirectory)&quot; @(_InstallArguments, ' ')"
-        WorkingDirectory="$(_TempDirectory)"
-        EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
-    />
-    <RemoveDir Directories="$(_TempDirectory)" />
-  </Target>
-
   <Target Name="PushManifestToBuildAssetRegistry" >
     <ItemGroup>
       <BuildArtifacts Include="$(OutputPath)*.nupkg" />
