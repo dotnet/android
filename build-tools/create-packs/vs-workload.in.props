@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetName>Microsoft.NET.Sdk.Android.Workload.@VSMAN_VERSION@</TargetName>
     <ManifestBuildVersion>@WORKLOAD_VERSION@</ManifestBuildVersion>
+    <EnableSideBySideManifests>true</EnableSideBySideManifests>
   </PropertyGroup>
   <ItemGroup>
     <!-- Shorten package names to avoid long path caching issues in Visual Studio -->
