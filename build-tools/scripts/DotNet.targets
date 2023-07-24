@@ -55,6 +55,7 @@
       <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
       <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(XamarinAndroidSourcePath)..\maui</MauiSourcePath>
       <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
+      <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
 
@@ -106,7 +107,7 @@
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install maui-android @(_InstallArguments, ' ')"
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
         EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
     />

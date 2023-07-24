@@ -366,7 +366,7 @@ stages:
       retryCountOnTaskFailure: 3
       inputs:
         projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
-        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
+        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
