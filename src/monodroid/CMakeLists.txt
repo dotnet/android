@@ -521,7 +521,6 @@ if(ANDROID)
       ${BIONIC_SOURCES_DIR}/cxa_guard.cc
       ${SOURCES_DIR}/cxx-abi/string.cc
       ${SOURCES_DIR}/cxx-abi/terminate.cc
-      ${SOURCES_DIR}/cxx-abi/vector.cc
       )
   endif()
 else()
