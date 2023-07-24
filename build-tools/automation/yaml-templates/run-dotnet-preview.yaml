@@ -14,11 +14,11 @@ steps:
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
         $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet"
-        $env:PATH="$DOTNET_ROOT;$env:PATH"
+        $env:PATH = "$DOTNET_ROOT;$env:PATH"
         $dotnetPath = "$DOTNET_ROOT/dotnet"
     } else {
         $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet"
-        $env:PATH="$DOTNET_ROOT:$env:PATH"
+        $env:PATH = "$DOTNET_ROOT:$env:PATH"
         $dotnetPath = "$DOTNET_ROOT\dotnet.exe"
     }
     & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
