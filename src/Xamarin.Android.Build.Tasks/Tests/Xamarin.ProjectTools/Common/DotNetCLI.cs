@@ -47,7 +47,7 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
 				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-				p.StartInfo.SetEnvironmentVariable ("DOTNET_ROOT", TestEnvironment.DotNetPreviewDirectory);
+				p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 				if (TestEnvironment.UseLocalBuildOutput) {
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
