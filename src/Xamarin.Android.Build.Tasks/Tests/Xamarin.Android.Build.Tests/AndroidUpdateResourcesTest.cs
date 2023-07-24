@@ -1102,40 +1102,25 @@ namespace Lib1 {
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5, not possible to use $(TFV) of v8.0
-		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
+		public void CheckMaxResWarningIsEmittedAsAWarning()
 		{
-			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v8.0",
-				TargetSdkVersion = "26",
-				MinSdkVersion = null,
-				UseLatestPlatformSdk = false,
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem.Folder ("Resources\\values-v27\\") {
+					new BuildItem.Folder ("Resources\\values-v33\\") {
 					},
 				},
 			};
-			proj.AndroidUseAapt2 = useAapt2;
-			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v33\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
   <string name=""test"" >Test</string>
 </resources>",
 			});
 			using (var builder = CreateApkBuilder (path)) {
-				if (!builder.TargetFrameworkExists (proj.TargetFrameworkVersion)) {
-					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
-				}
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				if (useAapt2) {
-					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
-				} else {
-					var expected = "warning APT1146: max res 26, skipping values-v27";
-					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT1146 warning about 'max res 26, skipping values-v27'");
-				}
+				StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
 			}
 		}
 

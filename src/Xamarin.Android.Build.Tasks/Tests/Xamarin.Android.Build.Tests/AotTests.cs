@@ -137,6 +137,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildAotApplicationWithNdkAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAotNdk AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
@@ -213,6 +216,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAot AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
@@ -411,6 +417,9 @@ namespace "+ libName + @" {
 		[Category ("LLVM")]
 		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			AssertAotModeSupported (androidAotMode);
 
 			var proj = new XamarinAndroidApplicationProject () {

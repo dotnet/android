@@ -352,7 +352,7 @@ In a Xamarin.Android binding project, the **JavaDocJar** build action
 is used on `.jar` files that contain *Javadoc HTML*.  The Javadoc HTML
 is parsed in order to extract parameter names.
 
-Only certain "Javadoc HTML dialects" are supported, including:
+Only certain "Javadoc HTML variations" are supported, including:
 
   * JDK 1.7 `javadoc` output.
   * JDK 1.8 `javadoc` output.
