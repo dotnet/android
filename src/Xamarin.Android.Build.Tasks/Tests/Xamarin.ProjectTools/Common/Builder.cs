@@ -279,7 +279,7 @@ namespace Xamarin.ProjectTools
 			}
 			if (Builder.UseDotNet) {
 				psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-				psi.SetEnvironmentVariable ("DOTNET_ROOT", TestEnvironment.DotNetPreviewDirectory);
+				psi.SetEnvironmentVariable ("PATH", $"{TestEnvironment.DotNetPreviewDirectory}{Path.PathSeparator}{Environment.GetEnvironmentVariable ("PATH")});
 			}
 
 			psi.Arguments = args.ToString ();
