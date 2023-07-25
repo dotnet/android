@@ -33,6 +33,7 @@ jobs:
     parameters:
       installTestSlicer: true
       installLegacyDotNet: false
+      installLegacyXamarinAndroid: true
       restoreNUnitConsole: false
       updateMono: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
