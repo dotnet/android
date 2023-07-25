@@ -48,3 +48,5 @@ variables:
   value: 33,34
 - name: ExcludedNUnitCategories
   value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != StaticProject & cat != SystemApplication'
+- name: MSBUILDLOGALLENVIRONMENTVARIABLES
+  value: 1
