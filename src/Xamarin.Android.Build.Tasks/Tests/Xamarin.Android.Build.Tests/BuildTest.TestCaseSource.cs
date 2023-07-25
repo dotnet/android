@@ -11,6 +11,105 @@ namespace Xamarin.Android.Build.Tests
 {
 	public partial class BuildTest : BaseTest
 	{
+		static readonly object [] DotNetBuildSource = new object [] {
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-x86",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-x64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                true,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm",
+				/* isRelease */          true,
+				/* aot */                true,
+				/* usesAssemblyStore */  true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          false,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  false,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          true,
+				/* aot */                false,
+				/* usesAssemblyStore */  true,
+			},
+			new object [] {
+				/* runtimeIdentifiers */ "android-arm;android-arm64;android-x86;android-x64",
+				/* isRelease */          true,
+				/* aot */                true,
+				/* usesAssemblyStore */  false,
+			},
+		};
+
 #pragma warning disable 414
 		static object [] RuntimeChecks () => new object [] {
 			new object[] {

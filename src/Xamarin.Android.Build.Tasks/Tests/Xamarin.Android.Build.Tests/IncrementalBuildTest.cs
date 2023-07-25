@@ -1077,15 +1077,38 @@ namespace Lib2
 		{
 			AssertAotModeSupported (androidAotMode);
 
+			// Setup dependencies App A -> Lib B
+			var path = Path.Combine ("temp", TestName);
+
+			var libB = new XamarinAndroidLibraryProject {
+				ProjectName = "LibraryB",
+				IsRelease = true,
+				EnableDefaultItems = true,
+			};
+			libB.Sources.Clear ();
+			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => "public class Foo { }",
+			});
+
+			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
+			Assert.IsTrue (libBBuilder.Build(libB), $"{libB.ProjectName} should build");
+
 			var targets = new List<string> {
 				"_RemoveRegisterAttribute",
 				"_BuildApkEmbed",
 			};
-			var path = Path.Combine ("temp", $"BuildAotApplication_{supportedAbis}_{androidAotMode}_{aotAssemblies}_{expectedResult}");
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "AppA",
 				IsRelease = true,
 				AotAssemblies = aotAssemblies,
+				EnableDefaultItems = true,
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				}
 			};
+			proj.AddReference (libB);
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
 			}
@@ -1193,6 +1216,36 @@ namespace Lib2
 				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
 			}
+		}
+
+		[Test]
+		public void DesignTimeBuildSignAndroidPackage ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
+			var builder = CreateApkBuilder ();
+			var parameters = new [] { "BuildingInsideVisualStudio=true"};
+			builder.BuildLogFile = "update.log";
+			Assert.IsTrue (builder.RunTarget (proj, "Compile", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 1);
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateRtxt");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerIntermediateClass");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerAssembly", occurrence: 1);
+			parameters = new [] { "BuildingInsideVisualStudio=true" };
+			builder.BuildLogFile = "build1.log";
+			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 1);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 1);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", occurrence: 2);
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed 2");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 3);
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly");
 		}
 
 		[Test]
