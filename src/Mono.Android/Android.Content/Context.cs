@@ -1,4 +1,5 @@
 using System;
+using Android.OS;
 using Android.Runtime;
 
 namespace Android.Content {
@@ -15,6 +16,15 @@ namespace Android.Content {
 		// Added in API-26, converted to enum in API-33, constant needed for backwards compatibility
 		[Obsolete ("This constant will be removed in the future version. Use Android.Content.ReceiverFlags enum directly instead of this field.")]
 		public const int ReceiverVisibleToInstantApps = 1;
+#endif
+
+#if ANDROID_34
+		// Add correctly enumified overloads
+		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, ReceiverFlags flags)
+			=> RegisterReceiver (receiver, filter, (ActivityFlags)flags);
+
+		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, string? broadcastPermission, Handler? scheduler, ReceiverFlags flags)
+			=> RegisterReceiver (receiver, filter, broadcastPermission, scheduler, (ActivityFlags)flags);
 #endif
 	}
 }
