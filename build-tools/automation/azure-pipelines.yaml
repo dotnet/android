@@ -1789,6 +1789,14 @@ stages:
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
       displayName: set variables to unsigned installers
 
+    - template: yaml-templates\use-dot-net.yaml
+
+    # Signing depends on .NET Core 3
+    - template: yaml-templates\use-dot-net.yaml
+      parameters:
+        version: 3.1
+        quality: GA
+
     - template: yaml-templates/install-microbuild-tooling.yaml
 
     - task: MSBuild@1
