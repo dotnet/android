@@ -1789,6 +1789,12 @@ stages:
         Write-Host "##vso[task.setvariable variable=XA.Unsigned.Pkg]$pkg"
       displayName: set variables to unsigned installers
 
+    - task: UseDotNet@2
+      displayName: Install .NET Core 3.1.x
+      inputs:
+        packageType: runtime
+        version: 3.1.x
+
     - template: yaml-templates/install-microbuild-tooling.yaml
 
     - task: MSBuild@1
