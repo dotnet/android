@@ -2,6 +2,10 @@
   <PropertyGroup>
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
+    <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
+    <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
+    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
+    <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
 
   <Target Name="BuildExternal">
@@ -47,15 +51,18 @@
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
   </Target>
 
+  <Target Name="UpdateMauiWorkloadsProj">
+    <XmlPoke
+      XmlInputPath="$(MauiSourcePath)\src\DotNet\Dependencies\Workloads.csproj"
+      Value="Microsoft.NET.Sdk.Android.Manifest-$(DotNetSdkManifestsFolder)"
+      Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
+  </Target>
+
   <Target Name="InstallMaui">
     <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' and '$(MauiUseLocalPacks)' != 'true' " />
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
-      <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
-      <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(XamarinAndroidSourcePath)..\maui</MauiSourcePath>
-      <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
-      <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
 
