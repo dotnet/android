@@ -230,7 +230,7 @@ stages:
     - task: ShellScript@2
       inputs:
         scriptPath: dotnet-local.sh
-        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj -c Release
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: yaml-templates/start-stop-emulator.yaml
@@ -284,7 +284,7 @@ stages:
     - task: ShellScript@2
       inputs:
         scriptPath: dotnet-local.sh
-        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj -c Release
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - template: yaml-templates/upload-results.yaml
       parameters:
