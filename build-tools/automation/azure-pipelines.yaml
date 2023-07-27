@@ -228,6 +228,7 @@ stages:
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
     - task: ShellScript@2
+      displayName: Test dotnet-local.sh
       inputs:
         scriptPath: dotnet-local.sh
         args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
@@ -282,6 +283,7 @@ stages:
         testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
     - task: ShellScript@2
+      displayName: Test dotnet-local.sh
       inputs:
         scriptPath: dotnet-local.sh
         args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
