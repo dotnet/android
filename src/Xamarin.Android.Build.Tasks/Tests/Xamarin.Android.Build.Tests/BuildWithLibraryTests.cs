@@ -516,7 +516,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			}
 		}
 
-        [Test]
+		[Test]
 		public void DuplicateJCWNames ()
 		{
 			var source = @"[Android.Runtime.Register (""examplelib.EmptyClass"")] public class EmptyClass : Java.Lang.Object { }";
