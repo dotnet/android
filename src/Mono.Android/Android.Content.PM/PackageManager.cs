@@ -5,73 +5,82 @@ public abstract partial class PackageManager
 {
 	public sealed partial class PackageInfoFlags
 	{
-		// Create overloads that accept PackageInfoLongFlags
+		// Create overloads that accept PackageInfoFlagsLong
 		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android33.0")]
-		public static unsafe Android.Content.PM.PackageManager.PackageInfoFlags Of (PackageInfoLongFlags value)
+		public static Android.Content.PM.PackageManager.PackageInfoFlags Of (PackageInfoFlagsLong value)
 			=> Of ((long) value);
 
 		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android33.0")]
-		public unsafe PackageInfoLongFlags ValueAsFlags
-			=> (PackageInfoLongFlags) Value;
+		public PackageInfoFlagsLong ValueAsFlags
+			=> (PackageInfoFlagsLong) Value;
 	}
 }
 
 // Manually created "long" version of "PackageInfoFlags" enum, created from documentation:
 // https://developer.android.com/reference/android/content/pm/PackageManager.PackageInfoFlags#of(long)
 [System.Flags]
-public enum PackageInfoLongFlags : long
+public enum PackageInfoFlagsLong : long
 {
 	None = 0,
 
-	GetActivities = 1,
+	GetActivities = PackageInfoFlags.Activities,
 
-	GetReceivers = 2,
+	GetReceivers = PackageInfoFlags.Receivers,
 
-	GetServices = 4,
+	GetServices = PackageInfoFlags.Services,
 
-	GetProviders = 8,
+	GetProviders = PackageInfoFlags.Providers,
 
-	GetInstrumentation = 16,
+	GetInstrumentation = PackageInfoFlags.Instrumentation,
 
-	GetIntentFilters = 32,
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android31.0", "The platform does not support getting IntentFilters for the package.")]
+	GetIntentFilters = PackageInfoFlags.IntentFilters,
 
-	GetSignatures = 64,
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android28.0", "Use GetSigningCertificates instead.")]
+	GetSignatures = PackageInfoFlags.Signatures,
 
-	GetMetaData = 128,
+	GetMetaData = PackageInfoFlags.MetaData,
 
-	GetGids = 256,
+	GetGids = PackageInfoFlags.Gids,
 
-	GetDisabledComponents = 512,
-
-	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android24.0")]
-	MatchDisabledComponents = 512,
-
-	GetSharedLibraryFiles = 1024,
-
-	GetUriPermissionPatterns = 2048,
-
-	GetPermissions = 4096,
-
-	GetUninstalledPackages = 8192,
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android24.0", "Replaced with MatchDisabledComponents.")]
+	GetDisabledComponents = PackageInfoFlags.DisabledComponents,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android24.0")]
-	MatchUninstalledPackages = 8192,
+	MatchDisabledComponents = PackageInfoFlags.MatchDisabledComponents,
 
-	GetConfigurations = 16384,
+	GetSharedLibraryFiles = PackageInfoFlags.SharedLibraryFiles,
 
-	GetDisabledUntilUsedComponents = 32768,
+	GetUriPermissionPatterns = PackageInfoFlags.UriPermissionPatterns,
+
+	GetPermissions = PackageInfoFlags.Permissions,
+
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android24.0", "Replaced with MatchUninstalledPackages.")]
+	GetUninstalledPackages = PackageInfoFlags.UninstalledPackages,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android24.0")]
-	MatchDisabledUntilUsedComponents = 32768,
+	MatchUninstalledPackages = PackageInfoFlags.MatchUninstalledPackages,
+
+	GetConfigurations = PackageInfoFlags.Configurations,
+
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android24.0", "Replaced with MatchDisabledUntilUsedComponents.")]
+	GetDisabledUntilUsedComponents = PackageInfoFlags.DisabledUntilUsedComponents,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android24.0")]
-	MatchSystemOnly = 1048576,
+	MatchDisabledUntilUsedComponents = PackageInfoFlags.MatchDisabledUntilUsedComponents,
+
+	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android24.0")]
+	MatchSystemOnly = PackageInfoFlags.MatchSystemOnly,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android28.0")]
-	GetSigningCertificates = 134217728,
+	GetSigningCertificates = PackageInfoFlags.SigningCertificates,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android29.0")]
 	MatchApex = 1073741824,
+
+	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android31.0")]
+	[global::System.Runtime.Versioning.ObsoletedOSPlatformAttribute ("android34.0", "Use GetAttributionsLong to avoid unintended sign extension.")]
+	GetAttributions = PackageInfoFlags.Attributions,
 
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android34.0")]
 	GetAttributionsLong = 2147483648,
