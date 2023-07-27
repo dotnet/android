@@ -16,7 +16,7 @@ namespace Android.Runtime {
 			InnerException  = innerException;
 		}
 
-		public static JavaProxyThrowable Create (Exception? innerException)
+		public static JavaProxyThrowable Create (Exception innerException)
 		{
 			if (innerException == null) {
 				throw new ArgumentNullException (nameof (innerException));
