@@ -16,7 +16,7 @@ namespace Android.Runtime {
 			InnerException  = innerException;
 		}
 
-		public static JavaProxyThrowable Create (Exception? innerException, bool appendJavaStackTrace = false)
+		public static JavaProxyThrowable Create (Exception? innerException)
 		{
 			if (innerException == null) {
 				throw new ArgumentNullException (nameof (innerException));
@@ -26,7 +26,7 @@ namespace Android.Runtime {
 			var proxy = new JavaProxyThrowable ($"[{innerException.GetType}]: {innerException.Message}", innerException);
 
 			try {
-				proxy.TranslateStackTrace (appendJavaStackTrace);
+				proxy.TranslateStackTrace ();
 			} catch (Exception ex) {
 				// We shouldn't throw here, just try to do the best we can do
 				Console.WriteLine ($"JavaProxyThrowable: translation threw an exception: {ex}");
@@ -36,7 +36,7 @@ namespace Android.Runtime {
 			return proxy;
 		}
 
-		void TranslateStackTrace (bool appendJavaStackTrace)
+		void TranslateStackTrace ()
 		{
 			var trace = new StackTrace (InnerException, fNeedFileInfo: true);
 			if (trace.FrameCount <= 0) {
@@ -44,15 +44,14 @@ namespace Android.Runtime {
 			}
 
 			StackTraceElement[]? javaTrace = null;
-			if (appendJavaStackTrace) {
-				try {
-					javaTrace = Java.Lang.Thread.CurrentThread ()?.GetStackTrace ();
-				} catch (Exception ex) {
-					// Report...
-					Console.WriteLine ($"JavaProxyThrowable: obtaining Java stack trace threw an exception: {ex}");
-					// ..but ignore
-				}
+			try {
+				javaTrace = GetStackTrace ();
+			} catch (Exception ex) {
+				// Report...
+				Console.WriteLine ($"JavaProxyThrowable: obtaining Java stack trace threw an exception: {ex}");
+				// ..but ignore
 			}
+
 
 			StackFrame[] frames = trace.GetFrames ();
 			int nElements = frames.Length + (javaTrace?.Length ?? 0);

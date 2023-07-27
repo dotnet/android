@@ -79,7 +79,7 @@ namespace Android.Runtime {
 		{
 			var je  = pendingException as JavaProxyThrowable;
 			if (je == null) {
-				je  = JavaProxyThrowable.Create (pendingException, appendJavaStackTrace: true);
+				je  = JavaProxyThrowable.Create (pendingException);
 			}
 			var r = new JniObjectReference (je.Handle);
 			JniEnvironment.Exceptions.Throw (r);
