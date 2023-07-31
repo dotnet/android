@@ -1,0 +1,109 @@
+id: 
+name: GitOps.PullRequestIssueManagement
+description: GitOps.PullRequestIssueManagement primitive
+owner: 
+resource: repository
+disabled: false
+where: 
+configuration:
+  resourceManagementConfiguration:
+    scheduledSearches:
+    - description: 
+      frequencies:
+      - weekday:
+          day: Monday
+          time: 0:0
+      - weekday:
+          day: Tuesday
+          time: 0:0
+      - weekday:
+          day: Wednesday
+          time: 0:0
+      - weekday:
+          day: Thursday
+          time: 0:0
+      - weekday:
+          day: Friday
+          time: 0:0
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: need-info
+      - noActivitySince:
+          days: 7
+      actions:
+      - addReply:
+          reply: Hi @${issueAuthor}. Due to inactivity, we will be closing this issue. Please feel free to re-open this issue if the issue persists. For enhanced visibility, if over 7 days have passed, please open a new issue and link this issue there. Thank you.
+      - closeIssue
+    - description: 
+      frequencies:
+      - hourly:
+          hour: 6
+      filters:
+      - isIssue
+      - isOpen
+      - hasLabel:
+          label: possibly-stale
+      - noActivitySince:
+          days: 14
+      actions:
+      - addReply:
+          reply: This issue will now be closed since it had been marked `possibly-stale` but received no further activity in the past 14 days. It is still possible to reopen or comment on the issue, but please note that the issue will be locked if it remains inactive for another 30 days.
+      - closeIssue
+    eventResponderTasks:
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: need-info
+      then:
+      - addReply:
+          reply: Hi @${issueAuthor}. We have added the "need-info" label to this issue, which indicates that we have an open question for you before we can take further action. This issue will be closed automatically in 7 days if we do not hear back from you by then - please feel free to re-open it if you come back to this issue after that time.
+      description: 
+    - if:
+      - payloadType: Issue_Comment
+      - isAction:
+          action: Created
+      - isOpen
+      - hasLabel:
+          label: need-info
+      - not:
+          activitySenderHasPermission:
+            permission: Admin
+      - not:
+          activitySenderHasPermission:
+            permission: Write
+      then:
+      - removeLabel:
+          label: need-info
+      - addLabel:
+          label: need-attention
+      description: 
+    - if:
+      - payloadType: Issues
+      - isAction:
+          action: Opened
+      then:
+      - addLabel:
+          label: needs-triage
+      description: 
+    - if:
+      - payloadType: Issues
+      - labelAdded:
+          label: possibly-stale
+      then:
+      - addReply:
+          reply: We suspect this issue is stale and no longer relevant. It will be closed if no further activity occurs within 14 more days. Any new comment (by anyone, not necessarily the author) will undo this process.
+      description: 
+    - if:
+      - payloadType: Issue_Comment
+      - hasLabel:
+          label: possibly-stale
+      then:
+      - removeLabel:
+          label: possibly-stale
+      - addLabel:
+          label: need-attention
+      description: 
+onFailure: 
+onSuccess: 
