@@ -7,6 +7,7 @@ parameters:
   installTestSlicer: false
   installApkDiff: true
   installLegacyDotNet: true
+  installLegacyXamarinAndroid: false
   restoreNUnitConsole: true
   updateMono: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -65,6 +66,19 @@ steps:
       arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
       xaSourcePath: ${{ parameters.xaSourcePath }}
+
+- ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
+  - task: DotNetCoreCLI@2
+    displayName: install boots 1.1.0.36
+    inputs:
+      command: custom
+      custom: tool
+      arguments: >-
+        update boots -g
+        --version 1.1.0.36
+        --add-source "https://api.nuget.org/v3/index.json"
+  - powershell: boots --stable Xamarin.Android
+    displayName: install Xamarin.Android stable
 
 - template: run-xaprepare.yaml
   parameters:

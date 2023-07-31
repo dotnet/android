@@ -9,7 +9,14 @@ steps:
   ignoreLASTEXITCODE: true
   condition: ${{ parameters.condition }}
 
-- script: dotnet tool update apkdiff --version ${{ parameters.version }} --add-source https://api.nuget.org/v3/index.json -g
+- task: DotNetCoreCLI@2
   displayName: install apkdiff ${{ parameters.version }}
   condition: ${{ parameters.condition }}
   continueOnError: ${{ parameters.continueOnError }}
+  inputs:
+    command: custom
+    custom: tool
+    arguments: >-
+      update apkdiff -g
+      --version ${{ parameters.version }}
+      --add-source "https://api.nuget.org/v3/index.json"
