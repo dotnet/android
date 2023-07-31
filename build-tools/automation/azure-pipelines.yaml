@@ -470,7 +470,9 @@ stages:
       - task: MicroBuildCodesignVerify@3
         displayName: verify signed msi content
         inputs:
-          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          TargetFolders: |
+            $(Build.ArtifactStagingDirectory)\bin\manifests
+            $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
           ExcludeSNVerify: true
           ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
