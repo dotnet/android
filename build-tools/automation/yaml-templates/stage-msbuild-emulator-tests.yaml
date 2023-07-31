@@ -36,8 +36,9 @@ stages:
         installTestSlicer: true
         installApkDiff: false
         installLegacyDotNet: false
+        installLegacyXamarinAndroid: true
         restoreNUnitConsole: false
-        updateMono: false
+        updateMono: true
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}

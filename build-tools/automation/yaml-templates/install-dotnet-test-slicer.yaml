@@ -9,7 +9,14 @@ steps:
   ignoreLASTEXITCODE: true
   condition: ${{ parameters.condition }}
 
-- script: dotnet tool update dotnet-test-slicer --version ${{ parameters.version }} --add-source https://api.nuget.org/v3/index.json -g
+- task: DotNetCoreCLI@2
   displayName: install dotnet-test-slicer ${{ parameters.version }}
   condition: ${{ parameters.condition }}
   continueOnError: ${{ parameters.continueOnError }}
+  inputs:
+    command: custom
+    custom: tool
+    arguments: >-
+      update dotnet-test-slicer -g
+      --version ${{ parameters.version }}
+      --add-source "https://api.nuget.org/v3/index.json"
