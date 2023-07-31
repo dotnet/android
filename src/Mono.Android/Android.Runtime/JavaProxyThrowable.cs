@@ -23,7 +23,7 @@ namespace Android.Runtime {
 			}
 
 			// We prepend managed exception type to message since Java will see `JavaProxyThrowable` instead.
-			var proxy = new JavaProxyThrowable ($"[{innerException.GetType}]: {innerException.Message}", innerException);
+			var proxy = new JavaProxyThrowable ($"[{innerException.GetType ()}]: {innerException.Message}", innerException);
 
 			try {
 				proxy.TranslateStackTrace ();
@@ -65,7 +65,7 @@ namespace Android.Runtime {
 					declaringClass: managedMethod?.DeclaringType?.FullName,
 					methodName: managedMethod?.Name,
 					fileName: managedFrame?.GetFileName (),
-					lineNumber: managedFrame?.GetFileLineNumber () ?? 0
+					lineNumber: managedFrame?.GetFileLineNumber () ?? -1
 				);
 
 				elements[i] = throwableFrame;
