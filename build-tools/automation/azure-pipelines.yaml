@@ -352,6 +352,12 @@ stages:
         -androidVersion $(ANDROID_PACK_VERSION)
       displayName: Update MAUI's Android dependency
 
+    - task: DotNetCoreCLI@2
+      displayName: Update Android SDK band in Workloads.csproj
+      inputs:
+        projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
+
     - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Install .NET
       retryCountOnTaskFailure: 3
@@ -464,7 +470,9 @@ stages:
       - task: MicroBuildCodesignVerify@3
         displayName: verify signed msi content
         inputs:
-          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          TargetFolders: |
+            $(Build.ArtifactStagingDirectory)\bin\manifests
+            $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
           ExcludeSNVerify: true
           ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 

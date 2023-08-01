@@ -10,7 +10,7 @@ create-installers: create-nupkgs
 create-nupkgs:
 	@echo Disk usage before create-nupkgs
 	-df -h
-	$(call SYSTEM_DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
+	$(call DOTNET_BINLOG,create-all-packs) -t:CreateAllPacks $(topdir)/build-tools/create-packs/Microsoft.Android.Sdk.proj
 
 create-pkg:
 	$(call SYSTEM_DOTNET_BINLOG,create-pkg) /t:CreatePkg \
