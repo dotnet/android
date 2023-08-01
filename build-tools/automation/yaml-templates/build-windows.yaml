@@ -86,7 +86,10 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
-    - template: install-apkdiff.yaml
+    - template: install-global-tool.yaml
+      parameters:
+        toolName: apkdiff
+        version: $(ApkDiffToolVersion)
 
     - template: run-nunit-tests.yaml
       parameters:
