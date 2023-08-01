@@ -13,6 +13,12 @@ variables:
   value: test-assemblies
 - name: WindowsToolchainPdbArtifactName
   value: windows-toolchain-pdb
+- name: ApkDiffToolVersion
+  value: 0.0.15
+- name: TestSlicerToolVersion
+  value: 0.1.0-alpha5
+- name: BootsToolVersion
+  value: 1.1.0.36
 - name: NUnitConsoleVersion
   value: 3.16.3
 - name: NUnit.NumberOfTestWorkers
