@@ -705,5 +705,46 @@ public class Test
 				}
 			}
 		}
+
+		[Test]
+		public void DefaultItems ()
+		{
+			void CreateEmptyFile (string path)
+			{
+				Directory.CreateDirectory (Path.GetDirectoryName (path));
+				File.WriteAllText (path, contents: "");
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				EnableDefaultItems = true,
+			};
+
+			var builder = CreateApkBuilder ();
+			builder.Save (proj);
+			proj.ShouldPopulate = false;
+
+			// Build error -> no nested sub-directories in Resources
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "drawable", "foo", "bar.png"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo", "bar.png"));
+
+			// Build error -> no files/directories that start with .
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", ".DS_Store"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".DS_Store"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".svn", "foo.txt"));
+
+			// Files that should work
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo.txt"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", "foo", "bar.txt"));
+
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+			var apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkPath);
+			using (var apk = ZipHelper.OpenZip (apkPath)) {
+				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
+				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
+			}
+		}
+
 	}
 }

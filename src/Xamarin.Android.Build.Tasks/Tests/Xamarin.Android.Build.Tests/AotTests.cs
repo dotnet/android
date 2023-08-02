@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Android.Build;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -486,5 +488,45 @@ namespace "+ libName + @" {
 				Assert.IsNotNull (entry, $"{path} should be in {apk}", abi);
 			}
 		}
+
+		[Test]
+		public void CheckWhetherLibcAndLibmAreReferencedInAOTLibraries ()
+		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EmbedAssembliesIntoApk = true,
+				AotAssemblies = true,
+			};
+			proj.SetProperty ("EnableLLVM", "True");
+
+			var abis = new [] { "arm64-v8a", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+
+			var libPaths = new List<string> ();
+			if (Builder.UseDotNet) {
+				libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
+			} else {
+				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
+			}
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+
+				foreach (string libPath in libPaths) {
+					string lib = Path.Combine (objPath, libPath);
+
+					Assert.IsTrue (File.Exists (lib), $"Library {lib} should exist on disk");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libc.so"), $"Library {lib} should reference libc.so");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libm.so"), $"Library {lib} should reference libm.so");
+				}
+			}
+		}
+
 	}
 }

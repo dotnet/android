@@ -276,6 +276,7 @@ namespace Xamarin.Android.Build.Tests
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
 			}
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (proj.IsRelease = isRelease && !Builder.UseDotNet) {
