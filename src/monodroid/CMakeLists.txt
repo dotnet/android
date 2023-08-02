@@ -544,7 +544,6 @@ if(ANDROID AND ENABLE_NET)
   list(APPEND XAMARIN_MONODROID_SOURCES
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
-    ${SOURCES_DIR}/java_interop_api.c
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
     )
 else()
@@ -553,7 +552,6 @@ else()
     )
 
   set(XAMARIN_INTERNAL_API_SOURCES
-    ${SOURCES_DIR}/java_interop_api.c
     ${SOURCES_DIR}/internal-pinvoke-api.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
     )
