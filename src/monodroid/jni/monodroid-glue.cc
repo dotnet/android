@@ -1133,6 +1133,7 @@ MonodroidRuntime::init_android_runtime (
 		"Failed to obtain unmanaged-callers-only pointer to the Android.Runtime.JNIEnvInit.Initialize method. %s",
 		mono_error_get_message (&error)
 	);
+	log_info (LOG_DEFAULT, "Before INITIALIZE");
 	initialize (&init);
 #else // def NET && def ANDROID
 	void *args [] = {

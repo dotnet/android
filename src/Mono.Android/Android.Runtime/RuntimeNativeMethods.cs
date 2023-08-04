@@ -11,9 +11,11 @@ namespace Android.Runtime
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_log (LogLevel level, LogCategories category, string message);
 
+		[SuppressGCTransition]
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static IntPtr monodroid_timing_start (string? message);
 
+		[SuppressGCTransition]
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal extern static void monodroid_timing_stop (IntPtr sequence, string? message);
 
