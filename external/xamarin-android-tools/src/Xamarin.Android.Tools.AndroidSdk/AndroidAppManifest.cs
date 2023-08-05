@@ -323,8 +323,7 @@ namespace Xamarin.Android.Tools
 		IEnumerable<XElement> GetLaunchableActivities ()
 		{
 			foreach (var activity in application.Elements ("activity")) {
-				var filter = activity.Element ("intent-filter");
-				if (filter != null) {
+				foreach (var filter in activity.Elements ("intent-filter")) {
 					foreach (var category in filter.Elements ("category"))
 						if (category != null && (string?)category.Attribute (aName) == "android.intent.category.LAUNCHER")
 							yield return activity;

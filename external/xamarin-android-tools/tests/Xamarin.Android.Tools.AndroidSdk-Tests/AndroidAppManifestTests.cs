@@ -46,6 +46,16 @@ namespace Xamarin.Android.Tools.Tests
 		}
 
 		[Test]
+		public void GetLaunchableActivityNames ()
+		{
+			var versions	= new AndroidVersions (Array.Empty<AndroidVersion>());
+			var manifest    = AndroidAppManifest.Load (GetTestAppManifest (), versions);
+			var launchers   = manifest.GetLaunchableActivityNames ().ToList ();
+			Assert.AreEqual (1,                             launchers.Count);
+			Assert.AreEqual (".HasMultipleIntentFilters",	launchers [0]);
+		}
+
+		[Test]
 		public void SetNewPermissions ()
 		{
 			var versions = new AndroidVersions (new AndroidVersion [0]);
