@@ -22,7 +22,6 @@ stages:
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
       agentCount: 10
-      testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
@@ -34,7 +33,6 @@ stages:
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 6
-      testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}

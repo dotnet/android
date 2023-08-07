@@ -48,7 +48,7 @@ jobs:
   - template: run-sliced-nunit-tests.yaml
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-      testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
+      testFilter: ${{ parameters.testFilter }}
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
