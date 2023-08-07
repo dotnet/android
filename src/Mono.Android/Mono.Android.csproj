@@ -41,10 +41,6 @@
     <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_EnableCodeAnalyzerPlatformWarnings)' == '' ">
-    <NoWarn>$(NoWarn);CA1422;CA1416</NoWarn>
-  </PropertyGroup>
-
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />

@@ -125,7 +125,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Boolean_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Boolean;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Boolean (value))
+				using (var val = Java.Lang.Boolean.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Boolean_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -140,7 +140,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Byte_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Byte;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Byte (value))
+				using (var val = Java.Lang.Byte.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Byte_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -155,7 +155,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Short_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Short;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Short (value))
+				using (var val = Java.Lang.Short.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Short_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -170,7 +170,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Integer_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Integer;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Integer (value))
+				using (var val = Java.Lang.Integer.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Integer_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -185,7 +185,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Long_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Long;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Long (value))
+				using (var val = Java.Lang.Long.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Long_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -200,7 +200,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Float_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Float;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Float (value))
+				using (var val = Java.Lang.Float.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Float_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -215,7 +215,7 @@ namespace Android.Content {
 				id_put_Ljava_lang_String_Ljava_lang_Double_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Double;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = new Java.Lang.Double (value))
+				using (var val = Java.Lang.Double.ValueOf (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Double_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);

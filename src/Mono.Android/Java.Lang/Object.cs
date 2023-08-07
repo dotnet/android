@@ -318,7 +318,7 @@ namespace Java.Lang {
 
 		public static implicit operator Java.Lang.Object (bool value)
 		{
-			return new Java.Lang.Boolean (value);
+			return Java.Lang.Boolean.ValueOf (value);
 		}
 
 		[Obsolete ("Use `(Java.Lang.Byte)(sbyte) value`", error: true)]
@@ -329,12 +329,12 @@ namespace Java.Lang {
 
 		public static implicit operator Java.Lang.Object (sbyte value)
 		{
-			return new Java.Lang.Byte (value);
+			return Java.Lang.Byte.ValueOf (value);
 		}
 
 		public static implicit operator Java.Lang.Object (char value)
 		{
-			return new Java.Lang.Character (value);
+			return Java.Lang.Character.ValueOf (value);
 		}
 
 		[Obsolete ("Use `(Java.Lang.Integer)(int) value`", error: true)]
@@ -345,7 +345,7 @@ namespace Java.Lang {
 
 		public static implicit operator Java.Lang.Object (int value)
 		{
-			return new Java.Lang.Integer (value);
+			return Java.Lang.Integer.ValueOf (value);
 		}
 
 		[Obsolete ("Use `(Java.Lang.Long)(long) value`", error: true)]
@@ -356,17 +356,17 @@ namespace Java.Lang {
 
 		public static implicit operator Java.Lang.Object (long value)
 		{
-			return new Java.Lang.Long (value);
+			return Java.Lang.Long.ValueOf (value);
 		}
 
 		public static implicit operator Java.Lang.Object (float value)
 		{
-			return new Java.Lang.Float (value);
+			return Java.Lang.Float.ValueOf (value);
 		}
 
 		public static implicit operator Java.Lang.Object (double value)
 		{
-			return new Java.Lang.Double (value);
+			return Java.Lang.Double.ValueOf (value);
 		}
 
 		public static implicit operator Java.Lang.Object? (string? value)

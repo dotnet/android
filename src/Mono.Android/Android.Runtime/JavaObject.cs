@@ -10,26 +10,25 @@ namespace Android.Runtime {
 			if (obj == null)
 				return IntPtr.Zero;
 
-			Type type = obj.GetType ();
-			if (type == typeof (bool))
-				return new Java.Lang.Boolean ((bool)obj).Handle;
-			else if (type == typeof (sbyte))
-				return new Java.Lang.Byte ((sbyte)obj).Handle;
-			else if (type == typeof (char))
-				return new Java.Lang.Character ((char)obj).Handle;
-			else if (type == typeof (short))
-				return new Java.Lang.Short ((short)obj).Handle;
-			else if (type == typeof (int))
-				return new Java.Lang.Integer ((int)obj).Handle;
-			else if (type == typeof (long))
-				return new Java.Lang.Long ((long)obj).Handle;
-			else if (type == typeof (float))
-				return new Java.Lang.Float ((float)obj).Handle;
-			else if (type == typeof (double))
-				return new Java.Lang.Double ((double)obj).Handle;
-			else if (type == typeof (string))
-				return JNIEnv.NewString ((string)obj);
-			else if (typeof (IJavaObject).IsAssignableFrom (type))
+			if (obj is bool bool_obj)
+				return Java.Lang.Boolean.ValueOf (bool_obj).Handle;
+			else if (obj is sbyte sbyte_obj)
+				return Java.Lang.Byte.ValueOf (sbyte_obj).Handle;
+			else if (obj is char char_obj)
+				return Java.Lang.Character.ValueOf (char_obj).Handle;
+			else if (obj is short short_obj)
+				return Java.Lang.Short.ValueOf (short_obj)!.Handle;
+			else if (obj is int int_obj)
+				return Java.Lang.Integer.ValueOf (int_obj).Handle;
+			else if (obj is long long_obj)
+				return Java.Lang.Long.ValueOf (long_obj).Handle;
+			else if (obj is float float_obj)
+				return Java.Lang.Float.ValueOf (float_obj).Handle;
+			else if (obj is double double_obj)
+				return Java.Lang.Double.ValueOf (double_obj).Handle;
+			else if (obj is string string_obj)
+				return JNIEnv.NewString (string_obj);
+			else if (typeof (IJavaObject).IsAssignableFrom (obj.GetType ()))
 				return ((IJavaObject)obj).Handle;
 			else
 				return new JavaObject (obj).Handle;
@@ -37,29 +36,28 @@ namespace Android.Runtime {
 
 		public static object? GetObject (IntPtr handle, JniHandleOwnership transfer)
 		{
-			Java.Lang.Object? jlo = Java.Lang.Object.GetObject (handle, transfer) as Java.Lang.Object;
-			if (jlo == null)
+			if (Java.Lang.Object.GetObject (handle, transfer) is not Java.Lang.Object jlo)
 				return null;
-			else if (jlo is Java.Lang.Boolean)
-				return Dispose ((Java.Lang.Boolean) jlo, v => v.BooleanValue ());
-			else if (jlo is Java.Lang.Byte)
-				return Dispose ((Java.Lang.Byte) jlo, v => v.ByteValue ());
-			else if (jlo is Java.Lang.Character)
-				return Dispose ((Java.Lang.Character) jlo, v => v.CharValue ());
-			else if (jlo is Java.Lang.Short)
-				return Dispose ((Java.Lang.Short) jlo, v => v.ShortValue ());
-			else if (jlo is Java.Lang.Integer)
-				return Dispose ((Java.Lang.Integer) jlo, v => v.IntValue ());
-			else if (jlo is Java.Lang.Long)
-				return Dispose ((Java.Lang.Long) jlo, v => v.LongValue ());
-			else if (jlo is Java.Lang.Float)
-				return Dispose ((Java.Lang.Float) jlo, v => v.FloatValue ());
-			else if (jlo is Java.Lang.Double)
-				return Dispose ((Java.Lang.Double) jlo, v => v.DoubleValue ());
+			else if (jlo is Java.Lang.Boolean bool_jlo)
+				return Dispose (bool_jlo, v => v.BooleanValue ());
+			else if (jlo is Java.Lang.Byte byte_jlo)
+				return Dispose (byte_jlo, v => v.ByteValue ());
+			else if (jlo is Java.Lang.Character chat_jlo)
+				return Dispose (chat_jlo, v => v.CharValue ());
+			else if (jlo is Java.Lang.Short short_jlo)
+				return Dispose (short_jlo, v => v.ShortValue ());
+			else if (jlo is Java.Lang.Integer int_jlo)
+				return Dispose (int_jlo, v => v.IntValue ());
+			else if (jlo is Java.Lang.Long long_jlo)
+				return Dispose (long_jlo, v => v.LongValue ());
+			else if (jlo is Java.Lang.Float float_jlo)
+				return Dispose (float_jlo, v => v.FloatValue ());
+			else if (jlo is Java.Lang.Double double_jlo)
+				return Dispose (double_jlo, v => v.DoubleValue ());
 			else if (jlo is Java.Lang.String)
 				return Dispose (jlo, v => JNIEnv.GetString (v.Handle, JniHandleOwnership.DoNotTransfer));
-			else if (jlo is JavaObject)
-				return ((JavaObject) jlo).inst;
+			else if (jlo is JavaObject jobj_jlo)
+				return (jobj_jlo).inst;
 			else
 				return jlo;
 		}
