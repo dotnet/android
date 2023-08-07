@@ -3,7 +3,7 @@ parameters:
   jobName:                # Name of the job
   jobDisplayName:         # Display name of the job
   agentCount:             # Number of build agents to run in parallel
-  testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testFilter: ' '         # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
