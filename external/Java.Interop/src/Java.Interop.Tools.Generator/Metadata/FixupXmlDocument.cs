@@ -41,6 +41,10 @@ namespace Java.Interop.Tools.Generator
 				if (!ShouldApply (metaitem, apiDocument))
 					continue;
 
+				// Namespace replacements are handled elsewhere
+				if (metaitem.Name.LocalName == "ns-replace")
+					continue;
+
 				var path = metaitem.XGetAttribute ("path");
 
 				if (path != prev_path)
