@@ -20,8 +20,8 @@ MSBuild version 15 or later is required.
 
  5. In a [Developer Command Prompt][developer-prompt], prepare the project:
 
-        dotnet msbuild Xamarin.Android.sln -t:Prepare -nr:false -m:1
-        dotnet msbuild external\Java.Interop\Java.Interop.sln -t:Prepare -nr:false -m:1
+        dotnet msbuild Xamarin.Android.sln -t:Prepare -nodeReuse:false
+        dotnet msbuild external\Java.Interop\Java.Interop.sln -t:Prepare -nodeReuse:false
 
     This will ensure that the build dependencies are installed, perform
     `git submodule update`, download NuGet dependencies, and other
@@ -29,7 +29,7 @@ MSBuild version 15 or later is required.
 
  6. Build the project:
 
-        dotnet-local.cmd build Xamarin.Android.sln  -nr:false -m:1
+        dotnet-local.cmd build Xamarin.Android.sln  -nodeReuse:false
 
  7. (For Microsoft team members only - Optional) In a [Developer Command
     Prompt][developer-prompt], build external proprietary git
