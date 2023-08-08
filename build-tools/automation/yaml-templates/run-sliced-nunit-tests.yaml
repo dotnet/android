@@ -17,7 +17,7 @@ steps:
     displayName: Slice unit tests with filter
 - ${{ else }}:
   - pwsh: >-
-      dotnet-test-slice slice
+      dotnet-test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --slice-number=$(System.JobPositionInPhase)
       --total-slices=$(System.TotalJobsInPhase)
