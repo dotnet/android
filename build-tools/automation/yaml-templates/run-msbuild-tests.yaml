@@ -1,9 +1,9 @@
 parameters:
-  testOS:                 # 'macOS' or 'Windows'
-  jobName:                # Name of the job
-  jobDisplayName:         # Display name of the job
-  agentCount:             # Number of build agents to run in parallel
-  testFilter: ' '         # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testOS: ''              # 'macOS' or 'Windows'
+  jobName: ''             # Name of the job
+  jobDisplayName: ''      # Display name of the job
+  agentCount: 1           # Number of build agents to run in parallel
+  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''

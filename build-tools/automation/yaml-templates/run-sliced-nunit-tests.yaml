@@ -1,20 +1,28 @@
 parameters:
-  testAssembly:           # NUnit test assembly to run
-  testFilter: ' '         # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
-  testRunTitle:           # Title of the test run
+  testAssembly: ''        # NUnit test assembly to run
+  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testRunTitle: ''        # Title of the test run
   xaSourcePath: $(System.DefaultWorkingDirectory)
   retryFailedTests: true  # Retry failed tests once
 
 steps:
-- pwsh: |
-    dotnet-test-slicer `
-      slice `
-      --test-assembly="${{ parameters.testAssembly }}" `
-      --test-filter="${{ parameters.testFilter }}" `
-      --slice-number=$(System.JobPositionInPhase) `
-      --total-slices=$(System.TotalJobsInPhase) `
+- ${{if parameters.testFilter}}:
+  - pwsh: >-
+      dotnet-test-slicer slice
+      --test-assembly="${{ parameters.testAssembly }}"
+      --test-filter="${{ parameters.testFilter }}"
+      --slice-number=$(System.JobPositionInPhase)
+      --total-slices=$(System.TotalJobsInPhase)
       --outfile="${{ parameters.testAssembly }}.runsettings"
-  displayName: Slice unit tests
+    displayName: Slice unit tests with filter
+- ${{ else }}:
+  - pwsh: >-
+      dotnet-test-slice slice
+      --test-assembly="${{ parameters.testAssembly }}"
+      --slice-number=$(System.JobPositionInPhase)
+      --total-slices=$(System.TotalJobsInPhase)
+      --outfile="${{ parameters.testAssembly }}.runsettings"
+    displayName: Slice unit tests
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
