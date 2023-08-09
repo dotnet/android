@@ -46,7 +46,7 @@ else()
   set(ANALYZERS_ENABLED OFF)
 endif()
 
-option(ENABLE_NET "Enable compilation for .NET 6+" OFF)
+option(ENABLE_NET "Enable compilation for .NET 6+" ON)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
