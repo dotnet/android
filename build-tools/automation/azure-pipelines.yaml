@@ -273,7 +273,7 @@ stages:
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
         testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
 
     - template: yaml-templates/upload-results.yaml

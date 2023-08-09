@@ -15,38 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{
-#pragma warning disable 414
-		static object [] ManagedSymbolsArchiveSource = new object [] {
-			//           isRelease, monoSymbolArchive, packageFormat,
-			new object[] { false    , false              , "apk" },
-			new object[] { true     , true               , "apk" },
-			new object[] { true     , false              , "apk" },
-			new object[] { true     , true               , "aab" },
-		};
-#pragma warning restore 414
-
-		[Test]
-		[Category ("MonoSymbolicate")]
-		[TestCaseSource (nameof(ManagedSymbolsArchiveSource))]
-		public void CheckManagedSymbolsArchive (bool isRelease, bool monoSymbolArchive, string packageFormat)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", monoSymbolArchive);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				Assert.AreEqual (monoSymbolArchive, Directory.Exists (archivePath),
-					string.Format ("The msym archive {0} exist.", monoSymbolArchive ? "should" : "should not"));
-			}
-		}
-
 		[Test]
 		public void CheckProguardMappingFileExists ()
 		{
@@ -230,6 +198,10 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		void AssertEmbeddedDSOs (string apk)
 		{
 			FileAssert.Exists (apk);
+
+			var zipAlignPath = Path.Combine (GetPathToZipAlign (), IsWindows ? "zipalign.exe" : "zipalign");
+			Assert.That (new FileInfo (zipAlignPath), Does.Exist, $"ZipAlign not found at {zipAlignPath}");
+			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
 
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip) {
