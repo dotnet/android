@@ -42,10 +42,6 @@
     <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_EnableCodeAnalyzerPlatformWarnings)' == '' ">
-    <NoWarn>$(NoWarn);CA1422;CA1416</NoWarn>
-  </PropertyGroup>
-
   <ItemGroup>
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Shipped.txt" />
     <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
@@ -92,6 +88,10 @@
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
+    <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
+    <Compile Include="Java.Time\ZonedDateTime.cs" />
+    <Compile Include="Java.Time\LocalDateTime.cs" />
+    <Compile Include="Java.Time\LocalDate.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />

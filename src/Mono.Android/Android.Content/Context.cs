@@ -20,9 +20,11 @@ namespace Android.Content {
 
 #if ANDROID_34
 		// Add correctly enumified overloads
+		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, ReceiverFlags flags)
 			=> RegisterReceiver (receiver, filter, (ActivityFlags)flags);
 
+		[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 		public Intent? RegisterReceiver (BroadcastReceiver? receiver, IntentFilter? filter, string? broadcastPermission, Handler? scheduler, ReceiverFlags flags)
 			=> RegisterReceiver (receiver, filter, broadcastPermission, scheduler, (ActivityFlags)flags);
 #endif
