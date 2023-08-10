@@ -274,6 +274,7 @@ namespace Java.Interop {
 			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		static Dictionary<Type, Func<object, IJavaObject>> JavaObjectConverters = new Dictionary<Type, Func<object, IJavaObject>>() {
 			{ typeof (bool),   value => new Java.Lang.Boolean ((bool) value) },
 			{ typeof (byte),   value => new Java.Lang.Byte ((sbyte) (byte) value) },
@@ -306,6 +307,7 @@ namespace Java.Interop {
 			return new Android.Runtime.JavaObject (value);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		static Dictionary<Type, Func<object, IntPtr>> LocalJniHandleConverters = new Dictionary<Type, Func<object, IntPtr>> {
 			{ typeof (bool),   value => {
 				using (var v = new Java.Lang.Boolean ((bool) value))

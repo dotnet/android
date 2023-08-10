@@ -316,6 +316,7 @@ namespace Java.Lang {
 			return new Java.Lang.Object (JNIEnv.NewArray (value), JniHandleOwnership.TransferLocalRef);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (bool value)
 		{
 			return new Java.Lang.Boolean (value);
@@ -327,11 +328,13 @@ namespace Java.Lang {
 			throw new InvalidOperationException ("Should not be reached");
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (sbyte value)
 		{
 			return new Java.Lang.Byte (value);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (char value)
 		{
 			return new Java.Lang.Character (value);
@@ -343,6 +346,7 @@ namespace Java.Lang {
 			throw new InvalidOperationException ("Should not be reached");
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (int value)
 		{
 			return new Java.Lang.Integer (value);
@@ -354,16 +358,19 @@ namespace Java.Lang {
 			throw new InvalidOperationException ("Should not be reached");
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (long value)
 		{
 			return new Java.Lang.Long (value);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (float value)
 		{
 			return new Java.Lang.Float (value);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static implicit operator Java.Lang.Object (double value)
 		{
 			return new Java.Lang.Double (value);
