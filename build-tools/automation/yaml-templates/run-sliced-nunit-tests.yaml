@@ -15,6 +15,7 @@ steps:
       --total-slices=$(System.TotalJobsInPhase)
       --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Slice unit tests with filter
+    failOnStderr: true
 - ${{ else }}:
   - pwsh: >-
       dotnet-test-slicer slice
@@ -23,6 +24,7 @@ steps:
       --total-slices=$(System.TotalJobsInPhase)
       --outfile="${{ parameters.testAssembly }}.runsettings"
     displayName: Slice unit tests
+    failOnStderr: true
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
