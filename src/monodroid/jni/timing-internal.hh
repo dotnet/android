@@ -2,14 +2,10 @@
 #define __TIMING_INTERNAL_HH
 
 #include <atomic>
-#include <array>
-#include <charconv>
 #include <ctime>
-#include <string>
-#include <type_traits>
+#include <limits>
 #include <vector>
 
-#include "cpp-util.hh"
 #include "logger.hh"
 #include "startup-aware-lock.hh"
 #include "strings.hh"
@@ -23,7 +19,6 @@
 // now
 #if __has_include (<concepts>) && !defined(__APPLE__)
 #define HAVE_CONCEPTS
-#include <concepts>
 #endif // __has_include && ndef __APPLE__
 
 namespace xamarin::android::internal
@@ -60,7 +55,20 @@ namespace xamarin::android::internal
 		RuntimeConfigBlob         = 9,
 		RuntimeRegister           = 10,
 		TotalRuntimeInit          = 11,
-		Unspecified               = 12,
+		MonoMethodJit             = 12,
+		MonoClassLoad             = 13,
+		MonoImageLoad             = 14,
+		MonoAssemblyLoad          = 15,
+		MonoMethodDuration        = 16,
+		MonoMethodInvoke          = 17,
+		Unspecified               = std::numeric_limits<std::underlying_type_t<TimingEventKind>>::max (),
+	};
+
+	enum class TimingMode
+	{
+		Bare,
+		Extended,
+		Verbose,
 	};
 
 	struct TimingEventPoint
@@ -111,6 +119,23 @@ namespace xamarin::android::internal
 		static constexpr uint32_t ms_in_second = 1000;
 		static constexpr uint32_t ns_in_second = ms_in_second * ns_in_millisecond;
 
+		// defaults
+		static constexpr TimingMode default_timing_mode = TimingMode::Bare;
+		static constexpr bool default_fast_timing_enabled = false;
+		static constexpr bool default_log_to_file = false;
+		static constexpr size_t default_duration_milliseconds = 1500;
+		static constexpr std::string_view default_timing_file_name { "timing.txt" };
+
+		// Parameters in the debug.mono.timing property
+		static constexpr std::string_view OPT_DURATION      { "duration=" };
+		static constexpr std::string_view OPT_FAST          { "fast" };
+		static constexpr std::string_view OPT_FILE_NAME     { "filename=" };
+		static constexpr std::string_view OPT_MODE          { "mode=" };
+		static constexpr std::string_view OPT_MODE_BARE     { "bare" };
+		static constexpr std::string_view OPT_MODE_EXTENDED { "extended" };
+		static constexpr std::string_view OPT_MODE_VERBOSE  { "verbose" };
+		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
+
 	protected:
 		FastTiming () noexcept
 		{
@@ -128,6 +153,36 @@ namespace xamarin::android::internal
 			return
 				(log_timing_categories & LOG_TIMING_BARE) == LOG_TIMING_BARE ||
 				(log_timing_categories & LOG_TIMING_FAST_BARE) == LOG_TIMING_FAST_BARE;
+		}
+
+		force_inline static TimingMode mode () noexcept
+		{
+			return timing_mode;
+		}
+
+		force_inline static void set_mode (TimingMode new_mode) noexcept
+		{
+			timing_mode = new_mode;
+		}
+
+		force_inline static bool fast_mode_enabled () noexcept
+		{
+			return immediate_logging;
+		}
+
+		force_inline static void set_fast_mode_enabled (bool yesno) noexcept
+		{
+			immediate_logging = yesno;
+		}
+
+		force_inline size_t duration () noexcept
+		{
+			return duration_ms;
+		}
+
+		force_inline void set_duration (size_t new_duration_ms) noexcept
+		{
+			duration_ms = new_duration_ms;
 		}
 
 		force_inline static void initialize (bool log_immediately) noexcept
@@ -273,7 +328,10 @@ namespace xamarin::android::internal
 
 	private:
 		static void really_initialize (bool log_immediately) noexcept;
+		static void parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept;
 		static void* timing_signal_thread (void *arg) noexcept;
+		void dump_to_logcat (size_t entries) noexcept;
+		void dump_to_file (size_t entries) noexcept;
 
 		force_inline static void mark (TimingEventPoint &point) noexcept
 		{
@@ -482,8 +540,12 @@ namespace xamarin::android::internal
 		std::vector<TimingEvent> events;
 
 		static TimingEvent init_time;
-		static bool is_enabled;
-		static bool immediate_logging;
+		static inline bool is_enabled = false;
+		static inline bool immediate_logging = default_fast_timing_enabled;
+		static inline TimingMode timing_mode = default_timing_mode;
+		static inline bool log_to_file = default_log_to_file;
+		static inline size_t duration_ms = default_duration_milliseconds;
+		static inline char* output_file_name = nullptr;
 	};
 
 	extern FastTiming *internal_timing;

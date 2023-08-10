@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cerrno>
 #include <limits>
+#include <string_view>
 #include <type_traits>
 #include <unistd.h>
 
@@ -75,6 +76,32 @@ namespace xamarin::android::internal
 			return memcmp (_start, s, length ()) == 0;
 		}
 
+		force_inline bool equal (std::string_view const& s) const noexcept
+		{
+			return equal (s.data (), s.length ());
+		}
+
+		force_inline bool equal (size_t start_index, std::string_view const& s) const noexcept
+		{
+			if (s == nullptr) {
+				return false;
+			}
+
+			if (!can_access (s.length ())) {
+				return false;
+			}
+
+			if (s.length () != length () + start_index) {
+				return false;
+			}
+
+			if (length () == 0) {
+				return true;
+			}
+
+			return memcmp (_start + start_index, s.data (), s.length ());
+		}
+
 		template<size_t Size>
 		force_inline bool equal (const char (&s)[Size]) noexcept
 		{
@@ -100,6 +127,11 @@ namespace xamarin::android::internal
 			}
 
 			return memcmp (start (), s, s_length) == 0;
+		}
+
+		force_inline bool starts_with (std::string_view const& s) const noexcept
+		{
+			return starts_with (s.data (), s.length ());
 		}
 
 		template<size_t Size>

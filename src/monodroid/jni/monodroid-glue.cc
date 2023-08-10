@@ -757,11 +757,27 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	mono_profiler_set_thread_started_callback (profiler_handle, thread_start);
 	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
 
-	if (XA_UNLIKELY (log_methods)) {
+	if (XA_UNLIKELY (log_methods)) { // TODO: migrate to the new timing logger
 		jit_time.mark_start ();
 		mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
 		mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
 		mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
+	}
+
+	if (FastTiming::enabled () && FastTiming::mode () != TimingMode::Bare) {
+		switch (FastTiming::mode ()) {
+			case TimingMode::Extended:
+				// TODO: implement;
+				break;
+
+			case TimingMode::Verbose:
+				// TODO: implement
+				break;
+
+			default:
+				// ignored
+				break;
+		}
 	}
 
 	parse_gdb_options ();

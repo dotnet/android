@@ -8,8 +8,6 @@ namespace xamarin::android::internal {
 	FastTiming *internal_timing = nullptr;
 }
 
-bool FastTiming::is_enabled = false;
-bool FastTiming::immediate_logging = false;
 TimingEvent FastTiming::init_time {};
 
 void
@@ -19,6 +17,10 @@ FastTiming::really_initialize (bool log_immediately) noexcept
 	is_enabled = true;
 	immediate_logging = log_immediately;
 
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) != 0) {
+	}
+
 	if (immediate_logging) {
 		return;
 	}
@@ -26,16 +28,71 @@ FastTiming::really_initialize (bool log_immediately) noexcept
 	log_write (LOG_TIMING, LogLevel::Info, "[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application");
 }
 
-void
-FastTiming::dump () noexcept
+void FastTiming::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept
 {
-	if (immediate_logging) {
+	if (value.length () == 0) {
 		return;
 	}
 
-	StartupAwareLock lock { event_vector_realloc_mutex };
-	size_t entries = next_event_index.load ();
+	string_segment param;
+	while (value.next_token (',', param)) {
+		if (param.equal (OPT_FAST)) {
+			immediate_logging = true;
+			continue;
+		}
 
+		if (param.starts_with (OPT_MODE)) {
+			if (param.equal (OPT_MODE.length (), OPT_MODE_BARE)) {
+				timing_mode = TimingMode::Bare;
+				continue;
+			}
+
+			if (param.equal (OPT_MODE.length (), OPT_MODE_EXTENDED)) {
+				timing_mode = TimingMode::Extended;
+				continue;
+			}
+
+			if (param.equal (OPT_MODE.length (), OPT_MODE_VERBOSE)) {
+				timing_mode = TimingMode::Verbose;
+				continue;
+			}
+
+			log_warn (LOG_TIMING, "Unsupported timing mode '%s'", param.start ());
+			continue;
+		}
+
+		if (param.equal (OPT_TO_FILE)) {
+			log_to_file = true;
+			continue;
+		}
+
+		if (param.starts_with (OPT_FILE_NAME)) {
+			output_file_name = utils.strdup_new (param.start () + OPT_FILE_NAME.length (), param.length () - OPT_FILE_NAME.length ());
+			continue;
+		}
+
+		if (param.starts_with (OPT_DURATION)) {
+			if (!param.to_integer (duration_ms, OPT_DURATION.length ())) {
+				log_warn (LOG_TIMING, "Failed to parse duration in milliseconds from '%s'", param.start ());
+				duration_ms = default_duration_milliseconds;
+			}
+			continue;
+		}
+	}
+
+	if (output_file_name != nullptr) {
+		log_to_file = true;
+	}
+
+	// If logging to file is requested, turn off immediate logging.
+	if (log_to_file) {
+		immediate_logging = false;
+	}
+}
+
+void
+FastTiming::dump_to_logcat (size_t entries) noexcept
+{
 	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results");
 	if (entries == 0) {
 		log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
@@ -85,4 +142,40 @@ FastTiming::dump () noexcept
 
 	ns_to_time (total_managed_to_java_time, sec, ms, ns);
 	log_info_nocheck (LOG_TIMING, "  [2/7] Managed to Java lookup: %u:%u::%u", sec, ms, ns);
+}
+
+void
+FastTiming::dump_to_file (size_t entries) noexcept
+{
+	std::unique_ptr<char> timing_log_path {
+		utils.path_combine (
+			androidSystem.get_override_dir (0),
+			output_file_name == nullptr ? default_timing_file_name.data () : output_file_name
+		)
+	};
+
+	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path.get ());
+	if (entries == 0) {
+		log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
+		return;
+	}
+
+	// TODO: implement
+}
+
+void
+FastTiming::dump () noexcept
+{
+	if (immediate_logging) {
+		return;
+	}
+
+	StartupAwareLock lock { event_vector_realloc_mutex };
+	size_t entries = next_event_index.load ();
+
+	if (log_to_file) {
+		dump_to_file (entries);
+	} else {
+		dump_to_logcat (entries);
+	}
 }
