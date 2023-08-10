@@ -274,16 +274,17 @@ namespace Java.Interop {
 			return Convert.ChangeType (value, targetType, CultureInfo.InvariantCulture);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		static Dictionary<Type, Func<object, IJavaObject>> JavaObjectConverters = new Dictionary<Type, Func<object, IJavaObject>>() {
-			{ typeof (bool),   value => Java.Lang.Boolean.ValueOf ((bool) value) },
-			{ typeof (byte),   value => Java.Lang.Byte.ValueOf ((sbyte) (byte) value) },
-			{ typeof (sbyte),  value => Java.Lang.Byte.ValueOf ((sbyte) value) },
-			{ typeof (char),   value => Java.Lang.Character.ValueOf ((char) value) },
-			{ typeof (short),  value => Java.Lang.Short.ValueOf ((short) value)! },
-			{ typeof (int),    value => Java.Lang.Integer.ValueOf ((int) value) },
-			{ typeof (long),   value => Java.Lang.Long.ValueOf ((long) value) },
-			{ typeof (float),  value => Java.Lang.Float.ValueOf ((float) value) },
-			{ typeof (double), value => Java.Lang.Double.ValueOf ((double) value) },
+			{ typeof (bool),   value => new Java.Lang.Boolean ((bool) value) },
+			{ typeof (byte),   value => new Java.Lang.Byte ((sbyte) (byte) value) },
+			{ typeof (sbyte),  value => new Java.Lang.Byte ((sbyte) value) },
+			{ typeof (char),   value => new Java.Lang.Character ((char) value) },
+			{ typeof (short),  value => new Java.Lang.Short ((short) value) },
+			{ typeof (int),    value => new Java.Lang.Integer ((int) value) },
+			{ typeof (long),   value => new Java.Lang.Long ((long) value) },
+			{ typeof (float),  value => new Java.Lang.Float ((float) value) },
+			{ typeof (double), value => new Java.Lang.Double ((double) value) },
 			{ typeof (string), value => new Java.Lang.String (value.ToString ()!) },
 		};
 
@@ -306,41 +307,42 @@ namespace Java.Interop {
 			return new Android.Runtime.JavaObject (value);
 		}
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		static Dictionary<Type, Func<object, IntPtr>> LocalJniHandleConverters = new Dictionary<Type, Func<object, IntPtr>> {
 			{ typeof (bool),   value => {
-				using (var v = Java.Lang.Boolean.ValueOf ((bool) value))
+				using (var v = new Java.Lang.Boolean ((bool) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (byte),   value => {
-				using (var v = Java.Lang.Byte.ValueOf ((sbyte) (byte) value))
+				using (var v = new Java.Lang.Byte ((sbyte) (byte) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (sbyte),  value => {
-				using (var v = Java.Lang.Byte.ValueOf ((sbyte) value))
+				using (var v = new Java.Lang.Byte ((sbyte) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (char),   value => {
-				using (var v = Java.Lang.Character.ValueOf ((char) value))
+				using (var v = new Java.Lang.Character ((char) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (short),  value => {
-				using (var v = Java.Lang.Short.ValueOf ((short) value))
+				using (var v = new Java.Lang.Short ((short) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (int),    value => {
-				using (var v = Java.Lang.Integer.ValueOf ((int) value))
+				using (var v = new Java.Lang.Integer ((int) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (long),   value => {
-				using (var v = Java.Lang.Long.ValueOf ((long) value))
+				using (var v = new Java.Lang.Long ((long) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (float),  value => {
-				using (var v = Java.Lang.Float.ValueOf ((float) value))
+				using (var v = new Java.Lang.Float ((float) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (double), value => {
-				using (var v = Java.Lang.Double.ValueOf ((double) value))
+				using (var v = new Java.Lang.Double ((double) value))
 					return JNIEnv.ToLocalJniHandle (v);
 			} },
 			{ typeof (string), value => {

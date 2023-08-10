@@ -119,13 +119,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Boolean_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Boolean;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, bool value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Boolean_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Boolean_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Boolean;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Boolean.ValueOf (value))
+				using (var val = new Java.Lang.Boolean (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Boolean_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -134,13 +135,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Byte_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Byte;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, sbyte value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Byte_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Byte_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Byte;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Byte.ValueOf (value))
+				using (var val = new Java.Lang.Byte (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Byte_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -149,13 +151,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Short_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Short;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, short value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Short_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Short_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Short;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Short.ValueOf (value))
+				using (var val = new Java.Lang.Short (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Short_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -164,13 +167,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Integer_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Integer;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, int value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Integer_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Integer_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Integer;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Integer.ValueOf (value))
+				using (var val = new Java.Lang.Integer (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Integer_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -179,13 +183,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Long_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Long;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, long value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Long_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Long_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Long;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Long.ValueOf (value))
+				using (var val = new Java.Lang.Long (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Long_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -194,13 +199,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Float_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Float;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, float value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Float_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Float_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Float;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Float.ValueOf (value))
+				using (var val = new Java.Lang.Float (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Float_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
@@ -209,13 +215,14 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Double_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Double;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, double value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Double_ == IntPtr.Zero)
 				id_put_Ljava_lang_String_Ljava_lang_Double_ = JNIEnv.GetMethodID (class_ref, "put", "(Ljava/lang/String;Ljava/lang/Double;)V");
 			IntPtr jkey = JNIEnv.NewString (key);
 			try {
-				using (var val = Java.Lang.Double.ValueOf (value))
+				using (var val = new Java.Lang.Double (value))
 					JNIEnv.CallVoidMethod (Handle, id_put_Ljava_lang_String_Ljava_lang_Double_, new JValue (jkey), new JValue (val));
 			} finally {
 				JNIEnv.DeleteLocalRef (jkey);
