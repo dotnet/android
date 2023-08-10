@@ -10,6 +10,9 @@ using Xamarin.Tools.Zip;
 using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Android.App;
+using Mono.Cecil;
+using System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -1118,5 +1121,48 @@ class TestActivity : Activity { }"
 			}
 		}
 
+		[IntentFilter (new [] { "myaction" }, DataPathSuffix = "mysuffix", DataPathAdvancedPattern = "mypattern")]
+		[IntentFilter (new [] { "myaction" }, DataPathSuffixes = new [] { "mysuffix", "mysuffix2" }, DataPathAdvancedPatterns = new [] { "mypattern", "mypattern2" })]
+		public class IntentFilterAttributeDataPathTestClass { }
+
+		[Test]
+		public void IntentFilterDataPathTest ()
+		{
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type).First ();
+			var xml = intent.ToElement ("blah").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""myaction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""mysuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""mypattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
+
+		[Test]
+		public void IntentFilterDataPathsTest ()
+		{
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type).ElementAt (1);
+			var xml = intent.ToElement ("blah").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""myaction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""mysuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""mysuffix2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""mypattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""mypattern2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
 	}
 }
