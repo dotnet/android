@@ -6,25 +6,15 @@ parameters:
   retryFailedTests: true  # Retry failed tests once
 
 steps:
-- ${{if parameters.testFilter}}:
-  - pwsh: >-
-      dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --test-filter="${{ parameters.testFilter }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
-    displayName: Slice unit tests with filter
-    failOnStderr: true
-- ${{ else }}:
-  - pwsh: >-
-      dotnet-test-slicer slice
-      --test-assembly="${{ parameters.testAssembly }}"
-      --slice-number=$(System.JobPositionInPhase)
-      --total-slices=$(System.TotalJobsInPhase)
-      --outfile="${{ parameters.testAssembly }}.runsettings"
-    displayName: Slice unit tests
-    failOnStderr: true
+- pwsh: >-
+    dotnet-test-slicer slice
+    --test-assembly "${{ parameters.testAssembly }}"
+    --test-filter `"${{ parameters.testFilter }}`"
+    --slice-number $(System.JobPositionInPhase)
+    --total-slices $(System.TotalJobsInPhase)
+    --outfile "${{ parameters.testAssembly }}.runsettings"
+  displayName: Slice unit tests
+  failOnStderr: true
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
@@ -51,8 +41,8 @@ steps:
   - pwsh: |
       dotnet-test-slicer `
         retry `
-        --trx="$(Agent.TempDirectory)" `
-        --outfile="${{ parameters.testAssembly }}.runsettings"
+        --trx "$(Agent.TempDirectory)" `
+        --outfile "${{ parameters.testAssembly }}.runsettings"
     displayName: Look for failed tests
     workingDirectory: ${{ parameters.xaSourcePath }}
 
