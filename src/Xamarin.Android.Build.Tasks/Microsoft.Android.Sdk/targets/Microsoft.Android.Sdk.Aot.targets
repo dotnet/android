@@ -123,8 +123,8 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         LLVMPath="$(_LLVMPath)"
         LdName="$(_LdName)"
         LdFlags="$(_LdFlags)"
-        CollectCompiledMethods="$(AndroidStripIL)"
-        CompiledMethodsOutputDirectory="$(IntermediateOutputPath)tokens"
+        CollectTrimmingEligibleMethods="$(AndroidStripIL)"
+        TrimmingEligibleMethodsOutputDirectory="$(IntermediateOutputPath)tokens"
         WorkingDirectory="$(MSBuildProjectDirectory)"
         AotArguments="$(AndroidAotAdditionalArguments)">
       <Output TaskParameter="CompiledAssemblies" ItemName="_MonoAOTCompiledAssemblies" />
