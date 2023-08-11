@@ -88,7 +88,36 @@ namespace xamarin::android::internal
 			true
 		>;
 
+		using timing_sequence_map_t = tsl::robin_map<void*, size_t>;
 		using load_assemblies_context_type = MonoAssemblyLoadContextGCHandle;
+
+		class TimingProfilerState
+		{
+		public:
+			template<typename T>
+			void add_sequence (T* ptr, size_t sequence_number)
+			{
+				std::lock_guard lock (map_lock);
+				seq_map[ptr] = sequence_number;
+			}
+
+			template<typename T>
+			size_t get_sequence (T* ptr)
+			{
+				std::lock_guard lock (map_lock);
+				auto iter = seq_map.find (ptr);
+				if (iter == seq_map.end ()) {
+					return 0;
+				}
+
+				return iter->second;
+			}
+
+		private:
+			timing_sequence_map_t seq_map;
+			std::mutex map_lock;
+		};
+
 		static constexpr pinvoke_library_map::size_type LIBRARY_MAP_INITIAL_BUCKET_COUNT = 1;
 #else // def NET
 		using load_assemblies_context_type = MonoDomain*;
@@ -300,6 +329,11 @@ namespace xamarin::android::internal
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (JNIEnv *env, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
+		void timing_init () noexcept;
+		void timing_ensure_state () noexcept;
+		void timing_init_extended () noexcept;
+		void timing_init_verbose () noexcept;
+
 #if defined (NET)
 		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
 #else //def NET
@@ -341,6 +375,13 @@ namespace xamarin::android::internal
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
+		static void prof_assembly_loading (MonoProfiler *prof, MonoAssembly *assembly) noexcept;
+		static void prof_assembly_loaded (MonoProfiler *prof, MonoAssembly *assembly) noexcept;
+		static void prof_image_loading (MonoProfiler *prof, MonoImage *assembly) noexcept;
+		static void prof_image_loaded (MonoProfiler *prof, MonoImage *assembly) noexcept;
+		static void prof_class_loading (MonoProfiler *prof, MonoClass *klass) noexcept;
+		static void prof_class_loaded (MonoProfiler *prof, MonoClass *klass) noexcept;
+
 #if !defined (RELEASE) || !defined (ANDROID)
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;
 		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
@@ -416,6 +457,8 @@ namespace xamarin::android::internal
 		static void *system_native_library_handle;
 		static void *system_security_cryptography_native_android_library_handle;
 		static void *system_io_compression_native_library_handle;
+
+		static inline TimingProfilerState* timing_profiler_state = nullptr;
 #else // def NET
 		static std::mutex   api_init_lock;
 		static void        *api_dso_handle;

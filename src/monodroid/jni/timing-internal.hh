@@ -136,6 +136,15 @@ namespace xamarin::android::internal
 		static constexpr std::string_view OPT_MODE_VERBOSE  { "verbose" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
+		// Results dump stage log markers
+		static constexpr std::string_view DUMP_STAGE_INIT_TAG                { "2/1" };
+		static constexpr std::string_view DUMP_STAGE_RESULTS_TAG             { "2/2" };
+		static constexpr std::string_view DUMP_STAGE_NO_EVENTS_TAG           { "2/3" };
+		static constexpr std::string_view DUMP_STAGE_ACCUMULATED_RESULTS_TAG { "2/4" };
+		static constexpr std::string_view DUMP_STAGE_ACC_ASSEMBLY_LOAD_TAG   { "2/5" };
+		static constexpr std::string_view DUMP_STAGE_ACC_JAVA_TO_MANAGED_TAG { "2/6" };
+		static constexpr std::string_view DUMP_STAGE_ACC_MANAGED_TO_JAVA_TAG { "2/7" };
+
 	protected:
 		FastTiming () noexcept
 		{
@@ -330,6 +339,7 @@ namespace xamarin::android::internal
 		static void really_initialize (bool log_immediately) noexcept;
 		static void parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept;
 		static void* timing_signal_thread (void *arg) noexcept;
+		bool no_events_logged (size_t entries) noexcept;
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
 
@@ -420,6 +430,42 @@ namespace xamarin::android::internal
 
 				case TimingEventKind::TotalRuntimeInit: {
 					constexpr char desc[] = "Runtime.init: end, total time";
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoAssemblyLoad: {
+					constexpr std::string_view desc { "MonoVM assembly load: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoClassLoad: {
+					constexpr std::string_view desc { "MonoVM class load: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoImageLoad: {
+					constexpr std::string_view desc { "MonoVM image load: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoMethodJit: {
+					constexpr std::string_view desc { "MonoVM method JIT: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoMethodInvoke: {
+					constexpr std::string_view desc { "MonoVM method invocation: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::MonoMethodDuration: {
+					constexpr std::string_view desc { "MonoVM method self duration: " };
 					message.append (desc);
 					return;
 				}

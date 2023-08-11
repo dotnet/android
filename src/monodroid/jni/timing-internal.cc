@@ -18,14 +18,15 @@ FastTiming::really_initialize (bool log_immediately) noexcept
 	immediate_logging = log_immediately;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) != 0) {
+	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_TIMING, value) != 0) {
+		parse_options (value);
 	}
 
 	if (immediate_logging) {
 		return;
 	}
 
-	log_write (LOG_TIMING, LogLevel::Info, "[2/1] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application");
+	log_info (LOG_TIMING, "[%s] To get timing results, send the mono.android.app.DUMP_TIMING_DATA intent to the application", DUMP_STAGE_INIT_TAG.data ());
 }
 
 void FastTiming::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept
@@ -56,8 +57,6 @@ void FastTiming::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> 
 				timing_mode = TimingMode::Verbose;
 				continue;
 			}
-
-			log_warn (LOG_TIMING, "Unsupported timing mode '%s'", param.start ());
 			continue;
 		}
 
@@ -90,22 +89,32 @@ void FastTiming::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> 
 	}
 }
 
+force_inline bool
+FastTiming::no_events_logged (size_t entries) noexcept
+{
+	if (entries > 0) {
+		return false;
+	}
+
+	log_info_nocheck (LOG_TIMING, "[%s] No events logged", DUMP_STAGE_NO_EVENTS_TAG.data ());
+	return true;
+}
+
 void
 FastTiming::dump_to_logcat (size_t entries) noexcept
 {
-	log_write (LOG_TIMING, LogLevel::Info, "[2/2] Performance measurement results");
-	if (entries == 0) {
-		log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
+	log_info_nocheck (LOG_TIMING, "[%s] Performance measurement results", DUMP_STAGE_RESULTS_TAG.data ());
+	if (no_events_logged (entries)) {
 		return;
 	}
 
 	dynamic_local_string<SharedConstants::MAX_LOGCAT_MESSAGE_LENGTH, char> message;
 
-	// Values are in nanoseconds
+	// Values are in nanoseconds, we don't need to worry about overflow for our needs, when accumulating.
 	uint64_t total_assembly_load_time = 0;
 	uint64_t total_java_to_managed_time = 0;
 	uint64_t total_managed_to_java_time = 0;
-	uint64_t total_ns;
+	uint64_t total_ns; // initialized by `calculate_interval`
 
 	format_and_log (init_time, message, total_ns, true /* indent */);
 	for (size_t i = 0; i < entries; i++) {
@@ -132,16 +141,16 @@ FastTiming::dump_to_logcat (size_t entries) noexcept
 	}
 
 	uint32_t sec, ms, ns;
-	log_write (LOG_TIMING, LogLevel::Info, "[2/4] Accumulated performance results");
+	log_info_nocheck (LOG_TIMING, "[%s] Accumulated performance results", DUMP_STAGE_ACCUMULATED_RESULTS_TAG.data ());
 
 	ns_to_time (total_assembly_load_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/5] Assembly load: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [%s] Assembly load: %u:%u::%u", DUMP_STAGE_ACC_ASSEMBLY_LOAD_TAG.data (), sec, ms, ns);
 
 	ns_to_time (total_java_to_managed_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/6] Java to Managed lookup: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [%s] Java to Managed lookup: %u:%u::%u", DUMP_STAGE_ACC_JAVA_TO_MANAGED_TAG.data (), sec, ms, ns);
 
 	ns_to_time (total_managed_to_java_time, sec, ms, ns);
-	log_info_nocheck (LOG_TIMING, "  [2/7] Managed to Java lookup: %u:%u::%u", sec, ms, ns);
+	log_info_nocheck (LOG_TIMING, "  [%s] Managed to Java lookup: %u:%u::%u", DUMP_STAGE_ACC_MANAGED_TO_JAVA_TAG.data (), sec, ms, ns);
 }
 
 void
@@ -154,9 +163,8 @@ FastTiming::dump_to_file (size_t entries) noexcept
 		)
 	};
 
-	log_info (LOG_TIMING, "[2/2] Performance measurement results logged to file: %s", timing_log_path.get ());
-	if (entries == 0) {
-		log_write (LOG_TIMING, LogLevel::Info, "[2/3] No events logged");
+	log_info (LOG_TIMING, "[%s] Performance measurement results logged to file: %s", DUMP_STAGE_RESULTS_TAG.data (), timing_log_path.get ());
+	if (no_events_logged (entries)) {
 		return;
 	}
 
@@ -166,6 +174,11 @@ FastTiming::dump_to_file (size_t entries) noexcept
 void
 FastTiming::dump () noexcept
 {
+	// TODO: measure (average over, say, 10 calls) and log the following:
+	//   * timing_profiler_state->add_sequence
+	//   * timing_profiler_state->get_sequence
+	//
+	// This will allow to subtract these values from various measurements
 	if (immediate_logging) {
 		return;
 	}

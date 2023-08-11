@@ -83,15 +83,15 @@ namespace xamarin::android::internal
 
 		force_inline bool equal (size_t start_index, std::string_view const& s) const noexcept
 		{
-			if (s == nullptr) {
+			if (s.empty ()) {
 				return false;
 			}
 
-			if (!can_access (s.length ())) {
+			if (!can_access (s.length () + start_index)) {
 				return false;
 			}
 
-			if (s.length () != length () + start_index) {
+			if (s.length () != length () - start_index) {
 				return false;
 			}
 
@@ -99,7 +99,7 @@ namespace xamarin::android::internal
 				return true;
 			}
 
-			return memcmp (_start + start_index, s.data (), s.length ());
+			return memcmp (_start + start_index, s.data (), length () - start_index) == 0;
 		}
 
 		template<size_t Size>
@@ -474,6 +474,15 @@ namespace xamarin::android::internal
 			buffer.get ()[idx] = NUL;
 
 			return *this;
+		}
+
+		force_inline string_base& append (std::basic_string_view<TChar> const& s) noexcept
+		{
+			if (s.empty ()) {
+				return *this;
+			}
+
+			return append (s.data (), s.length ());
 		}
 
 		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>

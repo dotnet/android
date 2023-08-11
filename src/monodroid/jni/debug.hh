@@ -3,6 +3,7 @@
 #define __MONODROID_DEBUG_H__
 
 #include <cstdint>
+#include <string_view>
 #include <pthread.h>
 #include <sys/time.h>
 
@@ -29,20 +30,20 @@ namespace xamarin::android
 
 	public:
 		/* Android property containing connection information, set by XS */
-		static inline const char DEBUG_MONO_CONNECT_PROPERTY[]      = "debug.mono.connect";
-		static inline const char DEBUG_MONO_DEBUG_PROPERTY[]        = "debug.mono.debug";
-		static inline const char DEBUG_MONO_ENV_PROPERTY[]          = "debug.mono.env";
-		static inline const char DEBUG_MONO_EXTRA_PROPERTY[]        = "debug.mono.extra";
-		static inline const char DEBUG_MONO_GC_PROPERTY[]           = "debug.mono.gc";
-		static inline const char DEBUG_MONO_GDB_PROPERTY[]          = "debug.mono.gdb";
-		static inline const char DEBUG_MONO_LOG_PROPERTY[]          = "debug.mono.log";
-		static inline const char DEBUG_MONO_MAX_GREFC[]             = "debug.mono.max_grefc";
-		static inline const char DEBUG_MONO_PROFILE_PROPERTY[]      = "debug.mono.profile";
-		static inline const char DEBUG_MONO_RUNTIME_ARGS_PROPERTY[] = "debug.mono.runtime_args";
-		static inline const char DEBUG_MONO_SOFT_BREAKPOINTS[]      = "debug.mono.soft_breakpoints";
-		static inline const char DEBUG_MONO_TIMING[]                = "debug.mono.timing";
-		static inline const char DEBUG_MONO_TRACE_PROPERTY[]        = "debug.mono.trace";
-		static inline const char DEBUG_MONO_WREF_PROPERTY[]         = "debug.mono.wref";
+		static constexpr std::string_view DEBUG_MONO_CONNECT_PROPERTY      { "debug.mono.connect" };
+		static constexpr std::string_view DEBUG_MONO_DEBUG_PROPERTY        { "debug.mono.debug" };
+		static constexpr std::string_view DEBUG_MONO_ENV_PROPERTY          { "debug.mono.env" };
+		static constexpr std::string_view DEBUG_MONO_EXTRA_PROPERTY        { "debug.mono.extra" };
+		static constexpr std::string_view DEBUG_MONO_GC_PROPERTY           { "debug.mono.gc" };
+		static constexpr std::string_view DEBUG_MONO_GDB_PROPERTY          { "debug.mono.gdb" };
+		static constexpr std::string_view DEBUG_MONO_LOG_PROPERTY          { "debug.mono.log" };
+		static constexpr std::string_view DEBUG_MONO_MAX_GREFC             { "debug.mono.max_grefc" };
+		static constexpr std::string_view DEBUG_MONO_PROFILE_PROPERTY      { "debug.mono.profile" };
+		static constexpr std::string_view DEBUG_MONO_RUNTIME_ARGS_PROPERTY { "debug.mono.runtime_args" };
+		static constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
+		static constexpr std::string_view DEBUG_MONO_TIMING                { "debug.mono.timing" };
+		static constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
+		static constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
 
 	public:
 		explicit Debug ()

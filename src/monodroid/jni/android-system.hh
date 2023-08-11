@@ -2,6 +2,7 @@
 #ifndef __ANDROID_SYSTEM_H
 #define __ANDROID_SYSTEM_H
 
+#include <string_view>
 #include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -56,7 +57,19 @@ namespace xamarin::android::internal
 		void  setup_process_args (jstring_array_wrapper &runtimeApks);
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
+
+		int monodroid_get_system_property (std::string_view const& name, char **value) noexcept
+		{
+			return monodroid_get_system_property (name.data (), value);
+		}
+
 		int   monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value);
+
+		int monodroid_get_system_property (std::string_view const& name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
+		{
+			return monodroid_get_system_property (name.data (), value);
+		}
+
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();
