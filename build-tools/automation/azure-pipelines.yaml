@@ -112,7 +112,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
-        
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -140,7 +140,7 @@ stages:
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
-      
+
     - template: yaml-templates/start-stop-emulator.yaml
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -201,7 +201,7 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
-        
+
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
@@ -220,12 +220,18 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-        
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: yaml-templates/start-stop-emulator.yaml
@@ -275,6 +281,12 @@ stages:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
         testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - template: yaml-templates/upload-results.yaml
       parameters:
