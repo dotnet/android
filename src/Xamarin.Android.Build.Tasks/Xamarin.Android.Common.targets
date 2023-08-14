@@ -1973,7 +1973,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'"
+    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true' AND '$(AndroidStripIL)' != 'true'"
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
