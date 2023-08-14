@@ -24,7 +24,6 @@ _PREPARE_ARGS =
 all:
 	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION) -m:1
 	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
-	$(call MSBUILD_BINLOG,all,$(_SLN_BUILD)) /restore $(MSBUILD_FLAGS) tools/xabuild/xabuild.csproj
 
 -include bin/Build$(CONFIGURATION)/rules.mk
 
@@ -95,7 +94,6 @@ MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(wo
 endif
 
 all-tests::
-	$(call MSBUILD_BINLOG,build-xabuild) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
 	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
 
 pack-dotnet::
