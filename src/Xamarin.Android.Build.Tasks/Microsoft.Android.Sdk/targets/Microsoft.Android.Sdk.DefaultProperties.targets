@@ -112,7 +112,7 @@
     <_AggressiveAttributeTrimming Condition="'$(_AggressiveAttributeTrimming)' == ''">true</_AggressiveAttributeTrimming>
     <NullabilityInfoContextSupport Condition="'$(NullabilityInfoContextSupport)' == ''">false</NullabilityInfoContextSupport>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>
-    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == ''">true</JsonSerializerIsReflectionEnabledByDefault>
+    <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>
     <_SystemReflectionForceInterpretedInvoke Condition="'$(_SystemReflectionForceInterpretedInvoke)' == ''">true</_SystemReflectionForceInterpretedInvoke>
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
     <VerifyDependencyInjectionOpenGenericServiceTrimmability Condition="'$(VerifyDependencyInjectionOpenGenericServiceTrimmability)' == '' and '$(PublishTrimmed)' == 'true'">false</VerifyDependencyInjectionOpenGenericServiceTrimmability>
