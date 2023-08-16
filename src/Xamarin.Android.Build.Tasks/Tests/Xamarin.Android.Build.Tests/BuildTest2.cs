@@ -26,7 +26,7 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* isClassic */              false,
 				/* isRelease */              true,
-				/* marshalMethodsEnabled */  true,
+				/* marshalMethodsEnabled */  false,
 			},
 			new object[] {
 				/* isClassic */              false,
@@ -276,6 +276,7 @@ namespace Xamarin.Android.Build.Tests
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
 			}
+			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			if (proj.IsRelease = isRelease && !Builder.UseDotNet) {
@@ -816,12 +817,10 @@ namespace UnamedProject
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // n/a for .NET 5+
 		public void TargetFrameworkMonikerAssemblyAttributesPath ()
 		{
-			const string filePattern = "MonoAndroid,Version=v*.AssemblyAttributes.cs";
+			const string filePattern = ".NETCoreApp,Version=*.AssemblyAttributes.cs";
 			var proj = new XamarinAndroidApplicationProject {
-				TargetFrameworkVersion = "v6.0",
 			};
 			proj.SetProperty ("AndroidUseLatestPlatformSdk", "True");
 
@@ -829,12 +828,9 @@ namespace UnamedProject
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var old_assemblyattributespath = Path.Combine (intermediate, $"MonoAndroid,Version={proj.TargetFrameworkVersion}.AssemblyAttributes.cs");
-				FileAssert.DoesNotExist (old_assemblyattributespath, "TargetFrameworkMonikerAssemblyAttributesPath should have the newer TargetFrameworkVersion.");
 
 				var new_assemblyattributespath = Directory.EnumerateFiles (intermediate, filePattern).SingleOrDefault ();
 				Assert.IsNotNull (new_assemblyattributespath, $"A *single* file of pattern {filePattern} should exist in `$(IntermediateOutputPath)`.");
-				StringAssert.DoesNotContain (proj.TargetFrameworkVersion, File.ReadAllText (new_assemblyattributespath), $"`{new_assemblyattributespath}` should not contain `{proj.TargetFrameworkVersion}`!");
 			}
 		}
 

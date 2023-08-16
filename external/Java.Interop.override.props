@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <Standalone>True</Standalone>
   </PropertyGroup>
 
 </Project>

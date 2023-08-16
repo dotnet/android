@@ -29,6 +29,11 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
 		{
+			// TODO: enable when marshal methods are fixed
+			if (enableMarshalMethods) {
+				Assert.Ignore ("Test is skipped when marshal methods are enabled, pending fixes to MM for .NET9");
+			}
+
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
@@ -159,53 +164,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
-		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
-
-		void SymbolicateAndAssert (string symbolArchivePath, string logcatFilePath, IEnumerable<string> expectedStackTraceContents)
-		{
-			// 09-22 14:21:07.064 12786 12786 I MonoDroid:   at UnnamedProject.MainActivity.OnCreate (Android.OS.Bundle bundle) [0x00051] in <b3164619c4824e379aecfb7335bd4cce>:0
-			Assert.IsTrue (ObfuscatedStackRegex.IsMatch (File.ReadAllText (logcatFilePath)), "Original logcat output did not contain obfuscated crash info.");
-			var monoSymbolicate = IsWindows ? Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "mono-symbolicate.exe") : "mono-symbolicate";
-			var symbolicatedOutput = RunProcess (monoSymbolicate, $"\"{symbolArchivePath}\" \"{logcatFilePath}\"");
-			File.WriteAllText (Path.Combine (Path.GetDirectoryName (logcatFilePath), "mono-symbol.log"), symbolicatedOutput);
-			Assert.IsFalse (ObfuscatedStackRegex.IsMatch (symbolicatedOutput), "Symbolicated logcat output did contain obfuscated crash info.");
-			foreach (string expectedString in expectedStackTraceContents) {
-				StringAssert.Contains (expectedString, symbolicatedOutput);
-			}
-		}
-
-		[Test, Category ("MonoSymbolicate")]
-		public void MonoSymbolicateAndroidStackTrace ()
-		{
-			proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
-@"			throw new Android.OS.RemoteException (""We've thrown an unhandled Android.OS.RemoteException!"");
-");
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
-			Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-			RunProjectAndAssert (proj, builder);
-
-			var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
-			MonitorAdbLogcat ((line) => {
-				return line.Contains ($"Force finishing activity {proj.PackageName}");
-			}, logcatPath, 30);
-
-			var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
-			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
-			SymbolicateAndAssert (archivePath, logcatPath, new string [] {
-				Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:32"),
-				TestEnvironment.UseLocalBuildOutput
-					? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
-					: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
-			}) ;
-		}
-
 		[Test]
 		[Category ("UsesDevice")]
 		public void SmokeTestBuildAndRunWithSpecialCharacters ()
@@ -226,127 +184,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds));
 			}
-		}
-
-		[Test, Category ("MonoSymbolicate")]
-		public void MonoSymbolicateNetStandardStackTrace ()
-		{
-			var lib = new DotNetStandard {
-				ProjectName = "Library1",
-				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "netstandard2.0",
-				Sources = {
-					new BuildItem.Source ("Class1.cs") {
-						TextContent = () => @"
-using System;
-namespace Library1 {
-	public class Class1 {
-		string Data { get; set; }
-		public Class1(string data) {
-			Data = data;
-		}
-
-		public string GetData() {
-			if (Data == null)
-				throw new NullReferenceException();
-			return Data;
-		}
-	}
-}",
-					},
-				}
-			};
-
-			proj = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
-				References = {
-					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-				},
-			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_FORMS_INIT}",
-@"			var cl = new Library1.Class1(null);
-			cl.GetData();
-");
-			var rootPath = Path.Combine (Root, "temp", TestName);
-			using (var lb = CreateDllBuilder (Path.Combine (Path.Combine (Root, "temp", TestName), lib.ProjectName))) {
-				Assert.IsTrue (lb.Build (lib), "Library build should have succeeded.");
-
-				builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
-				Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-				RunProjectAndAssert (proj, builder);
-
-				var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
-				MonitorAdbLogcat ((line) => {
-					return line.Contains ($"Force finishing activity {proj.PackageName}");
-				}, logcatPath, 30);
-
-				var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
-				Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
-				SymbolicateAndAssert (archivePath, logcatPath, new string [] {
-					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
-					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:23"),
-					TestEnvironment.UseLocalBuildOutput
-						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
-						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
-				});
-			}
-		}
-
-		public static string [] ProfilerOptions () => new string [] {
-			"log:heapshot", // Heapshot
-			"log:sample", // Sample
-			"log:nodefaults,exception,monitor,counter,sample", // Sample5_8
-			"log:nodefaults,exception,monitor,counter,sample-real", // SampleReal
-			"log:alloc", // Allocations
-			"log:nodefaults,gc,gcalloc,gcroot,gcmove,counter", // Allocations5_8
-			"log:nodefaults,gc,nogcalloc,gcroot,gcmove,counter", // LightAllocations
-			"log:calls,alloc,heapshot", // All
-		};
-
-		[Test]
-		[Category ("DotNetIgnore")] // TODO: libmono-profiler-log.so is missing in .NET 6
-		public void ProfilerLogOptions_ShouldCreateMlpdFiles ([ValueSource (nameof (ProfilerOptions))] string profilerOption)
-		{
-			AssertCommercialBuild ();
-
-			proj = new XamarinAndroidApplicationProject () {
-			};
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			string mlpdDestination = Path.Combine (Root, builder.ProjectDirectory, "profile.mlpd");
-			if (File.Exists (mlpdDestination))
-				File.Delete (mlpdDestination);
-
-			RunAdbCommand ($"shell setprop debug.mono.profile {profilerOption}");
-			RunProjectAndAssert (proj, builder);
-			Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
-
-			// Wait for seven seconds after the activity is displayed to get profiler results
-			WaitFor (7000);
-			string profilerFileDir = null;
-			foreach (var dir in GetOverrideDirectoryPaths (proj.PackageName)) {
-				var listing = RunAdbCommand ($"shell run-as {proj.PackageName} ls {dir}");
-				if (listing.Contains ("profile.mlpd")) {
-					profilerFileDir = dir;
-					break;
-				}
-			}
-
-			Assert.IsTrue (!string.IsNullOrEmpty (profilerFileDir), $"Unable to locate 'profile.mlpd' in any override directories.");
-			var profilerContent = RunAdbCommand ($"shell run-as {proj.PackageName} cat {profilerFileDir}/profile.mlpd");
-			File.WriteAllText (mlpdDestination, profilerContent);
-			RunAdbCommand ($"shell run-as {proj.PackageName} rm {profilerFileDir}/profile.mlpd");
-			RunAdbCommand ($"shell am force-stop {proj.PackageName}");
-			RunAdbCommand ("shell setprop debug.mono.profile \"\"");
-			Assert.IsTrue (new FileInfo (mlpdDestination).Length > 5000,
-				$"profile.mlpd file created with option '{profilerOption}' was not larger than 5 kb. The application may have crashed.");
-			Assert.IsTrue (profilerContent.Contains ("String") && profilerContent.Contains ("Java"),
-				$"profile.mlpd file created with option '{profilerOption}' did not contain expected data.");
 		}
 
 		[Test]

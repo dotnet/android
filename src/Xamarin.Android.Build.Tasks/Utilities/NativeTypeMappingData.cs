@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 		public uint MapModuleCount { get; }
 		public uint JavaTypeCount  { get; }
 
-		public NativeTypeMappingData (Action<string> logger, TypeMapGenerator.ModuleReleaseData[] modules)
+		public NativeTypeMappingData (TypeMapGenerator.ModuleReleaseData[] modules)
 		{
 			Modules = modules ?? throw new ArgumentNullException (nameof (modules));
 

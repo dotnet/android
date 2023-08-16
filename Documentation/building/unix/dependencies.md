@@ -135,8 +135,7 @@ and to enable it again, issue the following command:
 
 ## macOS Dependencies
 
-The [`android-toolchain.projitems`](../../../build-tools/android-toolchain/android-toolchain.projitems), and
-[`monodroid.projitems`](../../../src/monodroid/monodroid.projitems) project files, among
+The [`android-toolchain.projitems`](../../../build-tools/android-toolchain/android-toolchain.projitems), among
 others, use the `@(RequiredProgram)` build action to check for the existence
 of a program within `$PATH` during the build. If a required program doesn't
 exist, then the build will fail and a suggested `brew install` command line
