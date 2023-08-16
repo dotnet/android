@@ -1303,6 +1303,15 @@ This is only used when building `system` applications.
 
 Support for this property was added in Xamarin.Android 11.3.
 
+## AndroidStripIL
+
+When setting it to true, the method body of the AOT compiled methods will be strip away.
+By default, `AndroidStripIL` is set to false.
+To maximize the impact of this feature, when setting it to true, the default value of 
+`AndroidEnableProfiledAot` becomes false. However, you could overwrite it by setting it to true explicitly.
+
+Support for this property was added in .NET 8.
+
 ## AndroidSupportedAbis
 
 A string property that contains a
