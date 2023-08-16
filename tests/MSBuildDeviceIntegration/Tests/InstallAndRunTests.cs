@@ -1075,5 +1075,24 @@ namespace UnnamedProject
 			);
 		}
 
+		[Test]
+		public void EnableAndroidStripIL ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty("AndroidStripIL", "true");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+		}
+
 	}
 }
