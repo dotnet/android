@@ -152,7 +152,7 @@ namespace Xamarin.ProjectTools
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
 				"-m:1",
-				"-nr:false",
+				"-nodeReuse:false",
 				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {

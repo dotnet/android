@@ -5,136 +5,136 @@
       "Size": 3572
     },
     "assemblies/_Microsoft.Android.Resource.Designer.dll": {
-      "Size": 2102
+      "Size": 2101
     },
     "assemblies/FormsViewGroup.dll": {
       "Size": 7112
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 66808
+      "Size": 70026
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 469914
+      "Size": 469836
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5575
+      "Size": 5509
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3870
+      "Size": 3859
     },
     "assemblies/netstandard.dll": {
-      "Size": 5585
+      "Size": 5575
     },
     "assemblies/rc.bin": {
-      "Size": 1302
+      "Size": 1395
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 11524
+      "Size": 11508
     },
     "assemblies/System.Collections.dll": {
-      "Size": 15415
+      "Size": 15408
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 7461
+      "Size": 7451
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 1946
+      "Size": 1935
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2560
+      "Size": 2549
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6044
+      "Size": 6031
     },
     "assemblies/System.Console.dll": {
-      "Size": 6588
+      "Size": 6572
     },
     "assemblies/System.Core.dll": {
-      "Size": 1996
+      "Size": 1984
     },
     "assemblies/System.Diagnostics.DiagnosticSource.dll": {
-      "Size": 12529
+      "Size": 12520
     },
     "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6562
+      "Size": 6548
     },
     "assemblies/System.dll": {
-      "Size": 2350
+      "Size": 2341
     },
     "assemblies/System.Drawing.dll": {
-      "Size": 1944
+      "Size": 1934
     },
     "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 11987
+      "Size": 11971
     },
     "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 11196
+      "Size": 11188
     },
     "assemblies/System.IO.Compression.dll": {
-      "Size": 15877
+      "Size": 15864
     },
     "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 9887
+      "Size": 9869
     },
     "assemblies/System.Linq.dll": {
-      "Size": 19570
+      "Size": 19560
     },
     "assemblies/System.Linq.Expressions.dll": {
-      "Size": 164694
+      "Size": 164682
     },
     "assemblies/System.Net.Http.dll": {
-      "Size": 69096
+      "Size": 69544
     },
     "assemblies/System.Net.Primitives.dll": {
-      "Size": 22443
+      "Size": 22431
     },
     "assemblies/System.Net.Requests.dll": {
-      "Size": 3609
+      "Size": 3599
     },
     "assemblies/System.ObjectModel.dll": {
-      "Size": 8124
+      "Size": 8113
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 843541
+      "Size": 845111
     },
     "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 192912
+      "Size": 192906
     },
     "assemblies/System.Private.Uri.dll": {
-      "Size": 43487
+      "Size": 43477
     },
     "assemblies/System.Private.Xml.dll": {
-      "Size": 215780
+      "Size": 215983
     },
     "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 16647
+      "Size": 16636
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2759
+      "Size": 2748
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3733
+      "Size": 3858
     },
     "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 1872
+      "Size": 1861
     },
     "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2490
+      "Size": 2480
     },
     "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3769
+      "Size": 3758
     },
     "assemblies/System.Security.Cryptography.dll": {
-      "Size": 8111
+      "Size": 8099
     },
     "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 158602
+      "Size": 158865
     },
     "assemblies/System.Xml.dll": {
-      "Size": 1765
+      "Size": 1752
     },
     "assemblies/System.Xml.Linq.dll": {
-      "Size": 1782
+      "Size": 1771
     },
     "assemblies/UnnamedProject.dll": {
       "Size": 4987
@@ -209,25 +209,25 @@
       "Size": 3514720
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 97096
+      "Size": 97080
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 381088
+      "Size": 325320
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3184096
+      "Size": 3189360
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 93856
+      "Size": 93920
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 154904
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 102800
+      "Size": 102752
     },
     "META-INF/android.support.design_material.version": {
       "Size": 12
@@ -1916,5 +1916,5 @@
       "Size": 325240
     }
   },
-  "PackageSize": 7982094
+  "PackageSize": 7977998
 }

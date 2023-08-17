@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "L_15.0.7-5.0.3";
+		const string BinutilsVersion                = "L_16.0.6-6.0.0";
 
 		const string MicrosoftOpenJDK11Version      = "11.0.16";
 		const string MicrosoftOpenJDK11Release      = "8.1";
@@ -347,12 +347,6 @@ namespace Xamarin.Android.Prepare
 
 			public static string DotNetPreviewTool => Path.Combine (DotNetPreviewPath, "dotnet");
 
-			// CMake
-			public static string CmakeMSBuildPropsName               = "cmake-config.props";
-			public static string CmakeShellScriptsPropsName          = "cmake-config.sh";
-			public static string CmakeMonodroidTargets               = "cmake-monodroid.targets";
-			public static string MonodroidSourceDir                  => GetCachedPath (ref monodroidSourceDir, () => Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "monodroid"));
-
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
@@ -464,7 +458,6 @@ namespace Xamarin.Android.Prepare
 			static string? netcoreAppRuntimeAndroidARM64;
 			static string? netcoreAppRuntimeAndroidX86;
 			static string? netcoreAppRuntimeAndroidX86_64;
-			static string? monodroidSourceDir;
 		}
 	}
 }

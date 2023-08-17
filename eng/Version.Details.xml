@@ -16,9 +16,9 @@
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>f2265941403ac9885fa7aa0057bd5cd56e80b511</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.4-alpha.23360.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.4-alpha.23407.2" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>1a6a83a8f50e1119f1007b1e3c211d3289ba6901</Sha>
+      <Sha>2f4ef297939628143389ddeea569874ded0b1c1b</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>

@@ -153,6 +153,7 @@ stages:
     parameters:
       emulatorMSBuildArgs: -p:TestAvdExtraBootArgs=-writable-system
       jobName: SystemApplicationTests
+      jobTimeout: 120
       testSteps:
       - template: run-nunit-tests.yaml
         parameters:
@@ -173,13 +174,18 @@ stages:
   - job: mac_timezoneinfo_tests
     displayName: TimeZoneInfoTests Emulator Tests
     strategy:
-      parallel: 4
+      parallel: 3
     pool:
-      vmImage: $(HostedMacImage)
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: 120
     workspace:
       clean: all
     steps:
+    - template: agent-cleanser/v1.yml@yaml-templates
+
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
@@ -221,13 +227,18 @@ stages:
   - job: mac_localization_tests
     displayName: Localization Emulator Tests
     strategy:
-      parallel: 10
+      parallel: 6
     pool:
-      vmImage: $(HostedMacImage)
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: 150
     workspace:
       clean: all
     steps:
+    - template: agent-cleanser/v1.yml@yaml-templates
+
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
@@ -249,7 +260,7 @@ stages:
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: method == CheckLocalizationIsCorrectWithSlicer
-        testRunTitle: CheckTimeZoneInfoIsCorrect On Device - macOS
+        testRunTitle: CheckLocalizationIsCorrect On Device - macOS
 
     - template: yaml-templates/upload-results.yaml
       parameters:
