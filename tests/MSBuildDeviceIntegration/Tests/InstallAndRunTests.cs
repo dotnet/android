@@ -1076,13 +1076,13 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void EnableAndroidStripIL ()
+		public void EnableAndroidStripILAfterAOT ()
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true,
 				EnableDefaultItems = true,
 			};
-			proj.SetProperty("AndroidStripIL", "true");
+			proj.SetProperty("AndroidStripILAfterAOT", "true");
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");

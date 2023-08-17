@@ -123,7 +123,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         LLVMPath="$(_LLVMPath)"
         LdName="$(_LdName)"
         LdFlags="$(_LdFlags)"
-        CollectTrimmingEligibleMethods="$(AndroidStripIL)"
+        CollectTrimmingEligibleMethods="$(AndroidStripILAfterAOT)"
         TrimmingEligibleMethodsOutputDirectory="$(IntermediateOutputPath)tokens"
         WorkingDirectory="$(MSBuildProjectDirectory)"
         AotArguments="$(AndroidAotAdditionalArguments)">
@@ -131,14 +131,14 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <Output TaskParameter="FileWrites"         ItemName="FileWrites" />
     </MonoAOTCompiler>
     <ILStrip
-        Condition=" '$(AndroidStripIL)' == 'true' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
         TrimIndividualMethods="true"
         Assemblies="@(_MonoAOTCompiledAssemblies)"
         DisableParallelStripping="$(_DisableParallelAot)">
       <Output TaskParameter="TrimmedAssemblies" ItemName="_ILStripTrimmedAssemblies" />
     </ILStrip>
     <Move
-        Condition=" '$(AndroidStripIL)' == 'true' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
         SourceFiles="@(_ILStripTrimmedAssemblies->'%(TrimmedAssemblyFileName)')"
         DestinationFiles="@(_ILStripTrimmedAssemblies)"
     />
