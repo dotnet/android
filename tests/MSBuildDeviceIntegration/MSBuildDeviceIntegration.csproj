@@ -37,6 +37,9 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Reference Include="Xamarin.Android.Cecil">
+      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
+    </Reference>
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.787" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
