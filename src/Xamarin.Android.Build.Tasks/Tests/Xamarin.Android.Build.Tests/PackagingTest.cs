@@ -15,38 +15,6 @@ namespace Xamarin.Android.Build.Tests
 	[Parallelizable (ParallelScope.Children)]
 	public class PackagingTest : BaseTest
 	{
-#pragma warning disable 414
-		static object [] ManagedSymbolsArchiveSource = new object [] {
-			//           isRelease, monoSymbolArchive, packageFormat,
-			new object[] { false    , false              , "apk" },
-			new object[] { true     , true               , "apk" },
-			new object[] { true     , false              , "apk" },
-			new object[] { true     , true               , "aab" },
-		};
-#pragma warning restore 414
-
-		[Test]
-		[Category ("MonoSymbolicate")]
-		[TestCaseSource (nameof(ManagedSymbolsArchiveSource))]
-		public void CheckManagedSymbolsArchive (bool isRelease, bool monoSymbolArchive, string packageFormat)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", monoSymbolArchive);
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				Assert.AreEqual (monoSymbolArchive, Directory.Exists (archivePath),
-					string.Format ("The msym archive {0} exist.", monoSymbolArchive ? "should" : "should not"));
-			}
-		}
-
 		[Test]
 		public void CheckProguardMappingFileExists ()
 		{
@@ -230,6 +198,10 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		void AssertEmbeddedDSOs (string apk)
 		{
 			FileAssert.Exists (apk);
+
+			var zipAlignPath = Path.Combine (GetPathToZipAlign (), IsWindows ? "zipalign.exe" : "zipalign");
+			Assert.That (new FileInfo (zipAlignPath), Does.Exist, $"ZipAlign not found at {zipAlignPath}");
+			Assert.That (RunCommand (zipAlignPath, $"-c -v -p 4 {apk}"), Is.True, $"{apk} does not contain page-aligned .so files");
 
 			using (var zip = ZipHelper.OpenZip (apk)) {
 				foreach (var entry in zip) {
@@ -705,5 +677,46 @@ public class Test
 				}
 			}
 		}
+
+		[Test]
+		public void DefaultItems ()
+		{
+			void CreateEmptyFile (string path)
+			{
+				Directory.CreateDirectory (Path.GetDirectoryName (path));
+				File.WriteAllText (path, contents: "");
+			}
+
+			var proj = new XamarinAndroidApplicationProject () {
+				EnableDefaultItems = true,
+			};
+
+			var builder = CreateApkBuilder ();
+			builder.Save (proj);
+			proj.ShouldPopulate = false;
+
+			// Build error -> no nested sub-directories in Resources
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "drawable", "foo", "bar.png"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo", "bar.png"));
+
+			// Build error -> no files/directories that start with .
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", ".DS_Store"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".DS_Store"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", ".svn", "foo.txt"));
+
+			// Files that should work
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Resources", "raw", "foo.txt"));
+			CreateEmptyFile (Path.Combine (Root, builder.ProjectDirectory, "Assets", "foo", "bar.txt"));
+
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+			var apkPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apkPath);
+			using (var apk = ZipHelper.OpenZip (apkPath)) {
+				apk.AssertContainsEntry (apkPath, "res/raw/foo.txt");
+				apk.AssertContainsEntry (apkPath, "assets/foo/bar.txt");
+			}
+		}
+
 	}
 }

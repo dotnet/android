@@ -1,3 +1,5 @@
+global using JNIEnv = global::Android.Runtime.JNIEnv;
+
 using System;
 
 namespace Java.InteropTests

@@ -77,6 +77,7 @@ namespace Android.Views {
 
 #if ANDROID_11
 		[Obsolete ("Please Use DispatchSystemUiVisibilityChanged(SystemUiFlags)")]
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 		public void DispatchSystemUiVisibilityChanged (int visibility)
 		{
 			DispatchSystemUiVisibilityChanged ((SystemUiFlags) visibility);

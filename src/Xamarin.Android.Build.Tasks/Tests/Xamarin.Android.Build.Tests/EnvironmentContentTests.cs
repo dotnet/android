@@ -141,58 +141,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("MonoSymbolicate")]
-		public void CheckBuildIdIsUnique ([Values ("apk", "aab")] string packageFormat)
-		{
-			const string supportedAbis = "armeabi-v7a;x86";
-
-			Dictionary<string, string> buildIds = new Dictionary<string, string> ();
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
-			proj.SetProperty (proj.ReleaseProperties, "DebugType", "Portable");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
-			proj.SetAndroidSupportedAbis (supportedAbis);
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				var allFilesInArchive = Directory.GetFiles (archivePath, "*", SearchOption.AllDirectories);
-				string extension = "dll";
-				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				extension = "pdb";
-				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-
-				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
-
-				string buildID;
-				Assert.IsTrue (envvars.TryGetValue ("XAMARIN_BUILD_ID", out buildID), "The environment should contain a XAMARIN_BUILD_ID");
-				buildIds.Add ("all", buildID);
-
-				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);
-				var doc = XDocument.Load (Path.Combine (msymDirectory, "manifest.xml"));
-
-				Assert.IsTrue (doc.Element ("mono-debug")
-					.Elements ()
-					.Any (x => x.Name == "app-id" && x.Value == proj.PackageName), "app-id is has an incorrect value.");
-				var buildId = buildIds.First ().Value;
-				Assert.IsTrue (doc.Element ("mono-debug")
-					.Elements ()
-					.Any (x => x.Name == "build-id" && x.Value == buildId), "build-id is has an incorrect value.");
-
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
-			}
-		}
-
-		[Test]
 		public void CheckForInvalidHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
