@@ -1305,10 +1305,15 @@ Support for this property was added in Xamarin.Android 11.3.
 
 ## AndroidStripILAfterAOT
 
-When setting it to true, the method body of the AOT compiled methods will be strip away.
-By default, `AndroidStripILAfterAOT` is set to false.
-To maximize the impact of this feature, when setting it to true, the default value of 
-`AndroidEnableProfiledAot` becomes false. However, you could overwrite it by setting it to true explicitly.
+A bool property that specifies whether or not the *method bodies* of AOT compiled methods will be removed.
+
+The default value is `false`, and the method bodies of AOT compiled methods will *not* be removed.
+
+When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is set to `false` by default.
+This means that in Release configuration builds -- in which
+[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- AOT is enabled for *everything*.
+This can result in increased app sizes. This behavior can be overridden by explicitly setting
+`$(AndroidEnableProfiledAot)` to `true` within your project file.
 
 Support for this property was added in .NET 8.
 
