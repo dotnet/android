@@ -1077,7 +1077,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void EnableAndroidStripILAfterAOT ()
+		public void EnableAndroidStripILAfterAOT ([Values (false, true)] bool profiledAOT)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = nameof (EnableAndroidStripILAfterAOT),
@@ -1086,6 +1086,7 @@ namespace UnnamedProject
 				EnableDefaultItems = true,
 			};
 			proj.SetProperty("AndroidStripILAfterAOT", "true");
+			proj.SetProperty("AndroidEnableProfiledAot", profiledAOT.ToString ());
 			// So we can use Mono.Cecil to open assemblies directly
 			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
 
