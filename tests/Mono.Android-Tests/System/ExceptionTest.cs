@@ -22,11 +22,11 @@ namespace Xamarin.Android.RuntimeTests {
 			MethodInfo? create = JavaProxyThrowable_type.GetMethod (
 				"Create",
 				BindingFlags.Static | BindingFlags.Public,
-				new Type[] { typeof(Exception), typeof(bool) }
+				new Type[] { typeof (Exception) }
 			);
 
 			Assert.AreNotEqual (null, create, "Unable to find the Android.Runtime.JavaProxyThrowable.Create(Exception) method");
-			return (Java.Lang.Throwable)create.Invoke (null, new object[] { e, false }); // Don't append Java stack trace
+			return (Java.Lang.Throwable)create.Invoke (null, new object[] { e }); // Don't append Java stack trace
 		}
 
 		[Test]
