@@ -109,6 +109,7 @@
       <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
       <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
       <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
