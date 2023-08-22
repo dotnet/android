@@ -43,5 +43,13 @@ namespace Android.App {
 #if ANDROID_25
 		public string?    RoundIcon       {get; set;}
 #endif
+#if ANDROID_26
+		public string?    DataPathAdvancedPattern  {get; set;}
+		public string[]?  DataPathAdvancedPatterns {get; set;}
+#endif
+#if ANDROID_31
+		public string?    DataPathSuffix {get; set;}
+		public string[]?  DataPathSuffixes {get; set;}
+#endif
 	}
 }
