@@ -93,7 +93,7 @@
     <_AndroidXA1029 Condition=" '$(AotAssemblies)' != '' ">true</_AndroidXA1029>
     <_AndroidXA1030 Condition=" '$(RunAOTCompilation)' == 'true' and '$(PublishTrimmed)' == 'false' ">true</_AndroidXA1030>
     <AotAssemblies>$(RunAOTCompilation)</AotAssemblies>
-    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' ">true</AndroidEnableProfiledAot>
+    <AndroidEnableProfiledAot Condition=" '$(AndroidEnableProfiledAot)' == '' and '$(RunAOTCompilation)' == 'true' and '$(AndroidStripILAfterAOT)' != 'true' ">true</AndroidEnableProfiledAot>
 
     <!--
       Runtime libraries feature switches defaults
