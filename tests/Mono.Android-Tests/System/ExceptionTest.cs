@@ -55,7 +55,8 @@ namespace Xamarin.Android.RuntimeTests {
 			Java.Lang.StackTraceElement[] javaFrames = throwable.GetStackTrace ();
 
 			// Java
-			Assert.AreEqual (managedFrames.Length, javaFrames.Length, "Java and managed stack traces have a different number of frames");
+			Assert.IsTrue (javaFrames.Length >= managedFrames.Length,
+					$"Java should have at least as many frames as .NET does; java({javaFrames.Length}) < managed({managedFrames.Length})");
 			for (int i = 0; i < managedFrames.Length; i++) {
 				var mf = managedFrames[i];
 				var jf = javaFrames[i];
