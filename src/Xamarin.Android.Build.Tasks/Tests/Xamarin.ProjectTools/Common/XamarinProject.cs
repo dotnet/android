@@ -95,6 +95,7 @@ namespace Xamarin.ProjectTools
 $@"<Project>
 	<PropertyGroup>
 		<Configuration>{Configuration}</Configuration>
+		<DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
 	</PropertyGroup>
 </Project>"
 				});
