@@ -7,6 +7,8 @@
     <_OutputPath>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\</_OutputPath>
     <GenerateAssemblyInfo>true</GenerateAssemblyInfo>
     <ProduceReferenceAssemblyInOutDir>true</ProduceReferenceAssemblyInOutDir>
+    <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
+    <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <DotNetTargetFrameworkVersion>7.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
