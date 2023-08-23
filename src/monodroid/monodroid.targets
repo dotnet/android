@@ -50,7 +50,7 @@
       Inputs="jni\*.cc;jni\**\*.c"
       Outputs="@(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt')">
     <Exec
-        Command="clang-check -analyze -p=$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug jni\*.cc jni\**\*.c > @(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt 2>&amp;1')"
+        Command="clang-check -analyze -p=$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug jni\*.cc jni\**\*.c > @(AndroidSupportedTargetJitAbi->'$(MSBuildThisFileDirectory)static-analysis.%(Identity).txt 2>&amp;1')"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
@@ -166,17 +166,7 @@
       Outputs="@(_BuildAndroidAnalyzerRuntimesOutputs)">
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Debug"
-    />
-
-    <Exec
-        Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug"
-    />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Debug"
     />
 
     <Exec
@@ -186,17 +176,7 @@
 
     <Exec
         Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-asan-Release"
-    />
-
-    <Exec
-        Command="$(NinjaPath) -v"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release"
-    />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-ubsan-Release"
     />
 
     <Exec
@@ -211,20 +191,20 @@
       AfterTargets="Clean">
     <Exec
         Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"
     />
     <Exec
         Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release"
+        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release"
     />
     <RemoveDir Directories="obj\local;libs" />
-    <RemoveDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug" />
-    <RemoveDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release" />
+    <RemoveDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
+    <RemoveDir Directories="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
     <Delete Files="jni\config.include;jni\machine.config.include;jni\Application.mk" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.debug.d.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.so')" />
-    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(Identity)\libmono-android.release.d.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.debug.d.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.so')" />
+    <Delete Files="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libmono-android.release.d.so')" />
     <Delete Files="%(_EmbeddedBlob.Include)" />
 
   </Target>
@@ -236,11 +216,11 @@
   <Target Name="_GetCompileCommandsDirs"
           DependsOnTargets="_BuildAndroidRuntimes">
     <ItemGroup>
-      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Debug">
-        <LogTag>%(AndroidSupportedTargetJitAbi.Identity)-Debug</LogTag>
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug">
+        <LogTag>%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug</LogTag>
       </_CompileCommandsDir>
-      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-Release">
-        <LogTag>%(AndroidSupportedTargetJitAbi.Identity)-Release</LogTag>
+      <_CompileCommandsDir Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release">
+        <LogTag>%(AndroidSupportedTargetJitAbi.AndroidRID)-Release</LogTag>
       </_CompileCommandsDir>
     </ItemGroup>
   </Target>
