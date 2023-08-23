@@ -20,11 +20,9 @@
     <PackageReference Include="NUnit3TestAdapter" />
   </ItemGroup>
 
-  <!--
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
-  -->
+
   <ItemGroup>
-    <PackageReference Include="Mono.Cecil" />
     <PackageReference Include="Mono.Linq.Expressions" />
   </ItemGroup>
 

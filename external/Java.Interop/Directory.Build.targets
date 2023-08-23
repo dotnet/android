@@ -3,18 +3,36 @@
 
   <!-- Add Roslyn analyzers NuGet to all projects -->
   <ItemGroup Condition=" '$(DisableRoslynAnalyzers)' != 'True' ">
-    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers">
+    <PackageReference Include="Microsoft.CodeAnalysis.FxCopAnalyzers" Version="3.3.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
   </ItemGroup>
 
-  <!-- Set Assets for NUnit3TestAdapter -->
+  <!-- NuGet Dependencies -->
   <ItemGroup>
-    <PackageReference Update="NUnit3TestAdapter">
+    <PackageReference Update="GitInfo"                                      Version="2.1.2" />
+    <PackageReference Update="HtmlAgilityPack"                              Version="1.11.30" />
+    <PackageReference Update="Irony"                                        Version="1.1.0" />
+    <PackageReference Update="Microsoft.Build.Framework"                    Version="17.3.2" />
+    <PackageReference Update="Microsoft.Build.Utilities.Core"               Version="17.3.2" />
+    <PackageReference Update="Microsoft.CodeAnalysis.CSharp"                Version="4.3.1" />
+    <PackageReference Update="Microsoft.CSharp"                             Version="4.7.0" />
+    <PackageReference Update="Microsoft.DotNet.GenAPI"                      Version="7.0.0-beta.22103.1" />
+    <PackageReference Update="Microsoft.NET.Test.Sdk"                       Version="17.5.0-preview-20221003-04" />
+    <PackageReference Update="Microsoft.SourceLink.GitHub"                  Version="1.1.1" />
+    <PackageReference Update="Microsoft.Xml.SgmlReader"                     Version="1.8.16" />
+    <PackageReference Update="Mono.CSharp"                                  Version="4.0.0.143" />
+    <PackageReference Update="Mono.Linq.Expressions"                        Version="2.0.0" />
+    <PackageReference Update="Mono.Options"                                 Version="6.12.0.148" />
+    <PackageReference Update="Mono.Terminal"                                Version="5.4.2" />
+    <PackageReference Update="nunit"                                        Version="3.13.2" />
+    <PackageReference Update="NUnit.ConsoleRunner"                          Version="3.12.0" />
+    <PackageReference Update="NUnit3TestAdapter"                            Version="4.0.0">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
+    <PackageReference Update="protobuf-net"                                 Version="2.4.4" />
   </ItemGroup>
 
   <Import Project="build-tools\scripts\VersionInfo.targets" />
