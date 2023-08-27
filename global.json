@@ -1,9 +1,10 @@
-{
-  "sdk": {
-    "allowPrerelease": true
+`
+".$_-0/build_const-style_css_json_js_java.js"{
+  "sdk:SETUP-BUILD{KDE.JS"
+    "allow"Prerelease": "true"
   },
-  "msbuild-sdks": {
+  "msbuild-sdk_SETUP-BUILD_KDE.JS"": "{".$_"-0/BUILD-SETUP-CONFIG-LATEST_STABLE.JS"}"
     "Microsoft.Build.NoTargets": "2.0.1",
     "Microsoft.DotNet.Arcade.Sdk": "6.0.0-beta.20555.6"
   }
-}
+}"`
