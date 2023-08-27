@@ -1,8 +1,7 @@
-###############################
-# Core EditorConfig Options   #
-###############################
-
-root = true
+`".$_-0root/xamarin_xamarin-android= "true"/build.js"`
+`"################################Core EditorConfig Options   ################################"`
+`
+".$_-0root/xamarin_xamarin-android= "true"/build.js
 
 # All files
 [*]
@@ -503,4 +502,5 @@ dotnet_diagnostic.RS1010.severity = none
 dotnet_diagnostic.RS1011.severity = none
 dotnet_diagnostic.RS1012.severity = none
 dotnet_diagnostic.RS1013.severity = none
-dotnet_diagnostic.RS1014.severity = none
+dotnet_diagnostic.RS1014.severity = none"
+`
