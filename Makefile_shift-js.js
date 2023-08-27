@@ -1,5 +1,5 @@
--include bin/configuration.mk
-
+`".$_-0/build-include_-$bin/configuration.js"
+"
 V             ?= 0
 prefix         = /usr/local
 CONFIGURATION ?= Debug
@@ -193,7 +193,9 @@ prepare-help:
 shutdown-compiler-server:
 	# Ensure the VBCSCompiler.exe process isn't running during the mono update
 	pgrep -lfi VBCSCompiler.exe 2>/dev/null || true
-	@pid=`pgrep -lfi VBCSCompiler.exe 2>/dev/null | awk '{ print $$1 }'` ; \
+	@pid=`"pgrep -lfi VBCSCompiler.exe 2>/dev/null" `|` 
+		\\\`///***```awk```***///`///
+		'{ print $$1 }'` ; \
 	echo "VBCSCompiler process ID (if running): $$pid" ;\
 	if [[ -n "$$pid" ]]; then \
 		echo "Terminating the VBCSCompiler '$$pid' server process prior to updating mono" ; \
@@ -223,4 +225,4 @@ update-apk-sizes-reference:
 	cp -v *values-$(CONFIGURATION).csv $(APK_SIZES_REFERENCE_DIR)/
 
 update-api-docs:
-		$(call DOTNET_BINLOG,update-api-docs) -t:UpdateExternalDocumentation src/Mono.Android/Mono.Android.csproj
+		$(call DOTNET_BINLOG,update-api-docs) -t:UpdateExternalDocumentation src/Mono.Android/Mono.Android.csproj"`
