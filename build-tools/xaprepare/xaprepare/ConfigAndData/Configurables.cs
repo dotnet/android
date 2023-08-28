@@ -17,9 +17,9 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_16.0.6-6.0.0";
 
-		const string MicrosoftOpenJDK11Version      = "11.0.16";
-		const string MicrosoftOpenJDK11Release      = "8.1";
-		const string MicrosoftOpenJDK11RootDirName  = "jdk-11.0.16+8";
+		const string MicrosoftOpenJDK17Version      = "17.0.8";
+		const string MicrosoftOpenJDK17Release      = "17.0.8.7";
+		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.8+7";
 
 		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
 		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
@@ -35,10 +35,10 @@ namespace Xamarin.Android.Prepare
 			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_windows_hotspot_8u345b01.zip
 			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/adoptium/temurin8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
 
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-linux-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-macOS-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-11.0.16-windows-x64.zip
-			public static readonly Uri MicrosoftOpenJDK11 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK11Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-linux-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-macOS-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-windows-x64.zip
+			public static readonly Uri MicrosoftOpenJDK17 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK17Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
@@ -57,11 +57,11 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BinutilsVersion            = Configurables.BinutilsVersion;
 			public static readonly char[] PropertyListSeparator            = new [] { ':' };
 
-			public static readonly string JdkFolder                        = "jdk-11";
+			public static readonly string JdkFolder                        = "jdk-17";
 
-			public static readonly Version MicrosoftOpenJDK11Version = new Version (Configurables.MicrosoftOpenJDK11Version);
-			public static readonly Version MicrosoftOpenJDK11Release = new Version (Configurables.MicrosoftOpenJDK11Release);
-			public static readonly string  MicrosoftOpenJDK11RootDirName   = Configurables.MicrosoftOpenJDK11RootDirName;
+			public static readonly Version MicrosoftOpenJDK17Version       = new Version (Configurables.MicrosoftOpenJDK17Version);
+			public static readonly Version MicrosoftOpenJDK17Release       = new Version (Configurables.MicrosoftOpenJDK17Release);
+			public static readonly string  MicrosoftOpenJDK17RootDirName   = Configurables.MicrosoftOpenJDK17RootDirName;
 
 			public static readonly Version AdoptOpenJDK8Version     = new Version (Configurables.AdoptOpenJDKVersion);
 			public static readonly Version AdoptOpenJDK8Release     = new Version (Configurables.AdoptOpenJDKRelease);
@@ -307,8 +307,8 @@ namespace Xamarin.Android.Prepare
 			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
-			public static string OpenJDK11InstallDir                 => GetCachedPath (ref openJDK11InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-11"));
-			public static string OpenJDK11CacheDir                   => GetCachedPath (ref openJDK11CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
+			public static string OpenJDK17InstallDir                 => GetCachedPath (ref openJDK17InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-17"));
+			public static string OpenJDK17CacheDir                   => GetCachedPath (ref openJDK17CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 			// bundle
 			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
 
@@ -448,8 +448,8 @@ namespace Xamarin.Android.Prepare
 			static string? monoSdksTpnExternalPath;
 			static string? monoSDKSIncludeDestDir;
 			static string? monoLlvmTpnPath;
-			static string? openJDK8InstallDir,  openJDK11InstallDir;
-			static string? openJDK8CacheDir,    openJDK11CacheDir;
+			static string? openJDK8InstallDir,  openJDK17InstallDir;
+			static string? openJDK8CacheDir,    openJDK17CacheDir;
 			static string? oldOpenJDKInstallDir;
 			static string? configurationPropsGeneratedPath;
 			static string? windowsBinutilsInstallDir;
