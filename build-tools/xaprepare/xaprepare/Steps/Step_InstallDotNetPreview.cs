@@ -81,41 +81,34 @@ namespace Xamarin.Android.Prepare
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
 			if (!success) {
-				string message;
 				if (status == HttpStatusCode.NotFound) {
-					message = $"dotnet-install URL '{dotnetScriptUrl}' not found.";
+					Log.WarningLine ($"dotnet-install URL '{dotnetScriptUrl}' not found.");
 				} else {
-					message = $"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int)status})";
+					Log.WarningLine ($"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int) status})");
 				}
 
-				if (ReportAndCheckCached (message, quietOnError: true))
+				if (File.Exists (dotnetScriptPath)) {
+					Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
 					return true;
+				}
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
 			await Download (context, dotnetScriptUrl, tempDotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
 
-			if (!File.Exists (tempDotnetScriptPath)) {
-				return ReportAndCheckCached ($"Download of dotnet-install from {dotnetScriptUrl} failed");
+			if (File.Exists (tempDotnetScriptPath)) {
+				Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
+				Utilities.DeleteFile (tempDotnetScriptPath);
+				return true;
 			}
 
-			Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
-			Utilities.DeleteFile (tempDotnetScriptPath);
-			return true;
-
-			bool ReportAndCheckCached (string message, bool quietOnError = false)
-			{
-				if (File.Exists (dotnetScriptPath)) {
-					Log.WarningLine (message);
-					Log.WarningLine ($"Using cached installation script found in {dotnetScriptPath}");
-					return true;
-				}
-
-				if (!quietOnError) {
-					Log.ErrorLine (message);
-					Log.ErrorLine ($"Cached installation script not found in {dotnetScriptPath}");
-				}
+			if (File.Exists (dotnetScriptPath)) {
+				Log.WarningLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
+				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				return true;
+			} else {
+				Log.ErrorLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
 				return false;
 			}
 		}
@@ -196,7 +189,6 @@ namespace Xamarin.Android.Prepare
 			string scriptFileName = Path.GetFileName (dotnetScriptUrl.LocalPath);
 			string cachedDotnetScriptPath = Path.Combine (cacheDir, scriptFileName);
 			if (!await DownloadDotNetInstallScript (context, cachedDotnetScriptPath, dotnetScriptUrl)) {
-				Log.ErrorLine ($"Failed to download dotnet-install script.");
 				return false;
 			}
 
