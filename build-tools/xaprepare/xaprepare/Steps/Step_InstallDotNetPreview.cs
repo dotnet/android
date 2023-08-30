@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 
 			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
-				Log.ErrorLine ($"Installation of dotnet SDK {BuildToolVersion} failed.");
+				Log.ErrorLine ($"Installation of dotnet SDK '{BuildToolVersion}' failed.");
 				return false;
 			}
 
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Prepare
 				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
 			};
 			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, restoreArgs)) {
-				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
+				Log.ErrorLine ($"Failed to restore runtime packs using '{packageDownloadProj}'.");
 				return false;
 			}
 
@@ -77,18 +77,19 @@ namespace Xamarin.Android.Prepare
 			string tempDotnetScriptPath = dotnetScriptPath + "-tmp";
 			Utilities.DeleteFile (tempDotnetScriptPath);
 
-			Log.StatusLine ("Downloading dotnet-install...");
+			Log.StatusLine ("Downloading dotnet-install script...");
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
 			if (!success) {
 				string message;
 				if (status == HttpStatusCode.NotFound) {
-					message = "dotnet-install URL not found";
+					message = $"dotnet-install URL '{dotnetScriptUrl}' not found.";
 				} else {
-					message = $"Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})";
+					message = $"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int)status})";
 				}
 
-				return ReportAndCheckCached (message, quietOnError: true);
+				if (ReportAndCheckCached (message, quietOnError: true))
+					return true;
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
@@ -195,6 +196,7 @@ namespace Xamarin.Android.Prepare
 			string scriptFileName = Path.GetFileName (dotnetScriptUrl.LocalPath);
 			string cachedDotnetScriptPath = Path.Combine (cacheDir, scriptFileName);
 			if (!await DownloadDotNetInstallScript (context, cachedDotnetScriptPath, dotnetScriptUrl)) {
+				Log.ErrorLine ($"Failed to download dotnet-install script.");
 				return false;
 			}
 

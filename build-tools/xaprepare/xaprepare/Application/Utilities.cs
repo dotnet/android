@@ -478,10 +478,7 @@ namespace Xamarin.Android.Prepare
 				try {
 					using (var httpClient = new HttpClient ()) {
 						httpClient.Timeout = WebRequestTimeout;
-						var req = new HttpRequestMessage (HttpMethod.Head, url);
-						req.Headers.ConnectionClose = true;
-
-						HttpResponseMessage resp = await httpClient.SendAsync (req, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (true);
+						HttpResponseMessage resp = await httpClient.GetAsync (url, HttpCompletionOption.ResponseHeadersRead).ConfigureAwait (true);
 						if (!resp.IsSuccessStatusCode || !resp.Content.Headers.ContentLength.HasValue)
 							return (false, 0, resp.StatusCode);
 
