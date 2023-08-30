@@ -835,5 +835,30 @@ namespace Styleable.Library {
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
 			Assert.IsTrue (didStart, "Activity should have started.");
 		}
+
+		[Test]
+		public void TargetAPI34 ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinFormsAndroidApplicationProject {
+				IsRelease = isRelease,
+				TargetSdkVersion = "34",
+			};
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			if (Builder.UseDotNet)
+				Assert.True (builder.RunTarget (proj, "Run"), "Project should have run.");
+			else if (CommercialBuildAvailable)
+				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+			else
+				AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+
+			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"));
+			Assert.IsTrue (didStart, "Activity should have started.");
+		}
 	}
 }
