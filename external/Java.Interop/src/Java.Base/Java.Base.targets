@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <GeneratorPath>$(UtilityOutputFullPath)generator.dll</GeneratorPath>
+    <DefineConstants>$(JavaApiDefineConstants);$(DefineConstants);</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

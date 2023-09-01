@@ -61,11 +61,11 @@ namespace Java.Interop.BootstrapTasks
 			JavaHomePath  = jdk.HomePath;
 
 			Directory.CreateDirectory (Path.GetDirectoryName (PropertyFile.ItemSpec));
-			WritePropertyFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+			WritePropertyFile (jdk, rtJarPath);
 
 			if (MakeFragmentFile != null) {
 				Directory.CreateDirectory (Path.GetDirectoryName (MakeFragmentFile.ItemSpec));
-				WriteMakeFragmentFile (jdk.JavaPath, jdk.JarPath, jdk.JavacPath, jdk.JdkJvmPath, rtJarPath, jdk.IncludePath);
+				WriteMakeFragmentFile (jdk, rtJarPath);
 			}
 
 			return !Log.HasLoggedErrors;
@@ -117,8 +117,14 @@ namespace Java.Interop.BootstrapTasks
 			return logger;
 		}
 
-		void WritePropertyFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
+		void WritePropertyFile (XATInfo jdk, string rtJarPath)
 		{
+			var jarPath     = jdk.JarPath;
+			var javacPath   = jdk.JavacPath;
+			var javaPath    = jdk.JavaPath;
+			var jdkJvmPath  = jdk.JdkJvmPath;
+			var includes    = jdk.IncludePath;
+
 			var msbuild = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
 			var jdkJvmP = $"JdkJvm{PropertyNameModifier}Path";
 			var project = new XElement (msbuild + "Project",
@@ -129,6 +135,9 @@ namespace Java.Interop.BootstrapTasks
 						new XElement (msbuild + "ItemGroup",
 							includes.Select (i => new XElement (msbuild + $"Jdk{PropertyNameModifier}IncludePath", new XAttribute ("Include", i)))))),
 				new XElement (msbuild + "PropertyGroup",
+					CreateProperty (msbuild, $"JavaApi{PropertyNameModifier}DefineConstants",
+						string.Join (";", Enumerable.Range (11, jdk.Version.Major-11+1).Select (v => $"JAVA_API_{v}"))),
+					CreateProperty (msbuild, $"Java{PropertyNameModifier}MajorVersion", jdk.Version.Major.ToString ()),
 					CreateProperty (msbuild, $"Java{PropertyNameModifier}SdkDirectory", JavaHomePath),
 					CreateProperty (msbuild, $"Java{PropertyNameModifier}Path", javaPath),
 					CreateProperty (msbuild, $"JavaC{PropertyNameModifier}Path", javacPath),
@@ -148,8 +157,15 @@ namespace Java.Interop.BootstrapTasks
 					new XAttribute ("Condition", $" '$({propertyName})' == '' "),
 					propertyValue);
 		}
-		void WriteMakeFragmentFile (string javaPath, string jarPath, string javacPath, string jdkJvmPath, string rtJarPath, IEnumerable<string> includes)
+
+		void WriteMakeFragmentFile (XATInfo jdk, string rtJarPath)
 		{
+			var jarPath     = jdk.JarPath;
+			var javacPath   = jdk.JavacPath;
+			var javaPath    = jdk.JavaPath;
+			var jdkJvmPath  = jdk.JdkJvmPath;
+			var includes    = jdk.IncludePath;
+
 			using (var o = new StreamWriter (MakeFragmentFile.ItemSpec)) {
 				o.WriteLine ($"export  JI_JAR_PATH          := {jarPath}");
 				o.WriteLine ($"export  JI_JAVA_PATH         := {javaPath}");

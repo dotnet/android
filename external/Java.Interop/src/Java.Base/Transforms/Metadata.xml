@@ -6,6 +6,8 @@
 
   <!-- Type / Namespace conflicts -->
   <ns-replace source="java.lang.module" replacement="Java.Lang.Modules" />
+  <ns-replace source="java.lang.runtime" replacement="Java.Lang.Runtimes" />
+  <ns-replace source="java.lang.constant" replacement="Java.Lang.Constants" />
 
   <!-- Bind `Object.finalize()` as `Object.JavaFinalize()` -->
   <attr path="/api/package[@name='java.lang']//method[@name='finalize' and count(parameter)=0]" name="managedName">JavaFinalize</attr>
@@ -62,4 +64,21 @@
   <attr path="/api/package[@name='java.lang']/class[@name='StringBuffer']" name="extends">java.lang.Object</attr>
   <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuffer']/method[@jni-return='Ljava/lang/AbstractStringBuilder;']" />
   <remove-node path="//api/package[@name='java.lang']/class[@name='StringBuffer']/method[@jni-return='Ljava/lang/Appendable;']" />
+
+  <!-- JDK 17? -->
+  <remove-node path="/api/package[@name='java.lang.invoke']/interface[@name='TypeDescriptor']" />
+  <attr path="/api/package[@name='java.lang']/class[@name='Record']/method[@name='equals' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+      name="managedOverride">override</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getAnnotation' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;T&gt;']]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getAnnotation' and count(parameter)=1 and parameter[1][@type='java.lang.Class&lt;T&gt;']]"
+      name="explicitInterface">IAnnotatedElement</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getAnnotations' and count(parameter)=0]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getAnnotations' and count(parameter)=0]"
+      name="explicitInterface">IAnnotatedElement</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getDeclaredAnnotations' and count(parameter)=0]"
+      name="managedOverride">reabstract</attr>
+  <attr path="/api/package[@name='java.lang.reflect']/interface[@name='AnnotatedType']/method[@name='getDeclaredAnnotations' and count(parameter)=0]"
+      name="explicitInterface">IAnnotatedElement</attr>
 </metadata>

@@ -16,6 +16,7 @@
       <_MaxJdk>$(MaxJdkVersion)</_MaxJdk>
       <_MaxJdk Condition=" '$(_MaxJdk)' == '' ">$(JI_MAX_JDK)</_MaxJdk>
       <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_11_X64)' != '' And Exists($(JAVA_HOME_11_X64)) ">$(JAVA_HOME_11_X64)</JdksRoot>
+      <JdksRoot Condition=" '$(JdksRoot)' == '' And '$(JAVA_HOME_17_X64)' != '' And Exists($(JAVA_HOME_17_X64)) ">$(JAVA_HOME_17_X64)</JdksRoot>
     </PropertyGroup>
     <JdkInfo
         JdksRoot="$(JdksRoot)"
