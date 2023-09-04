@@ -9,8 +9,9 @@ namespace Android.Telephony {
 
 	public partial class CellInfo {
 
-		static Delegate cb_getCellIdentity;
+		static Delegate? cb_getCellIdentity;
 #pragma warning disable 0169
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static Delegate GetGetCellIdentityHandler ()
 		{
 			if (cb_getCellIdentity == null)
@@ -18,13 +19,15 @@ namespace Android.Telephony {
 			return cb_getCellIdentity;
 		}
 
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
 		{
-			Android.Telephony.CellInfo __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
 			return JNIEnv.ToLocalJniHandle (__this.CellIdentity);
 		}
 #pragma warning restore 0169
 
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		public unsafe virtual Android.Telephony.CellIdentity CellIdentity {
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]"
 			[Register ("getCellIdentity", "()Landroid/telephony/CellIdentity;", "GetGetCellIdentityHandler", ApiSince = 30)]
@@ -32,7 +35,7 @@ namespace Android.Telephony {
 				const string __id = "getCellIdentity.()Landroid/telephony/CellIdentity;";
 				try {
 					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Lang.Object.GetObject<Android.Telephony.CellIdentity> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<Android.Telephony.CellIdentity> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 				}
 		                catch (Java.Lang.NoSuchMethodError) {
 					throw new Java.Lang.AbstractMethodError (__id);
@@ -40,7 +43,7 @@ namespace Android.Telephony {
 			}
 		}
 
-		static Delegate cb_getCellSignalStrength;
+		static Delegate? cb_getCellSignalStrength;
 #pragma warning disable 0169
 		static Delegate GetGetCellSignalStrengthHandler ()
 		{
@@ -51,7 +54,7 @@ namespace Android.Telephony {
 
 		static IntPtr n_GetCellSignalStrength (IntPtr jnienv, IntPtr native__this)
 		{
-			Android.Telephony.CellInfo __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
+			var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
 			return JNIEnv.ToLocalJniHandle (__this.CellSignalStrength);
 		}
 #pragma warning restore 0169
@@ -63,7 +66,7 @@ namespace Android.Telephony {
 				const string __id = "getCellSignalStrength.()Landroid/telephony/CellSignalStrength;";
 				try {
 					var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, null);
-					return global::Java.Lang.Object.GetObject<Android.Telephony.CellSignalStrength> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+					return global::Java.Lang.Object.GetObject<Android.Telephony.CellSignalStrength> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 				}
 				catch (Java.Lang.NoSuchMethodError) {
 					throw new Java.Lang.AbstractMethodError (__id);

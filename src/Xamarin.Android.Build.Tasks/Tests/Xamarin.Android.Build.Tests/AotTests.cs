@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -8,6 +9,7 @@ using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using Xamarin.Android.Build;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -137,6 +139,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildAotApplicationWithNdkAndBundleAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAotNdk AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
@@ -213,6 +218,9 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildAotApplicationAndÜmläüts (string supportedAbis, bool enableLLVM, bool usesAssemblyBlobs)
 		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
 			var abisSanitized = supportedAbis.Replace (";", "").Replace ("-", "").Replace ("_", "");
 			var path = Path.Combine ("temp", string.Format ("BuildAot AndÜmläüts_{0}_{1}_{2}", abisSanitized, enableLLVM, usesAssemblyBlobs));
 			var proj = new XamarinAndroidApplicationProject () {
@@ -356,62 +364,11 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		[Category ("HybridAOT")]
-		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
-		{
-			// There's no point in testing all of the ABIs with and without assembly blobs, let's test just one of them this way
-			bool usesAssemblyBlobs = String.Compare ("arm64-v8a", abis, StringComparison.Ordinal) == 0;
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AotAssemblies = true,
-			};
-			proj.SetProperty ("AndroidAotMode", "Hybrid");
-			// So we can use Mono.Cecil to open assemblies directly
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
-			proj.SetAndroidSupportedAbis (abis);
-
-			using (var b = CreateApkBuilder ()) {
-
-				if (abis == "armeabi-v7a") {
-					proj.SetProperty ("_AndroidAotModeValidateAbi", "False");
-					b.Build (proj);
-					proj.SetProperty ("_AndroidAotModeValidateAbi", () => null);
-				}
-
-				if (abis.Contains ("armeabi-v7a")) {
-					b.ThrowOnBuildFailure = false;
-					Assert.IsFalse (b.Build (proj), "Build should have failed.");
-					string error = b.LastBuildOutput
-							.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-							.FirstOrDefault (x => x.Contains ("error XA1025:"));
-					Assert.IsNotNull (error, "Build should have failed with XA1025.");
-					return;
-				}
-
-				b.Build (proj);
-
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-				Assert.IsTrue (helper.Exists ($"assemblies/{proj.ProjectName}.dll"), $"{proj.ProjectName}.dll should exist in apk!");
-
-				using (var stream = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll")) {
-					stream.Position = 0;
-					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-						var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
-						var method = type.Methods.First (m => m.Name == "OnCreate");
-						Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
-					}
-				}
-			}
-		}
-
-		[Test]
 		[Category ("LLVM")]
-		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
+		public void NoSymbolsArgShouldReduceAppSize ([Values (false, true)] bool skipDebugSymbols)
 		{
-			AssertAotModeSupported (androidAotMode);
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -420,8 +377,6 @@ namespace "+ libName + @" {
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
-			if (!string.IsNullOrEmpty (androidAotMode))
-				proj.SetProperty ("AndroidAotMode", androidAotMode);
 
 			var xaAssemblySize = 0;
 			var xaAssemblySizeNoSymbol = 0;
@@ -477,5 +432,45 @@ namespace "+ libName + @" {
 				Assert.IsNotNull (entry, $"{path} should be in {apk}", abi);
 			}
 		}
+
+		[Test]
+		public void CheckWhetherLibcAndLibmAreReferencedInAOTLibraries ()
+		{
+			if (IsWindows)
+				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
+
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				EmbedAssembliesIntoApk = true,
+				AotAssemblies = true,
+			};
+			proj.SetProperty ("EnableLLVM", "True");
+
+			var abis = new [] { "arm64-v8a", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+
+			var libPaths = new List<string> ();
+			if (Builder.UseDotNet) {
+				libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
+			} else {
+				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
+				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
+			}
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+
+				foreach (string libPath in libPaths) {
+					string lib = Path.Combine (objPath, libPath);
+
+					Assert.IsTrue (File.Exists (lib), $"Library {lib} should exist on disk");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libc.so"), $"Library {lib} should reference libc.so");
+					Assert.IsTrue (ELFHelper.ReferencesLibrary (lib, "libm.so"), $"Library {lib} should reference libm.so");
+				}
+			}
+		}
+
 	}
 }

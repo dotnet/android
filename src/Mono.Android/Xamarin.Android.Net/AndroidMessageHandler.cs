@@ -133,7 +133,7 @@ namespace Xamarin.Android.Net
 			new AuthModuleDigest ()
 		};
 
-		CookieContainer _cookieContainer;
+		CookieContainer? _cookieContainer;
 		DecompressionMethods _decompressionMethods;
 
 		bool disposed;
@@ -183,9 +183,9 @@ namespace Xamarin.Android.Net
 
 		public ClientCertificateOption ClientCertificateOptions { get; set; }
 
-		public X509CertificateCollection ClientCertificates { get; set; }
+		public X509CertificateCollection? ClientCertificates { get; set; }
 
-		public ICredentials DefaultProxyCredentials { get; set; }
+		public ICredentials? DefaultProxyCredentials { get; set; }
 
 		public int MaxConnectionsPerServer { get; set; } = int.MaxValue;
 
@@ -214,7 +214,7 @@ namespace Xamarin.Android.Net
 			(int)Build.VERSION.SdkInt >= 29 ?
 				SslProtocols.Tls13 | SslProtocols.Tls12 : SslProtocols.Tls12;
 
-		public IDictionary<string, object?> Properties { get; set; }
+		public IDictionary<string, object?>? Properties { get; set; }
 
 		int maxAutomaticRedirections = 50;
 
@@ -398,7 +398,7 @@ namespace Xamarin.Android.Net
 		}
 
 #if !MONOANDROID1_0
-		async Task <HttpResponseMessage?> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
+		async Task <HttpResponseMessage> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
 
@@ -418,7 +418,7 @@ namespace Xamarin.Android.Net
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
 
-			if (!request.RequestUri.IsAbsoluteUri)
+			if (request.RequestUri is null || !request.RequestUri.IsAbsoluteUri)
 				throw new ArgumentException ("Must represent an absolute URI", "request");
 
 			var redirectState = new RequestRedirectionState {
@@ -484,7 +484,7 @@ namespace Xamarin.Android.Net
 				return proxy;
 			}
 
-			Uri puri = Proxy.GetProxy (destination);
+			Uri? puri = Proxy.GetProxy (destination);
 			if (puri == null) {
 				return proxy;
 			}
@@ -540,6 +540,9 @@ namespace Xamarin.Android.Net
 
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
+			if (request.Content is null)
+				return;
+
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 
@@ -738,7 +741,7 @@ namespace Xamarin.Android.Net
 				return inputStream;
 			}
 
-			var encodings = new HashSet<string> (httpConnection.ContentEncoding?.Split (','), StringComparer.OrdinalIgnoreCase);
+			var encodings = new HashSet<string> (httpConnection.ContentEncoding.Split (','), StringComparer.OrdinalIgnoreCase);
 			Stream? ret = null;
 			string? supportedEncoding = null;
 			if (encodings.Contains (GZIP_ENCODING)) {
@@ -924,8 +927,7 @@ namespace Xamarin.Android.Net
 
 		void ParseCookies (AndroidHttpResponseMessage ret, Uri connectionUri)
 		{
-			IEnumerable <string> cookieHeaderValue;
-			if (!UseCookies || CookieContainer == null || !ret.Headers.TryGetValues ("Set-Cookie", out cookieHeaderValue) || cookieHeaderValue == null) {
+			if (!UseCookies || CookieContainer == null || !ret.Headers.TryGetValues ("Set-Cookie", out var cookieHeaderValue) || cookieHeaderValue == null) {
 				if (Logger.LogNet)
 					Logger.Log (LogLevel.Info, LOG_APP, $"No cookies");
 				return;
@@ -1114,7 +1116,7 @@ namespace Xamarin.Android.Net
 			if (accept_encoding?.Count > 0)
 				httpConnection.SetRequestProperty ("Accept-Encoding", String.Join (",", accept_encoding));
 
-			if (UseCookies && CookieContainer != null) {
+			if (UseCookies && CookieContainer != null && request.RequestUri is not null) {
 				string cookieHeaderValue = CookieContainer.GetCookieHeader (request.RequestUri);
 				if (!String.IsNullOrEmpty (cookieHeaderValue))
 					httpConnection.SetRequestProperty ("Cookie", cookieHeaderValue);

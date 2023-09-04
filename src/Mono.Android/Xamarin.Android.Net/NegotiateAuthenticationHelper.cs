@@ -18,9 +18,9 @@ namespace Xamarin.Android.Net
 
 		internal class RequestedNegotiateAuthenticationData
 		{
-			public string AuthType { get; init; }
+			public required string AuthType { get; init; }
 			public bool IsProxyAuth { get; init; }
-			public NetworkCredential Credential { get; init; }
+			public required NetworkCredential Credential { get; init; }
 		}
 
 		internal static bool RequestNeedsNegotiateAuthentication (

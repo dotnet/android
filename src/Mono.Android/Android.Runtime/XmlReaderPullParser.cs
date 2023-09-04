@@ -111,11 +111,11 @@ namespace Android.Runtime
 			return GetAttributeResourceValue (null, "id", defaultValue);
 		}
 	
-		public string ClassAttribute {
+		public string? ClassAttribute {
 			get { return GetAttributeValue (null, "class"); }
 		}
 	
-		public string IdAttribute {
+		public string? IdAttribute {
 			get { return GetAttributeValue (null, "id"); }
 		}
 	
@@ -181,8 +181,11 @@ namespace Android.Runtime
 			return r.GetAttribute (index);
 		}
 	
-		public string GetAttributeValue (string? namespaceURI, string? name)
+		public string? GetAttributeValue (string? namespaceURI, string? name)
 		{
+			if (name is null)
+				return null;
+
 			return r.GetAttribute (name, namespaceURI);
 		}
 	
@@ -196,7 +199,7 @@ namespace Android.Runtime
 			return false;
 		}
 	
-		public string GetNamespace (string? prefix)
+		public string? GetNamespace (string prefix)
 		{
 			return r.LookupNamespace (prefix);
 		}

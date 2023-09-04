@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Mono.Unix.Native;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
@@ -16,8 +17,8 @@ namespace Xamarin.Android.Build.Tests
 	[NonParallelizable]
 	public class LocalizationTests : DeviceTest
 	{
-		static ProjectBuilder builder;
-		static XamarinAndroidApplicationProject proj;
+		ProjectBuilder builder;
+		XamarinAndroidApplicationProject proj;
 		string localeFileSuffix;
 
 		[OneTimeSetUp]
@@ -60,19 +61,6 @@ using System.Globalization;");
 			if (!string.IsNullOrEmpty (localeParam)) {
 				localeFileSuffix = localeParam.Replace ("/", "-");
 			}
-
-			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				RestartDevice ();
-				AssertHasDevices ();
-			}
-
-			// Attempt to reinstall the app that was installed during fixture setup if it is missing
-			var packageOutput = RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim ();
-			var expectedPackageOutput = $"package:{proj.PackageName}";
-			if (packageOutput != expectedPackageOutput) {
-				builder.BuildLogFile = $"setup-install-{localeFileSuffix}.log";
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			}
 		}
 
 		/// <summary>
@@ -93,27 +81,22 @@ using System.Globalization;");
 			}
 		}
 
-		[OneTimeTearDown]
-		public void AfterAllTests ()
+		protected override void DeviceTearDown ()
 		{
-			string output = Path.Combine (Root, builder?.ProjectDirectory);
-			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (output)) {
-				try {
-					Directory.Delete (output, recursive: true);
-				} catch (IOException ex) {
-					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
-				}
-			}
+		}
+
+		[OneTimeTearDown]
+		protected override void AfterAllTests ()
+		{
 		}
 
 
 		const int LOCALIZATION_NODE_COUNT = 15;
 		const int LOCALIZATION_RETRY_COUNT = 3;
 
-		static object [] GetLocalizationTestCases (int node)
+		static List<string> GetLocalizationTestInfo ()
 		{
-			List<object> tests = new List<object> ();
+			var tests = new List<string> ();
 			var ignore = new string [] {
 				"he-IL", // maps to wi-IL on Android.
 				"id-ID", // maps to in-ID on Android
@@ -127,11 +110,14 @@ using System.Globalization;");
 					TestContext.WriteLine ($"Ignoring {ci.Name} Localization Test");
 					continue;
 				}
-				tests.Add (new object [] {
-					ci.Name,
-				});
+				tests.Add (ci.Name);
 			}
+			return tests;
+		}
 
+		static object [] GetLocalizationTestCases (int node)
+		{
+			var tests = GetLocalizationTestInfo ();
 			return tests.Where (p => tests.IndexOf (p) % LOCALIZATION_NODE_COUNT == node).ToArray ();
 		}
 
@@ -210,41 +196,56 @@ using System.Globalization;");
 		[TestCaseSource (nameof (GetLocalizationTestCases), new object [] { 14 })]
 		public void CheckLocalizationIsCorrectNode15 (string locale) => CheckLocalizationIsCorrect (locale);
 
+		[Test]
+		[Retry (LOCALIZATION_RETRY_COUNT)]
+		[TestCaseSource (nameof (GetLocalizationTestInfo))]
+		public void CheckLocalizationIsCorrectWithSlicer (string locale) => CheckLocalizationIsCorrect (locale);
+
 
 		public void CheckLocalizationIsCorrect (string locale)
 		{
+			AssertHasDevices ();
+
+			// Attempt to reinstall the app that was installed during fixture setup if it is missing
+			var packageOutput = RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim ();
+			var expectedPackageOutput = $"package:{proj.PackageName}";
+			if (packageOutput != expectedPackageOutput) {
+				builder.BuildLogFile = $"setup-install-{localeFileSuffix}.log";
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+			}
+
+			RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+			RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
+
 			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{locale.Replace ("/", "-")}.log");
 			string deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
 			TestContext.Out.WriteLine ($"test value:{locale}, prop value:{deviceLocale}");
 
-			if (deviceLocale != locale) {
-				for (int attempt = 0; attempt < 5; attempt++) {
-					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}, attempt {attempt}...");
-					ClearAdbLogcat ();
-					var rebootLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"reboot{attempt}-logcat-{locale.Replace ("/", "-")}.log");
+			for (int attempt = 0; attempt < 5; attempt++) {
+				TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: Setting Locale to {locale}, attempt {attempt}...");
+				ClearAdbLogcat ();
+				var rebootLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"reboot{attempt}-logcat-{locale.Replace ("/", "-")}.log");
 
-					// https://developer.android.com/guide/topics/resources/localization#changing-the-emulator-locale-from-the-adb-shell
-					RunAdbCommand ($"shell \"su root setprop persist.sys.locale {locale};su root stop;sleep 5;su root start;\"");
+				// https://developer.android.com/guide/topics/resources/localization#changing-the-emulator-locale-from-the-adb-shell
+				RunAdbCommand ($"shell \"su root setprop persist.sys.locale {locale};su root stop;sleep 5;su root start;\"");
 
-					if (!MonitorAdbLogcat ((l) => {
-						if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED"))
-							return true;
-						return false;
-					}, rebootLogcatFile, timeout: 60)) {
-						TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
-					}
-					deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
-					if (deviceLocale == locale) {
-						break;
-					}
+				if (!MonitorAdbLogcat ((l) => {
+					if (l.Contains ("ActivityManager: Finished processing BOOT_COMPLETED"))
+						return true;
+					return false;
+				}, rebootLogcatFile, timeout: 60)) {
+					TestContext.Out.WriteLine ($"{nameof(CheckLocalizationIsCorrect)}: wating for boot to complete failed or timed out.");
+				}
+				deviceLocale = RunAdbCommand ("shell getprop persist.sys.locale")?.Trim ();
+				if (deviceLocale == locale) {
+					break;
 				}
 			}
 
 			Assert.AreEqual (locale, deviceLocale, $"The command to set the device locale to {locale} failed. Current device locale is {deviceLocale}");
 			ClearAdbLogcat ();
-			RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
-			RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
-			RunProjectAndAssert (proj, builder, logName: $"run-{locale.Replace ("/", "-")}.log");
+			Thread.Sleep (1000);
+			StartActivityAndAssert (proj);
 
 			string logcatSearchString = "Strings.SomeString=";
 			string expectedLogcatOutput = $"{logcatSearchString}{locale}";
@@ -271,7 +272,6 @@ using System.Globalization;");
 				return false;
 			}, humanizerLogCatFile, timeout:45), $"App output did not contain '{logcatSearchString}'");
 			Assert.IsTrue (logLine.Contains (expectedLogcatOutput), $"Line '{logLine}' did not contain '{expectedLogcatOutput}'");
-
 		}
 	}
 }

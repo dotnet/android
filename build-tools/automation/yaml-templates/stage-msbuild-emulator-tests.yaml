@@ -36,9 +36,9 @@ stages:
         installTestSlicer: true
         installApkDiff: false
         installLegacyDotNet: false
+        installLegacyXamarinAndroid: true
         restoreNUnitConsole: false
-        updateMono: false
-        androidSdkPlatforms: $(androidSdkPlatforms)
+        updateMono: true
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
@@ -57,7 +57,7 @@ stages:
     - template: run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
-        testFilter: cat != TimeZoneInfo & cat != Localization $(ExcludedNUnitCategories)
+        testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
@@ -99,7 +99,6 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
-        androidSdkPlatforms: $(androidSdkPlatforms)
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}

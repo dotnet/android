@@ -152,7 +152,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
-			TestOutputDir = Path.Combine (SetUp.TestDirectoryRoot, "temp", "CodeBehind");
+			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
 			if (Builder.UseDotNet) {
 				ProjectName += ".NET";
 			}
@@ -694,7 +694,8 @@ namespace Xamarin.Android.Build.Tests
 			CopyRecursively (TestProjectRootDirectory, temporaryProjectPath, ignore);
 			CopyRecursively (CommonSampleLibraryRootDirectory, Path.Combine (tempRoot, CommonSampleLibraryName), ignore);
 			CopyFile (Path.Combine (XABuildPaths.TopDirectory, "Directory.Build.props"), Path.Combine (tempRoot, "Directory.Build.props" ));
-			XASdkProject.SaveNuGetConfig (tempRoot);
+			var project = new XamarinAndroidApplicationProject ();
+			project.CopyNuGetConfig (Path.Combine (tempRoot, "NuGet.config"));
 			return temporaryProjectPath;
 		}
 

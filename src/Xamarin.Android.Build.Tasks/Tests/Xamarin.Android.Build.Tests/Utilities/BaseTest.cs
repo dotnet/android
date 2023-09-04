@@ -23,58 +23,9 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
-		[SetUpFixture]
-		public class SetUp
-		{
-			public static string TestDirectoryRoot {
-				get;
-				private set;
-			}
-
-			[OneTimeSetUp]
-			public void BeforeAllTests ()
-			{
-				TestDirectoryRoot = XABuildPaths.TestOutputDirectory;
-			}
-
-			[OneTimeTearDown]
-			public void AfterAllTests ()
-			{
-				if (System.Diagnostics.Debugger.IsAttached)
-					return;
-
-				//NOTE: adb.exe can cause a couple issues on Windows
-				//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
-				//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
-
-				try {
-					RunAdbCommand ("kill-server", true);
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
-				}
-
-				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
-				foreach (var p in Process.GetProcessesByName ("adb.exe"))
-					p.Kill ();
-			}
-
-		}
-
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
-		protected bool IsMacOS => TestEnvironment.IsMacOS;
-
-		protected bool IsLinux => TestEnvironment.IsLinux;
-
-		public string StagingPath {
-			get { return Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments); }
-		}
-
-		public string Root {
-			get {
-				return Path.GetFullPath (SetUp.TestDirectoryRoot);
-			}
-		}
+		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 
 		public static bool CommercialBuildAvailable => TestEnvironment.CommercialBuildAvailable;
 
@@ -128,14 +79,6 @@ namespace Xamarin.Android.Build.Tests
 		{
 			if (Builder.UseDotNet && !useAapt2) {
 				Assert.Ignore ("aapt(1) is not supported in .NET 5+");
-			}
-		}
-
-		protected static void AssertAotModeSupported (string aotMode)
-		{
-			if (Builder.UseDotNet && !string.IsNullOrEmpty (aotMode) &&
-					!string.Equals (aotMode, "Normal", StringComparison.OrdinalIgnoreCase)) {
-				Assert.Ignore ($"AotMode={aotMode} is not yet supported in .NET 6+");
 			}
 		}
 
@@ -562,11 +505,92 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		protected bool RunCommand (string command, string arguments)
+		{
+			var psi = new ProcessStartInfo () {
+				FileName		= command,
+				Arguments		= arguments,
+				UseShellExecute		= false,
+				RedirectStandardInput	= false,
+				RedirectStandardOutput	= true,
+				RedirectStandardError	= true,
+				CreateNoWindow		= true,
+				WindowStyle		= ProcessWindowStyle.Hidden,
+			};
+
+			var stderr_completed = new ManualResetEvent (false);
+			var stdout_completed = new ManualResetEvent (false);
+
+			var p = new Process () {
+				StartInfo   = psi,
+			};
+
+			p.ErrorDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stderr_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			p.OutputDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stdout_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			using (p) {
+				p.StartInfo = psi;
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
+
+				bool success = p.WaitForExit (60000);
+
+				// We need to call the parameter-less WaitForExit only if any of the standard
+				// streams have been redirected (see
+				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
+				//
+				p.WaitForExit ();
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
+				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
+
+				if (!success || p.ExitCode != 0) {
+					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
+					return false;
+				}
+
+				return true;
+			}
+		}
+
 		[SetUp]
 		public void TestSetup ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
 			TestContext.Out.Flush ();
+		}
+
+		[OneTimeTearDown]
+		protected virtual void AfterAllTests ()
+		{
+			if (System.Diagnostics.Debugger.IsAttached)
+				return;
+
+			//NOTE: adb.exe can cause a couple issues on Windows
+			//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
+			//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
+			if (IsWindows) {
+				try {
+					RunAdbCommand ("kill-server", true);
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
+				}
+
+				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
+				foreach (var p in Process.GetProcessesByName ("adb.exe"))
+					p.Kill ();
+			}
 		}
 
 		[TearDown]

@@ -33,8 +33,8 @@ message is where to put that information.
 
 # English
 
-Commit message should be properly spelled in some English dialect; it doesn't
-need to be American English vs. British English, but for whichever dialect
+Commit message should be properly spelled in some English regional language; it doesn't
+need to be American English vs. British English, but for whichever regional language
 *is* used, words should be spelled correctly.  Proper grammar should be used.
 
 Present tense should be used for work done within the current commit.

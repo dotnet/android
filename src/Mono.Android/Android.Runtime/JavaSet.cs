@@ -390,7 +390,6 @@ namespace Android.Runtime {
 			return GetEnumerator ()!;
 		}
 
-		[return: MaybeNull]
 		public IEnumerator<T> GetEnumerator ()
 		{
 			return System.Linq.Extensions.ToEnumerator_Dispose<T> (Iterator ());

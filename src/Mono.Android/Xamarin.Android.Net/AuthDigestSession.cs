@@ -138,7 +138,7 @@ namespace Xamarin.Android.Net
 
 			lastUse = DateTime.Now;
 			var uri = new Uri (request.URL?.ToString ()!);
-			NetworkCredential cred = credentials.GetCredential (uri, "digest");
+			NetworkCredential? cred = credentials.GetCredential (uri, "digest");
 			if (cred == null)
 				return null;
 

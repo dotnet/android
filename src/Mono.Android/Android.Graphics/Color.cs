@@ -416,7 +416,7 @@ namespace Android.Graphics
 
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
 		{
-			var c = typeof (Color).GetConstructor (new[]{typeof (int)});
+			var c = typeof (Color).GetConstructor (new[]{typeof (int)})!;
 			var v = Expression.Variable (typeof (Color), sourceValue.Name + "_val");
 			context.LocalVariables.Add (v);
 			context.CreationStatements.Add (Expression.Assign (v, Expression.New (c, sourceValue)));

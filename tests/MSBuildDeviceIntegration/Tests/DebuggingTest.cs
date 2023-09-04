@@ -16,19 +16,22 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class DebuggingTest : DeviceTest
 	{
+		const int DEBUGGER_MAX_CONNECTIONS = 100;
+		const int DEBUGGER_CONNECTION_TIMEOUT = 3000;
+
 		[TearDown]
 		public void ClearDebugProperties ()
 		{
 			ClearDebugProperty ();
 		}
 
-		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder)
+		void SetTargetFrameworkAndManifest(XamarinAndroidApplicationProject proj, Builder builder, int? apiLevelOverride)
 		{
 			builder.LatestTargetFrameworkVersion (out string apiLevel);
 			proj.SupportedOSPlatformVersion = "24";
 			proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{proj.PackageName}"">
-	<uses-sdk android:targetSdkVersion=""{apiLevel}"" />
+	<uses-sdk android:targetSdkVersion=""{apiLevelOverride?.ToString () ?? apiLevel}"" />
 	<application android:label=""${{PROJECT_NAME}}"">
 	</application >
 </manifest>";
@@ -64,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 				useEmbeddedDex = false;
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				SetTargetFrameworkAndManifest (proj, b);
+				SetTargetFrameworkAndManifest (proj, b, null);
 				proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:extractNativeLibs=\"{extractNativeLibs.ToString ().ToLowerInvariant ()}\" android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 				Assert.True (b.Install (proj), "Project should have installed.");
 				var manifest = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
@@ -121,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
-				SetTargetFrameworkAndManifest (app, appBuilder);
+				SetTargetFrameworkAndManifest (app, appBuilder, null);
 				Assert.IsTrue (libBuilder.Build (lib), "library build should have succeeded.");
 				Assert.True (appBuilder.Install (app), "app should have installed.");
 				RunProjectAndAssert (app, appBuilder);
@@ -136,21 +139,37 @@ namespace Xamarin.Android.Build.Tests
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
+				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     false,
+				/* packageFormat */      "apk",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
 			},
 		};
 #pragma warning restore 414
@@ -158,7 +177,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
 		[Retry(5)]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts)
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts, string packageFormat)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -175,6 +194,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
+			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetDefaultTargetDevice ();
 			proj.Sources.Add (new BuildItem.Source ("MyApplication.cs") {
 				TextContent = () => proj.ProcessSourceTemplate (@"using System;
@@ -200,7 +220,7 @@ namespace ${ROOT_NAMESPACE} {
 "),
 			});
 			using (var b = CreateApkBuilder (path)) {
-				SetTargetFrameworkAndManifest (proj, b);
+				SetTargetFrameworkAndManifest (proj, b, null);
 				Assert.True (b.Install (proj), "Project should have installed.");
 
 				int breakcountHitCount = 0;
@@ -225,7 +245,8 @@ namespace ${ROOT_NAMESPACE} {
 					int port = rnd.Next (10000, 20000);
 					TestContext.Out.WriteLine ($"{port}");
 					var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-						MaxConnectionAttempts = 2000, // we need a long delay here to get a reliable connection
+						MaxConnectionAttempts = DEBUGGER_MAX_CONNECTIONS, // we need a long delay here to get a reliable connection
+						TimeBetweenConnectionAttempts = DEBUGGER_CONNECTION_TIMEOUT,
 					};
 					var startInfo = new SoftDebuggerStartInfo (args) {
 						WorkingDirectory = Path.Combine (b.ProjectDirectory, proj.IntermediateOutputPath, "android", "assets"),
@@ -281,50 +302,88 @@ namespace ${ROOT_NAMESPACE} {
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "apk",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
 			},
 		};
 #pragma warning restore 414
 
-		[Test, Category ("Debugger")]
+		[Test, Category ("Debugger"), Category ("WearOS")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string packageFormat, bool useLatestSdk)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -367,6 +426,12 @@ namespace ${ROOT_NAMESPACE} {
 				EmbedAssembliesIntoApk = embedAssemblies,
 				AndroidFastDeploymentType = fastDevType
 			};
+			if (!useLatestSdk) {
+				lib.TargetFramework = "net7.0-android";
+				app.TargetFramework = "net7.0-android";
+			}
+
+			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
 			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
@@ -376,7 +441,7 @@ namespace ${ROOT_NAMESPACE} {
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
-				SetTargetFrameworkAndManifest (app, appBuilder);
+				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net7.0-android" ? 33 : null);
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {
@@ -426,7 +491,8 @@ namespace ${ROOT_NAMESPACE} {
 					int port = rnd.Next (10000, 20000);
 					TestContext.Out.WriteLine ($"{port}");
 					var args = new SoftDebuggerConnectArgs ("", IPAddress.Loopback, port) {
-						MaxConnectionAttempts = 2000,
+						MaxConnectionAttempts = DEBUGGER_MAX_CONNECTIONS,
+						TimeBetweenConnectionAttempts = DEBUGGER_CONNECTION_TIMEOUT,
 					};
 					var startInfo = new SoftDebuggerStartInfo (args) {
 						WorkingDirectory = Path.Combine (appBuilder.ProjectDirectory, app.IntermediateOutputPath, "android", "assets"),

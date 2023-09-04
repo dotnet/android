@@ -5,21 +5,21 @@ using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
 {
-	class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
+	partial class CompressedAssembliesNativeAssemblyGenerator : LlvmIrComposer
 	{
 		const string DescriptorsArraySymbolName = "compressed_assembly_descriptors";
 		const string CompressedAssembliesSymbolName = "compressed_assemblies";
 
 		sealed class CompressedAssemblyDescriptorContextDataProvider : NativeAssemblerStructContextDataProvider
 		{
-			public override ulong GetBufferSize (object data, string fieldName)
+			public override string? GetPointedToSymbolName (object data, string fieldName)
 			{
 				if (String.Compare ("data", fieldName, StringComparison.Ordinal) != 0) {
-					return 0;
+					return null;
 				}
 
 				var descriptor = EnsureType<CompressedAssemblyDescriptor> (data);
-				return descriptor.uncompressed_file_size;
+				return descriptor.BufferSymbolName;
 			}
 		}
 
@@ -28,10 +28,13 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof (CompressedAssemblyDescriptorContextDataProvider))]
 		sealed class CompressedAssemblyDescriptor
 		{
+			[NativeAssembler (Ignore = true)]
+			public string BufferSymbolName;
+
 			public uint   uncompressed_file_size;
 			public bool   loaded;
 
-			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToSymbol = "")]
 			public byte data;
 		};
 
@@ -60,60 +63,84 @@ namespace Xamarin.Android.Tasks
 		};
 
 		IDictionary<string, CompressedAssemblyInfo> assemblies;
-		StructureInfo<CompressedAssemblyDescriptor> compressedAssemblyDescriptorStructureInfo;
-		StructureInfo<CompressedAssemblies> compressedAssembliesStructureInfo;
-		List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors;
-		StructureInstance<CompressedAssemblies> compressedAssemblies;
+		StructureInfo compressedAssemblyDescriptorStructureInfo;
+		StructureInfo compressedAssembliesStructureInfo;
 
 		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies)
 		{
 			this.assemblies = assemblies;
 		}
 
-		public override void Init ()
+		void InitCompressedAssemblies (out List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors,
+		                               out StructureInstance<CompressedAssemblies>? compressedAssemblies,
+		                               out List<LlvmIrGlobalVariable>? buffers)
 		{
 			if (assemblies == null || assemblies.Count == 0) {
+				compressedAssemblyDescriptors = null;
+				compressedAssemblies = null;
+				buffers = null;
 				return;
 			}
 
+			ulong counter = 0;
 			compressedAssemblyDescriptors = new List<StructureInstance<CompressedAssemblyDescriptor>> (assemblies.Count);
+			buffers = new List<LlvmIrGlobalVariable> (assemblies.Count);
 			foreach (var kvp in assemblies) {
 				string assemblyName = kvp.Key;
 				CompressedAssemblyInfo info = kvp.Value;
 
+				string bufferName = $"__compressedAssemblyData_{counter++}";
 				var descriptor = new CompressedAssemblyDescriptor {
+					BufferSymbolName = bufferName,
 					uncompressed_file_size = info.FileSize,
 					loaded = false,
 					data = 0
 				};
 
-				compressedAssemblyDescriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (descriptor));
+				var bufferVar = new LlvmIrGlobalVariable (typeof(List<byte>), bufferName, LlvmIrVariableOptions.LocalWritable) {
+					ZeroInitializeArray = true,
+					ArrayItemCount = descriptor.uncompressed_file_size,
+				};
+				buffers.Add (bufferVar);
+
+				compressedAssemblyDescriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, descriptor));
 			}
 
-			compressedAssemblies = new StructureInstance<CompressedAssemblies> (new CompressedAssemblies { count = (uint)assemblies.Count });
+			compressedAssemblies = new StructureInstance<CompressedAssemblies> (compressedAssembliesStructureInfo, new CompressedAssemblies { count = (uint)assemblies.Count });
 		}
 
-		protected override void MapStructures (LlvmIrGenerator generator)
+		protected override void Construct (LlvmIrModule module)
 		{
-			compressedAssemblyDescriptorStructureInfo = generator.MapStructure<CompressedAssemblyDescriptor> ();
-			compressedAssembliesStructureInfo = generator.MapStructure<CompressedAssemblies> ();
-		}
+			MapStructures (module);
 
-		protected override void Write (LlvmIrGenerator generator)
-		{
+			List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors;
+			StructureInstance<CompressedAssemblies>? compressedAssemblies;
+			List<LlvmIrGlobalVariable>? buffers;
+
+			InitCompressedAssemblies (out compressedAssemblyDescriptors, out compressedAssemblies, out buffers);
+
 			if (compressedAssemblyDescriptors == null) {
-				generator.WriteStructure (compressedAssembliesStructureInfo, null, CompressedAssembliesSymbolName);
+				module.AddGlobalVariable (
+					typeof(StructureInstance<CompressedAssemblies>),
+					CompressedAssembliesSymbolName,
+					new StructureInstance<CompressedAssemblies> (compressedAssembliesStructureInfo, new CompressedAssemblies ()) { IsZeroInitialized = true },
+					LlvmIrVariableOptions.GlobalWritable
+				);
 				return;
 			}
 
-			generator.WriteStructureArray<CompressedAssemblyDescriptor> (
-				compressedAssemblyDescriptorStructureInfo,
-				compressedAssemblyDescriptors,
-				LlvmIrVariableOptions.LocalWritable,
-				DescriptorsArraySymbolName,
-				initialComment: "Compressed assembly data storage"
-			);
-			generator.WriteStructure (compressedAssembliesStructureInfo, compressedAssemblies, CompressedAssembliesSymbolName);
+			module.AddGlobalVariable (CompressedAssembliesSymbolName, compressedAssemblies, LlvmIrVariableOptions.GlobalWritable);
+			module.AddGlobalVariable (DescriptorsArraySymbolName, compressedAssemblyDescriptors, LlvmIrVariableOptions.LocalWritable);
+
+			module.Add (new LlvmIrGroupDelimiterVariable ());
+			module.Add (buffers);
+			module.Add (new LlvmIrGroupDelimiterVariable ());
+		}
+
+		void MapStructures (LlvmIrModule module)
+		{
+			compressedAssemblyDescriptorStructureInfo = module.MapStructure<CompressedAssemblyDescriptor> ();
+			compressedAssembliesStructureInfo = module.MapStructure<CompressedAssemblies> ();
 		}
 	}
 }

@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace Xamarin.Android.Tasks.LLVMIR
 {
-	sealed class StructureMemberInfo<T>
+	sealed class StructureMemberInfo
 	{
 		public string IRType        { get; }
 		public MemberInfo Info      { get; }
@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool IsInlineArray   { get; }
 		public bool NeedsPadding    { get; }
 
-		public StructureMemberInfo (MemberInfo mi, LlvmIrGenerator generator)
+		public StructureMemberInfo (MemberInfo mi, LlvmIrModule module)
 		{
 			Info = mi;
 
@@ -38,18 +38,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			};
 
 			ulong size = 0;
+			bool isPointer = false;
 			if (MemberType != typeof(string) && !MemberType.IsArray && (MemberType.IsStructure () || MemberType.IsClass)) {
 				IRType = $"%struct.{MemberType.GetShortName ()}";
 				// TODO: figure out how to get structure size if it isn't a pointer
 			} else {
-				IRType = generator.MapManagedTypeToIR (MemberType, out size);
+				IRType = LlvmIrGenerator.MapToIRType (MemberType, out size, out isPointer);
 			}
-			IsNativePointer = IRType[IRType.Length - 1] == '*';
+			IsNativePointer = isPointer;
 
 			if (!IsNativePointer) {
 				IsNativePointer = mi.IsNativePointer ();
 				if (IsNativePointer) {
-					IRType += "*";
+					IRType = LlvmIrGenerator.IRPointerType;
 				}
 			}
 
@@ -60,14 +61,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			Alignment = 0;
 
 			if (IsNativePointer) {
-				size = (ulong)generator.PointerSize;
+				size = 0; // Real size will be determined when code is generated and we know the target architecture
 			} else if (mi.IsInlineArray ()) {
+				if (!MemberType.IsArray) {
+					throw new InvalidOperationException ($"Internal error: member {mi.Name} of structure {mi.DeclaringType.Name} is marked as inline array, but is not of an array type.");
+				}
+
 				IsInlineArray = true;
 				IsNativeArray = true;
 				NeedsPadding = mi.InlineArrayNeedsPadding ();
 				int arrayElements = mi.GetInlineArraySize ();
 				if (arrayElements < 0) {
-					arrayElements = GetArraySizeFromProvider (typeof(T).GetDataProvider (), mi.Name);
+					arrayElements = GetArraySizeFromProvider (MemberType.GetDataProvider (), mi.Name);
 				}
 
 				if (arrayElements < 0) {
@@ -77,7 +82,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
 			} else if (this.IsIRStruct ()) {
-				IStructureInfo si = generator.GetStructureInfo (MemberType);
+				StructureInfo si = module.GetStructureInfo (MemberType);
 				size = si.Size;
 				Alignment = (ulong)si.MaxFieldAlignment;
 			}
@@ -92,7 +97,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public object? GetValue (T instance)
+		public object? GetValue (object instance)
 		{
 			if (Info is FieldInfo fi) {
 				return fi.GetValue (instance);

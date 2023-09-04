@@ -335,7 +335,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
-  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
@@ -362,6 +362,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
 </ItemGroup>
+
+<!-- Assets build properties -->
+<PropertyGroup>
+	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
+	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
+</PropertyGroup>
 
 <!--
 *******************************************
@@ -439,7 +445,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml">
   <MakeDir
       Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MamJsonToXml
       MappingFiles="@(_AndroidMamMappingFile)"
@@ -464,7 +470,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(_XARemapMembersFilePath)">
   <MakeDir
       Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MergeRemapXml
       InputRemapXmlFiles="@(_AndroidRemapMembers)"
@@ -879,12 +885,6 @@ because xbuild doesn't support framework reference assemblies.
 		JavaSdkPath="$(_JavaSdkDirectory)"
 	/>
 </Target>
-
-<!-- Assets build properties -->
-<PropertyGroup>
-	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
-	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
-</PropertyGroup>
 
 <!-- Assets Build -->
 
@@ -1973,7 +1973,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'"
+    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true' AND '$(AndroidStripILAfterAOT)' != 'true'"
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />

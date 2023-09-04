@@ -444,8 +444,7 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/Map#get(java.lang.Object)
 		//
-		[return: MaybeNull]
-		internal V Get (K key)
+		internal V? Get (K key)
 		{
 			if (id_get == IntPtr.Zero)
 				id_get = JNIEnv.GetMethodID (map_class, "get", "(Ljava/lang/Object;)Ljava/lang/Object;");

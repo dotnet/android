@@ -23,7 +23,8 @@
 #   $(MSBUILD_FLAGS): Additional MSBuild flags; contains $(CONFIGURATION), $(V), $(MSBUILD_ARGS).
 
 MSBUILD       = msbuild
-DOTNET_TOOL   = $(topdir)/bin/$(CONFIGURATION)/dotnet/dotnet
+DOTNET_ROOT   = $(topdir)/bin/$(CONFIGURATION)/dotnet/
+DOTNET_TOOL   = $(DOTNET_ROOT)dotnet
 DOTNET_VERB   = build
 MSBUILD_FLAGS = /p:Configuration=$(CONFIGURATION) $(MSBUILD_ARGS)
 
@@ -51,7 +52,7 @@ endef
 
 # $(call DOTNET_BINLOG,name,build=$(DOTNET_VERB),dotnet=$(DOTNET_TOOL))
 define DOTNET_BINLOG
-	$(if $(3),$(3),$(DOTNET_TOOL)) $(if $(2),$(2),$(DOTNET_VERB)) -c $(CONFIGURATION) -v:n $(MSBUILD_ARGS) \
+	$(if $(3),,PATH="$(DOTNET_ROOT):$(PATH)") $(if $(3),$(3),$(DOTNET_TOOL)) $(if $(2),$(2),$(DOTNET_VERB)) -c $(CONFIGURATION) -v:n $(MSBUILD_ARGS) \
 		-bl:"$(dir $(realpath $(firstword $(MAKEFILE_LIST))))/bin/Build$(CONFIGURATION)/msbuild-`date +%Y%m%dT%H%M%S`-$(1).binlog"
 endef
 

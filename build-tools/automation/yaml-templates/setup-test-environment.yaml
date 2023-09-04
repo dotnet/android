@@ -7,6 +7,7 @@ parameters:
   installTestSlicer: false
   installApkDiff: true
   installLegacyDotNet: true
+  installLegacyXamarinAndroid: false
   restoreNUnitConsole: true
   updateMono: true
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -66,6 +67,15 @@ steps:
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
+- ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
+  - template: install-global-tool.yaml
+    parameters:
+      toolName: boots
+      version: $(BootsToolVersion)
+      continueOnError: false
+  - powershell: boots --stable Xamarin.Android
+    displayName: install Xamarin.Android stable
+
 - template: run-xaprepare.yaml
   parameters:
     arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
@@ -106,7 +116,13 @@ steps:
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
-  - template: install-apkdiff.yaml
+  - template: install-global-tool.yaml
+    parameters:
+      toolName: apkdiff
+      version: $(ApkDiffToolVersion)
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
-  - template: install-dotnet-test-slicer.yaml
+  - template: install-global-tool.yaml
+    parameters:
+      toolName: dotnet-test-slicer
+      version: $(TestSlicerToolVersion)

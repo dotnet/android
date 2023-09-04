@@ -16,6 +16,14 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("openjdk-8-jdk"),
 		};
 
+		static readonly List<DebianLinuxProgram> packagesPreTrixie = new List<DebianLinuxProgram> {
+			new DebianLinuxProgram ("libncurses5-dev"),
+		};
+
+		static readonly List<DebianLinuxProgram> packagesTrixieAndLater = new List<DebianLinuxProgram> {
+			new DebianLinuxProgram ("libncurses-dev"),
+		};
+
 		// zulu-8 does NOT exist as official Debian package! We need it for our bots, but we have to figure out what to
 		// do with Debian 10+ in general, as it does not contain OpenJDK 8 anymore and we require it to work.
 		static readonly List<DebianLinuxProgram> packages10AndNewerBuildBots = new List<DebianLinuxProgram> {
@@ -25,6 +33,8 @@ namespace Xamarin.Android.Prepare
 		static readonly Dictionary<string, string> DebianUnstableVersionMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 			{ "bookworm", "12" },
 			{ "bookworm/sid", "12" },
+			{ "trixie", "13" },
+			{ "trixie/sid", "13" },
 		};
 
 		protected Version DebianRelease { get; private set; } = new Version (0, 0);
@@ -43,8 +53,26 @@ namespace Xamarin.Android.Prepare
 			if (DebianRelease.Major >= 10 || (IsTesting && String.Compare ("buster", CodeName, StringComparison.OrdinalIgnoreCase) == 0)) {
 				if (Context.IsRunningOnHostedAzureAgent)
 					Dependencies.AddRange (packages10AndNewerBuildBots);
-			} else
+				if (DebianRelease.Major >= 13) {
+					Dependencies.AddRange (packagesTrixieAndLater);
+				} else {
+					Dependencies.AddRange (packagesPreTrixie);
+				}
+			} else {
 				Dependencies.AddRange (packagesPre10);
+				Dependencies.AddRange (packagesPreTrixie);
+			}
+		}
+
+		static bool IsDebian13OrNewer (string? version)
+		{
+			if (String.IsNullOrEmpty (version)) {
+				return false;
+			}
+
+			return
+				version.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		static bool IsDebian10OrNewer (string? version)
@@ -56,6 +84,7 @@ namespace Xamarin.Android.Prepare
 			return
 				version!.IndexOf ("bullseye", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
+				version.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0 ||
 				version.IndexOf ("sid", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
@@ -75,7 +104,8 @@ namespace Xamarin.Android.Prepare
 				return false;
 			}
 
-			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0;
+			return debian_version!.IndexOf ("bookworm", StringComparison.OrdinalIgnoreCase) >= 0 ||
+			       debian_version!.IndexOf ("trixie", StringComparison.OrdinalIgnoreCase) >= 0;
 		}
 
 		protected override bool EnsureVersionInformation (Context context)

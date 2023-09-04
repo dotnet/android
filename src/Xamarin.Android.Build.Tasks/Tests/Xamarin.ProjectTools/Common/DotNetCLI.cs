@@ -16,19 +16,12 @@ namespace Xamarin.ProjectTools
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }
 
-		readonly XASdkProject project;
 		readonly string projectOrSolution;
 
 		public DotNetCLI (string projectOrSolution)
 		{
 			this.projectOrSolution = projectOrSolution;
 			ProjectDirectory = Path.GetDirectoryName (projectOrSolution);
-		}
-
-		public DotNetCLI (XASdkProject project, string projectOrSolution)
-			: this (projectOrSolution)
-		{
-			this.project = project;
 		}
 
 		/// <summary>
@@ -38,8 +31,10 @@ namespace Xamarin.ProjectTools
 		/// <returns>Whether or not the command succeeded.</returns>
 		protected bool Execute (params string [] args)
 		{
-			if (string.IsNullOrEmpty (ProcessLogFile))
-				ProcessLogFile = Path.Combine (XABuildPaths.TestOutputDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+			if (string.IsNullOrEmpty (ProcessLogFile)) {
+				Directory.CreateDirectory (ProjectDirectory);
+				ProcessLogFile = Path.Combine (ProjectDirectory, $"dotnet{DateTime.Now.ToString ("yyyyMMddHHmmssff")}-process.log");
+			}
 
 			var procOutput = new StringBuilder ();
 			bool succeeded;
@@ -52,6 +47,7 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
 				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+				p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 				if (TestEnvironment.UseLocalBuildOutput) {
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
@@ -156,14 +152,11 @@ namespace Xamarin.ProjectTools
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
 				"-m:1",
-				"-nr:false",
+				"-nodeReuse:false",
 				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
-			}
-			if (project != null) {
-				arguments.Add ($"/p:Configuration={project.Configuration}");
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
 				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");

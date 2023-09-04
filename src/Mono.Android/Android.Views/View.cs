@@ -22,8 +22,7 @@ namespace Android.Views {
 		}
 #endif
 
-		[return: MaybeNull]
-		public T FindViewById<T> (int id)
+		public T? FindViewById<T> (int id)
 			where T : Android.Views.View
 		{
 			return this.FindViewById (id).JavaCast<T> ();
@@ -78,6 +77,7 @@ namespace Android.Views {
 
 #if ANDROID_11
 		[Obsolete ("Please Use DispatchSystemUiVisibilityChanged(SystemUiFlags)")]
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 		public void DispatchSystemUiVisibilityChanged (int visibility)
 		{
 			DispatchSystemUiVisibilityChanged ((SystemUiFlags) visibility);

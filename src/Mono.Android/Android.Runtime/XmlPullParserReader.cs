@@ -72,7 +72,7 @@ namespace Android.Runtime
 			}
 			
 			public string LocalName;
-			public string Namespace;
+			public string? Namespace;
 		}
 		
 		public XmlPullParserReader (IJavaObject source)
@@ -140,7 +140,7 @@ namespace Android.Runtime
 				throw new ArgumentOutOfRangeException ();
 		}
 
-		public override string? GetAttribute (string localName, string namespaceName)
+		public override string? GetAttribute (string localName, string? namespaceName)
 		{
 			return namespaceName == xmlns_uri ? source.GetNamespace (localName) : source.GetAttributeValue (namespaceName, localName);
 		}
@@ -179,7 +179,7 @@ namespace Android.Runtime
 			}
 		}
 
-		public override string LookupNamespace (string prefix)
+		public override string? LookupNamespace (string prefix)
 		{
 			return nsmgr.LookupNamespace (prefix);
 		}
@@ -192,7 +192,7 @@ namespace Android.Runtime
 			attr_value = false;
 		}
 
-		public override bool MoveToAttribute (string localName, string namespaceName)
+		public override bool MoveToAttribute (string localName, string? namespaceName)
 		{
 			if (namespaceName == xmlns_uri) {
 				for (int i = 0; i < ns_count; i++)
@@ -251,7 +251,7 @@ namespace Android.Runtime
 			get { return String.IsNullOrEmpty (Prefix) ? LocalName : Prefix + ':' + LocalName; }
 		}
 
-		public override XmlNameTable NameTable {
+		public override XmlNameTable? NameTable {
 			get { return nsmgr.NameTable; }
 		}
 
@@ -297,9 +297,14 @@ namespace Android.Runtime
 			}
 		}
 
-		public override string Prefix {
+		public override string? Prefix {
 			// getPrefix(), getAttributePrefix(), getNamespacePrefix() are not supported!!!
-			get { return nsmgr.LookupPrefix (NamespaceURI); }
+			get {
+				if (NamespaceURI is null)
+					return null;
+
+				return nsmgr.LookupPrefix (NamespaceURI);
+			}
 		}
 
 		public override bool Read ()
@@ -331,14 +336,14 @@ namespace Android.Runtime
 			if (wasEmptyElement || NodeType == XmlNodeType.EndElement)
 				nsmgr.PopScope ();
 			if (NodeType == XmlNodeType.Element) {
-				if (NamespaceURI != String.Empty && nsmgr.LookupPrefix (NamespaceURI) != String.Empty)
+				if (!string.IsNullOrEmpty (NamespaceURI) && nsmgr.LookupPrefix (NamespaceURI) != String.Empty)
 					nsmgr.AddNamespace (String.Empty, NamespaceURI);
 				else if (NamespaceURI == String.Empty && nsmgr.DefaultNamespace != String.Empty)
 					nsmgr.AddNamespace (String.Empty, String.Empty);
 				for (int i = 0; i < source.AttributeCount; i++) {
 					string? ns = source.GetAttributeNamespace (i);
-					if (ns != String.Empty && nsmgr.LookupPrefix (ns) == null)
-						nsmgr.AddNamespace ("p" + i, source.GetAttributeNamespace (i));
+					if (!string.IsNullOrEmpty (ns) && nsmgr.LookupPrefix (ns) == null)
+						nsmgr.AddNamespace ("p" + i, ns);
 				}
 				nsmgr.PushScope ();
 			}

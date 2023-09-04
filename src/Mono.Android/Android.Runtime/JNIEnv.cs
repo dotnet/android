@@ -747,7 +747,7 @@ namespace Android.Runtime {
 
 		static TValue GetConverter<TValue>(Dictionary<Type, TValue> dict, Type? elementType, IntPtr array)
 		{
-			TValue converter;
+			TValue? converter;
 
 			if (elementType != null) {
 				if (elementType.IsEnum)
@@ -835,7 +835,9 @@ namespace Android.Runtime {
 				JniEnvironment.Arrays.GetDoubleArrayRegion (new JniObjectReference (array), start, length, p);
 		}
 
+#pragma warning disable RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		public static void CopyArray (IntPtr src, Array dest, Type? elementType = null)
+#pragma warning restore RS0027 // API with optional parameter(s) should have the most parameters amongst its public overloads
 		{
 			if (dest == null)
 				throw new ArgumentNullException ("dest");

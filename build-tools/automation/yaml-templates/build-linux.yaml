@@ -85,6 +85,29 @@ stages:
         artifactName: ${{ parameters.nugetArtifactName }}
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
+    - powershell: |
+        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
+        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
+      displayName: create SBOM directories
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
+    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
+      displayName: generate components SBOM
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+      inputs:
+        BuildDropPath: $(Build.StagingDirectory)/empty
+        BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
+        ManifestDirPath: $(Build.StagingDirectory)/sbom-components
+        PackageName: .NET Android
+        Verbosity: Verbose
+
+    - task: PublishBuildArtifacts@1
+      displayName: publish components SBOM
+      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+      inputs:
+        artifactName: sbom-components-linux
+        pathToPublish: $(Build.StagingDirectory)/sbom-components
+
     - template: upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
