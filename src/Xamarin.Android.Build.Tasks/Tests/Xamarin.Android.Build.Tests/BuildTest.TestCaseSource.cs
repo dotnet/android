@@ -148,65 +148,6 @@ namespace Xamarin.Android.Build.Tests
 				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
 			},
 		};
-
-		static object [] SequencePointChecks () => new object [] {
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  true ,
-				/* aotAssemblies */      false,
-				/* debugSymbols */       true,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  false,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  true ,
-				/* aotAssemblies */      true,
-				/* debugSymbols */       true,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  false,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  false ,
-				/* aotAssemblies */      false,
-				/* debugSymbols */       true,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  false,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  false ,
-				/* aotAssemblies */      false,
-				/* debugSymbols */       true,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  true,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  false ,
-				/* aotAssemblies */      true,
-				/* debugSymbols */       false,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  false,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  true ,
-				/* aotAssemblies */      true,
-				/* debugSymbols */       false,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  false,
-			},
-			new object[] {
-				/* isRelease */          true,
-				/* monoSymbolArchive */  true ,
-				/* aotAssemblies */      true,
-				/* debugSymbols */       false,
-				/* expectedRuntime */    "release",
-				/* usesAssemblyBlobs */  true,
-			},
-		};
 #pragma warning restore 414
 	}
 }

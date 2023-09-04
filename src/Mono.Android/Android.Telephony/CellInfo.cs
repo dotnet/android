@@ -11,6 +11,7 @@ namespace Android.Telephony {
 
 		static Delegate? cb_getCellIdentity;
 #pragma warning disable 0169
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static Delegate GetGetCellIdentityHandler ()
 		{
 			if (cb_getCellIdentity == null)
@@ -18,6 +19,7 @@ namespace Android.Telephony {
 			return cb_getCellIdentity;
 		}
 
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		static IntPtr n_GetCellIdentity (IntPtr jnienv, IntPtr native__this)
 		{
 			var __this = global::Java.Lang.Object.GetObject<Android.Telephony.CellInfo> (jnienv, native__this, JniHandleOwnership.DoNotTransfer)!;
@@ -25,6 +27,7 @@ namespace Android.Telephony {
 		}
 #pragma warning restore 0169
 
+		[global::System.Runtime.Versioning.SupportedOSPlatform ("android28.0")]
 		public unsafe virtual Android.Telephony.CellIdentity CellIdentity {
 			// Metadata.xml XPath method reference: path="/api/package[@name='android.telephony']/class[@name='CellInfo']/method[@name='getCellIdentity' and count(parameter)=0]"
 			[Register ("getCellIdentity", "()Landroid/telephony/CellIdentity;", "GetGetCellIdentityHandler", ApiSince = 30)]

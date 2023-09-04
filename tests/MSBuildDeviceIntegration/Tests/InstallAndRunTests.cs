@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 
@@ -164,53 +165,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			}
 		}
 
-		Regex ObfuscatedStackRegex = new Regex ("in <.*>:0", RegexOptions.Compiled);
-
-		void SymbolicateAndAssert (string symbolArchivePath, string logcatFilePath, IEnumerable<string> expectedStackTraceContents)
-		{
-			// 09-22 14:21:07.064 12786 12786 I MonoDroid:   at UnnamedProject.MainActivity.OnCreate (Android.OS.Bundle bundle) [0x00051] in <b3164619c4824e379aecfb7335bd4cce>:0
-			Assert.IsTrue (ObfuscatedStackRegex.IsMatch (File.ReadAllText (logcatFilePath)), "Original logcat output did not contain obfuscated crash info.");
-			var monoSymbolicate = IsWindows ? Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "mono-symbolicate.exe") : "mono-symbolicate";
-			var symbolicatedOutput = RunProcess (monoSymbolicate, $"\"{symbolArchivePath}\" \"{logcatFilePath}\"");
-			File.WriteAllText (Path.Combine (Path.GetDirectoryName (logcatFilePath), "mono-symbol.log"), symbolicatedOutput);
-			Assert.IsFalse (ObfuscatedStackRegex.IsMatch (symbolicatedOutput), "Symbolicated logcat output did contain obfuscated crash info.");
-			foreach (string expectedString in expectedStackTraceContents) {
-				StringAssert.Contains (expectedString, symbolicatedOutput);
-			}
-		}
-
-		[Test, Category ("MonoSymbolicate")]
-		public void MonoSymbolicateAndroidStackTrace ()
-		{
-			proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
-@"			throw new Android.OS.RemoteException (""We've thrown an unhandled Android.OS.RemoteException!"");
-");
-			builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-			var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
-			Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-			RunProjectAndAssert (proj, builder);
-
-			var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
-			MonitorAdbLogcat ((line) => {
-				return line.Contains ($"Force finishing activity {proj.PackageName}");
-			}, logcatPath, 30);
-
-			var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
-			Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
-			SymbolicateAndAssert (archivePath, logcatPath, new string [] {
-				Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:32"),
-				TestEnvironment.UseLocalBuildOutput
-					? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
-					: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
-			}) ;
-		}
-
 		[Test]
 		[Category ("UsesDevice")]
 		public void SmokeTestBuildAndRunWithSpecialCharacters ()
@@ -230,74 +184,6 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				var timeoutInSeconds = 120;
 				Assert.IsTrue (WaitForActivityToStart (proj.PackageName, "MainActivity",
 					Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds));
-			}
-		}
-
-		[Test, Category ("MonoSymbolicate")]
-		public void MonoSymbolicateNetStandardStackTrace ()
-		{
-			var lib = new DotNetStandard {
-				ProjectName = "Library1",
-				Sdk = "Microsoft.NET.Sdk",
-				TargetFramework = "netstandard2.0",
-				Sources = {
-					new BuildItem.Source ("Class1.cs") {
-						TextContent = () => @"
-using System;
-namespace Library1 {
-	public class Class1 {
-		string Data { get; set; }
-		public Class1(string data) {
-			Data = data;
-		}
-
-		public string GetData() {
-			if (Data == null)
-				throw new NullReferenceException();
-			return Data;
-		}
-	}
-}",
-					},
-				}
-			};
-
-			proj = new XamarinFormsAndroidApplicationProject () {
-				IsRelease = true,
-				References = {
-					new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"),
-				},
-			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_FORMS_INIT}",
-@"			var cl = new Library1.Class1(null);
-			cl.GetData();
-");
-			var rootPath = Path.Combine (Root, "temp", TestName);
-			using (var lb = CreateDllBuilder (Path.Combine (Path.Combine (Root, "temp", TestName), lib.ProjectName))) {
-				Assert.IsTrue (lb.Build (lib), "Library build should have succeeded.");
-
-				builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
-				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var archivePath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.apk.mSYM");
-				Assert.IsTrue (Directory.Exists (archivePath), $"Symbol archive path {archivePath} should exist.");
-				RunProjectAndAssert (proj, builder);
-
-				var logcatPath = Path.Combine (Root, builder.ProjectDirectory, "crash-logcat.log");
-				MonitorAdbLogcat ((line) => {
-					return line.Contains ($"Force finishing activity {proj.PackageName}");
-				}, logcatPath, 30);
-
-				var didParse = int.TryParse (proj.TargetSdkVersion, out int apiLevel);
-				Assert.IsTrue (didParse, $"Unable to parse {proj.TargetSdkVersion} as an int.");
-				SymbolicateAndAssert (archivePath, logcatPath, new string [] {
-					Path.Combine (Root, lb.ProjectDirectory, "Class1.cs:12"),
-					Path.Combine (Root, builder.ProjectDirectory, "MainActivity.cs:23"),
-					TestEnvironment.UseLocalBuildOutput
-						? Path.Combine ("src", "Mono.Android", "obj", XABuildPaths.Configuration, "monoandroid10", $"android-{apiLevel}", "mcw", "Android.App.Activity.cs:")
-						: $"src/Mono.Android/obj/Release/monoandroid10/android-{apiLevel}/mcw/Android.App.Activity.cs:",
-				});
 			}
 		}
 
@@ -1188,6 +1074,44 @@ namespace UnnamedProject
 					logcatOutput,
 					"Was IStaticMethodsInterface.Value executed?"
 			);
+		}
+
+		[Test]
+		public void EnableAndroidStripILAfterAOT ([Values (false, true)] bool profiledAOT)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (EnableAndroidStripILAfterAOT),
+				RootNamespace = nameof (EnableAndroidStripILAfterAOT),
+				IsRelease = true,
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty("AndroidStripILAfterAOT", "true");
+			proj.SetProperty("AndroidEnableProfiledAot", profiledAOT.ToString ());
+			// So we can use Mono.Cecil to open assemblies directly
+			proj.SetProperty ("AndroidEnableAssemblyCompression", "false");
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+			var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			var helper = new ArchiveAssemblyHelper (apk);
+			Assert.IsTrue (helper.Exists ($"assemblies/{proj.ProjectName}.dll"), $"{proj.ProjectName}.dll should exist in apk!");
+			using (var stream = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll")) {
+				stream.Position = 0;
+				using var assembly = AssemblyDefinition.ReadAssembly (stream);
+				var type = assembly.MainModule.GetType ($"{proj.RootNamespace}.MainActivity");
+				var method = type.Methods.FirstOrDefault (p => p.Name == "OnCreate");
+				Assert.IsNotNull (method, $"{proj.RootNamespace}.MainActivity.OnCreate should exist!");
+				Assert.IsTrue (!method.HasBody || method.Body.Instructions.Count == 0, $"{proj.RootNamespace}.MainActivity.OnCreate should have no body!");
+			}
+
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
 	}

@@ -1043,30 +1043,6 @@ namespace Lib2
 				/* aotAssemblies */   false,
 				/* expectedResult */  true,
 			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
 		};
 #pragma warning restore 414
 
@@ -1075,8 +1051,6 @@ namespace Lib2
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
 		{
-			AssertAotModeSupported (androidAotMode);
-
 			// Setup dependencies App A -> Lib B
 			var path = Path.Combine ("temp", TestName);
 

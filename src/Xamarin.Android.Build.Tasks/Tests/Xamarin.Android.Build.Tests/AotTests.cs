@@ -364,65 +364,11 @@ namespace "+ libName + @" {
 		}
 
 		[Test]
-		[Category ("HybridAOT")]
-		public void HybridAOT ([Values ("armeabi-v7a;arm64-v8a", "armeabi-v7a", "arm64-v8a")] string abis)
-		{
-			// There's no point in testing all of the ABIs with and without assembly blobs, let's test just one of them this way
-			bool usesAssemblyBlobs = String.Compare ("arm64-v8a", abis, StringComparison.Ordinal) == 0;
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-				AotAssemblies = true,
-			};
-			proj.SetProperty ("AndroidAotMode", "Hybrid");
-			// So we can use Mono.Cecil to open assemblies directly
-			proj.SetProperty ("AndroidEnableAssemblyCompression", "False");
-			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
-			proj.SetAndroidSupportedAbis (abis);
-
-			using (var b = CreateApkBuilder ()) {
-
-				if (abis == "armeabi-v7a") {
-					proj.SetProperty ("_AndroidAotModeValidateAbi", "False");
-					b.Build (proj);
-					proj.SetProperty ("_AndroidAotModeValidateAbi", () => null);
-				}
-
-				if (abis.Contains ("armeabi-v7a")) {
-					b.ThrowOnBuildFailure = false;
-					Assert.IsFalse (b.Build (proj), "Build should have failed.");
-					string error = b.LastBuildOutput
-							.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-							.FirstOrDefault (x => x.Contains ("error XA1025:"));
-					Assert.IsNotNull (error, "Build should have failed with XA1025.");
-					return;
-				}
-
-				b.Build (proj);
-
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
-				var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-				Assert.IsTrue (helper.Exists ($"assemblies/{proj.ProjectName}.dll"), $"{proj.ProjectName}.dll should exist in apk!");
-
-				using (var stream = helper.ReadEntry ($"assemblies/{proj.ProjectName}.dll")) {
-					stream.Position = 0;
-					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-						var type = assembly.MainModule.GetType ($"{proj.ProjectName}.MainActivity");
-						var method = type.Methods.First (m => m.Name == "OnCreate");
-						Assert.LessOrEqual (method.Body.Instructions.Count, 1, "OnCreate should have stripped method bodies!");
-					}
-				}
-			}
-		}
-
-		[Test]
 		[Category ("LLVM")]
-		public void NoSymbolsArgShouldReduceAppSize ([Values ("", "Hybrid")] string androidAotMode, [Values (false, true)] bool skipDebugSymbols)
+		public void NoSymbolsArgShouldReduceAppSize ([Values (false, true)] bool skipDebugSymbols)
 		{
 			if (IsWindows)
 				Assert.Ignore ("https://github.com/dotnet/runtime/issues/88625");
-
-			AssertAotModeSupported (androidAotMode);
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
@@ -431,8 +377,6 @@ namespace "+ libName + @" {
 			var supportedAbi = "arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbi);
 			proj.SetProperty ("EnableLLVM", true.ToString ());
-			if (!string.IsNullOrEmpty (androidAotMode))
-				proj.SetProperty ("AndroidAotMode", androidAotMode);
 
 			var xaAssemblySize = 0;
 			var xaAssemblySizeNoSymbol = 0;

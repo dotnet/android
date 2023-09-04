@@ -345,6 +345,7 @@
         <a name='sspPrefix' format='string' api-level='19' />
         <a name='sspPattern' format='string' api-level='19' />
         <a name='pathAdvancedPattern' api-level='26' />
+        <a name='pathSuffix' api-level='31' />
     </e>
     <e name='category'>
         <parent>intent-filter</parent>

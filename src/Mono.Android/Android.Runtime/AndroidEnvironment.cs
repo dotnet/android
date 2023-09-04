@@ -237,6 +237,7 @@ namespace Android.Runtime {
 		//
 		//  Rationale
 		//     No longer called by the indicated caller, however we keep it for backward compatibility.
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android31.0")]
 		static void GetDisplayDPI (out float x_dpi, out float y_dpi)
 		{
 			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();

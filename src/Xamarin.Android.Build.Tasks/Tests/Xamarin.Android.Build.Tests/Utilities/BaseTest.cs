@@ -82,14 +82,6 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		protected static void AssertAotModeSupported (string aotMode)
-		{
-			if (Builder.UseDotNet && !string.IsNullOrEmpty (aotMode) &&
-					!string.Equals (aotMode, "Normal", StringComparison.OrdinalIgnoreCase)) {
-				Assert.Ignore ($"AotMode={aotMode} is not yet supported in .NET 6+");
-			}
-		}
-
 		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
@@ -510,6 +502,65 @@ namespace Xamarin.Android.Build.Tests
 				var attribute = element.Attribute (ns + "extractNativeLibs");
 				Assert.IsNotNull (attribute, $"android:extractNativeLibs attribute not found in {manifest}");
 				Assert.AreEqual (extractNativeLibs ? "true" : "false", attribute.Value, $"Unexpected android:extractNativeLibs value found in {manifest}");
+			}
+		}
+
+		protected bool RunCommand (string command, string arguments)
+		{
+			var psi = new ProcessStartInfo () {
+				FileName		= command,
+				Arguments		= arguments,
+				UseShellExecute		= false,
+				RedirectStandardInput	= false,
+				RedirectStandardOutput	= true,
+				RedirectStandardError	= true,
+				CreateNoWindow		= true,
+				WindowStyle		= ProcessWindowStyle.Hidden,
+			};
+
+			var stderr_completed = new ManualResetEvent (false);
+			var stdout_completed = new ManualResetEvent (false);
+
+			var p = new Process () {
+				StartInfo   = psi,
+			};
+
+			p.ErrorDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stderr_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			p.OutputDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stdout_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			using (p) {
+				p.StartInfo = psi;
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
+
+				bool success = p.WaitForExit (60000);
+
+				// We need to call the parameter-less WaitForExit only if any of the standard
+				// streams have been redirected (see
+				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
+				//
+				p.WaitForExit ();
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
+				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
+
+				if (!success || p.ExitCode != 0) {
+					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
+					return false;
+				}
+
+				return true;
 			}
 		}
 

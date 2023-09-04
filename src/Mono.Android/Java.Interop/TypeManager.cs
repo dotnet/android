@@ -8,7 +8,6 @@ using System.Runtime.InteropServices;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Android.Runtime;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop {
 
