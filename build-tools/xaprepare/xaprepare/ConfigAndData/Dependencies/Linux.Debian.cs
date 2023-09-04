@@ -18,10 +18,12 @@ namespace Xamarin.Android.Prepare
 
 		static readonly List<DebianLinuxProgram> packagesPreTrixie = new List<DebianLinuxProgram> {
 			new DebianLinuxProgram ("libncurses5-dev"),
+			new DebianLinuxProgram ("p7zip-full", "7z"),
 		};
 
 		static readonly List<DebianLinuxProgram> packagesTrixieAndLater = new List<DebianLinuxProgram> {
 			new DebianLinuxProgram ("libncurses-dev"),
+			new DebianLinuxProgram ("7zip", "7z"),
 		};
 
 		// zulu-8 does NOT exist as official Debian package! We need it for our bots, but we have to figure out what to
