@@ -47,6 +47,7 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
 				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+				p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 				if (TestEnvironment.UseLocalBuildOutput) {
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
@@ -151,7 +152,7 @@ namespace Xamarin.ProjectTools
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
 				"-m:1",
-				"-nr:false",
+				"-nodeReuse:false",
 				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {

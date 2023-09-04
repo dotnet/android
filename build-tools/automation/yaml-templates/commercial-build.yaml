@@ -7,7 +7,7 @@ parameters:
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
 
 steps:
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
   displayName: set JI_JAVA_HOME
 
 - template: use-dot-net.yaml
@@ -32,9 +32,18 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-update-mono
 
-# Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
+# Clone 'monodroid' without submodules
 - checkout: monodroid
   clean: true
+  path: s/xamarin-android/external/monodroid
+
+# Tell git to ignore the 'xamarin-android' submodule, which is large and unneeded
+- script: git config submodule."external/xamarin-android".update none
+  workingDirectory: xamarin-android/external/monodroid
+  displayName: Ignore XA submodule
+
+# Clone 'monodroid' with the rest of the submodules
+- checkout: monodroid
   submodules: recursive
   path: s/xamarin-android/external/monodroid
   persistCredentials: true

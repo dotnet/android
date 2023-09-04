@@ -10,11 +10,16 @@ jobs:
   - job: mac_${{ parameters.jobName }}_tests
     displayName: ${{ parameters.jobName }} Emulator Tests
     pool:
-      vmImage: $(HostedMacImage)
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: ${{ parameters.jobTimeout }}
     workspace:
       clean: all
     steps:
+    - template: agent-cleanser/v1.yml@yaml-templates
+
     - template: setup-test-environment.yaml
       parameters:
         installLegacyDotNet: false

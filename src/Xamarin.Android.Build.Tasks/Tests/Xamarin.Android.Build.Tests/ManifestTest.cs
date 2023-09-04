@@ -10,6 +10,9 @@ using Xamarin.Tools.Zip;
 using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Android.App;
+using Mono.Cecil;
+using System.Reflection;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -1118,5 +1121,53 @@ class TestActivity : Activity { }"
 			}
 		}
 
+		[IntentFilter (new [] { "singularAction" },
+		    DataPathSuffix = "singularSuffix",
+		    DataPathAdvancedPattern = "singularPattern")]
+		[IntentFilter (new [] { "pluralAction" },
+		    DataPathSuffixes = new [] { "pluralSuffix1", "pluralSuffix2" },
+		    DataPathAdvancedPatterns = new [] { "pluralPattern1", "pluralPattern2" })]
+
+		public class IntentFilterAttributeDataPathTestClass { }
+
+		[Test]
+		public void IntentFilterDataPathTest ()
+		{
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type).Single (f => f.Actions.Contains ("singularAction"));
+			var xml = intent.ToElement ("dummy.packageid").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""singularAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""singularSuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""singularPattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
+
+		[Test]
+		public void IntentFilterDataPathsTest ()
+		{
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type).Single (f => f.Actions.Contains ("pluralAction"));
+			var xml = intent.ToElement ("dummy.packageid").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""pluralAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""pluralSuffix1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""pluralSuffix2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""pluralPattern1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""pluralPattern2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
 	}
 }

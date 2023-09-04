@@ -12,8 +12,53 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Build.Tests
 {
 	[Parallelizable (ParallelScope.Children)]
-	public class BindingBuildTest : BaseTest {
-#pragma warning disable 414
+	public class BindingBuildTest : BaseTest
+	{
+		[Test]
+		public void DotNetBuildBinding ()
+		{
+			var proj = new XamarinAndroidLibraryProject () {
+				EnableDefaultItems = true,
+			};
+			// Both transform files should be applied
+			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms.xml") {
+				TextContent = () =>
+@"<metadata>
+  <attr path=""/api/package[@name='com.xamarin.android.test.msbuildtest']"" name=""managedName"">FooBar</attr>
+</metadata>",
+			});
+			proj.Sources.Add (new AndroidItem.TransformFile ("Transforms\\Metadata.xml") {
+				TextContent = () =>
+@"<metadata>
+  <attr path=""/api/package[@managedName='FooBar']"" name=""managedName"">MSBuildTest</attr>
+</metadata>",
+			});
+			proj.Sources.Add (new AndroidItem.AndroidLibrary ("javaclasses.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+			});
+			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
+				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
+			});
+			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => ResourceData.JavaSourceTestExtension,
+				Metadata = { { "Bind", "True"} },
+			});
+			var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+
+			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				var typeName = "MSBuildTest.JavaSourceJarTest";
+				var type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+				typeName = "MSBuildTest.JavaSourceTestExtension";
+				type = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (type, $"{assemblyPath} should contain {typeName}");
+			}
+		}
+
 		static object [] ClassParseOptions = new object [] {
 			new object[] {
 				/* classParser */   "class-parse",
@@ -22,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
-		public void BuildBasicBindingLibrary (string classParser)
+		public void BindingLibraryIncremental (string classParser)
 		{
 			var targets = new List<string> {
 				"_ExportJarToXml",
@@ -443,30 +488,6 @@ namespace Foo {
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")]
-		public void JavaDocJar ()
-		{
-			var binding = new XamarinAndroidBindingProject () {
-				AndroidClassParser = "class-parse",
-			};
-			binding.SetProperty ("DocumentationFile", "UnnamedProject.xml");
-			using (var bindingBuilder = CreateDllBuilder ()) {
-				binding.Jars.Add (new AndroidItem.EmbeddedJar ("javasourcejartest.jar") {
-					BinaryContent = () => ResourceData.JavaSourceJarTestJar,
-				});
-				binding.OtherBuildItems.Add (new BuildItem ("JavaDocJar", "javasourcejartest-javadoc.jar") {
-					BinaryContent = () => ResourceData.JavaSourceJarTestJavadocJar,
-				});
-				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
-
-				var cs_file = bindingBuilder.Output.GetIntermediaryPath (
-					Path.Combine ("generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest.cs"));
-				FileAssert.Exists (cs_file);
-				StringAssert.Contains ("Greet (string name, global::Java.Util.Date date)", File.ReadAllText (cs_file));
-			}
-		}
-
-		[Test]
 		public void JavaSourceJar ()
 		{
 			var binding = new XamarinAndroidBindingProject () {
@@ -496,6 +517,39 @@ namespace Foo {
 				Assert.IsTrue (xml.Contains ("Includes a https://developer.android.com/test.html element."), "{@docRoot} value was not replaced!");
 				Assert.IsTrue (xml.Contains ("<a href=\"https://developer.android.com/reference/com/xamarin/android/test/msbuildtest/JavaSourceJarTest#greet(java.lang.String,%20java.util.Date)\" title=\"Reference documentation\">"), "Java documentation URL was not imported!");
 				Assert.IsTrue (xml.Contains ("<a href=\"https://developers.google.com/terms/site-policies\" title=\"Android Open Source Project\">Android Open Source Project</a>"), "Copyright file was not imported!");
+			}
+		}
+
+		[Test]
+		public void AppWithSingleJar ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+				Sources = {
+					new AndroidItem.AndroidLibrary ("Jars\\javaclasses.jar") {
+						BinaryContent = () => ResourceData.JavaSourceJarTestJar,
+					}
+				}
+			};
+
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "first build should succeed");
+
+			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				Assert.IsNotNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should contain {typeName}");
+			}
+
+			// Remove the @(AndroidLibrary) & build again
+			proj.Sources.RemoveAt (proj.Sources.Count - 1);
+			Directory.Delete (Path.Combine (Root, builder.ProjectDirectory, "Jars"), recursive: true);
+			Assert.IsTrue (builder.Build (proj), "second build should succeed");
+
+			FileAssert.Exists (assemblyPath);
+			using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+				Assert.IsNull (assembly.MainModule.GetType (typeName), $"{assemblyPath} should *not* contain {typeName}");
 			}
 		}
 
@@ -619,26 +673,6 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
-			}
-		}
-
-		[Test]
-		[Category ("DotNetIgnore")] //TODO: @(LibraryProjectProperties) not supported yet in .NET 5+
-		public void BugzillaBug11964 ()
-		{
-			var proj = new XamarinAndroidBindingProject ();
-
-			proj.Sources.Add (new BuildItem ("LibraryProjectProperties", "project.properties") {
-				TextContent = () => ""
-			});
-
-			using (var builder = CreateDllBuilder ()) {
-				builder.ThrowOnBuildFailure = false;
-				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
-				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ("error XA1019:"));
-				Assert.IsNotNull (error, "Build should have failed with XA1019.");
 			}
 		}
 

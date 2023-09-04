@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -649,6 +650,50 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+				Sources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+					},
+				}
+			};
+			proj.SetProperty (KnownProperties.OutputType, "Library");
+
+			// Turn off Resource.designer.cs and remove usage of it
+			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
+			if (!useDesignerAssembly)
+				proj.SetProperty ("AndroidUseDesignerAssembly", "false");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Resource.Layout.Main", "0")
+				.Replace ("Resource.Id.myButton", "0");
+
+			var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.RunTarget(proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
+			Assert.IsTrue (builder.Build (proj), "build should succeed");
+
+			resource_designer_cs =  Path.Combine (intermediate, "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
+			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (assemblyPath);
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			var typeName = $"{proj.ProjectName}.Resource";
+			var type = assembly.MainModule.GetType (typeName);
+			Assert.IsNull (type, $"{assemblyPath} should *not* contain {typeName}");
+		}
+
+		[Test]
 		public void CheckThatXA1034IsRaisedForInvalidConfiguration ([Values (true, false)] bool isRelease)
 		{
 			if (!Builder.UseDotNet)
@@ -1102,40 +1147,25 @@ namespace Lib1 {
 		}
 
 		[Test]
-		[Category ("DotNetIgnore")] // n/a in .NET 5, not possible to use $(TFV) of v8.0
-		public void CheckMaxResWarningIsEmittedAsAWarning([Values (false, true)] bool useAapt2)
+		public void CheckMaxResWarningIsEmittedAsAWarning()
 		{
-			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v8.0",
-				TargetSdkVersion = "26",
-				MinSdkVersion = null,
-				UseLatestPlatformSdk = false,
 				IsRelease = true,
 				OtherBuildItems = {
-					new BuildItem.Folder ("Resources\\values-v27\\") {
+					new BuildItem.Folder ("Resources\\values-v33\\") {
 					},
 				},
 			};
-			proj.AndroidUseAapt2 = useAapt2;
-			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v27\\Strings.xml") {
+			proj.AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values-v33\\Strings.xml") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
 <resources>
   <string name=""test"" >Test</string>
 </resources>",
 			});
 			using (var builder = CreateApkBuilder (path)) {
-				if (!builder.TargetFrameworkExists (proj.TargetFrameworkVersion)) {
-					Assert.Ignore ($"Skipping Test. TargetFrameworkVersion {proj.TargetFrameworkVersion} was not available.");
-				}
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				if (useAapt2) {
-					StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
-				} else {
-					var expected = "warning APT1146: max res 26, skipping values-v27";
-					StringAssertEx.Contains (expected, builder.LastBuildOutput, "Build output should contain an APT1146 warning about 'max res 26, skipping values-v27'");
-				}
+				StringAssertEx.DoesNotContain ("APT0000", builder.LastBuildOutput, "Build output should not contain an APT0000 warning");
 			}
 		}
 

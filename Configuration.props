@@ -180,12 +180,13 @@
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
-    <AdbToolExe Condition=" '$(AdbToolExe)' == '' ">adb</AdbToolExe>
+    <AdbToolExe Condition=" '$(AdbToolExe)' == '' and '$(HostOS)' != 'Windows' ">adb</AdbToolExe>
+    <AdbToolExe Condition=" '$(AdbToolExe)' == '' and '$(HostOS)' == 'Windows' ">adb.exe</AdbToolExe>
     <AvdManagerHome Condition=" '$(AvdManagerHome)' == '' ">$(AndroidToolchainDirectory)</AvdManagerHome>
-    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' ">avdmanager</AvdManagerToolExe>
+    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' != 'Windows' ">avdmanager</AvdManagerToolExe>
+    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
     <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">7.0</CommandLineToolsFolder>
     <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">8512546_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
@@ -193,7 +194,8 @@
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
     <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">32.1.9</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
-    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
+    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' != 'Windows'  ">emulator</EmulatorToolExe>
+    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' == 'Windows'  ">emulator.exe</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>
     <BundleToolJarPath Condition=" '$(BundleToolJarPath)' == '' ">$(MicrosoftAndroidSdkOutDir)bundletool.jar</BundleToolJarPath>

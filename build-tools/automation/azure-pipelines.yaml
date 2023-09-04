@@ -30,6 +30,11 @@ resources:
     name: xamarin/release-scripts
     ref: refs/heads/sign-and-notarized
     endpoint: xamarin
+  - repository: maui
+    type: github
+    name: dotnet/maui
+    ref: refs/heads/net8.0
+    endpoint: xamarin
 
 parameters:
 - name: provisionatorChannel
@@ -107,7 +112,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
-        
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -135,7 +140,7 @@ stages:
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
-      
+
     - template: yaml-templates/start-stop-emulator.yaml
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -196,7 +201,7 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
-        
+
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
@@ -215,12 +220,18 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-        
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: yaml-templates/start-stop-emulator.yaml
@@ -268,8 +279,14 @@ stages:
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
         testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -277,12 +294,144 @@ stages:
         artifactName: Test Results - MSBuild Smoke - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
-      
+
 - template: yaml-templates/stage-msbuild-tests.yaml
-      
+
 - template: yaml-templates/stage-msbuild-emulator-tests.yaml
   parameters:
     usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
+
+- stage: maui_tests
+  displayName: MAUI Tests
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
+  jobs:
+  # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
+  - job: maui_tests_integration
+    displayName: MAUI Integration
+    pool: $(1ESWindowsPool)
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    variables:
+      BuildVersion: $(Build.BuildId)
+    steps:
+    - checkout: maui
+      clean: true
+      submodules: recursive
+      path: s/maui
+      persistCredentials: true
+
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+        provisionClassic: false
+        provisionatorChannel: ${{ parameters.provisionatorChannel }}
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
+        androidSdkPlatforms: 23,24,25,26,27,28,29,30,31,32,$(DefaultTestSdkPlatforms)
+
+    - task: NuGetAuthenticate@0
+      displayName: authenticate with azure artifacts
+      inputs:
+        forceReinstallCredentialProvider: true
+
+    - script: |
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_11_X64%
+        echo ##vso[task.setvariable variable=JAVA_HOME]%JAVA_HOME_11_X64%
+      displayName: set JI_JAVA_HOME, JAVA_HOME
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(NuGetArtifactName)
+        downloadPath: $(Build.StagingDirectory)/android-packs
+
+    - pwsh: |
+        $searchPath = Join-Path $(Build.StagingDirectory) android-packs
+        $wlmanPack = Get-ChildItem $searchPath -Filter *Android*Manifest*.nupkg | Select-Object -First 1
+        $dest = Join-Path $searchPath "tmp-wlman" "$($wlmanPack.BaseName)"
+        Expand-Archive -LiteralPath $wlmanPack -DestinationPath $dest
+        $wlmanJsonPath = Join-Path $dest "data" "WorkloadManifest.json"
+        $json = Get-Content $wlmanJsonPath | ConvertFrom-Json -AsHashtable
+        Write-Host "Setting variable ANDROID_PACK_VERSION = $($json["version"])"
+        Write-Host "##vso[task.setvariable variable=ANDROID_PACK_VERSION;]$($json["version"])"
+      displayName: Set ANDROID_PACK_VERSION
+
+    - pwsh: >-
+        $(Build.SourcesDirectory)/maui/eng/scripts/update-version-props.ps1
+        -xmlFileName "$(Build.SourcesDirectory)/maui/eng/Versions.props"
+        -androidVersion $(ANDROID_PACK_VERSION)
+      displayName: Update MAUI's Android dependency
+
+    - task: DotNetCoreCLI@2
+      displayName: Update Android SDK band in Workloads.csproj
+      inputs:
+        projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
+
+    - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
+      displayName: Install .NET
+      retryCountOnTaskFailure: 3
+      workingDirectory: $(Build.SourcesDirectory)/maui
+
+    - pwsh: ./build.ps1 --target=dotnet-pack --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
+      displayName: Pack .NET Maui
+      workingDirectory: $(Build.SourcesDirectory)/maui
+
+    - task: DotNetCoreCLI@2
+      displayName: Install MAUI workload packs
+      retryCountOnTaskFailure: 3
+      inputs:
+        projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
+
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        command: new
+        arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
+        xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+        displayName: Create MAUI template
+        continueOnError: false
+
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        arguments: >-
+          -f $(DotNetTargetFramework)-android -c Debug
+          --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
+        xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+        displayName: Build MAUI template - Debug
+
+    - template: yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        arguments: >-
+          -f $(DotNetTargetFramework)-android -c Release
+          --configfile $(Build.SourcesDirectory)/maui/NuGet.config
+          -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
+        xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+        displayName: Build MAUI template - Release
+
+    - task: CopyFiles@2
+      displayName: copy build logs
+      condition: always()
+      inputs:
+        Contents: |
+          $(Build.SourcesDirectory)/maui/artifacts/logs/**
+        TargetFolder: $(Build.StagingDirectory)/logs
+        flattenFolders: true
+
+    - template: yaml-templates/publish-artifact.yaml
+      parameters:
+        displayName: upload build and test results
+        artifactName: Test Results - MAUI Integration
+        targetPath: $(Build.StagingDirectory)/logs
+        condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
+
+    - template: yaml-templates/fail-on-issue.yaml
+
 
 - stage: dotnet_prepare_release
   displayName: Prepare .NET Release
@@ -333,7 +482,9 @@ stages:
       - task: MicroBuildCodesignVerify@3
         displayName: verify signed msi content
         inputs:
-          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          TargetFolders: |
+            $(Build.ArtifactStagingDirectory)\bin\manifests
+            $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
           ExcludeSNVerify: true
           ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
@@ -452,12 +603,73 @@ stages:
   - dotnet_prepare_release
   condition: and(eq(variables['MicroBuildSignType'], 'Real'), eq(dependencies.dotnet_prepare_release.result, 'Succeeded'))
   jobs:
-  - template: compliance/sbom/job.v1.yml@yaml-templates
-    parameters:
-      artifactNames: [ nuget-signed, nuget-linux-signed, vs-msi-nugets, vsdrop-signed ]
-      packageName: xamarin-android
-      packageFilter: '*.nupkg;*.msi'
-      GitHub.Token: $(GitHub.Token)
+  - job: sbom
+    displayName: Generate SBOM
+    timeoutInMinutes: 60
+    pool:
+      name: AzurePipelines-EO
+      demands:
+      - ImageOverride -equals AzurePipelinesWindows2022compliant
+    variables:
+      Packaging.EnableSBOMSigning: true
+    workspace:
+      clean: all
+    steps:
+    - checkout: self
+      submodules: recursive
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: nuget-linux-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        downloadPath: $(Build.StagingDirectory)\packages
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vs-msi-nugets
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.nupkg'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsdrop-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: vsdrop-multitarget-signed
+        downloadPath: $(Build.StagingDirectory)\packages
+        patterns: '*.msi'
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-macos
+        downloadPath: $(Build.StagingDirectory)\sbom\components-macos
+
+    - task: DownloadPipelineArtifact@2
+      inputs:
+        artifactName: sbom-components-linux
+        downloadPath: $(Build.StagingDirectory)\sbom\components-linux
+
+    - template: compliance/sbom/scan.v1.yml@yaml-templates
+      parameters:
+        dropDirectory: $(Build.StagingDirectory)\packages
+        componentsDirectory: $(Build.StagingDirectory)\sbom
+        manifestDirectory: $(Build.StagingDirectory)\sbom
+        packageName: .NET Android
+        packageVersionRegex: '(?i)^Microsoft.*\.(?<version>\d+\.\d+\.\d+(-.*)?\.\d+).nupkg$'
 
 # Check - "Xamarin.Android (Compliance)"
 - template: security/full/v0.yml@yaml-templates
