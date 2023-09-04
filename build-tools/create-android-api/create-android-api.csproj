@@ -38,7 +38,7 @@
     <!-- We don't generate 'api.xml' files for older API levels we no longer ship -->
     <ItemGroup>
       <_MergedXmlFiles
-          Condition=" %(ApiFileDefinition.Level) >= 19  "
+          Condition=" %(ApiFileDefinition.Level) >= 34  "
           Include="@(ApiFileDefinition)" />
     </ItemGroup>
   </Target>

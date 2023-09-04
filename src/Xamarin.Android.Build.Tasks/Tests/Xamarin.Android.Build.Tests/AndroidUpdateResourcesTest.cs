@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Mono.Cecil;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
@@ -646,6 +647,50 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 				Assert.IsFalse (File.Exists (outputFile), $"{designerFile}{proj.Language.DefaultDesignerExtension} should have been cleaned in {proj.IntermediateOutputPath}");
 			}
+		}
+
+		[Test]
+		public void GenerateResourceDesigner_false([Values (false, true)] bool useDesignerAssembly)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+				Sources = {
+					new AndroidItem.AndroidResource (() => "Resources\\drawable\\foo.png") {
+						BinaryContent = () => XamarinAndroidCommonProject.icon_binary_mdpi,
+					},
+				}
+			};
+			proj.SetProperty (KnownProperties.OutputType, "Library");
+
+			// Turn off Resource.designer.cs and remove usage of it
+			proj.SetProperty ("AndroidGenerateResourceDesigner", "false");
+			if (!useDesignerAssembly)
+				proj.SetProperty ("AndroidUseDesignerAssembly", "false");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Resource.Layout.Main", "0")
+				.Replace ("Resource.Id.myButton", "0");
+
+			var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.RunTarget(proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" }), "Designtime build should succeed.");
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var resource_designer_cs = Path.Combine (intermediate, "designtime",  "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
+			Assert.IsTrue (builder.Build (proj), "build should succeed");
+
+			resource_designer_cs =  Path.Combine (intermediate, "Resource.designer.cs");
+			if (useDesignerAssembly)
+				resource_designer_cs = Path.Combine (intermediate, "__Microsoft.Android.Resource.Designer.cs");
+			FileAssert.DoesNotExist (resource_designer_cs);
+
+			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
+			FileAssert.Exists (assemblyPath);
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			var typeName = $"{proj.ProjectName}.Resource";
+			var type = assembly.MainModule.GetType (typeName);
+			Assert.IsNull (type, $"{assemblyPath} should *not* contain {typeName}");
 		}
 
 		[Test]

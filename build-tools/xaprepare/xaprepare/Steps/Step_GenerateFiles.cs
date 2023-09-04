@@ -58,7 +58,6 @@ namespace Xamarin.Android.Prepare
 						Get_MonoGitHash_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
-						new GeneratedMonodroidCmakeFiles (Configurables.Paths.BuildBinDir),
 					};
 				} else {
 					return new List <GeneratedFile> {
@@ -66,7 +65,6 @@ namespace Xamarin.Android.Prepare
 						Get_Configuration_OperatingSystem_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
-						new GeneratedMonodroidCmakeFiles (Configurables.Paths.BuildBinDir),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 						Get_mingw_32_cmake (context),
