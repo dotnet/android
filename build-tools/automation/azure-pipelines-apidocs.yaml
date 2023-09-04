@@ -59,7 +59,7 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
+    - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
       displayName: set JI_JAVA_HOME
 
     # Set MSBuild property overrides if parameters are set
