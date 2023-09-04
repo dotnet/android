@@ -112,7 +112,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
-        
+
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
@@ -140,7 +140,7 @@ stages:
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
-      
+
     - template: yaml-templates/start-stop-emulator.yaml
 
     - template: yaml-templates/apk-instrumentation.yaml
@@ -201,7 +201,7 @@ stages:
         extraBuildArgs: -p:TestsFlavor=AotLlvm -p:EnableLLVM=true -p:AndroidEnableProfiledAot=false
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: $(DotNetTargetFramework)-AotLlvm
-        
+
     - template: yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
@@ -220,12 +220,18 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
         artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
         extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-        
+
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
         testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
       - template: yaml-templates/start-stop-emulator.yaml
@@ -273,8 +279,14 @@ stages:
       parameters:
         testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
         testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+
+    - task: ShellScript@2
+      displayName: Test dotnet-local.sh
+      inputs:
+        scriptPath: dotnet-local.sh
+        args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
     - template: yaml-templates/upload-results.yaml
       parameters:
@@ -292,7 +304,7 @@ stages:
 - stage: maui_tests
   displayName: MAUI Tests
   dependsOn: mac_build
-  condition: eq(variables['System.PullRequest.TargetBranch'], 'main')
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
   jobs:
   # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
   - job: maui_tests_integration
@@ -351,6 +363,12 @@ stages:
         -xmlFileName "$(Build.SourcesDirectory)/maui/eng/Versions.props"
         -androidVersion $(ANDROID_PACK_VERSION)
       displayName: Update MAUI's Android dependency
+
+    - task: DotNetCoreCLI@2
+      displayName: Update Android SDK band in Workloads.csproj
+      inputs:
+        projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+        arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
     - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
       displayName: Install .NET
@@ -464,7 +482,9 @@ stages:
       - task: MicroBuildCodesignVerify@3
         displayName: verify signed msi content
         inputs:
-          TargetFolders: $(Build.StagingDirectory)\bin\manifests
+          TargetFolders: |
+            $(Build.ArtifactStagingDirectory)\bin\manifests
+            $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
           ExcludeSNVerify: true
           ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 

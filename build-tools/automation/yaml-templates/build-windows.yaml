@@ -86,14 +86,23 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
-    - template: install-apkdiff.yaml
+    - template: install-global-tool.yaml
+      parameters:
+        toolName: apkdiff
+        version: $(ApkDiffToolVersion)
 
     - template: run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
         testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuild-$(XA.Build.Configuration).xml
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests $(DotNetNUnitCategories)"
+        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
+
+    - task: BatchScript@1
+      displayName: Test dotnet-local.cmd
+      inputs:
+        filename: dotnet-local.cmd
+        arguments: build samples\HelloWorld\HelloWorld\HelloWorld.DotNet.csproj
 
     - template: upload-results.yaml
       parameters:

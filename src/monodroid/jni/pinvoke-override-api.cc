@@ -4,10 +4,6 @@
 #include <mono/utils/mono-publib.h>
 #include <mono/utils/mono-dl-fallback.h>
 
-extern "C" {
-#include "java_interop_api.h"
-}
-
 #include "globals.hh"
 #include "monodroid-glue.hh"
 #include "monodroid-glue-internal.hh"
