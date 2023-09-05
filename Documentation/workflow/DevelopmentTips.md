@@ -477,6 +477,24 @@ automatically picked up by the .NET SDK.
 
 ## Enabling Mono Logging
 
+### The easy way
+
+A quick way to enable Mono logging is to use the `RunWithLogging`
+target:
+
+```bash
+$ dotnet build -t:RunWithLogging
+```
+
+If successful, messages printed to the screen will show location
+of the logcat file with the logged messages.
+
+Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
+property to `true`, in which case the log output file will contain
+(very) verbose log messages from the MonoVM runtime.
+
+### The manual way
+
 Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
 default. You can set the `debug.mono.log` system property to answer
 questions like: Is AOT working? Is the Mono Interpreter enabled?

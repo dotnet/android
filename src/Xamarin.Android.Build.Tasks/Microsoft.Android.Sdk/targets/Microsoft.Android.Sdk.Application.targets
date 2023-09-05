@@ -36,7 +36,7 @@ This file contains targets specific for Android application projects.
     </_RunWithLoggingDependsOn>
 
     <_RunLogFilePath Condition=" '$(_RunLogFilePath)' == '' ">$(IntermediateOutputPath)logcat.txt</_RunLogFilePath>
-    <_RunLogVerbose Condition=" '$(_RunLogVerbose)' == '' ">false</_RunLogVerbose>
+    <RunLogVerbose Condition=" '$(RunLogVerbose)' == '' ">false</RunLogVerbose>
   </PropertyGroup>
 
   <Target Name="RunWithLogging"
@@ -49,7 +49,7 @@ This file contains targets specific for Android application projects.
 
     <PropertyGroup>
       <_MonoLog>default,assembly,timing=bare</_MonoLog>
-      <_MonoLog Condition=" '$(_RunLogVerbose)' != 'false' ">$(_MonoLog),mono_log_level=debug,mono_log_mask=all</_MonoLog>
+      <_MonoLog Condition=" '$(RunLogVerbose)' != 'false' ">$(_MonoLog),mono_log_level=debug,mono_log_mask=all</_MonoLog>
       <_SleepTime>1000</_SleepTime> <!-- milliseconds -->
     </PropertyGroup>
 
