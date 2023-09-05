@@ -493,6 +493,13 @@ Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
 property to `true`, in which case the log output file will contain
 (very) verbose log messages from the MonoVM runtime.
 
+By default, the target will wait for a 1000ms before it dumps the
+logcat buffer to file.  This is to give the Android logging daemon
+time to actually put all the messages logged by the application in
+the logcat buffer.  This value can be overridden by setting the
+`$(RunLogDelay)` MSBuild property to a number of milliseconds that
+the target should wait before creating the log file.
+
 ### The manual way
 
 Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
