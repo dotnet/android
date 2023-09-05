@@ -3,8 +3,8 @@ plugins {
 }
 
 java {
-    ext.javaSourceVer = project.hasProperty('javaSourceVer') ? JavaVersion.toVersion(project.getProperty('javaSourceVer')) : JavaVersion.VERSION_1_8
-    ext.javaTargetVer = project.hasProperty('javaTargetVer') ? JavaVersion.toVersion(project.getProperty('javaTargetVer')) : JavaVersion.VERSION_1_8
+    ext.javaSourceVer = project.hasProperty('javaSourceVer') ? JavaVersion.toVersion(project.getProperty('javaSourceVer')) : JavaVersion.VERSION_11
+    ext.javaTargetVer = project.hasProperty('javaTargetVer') ? JavaVersion.toVersion(project.getProperty('javaTargetVer')) : JavaVersion.VERSION_11
 
     sourceCompatibility = ext.javaSourceVer
     targetCompatibility = ext.javaTargetVer
