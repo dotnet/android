@@ -452,7 +452,7 @@ A second (better) way is to add this MSBuild target to your Android
 ```xml
 <Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
   <ItemGroup>
-      <KnownRuntimePack 
+      <KnownRuntimePack
           Update="Microsoft.NETCore.App"
           Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
           LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"

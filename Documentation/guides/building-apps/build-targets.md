@@ -96,6 +96,18 @@ MSBuild property controls which
 [Visual Studio SDK Manager repository](~/android/get-started/installation/android-sdk.md?tabs=windows#repository-selection)
 is used for package name and package version detection, and URLs to download.
 
+## RunWithLogging
+
+Runs the application with additional logging enabled.  Helpful when reporting or investigating an issue with
+either the application or the runtime.  If successful, messages printed to the screen will show location
+of the logcat file with the logged messages.
+
+Properties which affect how the target works:
+
+  * `/p:RunLogVerbose=true` enables even more verbose logging from MonoVM
+  * `/p:RunLogDelay=X` where `X` should be replaced with time in milliseconds to wait before writing the
+    log output to file.  Defaults to `1000`.
+
 ## SignAndroidPackage
 
 Creates and signs the Android package (`.apk`) file.
