@@ -497,7 +497,7 @@ By default, the target will wait for a 1000ms before it dumps the
 logcat buffer to file.  This is to give the Android logging daemon
 time to actually put all the messages logged by the application in
 the logcat buffer.  This value can be overridden by setting the
-`$(RunLogDelay)` MSBuild property to a number of milliseconds that
+`$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
 the target should wait before creating the log file.
 
 ### The manual way

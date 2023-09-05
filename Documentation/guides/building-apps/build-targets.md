@@ -105,7 +105,7 @@ of the logcat file with the logged messages.
 Properties which affect how the target works:
 
   * `/p:RunLogVerbose=true` enables even more verbose logging from MonoVM
-  * `/p:RunLogDelay=X` where `X` should be replaced with time in milliseconds to wait before writing the
+  * `/p:RunLogDelayInMS=X` where `X` should be replaced with time in milliseconds to wait before writing the
     log output to file.  Defaults to `1000`.
 
 ## SignAndroidPackage

@@ -50,7 +50,7 @@ This file contains targets specific for Android application projects.
     <PropertyGroup>
       <_MonoLog>default,assembly,timing=bare</_MonoLog>
       <_MonoLog Condition=" '$(RunLogVerbose)' != 'false' ">$(_MonoLog),mono_log_level=debug,mono_log_mask=all</_MonoLog>
-      <RunLogDelay>1000</RunLogDelay> <!-- milliseconds -->
+      <RunLogDelayInMS>1000</RunLogDelayInMS> <!-- milliseconds -->
     </PropertyGroup>
 
     <Message Text="Preparing application to log more information" Importance="High" />
@@ -62,8 +62,8 @@ This file contains targets specific for Android application projects.
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
 
-    <Message Text="Sleeping for $(RunLogDelay)ms to give logcat a chance to log all the messages" Importance="High" />
-    <XASleepInternal Milliseconds="$(RunLogDelay)" />
+    <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />
+    <XASleepInternal Milliseconds="$(RunLogDelayInMS)" />
 
     <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) logcat -d > &quot;$(_RunLogFilePath)&quot;" />
     <Message Text="Logcat output is available in $(_RunLogFilePath)" Importance="High" />
