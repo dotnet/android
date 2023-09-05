@@ -162,8 +162,8 @@
     <MingwCommandPrefix64>x86_64-w64-mingw32</MingwCommandPrefix64>
   </PropertyGroup>
   <PropertyGroup>
-    <JavacSourceVersion>1.8</JavacSourceVersion>
-    <JavacTargetVersion>1.8</JavacTargetVersion>
+    <JavacSourceVersion>11</JavacSourceVersion>
+    <JavacTargetVersion>11</JavacTargetVersion>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
