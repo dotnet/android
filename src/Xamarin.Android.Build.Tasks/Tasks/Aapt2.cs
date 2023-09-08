@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks {
 	public abstract class Aapt2 : AndroidAsyncTask {
 
 		private const int MAX_PATH = 260;
+		private const int ASCII_MAX_CHAR = 127;
 		private static readonly int DefaultMaxAapt2Daemons = 6;
 		protected Dictionary<string, string> _resource_name_case_map;
 
@@ -235,7 +236,7 @@ namespace Xamarin.Android.Tasks {
 				return true;
 
 			foreach (var c in filePath)
-				if (c > 128) // cannot use Char.IsAscii cos we are .netstandard2.0
+				if (c > ASCII_MAX_CHAR) // cannot use Char.IsAscii cos we are .netstandard2.0
 					return false;
 			return true;
 		}
