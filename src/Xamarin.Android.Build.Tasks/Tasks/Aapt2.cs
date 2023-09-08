@@ -216,9 +216,6 @@ namespace Xamarin.Android.Tasks {
 				LogCodedWarning (GetErrorCode (singleLine), singleLine);
 				return true;
 			}
-			else {
-				LogMessage (singleLine, messageImportance);
-			}
 			return false;
 		}
 
