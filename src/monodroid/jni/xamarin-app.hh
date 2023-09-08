@@ -111,6 +111,45 @@ struct XamarinAndroidBundledAssembly final
 	char    *name;
 };
 
+struct AssemblyEntry
+{
+        // offset into the `xa_input_assembly_data` array
+        uint32_t input_data_offset;
+
+        // number of bytes data of this assembly occupies
+        uint32_t input_data_size;
+
+        // offset into the `xa_uncompressed_assembly_data` array where the uncompressed
+        // assembly data (if any) lives.
+        uint32_t uncompressed_data_offset;
+
+        // Size of the uncompressed data. 0 if assembly wasn't compressed.
+        uint32_t uncompressed_data_size;
+};
+
+struct AssemblyIndexEntry
+{
+        xamarin::android::hash_t name_hash;
+
+        // Index into the `xa_assemblies` descriptor array
+        uint32_t index;
+};
+
+constexpr size_t InputAssemblyDataSize = 1024;
+constexpr size_t UncompressedAssemblyDataSize = 2048;
+constexpr size_t AssemblyCount = 2;
+constexpr size_t AssemblyNameLength = 26; // including the terminating NUL
+
+MONO_API MONO_API_EXPORT const uint8_t xa_input_assembly_data[InputAssemblyDataSize];
+
+// All the compressed assemblies are uncompressed into this array, with offsets in `xa_assemblies`
+// pointing to the place where they start
+MONO_API MONO_API_EXPORT uint8_t xa_uncompressed_assembly_data[UncompressedAssemblyDataSize];
+
+MONO_API MONO_API_EXPORT const AssemblyEntry xa_assemblies[AssemblyCount];
+MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
+MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
+
 //
 // Assembly store format
 //
