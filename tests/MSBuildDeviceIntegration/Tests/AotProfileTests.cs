@@ -25,7 +25,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AotAssemblies = false,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			
 			if (Builder.UseDotNet) {
 				// TODO: only needed in .NET 6+

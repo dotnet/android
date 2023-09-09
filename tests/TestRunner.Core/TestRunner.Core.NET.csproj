@@ -7,4 +7,6 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
+
 </Project>

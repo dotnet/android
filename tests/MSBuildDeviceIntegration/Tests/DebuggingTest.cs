@@ -59,7 +59,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 			};
 			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+				proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			}
 			proj.SetDefaultTargetDevice ();
 			if (Builder.UseDotNet && isRelease) {
@@ -91,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			if (!CommercialBuildAvailable) {
-				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+				app.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
@@ -192,7 +192,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetDefaultTargetDevice ();
@@ -434,7 +434,7 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			app.SetAndroidSupportedAbis ("arm64-v8a", "x86", "x86_64");
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))

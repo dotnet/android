@@ -8,6 +8,8 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
+
   <ItemGroup>
     <ProjectReference Include="..\TestRunner.Core\TestRunner.Core.NET.csproj" />
     <ProjectReference Include="..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />

@@ -26,6 +26,8 @@
     <GenerateDocumentation>True</GenerateDocumentation>
   </PropertyGroup>
 
+  <Import Project="..\..\Configuration.props" />
+
   <ItemGroup>
     <Compile Include="..\..\src-ThirdParty\NUnitLite\**\*.cs" />
   </ItemGroup>

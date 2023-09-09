@@ -10,6 +10,8 @@
     <GenerateSerializationAssemblies>Off</GenerateSerializationAssemblies>
   </PropertyGroup>
 
+  <Import Project="..\..\..\Configuration.props" />
+
   <ItemGroup>
     <AndroidAsset Include="..\LinkedAssets\linked_text2.txt">
       <Link>Assets\linked_text2.txt</Link>
