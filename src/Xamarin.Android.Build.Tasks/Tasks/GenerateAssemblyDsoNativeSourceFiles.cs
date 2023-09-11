@@ -44,7 +44,7 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 			FileInfo fi = new (assembly.ItemSpec);
 			string inputFile;
 			bool compressed;
-			ulong compressedSize;
+			uint compressedSize;
 
 			Log.LogDebugMessage ($"  Input: {assembly.ItemSpec}");
 			if (assemblyCompressor != null) {
@@ -54,7 +54,7 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 					compressedSize = 0;
 				} else {
 					var cfi = new FileInfo (inputFile);
-					compressedSize = (ulong)cfi.Length;
+					compressedSize = (uint)cfi.Length;
 				}
 			} else {
 				inputFile = assembly.ItemSpec;
@@ -68,7 +68,7 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 				assemblyList = new List<DSOAssemblyInfo> ();
 				dsoAssembliesInfo.Add (arch, assemblyList);
 			}
-			assemblyList.Add (new DSOAssemblyInfo (GetAssemblyName (assembly), inputFile, (ulong)fi.Length, compressedSize));
+			assemblyList.Add (new DSOAssemblyInfo (GetAssemblyName (assembly), inputFile, (uint)fi.Length, compressedSize));
 			Log.LogDebugMessage ($"    added to list with name: {assemblyList[assemblyList.Count - 1].Name}");
 		}
 

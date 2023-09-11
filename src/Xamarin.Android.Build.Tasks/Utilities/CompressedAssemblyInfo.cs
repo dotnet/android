@@ -43,12 +43,12 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Size of the loadable assembly data (after decompression, if compression is enabled).
 		/// </summary>
-		public ulong DataSize             { get; }
+		public uint DataSize              { get; }
 
 		/// <summary>
 		/// Size of the compressed assembly data or `0` if assembly is uncompressed.
 		/// </summary>
-		public ulong CompressedDataSize   { get; }
+		public uint CompressedDataSize    { get; }
 
 		public string InputFile           { get; }
 
@@ -64,7 +64,7 @@ namespace Xamarin.Android.Tasks
 		/// <paramref name="dataSize"/> gives the original file size, while <paramref name="compressedDataSize"/> specifies
 		/// data size after compression, or `0` if file isn't compressed.
 		/// </summary>
-		public DSOAssemblyInfo (string name, string inputFile, ulong dataSize, ulong compressedDataSize)
+		public DSOAssemblyInfo (string name, string inputFile, uint dataSize, uint compressedDataSize)
 		{
 			Name = name;
 			InputFile = inputFile;
