@@ -135,11 +135,20 @@ struct AssemblyIndexEntry
         uint32_t index;
 };
 
-constexpr size_t InputAssemblyDataSize = 1024;
-constexpr size_t UncompressedAssemblyDataSize = 2048;
-constexpr size_t AssemblyCount = 2;
-constexpr size_t AssemblyNameLength = 26; // including the terminating NUL
+constexpr uint32_t InputAssemblyDataSize = 1024;
+constexpr uint32_t UncompressedAssemblyDataSize = 2048;
+constexpr uint32_t AssemblyCount = 2;
+constexpr uint32_t AssemblyNameLength = 26; // including the terminating NUL
 
+struct AssembliesConfig
+{
+	uint32_t input_assembly_data_size;
+	uint32_t uncompressed_assembly_data_size;
+	uint32_t assembly_name_length;
+	uint32_t assembly_count;
+};
+
+MONO_API MONO_API_EXPORT const AssembliesConfig xa_assemblies_config;
 MONO_API MONO_API_EXPORT const uint8_t xa_input_assembly_data[InputAssemblyDataSize];
 
 // All the compressed assemblies are uncompressed into this array, with offsets in `xa_assemblies`

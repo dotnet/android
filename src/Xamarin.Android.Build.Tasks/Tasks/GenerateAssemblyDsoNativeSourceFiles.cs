@@ -38,7 +38,8 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 			Log.LogDebugMessage ("Assembly compression DISABLED");
 		}
 
-		ulong assemblyDataSize = 0;
+		ulong inputAssemblyDataSize = 0;
+		ulong uncompressedAssemblyDataSize = 0;
 		Log.LogDebugMessage ("Processing the input assemblies");
 		foreach (ITaskItem assembly in Assemblies) {
 			FileInfo fi = new (assembly.ItemSpec);
@@ -61,7 +62,9 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 				compressed = false;
 				compressedSize = 0;
 			}
-			assemblyDataSize += compressedSize == 0 ? (ulong)fi.Length : compressedSize;
+			inputAssemblyDataSize += compressedSize == 0 ? (ulong)fi.Length : compressedSize;
+			uncompressedAssemblyDataSize += (ulong)fi.Length;
+
 			Log.LogDebugMessage ($"    will include from: {inputFile} (compressed? {compressed}; compressedSize == {compressedSize}");
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
 			if (!dsoAssembliesInfo.TryGetValue (arch, out List<DSOAssemblyInfo>? assemblyList)) {
@@ -72,14 +75,32 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 			Log.LogDebugMessage ($"    added to list with name: {assemblyList[assemblyList.Count - 1].Name}");
 		}
 
-		Log.LogDebugMessage ($"Size of assembly data to stash: {assemblyDataSize}");
+		Log.LogDebugMessage ($"Size of assembly data to stash: {inputAssemblyDataSize}");
 		Log.LogDebugMessage ($"Number of architectures to stash into DSOs: {dsoAssembliesInfo.Count}");
 		foreach (var kvp in dsoAssembliesInfo) {
 			Log.LogDebugMessage ($"  {kvp.Key}: {kvp.Value.Count} assemblies");
 		}
 
-		var generator = new AssemblyDSOGenerator (dsoAssembliesInfo);
+		var generator = new AssemblyDSOGenerator (dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
 		LLVMIR.LlvmIrModule module = generator.Construct ();
+
+		foreach (string abi in SupportedAbis) {
+			string targetAbi = abi.ToLowerInvariant ();
+			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{PrepareAbiItems.AssemblyDSOBase}.{targetAbi}.ll");
+
+			using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
+			try {
+				generator.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, outputAsmFilePath);
+			} catch {
+				throw;
+			} finally {
+				sw.Flush ();
+			}
+
+			if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
+				Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
+			}
+		}
 
 		return !Log.HasLoggedErrors;
 	}

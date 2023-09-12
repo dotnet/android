@@ -326,3 +326,10 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		.replacement = "another/replacement/java/type",
 	},
 };
+
+const AssembliesConfig xa_assemblies_config = {
+        .input_assembly_data_size = InputAssemblyDataSize,
+        .uncompressed_assembly_data_size = UncompressedAssemblyDataSize,
+        .assembly_name_length = AssemblyNameLength,
+        .assembly_count = AssemblyCount,
+};

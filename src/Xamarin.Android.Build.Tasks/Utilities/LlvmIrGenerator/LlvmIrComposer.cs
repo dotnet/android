@@ -34,9 +34,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			output.Flush ();
 		}
 
-		public static ulong GetXxHash (string str, bool is64Bit)
+		public static byte[] StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
+
+		public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (StringToBytes (str), is64Bit);
+
+		public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
 		{
-			byte[] stringBytes = Encoding.UTF8.GetBytes (str);
 			if (is64Bit) {
 				return XxHash64.HashToUInt64 (stringBytes);
 			}
