@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Globalization;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
@@ -146,6 +147,35 @@ class LlvmIrLocalVariable : LlvmIrVariable
 	}
 }
 
+enum LlvmIrStreamedArrayDataProviderState
+{
+	Finished,
+	StartSection,
+}
+
+abstract class LlvmIrStreamedArrayDataProvider
+{
+	/// <summary>
+	/// Type of every member of the array returned by <see cref="GetData ()"/>.  Generator will check
+	/// every member type against this property, allowing also derived types.
+	/// </summary>
+	public Type ArrayMemberType { get; }
+
+	protected LlvmIrStreamedArrayDataProvider (Type arrayMemberType)
+	{
+		ArrayMemberType = arrayMemberType;
+	}
+
+	/// <summary>
+	/// Whenever <see cref="GetData ()"/> returns <see cref="LlvmIrStreamedArrayDataProviderState.StartSection"/> the
+	/// generator will call this method to obtain the new section comment, if any, to be output before the actual
+	/// data.  Returning `String.Empty` prevents the comment from being added.
+	/// </summary>
+	public virtual string GetSectionStartComment () => String.Empty;
+
+	public abstract (LlvmIrStreamedArrayDataProviderState status, ICollection? data) GetData ();
+}
+
 class LlvmIrGlobalVariable : LlvmIrVariable
 {
 	/// <summary>
@@ -162,8 +192,32 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// </summary>
 	public virtual LlvmIrVariableOptions? Options { get; set; }
 
+	/// <summary>
+	/// If set to `true`, initialize the array with a shortcut zero-initializer statement.  Useful when pre-allocating
+	/// space for runtime use that won't be filled in with any data at the build time.
+	/// </summary>
 	public bool ZeroInitializeArray { get; set; }
+
+	/// <summary>
+	/// Specify number of items in an array. Used in cases when we want to pre-allocate an array without giving it any
+	/// value, thus making it impossible for the generator to discover the number of items automatically.  This is useful
+	/// when using <seealso cref="ZeroInitializeArray" />.  This property is used **only** if the variable <see cref="LlvmIrVariable.Value"/>
+	/// is `null`.
+	/// </summary>
 	public ulong ArrayItemCount { get; set; }
+
+	/// <summary>
+	/// If set, it will override any automatically calculated alignment for this variable
+	/// </summary>
+	public ulong? Alignment                        { get; set; }
+
+	/// <summary>
+	/// If set, the provider will be called to obtain all the data to be placed in an array variable. The total amount
+	/// of data that will be returned by the provider **must** be specified in the <see cref="ArrayItemCount"/> property,
+	/// in order for the generator to properly declare the variable.  The generator will verify that the amount of data
+	/// is exactly that much and throw an exception otherwise.
+	/// </summary>
+	public LlvmIrStreamedArrayDataProvider? ArrayDataProvider { get; set; }
 
 	/// <summary>
 	/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see

@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" hash, from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {

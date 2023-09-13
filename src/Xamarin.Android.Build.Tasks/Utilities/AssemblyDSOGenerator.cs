@@ -75,6 +75,8 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 	}
 
+	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
+
 	readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
 	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> assemblies;
 	readonly Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
@@ -130,6 +132,14 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			ConstructEmptyModule ();
 			return;
 		}
+
+		var xa_uncompressed_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAUncompressedAssemblyDataVarName) {
+			Alignment = 4096, // align to page boundary, may make access slightly faster
+			ArrayItemCount = uncompressedAssemblyDataSize,
+			Options = LlvmIrVariableOptions.GlobalWritable,
+			ZeroInitializeArray = true,
+		};
+		module.Add (xa_uncompressed_assembly_data);
 	}
 
 	void AddAssemblyData (AndroidTargetArch arch, List<DSOAssemblyInfo> infos)

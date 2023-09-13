@@ -1066,7 +1066,7 @@ namespace Xamarin.Android.Tasks
 				i = acs.Hashes32[v32].index;
 			}
 
-			return $" {index}: {name} => 0x{value:x} => {i}";
+			return $" {index}: {name} => {i}";
 		}
 
 		void UpdateAssemblyImageCacheIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)

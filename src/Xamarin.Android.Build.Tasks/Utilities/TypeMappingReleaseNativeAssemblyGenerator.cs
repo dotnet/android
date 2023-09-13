@@ -258,7 +258,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: construction state expected but not found");
 			}
 
-			return $" {index}: 0x{value:x} => {cs.JavaMap[(int)index].Instance.JavaName}";
+			return $" {index}: {cs.JavaMap[(int)index].Instance.JavaName}";
 		}
 
 		void GenerateAndSortJavaHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
