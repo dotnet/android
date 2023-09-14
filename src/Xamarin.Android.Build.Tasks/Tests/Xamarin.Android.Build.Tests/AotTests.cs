@@ -137,9 +137,9 @@ namespace Xamarin.Android.Build.Tests
 				builder.ThrowOnBuildFailure = false;
 				Assert.AreEqual (expectedResult, builder.Build (proj), "Build should have succeeded.");
 				if (!expectedResult) {
-					var aotFailed = builder.LastBuildOutput.Contains ("Precompiling failed");
-					var aapt2Failed = builder.LastBuildOutput.Contains ("APT2265");
-					Assert.IsTrue (aotFailed | aapt2Failed, "Error APT2265 or an AOT error should have been raised.");
+					var aotFailed = builder.LastBuildOutput.ContainsText ("Precompiling failed");
+					var aapt2Failed = builder.LastBuildOutput.ContainsText ("APT2265");
+					Assert.IsTrue (aotFailed || aapt2Failed, "Error APT2265 or an AOT error should have been raised.");
 				}
 			}
 		}
