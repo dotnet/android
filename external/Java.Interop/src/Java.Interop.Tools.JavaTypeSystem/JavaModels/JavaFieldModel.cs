@@ -43,5 +43,13 @@ namespace Java.Interop.Tools.JavaTypeSystem.Models
 				return;
 			}
 		}
+
+		public override string ToString ()
+		{
+			if (DeclaringType != null)
+				return $"[Field] {DeclaringType.FullName}.{Name}";
+
+			return $"[Field] {Name}";
+		}
 	}
 }
