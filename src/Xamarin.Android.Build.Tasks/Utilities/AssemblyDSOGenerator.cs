@@ -1,5 +1,5 @@
 using System;
-using System.Buffers;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -14,7 +14,10 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	sealed class AssemblyEntry
 	{
 		[NativeAssembler (Ignore = true)]
-		public byte[] AssemblyData;
+		public byte[]? AssemblyData;
+
+		[NativeAssembler (Ignore = true)]
+		public string InputFilePath;
 
 		// offset into the `xa_input_assembly_data` array
 		public uint input_data_offset;
@@ -75,9 +78,110 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 	}
 
-	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
+	sealed class AssemblyInputDataArrayProvider : LlvmIrStreamedArrayDataProvider
+	{
+		sealed class DataState
+		{
+			public int Index = 0;
+			public string Comment = String.Empty;
+			public ulong TotalDataSize = 0;
+		}
 
-	readonly ArrayPool<byte> bytePool = ArrayPool<byte>.Shared;
+		Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
+		Dictionary<AndroidTargetArch, DataState> dataStates;
+
+		public AssemblyInputDataArrayProvider (Type arrayElementType, Dictionary<AndroidTargetArch, ArchState> assemblyArchStates)
+			: base (arrayElementType)
+		{
+			this.assemblyArchStates = assemblyArchStates;
+
+			dataStates = new Dictionary<AndroidTargetArch, DataState> ();
+			foreach (var kvp in assemblyArchStates) {
+				dataStates.Add (kvp.Key, new DataState ());
+			}
+		}
+
+		public override (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target)
+		{
+			ArchState archState = GetArchState (target);
+			DataState dataState = GetDataState (target);
+			int index = dataState.Index++;
+			if (index >= archState.xa_assemblies.Count) {
+				throw new InvalidOperationException ("Internal error: no more data left");
+			}
+
+			AssemblyEntry entry = archState.xa_assemblies[index];
+			AssemblyIndexEntry indexEntry = archState.xa_assembly_index[index];
+			string compressed = entry.uncompressed_data_size == 0 ? "no" : "yes";
+
+			dataState.Comment = $" Assembly: {indexEntry.Name} ({entry.InputFilePath}); Data size: {entry.AssemblyData.Length}; compressed: {compressed}";
+			// Each assembly is a new "section"
+			return (
+				index == archState.xa_assemblies.Count - 1 ? LlvmIrStreamedArrayDataProviderState.LastSection : LlvmIrStreamedArrayDataProviderState.NextSection,
+				EnsureValidAssemblyData (entry)
+			);
+		}
+
+		public override ulong GetTotalDataSize (LlvmIrModuleTarget target)
+		{
+			DataState dataState = GetDataState (target);
+			if (dataState.TotalDataSize > 0) {
+				return dataState.TotalDataSize;
+			}
+
+			ArchState archState = GetArchState (target);
+			ulong totalSize = 0;
+			foreach (AssemblyEntry entry in archState.xa_assemblies) {
+				byte[] data = EnsureValidAssemblyData (entry);
+				totalSize += (ulong)data.Length;
+			}
+
+			return dataState.TotalDataSize = totalSize;
+		}
+
+		public override string GetSectionStartComment (LlvmIrModuleTarget target)
+		{
+			DataState dataState = GetDataState (target);
+			string ret = dataState.Comment;
+			dataState.Comment = String.Empty;
+			return ret;
+		}
+
+		DataState GetDataState (LlvmIrModuleTarget target)
+		{
+			if (!dataStates.TryGetValue (target.TargetArch, out DataState dataState)) {
+				throw new InvalidOperationException ($"Internal error: data state for ABI {target.TargetArch} not available");
+			}
+
+			return dataState;
+		}
+
+		ArchState GetArchState (LlvmIrModuleTarget target)
+		{
+			if (!assemblyArchStates.TryGetValue (target.TargetArch, out ArchState archState)) {
+				throw new InvalidOperationException ($"Internal error: architecture state for ABI {target.TargetArch} not available");
+			}
+
+			return archState;
+		}
+
+		byte[] EnsureValidAssemblyData (AssemblyEntry entry)
+		{
+			if (entry.AssemblyData == null) {
+				throw new InvalidOperationException ("Internal error: assembly data must be present");
+			}
+
+			if (entry.AssemblyData.Length == 0) {
+				throw new InvalidOperationException ("Internal error: assembly data must not be empty");
+			}
+
+			return entry.AssemblyData;
+		}
+	}
+
+	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
+	const string XAInputAssemblyDataVarName = "xa_input_assembly_data";
+
 	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> assemblies;
 	readonly Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
 	readonly uint inputAssemblyDataSize;
@@ -140,6 +244,26 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			ZeroInitializeArray = true,
 		};
 		module.Add (xa_uncompressed_assembly_data);
+
+		var xa_input_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAInputAssemblyDataVarName) {
+			Alignment = 4096,
+			ArrayDataProvider = new AssemblyInputDataArrayProvider (typeof(byte), assemblyArchStates),
+			ArrayStride = 16,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+			WriteOptions = LlvmIrVariableWriteOptions.ArrayFormatInRows,
+		};
+		module.Add (xa_input_assembly_data);
+	}
+
+	protected override void CleanupAfterGeneration (AndroidTargetArch arch)
+	{
+		if (!assemblyArchStates.TryGetValue (arch, out ArchState archState)) {
+			throw new InvalidOperationException ($"Internal error: data for ABI {arch} not available");
+		}
+
+		foreach (AssemblyEntry entry in archState.xa_assemblies) {
+			entry.AssemblyData = null; // Help the GC a bit
+		}
 	}
 
 	void AddAssemblyData (AndroidTargetArch arch, List<DSOAssemblyInfo> infos)
@@ -166,6 +290,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		ulong assemblyNameLength = 0;
 		foreach (DSOAssemblyInfo info in infos) {
 			uint inputSize = info.CompressedDataSize == 0 ? (uint)info.DataSize : (uint)info.CompressedDataSize;
+
 			if (inputSize > Int32.MaxValue) {
 				throw new InvalidOperationException ($"Assembly {info.InputFile} size exceeds 2GB");
 			}
@@ -177,7 +302,10 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			//
 			// All the data will then be concatenated on write time into a single native array.
 			var entry = new AssemblyEntry {
-				AssemblyData = bytePool.Rent ((int)inputSize),
+				// We can't use the byte pool here, even though it would be more efficient, because the generator expects an ICollection,
+				// which it then iterates on, and the rented arrays can (and frequently will) be bigger than the requested size.
+				AssemblyData = new byte[inputSize],
+				InputFilePath = info.InputFile,
 				input_data_offset = (uint)inputOffset,
 				input_data_size = inputSize,
 				uncompressed_data_size = info.CompressedDataSize == 0 ? 0 : (uint)info.DataSize,

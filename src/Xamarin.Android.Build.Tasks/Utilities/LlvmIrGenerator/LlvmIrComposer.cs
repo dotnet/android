@@ -32,7 +32,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
 			generator.Generate (output, module);
 			output.Flush ();
+
+			CleanupAfterGeneration (arch);
 		}
+
+		protected virtual void CleanupAfterGeneration (AndroidTargetArch arch)
+		{}
 
 		public static byte[] StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 

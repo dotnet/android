@@ -268,7 +268,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			if (variable.Alignment.HasValue) {
 				alignment = variable.Alignment.Value;
 			} else if (typeInfo.IsAggregate) {
-				ulong count = GetAggregateValueElementCount (variable);
+				ulong count = GetAggregateValueElementCount (context, variable);
 				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, count * typeInfo.Size);
 			} else if (typeInfo.IsStructure) {
 				alignment = (ulong)target.GetAggregateAlignment ((int)typeInfo.MaxFieldAlignment, typeInfo.Size);
@@ -317,9 +317,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			WriteValue (context, valueType, variable);
 		}
 
-		ulong GetAggregateValueElementCount (LlvmIrVariable variable) => GetAggregateValueElementCount (variable.Type, variable.Value, variable as LlvmIrGlobalVariable);
+		ulong GetAggregateValueElementCount (GeneratorWriteContext context, LlvmIrVariable variable) => GetAggregateValueElementCount (context, variable.Type, variable.Value, variable as LlvmIrGlobalVariable);
 
-		ulong GetAggregateValueElementCount (Type type, object? value, LlvmIrGlobalVariable? globalVariable = null)
+		ulong GetAggregateValueElementCount (GeneratorWriteContext context, Type type, object? value, LlvmIrGlobalVariable? globalVariable = null)
 		{
 			if (!type.IsArray ()) {
 				throw new InvalidOperationException ($"Internal error: unknown type {type} when trying to determine aggregate type element count");
@@ -327,6 +327,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (value == null) {
 				if (globalVariable != null) {
+					if (globalVariable.ArrayDataProvider != null) {
+						return globalVariable.ArrayDataProvider.GetTotalDataSize (context.Target);
+					}
 					return globalVariable.ArrayItemCount;
 				}
 				return 0;
@@ -413,7 +416,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (type.IsArray ()) {
 				Type elementType = type.GetArrayElementType ();
-				ulong elementCount = GetAggregateValueElementCount (type, value, globalVariable);
+				ulong elementCount = GetAggregateValueElementCount (context, type, value, globalVariable);
 
 				WriteArrayType (context, elementType, elementCount, out typeInfo);
 				return;
@@ -486,7 +489,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				if (variable is LlvmIrGlobalVariable gv) {
 					zeroInitialize = gv.ZeroInitializeArray || variable.Value == null;
 				} else {
-					zeroInitialize = GetAggregateValueElementCount (variable) == 0;
+					zeroInitialize = GetAggregateValueElementCount (context, variable) == 0;
 				}
 
 				if (zeroInitialize) {
@@ -708,7 +711,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.Output.Write (']');
 		}
 
-		uint GetArrayStride (LlvmIrVariable variable)
+ 		uint GetArrayStride (LlvmIrVariable variable)
 		{
 			if ((variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayFormatInRows) == LlvmIrVariableWriteOptions.ArrayFormatInRows) {
 				return variable.ArrayStride > 0 ? variable.ArrayStride : 1;
@@ -717,19 +720,24 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return 1;
 		}
 
-		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable variable, ICollection entries, Type elementType, uint stride, bool writeIndices)
+		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable variable, ICollection entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
 		{
 			bool first = true;
 			bool ignoreComments = stride > 1;
 			string? prevItemComment = null;
 			ulong counter = 0;
 
-			// TODO: implement output in rows
 			foreach (object entry in entries) {
 				if (!first) {
 					context.Output.Write (',');
-					WritePrevItemCommentOrNewline ();
+					if (stride == 1 || counter % stride == 0) {
+						WritePrevItemCommentOrNewline ();
+						context.Output.Write (context.CurrentIndent);
+					} else {
+						context.Output.Write (' ');
+					}
 				} else {
+					context.Output.Write (context.CurrentIndent);
 					first = false;
 				}
 
@@ -745,11 +753,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				}
 
 				counter++;
-				context.Output.Write (context.CurrentIndent);
 				WriteType (context, elementType, entry, out _);
 
 				context.Output.Write (' ');
 				WriteValue (context, elementType, entry);
+			}
+
+			if (terminateWithComma) {
+				if (!ignoreComments) {
+					context.Output.WriteLine (); // must put comma outside the comment
+					context.Output.Write (context.CurrentIndent);
+				}
+				context.Output.Write (',');
 			}
 			WritePrevItemCommentOrNewline ();
 
@@ -768,44 +783,48 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteStreamedArrayValue (GeneratorWriteContext context, LlvmIrGlobalVariable variable, LlvmIrStreamedArrayDataProvider dataProvider)
 		{
-			ulong itemCount = 0;
+			ulong dataSizeSoFar = 0;
+			ulong totalDataSize = dataProvider.GetTotalDataSize (context.Target);
 			bool first = true;
 
 			WriteArrayValueStart (context);
 			while (true) {
-				(LlvmIrStreamedArrayDataProviderState state, ICollection? data) = dataProvider.GetData ();
-				if (state == LlvmIrStreamedArrayDataProviderState.Finished) {
-					break;
-				}
-
-				if (data == null || data.Count == 0) {
+				(LlvmIrStreamedArrayDataProviderState state, ICollection data) = dataProvider.GetData (context.Target);
+				if (data.Count == 0) {
 					throw new InvalidOperationException ("Data must be provided for streamed arrays");
 				}
 
-				string comment;
-				if (state == LlvmIrStreamedArrayDataProviderState.StartSection) {
-					if (first) {
-						first = false;
-					} else {
-						context.Output.WriteLine ();
-					}
-					comment = dataProvider.GetSectionStartComment ();
-				} else {
-					comment = String.Empty;
+				dataSizeSoFar += (ulong)data.Count;
+				if (dataSizeSoFar > totalDataSize) {
+					throw new InvalidOperationException ($"Data provider {dataProvider} is trying to write more data than declared");
 				}
 
+				if (first) {
+					first = false;
+				} else {
+					context.Output.WriteLine ();
+				}
+				string comment = dataProvider.GetSectionStartComment (context.Target);
+
 				if (comment.Length > 0) {
+					context.Output.Write (context.CurrentIndent);
 					WriteCommentLine (context, comment);
 				}
 
+				bool lastSection = state == LlvmIrStreamedArrayDataProviderState.LastSection;
 				WriteArrayEntries (
 					context,
 					variable,
 					data,
-					dataProvider.ArrayMemberType,
+					dataProvider.ArrayElementType,
 					GetArrayStride (variable),
-					writeIndices: ArrayWantsToWriteIndices (variable)
+					writeIndices: false,
+					terminateWithComma: !lastSection
 				);
+
+				if (lastSection) {
+					break;
+				}
 
 			}
 			WriteArrayValueEnd (context);

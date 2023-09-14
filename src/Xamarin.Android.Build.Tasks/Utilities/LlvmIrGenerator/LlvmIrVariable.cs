@@ -149,8 +149,8 @@ class LlvmIrLocalVariable : LlvmIrVariable
 
 enum LlvmIrStreamedArrayDataProviderState
 {
-	Finished,
-	StartSection,
+	NextSection,
+	LastSection,
 }
 
 abstract class LlvmIrStreamedArrayDataProvider
@@ -159,21 +159,34 @@ abstract class LlvmIrStreamedArrayDataProvider
 	/// Type of every member of the array returned by <see cref="GetData ()"/>.  Generator will check
 	/// every member type against this property, allowing also derived types.
 	/// </summary>
-	public Type ArrayMemberType { get; }
+	public Type ArrayElementType { get; }
 
-	protected LlvmIrStreamedArrayDataProvider (Type arrayMemberType)
+	protected LlvmIrStreamedArrayDataProvider (Type arrayElementType)
 	{
-		ArrayMemberType = arrayMemberType;
+		ArrayElementType = arrayElementType;
 	}
 
 	/// <summary>
-	/// Whenever <see cref="GetData ()"/> returns <see cref="LlvmIrStreamedArrayDataProviderState.StartSection"/> the
-	/// generator will call this method to obtain the new section comment, if any, to be output before the actual
-	/// data.  Returning `String.Empty` prevents the comment from being added.
+	/// Whenever <see cref="GetData ()"/> returns the generator will call this method to obtain the new section
+	/// comment, if any, to be output before the actual data.  Returning `String.Empty` prevents the comment
+	/// from being added.
 	/// </summary>
-	public virtual string GetSectionStartComment () => String.Empty;
+	public virtual string GetSectionStartComment (LlvmIrModuleTarget target) => String.Empty;
 
-	public abstract (LlvmIrStreamedArrayDataProviderState status, ICollection? data) GetData ();
+	/// <summary>
+	/// Provide the next chunk of data for the specified target (ABI).  Implementations need to return at least one
+	/// non-empty collection of data.  The returned collection **must** be exactly the size of contained data (e.g. it cannot be
+	/// a byte array rented from a byte pool, because these can be bigger than requested.  When returning the last (or the only) section,
+	/// <paramref name="status"/> must have a value of <see cref="LlvmIrStreamedArrayDataProviderState.LastSection"/>.
+	/// Each section may be preceded by a comment, <see cref="GetSectionStartComment"/>.
+	/// </summary>
+	public abstract (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target);
+
+	/// <summary>
+	/// Provide the total data size for the specified target (ABI).  This needs to be used instead of <see cref="LlvmIrVariable.ArrayItemCount"/>
+	/// because a variable instance is created once and shared by all targets, while per-target data sets might have different sizes.
+	/// </summary>
+	public abstract ulong GetTotalDataSize (LlvmIrModuleTarget target);
 }
 
 class LlvmIrGlobalVariable : LlvmIrVariable
