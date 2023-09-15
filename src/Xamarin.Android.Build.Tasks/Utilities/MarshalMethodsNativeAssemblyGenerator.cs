@@ -922,6 +922,7 @@ namespace Xamarin.Android.Tasks
 			var mm_method_names_variable = new LlvmIrGlobalVariable (mm_method_names, "mm_method_names", LlvmIrVariableOptions.GlobalConstant) {
 				BeforeWriteCallback = UpdateMarshalMethodNameIds,
 				BeforeWriteCallbackCallerState = acs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			module.Add (mm_method_names_variable);
 
@@ -1021,6 +1022,7 @@ namespace Xamarin.Android.Tasks
 				BeforeWriteCallbackCallerState = acs,
 				GetArrayItemCommentCallback = GetAssemblyImageCacheItemComment,
 				GetArrayItemCommentCallbackCallerState = acs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			module.Add (assembly_image_cache_hashes);
 

@@ -69,6 +69,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public TypeMapJava JavaTypeMapEntry;
 
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_map_index;
 		}
@@ -126,6 +127,8 @@ namespace Xamarin.Android.Tasks
 			public ulong JavaNameHash64;
 
 			public uint module_index;
+
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_name_index;
 		}
@@ -212,6 +215,7 @@ namespace Xamarin.Android.Tasks
 				BeforeWriteCallbackCallerState = cs,
 				GetArrayItemCommentCallback = GetJavaHashesItemComment,
 				GetArrayItemCommentCallbackCallerState = cs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			map_java_hashes.WriteOptions &= ~LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 			module.Add (map_java_hashes);

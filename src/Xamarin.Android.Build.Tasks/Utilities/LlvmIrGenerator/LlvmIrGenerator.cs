@@ -29,6 +29,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public readonly LlvmIrMetadataManager MetadataManager;
 		public string CurrentIndent { get; private set; } = String.Empty;
 		public bool InVariableGroup { get; set; }
+		public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Default;
 
 		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager)
 		{
@@ -216,6 +217,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
+				context.NumberFormat = gv.NumberFormat;
+
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
 					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
 						context.Output.WriteLine ();
@@ -615,8 +618,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			bool isBasic = basicTypeMap.TryGetValue (type, out BasicType basicTypeDesc);
 			if (isBasic) {
 				if (basicTypeDesc.IsNumeric) {
+					bool hex = context.NumberFormat switch {
+						LlvmIrVariableNumberFormat.Default => basicTypeDesc.PreferHex,
+						LlvmIrVariableNumberFormat.Decimal => false,
+						LlvmIrVariableNumberFormat.Hexadecimal => true,
+						_ => throw new InvalidOperationException ($"Internal error: number format {context.NumberFormat} is unsupported")
+					};
+
 					context.Output.Write (
-						basicTypeDesc.PreferHex ? ToHex (basicTypeDesc, type, value) :  MonoAndroidHelper.CultureInvariantToString (value)
+						hex ? ToHex (basicTypeDesc, type, value) :  MonoAndroidHelper.CultureInvariantToString (value)
 					);
 					return;
 				}
@@ -677,7 +687,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.Output.Write (' ');
 
 				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
+				LlvmIrVariableNumberFormat numberFormat = smi.Info.GetNumberFormat ();
+				LlvmIrVariableNumberFormat? savedNumberFormat = null;
+
+				if (numberFormat != LlvmIrVariableNumberFormat.Default && numberFormat != context.NumberFormat) {
+					savedNumberFormat = context.NumberFormat;
+					context.NumberFormat = numberFormat;
+				}
+
 				WriteValue (context, instance, smi, value);
+
+				if (savedNumberFormat.HasValue) {
+					context.NumberFormat = savedNumberFormat.Value;
+				}
 
 				if (i < lastMember) {
 					context.Output.Write (", ");

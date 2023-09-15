@@ -235,6 +235,7 @@ namespace Xamarin.Android.Tasks
 			var dso_cache = new LlvmIrGlobalVariable (dsoCache, "dso_cache", LlvmIrVariableOptions.GlobalWritable) {
 				Comment = " DSO cache entries",
 				BeforeWriteCallback = HashAndSortDSOCache,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			module.Add (dso_cache);
 

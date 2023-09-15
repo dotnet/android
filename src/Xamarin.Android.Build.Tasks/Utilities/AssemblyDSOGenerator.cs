@@ -34,16 +34,23 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	}
 
 	// Must be identical to AssemblyIndexEntry in src/monodroid/jni/xamarin-app.hh
-	sealed class AssemblyIndexEntry
+	class AssemblyIndexEntryBase<T>
 	{
 		[NativeAssembler (Ignore = true)]
 		public string Name;
 
-		public ulong name_hash;
+		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+		public T name_hash;
 
 		// Index into the `xa_assemblies` descriptor array
 		public uint index;
 	}
+
+	sealed class AssemblyIndexEntry32 : AssemblyIndexEntryBase<uint>
+	{}
+
+	sealed class AssemblyIndexEntry64 : AssemblyIndexEntryBase<ulong>
+	{}
 
 	// Must be identical to AssembliesConfig in src/monodroid/jni/xamarin-app.hh
 	sealed class AssembliesConfig
@@ -57,18 +64,34 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	// Members with underscores correspond to the native fields we output.
 	sealed class ArchState
 	{
-		public readonly List<AssemblyEntry> xa_assemblies;
-		public readonly List<AssemblyIndexEntry> xa_assembly_index;
+		public readonly List<StructureInstance<AssemblyEntry>> xa_assemblies;
+		public readonly List<StructureInstance<AssemblyIndexEntry32>>? xa_assembly_index32;
+		public readonly List<StructureInstance<AssemblyIndexEntry64>>? xa_assembly_index64;
 		public readonly AssembliesConfig xa_assemblies_config;
 
-		public ArchState (int assemblyCount)
+		public ArchState (int assemblyCount, AndroidTargetArch arch)
 		{
 			if (assemblyCount < 0) {
 				throw new ArgumentException ("must not be a negative number", nameof (assemblyCount));
 			}
 
-			xa_assemblies = new List<AssemblyEntry> (assemblyCount);
-			xa_assembly_index = new List<AssemblyIndexEntry> (assemblyCount);
+			xa_assemblies = new List<StructureInstance<AssemblyEntry>> (assemblyCount);
+
+			switch (arch) {
+				case AndroidTargetArch.Arm64:
+				case AndroidTargetArch.X86_64:
+					xa_assembly_index64 = new List<StructureInstance<AssemblyIndexEntry64>> (assemblyCount);
+					break;
+
+				case AndroidTargetArch.Arm:
+				case AndroidTargetArch.X86:
+					xa_assembly_index32 = new List<StructureInstance<AssemblyIndexEntry32>> (assemblyCount);
+					break;
+
+				default:
+					throw new InvalidOperationException ($"Internal error: architecture {arch} not supported");
+			}
+
 			xa_assemblies_config = new AssembliesConfig {
 				input_assembly_data_size = 0,
 				uncompressed_assembly_data_size = 0,
@@ -110,11 +133,20 @@ class AssemblyDSOGenerator : LlvmIrComposer
 				throw new InvalidOperationException ("Internal error: no more data left");
 			}
 
-			AssemblyEntry entry = archState.xa_assemblies[index];
-			AssemblyIndexEntry indexEntry = archState.xa_assembly_index[index];
+			var entry = (AssemblyEntry)archState.xa_assemblies[index].Obj;
+			string name;
+
+			if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
+				name = ((AssemblyIndexEntry64)archState.xa_assembly_index64[index].Obj).Name;
+			} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
+				name = ((AssemblyIndexEntry32)archState.xa_assembly_index32[index].Obj).Name;
+			} else {
+				throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
+			}
+
 			string compressed = entry.uncompressed_data_size == 0 ? "no" : "yes";
 
-			dataState.Comment = $" Assembly: {indexEntry.Name} ({entry.InputFilePath}); Data size: {entry.AssemblyData.Length}; compressed: {compressed}";
+			dataState.Comment = $" Assembly: {name} ({entry.InputFilePath}); Data size: {entry.AssemblyData.Length}; compressed: {compressed}";
 			// Each assembly is a new "section"
 			return (
 				index == archState.xa_assemblies.Count - 1 ? LlvmIrStreamedArrayDataProviderState.LastSection : LlvmIrStreamedArrayDataProviderState.NextSection,
@@ -131,7 +163,8 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 			ArchState archState = GetArchState (target);
 			ulong totalSize = 0;
-			foreach (AssemblyEntry entry in archState.xa_assemblies) {
+			foreach (StructureInstance<AssemblyEntry> si in archState.xa_assemblies) {
+				var entry = (AssemblyEntry)si.Obj;
 				byte[] data = EnsureValidAssemblyData (entry);
 				totalSize += (ulong)data.Length;
 			}
@@ -156,14 +189,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			return dataState;
 		}
 
-		ArchState GetArchState (LlvmIrModuleTarget target)
-		{
-			if (!assemblyArchStates.TryGetValue (target.TargetArch, out ArchState archState)) {
-				throw new InvalidOperationException ($"Internal error: architecture state for ABI {target.TargetArch} not available");
-			}
-
-			return archState;
-		}
+		ArchState GetArchState (LlvmIrModuleTarget target) => AssemblyDSOGenerator.GetArchState (target, assemblyArchStates);
 
 		byte[] EnsureValidAssemblyData (AssemblyEntry entry)
 		{
@@ -179,15 +205,19 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 	}
 
+	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
+	const string XAAssemblyIndexVarName            = "xa_assembly_index";
+	const string XAAssemblyNamesVarName            = "xa_assembly_names";
+	const string XAInputAssemblyDataVarName        = "xa_input_assembly_data";
 	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
-	const string XAInputAssemblyDataVarName = "xa_input_assembly_data";
 
 	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> assemblies;
 	readonly Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
 	readonly uint inputAssemblyDataSize;
 	readonly uint uncompressedAssemblyDataSize;
 	StructureInfo? assemblyEntryStructureInfo;
-	StructureInfo? assemblyIndexEntryStructureInfo;
+	StructureInfo? assemblyIndexEntry32StructureInfo;
+	StructureInfo? assemblyIndexEntry64StructureInfo;
 	StructureInfo? assembliesConfigStructureInfo;
 
 	public AssemblyDSOGenerator (Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssemblies, ulong inputAssemblyDataSize, ulong uncompressedAssemblyDataSize)
@@ -237,6 +267,24 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			return;
 		}
 
+		var xa_assemblies_config = new LlvmIrGlobalVariable (typeof(StructureInstance<AssembliesConfig>), XAAssembliesConfigVarName) {
+			BeforeWriteCallback = AssembliesConfigBeforeWrite,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (xa_assemblies_config);
+
+		// var xa_assembly_index = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyIndexEntry32>>), XAAssemblyIndexVarName) {
+		// 	BeforeWriteCallback = AssemblyIndexBeforeWrite,
+		// 	Options = LlvmIrVariableOptions.GlobalConstant,
+		// };
+		// module.Add (xa_assembly_index);
+
+		var xa_assembly_names = new LlvmIrGlobalVariable (typeof(List<string>), XAAssemblyNamesVarName) {
+			BeforeWriteCallback = AssemblyNamesBeforeWrite,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (xa_assembly_names);
+
 		var xa_uncompressed_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAUncompressedAssemblyDataVarName) {
 			Alignment = 4096, // align to page boundary, may make access slightly faster
 			ArrayItemCount = uncompressedAssemblyDataSize,
@@ -249,10 +297,69 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			Alignment = 4096,
 			ArrayDataProvider = new AssemblyInputDataArrayProvider (typeof(byte), assemblyArchStates),
 			ArrayStride = 16,
+			NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			Options = LlvmIrVariableOptions.GlobalConstant,
 			WriteOptions = LlvmIrVariableWriteOptions.ArrayFormatInRows,
 		};
 		module.Add (xa_input_assembly_data);
+	}
+
+	void AssemblyNamesBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		var names = new List<string> ();
+		if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
+			foreach (StructureInstance<AssemblyIndexEntry64> e in archState.xa_assembly_index64) {
+				var entry = (AssemblyIndexEntry64)e.Obj;
+				names.Add (entry.Name);
+			}
+		} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
+			foreach (StructureInstance<AssemblyIndexEntry32> e in archState.xa_assembly_index32) {
+				var entry = (AssemblyIndexEntry32)e.Obj;
+				names.Add (entry.Name);
+			}
+		} else {
+			throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
+		}
+
+		variable.Value = names;
+	}
+
+	void AssemblyIndexBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		var gv = (LlvmIrGlobalVariable)variable;
+		object value;
+		Type type;
+
+		if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
+			value = archState.xa_assembly_index64;
+			type = archState.xa_assembly_index64.GetType ();
+		} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
+			value = archState.xa_assembly_index32;
+			type = archState.xa_assembly_index32.GetType ();
+		} else {
+			throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
+		}
+
+		gv.OverrideValueAndType (type, value);
+	}
+
+	void AssembliesConfigBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		variable.Value = new StructureInstance<AssembliesConfig> (assembliesConfigStructureInfo, archState.xa_assemblies_config);
+	}
+
+	ArchState GetArchState (LlvmIrModuleTarget target) => GetArchState (target, assemblyArchStates);
+
+	static ArchState GetArchState (LlvmIrModuleTarget target, Dictionary<AndroidTargetArch, ArchState> archStates)
+	{
+		if (!archStates.TryGetValue (target.TargetArch, out ArchState archState)) {
+			throw new InvalidOperationException ($"Internal error: architecture state for ABI {target.TargetArch} not available");
+		}
+
+		return archState;
 	}
 
 	protected override void CleanupAfterGeneration (AndroidTargetArch arch)
@@ -261,7 +368,8 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			throw new InvalidOperationException ($"Internal error: data for ABI {arch} not available");
 		}
 
-		foreach (AssemblyEntry entry in archState.xa_assemblies) {
+		foreach (StructureInstance<AssemblyEntry> si in archState.xa_assemblies) {
+			var entry = (AssemblyEntry)si.Obj;
 			entry.AssemblyData = null; // Help the GC a bit
 		}
 	}
@@ -273,7 +381,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 
 		if (!assemblyArchStates.TryGetValue (arch, out ArchState archState)) {
-			archState = new ArchState (infos.Count);
+			archState = new ArchState (infos.Count, arch);
 			assemblyArchStates.Add (arch, archState);
 		}
 
@@ -319,21 +427,41 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 			// This is way, way more than Google Play Store supports now, but we won't limit ourselves more than we have to
 			uncompressedOffset = AddWithCheck (uncompressedOffset, entry.uncompressed_data_offset, UInt32.MaxValue, "Compressed data too long");
-			archState.xa_assemblies.Add (entry);
+			archState.xa_assemblies.Add (new StructureInstance<AssemblyEntry> (assemblyEntryStructureInfo, entry));
 
 			byte[] nameBytes = StringToBytes (info.Name);
 			if ((ulong)nameBytes.Length > assemblyNameLength) {
 				assemblyNameLength = (ulong)nameBytes.Length;
 			}
 
-			var index = new AssemblyIndexEntry {
-				Name = info.Name,
-				name_hash = GetXxHash (nameBytes, is64Bit),
-				index = (uint)archState.xa_assemblies.Count - 1,
-			};
-			archState.xa_assembly_index.Add (index);
+			if (is64Bit) {
+				var indexEntry = new AssemblyIndexEntry64 {
+					Name = info.Name,
+					name_hash = GetXxHash (nameBytes, is64Bit),
+					index = (uint)archState.xa_assemblies.Count - 1,
+				};
+				archState.xa_assembly_index64.Add (new StructureInstance<AssemblyIndexEntry64> (assemblyIndexEntry64StructureInfo, indexEntry));
+			} else {
+				var indexEntry = new AssemblyIndexEntry32 {
+					Name = info.Name,
+					name_hash = (uint)GetXxHash (nameBytes, is64Bit),
+					index = (uint)archState.xa_assemblies.Count - 1,
+				};
+				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
+			}
 		}
 
+		if (is64Bit) {
+			archState.xa_assembly_index64.Sort (
+				(StructureInstance<AssemblyIndexEntry64> a, StructureInstance<AssemblyIndexEntry64> b) => ((AssemblyIndexEntry64)a.Obj).name_hash.CompareTo (((AssemblyIndexEntry64)b.Obj).name_hash)
+			);
+		} else {
+			archState.xa_assembly_index32.Sort (
+				(StructureInstance<AssemblyIndexEntry32> a, StructureInstance<AssemblyIndexEntry32> b) => ((AssemblyIndexEntry32)a.Obj).name_hash.CompareTo (((AssemblyIndexEntry32)b.Obj).name_hash)
+			);
+		}
+
+		archState.xa_assemblies_config.assembly_count = (uint)archState.xa_assemblies.Count;
 		archState.xa_assemblies_config.input_assembly_data_size = (uint)inputOffset;
 		archState.xa_assemblies_config.uncompressed_assembly_data_size = (uint)uncompressedOffset;
 
@@ -359,7 +487,8 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	void MapStructures (LlvmIrModule module)
 	{
 		assemblyEntryStructureInfo = module.MapStructure<AssemblyEntry> ();
-		assemblyIndexEntryStructureInfo = module.MapStructure<AssemblyIndexEntry> ();
+		assemblyIndexEntry32StructureInfo = module.MapStructure<AssemblyIndexEntry32> ();
+		assemblyIndexEntry64StructureInfo = module.MapStructure<AssemblyIndexEntry64> ();
 		assembliesConfigStructureInfo = module.MapStructure<AssembliesConfig> ();
 	}
 }

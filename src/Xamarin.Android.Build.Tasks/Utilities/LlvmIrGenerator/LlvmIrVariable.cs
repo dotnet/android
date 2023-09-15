@@ -12,6 +12,13 @@ enum LlvmIrVariableWriteOptions
 	ArrayFormatInRows       = 0x0002,
 }
 
+enum LlvmIrVariableNumberFormat
+{
+	Default,
+	Hexadecimal,
+	Decimal,
+}
+
 abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 {
 	public abstract bool Global                    { get; }
@@ -29,6 +36,8 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	public uint ArrayStride                        { get; set; } = 8;
 	public object? Value                           { get; set; }
 	public string? Comment                         { get; set; }
+
+	public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Decimal;
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function

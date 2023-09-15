@@ -33,6 +33,8 @@ namespace Xamarin.Android.Tasks
 		/// size to which the member must be padded is specified by <see cref="NativeAssemblerStructContextDataProvider.GetMaxInlineWidth"/>
 		/// </summary>
 		public bool NeedsPadding     { get; set; }
+
+		public LLVMIR.LlvmIrVariableNumberFormat NumberFormat { get; set; } = LLVMIR.LlvmIrVariableNumberFormat.Default;
 	}
 
 	[AttributeUsage (AttributeTargets.Class, Inherited = true)]
