@@ -277,10 +277,31 @@ stages:
 
     - template: yaml-templates/run-nunit-tests.yaml
       parameters:
-        testRunTitle: Xamarin.Android.Build.Tests - Linux .NET 6 Smoke Tests
+        testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-        dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
-        testResultsFile: TestResult-NETSmokeMSBuildTests-Linux-$(XA.Build.Configuration).xml
+        dotNetTestExtraArgs: --filter "Name = BuildTest"
+        testResultsFile: TestResult-BuildTest-Linux-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = PackagingTest"
+        testResultsFile: TestResult-PackagingTest-Linux-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
+        testResultsFile: TestResult-XASdkTests-Linux-$(XA.Build.Configuration).xml
+
+    - template: yaml-templates/run-nunit-tests.yaml
+      parameters:
+        testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
+        testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
+        dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
+        testResultsFile: TestResult-AndroidDependenciesTests-Linux-$(XA.Build.Configuration).xml
 
     - task: ShellScript@2
       displayName: Test dotnet-local.sh
@@ -291,7 +312,7 @@ stages:
     - template: yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
-        artifactName: Test Results - MSBuild Smoke - Linux
+        artifactName: Test Results - MSBuild - Linux
 
     - template: yaml-templates/fail-on-issue.yaml
 
