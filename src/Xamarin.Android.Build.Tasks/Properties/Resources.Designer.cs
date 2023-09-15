@@ -819,6 +819,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in it path.
+        /// </summary>
+        public static string APT2265 {
+            get {
+                return ResourceManager.GetString("APT2265", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
         /// </summary>
         public static string XA3001 {

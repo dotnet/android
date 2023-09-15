@@ -167,10 +167,11 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 
 		[Test]
 		[Category ("UsesDevice")]
-		public void SmokeTestBuildAndRunWithSpecialCharacters ()
+		[TestCase ("テスト")]
+		[TestCase ("随机生成器")]
+		[TestCase ("中国")]
+		public void SmokeTestBuildAndRunWithSpecialCharacters (string testName)
 		{
-			var testName = "テスト";
-
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = testName,
