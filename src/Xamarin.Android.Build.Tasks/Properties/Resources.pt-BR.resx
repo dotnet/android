@@ -542,7 +542,11 @@ Altere o valor no AndroidManifest.xml para corresponder ao valor $(SupportedOSPl
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>Isso provavelmente ocorreu porque o projeto excedeu a limitação de comprimento máximo do caminho do Windows. Consulte https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 para obter detalhes.</value>
+    <value>This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
+  <data name="APT2265" xml:space="preserve">
+    <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
