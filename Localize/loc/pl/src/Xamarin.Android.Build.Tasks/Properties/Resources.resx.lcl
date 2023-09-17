@@ -56,9 +56,21 @@
       </Item>
       <Item ItemId=";APT2264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Jest to prawdopodobnie spowodowane przez projekt przekraczający ograniczenie maksymalnej długości ścieżki systemu Windows. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+            <Val><![CDATA[Przyczyną może być przekroczenie limitu maksymalnej długości ścieżki systemu Windows przez projekt. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";APT2265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Może to być spowodowane tym, że projekt zawiera znaki inne niż ASCII w nazwie pliku lub ścieżce. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
