@@ -31,17 +31,23 @@ namespace SystemTests
 
 		static readonly object [] TestPrivateSwitchesSource = new object [] {
 			new object [] {
-				/* name */     "ForceInterpretedInvoke",
-				/* expected */ true,
+				/* className */    "System.LocalAppContextSwitches, System.Private.CoreLib",
+				/* propertyName */ "ForceInterpretedInvoke",
+				/* expected */     true,
+			},
+			new object [] {
+				/* className */    "System.Diagnostics.Metrics.Meter.IsSupported, System.Diagnostics.DiagnosticSource",
+				/* propertyName */ "IsSupported",
+				/* expected */     false,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
-		public void TestPrivateSwitches (string name, object expected)
+		public void TestPrivateSwitches (string className, string propertyName, object expected)
 		{
-			var type = Type.GetType ("System.LocalAppContextSwitches, System.Private.CoreLib", throwOnError: true);
-			var property = type.GetProperty (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			var type = Type.GetType (className, throwOnError: true);
+			var property = type.GetProperty (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
 			Assert.AreEqual (expected, property.GetValue (null));
 		}
 	}
