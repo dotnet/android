@@ -39,6 +39,9 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		[NativeAssembler (Ignore = true)]
 		public string Name;
 
+		[NativeAssembler (Ignore = true)]
+		public byte[] NameBytes;
+
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public T name_hash;
 
@@ -273,13 +276,14 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		};
 		module.Add (xa_assemblies_config);
 
-		// var xa_assembly_index = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyIndexEntry32>>), XAAssemblyIndexVarName) {
-		// 	BeforeWriteCallback = AssemblyIndexBeforeWrite,
-		// 	Options = LlvmIrVariableOptions.GlobalConstant,
-		// };
-		// module.Add (xa_assembly_index);
+		var xa_assembly_index = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyIndexEntry32>>), XAAssemblyIndexVarName) {
+			BeforeWriteCallback = AssemblyIndexBeforeWrite,
+			GetArrayItemCommentCallback = AssemblyIndexItemComment,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (xa_assembly_index);
 
-		var xa_assembly_names = new LlvmIrGlobalVariable (typeof(List<string>), XAAssemblyNamesVarName) {
+		var xa_assembly_names = new LlvmIrGlobalVariable (typeof(List<byte[]>), XAAssemblyNamesVarName) {
 			BeforeWriteCallback = AssemblyNamesBeforeWrite,
 			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
@@ -304,25 +308,56 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		module.Add (xa_input_assembly_data);
 	}
 
+	string AssemblyIndexItemComment (LlvmIrVariable variable, LlvmIrModuleTarget target, ulong index, object? itemValue, object? state)
+	{
+		var value32 = itemValue as StructureInstance<AssemblyIndexEntry32>;
+		if (value32 != null) {
+			return MakeComment (((AssemblyIndexEntry32)value32.Obj).Name);
+		}
+
+		var value64 = itemValue as StructureInstance<AssemblyIndexEntry64>;
+		if (value64 != null) {
+			return MakeComment (((AssemblyIndexEntry64)value64.Obj).Name);
+		}
+
+		throw new InvalidOperationException ($"Internal error: assembly index array member has unsupported type '{itemValue?.GetType ()}'");
+
+		string MakeComment (string name) => $" => {name}";
+	}
+
 	void AssemblyNamesBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		ArchState archState = GetArchState (target);
-		var names = new List<string> ();
+		var names = new List<byte[]> ();
+
 		if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
 			foreach (StructureInstance<AssemblyIndexEntry64> e in archState.xa_assembly_index64) {
 				var entry = (AssemblyIndexEntry64)e.Obj;
-				names.Add (entry.Name);
+				names.Add (GetProperlySizedBytes (entry.NameBytes));
 			}
 		} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
 			foreach (StructureInstance<AssemblyIndexEntry32> e in archState.xa_assembly_index32) {
 				var entry = (AssemblyIndexEntry32)e.Obj;
-				names.Add (entry.Name);
+				names.Add (GetProperlySizedBytes (entry.NameBytes));
 			}
 		} else {
 			throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
 		}
 
 		variable.Value = names;
+
+		byte[] GetProperlySizedBytes (byte[] inputBytes)
+		{
+			if (inputBytes.Length > archState.xa_assemblies_config.assembly_name_length - 1) {
+				throw new ArgumentOutOfRangeException (nameof (inputBytes), $"Must not exceed {archState.xa_assemblies_config.assembly_name_length - 1} bytes");
+			}
+
+			var ret = new byte[archState.xa_assemblies_config.assembly_name_length];
+			Array.Clear (ret, 0, ret.Length);
+			inputBytes.CopyTo (ret, 0);
+
+			return ret;
+		}
 	}
 
 	void AssemblyIndexBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
@@ -437,6 +472,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			if (is64Bit) {
 				var indexEntry = new AssemblyIndexEntry64 {
 					Name = info.Name,
+					NameBytes = nameBytes,
 					name_hash = GetXxHash (nameBytes, is64Bit),
 					index = (uint)archState.xa_assemblies.Count - 1,
 				};
@@ -444,6 +480,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			} else {
 				var indexEntry = new AssemblyIndexEntry32 {
 					Name = info.Name,
+					NameBytes = nameBytes,
 					name_hash = (uint)GetXxHash (nameBytes, is64Bit),
 					index = (uint)archState.xa_assemblies.Count - 1,
 				};

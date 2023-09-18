@@ -516,6 +516,29 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			throw new InvalidOperationException ($"Invalid array size in field '{smi.Info.Name}' of structure '{si.Info.Name}', expected {expectedLength}, found {length}");
 		}
 
+		void WriteInlineArray (GeneratorWriteContext context, byte[] bytes, bool encodeAsASCII)
+		{
+			if (encodeAsASCII) {
+				context.Output.Write ('c');
+				context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
+				return;
+			}
+
+			string irType = MapToIRType (typeof(byte));
+			bool first = true;
+			context.Output.Write ("[ ");
+			foreach (byte b in bytes) {
+				if (!first) {
+					context.Output.Write (", ");
+				} else {
+					first = false;
+				}
+
+				context.Output.Write ($"{irType} u0x{b:x02}");
+			}
+			context.Output.Write (" ]");
+		}
+
 		void WriteValue (GeneratorWriteContext context, StructureInstance structInstance, StructureMemberInfo smi, object? value)
 		{
 			if (smi.IsNativePointer) {
@@ -533,8 +556,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 					// Byte arrays are represented in the same way as strings, without the explicit NUL termination byte
 					AssertArraySize (structInstance, smi, length, smi.ArrayElements);
-					context.Output.Write ('c');
-					context.Output.Write (QuoteString (bytes, bytes.Length, out _, nullTerminated: false));
+					WriteInlineArray (context, bytes, encodeAsASCII: false);
 					return;
 				}
 
@@ -659,8 +681,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			if (type.IsInlineArray ()) {
+			if (type.IsArray) {
+				if (type == typeof(byte[])) {
+					WriteInlineArray (context, (byte[])value, encodeAsASCII: true);
+					return;
+				}
 
+				throw new NotSupportedException ($"Internal error: array of type {type} is unsupported");
 			}
 
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
