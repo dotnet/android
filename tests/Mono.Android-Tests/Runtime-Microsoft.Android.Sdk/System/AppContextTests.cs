@@ -8,7 +8,7 @@ namespace SystemTests
 	public class AppContextTests
 	{
 		// Ensures the type is not trimmed away
-		static AppContextTests() => new System.Diagnostics.Metrics.Meter("foo");
+		static AppContextTests () => new System.Diagnostics.Metrics.Meter ("foo");
 
 		static readonly object [] GetDataSource = new object [] {
 			new object [] {
