@@ -46,10 +46,6 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: install-microbuild-tooling.yaml
-      parameters:
-        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
     - template: commercial-build.yaml
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
@@ -57,10 +53,6 @@ stages:
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
         signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
-
-    - template: remove-microbuild-tooling.yaml
-      parameters:
-        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - script: >
         mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
