@@ -37,7 +37,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
 
   <Target Name="AddMSBuildFilesUnixSign" >
     <ItemGroup>
-      <FilesToSign Include="@(_MSBuildFilesUnixSign)" Condition=" '%(_MSBuildFilesUnixSign.ExcludeFromAndroidNETSdk)' != 'true' ">
+      <FilesToSign Include="@(_MSBuildFilesUnixSign)">
         <Authenticode>MacDeveloperVNext</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
@@ -46,7 +46,7 @@ ourself (using an empty signing identity) before passing these files to ESRP.
 
   <Target Name="AddMSBuildFilesUnixSignAndHarden" >
     <ItemGroup>
-      <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)" Condition=" '%(_MSBuildFilesUnixSignAndHarden.ExcludeFromAndroidNETSdk)' != 'true' ">
+      <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)">
         <Authenticode>MacDeveloperVNextHarden</Authenticode>
         <Zip>true</Zip>
       </FilesToSign>
