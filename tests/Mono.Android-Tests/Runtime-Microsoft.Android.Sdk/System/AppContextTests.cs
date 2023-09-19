@@ -7,9 +7,6 @@ namespace SystemTests
 	[TestFixture]
 	public class AppContextTests
 	{
-		// Ensures the type is not trimmed away
-		static AppContextTests () => new System.Diagnostics.Metrics.Meter ("foo");
-
 		static readonly object [] GetDataSource = new object [] {
 			new object [] {
 				/* name */     "test_bool",
@@ -39,7 +36,7 @@ namespace SystemTests
 				/* expected */     true,
 			},
 			new object [] {
-				/* className */    "System.Diagnostics.Metrics.Meter.IsSupported, System.Diagnostics.DiagnosticSource",
+				/* className */    "System.Diagnostics.Metrics.Meter, System.Diagnostics.DiagnosticSource",
 				/* propertyName */ "IsSupported",
 				/* expected */     false,
 			},
