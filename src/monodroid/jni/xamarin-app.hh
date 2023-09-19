@@ -133,6 +133,9 @@ struct AssemblyIndexEntry
 
         // Index into the `xa_assemblies` descriptor array
         uint32_t index;
+
+        // whether hashed name had extension
+		bool has_extension;
 };
 
 constexpr uint32_t InputAssemblyDataSize = 1024;

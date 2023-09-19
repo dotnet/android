@@ -47,6 +47,9 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 		// Index into the `xa_assemblies` descriptor array
 		public uint index;
+
+		// whether hashed name had extension
+		public bool has_extension;
 	}
 
 	sealed class AssemblyIndexEntry32 : AssemblyIndexEntryBase<uint>
@@ -428,6 +431,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			_ => throw new NotSupportedException ($"Architecture '{arch}' is not supported")
 		};
 
+		var usedHashes = new HashSet<ulong> ();
 		ulong inputOffset = 0;
 		ulong uncompressedOffset = 0;
 		ulong assemblyNameLength = 0;
@@ -468,21 +472,47 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			if ((ulong)nameBytes.Length > assemblyNameLength) {
 				assemblyNameLength = (ulong)nameBytes.Length;
 			}
+			ulong nameHash = EnsureUniqueHash (GetXxHash (nameBytes, is64Bit), info.Name);
+
+			string nameWithoutExtension = Path.GetFileNameWithoutExtension (info.Name);
+			byte[] nameWithoutExtensionBytes = StringToBytes (nameWithoutExtension);
+			ulong nameWithoutExtensionHash = EnsureUniqueHash (GetXxHash (nameWithoutExtensionBytes, is64Bit), nameWithoutExtension);
+
+			uint assemblyIndex = (uint)archState.xa_assemblies.Count - 1;
 
 			if (is64Bit) {
 				var indexEntry = new AssemblyIndexEntry64 {
 					Name = info.Name,
 					NameBytes = nameBytes,
-					name_hash = GetXxHash (nameBytes, is64Bit),
-					index = (uint)archState.xa_assemblies.Count - 1,
+					name_hash = nameHash,
+					index = assemblyIndex,
+					has_extension = true,
+				};
+				archState.xa_assembly_index64.Add (new StructureInstance<AssemblyIndexEntry64> (assemblyIndexEntry64StructureInfo, indexEntry));
+
+				indexEntry = new AssemblyIndexEntry64 {
+					Name = nameWithoutExtension,
+					NameBytes = nameWithoutExtensionBytes,
+					name_hash = nameWithoutExtensionHash,
+					index = assemblyIndex,
+					has_extension = false,
 				};
 				archState.xa_assembly_index64.Add (new StructureInstance<AssemblyIndexEntry64> (assemblyIndexEntry64StructureInfo, indexEntry));
 			} else {
 				var indexEntry = new AssemblyIndexEntry32 {
 					Name = info.Name,
 					NameBytes = nameBytes,
-					name_hash = (uint)GetXxHash (nameBytes, is64Bit),
-					index = (uint)archState.xa_assemblies.Count - 1,
+					name_hash = (uint)nameHash,
+					index = assemblyIndex,
+				};
+				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
+
+				indexEntry = new AssemblyIndexEntry32 {
+					Name = nameWithoutExtension,
+					NameBytes = nameWithoutExtensionBytes,
+					name_hash = (uint)nameWithoutExtensionHash,
+					index = assemblyIndex,
+					has_extension = false,
 				};
 				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
 			}
@@ -513,6 +543,16 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			}
 
 			return v;
+		}
+
+		ulong EnsureUniqueHash (ulong hash, string name)
+		{
+			if (usedHashes.Contains (hash)) {
+				throw new InvalidOperationException ($"Hash 0x{hash:x} for name '{name}' is not unique");
+			}
+
+			usedHashes.Add (hash);
+			return hash;
 		}
 	}
 
