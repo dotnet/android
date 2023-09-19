@@ -48,6 +48,7 @@ namespace SystemTests
 		{
 			var type = Type.GetType (className, throwOnError: true);
 			var property = type.GetProperty (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.IsNotNull (property);
 			Assert.AreEqual (expected, property.GetValue (null));
 		}
 	}
