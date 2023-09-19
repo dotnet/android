@@ -37,7 +37,7 @@ namespace SystemTests
 			},
 			new object [] {
 				/* className */    "System.Diagnostics.Metrics.Meter, System.Diagnostics.DiagnosticSource",
-				/* propertyName */ "IsSupported",
+				/* propertyName */ "<IsSupported>k__BackingField",
 				/* expected */     false,
 			},
 		};
@@ -47,9 +47,15 @@ namespace SystemTests
 		public void TestPrivateSwitches (string className, string propertyName, object expected)
 		{
 			var type = Type.GetType (className, throwOnError: true);
-			var property = type.GetProperty (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-			Assert.IsNotNull (property);
-			Assert.AreEqual (expected, property.GetValue (null));
+			var members = type.GetMember (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.AreEqual (1, members.Length);
+			if (members [0] is PropertyInfo property) {
+				Assert.AreEqual (expected, property.GetValue (null));
+			} else if (members [0] is FieldInfo field) {
+				Assert.AreEqual (expected, field.GetValue (null));
+			} else {
+				Assert.Fail($"Unknown member type: {members [0]}");
+			}
 		}
 	}
 }
