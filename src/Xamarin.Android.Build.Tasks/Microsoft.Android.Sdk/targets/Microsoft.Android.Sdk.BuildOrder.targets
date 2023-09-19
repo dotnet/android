@@ -67,7 +67,6 @@ properties that determine build ordering.
       _GenerateEnvironmentFiles;
       _CompileJava;
       _CreateApplicationSharedLibraries;
-      _CreateAssemblySharedLibraries;
       _CompileDex;
       $(_AfterCompileDex);
       _CreateBaseApk;

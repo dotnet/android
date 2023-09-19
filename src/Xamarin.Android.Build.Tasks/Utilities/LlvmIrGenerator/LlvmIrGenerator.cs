@@ -421,7 +421,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				Type elementType = type.GetArrayElementType ();
 				ulong elementCount = GetAggregateValueElementCount (context, type, value, globalVariable);
 
-				WriteArrayType (context, elementType, elementCount, out typeInfo);
+				WriteArrayType (context, elementType, elementCount, globalVariable, out typeInfo);
 				return;
 			}
 
@@ -438,6 +438,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, out LlvmTypeInfo typeInfo)
 		{
+			WriteArrayType (context, elementType, elementCount, variable: null, out typeInfo);
+		}
+
+		void WriteArrayType (GeneratorWriteContext context, Type elementType, ulong elementCount, LlvmIrGlobalVariable? variable, out LlvmTypeInfo typeInfo)
+		{
 			string irType;
 			ulong size;
 			ulong maxFieldAlignment;
@@ -453,6 +458,35 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			} else {
 				irType = GetIRType (elementType, out size, out isPointer);
 				maxFieldAlignment = size;
+
+				if (elementType.IsArray) {
+					if (variable == null) {
+						throw new InvalidOperationException ($"Internal error: array of arrays ({elementType}) requires variable to be defined");
+					}
+
+					// For the sake of simpler code, we currently assume that all the element arrays are of the same size, because that's the only scenario
+					// that we use at this time.
+					var value = variable.Value as ICollection;
+					if (value == null) {
+						throw new InvalidOperationException ($"Internal error: variable '{variable.Name}' of type '{variable.Type}' is required to have a value of type which implements the ICollection interface");
+					}
+
+					if (value.Count == 0) {
+						throw new InvalidOperationException ($"Internal error: variable '{variable.Name}' of type '{variable.Type}' is required to have a value which is a non-empty ICollection");
+					}
+
+					Array? firstItem = null;
+					foreach (object v in value) {
+						firstItem = (Array)v;
+						break;
+					}
+
+					if (firstItem == null) {
+						throw new InvalidOperationException ($"Internal error: variable '{variable.Name}' of type '{variable.Type}' is required to have a value which is a non-empty ICollection with non-null elements");
+					}
+
+					irType = $"[{MonoAndroidHelper.CultureInvariantToString (firstItem.Length)} x {irType}]";
+				}
 			}
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
