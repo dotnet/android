@@ -56,9 +56,21 @@
       </Item>
       <Item ItemId=";APT2264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[To je pravděpodobně způsobeno tím, že projekt překračuje omezení maximální délky cesty systému Windows. Podrobnosti najdete v https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";APT2265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Příčinou může být to, že projekt má v názvu souboru nebo cestě jiné znaky než ASCII. Podrobnosti najdete v https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
