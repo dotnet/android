@@ -45,20 +45,12 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: install-microbuild-tooling.yaml
-      parameters:
-        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
     - template: commercial-build.yaml
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         provisionatorChannel: ${{ parameters.provisionatorChannel }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
-
-    - template: remove-microbuild-tooling.yaml
-      parameters:
-        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
     - powershell: |
         [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
