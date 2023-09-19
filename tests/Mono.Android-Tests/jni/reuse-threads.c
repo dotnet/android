@@ -75,6 +75,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -206,15 +207,18 @@ rt_invoke_callback_on_new_thread (CB cb)
 	return 0;
 }
 
+static int _register_retval = 0;
+
 /* We return -2 for errors, because -1 is reserved for the pthreads PTHREAD_CANCELED special value, indicating that the
  * thread was canceled. */
-static int
+static void
 _register_type_from_new_thread (void *data)
 {
 	RegisterFromThreadContext *context = (RegisterFromThreadContext*)data;
 
 	if (context == NULL) {
-		return -100;
+		_register_retval = -100;
+		pthread_exit (&_register_retval);
 	}
 
 	JNIEnv *env = _get_env ("_register_type_from_new_thread");
@@ -227,7 +231,8 @@ _register_type_from_new_thread (void *data)
 			(*env)->ExceptionClear (env);
 		}
 
-		return -101;
+		_register_retval = -101;
+		pthread_exit (&_register_retval);
 	}
 
 	int ret = 0;
@@ -286,7 +291,8 @@ _register_type_from_new_thread (void *data)
   cleanup:
 	(*env)->PopLocalFrame (env, NULL);
 
-	return ret;
+	_register_retval = ret;
+	pthread_exit (&_register_retval);
 }
 
 JNIEXPORT int JNICALL
