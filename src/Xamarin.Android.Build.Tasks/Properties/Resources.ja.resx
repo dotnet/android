@@ -546,6 +546,10 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
     <value>これは、プロジェクトが Windows のパスの最大の長さの制限を超えたことが原因の可能性があります。詳細については、https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 を参照してください。</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
+  <data name="APT2265" xml:space="preserve">
+    <value>これは、プロジェクトのファイル名またはパスに ASCII 以外の文字が含まれている場合に発生する可能性があります。詳細については、「https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265」を参照してください。</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
   <data name="XA3001" xml:space="preserve">
     <value>アセンブリを AOT できませんでした: {0}</value>
     <comment>The abbreviation "AOT" should not be translated.</comment>

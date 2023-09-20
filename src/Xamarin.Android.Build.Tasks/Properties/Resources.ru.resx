@@ -542,7 +542,11 @@ In this message, the term "binding" means a piece of generated code that makes i
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>Возможно, для этого проекта превышена максимальная длина пути в Windows. См. https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <value>Возможно, для этого проекта превышена максимальная длина пути в Windows. Подробности: https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
+  <data name="APT2265" xml:space="preserve">
+    <value>Возможно, проект содержит в имени файла или пути символы, отличные от ASCII. Подробности: https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">

@@ -26,6 +26,11 @@ namespace Xamarin.Android.Build.Tests
 		protected static bool IsDeviceAttached (bool refreshCachedValue = false)
 		{
 			if (string.IsNullOrEmpty (_shellEchoOutput) || refreshCachedValue) {
+				// run this twice as sometimes the first time returns the
+				// device as "offline".
+				RunAdbCommand ("devices");
+				var devices = RunAdbCommand ("devices");
+				TestContext.Out.WriteLine ($"LOG adb devices: {devices}");
 				_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
 			}
 			return _shellEchoOutput.Contains ("OK");
@@ -58,11 +63,14 @@ namespace Xamarin.Android.Build.Tests
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
 
 						if (string.IsNullOrEmpty (DeviceAbi))
-							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+							DeviceAbi = (RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2")) ?? "x86_64";
 
 						if (DeviceAbi.Contains (",")) {
 							DeviceAbi = DeviceAbi.Split (',')[0];
 						}
+					} else {
+						TestContext.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
+						DeviceAbi = "x86_64";
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
