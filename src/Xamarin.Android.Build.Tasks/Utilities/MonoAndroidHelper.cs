@@ -645,5 +645,24 @@ namespace Xamarin.Android.Tasks
 		}
 
 		public static string MakeNativeAssemblyFileName (string baseName, string abi) => $"{baseName}.{abi}.ll";
+
+		public static bool IsSatelliteAssembly (ITaskItem item)
+		{
+			return IsNotEmptyMetadataAndMaybeMatches (item, "AssetType", "resources") && IsNotEmptyMetadataAndMaybeMatches (item, "Culture");
+
+			bool IsNotEmptyMetadataAndMaybeMatches (ITaskItem item, string metadataName, string? expectedValue = null)
+			{
+				string? data = item.GetMetadata (metadataName);
+				if (String.IsNullOrEmpty (data)) {
+					return false;
+				}
+
+				if (String.IsNullOrEmpty (expectedValue)) {
+					return true;
+				}
+
+				return String.Compare (data, expectedValue, StringComparison.Ordinal) == 0;
+			}
+		}
 	}
 }

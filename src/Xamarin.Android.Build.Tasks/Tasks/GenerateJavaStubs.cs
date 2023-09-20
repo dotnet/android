@@ -313,6 +313,8 @@ namespace Xamarin.Android.Tasks
 						assemblies.AddUserAssembly (assembly);
 						addAssembly = true;
 					}
+				} else if (MonoAndroidHelper.IsSatelliteAssembly (assembly)) {
+					continue;
 				}
 
 				if (addAssembly) {
@@ -324,7 +326,11 @@ namespace Xamarin.Android.Tasks
 				// We don't check whether we have a resolver for `targetArch` on purpose, if it throws then it means we have a bug which
 				// should be fixed since there shouldn't be any assemblies passed to this task that belong in ABIs other than those
 				// specified in `SupportedAbis` (and, perhaps, a RID-agnostic one)
-				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+				try {
+					getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+				} catch (Exception ex) {
+					throw new InvalidOperationException ($"Internal error: failed to get resolver for assembly {assembly.ItemSpec}, target architecture '{targetArch}'", ex);
+				}
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation

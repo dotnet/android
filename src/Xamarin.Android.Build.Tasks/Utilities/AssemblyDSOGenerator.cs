@@ -474,7 +474,17 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			}
 			ulong nameHash = EnsureUniqueHash (GetXxHash (nameBytes, is64Bit), info.Name);
 
-			string nameWithoutExtension = Path.GetFileNameWithoutExtension (info.Name);
+			string nameWithoutExtension;
+			string? dirName = Path.GetDirectoryName (info.Name);
+
+			if (String.IsNullOrEmpty (dirName)) {
+				nameWithoutExtension = Path.GetFileNameWithoutExtension (info.Name);
+			} else {
+				// Don't use Path.Combine because the `/` separator must remain as such, since it's not a "real"
+				// directory separator but a culture/name separator.  Path.Combine would use `\` on Windows.
+				nameWithoutExtension = $"{dirName}/{Path.GetFileNameWithoutExtension (info.Name)}";
+			}
+
 			byte[] nameWithoutExtensionBytes = StringToBytes (nameWithoutExtension);
 			ulong nameWithoutExtensionHash = EnsureUniqueHash (GetXxHash (nameWithoutExtensionBytes, is64Bit), nameWithoutExtension);
 
