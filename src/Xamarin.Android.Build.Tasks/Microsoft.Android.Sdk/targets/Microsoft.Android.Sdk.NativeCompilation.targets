@@ -116,8 +116,20 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_PrepareDSOFastPathAssemblyNames">
+    <ItemGroup>
+      <_DSOFastPathAssembly Include="Java.Interop.dll" />
+      <_DSOFastPathAssembly Include="Mono.Android.Runtime.dll" />
+      <_DSOFastPathAssembly Include="Mono.Android.dll" />
+      <_DSOFastPathAssembly Include="System.Private.CoreLib.dll" />
+      <_DSOFastPathAssembly Include="System.Runtime" />
+      <_DSOFastPathAssembly Include="$(AndroidApplication)" />
+    </ItemGroup>
+  </Target>
+
   <!-- Native source code generation targets -->
   <Target Name="_GenerateAssemblyDsoNativeSourceFiles"
+          DependsOnTargets="_PrepareDSOFastPathAssemblyNames"
           Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
           Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
           Outputs="@(_AssemblyDSOSource)">
@@ -126,6 +138,7 @@
         CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
         SupportedAbis="@(_BuildTargetAbis)"
         Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        FastPathAssemblyNames="@(_DSOFastPathAssembly)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"
     />
   </Target>

@@ -219,6 +219,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> assemblies;
 	readonly Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
+	readonly HashSet<string>? fastPathAssemblies;
 	readonly uint inputAssemblyDataSize;
 	readonly uint uncompressedAssemblyDataSize;
 	StructureInfo? assemblyEntryStructureInfo;
@@ -226,12 +227,21 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	StructureInfo? assemblyIndexEntry64StructureInfo;
 	StructureInfo? assembliesConfigStructureInfo;
 
-	public AssemblyDSOGenerator (Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssemblies, ulong inputAssemblyDataSize, ulong uncompressedAssemblyDataSize)
+	public AssemblyDSOGenerator (ICollection<string> fastPathAssemblyNames, Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssemblies, ulong inputAssemblyDataSize, ulong uncompressedAssemblyDataSize)
 	{
 		this.inputAssemblyDataSize = EnsureValidSize (inputAssemblyDataSize, nameof (inputAssemblyDataSize));
 		this.uncompressedAssemblyDataSize = EnsureValidSize (uncompressedAssemblyDataSize, nameof (uncompressedAssemblyDataSize));
 		assemblies = dsoAssemblies;
 		assemblyArchStates = new Dictionary<AndroidTargetArch, ArchState> ();
+
+		if (fastPathAssemblyNames.Count == 0) {
+			return;
+		}
+
+		fastPathAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+		foreach (string asmName in fastPathAssemblyNames) {
+			fastPathAssemblies.Add (asmName);
+		}
 
 		uint EnsureValidSize (ulong v, string name)
 		{

@@ -28,6 +28,9 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 	[Required]
 	public bool EnableCompression { get; set; }
 
+	[Required]
+	public string[] FastPathAssemblyNames { get; set; }
+
 	public override bool RunTask ()
 	{
 		Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssembliesInfo = new ();
@@ -94,7 +97,7 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 			Log.LogDebugMessage ($"  {kvp.Key}: {kvp.Value.Count} assemblies");
 		}
 
-		var generator = new AssemblyDSOGenerator (dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
+		var generator = new AssemblyDSOGenerator (FastPathAssemblyNames, dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
 		LLVMIR.LlvmIrModule module = generator.Construct ();
 
 		foreach (string abi in SupportedAbis) {
