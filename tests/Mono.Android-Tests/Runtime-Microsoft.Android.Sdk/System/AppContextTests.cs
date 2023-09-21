@@ -31,18 +31,31 @@ namespace SystemTests
 
 		static readonly object [] TestPrivateSwitchesSource = new object [] {
 			new object [] {
-				/* name */     "ForceInterpretedInvoke",
-				/* expected */ true,
+				/* className */    "System.LocalAppContextSwitches, System.Private.CoreLib",
+				/* propertyName */ "ForceInterpretedInvoke",
+				/* expected */     true,
+			},
+			new object [] {
+				/* className */    "System.Diagnostics.Metrics.Meter, System.Diagnostics.DiagnosticSource",
+				/* propertyName */ "<IsSupported>k__BackingField",
+				/* expected */     false,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
-		public void TestPrivateSwitches (string name, object expected)
+		public void TestPrivateSwitches (string className, string propertyName, object expected)
 		{
-			var type = Type.GetType ("System.LocalAppContextSwitches, System.Private.CoreLib", throwOnError: true);
-			var property = type.GetProperty (name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-			Assert.AreEqual (expected, property.GetValue (null));
+			var type = Type.GetType (className, throwOnError: true);
+			var members = type.GetMember (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
+			Assert.AreEqual (1, members.Length);
+			if (members [0] is PropertyInfo property) {
+				Assert.AreEqual (expected, property.GetValue (null));
+			} else if (members [0] is FieldInfo field) {
+				Assert.AreEqual (expected, field.GetValue (null));
+			} else {
+				Assert.Fail($"Unknown member type: {members [0]}");
+			}
 		}
 	}
 }

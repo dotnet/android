@@ -153,6 +153,32 @@ The `$(AndroidApplicationJavaClass)` property is generally set by
 
 Added in Xamarin.Android 6.1.
 
+## AndroidAvoidEmitForPerformance
+
+A boolean property that determines whether or not `System.Reflection.Emit` is
+"avoided" to improve startup performance. This property is `True` by default.
+
+Usage of `System.Reflection.Emit` has a noticeable impact on startup performance
+on Android. This behavior is disabled by default for the following feature
+switches:
+
+* `Switch.System.Reflection.ForceInterpretedInvoke`: after the second call to
+  `MethodInfo.Invoke()` or `ConstructorInfo.Invoke()`, code is emitted to
+  improve performance of repeated calls.
+
+* `Microsoft.Extensions.DependencyInjection.DisableDynamicEngine`: after the
+  second call to retrieve a service from a dependency injection container, code
+  is emitted to improve performance of repeated calls.
+
+It is desirable in most Android applications to disable this behavior.
+
+See the [Base Class Libraries Feature Switches documentation][feature-switches]
+for details about available feature switches.
+
+Added in .NET 8.
+
+[feature-switches]: https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md
+
 ## AndroidBinUtilsPath
 
 A path to a directory containing
