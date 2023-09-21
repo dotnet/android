@@ -128,8 +128,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </Target>
 
   <Target Name="AddBindingsToCompile"
-      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or Exists ('@(_GeneratedManagedBindingFiles)') "
-      DependsOnTargets="GenerateBindings;_CollectGeneratedManagedBindingFiles">
+      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or '@(_GeneratedManagedBindingFiles->Count())' != '0' "
+      DependsOnTargets="GenerateBindings">
     <!-- bindings need AllowUnsafeBlocks -->
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
