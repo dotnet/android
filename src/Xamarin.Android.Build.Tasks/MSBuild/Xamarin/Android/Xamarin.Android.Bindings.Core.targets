@@ -129,14 +129,14 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   <Target Name="AddBindingsToCompile"
       Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or '@(_GeneratedManagedBindingFiles->Count())' != '0' "
-      DependsOnTargets="GenerateBindings">
+      DependsOnTargets="GenerateBindings;_CollectGeneratedManagedBindingFiles">
     <!-- bindings need AllowUnsafeBlocks -->
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
     </PropertyGroup>
     <!-- Add the files to list of things to be compiled -->
     <ItemGroup>
-      <Compile Include="@(_GeneratedManagedBindingFiles)" />
+      <Compile Include="@(_GeneratedManagedBindingFiles)" Condition="Exists ('%(_GeneratedManagedBindingFiles.Identity)')" />
     </ItemGroup>
   </Target>
 
