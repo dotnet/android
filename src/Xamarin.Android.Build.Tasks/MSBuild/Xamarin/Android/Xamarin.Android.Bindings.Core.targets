@@ -41,12 +41,16 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     </PropertyGroup>
   </Target>
 
-  <Target Name="_ClearGeneratedManagedBindings"
-    Condition=" '@(InputJar->Count())' == '0' And '@(EmbeddedJar->Count())' == '0' And '@(LibraryProjectZip->Count())' == '0' And '@(_JavaBindingSource->Count())' == '0' "
-  >
+  <Target Name="_CollectGeneratedManagedBindingFiles">
     <ItemGroup>
       <_GeneratedManagedBindingFiles Include="$(IntermediateOutputPath)generated\*\*.cs" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_ClearGeneratedManagedBindings"
+    Condition=" '@(InputJar->Count())' == '0' And '@(EmbeddedJar->Count())' == '0' And '@(LibraryProjectZip->Count())' == '0' And '@(_JavaBindingSource->Count())' == '0' "
+    DependsOnTargets="_CollectGeneratedManagedBindingFiles"
+  >
     <Delete Files="@(_GeneratedManagedBindingFiles)" />
   </Target>
 
@@ -124,15 +128,15 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </Target>
 
   <Target Name="AddBindingsToCompile"
-      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or Exists ('$(IntermediateOutputPath)generated') "
-      DependsOnTargets="GenerateBindings">
+      Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or Exists ('@(_GeneratedManagedBindingFiles)') "
+      DependsOnTargets="GenerateBindings;_CollectGeneratedManagedBindingFiles">
     <!-- bindings need AllowUnsafeBlocks -->
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>
     </PropertyGroup>
     <!-- Add the files to list of things to be compiled -->
     <ItemGroup>
-      <Compile Include="$(IntermediateOutputPath)generated\*\*.cs" />
+      <Compile Include="@(_GeneratedManagedBindingFiles)" />
     </ItemGroup>
   </Target>
 
