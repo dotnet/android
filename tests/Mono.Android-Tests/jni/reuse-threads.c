@@ -75,6 +75,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <semaphore.h>
@@ -206,15 +207,17 @@ rt_invoke_callback_on_new_thread (CB cb)
 	return 0;
 }
 
+static int _register_retval = 0;
+
 /* We return -2 for errors, because -1 is reserved for the pthreads PTHREAD_CANCELED special value, indicating that the
  * thread was canceled. */
-static int
+static void*
 _register_type_from_new_thread (void *data)
 {
 	RegisterFromThreadContext *context = (RegisterFromThreadContext*)data;
 
 	if (context == NULL) {
-		return -100;
+		return (void*)(intptr_t)-100;
 	}
 
 	JNIEnv *env = _get_env ("_register_type_from_new_thread");
@@ -227,7 +230,7 @@ _register_type_from_new_thread (void *data)
 			(*env)->ExceptionClear (env);
 		}
 
-		return -101;
+		return (void*)(intptr_t)-101;
 	}
 
 	int ret = 0;
@@ -286,7 +289,7 @@ _register_type_from_new_thread (void *data)
   cleanup:
 	(*env)->PopLocalFrame (env, NULL);
 
-	return ret;
+	return (void*)(intptr_t)ret;
 }
 
 JNIEXPORT int JNICALL
@@ -312,10 +315,10 @@ rt_register_type_on_new_thread (const char *java_type_name, jobject class_loader
 		return -201;
 	}
 
-	if ((int)tr == -1 /* PTHREAD_CANCELED - not defined in bionic */) {
+	if ((int)(intptr_t)tr == -1 /* PTHREAD_CANCELED - not defined in bionic */) {
 		__android_log_print (ANDROID_LOG_INFO, "XA/RuntimeTest", "RegisterOnNewThread: worker thread was canceled");
 		return -202;
 	}
 
-	return (int)tr;
+	return (int)(intptr_t)tr;
 }

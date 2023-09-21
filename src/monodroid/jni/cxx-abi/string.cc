@@ -7,7 +7,6 @@
 
 _LIBCPP_BEGIN_NAMESPACE_STD
 
-template class __attribute__ ((__visibility__("hidden"))) __basic_string_common<true>;
 template class __attribute__ ((__visibility__("hidden"))) basic_string<char>;
 
 _LIBCPP_END_NAMESPACE_STD
