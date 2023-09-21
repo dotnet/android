@@ -452,7 +452,7 @@ A second (better) way is to add this MSBuild target to your Android
 ```xml
 <Target Name="UpdateMonoRuntimePacks" BeforeTargets="ProcessFrameworkReferences">
   <ItemGroup>
-      <KnownRuntimePack 
+      <KnownRuntimePack
           Update="Microsoft.NETCore.App"
           Condition=" '%(KnownRuntimePack.TargetFramework)' == 'net6.0' "
           LatestRuntimeFrameworkVersion="6.0.0-preview.7.21364.3"
@@ -476,6 +476,31 @@ The `library-packs` directory is simply an implicit NuGet feed that is
 automatically picked up by the .NET SDK.
 
 ## Enabling Mono Logging
+
+### The easy way
+
+A quick way to enable Mono logging is to use the `RunWithLogging`
+target:
+
+```bash
+$ dotnet build -t:RunWithLogging
+```
+
+If successful, messages printed to the screen will show location
+of the logcat file with the logged messages.
+
+Verbosity of logging can be increased by setting the `$(RunLogVerbose)`
+property to `true`, in which case the log output file will contain
+(very) verbose log messages from the MonoVM runtime.
+
+By default, the target will wait for a 1000ms before it dumps the
+logcat buffer to file.  This is to give the Android logging daemon
+time to actually put all the messages logged by the application in
+the logcat buffer.  This value can be overridden by setting the
+`$(RunLogDelayInMS)` MSBuild property to a number of milliseconds that
+the target should wait before creating the log file.
+
+### The manual way
 
 Since [6e58ce4][6e58ce4], logging from Mono is no longer enabled by
 default. You can set the `debug.mono.log` system property to answer
