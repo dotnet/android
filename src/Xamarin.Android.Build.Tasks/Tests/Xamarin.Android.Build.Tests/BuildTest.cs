@@ -1555,6 +1555,35 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void BuildApplicationWithJavaSourceUsingAndroidX ([Values(true, false)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new BuildItem (AndroidBuildActions.AndroidJavaSource, "ToolbarEx.java") {
+						TextContent = () => @"package com.unnamedproject.unnamedproject;
+import android.content.Context;
+import androidx.appcompat.widget.Toolbar;
+public class ToolbarEx {
+	public static Toolbar GetToolbar (Context context) {
+		return new Toolbar (context);
+	}
+}
+",
+						Encoding = Encoding.ASCII
+					},
+				}
+			};
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded");
+
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+			}
+		}
+
+		[Test]
 		public void BuildApplicationCheckThatAddStaticResourcesTargetDoesNotRerun ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
