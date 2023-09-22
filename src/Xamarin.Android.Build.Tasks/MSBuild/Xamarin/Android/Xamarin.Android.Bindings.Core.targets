@@ -43,7 +43,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   <Target Name="_CollectGeneratedManagedBindingFiles">
     <ItemGroup>
-      <_GeneratedManagedBindingFiles Include="$(IntermediateOutputPath)generated\*\*.cs" />
+      <_GeneratedManagedBindingFiles Include="$(IntermediateOutputPath)generated\**\*.cs" />
     </ItemGroup>
   </Target>
 
@@ -121,7 +121,7 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
 
     <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)generated\*\*.cs" />
+      <FileWrites Include="$(IntermediateOutputPath)generated\**\*.cs" />
       <FileWrites Include="$(_GeneratorStampFile)" />
     </ItemGroup>
 
