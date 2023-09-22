@@ -48,8 +48,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
   </Target>
 
   <Target Name="_ClearGeneratedManagedBindings"
-    Condition=" '@(InputJar->Count())' == '0' And '@(EmbeddedJar->Count())' == '0' And '@(LibraryProjectZip->Count())' == '0' And '@(_JavaBindingSource->Count())' == '0' "
-    DependsOnTargets="_CollectGeneratedManagedBindingFiles"
+      Condition=" '@(InputJar->Count())' == '0' And '@(EmbeddedJar->Count())' == '0' And '@(LibraryProjectZip->Count())' == '0' And '@(_JavaBindingSource->Count())' == '0' "
+      DependsOnTargets="_CollectGeneratedManagedBindingFiles"
   >
     <Delete Files="@(_GeneratedManagedBindingFiles)" />
   </Target>
