@@ -31,6 +31,9 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 	[Required]
 	public string[] FastPathAssemblyNames { get; set; }
 
+	[Required]
+	public bool StandaloneOnly { get; set; }
+
 	public override bool RunTask ()
 	{
 		Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssembliesInfo = new ();

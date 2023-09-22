@@ -6,6 +6,7 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJniRemappingNativeCode" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareStandaloneAssemblyDSOItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AndroidUseAssemblySharedLibraries Condition=" '$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' ">false</_AndroidUseAssemblySharedLibraries>
@@ -57,16 +58,42 @@
     </PrepareAbiItems>
   </Target>
 
-  <Target Name="_PrepareAssemblySharedLibrariesSources"
-          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' ">
+  <Target Name="_PrepareAssemblyDSOSources">
+
+    <!-- These assemblies data will be placed in `libxamarin-app.so` instead of in
+         individual shared libraries.  This group should, in principle, include those
+         assemblies which are involved in the runtime startup process (before we call
+         the main activity's OnCreate -->
+    <ItemGroup>
+      <_DSOFastPathAssembly Include="Java.Interop.dll" />
+      <_DSOFastPathAssembly Include="Mono.Android.Runtime.dll" />
+      <_DSOFastPathAssembly Include="Mono.Android.dll" />
+      <_DSOFastPathAssembly Include="System.Private.CoreLib.dll" />
+      <_DSOFastPathAssembly Include="System.Runtime" />
+      <_DSOFastPathAssembly Include="$(AssemblyName).dll" />
+    </ItemGroup>
+
+    <!-- These source files will be built into `libxamarin-app.so` and will include data
+         of the above assemblies -->
     <PrepareAbiItems
         BuildTargetAbis="@(_BuildTargetAbis)"
         NativeSourcesDir="$(_NativeAssemblySourceDir)"
         InstantRunEnabled="$(_InstantRunEnabled)"
         Debug="$(AndroidIncludeDebugSymbols)"
         Mode="assembly_dsos">
-      <Output TaskParameter="AssemblySources" ItemName="_AssemblyDSOSource" />
+      <Output TaskParameter="AssemblySources" ItemName="_AssemblyDSOSourceApplication" />
     </PrepareAbiItems>
+
+    <!-- These sources will be used to build per-assembly shared libraries.  Each of the
+         returned files will be compiled into its own .so library -->
+    <PrepareStandaloneAssemblyDSOItems
+        Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
+        Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        FastPathAssemblies="@(_DSOFastPathAssembly)">
+      <Output TaskParameter="AssemblySources" ItemName="_AssemblyDSOSourceStandalone" />
+    </PrepareStandaloneAssemblyDSOItems>
   </Target>
 
   <Target Name="_PrepareAndroidRemapNativeAssemblySources">
@@ -102,7 +129,7 @@
         <abi>%(_AndroidRemapAssemblySource.abi)</abi>
       </_NativeAssemblyTarget>
 
-      <_NativeAssemblyTarget Include="@(_AssemblyDSOSource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <_NativeAssemblyTarget Include="@(_AssemblyDSOSourceApplication->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
         <abi>%(_AssemblyDSOSource.abi)</abi>
       </_NativeAssemblyTarget>
     </ItemGroup>
@@ -116,23 +143,15 @@
     </ItemGroup>
   </Target>
 
-  <Target Name="_PrepareDSOFastPathAssemblyNames">
-    <ItemGroup>
-      <_DSOFastPathAssembly Include="Java.Interop.dll" />
-      <_DSOFastPathAssembly Include="Mono.Android.Runtime.dll" />
-      <_DSOFastPathAssembly Include="Mono.Android.dll" />
-      <_DSOFastPathAssembly Include="System.Private.CoreLib.dll" />
-      <_DSOFastPathAssembly Include="System.Runtime" />
-      <_DSOFastPathAssembly Include="$(AndroidApplication)" />
-    </ItemGroup>
-  </Target>
-
   <!-- Native source code generation targets -->
-  <Target Name="_GenerateAssemblyDsoNativeSourceFiles"
-          DependsOnTargets="_PrepareDSOFastPathAssemblyNames"
+  <Target Name="_GenerateApplicationAssemblyDsoNativeSourceFiles"
           Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
           Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
-          Outputs="@(_AssemblyDSOSource)">
+          Outputs="@(_AssemblyDSOSourceApplication)">
+    <!-- TODO:
+         * Pass items produced by the _CreateStandaloneAssemblyDSOs target and use metadata when generating the
+           source to be included in libxamarin-app.so
+    -->
     <GenerateAssemblyDsoNativeSourceFiles
         SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
         CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
@@ -140,7 +159,21 @@
         Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
         FastPathAssemblyNames="@(_DSOFastPathAssembly)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"
-    />
+        StandaloneOnly="false" />
+  </Target>
+
+  <Target Name="_GenerateStandaloneAssemblyDsoNativeSourceFiles"
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
+          Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+          Outputs="(@_AssemblyDSOSourceStandalone)">
+    <GenerateAssemblyDsoNativeSourceFiles
+        SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
+        CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        FastPathAssemblyNames="@(_DSOFastPathAssembly)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+        StandaloneOnly="true" />
   </Target>
 
   <Target Name="_GenerateEmptyAndroidRemapNativeCode"
@@ -182,12 +215,17 @@
   </Target>
 
   <!-- Native code compilation targets -->
-  <Target Name="_CompileNativeAssemblySources"
-          DependsOnTargets="_PrepareAssemblySharedLibrariesSources;_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_GenerateAssemblyDsoNativeSourceFiles"
-          Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSource)"
+  <Target Name="_CompileAssemblyStandaloneDSOs"
+          DependsOnTargets="_GenerateStandaloneAssemblyDsoNativeSourceFiles"
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' ">
+  </Target>
+
+  <Target Name="_CompileApplicationNativeAssemblySources"
+          DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateApplicationAssemblyDsoNativeSourceFiles;_GenerateCompressedAssembliesNativeSourceFiles"
+          Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
           Outputs="@(_NativeAssemblyTarget)">
     <CompileNativeAssembly
-        Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSource)"
+        Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
         WorkingDirectory="$(_NativeAssemblySourceDir)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -197,9 +235,32 @@
     </ItemGroup>
   </Target>
 
-  <!-- Shared library linking targets -->
+  <!-- Shared library creation targets -->
+  <Target Name="_CreateStandaloneAssemblyDSOs"
+          DependsOnTargets="_CompileAssemblyStandaloneDSOs"
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' ">
+    <!-- TODO:
+         * Link standalone assembly shared libraries
+         * Return their paths with the following metadata:
+           * offset into the .so where assembly data begins
+           * assembly data size
+           * a flag whether the assembly was compressed
+           * path to the source assembly
+    -->
+  </Target>
+
+  <PropertyGroup>
+    <!-- Order of targets is **crucial** here -->
+    <_CreateApplicationSharedLibrariesDependsOn>
+      _PrepareAssemblyDSOSources;
+      _CreateStandaloneAssemblyDSOs;
+      _CompileApplicationNativeAssemblySources;
+      _PrepareApplicationSharedLibraryItems
+    </_CreateApplicationSharedLibrariesDependsOn>
+  </PropertyGroup>
+
   <Target Name="_CreateApplicationSharedLibraries"
-          DependsOnTargets="_CompileNativeAssemblySources;_PrepareApplicationSharedLibraryItems"
+          DependsOnTargets="$(_CreateApplicationSharedLibrariesDependsOn)"
           Inputs="@(_NativeAssemblyTarget)"
           Outputs="@(_ApplicationSharedLibrary)">
     <LinkApplicationSharedLibraries
