@@ -216,6 +216,7 @@ properties that determine build ordering.
     </_ResolveLibraryProjectsDependsOn>
     <_CompileBindingJavaDependsOnTargets>
       _AdjustJavacVersionArguments;
+      _GetLibraryImports;
       _DetermineBindingJavaLibrariesToCompile;
       _GetJavaPlatformJar;
     </_CompileBindingJavaDependsOnTargets>

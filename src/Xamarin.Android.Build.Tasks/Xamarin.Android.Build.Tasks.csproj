@@ -312,6 +312,9 @@
     <Compile Include="..\Mono.Android\\Android\NativeLibraryReferenceAttribute.cs">
       <Link>Mono.Android\NativeLibraryReferenceAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\..\build-tools\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\Sleep.cs">
+      <Link>Xamarin.Android.BuildTools.PrepTasks\Sleep.cs</Link>
+    </Compile>
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
