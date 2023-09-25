@@ -130,7 +130,6 @@ stages:
         project: Xamarin.Android.sln
         arguments: >-
           -t:PrepareJavaInterop -c Debug --no-restore
-          -p:RestoreConfigFile=NuGet.config
           -p:DotNetPreviewTool=$(System.DefaultWorkingDirectory)/bin/$(XA.Build.Configuration)/dotnet/dotnet
         displayName: prepare java.interop Debug
         continueOnError: false
@@ -138,9 +137,7 @@ stages:
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: >-
-          -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
-          -p:RestoreConfigFile=NuGet.config
+        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
