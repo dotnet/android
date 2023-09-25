@@ -9,7 +9,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Feed for dotnet/runtime 6.0.13, to be passed to external/java.interop/external/xamarin-android-tools -->
+    <!-- Feeds for dotnet/runtime, to be passed to external/java.interop/external/xamarin-android-tools -->
+    <_RestoreAdditionalProjectSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-26e0f822/nuget/v3/index.json" />
     <_RestoreAdditionalProjectSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-301ba1ee/nuget/v3/index.json" />
   </ItemGroup>
 
@@ -22,7 +23,7 @@
 
   <Target Name="PrepareJavaInterop">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -p:RestoreAdditionalProjectSources=@(_RestoreAdditionalProjectSources) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
+        Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -p:RestoreAdditionalProjectSources=\&quot;@(_RestoreAdditionalProjectSources)\&quot; -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
