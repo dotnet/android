@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <RestoreConfigFile>$(MSBuildThisFileDirectory)..\NuGet.config</RestoreConfigFile>
   </PropertyGroup>
 
 </Project>
