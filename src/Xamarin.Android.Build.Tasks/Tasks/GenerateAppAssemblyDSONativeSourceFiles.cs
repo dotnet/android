@@ -9,15 +9,9 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
+public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGenerationTask
 {
 	public override string TaskPrefix => "GADNSF";
-
-	[Required]
-	public string SourcesOutputDirectory { get; set; }
-
-	[Required]
-	public string CompressedAssembliesOutputDirectory { get; set; }
 
 	[Required]
 	public string[] SupportedAbis { get; set; }
@@ -26,64 +20,34 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 	public ITaskItem[] Assemblies { get; set; }
 
 	[Required]
-	public bool EnableCompression { get; set; }
-
-	[Required]
 	public string[] FastPathAssemblyNames { get; set; }
 
-	[Required]
-	public bool StandaloneOnly { get; set; }
-
-	public override bool RunTask ()
+	protected override void Generate ()
 	{
 		Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssembliesInfo = new ();
-		AssemblyCompression? assemblyCompressor = null;
-		if (EnableCompression) {
-			assemblyCompressor = new AssemblyCompression (Log, CompressedAssembliesOutputDirectory);
-			Log.LogDebugMessage ("Assembly compression ENABLED");
-		} else {
-			Log.LogDebugMessage ("Assembly compression DISABLED");
-		}
 
 		var satelliteAssemblies = new List<DSOAssemblyInfo> ();
 		ulong inputAssemblyDataSize = 0;
 		ulong uncompressedAssemblyDataSize = 0;
 		Log.LogDebugMessage ("Processing the input assemblies");
 		foreach (ITaskItem assembly in Assemblies) {
-			FileInfo fi = new (assembly.ItemSpec);
-			string inputFile;
-			bool compressed;
-			uint compressedSize;
+			CompressionResult cres = Compress (assembly);
+			string inputFile = cres.OutputFile;
 
 			Log.LogDebugMessage ($"  Input: {assembly.ItemSpec}");
-			if (assemblyCompressor != null) {
-				(inputFile, compressed) = assemblyCompressor.CompressAssembly (assembly, fi);
+			inputAssemblyDataSize += cres.Compressed ? (ulong)cres.InputFileInfo.Length : cres.CompressedSize;
+			uncompressedAssemblyDataSize += (ulong)cres.InputFileInfo.Length;
 
-				if (!compressed) {
-					compressedSize = 0;
-				} else {
-					var cfi = new FileInfo (inputFile);
-					compressedSize = (uint)cfi.Length;
-				}
-			} else {
-				inputFile = assembly.ItemSpec;
-				compressed = false;
-				compressedSize = 0;
-			}
-			inputAssemblyDataSize += compressedSize == 0 ? (ulong)fi.Length : compressedSize;
-			uncompressedAssemblyDataSize += (ulong)fi.Length;
-
-			Log.LogDebugMessage ($"    will include from: {inputFile} (compressed? {compressed}; compressedSize == {compressedSize}");
 			AndroidTargetArch arch;
 			if (!MonoAndroidHelper.IsSatelliteAssembly (assembly)) {
 				arch = MonoAndroidHelper.GetTargetArch (assembly);
-				StoreAssembly (arch, assembly, inputFile, fi.Length, compressedSize);
+				StoreAssembly (arch, assembly, inputFile, cres.InputFileInfo.Length, cres.CompressedSize);
 				continue;
 			}
 
 			// Satellite assemblies don't have any ABI, so they need to be added to all supported architectures.
 			// We will do it after this loop, when all architectures are known.
-			satelliteAssemblies.Add (MakeAssemblyInfo (assembly, inputFile, fi.Length, compressedSize));
+			satelliteAssemblies.Add (MakeAssemblyInfo (assembly, inputFile, cres.InputFileInfo.Length, cres.CompressedSize));
 		}
 
 		if (satelliteAssemblies.Count > 0) {
@@ -101,27 +65,28 @@ public class GenerateAssemblyDsoNativeSourceFiles : AndroidTask
 		}
 
 		var generator = new AssemblyDSOGenerator (FastPathAssemblyNames, dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
-		LLVMIR.LlvmIrModule module = generator.Construct ();
+		GenerateSources (generator, generator.Construct (), PrepareAbiItems.AssemblyDSOBase);
 
-		foreach (string abi in SupportedAbis) {
-			string targetAbi = abi.ToLowerInvariant ();
-			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{PrepareAbiItems.AssemblyDSOBase}.{targetAbi}.ll");
+		void GenerateSources (LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
+		{
+			foreach (string abi in SupportedAbis) {
+				string targetAbi = abi.ToLowerInvariant ();
+				string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{baseFileName}.{targetAbi}.ll");
 
-			using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
-			try {
-				generator.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, outputAsmFilePath);
-			} catch {
-				throw;
-			} finally {
-				sw.Flush ();
-			}
+				using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
+				try {
+					generator.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, outputAsmFilePath);
+				} catch {
+					throw;
+				} finally {
+					sw.Flush ();
+				}
 
-			if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
-				Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
+				if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
+					Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
+				}
 			}
 		}
-
-		return !Log.HasLoggedErrors;
 
 		void StoreAssembly (AndroidTargetArch arch, ITaskItem assembly, string inputFile, long fileLength, uint compressedSize, DSOAssemblyInfo? info = null)
 		{

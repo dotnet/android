@@ -217,22 +217,30 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	const string XAInputAssemblyDataVarName        = "xa_input_assembly_data";
 	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
 
-	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> assemblies;
+	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>>? allAssemblies;
+	readonly Dictionary<AndroidTargetArch, DSOAssemblyInfo>? standaloneAssemblies;
 	readonly Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
 	readonly HashSet<string>? fastPathAssemblies;
 	readonly uint inputAssemblyDataSize;
 	readonly uint uncompressedAssemblyDataSize;
+	readonly bool onlyStandalone;
 	StructureInfo? assemblyEntryStructureInfo;
 	StructureInfo? assemblyIndexEntry32StructureInfo;
 	StructureInfo? assemblyIndexEntry64StructureInfo;
 	StructureInfo? assembliesConfigStructureInfo;
 
+	public AssemblyDSOGenerator (Dictionary<AndroidTargetArch, DSOAssemblyInfo> dsoAssemblies)
+	{
+		onlyStandalone = true;
+	}
+
 	public AssemblyDSOGenerator (ICollection<string> fastPathAssemblyNames, Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssemblies, ulong inputAssemblyDataSize, ulong uncompressedAssemblyDataSize)
 	{
 		this.inputAssemblyDataSize = EnsureValidSize (inputAssemblyDataSize, nameof (inputAssemblyDataSize));
 		this.uncompressedAssemblyDataSize = EnsureValidSize (uncompressedAssemblyDataSize, nameof (uncompressedAssemblyDataSize));
-		assemblies = dsoAssemblies;
+		allAssemblies = dsoAssemblies;
 		assemblyArchStates = new Dictionary<AndroidTargetArch, ArchState> ();
+		onlyStandalone = false;
 
 		if (fastPathAssemblyNames.Count == 0) {
 			return;
@@ -255,15 +263,28 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 	protected override void Construct (LlvmIrModule module)
 	{
+		if (onlyStandalone) {
+			ConstructStandalone (module);
+		} else {
+			ConstructFastPath (module);
+		}
+	}
+
+	void ConstructStandalone (LlvmIrModule module)
+	{
+	}
+
+	void ConstructFastPath (LlvmIrModule module)
+	{
 		MapStructures (module);
 
-		if (assemblies.Count == 0) {
+		if (allAssemblies.Count == 0) {
 			ConstructEmptyModule ();
 			return;
 		}
 
 		int expectedCount = -1;
-		foreach (var kvp in assemblies) {
+		foreach (var kvp in allAssemblies) {
 			AndroidTargetArch arch = kvp.Key;
 			List<DSOAssemblyInfo> infos = kvp.Value;
 
@@ -453,7 +474,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			}
 
 			// We need to read each file into a separate array, as it is (theoretically) possible that all the assemblies data will exceed 2GB,
-			// which is the limit of we can allocate (or rent, below) in .NET.
+			// which is the limit of we can allocate (or rent, below) in .NET, per single array.
 			//
 			// We also need to read all the assemblies for all the target ABIs, as it is possible that **all** of them will be different.
 			//
