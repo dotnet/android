@@ -118,7 +118,9 @@ stages:
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
-        arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+        arguments: >-
+          -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
+          -p:RestoreConfigFile=NuGet.config
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
