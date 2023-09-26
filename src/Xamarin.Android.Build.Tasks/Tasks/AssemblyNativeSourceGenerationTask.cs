@@ -80,6 +80,10 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 
 	internal void GenerateSources (ICollection<string> supportedAbis, LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
 	{
+		if (String.IsNullOrEmpty (baseFileName)) {
+			throw new ArgumentException ("must not be null or empty", nameof (baseFileName));
+		}
+
 		foreach (string abi in supportedAbis) {
 			string targetAbi = abi.ToLowerInvariant ();
 			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{baseFileName}.{targetAbi}.ll");

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -16,18 +15,18 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 	{
 		public readonly string Abi;
 		public readonly string OriginalAssemblyPath;
-		public readonly string SourceFilePath;
+		public readonly string SourceFileBaseName;
 		public readonly string DSOPath;
 		public readonly string? Culture;
 		public readonly ITaskItem TaskItem;
 
-		public TargetDSO (ITaskItem dso, string sourcesDir)
+		public TargetDSO (ITaskItem dso)
 		{
 			TaskItem = dso;
 			DSOPath = dso.ItemSpec;
 			Abi = EnsureValidMetadata ("Abi");
 			OriginalAssemblyPath = EnsureValidMetadata ("InputAssemblyPath");
-			SourceFilePath = Path.Combine (sourcesDir, EnsureValidMetadata ("SourceFileName"));
+			SourceFileBaseName = EnsureValidMetadata ("SourceFileBaseName");
 			Culture = dso.GetMetadata ("SatelliteAssemblyCulture");
 
 			string EnsureValidMetadata (string what)
@@ -39,6 +38,19 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 				return v;
 			}
+		}
+	}
+
+	sealed class LocalDSOAssemblyInfo : DSOAssemblyInfo
+	{
+		public readonly TargetDSO TargetDSO;
+		public readonly ITaskItem SharedLibraryItem;
+
+		public LocalDSOAssemblyInfo (TargetDSO targetDSO, ITaskItem sharedLibraryItem, string name, string inputFile, uint dataSize, uint compressedDataSize)
+			: base (name, inputFile, dataSize, compressedDataSize)
+		{
+			TargetDSO = targetDSO;
+			SharedLibraryItem = sharedLibraryItem;
 		}
 	}
 
@@ -57,18 +69,22 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 	{
 		var assemblies = new Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> (StringComparer.OrdinalIgnoreCase);
 		var sharedLibraries = new List<ITaskItem> ();
+		var supportedAbis = new HashSet<string> ();
 
 		foreach (ITaskItem item in TargetSharedLibraries) {
-			var dso = new TargetDSO (item, SourcesOutputDirectory);
-			string inputFilePath = AddAssembly (dso, assemblies);
+			var dso = new TargetDSO (item);
+			supportedAbis.Add (dso.Abi);
 
 			var dsoItem = new TaskItem (dso.DSOPath);
+			DSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
 
+			dsoItem.SetMetadata ("Abi", dso.Abi);
 			dsoItem.SetMetadata ("DataSymbolOffset", "<TODO>");
-			dsoItem.SetMetadata ("DataSize", "<TODO>");
-			dsoItem.SetMetadata ("Compressed", "<TODO>");
+			dsoItem.SetMetadata ("DataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
+			dsoItem.SetMetadata ("UncompressedDataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
+			dsoItem.SetMetadata ("Compressed", dsoInfo.CompressedDataSize == 0 ? "false" : "true");
 			dsoItem.SetMetadata ("OriginalAssemblyPath", dso.OriginalAssemblyPath);
-			dsoItem.SetMetadata ("InputAssemblyPath", inputFilePath);
+			dsoItem.SetMetadata ("InputAssemblyPath", dsoInfo.InputFile);
 
 			if (!String.IsNullOrEmpty (dso.Culture)) {
 				dsoItem.SetMetadata ("SatelliteAssemblyCulture", dso.Culture);
@@ -77,10 +93,26 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			sharedLibraries.Add (dsoItem);
 		}
 
+		foreach (var kvp in assemblies) {
+			Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos = kvp.Value;
+
+			string baseName = String.Empty;
+			foreach (DSOAssemblyInfo info in infos.Values) {
+				var localInfo = (LocalDSOAssemblyInfo)info;
+
+				// All the architectures share the same base file name
+				baseName = localInfo.TargetDSO.SourceFileBaseName;
+				break;
+			}
+
+			var generator = new AssemblyDSOGenerator (infos);
+			GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
+		}
+
 		SharedLibraries = sharedLibraries.ToArray ();
 	}
 
-	string AddAssembly (TargetDSO dso, Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> assemblies)
+	DSOAssemblyInfo AddAssembly (TargetDSO dso, ITaskItem dsoItem, Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> assemblies)
 	{
 		string asmName = Path.GetFileNameWithoutExtension (dso.OriginalAssemblyPath);
 		if (!String.IsNullOrEmpty (dso.Culture)) {
@@ -101,7 +133,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		string inputFile = cres.OutputFile;
 
 		AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (dso.Abi);
-		DSOAssemblyInfo dsoInfo = MakeAssemblyInfo (dso.TaskItem, inputFile, cres.InputFileInfo.Length, cres.CompressedSize);
+		DSOAssemblyInfo dsoInfo = new LocalDSOAssemblyInfo (dso, dsoItem, GetAssemblyName (dso.TaskItem), inputFile, (uint)cres.InputFileInfo.Length, cres.CompressedSize);
 
 		try {
 			infos.Add (targetArch, dsoInfo);
@@ -109,6 +141,6 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			throw new InvalidOperationException ($"Internal error: failed to add '{dso.OriginalAssemblyPath}' for target arch {targetArch}", ex);
 		}
 
-		return dsoInfo.InputFile;
+		return dsoInfo;
 	}
 }

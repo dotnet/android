@@ -8,209 +8,8 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-class AssemblyDSOGenerator : LlvmIrComposer
+partial class AssemblyDSOGenerator : LlvmIrComposer
 {
-	// Must be identical to AssemblyEntry in src/monodroid/jni/xamarin-app.hh
-	sealed class AssemblyEntry
-	{
-		[NativeAssembler (Ignore = true)]
-		public byte[]? AssemblyData;
-
-		[NativeAssembler (Ignore = true)]
-		public string InputFilePath;
-
-		// offset into the `xa_input_assembly_data` array
-		public uint input_data_offset;
-
-		// number of bytes data of this assembly occupies
-		public uint input_data_size;
-
-		// offset into the `xa_uncompressed_assembly_data` array where the uncompressed
-		// assembly data (if any) lives.
-		public uint uncompressed_data_offset;
-
-		// Size of the uncompressed data. 0 if assembly wasn't compressed.
-		public uint uncompressed_data_size;
-	}
-
-	// Must be identical to AssemblyIndexEntry in src/monodroid/jni/xamarin-app.hh
-	class AssemblyIndexEntryBase<T>
-	{
-		[NativeAssembler (Ignore = true)]
-		public string Name;
-
-		[NativeAssembler (Ignore = true)]
-		public byte[] NameBytes;
-
-		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
-		public T name_hash;
-
-		// Index into the `xa_assemblies` descriptor array
-		public uint index;
-
-		// whether hashed name had extension
-		public bool has_extension;
-	}
-
-	sealed class AssemblyIndexEntry32 : AssemblyIndexEntryBase<uint>
-	{}
-
-	sealed class AssemblyIndexEntry64 : AssemblyIndexEntryBase<ulong>
-	{}
-
-	// Must be identical to AssembliesConfig in src/monodroid/jni/xamarin-app.hh
-	sealed class AssembliesConfig
-	{
-		public uint input_assembly_data_size;
-		public uint uncompressed_assembly_data_size;
-		public uint assembly_name_length;
-		public uint assembly_count;
-	};
-
-	// Members with underscores correspond to the native fields we output.
-	sealed class ArchState
-	{
-		public readonly List<StructureInstance<AssemblyEntry>> xa_assemblies;
-		public readonly List<StructureInstance<AssemblyIndexEntry32>>? xa_assembly_index32;
-		public readonly List<StructureInstance<AssemblyIndexEntry64>>? xa_assembly_index64;
-		public readonly AssembliesConfig xa_assemblies_config;
-
-		public ArchState (int assemblyCount, AndroidTargetArch arch)
-		{
-			if (assemblyCount < 0) {
-				throw new ArgumentException ("must not be a negative number", nameof (assemblyCount));
-			}
-
-			xa_assemblies = new List<StructureInstance<AssemblyEntry>> (assemblyCount);
-
-			switch (arch) {
-				case AndroidTargetArch.Arm64:
-				case AndroidTargetArch.X86_64:
-					xa_assembly_index64 = new List<StructureInstance<AssemblyIndexEntry64>> (assemblyCount);
-					break;
-
-				case AndroidTargetArch.Arm:
-				case AndroidTargetArch.X86:
-					xa_assembly_index32 = new List<StructureInstance<AssemblyIndexEntry32>> (assemblyCount);
-					break;
-
-				default:
-					throw new InvalidOperationException ($"Internal error: architecture {arch} not supported");
-			}
-
-			xa_assemblies_config = new AssembliesConfig {
-				input_assembly_data_size = 0,
-				uncompressed_assembly_data_size = 0,
-				assembly_name_length = 0,
-				assembly_count = (uint)assemblyCount,
-			};
-		}
-	}
-
-	sealed class AssemblyInputDataArrayProvider : LlvmIrStreamedArrayDataProvider
-	{
-		sealed class DataState
-		{
-			public int Index = 0;
-			public string Comment = String.Empty;
-			public ulong TotalDataSize = 0;
-		}
-
-		Dictionary<AndroidTargetArch, ArchState> assemblyArchStates;
-		Dictionary<AndroidTargetArch, DataState> dataStates;
-
-		public AssemblyInputDataArrayProvider (Type arrayElementType, Dictionary<AndroidTargetArch, ArchState> assemblyArchStates)
-			: base (arrayElementType)
-		{
-			this.assemblyArchStates = assemblyArchStates;
-
-			dataStates = new Dictionary<AndroidTargetArch, DataState> ();
-			foreach (var kvp in assemblyArchStates) {
-				dataStates.Add (kvp.Key, new DataState ());
-			}
-		}
-
-		public override (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target)
-		{
-			ArchState archState = GetArchState (target);
-			DataState dataState = GetDataState (target);
-			int index = dataState.Index++;
-			if (index >= archState.xa_assemblies.Count) {
-				throw new InvalidOperationException ("Internal error: no more data left");
-			}
-
-			var entry = (AssemblyEntry)archState.xa_assemblies[index].Obj;
-			string name;
-
-			if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
-				name = ((AssemblyIndexEntry64)archState.xa_assembly_index64[index].Obj).Name;
-			} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
-				name = ((AssemblyIndexEntry32)archState.xa_assembly_index32[index].Obj).Name;
-			} else {
-				throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
-			}
-
-			string compressed = entry.uncompressed_data_size == 0 ? "no" : "yes";
-
-			dataState.Comment = $" Assembly: {name} ({entry.InputFilePath}); Data size: {entry.AssemblyData.Length}; compressed: {compressed}";
-			// Each assembly is a new "section"
-			return (
-				index == archState.xa_assemblies.Count - 1 ? LlvmIrStreamedArrayDataProviderState.LastSection : LlvmIrStreamedArrayDataProviderState.NextSection,
-				EnsureValidAssemblyData (entry)
-			);
-		}
-
-		public override ulong GetTotalDataSize (LlvmIrModuleTarget target)
-		{
-			DataState dataState = GetDataState (target);
-			if (dataState.TotalDataSize > 0) {
-				return dataState.TotalDataSize;
-			}
-
-			ArchState archState = GetArchState (target);
-			ulong totalSize = 0;
-			foreach (StructureInstance<AssemblyEntry> si in archState.xa_assemblies) {
-				var entry = (AssemblyEntry)si.Obj;
-				byte[] data = EnsureValidAssemblyData (entry);
-				totalSize += (ulong)data.Length;
-			}
-
-			return dataState.TotalDataSize = totalSize;
-		}
-
-		public override string GetSectionStartComment (LlvmIrModuleTarget target)
-		{
-			DataState dataState = GetDataState (target);
-			string ret = dataState.Comment;
-			dataState.Comment = String.Empty;
-			return ret;
-		}
-
-		DataState GetDataState (LlvmIrModuleTarget target)
-		{
-			if (!dataStates.TryGetValue (target.TargetArch, out DataState dataState)) {
-				throw new InvalidOperationException ($"Internal error: data state for ABI {target.TargetArch} not available");
-			}
-
-			return dataState;
-		}
-
-		ArchState GetArchState (LlvmIrModuleTarget target) => AssemblyDSOGenerator.GetArchState (target, assemblyArchStates);
-
-		byte[] EnsureValidAssemblyData (AssemblyEntry entry)
-		{
-			if (entry.AssemblyData == null) {
-				throw new InvalidOperationException ("Internal error: assembly data must be present");
-			}
-
-			if (entry.AssemblyData.Length == 0) {
-				throw new InvalidOperationException ("Internal error: assembly data must not be empty");
-			}
-
-			return entry.AssemblyData;
-		}
-	}
-
 	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
 	const string XAAssemblyIndexVarName            = "xa_assembly_index";
 	const string XAAssemblyNamesVarName            = "xa_assembly_names";
@@ -223,7 +22,6 @@ class AssemblyDSOGenerator : LlvmIrComposer
 	readonly HashSet<string>? fastPathAssemblies;
 	readonly uint inputAssemblyDataSize;
 	readonly uint uncompressedAssemblyDataSize;
-	readonly bool onlyStandalone;
 	StructureInfo? assemblyEntryStructureInfo;
 	StructureInfo? assemblyIndexEntry32StructureInfo;
 	StructureInfo? assemblyIndexEntry64StructureInfo;
@@ -231,7 +29,8 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 	public AssemblyDSOGenerator (Dictionary<AndroidTargetArch, DSOAssemblyInfo> dsoAssemblies)
 	{
-		onlyStandalone = true;
+		standaloneAssemblies = dsoAssemblies;
+		assemblyArchStates = MakeArchStates ();
 	}
 
 	public AssemblyDSOGenerator (ICollection<string> fastPathAssemblyNames, Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssemblies, ulong inputAssemblyDataSize, ulong uncompressedAssemblyDataSize)
@@ -239,8 +38,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		this.inputAssemblyDataSize = EnsureValidSize (inputAssemblyDataSize, nameof (inputAssemblyDataSize));
 		this.uncompressedAssemblyDataSize = EnsureValidSize (uncompressedAssemblyDataSize, nameof (uncompressedAssemblyDataSize));
 		allAssemblies = dsoAssemblies;
-		assemblyArchStates = new Dictionary<AndroidTargetArch, ArchState> ();
-		onlyStandalone = false;
+		assemblyArchStates = MakeArchStates ();
 
 		if (fastPathAssemblyNames.Count == 0) {
 			return;
@@ -261,9 +59,11 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 	}
 
+	Dictionary<AndroidTargetArch, ArchState> MakeArchStates () => new Dictionary<AndroidTargetArch, ArchState> ();
+
 	protected override void Construct (LlvmIrModule module)
 	{
-		if (onlyStandalone) {
+		if (standaloneAssemblies != null) {
 			ConstructStandalone (module);
 		} else {
 			ConstructFastPath (module);
@@ -272,6 +72,23 @@ class AssemblyDSOGenerator : LlvmIrComposer
 
 	void ConstructStandalone (LlvmIrModule module)
 	{
+		foreach (var kvp in standaloneAssemblies) {
+			AndroidTargetArch arch = kvp.Key;
+			DSOAssemblyInfo info = kvp.Value;
+
+			AddStandaloneAssemblyData (arch, info);
+		}
+
+		var xa_input_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAInputAssemblyDataVarName) {
+			Alignment = 4096,
+			ArrayDataProvider = new StandaloneAssemblyInputDataArrayProvider (typeof(byte), assemblyArchStates),
+			ArrayStride = 16,
+			NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+			WriteOptions = LlvmIrVariableWriteOptions.ArrayFormatInRows,
+		};
+
+		module.Add (xa_input_assembly_data);
 	}
 
 	void ConstructFastPath (LlvmIrModule module)
@@ -443,14 +260,10 @@ class AssemblyDSOGenerator : LlvmIrComposer
 		}
 	}
 
-	void AddAssemblyData (AndroidTargetArch arch, List<DSOAssemblyInfo> infos)
+	(ArchState archState, bool is64Bit) GetArchState (AndroidTargetArch arch, int assemblyCount, StandaloneAssemblyEntry? standaloneAssembly = null)
 	{
-		if (infos.Count == 0) {
-			return;
-		}
-
 		if (!assemblyArchStates.TryGetValue (arch, out ArchState archState)) {
-			archState = new ArchState (infos.Count, arch);
+			archState = new ArchState (assemblyCount, arch, standaloneAssembly);
 			assemblyArchStates.Add (arch, archState);
 		}
 
@@ -462,16 +275,51 @@ class AssemblyDSOGenerator : LlvmIrComposer
 			_ => throw new NotSupportedException ($"Architecture '{arch}' is not supported")
 		};
 
+		return (archState, is64Bit);
+	}
+
+	uint GetInputSize (DSOAssemblyInfo info)
+	{
+		uint ret = info.CompressedDataSize == 0 ? (uint)info.DataSize : (uint)info.CompressedDataSize;
+		if (ret > Int32.MaxValue) {
+			throw new InvalidOperationException ($"Assembly {info.InputFile} size exceeds 2GB");
+		}
+
+		return ret;
+	}
+
+	void ReadAssemblyData (DSOAssemblyInfo info, StandaloneAssemblyEntry entry)
+	{
+		using (var asmFile = File.Open (info.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+			asmFile.Read (entry.AssemblyData, 0, entry.AssemblyData.Length);
+		}
+	}
+
+	void AddStandaloneAssemblyData (AndroidTargetArch arch, DSOAssemblyInfo info)
+	{
+		uint inputSize = GetInputSize (info);
+		var entry = new StandaloneAssemblyEntry {
+			AssemblyData = new byte[inputSize],
+			InputFilePath = info.InputFile,
+		};
+		(ArchState archState, bool _) = GetArchState (arch, 1, entry);
+
+		ReadAssemblyData (info, entry);
+	}
+
+	void AddAssemblyData (AndroidTargetArch arch, List<DSOAssemblyInfo> infos)
+	{
+		if (infos.Count == 0) {
+			return;
+		}
+
+		(ArchState archState, bool is64Bit) = GetArchState (arch, infos.Count);
 		var usedHashes = new HashSet<ulong> ();
 		ulong inputOffset = 0;
 		ulong uncompressedOffset = 0;
 		ulong assemblyNameLength = 0;
 		foreach (DSOAssemblyInfo info in infos) {
-			uint inputSize = info.CompressedDataSize == 0 ? (uint)info.DataSize : (uint)info.CompressedDataSize;
-
-			if (inputSize > Int32.MaxValue) {
-				throw new InvalidOperationException ($"Assembly {info.InputFile} size exceeds 2GB");
-			}
+			uint inputSize = GetInputSize (info);
 
 			// We need to read each file into a separate array, as it is (theoretically) possible that all the assemblies data will exceed 2GB,
 			// which is the limit of we can allocate (or rent, below) in .NET, per single array.
@@ -490,10 +338,7 @@ class AssemblyDSOGenerator : LlvmIrComposer
 				uncompressed_data_offset = (uint)uncompressedOffset,
 			};
 			inputOffset = AddWithCheck (inputOffset, inputSize, UInt32.MaxValue, "Input data too long");
-
-			using (var asmFile = File.Open (info.InputFile, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-				asmFile.Read (entry.AssemblyData, 0, entry.AssemblyData.Length);
-			}
+			ReadAssemblyData (info, entry);
 
 			// This is way, way more than Google Play Store supports now, but we won't limit ourselves more than we have to
 			uncompressedOffset = AddWithCheck (uncompressedOffset, entry.uncompressed_data_offset, UInt32.MaxValue, "Compressed data too long");
