@@ -65,28 +65,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 		}
 
 		var generator = new AssemblyDSOGenerator (FastPathAssemblyNames, dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
-		GenerateSources (generator, generator.Construct (), PrepareAbiItems.AssemblyDSOBase);
-
-		void GenerateSources (LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
-		{
-			foreach (string abi in SupportedAbis) {
-				string targetAbi = abi.ToLowerInvariant ();
-				string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{baseFileName}.{targetAbi}.ll");
-
-				using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
-				try {
-					generator.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, outputAsmFilePath);
-				} catch {
-					throw;
-				} finally {
-					sw.Flush ();
-				}
-
-				if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
-					Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
-				}
-			}
-		}
+		GenerateSources (SupportedAbis, generator, generator.Construct (), PrepareAbiItems.AssemblyDSOBase);
 
 		void StoreAssembly (AndroidTargetArch arch, ITaskItem assembly, string inputFile, long fileLength, uint compressedSize, DSOAssemblyInfo? info = null)
 		{
@@ -102,30 +81,5 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 			assemblyList.Add (info);
 			Log.LogDebugMessage ($"    added to arch {arch} with name: {assemblyList[assemblyList.Count - 1].Name}");
 		}
-
-		DSOAssemblyInfo MakeAssemblyInfo (ITaskItem assembly, string inputFile, long fileLength, uint compressedSize)
-		{
-			return new DSOAssemblyInfo (GetAssemblyName (assembly), inputFile, (uint)fileLength, compressedSize);
-		}
-	}
-
-	string GetAssemblyName (ITaskItem assembly)
-	{
-		if (!MonoAndroidHelper.IsSatelliteAssembly (assembly)) {
-			return Path.GetFileName (assembly.ItemSpec);
-		}
-
-		// It's a satellite assembly, %(DestinationSubDirectory) is the culture prefix
-		string? destinationSubDir = assembly.GetMetadata ("DestinationSubDirectory");
-		if (String.IsNullOrEmpty (destinationSubDir)) {
-			throw new InvalidOperationException ($"Satellite assembly '{assembly.ItemSpec}' has no culture metadata item");
-		}
-
-		string ret = $"{destinationSubDir}{Path.GetFileName (assembly.ItemSpec)}";
-		if (!assembly.ItemSpec.EndsWith (ret, StringComparison.OrdinalIgnoreCase)) {
-			throw new InvalidOperationException ($"Invalid metadata in satellite assembly '{assembly.ItemSpec}', culture metadata ('{destinationSubDir}') doesn't match file path");
-		}
-
-		return ret;
 	}
 }

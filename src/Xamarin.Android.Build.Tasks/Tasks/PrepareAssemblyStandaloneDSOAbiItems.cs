@@ -86,6 +86,10 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 			item.SetMetadata ("Abi", abi);
 			item.SetMetadata ("InputAssemblyPath", assembly.ItemSpec);
 			item.SetMetadata ("SourceFileName", MonoAndroidHelper.MakeNativeAssemblyFileName (baseName, abi));
+			string skipCompression = assembly.GetMetadata ("AndroidSkipCompression");
+			if (!String.IsNullOrEmpty (skipCompression)) {
+				item.SetMetadata ("AndroidSkipCompression", skipCompression);
+			}
 
 			return item;
 		}

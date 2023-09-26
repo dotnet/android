@@ -127,18 +127,22 @@ namespace Xamarin.Android.Tasks
 				return (assembly.ItemSpec, false);
 			}
 
+			return CompressAssembly (assembly.ItemSpec, inputInfo, assembly.GetMetadata ("DestinationSubDirectory"));
+		}
+
+		public (string outputPath, bool compressed) CompressAssembly (string assemblyPath, FileInfo inputInfo, string? subDirectory)
+		{
 			if (!inputInfo.Exists) {
-				throw new InvalidOperationException ($"File '{assembly.ItemSpec}' does not exist");
+				throw new InvalidOperationException ($"File '{assemblyPath}' does not exist");
 			}
 
 			string assemblyOutputDir;
-			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
 			if (!String.IsNullOrEmpty (subDirectory)) {
 				assemblyOutputDir = Path.Combine (compressedOutputDir, subDirectory);
 			} else {
 				assemblyOutputDir = compressedOutputDir;
 			}
-			string outputPath = Path.Combine (assemblyOutputDir, $"{Path.GetFileName (assembly.ItemSpec)}.lz4");
+			string outputPath = Path.Combine (assemblyOutputDir, $"{Path.GetFileName (assemblyPath)}.lz4");
 			Directory.CreateDirectory (assemblyOutputDir);
 
 			byte[]? sourceBytes = null;
@@ -146,15 +150,15 @@ namespace Xamarin.Android.Tasks
 			try {
 				int inputLength = checked((int)inputInfo.Length);
 				sourceBytes = bytePool.Rent (inputLength);
-				using (var fs = File.Open (assembly.ItemSpec, FileMode.Open, FileAccess.Read, FileShare.Read)) {
+				using (var fs = File.Open (assemblyPath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 					fs.Read (sourceBytes, 0, inputLength);
 				}
 
 				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (sourceBytes.Length));
 				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, inputLength, destBytes, 0, destBytes.Length, LZ4Level.L09_HC);
 				if (encodedLength < 0) {
-					log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
-					return (assembly.ItemSpec, false);
+					log.LogMessage ($"Failed to compress {assemblyPath}");
+					return (assemblyPath, false);
 				}
 
 				using (var fs = File.Open (outputPath, FileMode.Create, FileAccess.Write, FileShare.Read)) {
