@@ -178,7 +178,6 @@ properties that determine build ordering.
       _BeforeGetAndroidDependencies;
       _SetLatestTargetFrameworkVersion;
       _ResolveSdks;
-      _ResolveMonoAndroidSdks;
       _ResolveAndroidTooling;
       $(GetAndroidDependenciesDependsOn);
     </GetAndroidDependenciesDependsOn>
