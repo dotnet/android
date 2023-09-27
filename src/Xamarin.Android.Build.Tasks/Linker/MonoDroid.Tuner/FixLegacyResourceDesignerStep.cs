@@ -30,6 +30,7 @@ namespace MonoDroid.Tuner
 		AssemblyDefinition designerAssembly = null;
 		TypeDefinition designerType = null;
 		Dictionary<string, MethodDefinition> lookup;
+		Dictionary<string, MethodDefinition> lookupCaseInsensitive;
 
 		protected override void EndProcess ()
 		{
@@ -62,6 +63,7 @@ namespace MonoDroid.Tuner
 					return;
 				}
 				lookup = BuildResourceDesignerPropertyLookup (designerType);
+				lookupCaseInsensitive = BuildResourceDesignerPropertyLookup (designerType, StringComparer.OrdinalIgnoreCase);
 			} finally {
 				designerLoaded = true;
 			}
@@ -105,10 +107,10 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
-		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type)
+		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type, StringComparer comparer = null)
 		{
 			LogMessage ($"     Building Designer Lookups for {type.FullName}");
-			var output = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
+			var output = new Dictionary<string, MethodDefinition> (comparer ?? StringComparer.Ordinal);
 			foreach (TypeDefinition definition in type.NestedTypes)
 			{
 				foreach (PropertyDefinition property in definition.Properties)
@@ -117,6 +119,7 @@ namespace MonoDroid.Tuner
 					if (output.ContainsKey (key)) {
 						LogMessage ($"          Found duplicate {key}");
 					} else {
+						LogMessage ($"          Adding {key}");
 						output.Add (key, property.GetMethod);
 					}
 				}
@@ -153,7 +156,11 @@ namespace MonoDroid.Tuner
 				if (idx >= 0) {
 					string key = line.Substring (idx + designerFullName.Length);
 					LogMessage ($"Looking for {key}.");
-					if (lookup.TryGetValue (key, out MethodDefinition method)) {
+					var found = lookup.TryGetValue (key, out MethodDefinition method);
+					if (!found) {
+						found = lookupCaseInsensitive.TryGetValue (key, out method);
+					}
+					if (found) {
 						var importedMethod = designer.Module.ImportReference (method);
 						var newIn = Instruction.Create (OpCodes.Call, importedMethod);
 						instructions.Add (i, newIn);
