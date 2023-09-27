@@ -15,6 +15,8 @@
 
     <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
     <_CompressedAssembliesOutputDir>$(IntermediateOutputPath)android\lz4-2</_CompressedAssembliesOutputDir>
+
+    <_AndroidKeepStandaloneAssemblySources Condition=" '$(_AndroidKeepStandaloneAssemblySources)' == '' ">false</_AndroidKeepStandaloneAssemblySources>
   </PropertyGroup>
 
   <!-- Native code preparation targets -->
@@ -226,7 +228,9 @@
         CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
         TargetSharedLibraries="@(_StandaloneAssemblyDSOTarget)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"
-        SharedLibraryOutputDir="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)">
+        SharedLibraryOutputDir="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)"
+        KeepGeneratedSources="$(_AndroidKeepStandaloneAssemblySources)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)">
       <Output TaskParameter="SharedLibraries" ItemName="_StandaloneAssemblyDSO" />
     </BuildAndLinkStandaloneAssemblyDSOs>
     <!-- TODO:

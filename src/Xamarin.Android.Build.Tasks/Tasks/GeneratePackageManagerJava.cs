@@ -145,26 +145,6 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi)
-		{
-			switch (abi.Trim ()) {
-				case "armeabi-v7a":
-					return AndroidTargetArch.Arm;
-
-				case "arm64-v8a":
-					return AndroidTargetArch.Arm64;
-
-				case "x86":
-					return AndroidTargetArch.X86;
-
-				case "x86_64":
-					return AndroidTargetArch.X86_64;
-
-				default:
-					throw new InvalidOperationException ($"Unknown ABI {abi}");
-			}
-		}
-
 		static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 		static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
 		static readonly string[] defaultHttpMessageHandler = {"XA_HTTP_CLIENT_HANDLER_TYPE", "System.Net.Http.HttpClientHandler, System.Net.Http"};
@@ -423,7 +403,7 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
-				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
+				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {

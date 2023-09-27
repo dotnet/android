@@ -4,6 +4,7 @@ using System.IO;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -15,6 +16,18 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 		public uint CompressedSize;
 		public string OutputFile;
 		public FileInfo InputFileInfo;
+	}
+
+	internal sealed class GeneratedSource
+	{
+		public readonly string FilePath;
+		public readonly AndroidTargetArch TargetArch;
+
+		public GeneratedSource (string filePath, AndroidTargetArch targetArch)
+		{
+			FilePath = filePath;
+			TargetArch = targetArch;
+		}
 	}
 
 	[Required]
@@ -78,19 +91,21 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 		};
 	}
 
-	internal void GenerateSources (ICollection<string> supportedAbis, LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
+	internal List<GeneratedSource> GenerateSources (ICollection<string> supportedAbis, LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
 	{
 		if (String.IsNullOrEmpty (baseFileName)) {
 			throw new ArgumentException ("must not be null or empty", nameof (baseFileName));
 		}
 
+		var generatedSources = new List<GeneratedSource> ();
 		foreach (string abi in supportedAbis) {
 			string targetAbi = abi.ToLowerInvariant ();
 			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{baseFileName}.{targetAbi}.ll");
 
 			using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
+			AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 			try {
-				generator.Generate (module, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, outputAsmFilePath);
+				generator.Generate (module, targetArch, sw, outputAsmFilePath);
 			} catch {
 				throw;
 			} finally {
@@ -100,7 +115,10 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 			if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
 				Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
 			}
+			generatedSources.Add (new GeneratedSource (outputAsmFilePath, targetArch));
 		}
+
+		return generatedSources;
 	}
 
 	protected string GetAssemblyName (ITaskItem assembly)

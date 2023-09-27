@@ -7,6 +7,8 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
+using TPLTask = System.Threading.Tasks.Task;
+
 namespace Xamarin.Android.Tasks;
 
 public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGenerationTask
@@ -62,6 +64,11 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 	[Required]
 	public string SharedLibraryOutputDir { get; set; }
 
+	[Required]
+	public string AndroidBinUtilsDirectory { get; set; }
+
+	public bool KeepGeneratedSources { get; set; }
+
 	[Output]
 	public ITaskItem[] SharedLibraries { get; set; }
 
@@ -106,10 +113,69 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			}
 
 			var generator = new AssemblyDSOGenerator (infos);
-			GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
+			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
+
+			CompileAndLink (generatedSources, infos);
+
+			if (!KeepGeneratedSources) {
+				foreach (GeneratedSource src in generatedSources) {
+					try {
+						if (File.Exists (src.FilePath)) {
+							File.Delete (src.FilePath);
+						}
+					} catch (Exception ex) {
+						Log.LogDebugMessage ($"Generated source file '{src.FilePath}' not removed. Exception was thrown while removing it: {ex}");
+					}
+				}
+			}
 		}
 
 		SharedLibraries = sharedLibraries.ToArray ();
+	}
+
+	void CompileAndLink (List<GeneratedSource> generatedSources, Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos)
+	{
+		List<NativeCompilationHelper.Config> configs = GetAssemblerConfigs (generatedSources);
+		var tasks = new List<TPLTask> ();
+
+		foreach (NativeCompilationHelper.Config config in configs) {
+			tasks.Add (TPLTask.Factory.StartNew (() => NativeCompilationHelper.RunAssembler (config)));
+		}
+
+		// TODO: add timeout
+		// TODO: add cancellation support
+		try {
+			TPLTask.WaitAll (tasks.ToArray ());
+		} catch (AggregateException aex) {
+			foreach (Exception ex in aex.InnerExceptions) {
+				Log.LogErrorFromException (ex);
+			}
+
+			throw new InvalidOperationException ("Native compilation failed");
+		}
+	}
+
+	List<NativeCompilationHelper.Config> GetAssemblerConfigs (List<GeneratedSource> generatedSources)
+	{
+		string assemblerPath = NativeCompilationHelper.GetAssemblerPath (AndroidBinUtilsDirectory);
+		string workingDirectory = Path.GetFullPath (SourcesOutputDirectory);
+
+		var configs = new List<NativeCompilationHelper.Config> ();
+		foreach (GeneratedSource source in generatedSources) {
+			string sourceFile = Path.GetFileName (source.FilePath);
+
+			var config = new NativeCompilationHelper.Config (
+				log: Log,
+				assemblerPath: assemblerPath,
+				assemblerOptions: NativeCompilationHelper.MakeAssemblerOptions (sourceFile),
+				inputSource: sourceFile,
+				workingDirectory: workingDirectory
+			);
+
+			configs.Add (config);
+		}
+
+		return configs;
 	}
 
 	DSOAssemblyInfo AddAssembly (TargetDSO dso, ITaskItem dsoItem, Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> assemblies)

@@ -83,7 +83,7 @@ namespace Xamarin.Android.Tasks
 
 					using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 						try {
-							composer.Generate (compressedAssemblies, GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi), sw, llvmIrFilePath);
+							composer.Generate (compressedAssemblies, MonoAndroidHelper.AbiToTargetArch (abi), sw, llvmIrFilePath);
 						} catch {
 							throw;
 						} finally {
