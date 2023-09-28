@@ -141,7 +141,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			var generator = new AssemblyDSOGenerator (infos);
 			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
 			sourcesBatch.AddRange (generatedSources);
-			if ((uint)sourcesBatch.Count < maxParallelBuilds && remainingSources > maxParallelBuilds) {
+			if ((uint)sourcesBatch.Count < maxParallelBuilds && remainingSources >= maxParallelBuilds) {
 				continue;
 			}
 
