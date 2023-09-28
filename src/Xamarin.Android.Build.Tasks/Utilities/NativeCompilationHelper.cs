@@ -12,34 +12,50 @@ namespace Xamarin.Android.Tasks;
 
 class NativeCompilationHelper
 {
-	public sealed class Config
+	public sealed class AssemblerConfig
 	{
 		public readonly string AssemblerPath;
-		public readonly string AssemblerOptions;
+		public readonly List<string> AssemblerOptions;
 		public readonly string InputSource;
+		public readonly string OutputFile;
 		public readonly string WorkingDirectory;
 		public readonly TaskLoggingHelper Log;
 
 		public CancellationToken? CancellationToken { get; set; }
 		public Action? Cancel { get; set; }
 
-		public Config (TaskLoggingHelper log, string assemblerPath, string assemblerOptions, string inputSource, string workingDirectory)
+		public AssemblerConfig (TaskLoggingHelper log, string assemblerPath, string inputSource, string workingDirectory, List<string>? assemblerOptions = null, string? outputFile = null)
 		{
 			Log = log;
 			AssemblerPath = assemblerPath;
-			AssemblerOptions = assemblerOptions;
 			InputSource = inputSource;
 			WorkingDirectory = workingDirectory;
+
+			if (String.IsNullOrEmpty (outputFile)) {
+				OutputFile = Path.ChangeExtension (inputSource, ".o");
+			} else {
+				OutputFile = outputFile;
+			}
+
+			if (assemblerOptions != null) {
+				AssemblerOptions = new List<string> (assemblerOptions);
+			} else {
+				AssemblerOptions = new List<string> (NativeCompilationHelper.DefaultAssemblerOptions);
+			}
+
+			AssemblerOptions.Add ($"-o={QuoteFileName(OutputFile)}");
+			AssemblerOptions.Add (QuoteFileName (InputSource));
 		}
 	}
 
-	public const string DefaultAssemblerOptions =
-		"-O2 " +
-		"--debugger-tune=lldb " + // NDK uses lldb now
-		"--debugify-level=location+variables " +
-		"--fatal-warnings " +
-		"--filetype=obj " +
-		"--relocation-model=pic";
+	public static readonly List<string> DefaultAssemblerOptions = new List<string> {
+		"-O2",
+		"--debugger-tune=lldb",
+		"--debugify-level=location+variables",
+		"--fatal-warnings",
+		"--filetype=obj",
+		"--relocation-model=pic",
+	};
 
 	public static string GetAssemblerPath (string androidBinUtilsDirectory)
 	{
@@ -50,23 +66,6 @@ class NativeCompilationHelper
 		return Path.Combine (executableDir, executableName);
 	}
 
-	/// <summary>
-	/// Construct native assembler (`llc`) parameters from the provided components.  The only required parameter is <paramref name="sourceFile"/>,
-	/// which is used to construct the output file path by replacing its extension with `.o`, unless <paramref name="outputFile"/> is provided.
-	///
-	/// If <paramref name="commonOptions"/>, then the <see cref="DefaultAssemblerOptions"/> constant will be used.  If, on the other hand, it **is**
-	/// provided, it's the caller's responsibility to provide all the necessary options.
-	/// </summary>
-	public static string MakeAssemblerOptions (string sourceFile, string? commonOptions = null, string? outputFile = null)
-	{
-		if (String.IsNullOrEmpty (outputFile)) {
-			outputFile = Path.ChangeExtension (sourceFile, ".o");
-		}
-
-		string standardOptions = String.IsNullOrEmpty (commonOptions) ? DefaultAssemblerOptions : commonOptions;
-		return $"{standardOptions} -o={QuoteFileName (outputFile)} {QuoteFileName (sourceFile)}";
-	}
-
 	static string QuoteFileName (string fileName)
 	{
 		var builder = new CommandLineBuilder ();
@@ -74,13 +73,13 @@ class NativeCompilationHelper
 		return builder.ToString ();
 	}
 
-	public static void RunAssembler (Config config)
+	public static void RunAssembler (AssemblerConfig config)
 	{
 		var stdout_completed = new ManualResetEvent (false);
 		var stderr_completed = new ManualResetEvent (false);
 		var psi = new ProcessStartInfo () {
 			FileName = config.AssemblerPath,
-			Arguments = config.AssemblerOptions,
+			Arguments = String.Join (" ", config.AssemblerOptions),
 			UseShellExecute = false,
 			RedirectStandardOutput = true,
 			RedirectStandardError = true,

@@ -230,7 +230,8 @@
         EnableCompression="$(AndroidEnableAssemblyCompression)"
         SharedLibraryOutputDir="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)"
         KeepGeneratedSources="$(_AndroidKeepStandaloneAssemblySources)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)">
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        ParallelBuildsNumber="$(_AndroidNativeParallelBuildsNumber)">
       <Output TaskParameter="SharedLibraries" ItemName="_StandaloneAssemblyDSO" />
     </BuildAndLinkStandaloneAssemblyDSOs>
     <!-- TODO:

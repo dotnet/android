@@ -58,6 +58,8 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 	public override string TaskPrefix => "BALSAD";
 
+	const uint DefaultParallelBuilds = 8;
+
 	[Required]
 	public ITaskItem[] TargetSharedLibraries { get; set; }
 
@@ -68,6 +70,8 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 	public string AndroidBinUtilsDirectory { get; set; }
 
 	public bool KeepGeneratedSources { get; set; }
+
+	public string ParallelBuildsNumber { get; set; }
 
 	[Output]
 	public ITaskItem[] SharedLibraries { get; set; }
@@ -100,6 +104,28 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			sharedLibraries.Add (dsoItem);
 		}
 
+		uint maxParallelBuilds;
+		if (String.IsNullOrEmpty (ParallelBuildsNumber)) {
+			maxParallelBuilds = DefaultParallelBuilds;
+		} else if (!UInt32.TryParse (ParallelBuildsNumber, out maxParallelBuilds)) {
+			Log.LogWarning ($"Unable to parse parallel builds number from '{ParallelBuildsNumber}', an unsigned integer is expected. Will default to {DefaultParallelBuilds}");
+			maxParallelBuilds = DefaultParallelBuilds;
+		}
+		Log.LogDebugMessage ($"Will launch up to {maxParallelBuilds} builds at a time");
+
+		// Adjust maxParallelBuilds to be the next highest even multiple of supportedAbisCount, since each assembly will be built supportedAbisCount times and we
+		// want to build those sources together
+		uint supportedAbisCount = (uint)supportedAbis.Count;
+		if (maxParallelBuilds < supportedAbisCount) {
+			maxParallelBuilds = supportedAbisCount;
+			Log.LogDebugMessage ($"Maximum parallel builds number adjusted to match the number of supported ABIs, {supportedAbisCount}");
+		} else if (maxParallelBuilds % supportedAbisCount != 0) {
+			maxParallelBuilds += supportedAbisCount - (maxParallelBuilds % supportedAbisCount);
+			Log.LogDebugMessage ($"Maximum parallel builds number adjusted to the next even multiple of number of abis, {maxParallelBuilds}");
+		}
+
+		var sourcesBatch = new List<GeneratedSource> ();
+		uint remainingSources = (uint)assemblies.Count * supportedAbisCount;
 		foreach (var kvp in assemblies) {
 			Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos = kvp.Value;
 
@@ -114,20 +140,15 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 			var generator = new AssemblyDSOGenerator (infos);
 			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
-
-			CompileAndLink (generatedSources, infos);
-
-			if (!KeepGeneratedSources) {
-				foreach (GeneratedSource src in generatedSources) {
-					try {
-						if (File.Exists (src.FilePath)) {
-							File.Delete (src.FilePath);
-						}
-					} catch (Exception ex) {
-						Log.LogDebugMessage ($"Generated source file '{src.FilePath}' not removed. Exception was thrown while removing it: {ex}");
-					}
-				}
+			sourcesBatch.AddRange (generatedSources);
+			if ((uint)sourcesBatch.Count < maxParallelBuilds && remainingSources > maxParallelBuilds) {
+				continue;
 			}
+
+			CompileAndLink (sourcesBatch, infos);
+
+			remainingSources -= (uint)sourcesBatch.Count;
+			sourcesBatch.Clear ();
 		}
 
 		SharedLibraries = sharedLibraries.ToArray ();
@@ -135,11 +156,12 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 	void CompileAndLink (List<GeneratedSource> generatedSources, Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos)
 	{
-		List<NativeCompilationHelper.Config> configs = GetAssemblerConfigs (generatedSources);
+		Log.LogDebugMessage ($"Compiling and linking {generatedSources.Count} shared libraries in parallel");
+		List<NativeCompilationHelper.AssemblerConfig> configs = GetAssemblerConfigs (generatedSources);
 		var tasks = new List<TPLTask> ();
 
-		foreach (NativeCompilationHelper.Config config in configs) {
-			tasks.Add (TPLTask.Factory.StartNew (() => NativeCompilationHelper.RunAssembler (config)));
+		foreach (NativeCompilationHelper.AssemblerConfig config in configs) {
+			tasks.Add (TPLTask.Factory.StartNew (() => DoCompileAndLink (config)));
 		}
 
 		// TODO: add timeout
@@ -155,19 +177,35 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		}
 	}
 
-	List<NativeCompilationHelper.Config> GetAssemblerConfigs (List<GeneratedSource> generatedSources)
+	void DoCompileAndLink (NativeCompilationHelper.AssemblerConfig config)
+	{
+		NativeCompilationHelper.RunAssembler (config);
+
+		if (KeepGeneratedSources) {
+			return;
+		}
+
+		try {
+			if (File.Exists (config.InputSource)) {
+				File.Delete (config.InputSource);
+			}
+		} catch (Exception ex) {
+			Log.LogDebugMessage ($"Generated source file '{config.InputSource}' not removed. Exception was thrown while removing it: {ex}");
+		}
+	}
+
+	List<NativeCompilationHelper.AssemblerConfig> GetAssemblerConfigs (List<GeneratedSource> generatedSources)
 	{
 		string assemblerPath = NativeCompilationHelper.GetAssemblerPath (AndroidBinUtilsDirectory);
 		string workingDirectory = Path.GetFullPath (SourcesOutputDirectory);
 
-		var configs = new List<NativeCompilationHelper.Config> ();
+		var configs = new List<NativeCompilationHelper.AssemblerConfig> ();
 		foreach (GeneratedSource source in generatedSources) {
 			string sourceFile = Path.GetFileName (source.FilePath);
 
-			var config = new NativeCompilationHelper.Config (
+			var config = new NativeCompilationHelper.AssemblerConfig (
 				log: Log,
 				assemblerPath: assemblerPath,
-				assemblerOptions: NativeCompilationHelper.MakeAssemblerOptions (sourceFile),
 				inputSource: sourceFile,
 				workingDirectory: workingDirectory
 			);

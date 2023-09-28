@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 			return this.WhenAll (GetAssemblerConfigs (), NativeCompilationHelper.RunAssembler);
 		}
 
-		IEnumerable<NativeCompilationHelper.Config> GetAssemblerConfigs ()
+		IEnumerable<NativeCompilationHelper.AssemblerConfig> GetAssemblerConfigs ()
 		{
 			string assemblerPath = NativeCompilationHelper.GetAssemblerPath (AndroidBinUtilsDirectory);
 			string workingDirectory = Path.GetFullPath (WorkingDirectory);
@@ -36,11 +36,10 @@ namespace Xamarin.Android.Tasks
 				// We don't need the directory since our WorkingDirectory is where all the sources are
 				string sourceFile = Path.GetFileName (item.ItemSpec);
 
-				yield return new NativeCompilationHelper.Config (
+				yield return new NativeCompilationHelper.AssemblerConfig (
 					log: Log,
 					assemblerPath: assemblerPath,
-					assemblerOptions: NativeCompilationHelper.MakeAssemblerOptions (sourceFile),
-					inputSource: item.ItemSpec,
+					inputSource: sourceFile,
 					workingDirectory: workingDirectory
 				) {
 					CancellationToken = CancellationToken,
