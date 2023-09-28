@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -9,7 +11,6 @@ namespace Xamarin.Android.Tasks
 		sealed class CSharpBindingGenerator : BindingGenerator
 		{
 			const string BindingPartialClassBackingFieldName = "__layout_binding";
-
 			protected override string LineCommentString => "//";
 			protected override string DocCommentString => "///";
 			public override string LanguageName => "C#";
@@ -239,7 +240,7 @@ namespace Xamarin.Android.Tasks
 				if (loc == null)
 					return;
 
-				WriteLineIndent (state, $"#line {loc.Line} \"{loc.FilePath}\"");
+				WriteLineIndent (state, $"#line {loc.Line} \"{Path.GetFullPath (loc.FilePath)}\"");
 				state.WriteLine ();
 			}
 
