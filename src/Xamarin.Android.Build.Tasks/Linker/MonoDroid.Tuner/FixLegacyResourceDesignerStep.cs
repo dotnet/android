@@ -62,8 +62,7 @@ namespace MonoDroid.Tuner
 					LogMessage ($"   Did not find {DesignerAssemblyNamespace}.Resource type. It was probably linked out.");
 					return;
 				}
-				lookup = BuildResourceDesignerPropertyLookup (designerType);
-				lookupCaseInsensitive = BuildResourceDesignerPropertyLookup (designerType, StringComparer.OrdinalIgnoreCase);
+				lookup = BuildResourceDesignerPropertyLookup (designerType, out lookupCaseInsensitive);
 			} finally {
 				designerLoaded = true;
 			}
@@ -107,10 +106,11 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
-		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type, StringComparer comparer = null)
+		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type, out Dictionary<string, MethodDefinition> caseInsensitiveLookup)
 		{
 			LogMessage ($"     Building Designer Lookups for {type.FullName}");
-			var output = new Dictionary<string, MethodDefinition> (comparer ?? StringComparer.Ordinal);
+			var output = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
+			caseInsensitiveLookup = new Dictionary<string, MethodDefinition> (StringComparer.OrdinalIgnoreCase);
 			foreach (TypeDefinition definition in type.NestedTypes)
 			{
 				foreach (PropertyDefinition property in definition.Properties)
@@ -121,6 +121,7 @@ namespace MonoDroid.Tuner
 					} else {
 						LogMessage ($"          Adding {key}");
 						output.Add (key, property.GetMethod);
+						caseInsensitiveLookup.Add (key, property.GetMethod);
 					}
 				}
 			}
@@ -158,6 +159,7 @@ namespace MonoDroid.Tuner
 					LogMessage ($"Looking for {key}.");
 					var found = lookup.TryGetValue (key, out MethodDefinition method);
 					if (!found) {
+						LogMessage ($"DEBUG! Failed to find {key}! Trying case insensitive lookup.");
 						found = lookupCaseInsensitive.TryGetValue (key, out method);
 					}
 					if (found) {
