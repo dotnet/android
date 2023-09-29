@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks
 
 			string stripSymbolsArg = DebugBuild ? String.Empty : " -s";
 
-			string ld = Path.Combine (AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (AndroidBinUtilsDirectory, "ld"));
+			string ld = NativeCompilationHelper.GetLinkerPath (AndroidBinUtilsDirectory);
 			var targetLinkerArgs = new List<string> ();
 			foreach (var kvp in abis) {
 				string abi = kvp.Key;

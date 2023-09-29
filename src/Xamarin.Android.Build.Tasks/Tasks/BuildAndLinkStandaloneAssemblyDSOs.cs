@@ -138,6 +138,8 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 				break;
 			}
 
+			// TODO: fix shared library output. Each batch of GeneratedSource instances must be paired with its own `infos` or the
+			//       shared library output name will be wrong.
 			var generator = new AssemblyDSOGenerator (infos);
 			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
 			sourcesBatch.AddRange (generatedSources);
@@ -161,7 +163,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		var tasks = new List<TPLTask> ();
 
 		foreach (NativeCompilationHelper.AssemblerConfig config in configs) {
-			tasks.Add (TPLTask.Factory.StartNew (() => DoCompileAndLink (config)));
+			tasks.Add (TPLTask.Factory.StartNew (() => DoCompileAndLink (config, infos)));
 		}
 
 		// TODO: add timeout
@@ -177,20 +179,58 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		}
 	}
 
-	void DoCompileAndLink (NativeCompilationHelper.AssemblerConfig config)
+	void DoCompileAndLink (NativeCompilationHelper.AssemblerConfig config, Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos)
 	{
-		NativeCompilationHelper.RunAssembler (config);
-
-		if (KeepGeneratedSources) {
+		bool success = NativeCompilationHelper.RunAssembler (config);
+		if (!success || KeepGeneratedSources) {
 			return;
 		}
 
+		if (!infos.TryGetValue (config.TargetArch, out DSOAssemblyInfo genericDsoInfo)) {
+			throw new InvalidOperationException ($"Internal error: DSO info for arch '{config.TargetArch}' not found (input file: {config.InputSource})");
+		}
+
+		var dsoInfo = genericDsoInfo as LocalDSOAssemblyInfo;
+		if (dsoInfo == null) {
+			throw new InvalidOperationException ($"Internal error: DSO info must be an instance of {nameof(LocalDSOAssemblyInfo)}, but it was {genericDsoInfo.GetType ()} instead");
+		}
+
+		var linkerConfig = new NativeCompilationHelper.LinkerConfig (
+			log: Log,
+			targetArch: config.TargetArch,
+			linkerPath: NativeCompilationHelper.GetLinkerPath (AndroidBinUtilsDirectory),
+			outputSharedLibrary: dsoInfo.SharedLibraryItem.ItemSpec
+		);
+
+		string inputObjectFile;
+		if (!String.IsNullOrEmpty (config.WorkingDirectory)) {
+			inputObjectFile = Path.Combine (config.WorkingDirectory, config.OutputFile);
+		} else {
+			inputObjectFile = config.OutputFile;
+		}
+		linkerConfig.ObjectFilePaths.Add (inputObjectFile);
+
+		success = NativeCompilationHelper.RunLinker (linkerConfig);
+		if (!success || KeepGeneratedSources) {
+			return;
+		}
+
+		string sourceFile;
+		if (!String.IsNullOrEmpty (config.WorkingDirectory)) {
+			sourceFile = Path.Combine (config.WorkingDirectory, config.InputSource);
+		} else {
+			sourceFile = config.InputSource;
+		}
+
 		try {
-			if (File.Exists (config.InputSource)) {
-				File.Delete (config.InputSource);
+			Log.LogDebugMessage ($"Will delete source: {sourceFile}");
+			if (File.Exists (sourceFile)) {
+				File.Delete (sourceFile);
+			} else {
+				Log.LogDebugMessage ("  file doesn't exist");
 			}
 		} catch (Exception ex) {
-			Log.LogDebugMessage ($"Generated source file '{config.InputSource}' not removed. Exception was thrown while removing it: {ex}");
+			Log.LogDebugMessage ($"Generated source file '{sourceFile}' not removed. Exception was thrown while removing it: {ex}");
 		}
 	}
 
@@ -205,6 +245,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 			var config = new NativeCompilationHelper.AssemblerConfig (
 				log: Log,
+				targetArch: source.TargetArch,
 				assemblerPath: assemblerPath,
 				inputSource: sourceFile,
 				workingDirectory: workingDirectory

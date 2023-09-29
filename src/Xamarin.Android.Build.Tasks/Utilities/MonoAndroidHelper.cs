@@ -543,6 +543,8 @@ namespace Xamarin.Android.Tasks
 				"arm64-v8a"   => AndroidTargetArch.Arm64,
 				"x86_64"      => AndroidTargetArch.X86_64,
 				"x86"         => AndroidTargetArch.X86,
+				""            => throw new ArgumentException ("must not be empty string", nameof (abi)),
+				null          => throw new ArgumentNullException (nameof (abi)),
 				_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
 			};
 		}

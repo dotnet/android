@@ -24,7 +24,7 @@ namespace Xamarin.Android.Tasks
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
-			return this.WhenAll (GetAssemblerConfigs (), NativeCompilationHelper.RunAssembler);
+			return this.WhenAll (GetAssemblerConfigs (), (NativeCompilationHelper.AssemblerConfig config) => NativeCompilationHelper.RunAssembler (config));
 		}
 
 		IEnumerable<NativeCompilationHelper.AssemblerConfig> GetAssemblerConfigs ()
@@ -38,6 +38,7 @@ namespace Xamarin.Android.Tasks
 
 				yield return new NativeCompilationHelper.AssemblerConfig (
 					log: Log,
+					targetArch: MonoAndroidHelper.AbiToTargetArch (item.GetMetadata ("abi")),
 					assemblerPath: assemblerPath,
 					inputSource: sourceFile,
 					workingDirectory: workingDirectory
