@@ -1138,6 +1138,12 @@ namespace generatortests
 
 			var gens = ParseApiDefinition (xml);
 
+			// Override method should not be marked deprecated because it's: deprecated='not deprecated'
+			Assert.IsNull (gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
+
+			options.FixObsoleteOverrides = true;
+			gens = ParseApiDefinition (xml);
+
 			// Override method should be marked deprecated because base method is
 			Assert.AreEqual ("deprecated", gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").Deprecated);
 		}
@@ -1158,6 +1164,7 @@ namespace generatortests
 			  </package>
 			</api>";
 
+			options.FixObsoleteOverrides = true;
 			var gens = ParseApiDefinition (xml);
 
 			// Override method should match base method's 'deprecated-since'

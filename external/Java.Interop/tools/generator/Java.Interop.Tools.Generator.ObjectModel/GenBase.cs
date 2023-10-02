@@ -311,13 +311,15 @@ namespace MonoDroid.Generation
 					if (bm != null && bm.RetVal.FullName == m.RetVal.FullName) { // if return type is different, it could be still "new", not "override".
 						m.IsOverride = true;
 
-						// If method overrides a deprecated method, it also needs to be marked as deprecated
-						if (bm.Deprecated.HasValue () && !m.Deprecated.HasValue ())
-							m.Deprecated = bm.Deprecated;
+						if (opt.FixObsoleteOverrides) {
+							// If method overrides a deprecated method, it also needs to be marked as deprecated
+							if (bm.Deprecated.HasValue () && !m.Deprecated.HasValue ())
+								m.Deprecated = bm.Deprecated;
 
-						// Fix issue when base method was deprecated before the overriding method, set both both to base method value
-						if (bm.DeprecatedSince.GetValueOrDefault (0) < m.DeprecatedSince.GetValueOrDefault (0))
-							m.DeprecatedSince = bm.DeprecatedSince;
+							// Fix issue when base method was deprecated before the overriding method, set both both to base method value
+							if (bm.DeprecatedSince.GetValueOrDefault (0) < m.DeprecatedSince.GetValueOrDefault (0))
+								m.DeprecatedSince = bm.DeprecatedSince;
+						}
 
 						break;
 					}

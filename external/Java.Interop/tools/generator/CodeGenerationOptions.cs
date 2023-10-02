@@ -65,6 +65,7 @@ namespace MonoDroid.Generation
 		public bool UseShallowReferencedTypes { get; set; }
 		public bool UseObsoletedOSPlatformAttributes { get; set; }
 		public bool UseRestrictToAttributes { get; set; }
+		public bool FixObsoleteOverrides { get; set; }
 		public bool RemoveConstSugar => BuildingCoreAssembly;
 
 		bool? buildingCoreAssembly;
