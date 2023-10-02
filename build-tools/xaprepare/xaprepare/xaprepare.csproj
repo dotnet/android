@@ -45,6 +45,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Include="../../../src/Xamarin.Android.Build.Tasks/Utilities/PathUtil.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="7-Zip.CommandLine" Version="18.1.0" GeneratePathProperty="true" />
     <PackageReference Include="Kajabity.Tools.Java" Version="0.2.6862.30334" />
     <PackageReference Include="Mono.Options" Version="$(MonoOptionsVersion)" />

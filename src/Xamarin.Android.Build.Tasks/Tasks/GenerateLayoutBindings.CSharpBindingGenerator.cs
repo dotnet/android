@@ -11,6 +11,8 @@ namespace Xamarin.Android.Tasks
 		sealed class CSharpBindingGenerator : BindingGenerator
 		{
 			const string BindingPartialClassBackingFieldName = "__layout_binding";
+
+			string codebehindDir = string.Empty;
 			protected override string LineCommentString => "//";
 			protected override string DocCommentString => "///";
 			public override string LanguageName => "C#";
@@ -27,6 +29,11 @@ namespace Xamarin.Android.Tasks
 				WriteClassOpen (state, $"partial class {className}");
 				WriteLineIndent (state, $"{state.BindingClassName} {BindingPartialClassBackingFieldName};");
 				state.WriteLine ();
+			}
+
+			public override void SetCodeBehindDir(string path)
+			{
+				codebehindDir = Path.GetFullPath (path);
 			}
 
 			public override void EndPartialClassFile (State state)
@@ -240,7 +247,8 @@ namespace Xamarin.Android.Tasks
 				if (loc == null)
 					return;
 
-				WriteLineIndent (state, $"#line {loc.Line} \"{Path.GetFullPath (loc.FilePath)}\"");
+				var relativePath = PathUtil.GetRelativePath (codebehindDir, Path.GetFullPath (loc.FilePath));
+				WriteLineIndent (state, $"#line {loc.Line} \"{relativePath}\"");
 				state.WriteLine ();
 			}
 
