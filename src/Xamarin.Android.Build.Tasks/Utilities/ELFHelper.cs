@@ -15,6 +15,40 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
+		public static (ulong? offset, ulong? size) GetExportedSymbolOffsetAndSize (TaskLoggingHelper log, string dsoPath, string symbolName)
+		{
+			if (String.IsNullOrEmpty (dsoPath) || !File.Exists (dsoPath)) {
+				throw new ArgumentException ("must not be null or empty and the file must exist", nameof (dsoPath));
+			}
+
+			IELF elf = ELFReader.Load (dsoPath);
+			ISymbolTable? symtab = GetSymbolTable (elf, ".dynsym");
+			if (symtab == null) {
+				log.LogDebugMessage ($"Shared library '{dsoPath}' does not export any symbols");
+				return (null, null);
+			}
+
+			ISymbolEntry? symbol = null;
+			foreach (var entry in symtab.Entries) {
+				if (entry.Type == ELFSymbolType.Object && String.Compare (symbolName, entry.Name, StringComparison.Ordinal) == 0) {
+					symbol = entry;
+					break;
+				}
+			}
+
+			if (symbol == null) {
+				log.LogDebugMessage ($"Shared library '{dsoPath}' does not export symbol '{symbolName}'");
+				return (null, null);
+			}
+
+			if (elf.Class == Class.Bit64) {
+				var sym64 = (SymbolEntry<ulong>)symbol;
+				return (sym64.Value, sym64.Size);
+			}
+			var sym32 = (SymbolEntry<uint>)symbol;
+			return ((ulong)sym32.Value, (ulong)sym32.Size);
+		}
+
 		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
 		{
 			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {

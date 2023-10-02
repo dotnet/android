@@ -23,6 +23,7 @@ class NativeCompilationHelper
 		public readonly string? WorkingDirectory;
 		public readonly AndroidTargetArch TargetArch;
 
+		public object? State { get; set; }
 		public CancellationToken? CancellationToken { get; set; }
 		public Action? Cancel { get; set; }
 

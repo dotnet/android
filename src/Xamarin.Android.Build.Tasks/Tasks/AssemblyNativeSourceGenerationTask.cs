@@ -22,11 +22,13 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 	{
 		public readonly string FilePath;
 		public readonly AndroidTargetArch TargetArch;
+		public readonly object? State;
 
-		public GeneratedSource (string filePath, AndroidTargetArch targetArch)
+		public GeneratedSource (string filePath, AndroidTargetArch targetArch, object? state = null)
 		{
 			FilePath = filePath;
 			TargetArch = targetArch;
+			State = state;
 		}
 	}
 
@@ -91,7 +93,7 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 		};
 	}
 
-	internal List<GeneratedSource> GenerateSources (ICollection<string> supportedAbis, LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName)
+	internal List<GeneratedSource> GenerateSources (ICollection<string> supportedAbis, LLVMIR.LlvmIrComposer generator, LLVMIR.LlvmIrModule module, string baseFileName, object? sourceState = null)
 	{
 		if (String.IsNullOrEmpty (baseFileName)) {
 			throw new ArgumentException ("must not be null or empty", nameof (baseFileName));
@@ -115,7 +117,7 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 			if (Files.CopyIfStreamChanged (sw.BaseStream, outputAsmFilePath)) {
 				Log.LogDebugMessage ($"File {outputAsmFilePath} was (re)generated");
 			}
-			generatedSources.Add (new GeneratedSource (outputAsmFilePath, targetArch));
+			generatedSources.Add (new GeneratedSource (outputAsmFilePath, targetArch, sourceState));
 		}
 
 		return generatedSources;

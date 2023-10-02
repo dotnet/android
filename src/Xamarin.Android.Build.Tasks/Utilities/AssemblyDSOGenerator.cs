@@ -13,7 +13,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
 	const string XAAssemblyIndexVarName            = "xa_assembly_index";
 	const string XAAssemblyNamesVarName            = "xa_assembly_names";
-	const string XAInputAssemblyDataVarName        = "xa_input_assembly_data";
+	public const string XAInputAssemblyDataVarName = "xa_input_assembly_data";
 	const string XAUncompressedAssemblyDataVarName = "xa_uncompressed_assembly_data";
 
 	readonly Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>>? allAssemblies;

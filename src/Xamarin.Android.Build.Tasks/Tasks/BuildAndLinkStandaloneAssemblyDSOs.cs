@@ -48,6 +48,8 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		public readonly TargetDSO TargetDSO;
 		public readonly ITaskItem SharedLibraryItem;
 
+		public ulong? XAInputAssemblyDataOffset { get; set; }
+
 		public LocalDSOAssemblyInfo (TargetDSO targetDSO, ITaskItem sharedLibraryItem, string name, string inputFile, uint dataSize, uint compressedDataSize)
 			: base (name, inputFile, dataSize, compressedDataSize)
 		{
@@ -90,7 +92,6 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			DSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
 
 			dsoItem.SetMetadata ("Abi", dso.Abi);
-			dsoItem.SetMetadata ("DataSymbolOffset", "<TODO>");
 			dsoItem.SetMetadata ("DataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
 			dsoItem.SetMetadata ("UncompressedDataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
 			dsoItem.SetMetadata ("Compressed", dsoInfo.CompressedDataSize == 0 ? "false" : "true");
@@ -138,16 +139,14 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 				break;
 			}
 
-			// TODO: fix shared library output. Each batch of GeneratedSource instances must be paired with its own `infos` or the
-			//       shared library output name will be wrong.
 			var generator = new AssemblyDSOGenerator (infos);
-			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName);
+			List<GeneratedSource> generatedSources = GenerateSources (supportedAbis, generator, generator.Construct (), baseName, sourceState: infos);
 			sourcesBatch.AddRange (generatedSources);
 			if ((uint)sourcesBatch.Count < maxParallelBuilds && remainingSources >= maxParallelBuilds) {
 				continue;
 			}
 
-			CompileAndLink (sourcesBatch, infos);
+			CompileAndLink (sourcesBatch);
 
 			remainingSources -= (uint)sourcesBatch.Count;
 			sourcesBatch.Clear ();
@@ -156,13 +155,18 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		SharedLibraries = sharedLibraries.ToArray ();
 	}
 
-	void CompileAndLink (List<GeneratedSource> generatedSources, Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos)
+	void CompileAndLink (List<GeneratedSource> generatedSources)
 	{
 		Log.LogDebugMessage ($"Compiling and linking {generatedSources.Count} shared libraries in parallel");
 		List<NativeCompilationHelper.AssemblerConfig> configs = GetAssemblerConfigs (generatedSources);
 		var tasks = new List<TPLTask> ();
 
 		foreach (NativeCompilationHelper.AssemblerConfig config in configs) {
+			var infos = config.State as Dictionary<AndroidTargetArch, DSOAssemblyInfo>;
+			if (infos == null) {
+				throw new InvalidOperationException ($"Internal error: state for '{config.OutputFile}' is of invalid type.");
+			}
+
 			tasks.Add (TPLTask.Factory.StartNew (() => DoCompileAndLink (config, infos)));
 		}
 
@@ -182,7 +186,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 	void DoCompileAndLink (NativeCompilationHelper.AssemblerConfig config, Dictionary<AndroidTargetArch, DSOAssemblyInfo> infos)
 	{
 		bool success = NativeCompilationHelper.RunAssembler (config);
-		if (!success || KeepGeneratedSources) {
+		if (!success) {
 			return;
 		}
 
@@ -212,6 +216,26 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 
 		success = NativeCompilationHelper.RunLinker (linkerConfig);
 		if (!success || KeepGeneratedSources) {
+			return;
+		}
+
+		(dsoInfo.XAInputAssemblyDataOffset, ulong? symbolSize) = ELFHelper.GetExportedSymbolOffsetAndSize (Log, linkerConfig.OutputFile, AssemblyDSOGenerator.XAInputAssemblyDataVarName);
+		if (dsoInfo.XAInputAssemblyDataOffset == null) {
+			Log.LogError ($"Shared library '{linkerConfig.OutputFile}' does not export the required symbol '{AssemblyDSOGenerator.XAInputAssemblyDataVarName}'");
+			return;
+		}
+		Log.LogDebugMessage ($"Shared library '{linkerConfig.OutputFile}' has symbol '{AssemblyDSOGenerator.XAInputAssemblyDataVarName}' at offset {dsoInfo.XAInputAssemblyDataOffset}");
+		dsoInfo.SharedLibraryItem.SetMetadata ("DataSymbolOffset", MonoAndroidHelper.CultureInvariantToString (dsoInfo.XAInputAssemblyDataOffset));
+
+		ulong expectedSize;
+		if (dsoInfo.CompressedDataSize == 0) {
+			expectedSize = dsoInfo.DataSize;
+		} else {
+			expectedSize = dsoInfo.CompressedDataSize;
+		}
+
+		if (expectedSize != symbolSize) {
+			Log.LogError ($"Shared library '{linkerConfig.OutputFile}' symbol '{AssemblyDSOGenerator.XAInputAssemblyDataVarName}' has invalid size {symbolSize} (expected {expectedSize})");
 			return;
 		}
 
@@ -249,7 +273,9 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 				assemblerPath: assemblerPath,
 				inputSource: sourceFile,
 				workingDirectory: workingDirectory
-			);
+			) {
+				State = source.State,
+			};
 
 			configs.Add (config);
 		}
