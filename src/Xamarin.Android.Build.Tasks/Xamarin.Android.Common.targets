@@ -2550,8 +2550,8 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
-  <RemoveDirFixed Directories="$(IntermediateOutputPath)generated" Condition="Exists ('$(IntermediateOutputPath)generated')" />
-  <RemoveDirFixed Directories="$(IntermediateOutputPath)codebehind" Condition="Exists ('$(IntermediateOutputPath)codebehind')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)generated" Condition="Exists ('$(IntermediateOutputPath)generated')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)codebehind" Condition="Exists ('$(IntermediateOutputPath)codebehind')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)res" Condition="Exists ('$(IntermediateOutputPath)res')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)aidl" Condition="Exists ('$(IntermediateOutputPath)aidl')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)bundles" Condition="Exists ('$(IntermediateOutputPath)bundles')" />
