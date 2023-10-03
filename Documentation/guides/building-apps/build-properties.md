@@ -987,9 +987,12 @@ merging *AndroidManifest.xml* files. This is an enum-style property
 where `legacy` selects the original C# implementation
 and `manifestmerger.jar` selects Google's Java implementation.
 
-The default value is currently `legacy`. This will change to
-`manifestmerger.jar` in a future release to align behavior with
-Android Studio.
+The default value is currently `manifestmerger.jar`. If you want to 
+use the old version add the following to your csproj
+
+```
+<AndroidManifestMerger>legacy</AndroidManifestMerger>
+```
 
 Google's merger enables support for `xmlns:tools="http://schemas.android.com/tools"`
 as described in the [Android documentation][manifest-merger].
