@@ -17,6 +17,13 @@ partial class AssemblyDSOGenerator
 
 		[NativeAssembler (Ignore = true)]
 		public string InputFilePath;
+
+		// If `true`, we have an instance of a standalone assembly being processed when
+		// generating libxamarin-app.so sources.  This is necessary because we still need
+		// all the assembly information (name, size etc) to generated indexes etc.  However,
+		// in this case assembly data will not be needed as it's already in its own DSO
+		[NativeAssembler (Ignore = true)]
+		public bool IsStandalone;
 	}
 
 	// Must be identical to AssemblyEntry in src/monodroid/jni/xamarin-app.hh
@@ -53,6 +60,9 @@ partial class AssemblyDSOGenerator
 
 		// whether hashed name had extension
 		public bool has_extension;
+
+		// whether assembly data lives in a separate DSO
+		public bool is_standalone;
 	}
 
 	sealed class AssemblyIndexEntry32 : AssemblyIndexEntryBase<uint>
@@ -130,12 +140,14 @@ partial class AssemblyDSOGenerator
 				throw new ArgumentNullException (nameof (entry));
 			}
 
-			if (entry.AssemblyData == null) {
-				throw new InvalidOperationException ("Internal error: assembly data must be present");
-			}
+			if (!entry.IsStandalone) {
+				if (entry.AssemblyData == null) {
+					throw new InvalidOperationException ("Internal error: assembly data must be present");
+				}
 
-			if (entry.AssemblyData.Length == 0) {
-				throw new InvalidOperationException ("Internal error: assembly data must not be empty");
+				if (entry.AssemblyData.Length == 0) {
+					throw new InvalidOperationException ("Internal error: assembly data must not be empty");
+				}
 			}
 
 			return entry.AssemblyData;
@@ -185,7 +197,7 @@ partial class AssemblyDSOGenerator
 			}
 		}
 
-		public override (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target)
+		public override (LlvmIrStreamedArrayDataProviderState status, ICollection? data) GetData (LlvmIrModuleTarget target)
 		{
 			ArchState archState = GetArchState (target);
 			DataState dataState = GetDataState (target);
@@ -195,8 +207,14 @@ partial class AssemblyDSOGenerator
 			}
 
 			var entry = (AssemblyEntry)archState.xa_assemblies[index].Obj;
-			string name;
+			if (entry.IsStandalone) {
+				return (
+					IsLastEntry () ? LlvmIrStreamedArrayDataProviderState.LastSectionNoData : LlvmIrStreamedArrayDataProviderState.NextSectionNoData,
+					null
+				);
+			}
 
+			string name;
 			if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
 				name = ((AssemblyIndexEntry64)archState.xa_assembly_index64[index].Obj).Name;
 			} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
@@ -210,9 +228,27 @@ partial class AssemblyDSOGenerator
 			dataState.Comment = $" Assembly: {name} ({entry.InputFilePath}); Data size: {entry.AssemblyData.Length}; compressed: {compressed}";
 			// Each assembly is a new "section"
 			return (
-				index == archState.xa_assemblies.Count - 1 ? LlvmIrStreamedArrayDataProviderState.LastSection : LlvmIrStreamedArrayDataProviderState.NextSection,
+				IsLastEntry () ? LlvmIrStreamedArrayDataProviderState.LastSection : LlvmIrStreamedArrayDataProviderState.NextSection,
 				EnsureValidAssemblyData (entry)
 			);
+
+			bool IsLastEntry ()
+			{
+				if (index == archState.xa_assemblies.Count - 1) {
+					return true;
+				}
+
+				// Special case: if between the current index and the end of array are only standalone assemblies, we need to terminate now or we're going to have
+				// a dangling comma in the output which llc doesn't like.  Since we're in a forward-only streaming mode, we must take care of that corner case here,
+				// alas.
+				for (int i = index + 1; i < archState.xa_assemblies.Count; i++) {
+					if (!((AssemblyEntry)archState.xa_assemblies[i].Obj).IsStandalone) {
+						return false;
+					}
+				}
+
+				return true;
+			}
 		}
 
 		public override ulong GetTotalDataSize (LlvmIrModuleTarget target)
@@ -226,6 +262,10 @@ partial class AssemblyDSOGenerator
 			ulong totalSize = 0;
 			foreach (StructureInstance<AssemblyEntry> si in archState.xa_assemblies) {
 				var entry = (AssemblyEntry)si.Obj;
+				if (entry.IsStandalone) {
+					continue;
+				}
+
 				byte[] data = EnsureValidAssemblyData (entry);
 				totalSize += (ulong)data.Length;
 			}

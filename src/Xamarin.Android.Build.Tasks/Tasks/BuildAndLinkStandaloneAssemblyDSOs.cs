@@ -58,15 +58,23 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		}
 	}
 
-	public override string TaskPrefix => "BALSAD";
+	public static class DSOMetadata
+	{
+		public const string Compressed               = "Compressed";
+		public const string DataSize                 = "DataSize";
+		public const string DataSymbolOffset         = "DataSymbolOffset";
+		public const string InputAssemblyPath        = "InputAssemblyPath";
+		public const string OriginalAssemblyPath     = "OriginalAssemblyPath";
+		public const string SatelliteAssemblyCulture = "SatelliteAssemblyCulture";
+		public const string UncompressedDataSize     = "UncompressedDataSize";
+	}
 
 	const uint DefaultParallelBuilds = 8;
 
-	[Required]
-	public ITaskItem[] TargetSharedLibraries { get; set; }
+	public override string TaskPrefix => "BALSAD";
 
 	[Required]
-	public string SharedLibraryOutputDir { get; set; }
+	public ITaskItem[] TargetSharedLibraries { get; set; }
 
 	[Required]
 	public string AndroidBinUtilsDirectory { get; set; }
@@ -92,14 +100,14 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			DSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
 
 			dsoItem.SetMetadata ("Abi", dso.Abi);
-			dsoItem.SetMetadata ("DataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
-			dsoItem.SetMetadata ("UncompressedDataSize", MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
-			dsoItem.SetMetadata ("Compressed", dsoInfo.CompressedDataSize == 0 ? "false" : "true");
-			dsoItem.SetMetadata ("OriginalAssemblyPath", dso.OriginalAssemblyPath);
-			dsoItem.SetMetadata ("InputAssemblyPath", dsoInfo.InputFile);
+			dsoItem.SetMetadata (DSOMetadata.DataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
+			dsoItem.SetMetadata (DSOMetadata.UncompressedDataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
+			dsoItem.SetMetadata (DSOMetadata.Compressed, dsoInfo.CompressedDataSize == 0 ? "false" : "true");
+			dsoItem.SetMetadata (DSOMetadata.OriginalAssemblyPath, dso.OriginalAssemblyPath);
+			dsoItem.SetMetadata (DSOMetadata.InputAssemblyPath, dsoInfo.InputFile);
 
 			if (!String.IsNullOrEmpty (dso.Culture)) {
-				dsoItem.SetMetadata ("SatelliteAssemblyCulture", dso.Culture);
+				dsoItem.SetMetadata (DSOMetadata.SatelliteAssemblyCulture, dso.Culture);
 			}
 
 			sharedLibraries.Add (dsoItem);
@@ -225,7 +233,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			return;
 		}
 		Log.LogDebugMessage ($"Shared library '{linkerConfig.OutputFile}' has symbol '{AssemblyDSOGenerator.XAInputAssemblyDataVarName}' at offset {dsoInfo.XAInputAssemblyDataOffset}");
-		dsoInfo.SharedLibraryItem.SetMetadata ("DataSymbolOffset", MonoAndroidHelper.CultureInvariantToString (dsoInfo.XAInputAssemblyDataOffset));
+		dsoInfo.SharedLibraryItem.SetMetadata (DSOMetadata.DataSymbolOffset, MonoAndroidHelper.CultureInvariantToString (dsoInfo.XAInputAssemblyDataOffset));
 
 		ulong expectedSize;
 		if (dsoInfo.CompressedDataSize == 0) {

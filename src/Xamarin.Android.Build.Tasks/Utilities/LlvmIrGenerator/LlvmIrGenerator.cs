@@ -803,43 +803,45 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return 1;
 		}
 
-		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable variable, ICollection entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
+		void WriteArrayEntries (GeneratorWriteContext context, LlvmIrVariable variable, ICollection? entries, Type elementType, uint stride, bool writeIndices, bool terminateWithComma = false)
 		{
 			bool first = true;
 			bool ignoreComments = stride > 1;
 			string? prevItemComment = null;
 			ulong counter = 0;
 
-			foreach (object entry in entries) {
-				if (!first) {
-					context.Output.Write (',');
-					if (stride == 1 || counter % stride == 0) {
-						WritePrevItemCommentOrNewline ();
-						context.Output.Write (context.CurrentIndent);
+			if (entries != null) {
+				foreach (object entry in entries) {
+					if (!first) {
+						context.Output.Write (',');
+						if (stride == 1 || counter % stride == 0) {
+							WritePrevItemCommentOrNewline ();
+							context.Output.Write (context.CurrentIndent);
+						} else {
+							context.Output.Write (' ');
+						}
 					} else {
-						context.Output.Write (' ');
+						context.Output.Write (context.CurrentIndent);
+						first = false;
 					}
-				} else {
-					context.Output.Write (context.CurrentIndent);
-					first = false;
+
+					if (!ignoreComments) {
+						prevItemComment = null;
+						if (variable.GetArrayItemCommentCallback != null) {
+							prevItemComment = variable.GetArrayItemCommentCallback (variable, target, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
+						}
+
+						if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
+							prevItemComment = $" {counter}";
+						}
+					}
+
+					counter++;
+					WriteType (context, elementType, entry, out _);
+
+					context.Output.Write (' ');
+					WriteValue (context, elementType, entry);
 				}
-
-				if (!ignoreComments) {
-					prevItemComment = null;
-					if (variable.GetArrayItemCommentCallback != null) {
-						prevItemComment = variable.GetArrayItemCommentCallback (variable, target, counter, entry, variable.GetArrayItemCommentCallbackCallerState);
-					}
-
-					if (writeIndices && String.IsNullOrEmpty (prevItemComment)) {
-						prevItemComment = $" {counter}";
-					}
-				}
-
-				counter++;
-				WriteType (context, elementType, entry, out _);
-
-				context.Output.Write (' ');
-				WriteValue (context, elementType, entry);
 			}
 
 			if (terminateWithComma) {
@@ -872,29 +874,36 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			WriteArrayValueStart (context);
 			while (true) {
-				(LlvmIrStreamedArrayDataProviderState state, ICollection data) = dataProvider.GetData (context.Target);
-				if (data.Count == 0) {
-					throw new InvalidOperationException ("Data must be provided for streamed arrays");
+				(LlvmIrStreamedArrayDataProviderState state, ICollection? data) = dataProvider.GetData (context.Target);
+				if (state == LlvmIrStreamedArrayDataProviderState.NextSectionNoData) {
+					continue;
 				}
 
-				dataSizeSoFar += (ulong)data.Count;
-				if (dataSizeSoFar > totalDataSize) {
-					throw new InvalidOperationException ($"Data provider {dataProvider} is trying to write more data than declared");
+				bool mustHaveData = state != LlvmIrStreamedArrayDataProviderState.LastSectionNoData;
+				if (mustHaveData) {
+					if (data.Count == 0) {
+						throw new InvalidOperationException ("Data must be provided for streamed arrays");
+					}
+
+					dataSizeSoFar += (ulong)data.Count;
+					if (dataSizeSoFar > totalDataSize) {
+						throw new InvalidOperationException ($"Data provider {dataProvider} is trying to write more data than declared");
+					}
+
+					if (first) {
+						first = false;
+					} else {
+						context.Output.WriteLine ();
+					}
+					string comment = dataProvider.GetSectionStartComment (context.Target);
+
+					if (comment.Length > 0) {
+						context.Output.Write (context.CurrentIndent);
+						WriteCommentLine (context, comment);
+					}
 				}
 
-				if (first) {
-					first = false;
-				} else {
-					context.Output.WriteLine ();
-				}
-				string comment = dataProvider.GetSectionStartComment (context.Target);
-
-				if (comment.Length > 0) {
-					context.Output.Write (context.CurrentIndent);
-					WriteCommentLine (context, comment);
-				}
-
-				bool lastSection = state == LlvmIrStreamedArrayDataProviderState.LastSection;
+				bool lastSection = state == LlvmIrStreamedArrayDataProviderState.LastSection || state == LlvmIrStreamedArrayDataProviderState.LastSectionNoData;
 				WriteArrayEntries (
 					context,
 					variable,

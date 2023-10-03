@@ -113,29 +113,32 @@ struct XamarinAndroidBundledAssembly final
 
 struct AssemblyEntry
 {
-        // offset into the `xa_input_assembly_data` array
-        uint32_t input_data_offset;
+	// offset into the `xa_input_assembly_data` array
+	uint32_t input_data_offset;
 
-        // number of bytes data of this assembly occupies
-        uint32_t input_data_size;
+	// number of bytes data of this assembly occupies
+	uint32_t input_data_size;
 
-        // offset into the `xa_uncompressed_assembly_data` array where the uncompressed
-        // assembly data (if any) lives.
-        uint32_t uncompressed_data_offset;
+	// offset into the `xa_uncompressed_assembly_data` array where the uncompressed
+	// assembly data (if any) lives.
+	uint32_t uncompressed_data_offset;
 
-        // Size of the uncompressed data. 0 if assembly wasn't compressed.
-        uint32_t uncompressed_data_size;
+	// Size of the uncompressed data. 0 if assembly wasn't compressed.
+	uint32_t uncompressed_data_size;
 };
 
 struct AssemblyIndexEntry
 {
-        xamarin::android::hash_t name_hash;
+	xamarin::android::hash_t name_hash;
 
-        // Index into the `xa_assemblies` descriptor array
-        uint32_t index;
+	// Index into the `xa_assemblies` descriptor array
+	uint32_t index;
 
-        // whether hashed name had extension
-		bool has_extension;
+	// whether hashed name had extension
+	bool has_extension;
+
+	// whether assembly data lives in a separate DSO
+	bool is_standalone;
 };
 
 constexpr uint32_t InputAssemblyDataSize = 1024;

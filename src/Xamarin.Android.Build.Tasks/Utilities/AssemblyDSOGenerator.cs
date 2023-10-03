@@ -11,6 +11,7 @@ namespace Xamarin.Android.Tasks;
 partial class AssemblyDSOGenerator : LlvmIrComposer
 {
 	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
+	const string XAAssembliesVarName               = "xa_assemblies";
 	const string XAAssemblyIndexVarName            = "xa_assembly_index";
 	const string XAAssemblyNamesVarName            = "xa_assembly_names";
 	public const string XAInputAssemblyDataVarName = "xa_input_assembly_data";
@@ -91,6 +92,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		module.Add (xa_input_assembly_data);
 	}
 
+	// TODO: need to store information about an assembly being standalone.  Also, we need to store the shared library name somewhere (probably a separate array, at the same
+	// index as the xa_assemblies_index indicates
 	void ConstructFastPath (LlvmIrModule module)
 	{
 		MapStructures (module);
@@ -127,6 +130,12 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		};
 		module.Add (xa_assemblies_config);
 
+		var xa_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyEntry>>), XAAssembliesVarName) {
+			BeforeWriteCallback = AssembliesBeforeWrite,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (xa_assemblies);
+
 		var xa_assembly_index = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyIndexEntry32>>), XAAssemblyIndexVarName) {
 			BeforeWriteCallback = AssemblyIndexBeforeWrite,
 			GetArrayItemCommentCallback = AssemblyIndexItemComment,
@@ -157,6 +166,12 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			WriteOptions = LlvmIrVariableWriteOptions.ArrayFormatInRows,
 		};
 		module.Add (xa_input_assembly_data);
+	}
+
+	void AssembliesBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		variable.Value = archState.xa_assemblies;
 	}
 
 	string AssemblyIndexItemComment (LlvmIrVariable variable, LlvmIrModuleTarget target, ulong index, object? itemValue, object? state)
@@ -301,6 +316,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		var entry = new StandaloneAssemblyEntry {
 			AssemblyData = new byte[inputSize],
 			InputFilePath = info.InputFile,
+			IsStandalone = true,
 		};
 		(ArchState archState, bool _) = GetArchState (arch, 1, entry);
 
@@ -319,6 +335,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		ulong uncompressedOffset = 0;
 		ulong assemblyNameLength = 0;
 		foreach (DSOAssemblyInfo info in infos) {
+			bool isStandalone = info.IsStandalone;
 			uint inputSize = GetInputSize (info);
 
 			// We need to read each file into a separate array, as it is (theoretically) possible that all the assemblies data will exceed 2GB,
@@ -330,7 +347,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			var entry = new AssemblyEntry {
 				// We can't use the byte pool here, even though it would be more efficient, because the generator expects an ICollection,
 				// which it then iterates on, and the rented arrays can (and frequently will) be bigger than the requested size.
-				AssemblyData = new byte[inputSize],
+				AssemblyData = isStandalone ? null : new byte[inputSize],
+				IsStandalone = isStandalone,
 				InputFilePath = info.InputFile,
 				input_data_offset = (uint)inputOffset,
 				input_data_size = inputSize,
@@ -338,10 +356,12 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				uncompressed_data_offset = (uint)uncompressedOffset,
 			};
 			inputOffset = AddWithCheck (inputOffset, inputSize, UInt32.MaxValue, "Input data too long");
-			ReadAssemblyData (info, entry);
+			if (!isStandalone) {
+				ReadAssemblyData (info, entry);
+			}
 
 			// This is way, way more than Google Play Store supports now, but we won't limit ourselves more than we have to
-			uncompressedOffset = AddWithCheck (uncompressedOffset, entry.uncompressed_data_offset, UInt32.MaxValue, "Compressed data too long");
+			uncompressedOffset = AddWithCheck (uncompressedOffset, entry.uncompressed_data_size, UInt32.MaxValue, "Assembly data too long");
 			archState.xa_assemblies.Add (new StructureInstance<AssemblyEntry> (assemblyEntryStructureInfo, entry));
 
 			byte[] nameBytes = StringToBytes (info.Name);
@@ -373,6 +393,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 					name_hash = nameHash,
 					index = assemblyIndex,
 					has_extension = true,
+					is_standalone = isStandalone,
 				};
 				archState.xa_assembly_index64.Add (new StructureInstance<AssemblyIndexEntry64> (assemblyIndexEntry64StructureInfo, indexEntry));
 
@@ -382,6 +403,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 					name_hash = nameWithoutExtensionHash,
 					index = assemblyIndex,
 					has_extension = false,
+					is_standalone = isStandalone,
 				};
 				archState.xa_assembly_index64.Add (new StructureInstance<AssemblyIndexEntry64> (assemblyIndexEntry64StructureInfo, indexEntry));
 			} else {
@@ -390,6 +412,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 					NameBytes = nameBytes,
 					name_hash = (uint)nameHash,
 					index = assemblyIndex,
+					is_standalone = isStandalone,
 				};
 				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
 
@@ -399,6 +422,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 					name_hash = (uint)nameWithoutExtensionHash,
 					index = assemblyIndex,
 					has_extension = false,
+					is_standalone = isStandalone,
 				};
 				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
 			}

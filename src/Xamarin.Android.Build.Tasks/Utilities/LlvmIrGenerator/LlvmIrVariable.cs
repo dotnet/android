@@ -160,6 +160,8 @@ enum LlvmIrStreamedArrayDataProviderState
 {
 	NextSection,
 	LastSection,
+	NextSectionNoData,
+	LastSectionNoData,
 }
 
 abstract class LlvmIrStreamedArrayDataProvider
