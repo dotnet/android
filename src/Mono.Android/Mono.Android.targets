@@ -238,9 +238,9 @@
 
   <PropertyGroup>
     <!-- Override these properties to generate docs against a specific API level -->
-    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">33</DocsApiLevel>
-    <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">33</DocsPlatformId>
-    <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">xamarin-android-sdk-13</DocsFxMoniker>
+    <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">34</DocsApiLevel>
+    <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
+    <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
     <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
     <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/mdoc.exe"</_Mdoc>
