@@ -13,9 +13,6 @@ steps:
     sudo apt install -y --no-install-recommends mono-complete nuget msbuild
   displayName: install mono preview
 
-- script: sudo apt upgrade
-  displayName: update packages
-
 - template: use-dot-net.yaml
   parameters:
     remove_dotnet: true
