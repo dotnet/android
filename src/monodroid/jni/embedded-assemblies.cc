@@ -85,59 +85,7 @@ force_inline void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 #if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
-	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
-	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
-			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
-			Helpers::abort_application ();
-		}
-		if (XA_UNLIKELY (header->descriptor_index >= compressed_assemblies.count)) {
-			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
-			Helpers::abort_application ();
-		}
-
-		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
-		assembly_data_size = data_size - sizeof(CompressedAssemblyHeader);
-		if (!cad.loaded) {
-			StartupAwareLock decompress_lock (assembly_decompress_mutex);
-
-			if (cad.loaded) {
-				set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
-				return;
-			}
-
-			if (XA_UNLIKELY (cad.data == nullptr)) {
-				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
-				Helpers::abort_application ();
-			}
-
-			if (header->uncompressed_length != cad.uncompressed_file_size) {
-				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
-					Helpers::abort_application ();
-				} else {
-					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
-				}
-				cad.uncompressed_file_size = header->uncompressed_length;
-			}
-
-			const char *data_start = reinterpret_cast<const char*>(data + sizeof(CompressedAssemblyHeader));
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
-
-			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
-				Helpers::abort_application ();
-			}
-
-			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
-				Helpers::abort_application ();
-			}
-			cad.loaded = true;
-		}
-
-		set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
-	} else
+	// TODO: implement storing info about standalone assembly DSO offset here
 #endif
 	{
 		set_assembly_data_and_size (data, data_size, assembly_data, assembly_data_size);

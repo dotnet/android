@@ -31,11 +31,6 @@ const TypeMapJava map_java[] = {};
 const xamarin::android::hash_t map_java_hashes[] = {};
 #endif
 
-CompressedAssemblies compressed_assemblies = {
-	.count = 0,
-	.descriptors = nullptr,
-};
-
 //
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
 // the Designer
@@ -51,6 +46,7 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
 	.have_assembly_store = false,
+	.marshal_methods_enabled = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
@@ -243,6 +239,11 @@ const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
 const char xa_assembly_names[AssemblyCount][AssemblyNameLength] = {
 	"Assembly1.dll",
 	"AnotherAssembly2.dll",
+};
+
+const char xa_assembly_dso_names[AssemblyCount][SharedLibraryNameLength] = {
+	"libxaAssembly1.so",
+	"libxaAnotherAssembly2.so",
 };
 
 const AssembliesConfig xa_assemblies_config = {

@@ -12,6 +12,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 {
 	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
 	const string XAAssembliesVarName               = "xa_assemblies";
+	const string XAAssemblyDSONamesVarName         = "xa_assembly_dso_names";
 	const string XAAssemblyIndexVarName            = "xa_assembly_index";
 	const string XAAssemblyNamesVarName            = "xa_assembly_names";
 	public const string XAInputAssemblyDataVarName = "xa_input_assembly_data";
@@ -92,8 +93,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		module.Add (xa_input_assembly_data);
 	}
 
-	// TODO: need to store information about an assembly being standalone.  Also, we need to store the shared library name somewhere (probably a separate array, at the same
-	// index as the xa_assemblies_index indicates
 	void ConstructFastPath (LlvmIrModule module)
 	{
 		MapStructures (module);
@@ -132,6 +131,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 
 		var xa_assemblies = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyEntry>>), XAAssembliesVarName) {
 			BeforeWriteCallback = AssembliesBeforeWrite,
+			GetArrayItemCommentCallback = AssembliesItemComment,
 			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
 		module.Add (xa_assemblies);
@@ -148,6 +148,12 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
 		module.Add (xa_assembly_names);
+
+		var xa_assembly_dso_names = new LlvmIrGlobalVariable (typeof(List<byte[]>), XAAssemblyDSONamesVarName) {
+			BeforeWriteCallback = AssemblyDSONamesBeforeWrite,
+			Options = LlvmIrVariableOptions.GlobalConstant,
+		};
+		module.Add (xa_assembly_dso_names);
 
 		var xa_uncompressed_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAUncompressedAssemblyDataVarName) {
 			Alignment = 4096, // align to page boundary, may make access slightly faster
@@ -174,6 +180,18 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		variable.Value = archState.xa_assemblies;
 	}
 
+	string AssembliesItemComment (LlvmIrVariable variable, LlvmIrModuleTarget target, ulong index, object? itemValue, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		var entry = itemValue as StructureInstance<AssemblyEntry>;
+
+		if (entry != null) {
+			return MakeComment (((AssemblyEntry)entry.Obj).Name);
+		}
+
+		throw new InvalidOperationException ($"Internal error: assembly array member has unsupported type '{itemValue?.GetType ()}'");
+	}
+
 	string AssemblyIndexItemComment (LlvmIrVariable variable, LlvmIrModuleTarget target, ulong index, object? itemValue, object? state)
 	{
 		var value32 = itemValue as StructureInstance<AssemblyIndexEntry32>;
@@ -187,45 +205,46 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		}
 
 		throw new InvalidOperationException ($"Internal error: assembly index array member has unsupported type '{itemValue?.GetType ()}'");
-
-		string MakeComment (string name) => $" => {name}";
 	}
+
+	static string MakeComment (string name) => $" => {name}";
 
 	void AssemblyNamesBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		ArchState archState = GetArchState (target);
-		var names = new List<byte[]> ();
+		var names = new List<byte[]> ((int)archState.xa_assemblies_config.assembly_count);
 
-		if (target.TargetArch == AndroidTargetArch.Arm64 || target.TargetArch == AndroidTargetArch.X86_64) {
-			foreach (StructureInstance<AssemblyIndexEntry64> e in archState.xa_assembly_index64) {
-				var entry = (AssemblyIndexEntry64)e.Obj;
-				names.Add (GetProperlySizedBytes (entry.NameBytes));
-			}
-		} else if (target.TargetArch == AndroidTargetArch.Arm || target.TargetArch == AndroidTargetArch.X86) {
-			foreach (StructureInstance<AssemblyIndexEntry32> e in archState.xa_assembly_index32) {
-				var entry = (AssemblyIndexEntry32)e.Obj;
-				names.Add (GetProperlySizedBytes (entry.NameBytes));
-			}
-		} else {
-			throw new InvalidOperationException ($"Internal error: architecture {target.TargetArch} not supported");
+		foreach (byte[] nameBytes in archState.xa_assembly_names) {
+			names.Add (GetProperlySizedBytesForNameArray (archState.xa_assemblies_config.assembly_name_length, nameBytes));
 		}
 
 		variable.Value = names;
-
-		byte[] GetProperlySizedBytes (byte[] inputBytes)
-		{
-			if (inputBytes.Length > archState.xa_assemblies_config.assembly_name_length - 1) {
-				throw new ArgumentOutOfRangeException (nameof (inputBytes), $"Must not exceed {archState.xa_assemblies_config.assembly_name_length - 1} bytes");
-			}
-
-			var ret = new byte[archState.xa_assemblies_config.assembly_name_length];
-			Array.Clear (ret, 0, ret.Length);
-			inputBytes.CopyTo (ret, 0);
-
-			return ret;
-		}
 	}
 
+	void AssemblyDSONamesBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
+	{
+		ArchState archState = GetArchState (target);
+		var names = new List<byte[]> ((int)archState.xa_assemblies_config.assembly_count);
+
+		foreach (byte[] nameBytes in archState.xa_assembly_dso_names) {
+			names.Add (GetProperlySizedBytesForNameArray (archState.xa_assemblies_config.shared_library_name_length, nameBytes));
+		}
+
+		variable.Value = names;
+	}
+
+	static byte[] GetProperlySizedBytesForNameArray (uint requiredSize, byte[] inputBytes)
+	{
+		if (inputBytes.Length > requiredSize - 1) {
+			throw new ArgumentOutOfRangeException (nameof (inputBytes), $"Must not exceed {requiredSize - 1} bytes");
+		}
+
+		var ret = new byte[requiredSize];
+		Array.Clear (ret, 0, ret.Length);
+		inputBytes.CopyTo (ret, 0);
+
+		return ret;
+	}
 	void AssemblyIndexBeforeWrite (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 	{
 		ArchState archState = GetArchState (target);
@@ -334,6 +353,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		ulong inputOffset = 0;
 		ulong uncompressedOffset = 0;
 		ulong assemblyNameLength = 0;
+		ulong sharedLibraryNameLength = 0;
 		foreach (DSOAssemblyInfo info in infos) {
 			bool isStandalone = info.IsStandalone;
 			uint inputSize = GetInputSize (info);
@@ -349,6 +369,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				// which it then iterates on, and the rented arrays can (and frequently will) be bigger than the requested size.
 				AssemblyData = isStandalone ? null : new byte[inputSize],
 				IsStandalone = isStandalone,
+				Name = info.Name,
 				InputFilePath = info.InputFile,
 				input_data_offset = (uint)inputOffset,
 				input_data_size = inputSize,
@@ -365,6 +386,17 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			archState.xa_assemblies.Add (new StructureInstance<AssemblyEntry> (assemblyEntryStructureInfo, entry));
 
 			byte[] nameBytes = StringToBytes (info.Name);
+			archState.xa_assembly_names.Add (nameBytes);
+
+			byte[] sharedLibraryNameBytes = isStandalone ? StringToBytes (info.StandaloneDSOName) : Array.Empty<byte> ();
+			archState.xa_assembly_dso_names.Add (sharedLibraryNameBytes);
+
+			if (sharedLibraryNameBytes != null) {
+				if (sharedLibraryNameLength < (ulong)sharedLibraryNameBytes.Length) {
+					sharedLibraryNameLength = (ulong)sharedLibraryNameBytes.Length;
+				}
+			}
+
 			if ((ulong)nameBytes.Length > assemblyNameLength) {
 				assemblyNameLength = (ulong)nameBytes.Length;
 			}
@@ -389,7 +421,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			if (is64Bit) {
 				var indexEntry = new AssemblyIndexEntry64 {
 					Name = info.Name,
-					NameBytes = nameBytes,
 					name_hash = nameHash,
 					index = assemblyIndex,
 					has_extension = true,
@@ -399,7 +430,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 
 				indexEntry = new AssemblyIndexEntry64 {
 					Name = nameWithoutExtension,
-					NameBytes = nameWithoutExtensionBytes,
 					name_hash = nameWithoutExtensionHash,
 					index = assemblyIndex,
 					has_extension = false,
@@ -409,7 +439,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			} else {
 				var indexEntry = new AssemblyIndexEntry32 {
 					Name = info.Name,
-					NameBytes = nameBytes,
 					name_hash = (uint)nameHash,
 					index = assemblyIndex,
 					is_standalone = isStandalone,
@@ -418,7 +447,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 
 				indexEntry = new AssemblyIndexEntry32 {
 					Name = nameWithoutExtension,
-					NameBytes = nameWithoutExtensionBytes,
 					name_hash = (uint)nameWithoutExtensionHash,
 					index = assemblyIndex,
 					has_extension = false,
@@ -443,7 +471,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		archState.xa_assemblies_config.uncompressed_assembly_data_size = (uint)uncompressedOffset;
 
 		// Must include the terminating NUL
-		archState.xa_assemblies_config.assembly_name_length = (uint)assemblyNameLength + 1;
+		archState.xa_assemblies_config.assembly_name_length = (uint)AddWithCheck (assemblyNameLength, 1, UInt32.MaxValue, "Assembly name is too long");
+		archState.xa_assemblies_config.shared_library_name_length = (uint)AddWithCheck (sharedLibraryNameLength, 1, UInt32.MaxValue, "Shared library name is too long");
 
 		ulong AddWithCheck (ulong lhs, ulong rhs, ulong maxValue, string errorMessage)
 		{

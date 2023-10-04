@@ -1,3 +1,5 @@
+using System;
+
 namespace Xamarin.Android.Tasks;
 
 class DSOAssemblyInfo
@@ -27,18 +29,25 @@ class DSOAssemblyInfo
 	/// </summary>
 	public bool IsStandalone          { get; }
 
+	public string? StandaloneDSOName  { get; }
+
 	/// <summary>
 	/// <paramref name="name"/> is the original assembly name, including culture prefix (e.g. `en_US/`) if it is a
 	/// satellite assembly.  <paramref name="inputFile"/> should be the full path to the input file.
 	/// <paramref name="dataSize"/> gives the original file size, while <paramref name="compressedDataSize"/> specifies
 	/// data size after compression, or `0` if file isn't compressed.
 	/// </summary>
-	public DSOAssemblyInfo (string name, string inputFile, uint dataSize, uint compressedDataSize, bool isStandalone = false)
+	public DSOAssemblyInfo (string name, string inputFile, uint dataSize, uint compressedDataSize, bool isStandalone = false, string? dsoName = null)
 	{
+		if (isStandalone && String.IsNullOrEmpty (dsoName)) {
+			throw new ArgumentException ("must not be null or empty for standalone assembly", nameof (dsoName));
+		}
+
 		Name = name;
 		InputFile = inputFile;
 		DataSize = dataSize;
 		CompressedDataSize = compressedDataSize;
 		IsStandalone = isStandalone;
+		StandaloneDSOName = isStandalone ? dsoName : null;
 	}
 }

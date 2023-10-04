@@ -11,7 +11,6 @@
 #include "xxhash.hh"
 
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
-static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 1; // Increase whenever an incompatible change is made to the
 															 // assembly store format
@@ -81,26 +80,6 @@ struct TypeMapJava
 };
 #endif
 
-struct CompressedAssemblyHeader
-{
-	uint32_t magic; // COMPRESSED_DATA_MAGIC
-	uint32_t descriptor_index;
-	uint32_t uncompressed_length;
-};
-
-struct CompressedAssemblyDescriptor
-{
-	uint32_t   uncompressed_file_size;
-	bool       loaded;
-	uint8_t   *data;
-};
-
-struct CompressedAssemblies
-{
-	uint32_t                      count;
-	CompressedAssemblyDescriptor *descriptors;
-};
-
 struct XamarinAndroidBundledAssembly final
 {
 	int32_t  apk_fd;
@@ -145,6 +124,7 @@ constexpr uint32_t InputAssemblyDataSize = 1024;
 constexpr uint32_t UncompressedAssemblyDataSize = 2048;
 constexpr uint32_t AssemblyCount = 2;
 constexpr uint32_t AssemblyNameLength = 26; // including the terminating NUL
+constexpr uint32_t SharedLibraryNameLength = 32; // including the terminating NUL
 
 struct AssembliesConfig
 {
@@ -152,6 +132,7 @@ struct AssembliesConfig
 	uint32_t uncompressed_assembly_data_size;
 	uint32_t assembly_name_length;
 	uint32_t assembly_count;
+	uint32_t shared_library_name_length;
 };
 
 MONO_API MONO_API_EXPORT const AssembliesConfig xa_assemblies_config;
@@ -164,6 +145,7 @@ MONO_API MONO_API_EXPORT uint8_t xa_uncompressed_assembly_data[UncompressedAssem
 MONO_API MONO_API_EXPORT const AssemblyEntry xa_assemblies[AssemblyCount];
 MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
 MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
+MONO_API MONO_API_EXPORT const char xa_assembly_dso_names[AssemblyCount][SharedLibraryNameLength];
 
 //
 // Assembly store format
@@ -341,7 +323,6 @@ MONO_API MONO_API_EXPORT const TypeMapJava map_java[];
 MONO_API MONO_API_EXPORT const xamarin::android::hash_t map_java_hashes[];
 #endif
 
-MONO_API MONO_API_EXPORT CompressedAssemblies compressed_assemblies;
 MONO_API MONO_API_EXPORT const ApplicationConfig application_config;
 MONO_API MONO_API_EXPORT const char* const app_environment_variables[];
 MONO_API MONO_API_EXPORT const char* const app_system_properties[];

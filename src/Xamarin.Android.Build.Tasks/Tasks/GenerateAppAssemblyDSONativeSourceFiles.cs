@@ -131,7 +131,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 
 		}
 
-		return new DSOAssemblyInfo (name, inputFile, dataSize, compressedDataSize, isStandalone: true);
+		return new DSOAssemblyInfo (name, inputFile, dataSize, compressedDataSize, isStandalone: true, Path.GetFileName (dsoItem.ItemSpec));
 
 		string GetRequiredMetadata (string name)
 		{

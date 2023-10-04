@@ -29,6 +29,9 @@ partial class AssemblyDSOGenerator
 	// Must be identical to AssemblyEntry in src/monodroid/jni/xamarin-app.hh
 	sealed class AssemblyEntry : StandaloneAssemblyEntry
 	{
+		[NativeAssembler (Ignore = true)]
+		public string Name;
+
 		// offset into the `xa_input_assembly_data` array
 		public uint input_data_offset;
 
@@ -48,9 +51,6 @@ partial class AssemblyDSOGenerator
 	{
 		[NativeAssembler (Ignore = true)]
 		public string Name;
-
-		[NativeAssembler (Ignore = true)]
-		public byte[] NameBytes;
 
 		[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 		public T name_hash;
@@ -78,6 +78,7 @@ partial class AssemblyDSOGenerator
 		public uint uncompressed_assembly_data_size;
 		public uint assembly_name_length;
 		public uint assembly_count;
+		public uint shared_library_name_length;
 	};
 
 	// Members with underscores correspond to the native fields we output.
@@ -86,6 +87,8 @@ partial class AssemblyDSOGenerator
 		public readonly List<StructureInstance<AssemblyEntry>> xa_assemblies;
 		public readonly List<StructureInstance<AssemblyIndexEntry32>>? xa_assembly_index32;
 		public readonly List<StructureInstance<AssemblyIndexEntry64>>? xa_assembly_index64;
+		public readonly List<byte[]> xa_assembly_names;
+		public readonly List<byte[]> xa_assembly_dso_names;
 		public readonly AssembliesConfig xa_assemblies_config;
 		public readonly StandaloneAssemblyEntry? StandaloneAssembly;
 
@@ -97,6 +100,8 @@ partial class AssemblyDSOGenerator
 
 			StandaloneAssembly = standaloneAssembly;
 			xa_assemblies = new List<StructureInstance<AssemblyEntry>> (assemblyCount);
+			xa_assembly_names = new List<byte[]> (assemblyCount);
+			xa_assembly_dso_names = new List<byte[]> (assemblyCount);
 
 			switch (arch) {
 				case AndroidTargetArch.Arm64:

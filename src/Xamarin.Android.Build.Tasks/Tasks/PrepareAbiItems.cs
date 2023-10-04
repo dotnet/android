@@ -13,7 +13,6 @@ namespace Xamarin.Android.Tasks
 		const string ArmV7a = "armeabi-v7a";
 		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
-		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
 		public const string AssemblyDSOBase = "assembly_dso";
@@ -51,8 +50,6 @@ namespace Xamarin.Android.Tasks
 				baseName = TypeMapBase;
 			} else if (String.Compare ("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = EnvBase;
-			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
-				baseName = CompressedAssembliesBase;
 			} else if (String.Compare ("jniremap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = JniRemappingBase;
 			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {

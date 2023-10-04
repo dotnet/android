@@ -83,8 +83,6 @@ namespace Xamarin.Android.Tasks
 		public string TlsProvider { get; set; }
 		public string UncompressedFileExtensions { get; set; }
 
-		// Make it required after https://github.com/xamarin/monodroid/pull/1094 is merged
-		//[Required]
 		public bool EnableCompression { get; set; }
 
 		public bool IncludeWrapSh { get; set; }
@@ -130,7 +128,7 @@ namespace Xamarin.Android.Tasks
 
 		List<Regex> excludePatterns = new List<Regex> ();
 
-		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
+		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
@@ -197,7 +195,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (EmbedAssemblies) {
-					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
+					AddAssemblies (apk, debug, assemblyStoreApkName);
 					apk.Flush ();
 				}
 
@@ -312,18 +310,8 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool debug = _Debug;
-			bool compress = !debug && EnableCompression;
-			IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo = null;
 
-			if (compress) {
-				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<string, CompressedAssemblyInfo>> (key, RegisteredTaskObjectLifetime.Build);
-				if (compressedAssembliesInfo == null)
-					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
-			}
-
-			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
+			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, assemblyStoreApkName: null);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				foreach (var abi in SupportedAbis) {
@@ -332,7 +320,7 @@ namespace Xamarin.Android.Tasks
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
 					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
 						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
-					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi);
+					        debug, assemblyStoreApkName: abi);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
 				}
 			}
@@ -362,7 +350,7 @@ namespace Xamarin.Android.Tasks
 			return new Regex (sb.ToString (), options);
 		}
 
-		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
+		void AddAssemblies (ZipArchiveEx apk, bool debug, string assemblyStoreApkName)
 		{
 			string sourcePath;
 			AssemblyStoreGenerator storeGenerator;
@@ -387,12 +375,6 @@ namespace Xamarin.Android.Tasks
 			const string DefaultBaseApkName = "base";
 			if (String.IsNullOrEmpty (assemblyStoreApkName)) {
 				assemblyStoreApkName = DefaultBaseApkName;
-			}
-
-			AssemblyCompression? assemblyCompressor = null;
-			if (compress) {
-				string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-				assemblyCompressor = new AssemblyCompression (Log, compressedOutputDir);
 			}
 
 			// Add user assemblies
@@ -444,7 +426,7 @@ namespace Xamarin.Android.Tasks
 						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 					}
 
-					sourcePath = CompressAssembly (assembly);
+					sourcePath = assembly.ItemSpec;
 
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
@@ -484,15 +466,6 @@ namespace Xamarin.Android.Tasks
 						storeGenerator.Add (assemblyStoreApkName, storeAssembly);
 					}
 				}
-			}
-
-			string CompressAssembly (ITaskItem assembly)
-			{
-				if (!compress || assemblyCompressor == null) {
-					return assembly.ItemSpec;
-				}
-
-				return assemblyCompressor.CompressAssembly (assembly, compressedAssembliesInfo);
 			}
 		}
 

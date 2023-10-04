@@ -178,47 +178,5 @@ namespace Xamarin.Android.Tasks
 
 			return (outputPath, true);
 		}
-
-		public string CompressAssembly (ITaskItem assembly, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo)
-		{
-			if (bool.TryParse (assembly.GetMetadata ("AndroidSkipCompression"), out bool value) && value) {
-				log.LogDebugMessage ($"Skipping compression of {assembly.ItemSpec} due to 'AndroidSkipCompression' == 'true' ");
-				return assembly.ItemSpec;
-			}
-
-			var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
-			if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
-				AssemblyData compressedAssembly = new AssemblyData (assembly.ItemSpec, info.DescriptorIndex);
-
-				string assemblyOutputDir;
-				string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-				if (!String.IsNullOrEmpty (subDirectory))
-					assemblyOutputDir = Path.Combine (compressedOutputDir, subDirectory);
-				else
-					assemblyOutputDir = compressedOutputDir;
-				CompressionResult result = Compress (compressedAssembly, assemblyOutputDir);
-				if (result != CompressionResult.Success) {
-					switch (result) {
-						case CompressionResult.EncodingFailed:
-							log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
-							break;
-
-						case CompressionResult.InputTooBig:
-							log.LogMessage ($"Input assembly {assembly.ItemSpec} exceeds maximum input size");
-							break;
-
-						default:
-							log.LogMessage ($"Unknown error compressing {assembly.ItemSpec}");
-							break;
-					}
-					return assembly.ItemSpec;
-				}
-				return compressedAssembly.DestinationPath;
-			} else {
-				log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
-			}
-
-			return assembly.ItemSpec;
-		}
 	}
 }
