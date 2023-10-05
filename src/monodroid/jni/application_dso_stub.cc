@@ -45,7 +45,6 @@ const ApplicationConfig application_config = {
 	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
-	.have_assembly_store = false,
 	.marshal_methods_enabled = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
@@ -90,36 +89,6 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 		.data = nullptr,
 		.name_length = 0,
 		.name = second_assembly_name,
-	},
-};
-
-AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-};
-
-AssemblyStoreRuntimeData assembly_stores[] = {
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
-	},
-
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
 	},
 };
 
@@ -227,12 +196,14 @@ const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
 		.name_hash = 11111u,
 		.index = 0,
 		.has_extension = true,
+		.is_standalone = false,
 	},
 
 	{
 		.name_hash = 22222u,
 		.index = 1,
 		.has_extension = true,
+		.is_standalone = true,
 	},
 };
 
@@ -251,6 +222,7 @@ const AssembliesConfig xa_assemblies_config = {
 	.uncompressed_assembly_data_size = UncompressedAssemblyDataSize,
 	.assembly_name_length = AssemblyNameLength,
 	.assembly_count = AssemblyCount,
+	.shared_library_name_length = SharedLibraryNameLength,
 };
 
 void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept

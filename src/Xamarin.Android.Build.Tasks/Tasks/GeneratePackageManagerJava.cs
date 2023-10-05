@@ -226,7 +226,7 @@ namespace Xamarin.Android.Tasks
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 
 			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
-				if (UseAssemblyStore) {
+				if (UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 					return;
 				}
 
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Tasks
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				if (!UseAssemblyStore) {
+				if (!UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 					assemblyCount++;
 					return;
 				}
@@ -296,7 +296,7 @@ namespace Xamarin.Android.Tasks
 				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 			}
 
-			if (!UseAssemblyStore) {
+			if (!UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 				int abiNameLength = 0;
 				foreach (string abi in SupportedAbis) {
 					if (abi.Length <= abiNameLength) {
@@ -372,7 +372,6 @@ namespace Xamarin.Android.Tasks
 				// and in the same order.
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
-				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,

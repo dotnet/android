@@ -42,6 +42,8 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 		var fastPathItems = new HashSet<string> (FastPathAssemblyNames, StringComparer.OrdinalIgnoreCase);
 		var seenAbis = new HashSet<string> (StringComparer.Ordinal);
 		var satelliteAssemblies = new List<ITaskItem> ();
+		ushort dsoIndexCounter = 0;
+		var assemblyIndexes = new Dictionary<string, ushort> (StringComparer.OrdinalIgnoreCase);
 
 		foreach (ITaskItem assembly in Assemblies) {
 			if (fastPathItems.Contains (Path.GetFileName (assembly.ItemSpec))) {
@@ -79,8 +81,13 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 
 		ITaskItem MakeTaskItem (ITaskItem assembly, string abi, string baseName)
 		{
+			if (!assemblyIndexes.TryGetValue (baseName, out ushort index)) {
+				index = dsoIndexCounter++;
+				assemblyIndexes.Add (baseName, index);
+			}
+
 			// the 'xa' infix is to make it harder to produce library names that clash with 3rd party libraries
-			string dsoName = $"libxa{baseName}.so";
+			string dsoName = $"libxa{baseName}.{index:X04}.so";
 
 			var item = new TaskItem (Path.Combine (SharedLibraryOutputDir, abi, dsoName));
 			item.SetMetadata ("Abi", abi);

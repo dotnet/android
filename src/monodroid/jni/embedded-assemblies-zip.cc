@@ -170,70 +170,6 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 }
 
 force_inline void
-EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
-{
-	if (number_of_mapped_assembly_stores >= application_config.number_of_assembly_store_files) {
-		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", application_config.number_of_assembly_store_files);
-		Helpers::abort_application ();
-	}
-
-	md_mmap_info assembly_store_map = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
-
-	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid Xamarin.Android assembly store file", entry_name.get ());
-		Helpers::abort_application ();
-	}
-
-	if (header->version > ASSEMBLY_STORE_FORMAT_VERSION) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format v%u which is not understood by this version of Xamarin.Android", entry_name.get (), header->version);
-		Helpers::abort_application ();
-	}
-
-	if (header->store_id >= application_config.number_of_assembly_store_files) {
-		log_fatal (
-			LOG_ASSEMBLY,
-			"Assembly store '%s' index %u exceeds the number of stores known at application build time, %u",
-			entry_name.get (),
-			header->store_id,
-			application_config.number_of_assembly_store_files
-		);
-		Helpers::abort_application ();
-	}
-
-	AssemblyStoreRuntimeData &rd = assembly_stores[header->store_id];
-	if (rd.data_start != nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' has a duplicate ID (%u)", entry_name.get (), header->store_id);
-		Helpers::abort_application ();
-	}
-
-	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
-
-	rd.data_start = static_cast<uint8_t*>(assembly_store_map.area);
-	rd.assembly_count = header->local_entry_count;
-	rd.assemblies = reinterpret_cast<AssemblyStoreAssemblyDescriptor*>(rd.data_start + header_size);
-
-	number_of_found_assemblies += rd.assembly_count;
-
-	if (header->store_id == 0) {
-		constexpr size_t bundled_assembly_size = sizeof(AssemblyStoreAssemblyDescriptor);
-		constexpr size_t hash_entry_size = sizeof(AssemblyStoreHashEntry);
-
-		index_assembly_store_header = header;
-
-		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
-		if constexpr (std::is_same_v<hash_t, uint64_t>) {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes + (hash_entry_size * header->global_entry_count));
-		} else {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes);
-		}
-	}
-
-	number_of_mapped_assembly_stores++;
-	have_and_want_debug_symbols = register_debug_symbols;
-}
-
-force_inline void
 EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
@@ -309,11 +245,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application ();
 	}
 
-	if (application_config.have_assembly_store) {
-		zip_load_assembly_store_entries (buf, cd_entries, state);
-	} else {
-		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
-	}
+	zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 }
 
 template<bool NeedsNameAlloc>
