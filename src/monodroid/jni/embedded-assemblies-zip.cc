@@ -1,14 +1,11 @@
 #include <array>
 #include <cerrno>
-#include <cctype>
 #include <vector>
-#include <type_traits>
 #include <libgen.h>
 
 #include <mono/metadata/assembly.h>
 
 #include "embedded-assemblies.hh"
-#include "cpp-util.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
 
@@ -169,18 +166,17 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
+#if defined(RELEASE)
 force_inline void
-EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
 		return;
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool common_assembly_store_found = false;
-	bool arch_assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly DSOs in APK, at prefix %s", assembly_dso_prefix);
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -192,17 +188,16 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
-			common_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
-		}
+		// if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
+		// 	common_assembly_store_found = true;
+		// }
 
-		if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
-			arch_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
-		}
+		// if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
+		// 	arch_assembly_store_found = true;
+		// }
 	}
 }
+#endif
 
 void
 EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register)
@@ -245,7 +240,14 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application ();
 	}
 
-	zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
+#if defined (RELEASE)
+	if (application_config.have_standalone_assembly_dsos) {
+		zip_load_standalone_dso_entries (buf, cd_entries, state);
+	} else
+#endif // def RELEASE
+	{
+		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
+	}
 }
 
 template<bool NeedsNameAlloc>

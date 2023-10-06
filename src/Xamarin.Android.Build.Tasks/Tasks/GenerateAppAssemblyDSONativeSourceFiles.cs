@@ -108,30 +108,32 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 
 	DSOAssemblyInfo MakeStandaloneAssemblyInfo (ITaskItem dsoItem)
 	{
-		string name = Path.GetFileName (GetRequiredMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.OriginalAssemblyPath));
-		string? cultureName = dsoItem.GetMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.SatelliteAssemblyCulture);
+		string name = Path.GetFileName (GetRequiredMetadata (DSOMetadata.OriginalAssemblyPath));
+		string? cultureName = dsoItem.GetMetadata (DSOMetadata.SatelliteAssemblyCulture);
 
 		if (!String.IsNullOrEmpty (cultureName)) {
 			name = $"{cultureName}/{name}";
 		}
 
-		string inputFile = GetRequiredMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.InputAssemblyPath);
-		string compressed = GetRequiredMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.Compressed);
+		string inputFile = GetRequiredMetadata (DSOMetadata.InputAssemblyPath);
+		string compressed = GetRequiredMetadata (DSOMetadata.Compressed);
 		if (!Boolean.TryParse (compressed, out bool isCompressed)) {
-			throw new InvalidOperationException ($"Internal error: unable to parse '{compressed}' as a boolean value, from the '{BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.Compressed}' metadata of item {dsoItem}");
+			throw new InvalidOperationException ($"Internal error: unable to parse '{compressed}' as a boolean value, from the '{DSOMetadata.Compressed}' metadata of item {dsoItem}");
 		}
 
-		uint dataSize = GetUintFromRequiredMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.DataSize);
+		uint dataSize = GetUintFromRequiredMetadata (DSOMetadata.DataSize);
 		uint compressedDataSize;
 		if (!isCompressed) {
 			compressedDataSize = 0;
 		} else {
 			compressedDataSize = dataSize;
-			dataSize = GetUintFromRequiredMetadata (BuildAndLinkStandaloneAssemblyDSOs.DSOMetadata.UncompressedDataSize);
+			dataSize = GetUintFromRequiredMetadata (DSOMetadata.UncompressedDataSize);
 
 		}
 
-		return new DSOAssemblyInfo (name, inputFile, dataSize, compressedDataSize, isStandalone: true, Path.GetFileName (dsoItem.ItemSpec));
+		return new DSOAssemblyInfo (name, inputFile, dataSize, compressedDataSize, isStandalone: true, Path.GetFileName (dsoItem.ItemSpec)) {
+			AssemblyLoadInfoIndex = GetUintFromRequiredMetadata (DSOMetadata.AssemblyLoadInfoIndex),
+		};
 
 		string GetRequiredMetadata (string name)
 		{

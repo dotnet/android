@@ -140,10 +140,6 @@
           Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
           Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
           Outputs="@(_AssemblyDSOSourceApplication)">
-    <!-- TODO:
-         * Pass items produced by the _CreateStandaloneAssemblyDSOs target and use metadata when generating the
-           source to be included in libxamarin-app.so
-    -->
     <GenerateAppAssemblyDSONativeSourceFiles
         SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
         CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"

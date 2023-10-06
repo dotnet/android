@@ -114,9 +114,8 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
-		public bool HaveAssemblyStore { get; set; }
+		public bool HaveStandaloneAssemblyDSOs { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public int AndroidRuntimeJNIEnvToken { get; set; }
 		public int JNIEnvInitializeToken { get; set; }
@@ -168,6 +167,7 @@ namespace Xamarin.Android.Tasks
 				instant_run_enabled = InstantRunEnabled,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
+				have_standalone_assembly_dsos = HaveStandaloneAssemblyDSOs,
 				marshal_methods_enabled = MarshalMethodsEnabled,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,
@@ -175,7 +175,6 @@ namespace Xamarin.Android.Tasks
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
-				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,

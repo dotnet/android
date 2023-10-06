@@ -1,5 +1,4 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 
@@ -11,6 +10,7 @@ namespace Xamarin.Android.Tasks;
 partial class AssemblyDSOGenerator : LlvmIrComposer
 {
 	const string XAAssembliesConfigVarName         = "xa_assemblies_config";
+	const string XAAssembliesLoadInfo              = "xa_assemblies_load_info";
 	const string XAAssembliesVarName               = "xa_assemblies";
 	const string XAAssemblyDSONamesVarName         = "xa_assembly_dso_names";
 	const string XAAssemblyIndexVarName            = "xa_assembly_index";
@@ -28,6 +28,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 	StructureInfo? assemblyIndexEntry32StructureInfo;
 	StructureInfo? assemblyIndexEntry64StructureInfo;
 	StructureInfo? assembliesConfigStructureInfo;
+	StructureInfo? assemblyLoadInfoStructureInfo;
 
 	public AssemblyDSOGenerator (Dictionary<AndroidTargetArch, DSOAssemblyInfo> dsoAssemblies)
 	{
@@ -102,23 +103,23 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			return;
 		}
 
-		int expectedCount = -1;
+		int expectedAssemblyCount = -1;
 		foreach (var kvp in allAssemblies) {
 			AndroidTargetArch arch = kvp.Key;
 			List<DSOAssemblyInfo> infos = kvp.Value;
 
-			if (expectedCount < 0) {
-				expectedCount = infos.Count;
+			if (expectedAssemblyCount < 0) {
+				expectedAssemblyCount = infos.Count;
 			}
 
-			if (infos.Count != expectedCount) {
-				throw new InvalidOperationException ($"Collection of assemblies for architecture {arch} has a different number of entries ({infos.Count}) than expected ({expectedCount})");
+			if (infos.Count != expectedAssemblyCount) {
+				throw new InvalidOperationException ($"Collection of assemblies for architecture {arch} has a different number of entries ({infos.Count}) than expected ({expectedAssemblyCount})");
 			}
 
 			AddAssemblyData (arch, infos);
 		}
 
-		if (expectedCount <= 0) {
+		if (expectedAssemblyCount <= 0) {
 			ConstructEmptyModule ();
 			return;
 		}
@@ -154,6 +155,13 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			Options = LlvmIrVariableOptions.GlobalConstant,
 		};
 		module.Add (xa_assembly_dso_names);
+
+		var xa_assemblies_load_info = new LlvmIrGlobalVariable (typeof(StructureInstance<AssemblyLoadInfo>[]), XAAssembliesLoadInfo) {
+			ArrayItemCount = (ulong)expectedAssemblyCount,
+			Options = LlvmIrVariableOptions.GlobalWritable,
+			ZeroInitializeArray = true,
+		};
+		module.Add (xa_assemblies_load_info);
 
 		var xa_uncompressed_assembly_data = new LlvmIrGlobalVariable (typeof(byte[]), XAUncompressedAssemblyDataVarName) {
 			Alignment = 4096, // align to page boundary, may make access slightly faster
@@ -354,9 +362,18 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		ulong uncompressedOffset = 0;
 		ulong assemblyNameLength = 0;
 		ulong sharedLibraryNameLength = 0;
+		ulong dso_count = 0;
+
 		foreach (DSOAssemblyInfo info in infos) {
 			bool isStandalone = info.IsStandalone;
 			uint inputSize = GetInputSize (info);
+
+			if (isStandalone) {
+				if (!info.AssemblyLoadInfoIndex.HasValue) {
+					throw new InvalidOperationException ($"Internal error: item for assembly '{info.Name}' is missing the required assembly load index value");
+				}
+				dso_count++;
+			}
 
 			// We need to read each file into a separate array, as it is (theoretically) possible that all the assemblies data will exceed 2GB,
 			// which is the limit of we can allocate (or rent, below) in .NET, per single array.
@@ -417,12 +434,14 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			ulong nameWithoutExtensionHash = EnsureUniqueHash (GetXxHash (nameWithoutExtensionBytes, is64Bit), nameWithoutExtension);
 
 			uint assemblyIndex = (uint)archState.xa_assemblies.Count - 1;
+			uint loadInfoIndex = isStandalone ? info.AssemblyLoadInfoIndex.Value : UInt32.MaxValue;
 
 			if (is64Bit) {
 				var indexEntry = new AssemblyIndexEntry64 {
 					Name = info.Name,
 					name_hash = nameHash,
-					index = assemblyIndex,
+					assemblies_index = assemblyIndex,
+					load_info_index = loadInfoIndex,
 					has_extension = true,
 					is_standalone = isStandalone,
 				};
@@ -431,7 +450,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				indexEntry = new AssemblyIndexEntry64 {
 					Name = nameWithoutExtension,
 					name_hash = nameWithoutExtensionHash,
-					index = assemblyIndex,
+					assemblies_index = assemblyIndex,
+					load_info_index = loadInfoIndex,
 					has_extension = false,
 					is_standalone = isStandalone,
 				};
@@ -440,7 +460,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				var indexEntry = new AssemblyIndexEntry32 {
 					Name = info.Name,
 					name_hash = (uint)nameHash,
-					index = assemblyIndex,
+					assemblies_index = assemblyIndex,
+					load_info_index = loadInfoIndex,
 					is_standalone = isStandalone,
 				};
 				archState.xa_assembly_index32.Add (new StructureInstance<AssemblyIndexEntry32> (assemblyIndexEntry32StructureInfo, indexEntry));
@@ -448,7 +469,8 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				indexEntry = new AssemblyIndexEntry32 {
 					Name = nameWithoutExtension,
 					name_hash = (uint)nameWithoutExtensionHash,
-					index = assemblyIndex,
+					assemblies_index = assemblyIndex,
+					load_info_index = loadInfoIndex,
 					has_extension = false,
 					is_standalone = isStandalone,
 				};
@@ -467,6 +489,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		}
 
 		archState.xa_assemblies_config.assembly_count = (uint)archState.xa_assemblies.Count;
+		archState.xa_assemblies_config.assembly_dso_count = (uint)dso_count;
 		archState.xa_assemblies_config.input_assembly_data_size = (uint)inputOffset;
 		archState.xa_assemblies_config.uncompressed_assembly_data_size = (uint)uncompressedOffset;
 
@@ -506,5 +529,6 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		assemblyIndexEntry32StructureInfo = module.MapStructure<AssemblyIndexEntry32> ();
 		assemblyIndexEntry64StructureInfo = module.MapStructure<AssemblyIndexEntry64> ();
 		assembliesConfigStructureInfo = module.MapStructure<AssembliesConfig> ();
+		assemblyLoadInfoStructureInfo = module.MapStructure<AssemblyLoadInfo> ();
 	}
 }

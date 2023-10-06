@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <functional>
+#include <string>
 #include <vector>
 #include <semaphore.h>
 
@@ -96,12 +97,7 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
-
-		static constexpr char assembly_store_prefix[] = "assemblies";
-		static constexpr char assembly_store_extension[] = ".blob";
-		static constexpr auto assembly_store_common_file_name = concat_const ("/", assembly_store_prefix, assembly_store_extension);
-		static constexpr auto assembly_store_arch_file_name = concat_const ("/", assembly_store_prefix, ".", SharedConstants::android_abi, assembly_store_extension);
-
+		static constexpr auto assembly_dso_prefix = concat_const ("lib/", SharedConstants::android_apk_abi, "/libxa");
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
@@ -220,10 +216,13 @@ namespace xamarin::android::internal {
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
-		void zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
 		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
 		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
+
+#if defined (RELEASE)
+		void zip_load_standalone_dso_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+#endif // def RELEASE
 
 		template<size_t BufSize>
 		bool zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -269,11 +268,8 @@ namespace xamarin::android::internal {
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files
-#if defined (NET)
-				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
-#endif // NET
-				;
+				number_of_standalone_dsos == xa_assemblies_config.assembly_dso_count &&
+				((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
 		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
@@ -318,7 +314,7 @@ namespace xamarin::android::internal {
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
 #endif // def NET
-		uint32_t               number_of_mapped_assembly_stores = 0;
+		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
 		std::mutex             assembly_decompress_mutex;
 	};

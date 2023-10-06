@@ -45,6 +45,7 @@ const ApplicationConfig application_config = {
 	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
+	.have_standalone_assembly_dsos = false,
 	.marshal_methods_enabled = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
@@ -52,7 +53,6 @@ const ApplicationConfig application_config = {
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
-	.number_of_assembly_store_files = 2,
 	.number_of_dso_cache_entries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -194,14 +194,14 @@ const AssemblyEntry xa_assemblies[AssemblyCount] = {
 const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
 	{
 		.name_hash = 11111u,
-		.index = 0,
+		.assemblies_index = 0,
 		.has_extension = true,
 		.is_standalone = false,
 	},
 
 	{
 		.name_hash = 22222u,
-		.index = 1,
+		.assemblies_index = 1,
 		.has_extension = true,
 		.is_standalone = true,
 	},
@@ -222,8 +222,11 @@ const AssembliesConfig xa_assemblies_config = {
 	.uncompressed_assembly_data_size = UncompressedAssemblyDataSize,
 	.assembly_name_length = AssemblyNameLength,
 	.assembly_count = AssemblyCount,
+	.assembly_dso_count = 2,
 	.shared_library_name_length = SharedLibraryNameLength,
 };
+
+AssemblyLoadInfo xa_assemblies_load_info[AssemblyCount];
 
 void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
 {

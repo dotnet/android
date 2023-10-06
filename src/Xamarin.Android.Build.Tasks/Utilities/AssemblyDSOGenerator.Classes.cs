@@ -56,7 +56,12 @@ partial class AssemblyDSOGenerator
 		public T name_hash;
 
 		// Index into the `xa_assemblies` descriptor array
-		public uint index;
+		public uint assemblies_index;
+
+		// Index into the `xa_load_info` array.  We can't reuse the `assemblies_index` above because the order
+		// of entries in `xa_load_info` is determined in a different task than that of `xa_assemblies` and it
+		// also depends on the number of assemblies placed in the standalone DSOs.
+		public uint load_info_index;
 
 		// whether hashed name had extension
 		public bool has_extension;
@@ -71,6 +76,16 @@ partial class AssemblyDSOGenerator
 	sealed class AssemblyIndexEntry64 : AssemblyIndexEntryBase<ulong>
 	{}
 
+	// Must be identical to AssemblyLoadInfo in src/monodroid/jni/xamarin-app.hh
+	sealed class AssemblyLoadInfo
+	{
+		// offset into the APK, or 0 if the assembly isn't in a standalone DSO or if the DSOs are extracted to disk at install time
+		public uint apk_offset;
+
+		// Address at which the assembly data was mmapped
+		public IntPtr mmap_addr;
+	};
+
 	// Must be identical to AssembliesConfig in src/monodroid/jni/xamarin-app.hh
 	sealed class AssembliesConfig
 	{
@@ -78,6 +93,7 @@ partial class AssemblyDSOGenerator
 		public uint uncompressed_assembly_data_size;
 		public uint assembly_name_length;
 		public uint assembly_count;
+		public uint assembly_dso_count;
 		public uint shared_library_name_length;
 	};
 

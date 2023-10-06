@@ -21,15 +21,21 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		public readonly string DSOPath;
 		public readonly string? Culture;
 		public readonly ITaskItem TaskItem;
+		public readonly uint AssemblyLoadInfoIndex;
 
 		public TargetDSO (ITaskItem dso)
 		{
 			TaskItem = dso;
 			DSOPath = dso.ItemSpec;
-			Abi = EnsureValidMetadata ("Abi");
-			OriginalAssemblyPath = EnsureValidMetadata ("InputAssemblyPath");
-			SourceFileBaseName = EnsureValidMetadata ("SourceFileBaseName");
-			Culture = dso.GetMetadata ("SatelliteAssemblyCulture");
+			Abi = EnsureValidMetadata (DSOMetadata.Abi);
+			OriginalAssemblyPath = EnsureValidMetadata (DSOMetadata.InputAssemblyPath);
+			SourceFileBaseName = EnsureValidMetadata (DSOMetadata.SourceFileBaseName);
+			Culture = dso.GetMetadata (DSOMetadata.SatelliteAssemblyCulture);
+
+			string index = EnsureValidMetadata (DSOMetadata.AssemblyLoadInfoIndex);
+			if (!UInt32.TryParse (index, out AssemblyLoadInfoIndex)) {
+				throw new InvalidOperationException ($"Internal error: unable to parse string '{index}' as an unsigned 32-bit integer");
+			}
 
 			string EnsureValidMetadata (string what)
 			{
@@ -56,17 +62,6 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			TargetDSO = targetDSO;
 			SharedLibraryItem = sharedLibraryItem;
 		}
-	}
-
-	public static class DSOMetadata
-	{
-		public const string Compressed               = "Compressed";
-		public const string DataSize                 = "DataSize";
-		public const string DataSymbolOffset         = "DataSymbolOffset";
-		public const string InputAssemblyPath        = "InputAssemblyPath";
-		public const string OriginalAssemblyPath     = "OriginalAssemblyPath";
-		public const string SatelliteAssemblyCulture = "SatelliteAssemblyCulture";
-		public const string UncompressedDataSize     = "UncompressedDataSize";
 	}
 
 	const uint DefaultParallelBuilds = 8;
@@ -99,12 +94,13 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			var dsoItem = new TaskItem (dso.DSOPath);
 			DSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
 
-			dsoItem.SetMetadata ("Abi", dso.Abi);
-			dsoItem.SetMetadata (DSOMetadata.DataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
-			dsoItem.SetMetadata (DSOMetadata.UncompressedDataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
+			dsoItem.SetMetadata (DSOMetadata.Abi, dso.Abi);
+			dsoItem.SetMetadata (DSOMetadata.AssemblyLoadInfoIndex, MonoAndroidHelper.CultureInvariantToString (dso.AssemblyLoadInfoIndex));
 			dsoItem.SetMetadata (DSOMetadata.Compressed, dsoInfo.CompressedDataSize == 0 ? "false" : "true");
-			dsoItem.SetMetadata (DSOMetadata.OriginalAssemblyPath, dso.OriginalAssemblyPath);
+			dsoItem.SetMetadata (DSOMetadata.DataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.CompressedDataSize == 0 ? dsoInfo.DataSize : dsoInfo.CompressedDataSize));
 			dsoItem.SetMetadata (DSOMetadata.InputAssemblyPath, dsoInfo.InputFile);
+			dsoItem.SetMetadata (DSOMetadata.OriginalAssemblyPath, dso.OriginalAssemblyPath);
+			dsoItem.SetMetadata (DSOMetadata.UncompressedDataSize, MonoAndroidHelper.CultureInvariantToString (dsoInfo.DataSize));
 
 			if (!String.IsNullOrEmpty (dso.Culture)) {
 				dsoItem.SetMetadata (DSOMetadata.SatelliteAssemblyCulture, dso.Culture);

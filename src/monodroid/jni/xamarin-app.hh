@@ -108,13 +108,25 @@ struct AssemblyIndexEntry
 	xamarin::android::hash_t name_hash;
 
 	// Index into the `xa_assemblies` descriptor array
-	uint32_t index;
+	uint32_t assemblies_index;
+
+	// Index into the `xa_load_info` array.  We can't reuse the `assemblies_index` above because the order
+	// of entries in `xa_load_info` is determined in a different task than that of `xa_assemblies` and it
+	// also depends on the number of assemblies placed in the standalone DSOs.
+	uint32_t load_info_index;
 
 	// whether hashed name had extension
 	bool has_extension;
 
 	// whether assembly data lives in a separate DSO
 	bool is_standalone;
+};
+
+struct AssemblyLoadInfo
+{
+	uint32_t apk_offset; // offset into the APK, or 0 if the assembly isn't in a standalone DSO or if the DSOs are
+						 // extracted to disk at install time
+	void *mmap_addr;     // Address at which the assembly data was mmapped
 };
 
 constexpr uint32_t InputAssemblyDataSize = 1024;
@@ -129,6 +141,7 @@ struct AssembliesConfig
 	uint32_t uncompressed_assembly_data_size;
 	uint32_t assembly_name_length;
 	uint32_t assembly_count;
+	uint32_t assembly_dso_count;
 	uint32_t shared_library_name_length;
 };
 
@@ -143,6 +156,7 @@ MONO_API MONO_API_EXPORT const AssemblyEntry xa_assemblies[AssemblyCount];
 MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
 MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
 MONO_API MONO_API_EXPORT const char xa_assembly_dso_names[AssemblyCount][SharedLibraryNameLength];
+MONO_API MONO_API_EXPORT AssemblyLoadInfo xa_assemblies_load_info[AssemblyCount];
 
 enum class MonoComponent : uint32_t
 {
@@ -162,6 +176,7 @@ struct ApplicationConfig
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
+	bool have_standalone_assembly_dsos;
 	bool marshal_methods_enabled;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
@@ -169,7 +184,6 @@ struct ApplicationConfig
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
-	uint32_t number_of_assembly_store_files;
 	uint32_t number_of_dso_cache_entries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;

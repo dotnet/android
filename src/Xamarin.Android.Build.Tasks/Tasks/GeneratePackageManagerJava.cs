@@ -39,6 +39,9 @@ namespace Xamarin.Android.Tasks
 		public bool UseAssemblyStore { get; set; }
 
 		[Required]
+		public bool UseAssemblySharedLibraries { get; set; }
+
+		[Required]
 		public string OutputDirectory { get; set; }
 
 		[Required]
@@ -364,12 +367,9 @@ namespace Xamarin.Android.Tasks
 				InstantRunEnabled = InstantRunEnabled,
 				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+				HaveStandaloneAssemblyDSOs = UseAssemblySharedLibraries,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
-				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
-				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
-				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
-				// and in the same order.
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,

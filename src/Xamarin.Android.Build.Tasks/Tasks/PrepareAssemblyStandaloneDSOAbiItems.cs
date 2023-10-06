@@ -71,7 +71,7 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 
 				foreach (string abi in seenAbis) {
 					var newItem = MakeTaskItem (assembly, abi, baseName);
-					newItem.SetMetadata ("SatelliteAssemblyCulture", culture);
+					newItem.SetMetadata (DSOMetadata.SatelliteAssemblyCulture, culture);
 					sharedLibraries.Add (newItem);
 				}
 			}
@@ -90,12 +90,13 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 			string dsoName = $"libxa{baseName}.{index:X04}.so";
 
 			var item = new TaskItem (Path.Combine (SharedLibraryOutputDir, abi, dsoName));
-			item.SetMetadata ("Abi", abi);
-			item.SetMetadata ("InputAssemblyPath", assembly.ItemSpec);
-			item.SetMetadata ("SourceFileBaseName", baseName);
+			item.SetMetadata (DSOMetadata.Abi, abi);
+			item.SetMetadata (DSOMetadata.InputAssemblyPath, assembly.ItemSpec);
+			item.SetMetadata (DSOMetadata.SourceFileBaseName, baseName);
+			item.SetMetadata (DSOMetadata.AssemblyLoadInfoIndex, MonoAndroidHelper.CultureInvariantToString (index));
 			string skipCompression = assembly.GetMetadata ("AndroidSkipCompression");
 			if (!String.IsNullOrEmpty (skipCompression)) {
-				item.SetMetadata ("AndroidSkipCompression", skipCompression);
+				item.SetMetadata (DSOMetadata.AndroidSkipCompression, skipCompression);
 			}
 
 			return item;
