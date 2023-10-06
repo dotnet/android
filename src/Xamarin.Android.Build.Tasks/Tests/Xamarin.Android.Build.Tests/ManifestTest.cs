@@ -755,6 +755,7 @@ namespace Bug12935
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
+			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
