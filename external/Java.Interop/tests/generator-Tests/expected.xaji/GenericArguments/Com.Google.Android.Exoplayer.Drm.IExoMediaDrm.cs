@@ -162,6 +162,7 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	}
 
+	[global::Android.Runtime.Register ("mono/com/google/android/exoplayer/drm/ExoMediaDrm_OnEventListenerImplementor")]
 	internal sealed partial class IExoMediaDrmOnEventListenerImplementor : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
 
 		object sender;

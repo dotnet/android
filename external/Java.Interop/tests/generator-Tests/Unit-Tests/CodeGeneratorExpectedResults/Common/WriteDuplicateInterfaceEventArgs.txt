@@ -157,6 +157,7 @@ public partial class AnimationEndEventArgs : global::System.EventArgs {
 
 }
 
+[global::Android.Runtime.Register ("mono/java/code/AnimatorListenerImplementor")]
 internal sealed partial class AnimatorListenerImplementor : global::Java.Lang.Object, AnimatorListener {
 
 	object sender;
