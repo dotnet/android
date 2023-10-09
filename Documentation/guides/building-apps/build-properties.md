@@ -990,7 +990,7 @@ and `manifestmerger.jar` selects Google's Java implementation.
 The default value is currently `manifestmerger.jar`. If you want to 
 use the old version add the following to your csproj
 
-```
+```xml
 <AndroidManifestMerger>legacy</AndroidManifestMerger>
 ```
 
