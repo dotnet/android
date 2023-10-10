@@ -1136,6 +1136,7 @@ namespace UnamedProject
 				FileAssert.Exists (dexFile);
 				var classes = new [] {
 					"Lmono/MonoRuntimeProvider;",
+					"Lmono/android/view/View_OnClickListenerImplementor;",
 					"Landroid/runtime/JavaProxyThrowable;",
 					$"L{toolbar_class.Replace ('.', '/')};"
 				};
