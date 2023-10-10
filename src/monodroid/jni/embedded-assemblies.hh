@@ -68,6 +68,12 @@ namespace xamarin::android::internal {
 #define LoaderData typename
 #endif
 
+	enum class EntryLocation
+	{
+		Assemblies,
+		Libs,
+	};
+
 	class EmbeddedAssemblies final
 	{
 		struct md_mmap_info {
@@ -86,6 +92,7 @@ namespace xamarin::android::internal {
 			uint32_t              local_header_offset;
 			uint32_t              data_offset;
 			uint32_t              file_size;
+			EntryLocation         location;
 		};
 
 	private:
@@ -97,7 +104,15 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
-		static constexpr auto assembly_dso_prefix = concat_const ("lib/", SharedConstants::android_apk_abi, "/libxa");
+
+		// if the `libXA` embedded assembly prefix changes here, it must be updated in
+		// src/src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyStandaloneDSOAbiItems.cs as well
+		static constexpr auto assembly_dso_prefix = concat_const ("lib/", SharedConstants::android_apk_abi, "/libXA");
+
+		// This includes the `.0000.so` suffix each assembly DSO must have and at least one name character (in addition
+		// to the `libXA` prefix)
+		static constexpr size_t assembly_dso_min_length = assembly_dso_prefix.size () - 1 + 9;
+		static constexpr size_t assembly_index_start_offset = 7;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";

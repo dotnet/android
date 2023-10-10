@@ -86,8 +86,10 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 				assemblyIndexes.Add (baseName, index);
 			}
 
-			// the 'xa' infix is to make it harder to produce library names that clash with 3rd party libraries
-			string dsoName = $"libxa{baseName}.{index:X04}.so";
+			// the 'XA' infix is to make it harder to produce library names that clash with 3rd party libraries
+			// If the infix changes, the `assembly_dso_prefix` constant in src/monodroid/jni/embedded-assemblies.hh must
+			// be changed as well.
+			string dsoName = $"libXA{baseName}.{index:X04}.so";
 
 			var item = new TaskItem (Path.Combine (SharedLibraryOutputDir, abi, dsoName));
 			item.SetMetadata (DSOMetadata.Abi, abi);

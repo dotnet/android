@@ -851,15 +851,19 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 #endif // def NET
 
-	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
+	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0) {
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
 #else
-		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
+		log_fatal (LOG_DEFAULT, "No assemblies (or assembly shared libraries) were found in the application APK file(s)");
 #endif
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `assemblies/` are STORED (not compressed)");
+		log_fatal (LOG_DEFAULT, "Make sure that all entries (if any) in the APK directory named `assemblies/` are STORED (not compressed)");
+#if defined (RELEASE)
+		log_fatal (LOG_DEFAULT, "Make sure that all the shared libraries (if any) found in the APK directory named lib/%s are STORED, or that they are extracted to the filesystem", SharedConstants::android_apk_abi);
+		log_fatal (LOG_DEFAULT, "Check the 'android:extractNativeLibs=' attribute of the 'application' element in your AndroidManifest.xml file to see whether shared libraries are extracted or not");
+#endif
 		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `assemblies/` are compressed");
 
 		Helpers::abort_application ();

@@ -58,12 +58,18 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-	if (entry_name.get ()[0] != state.prefix[0] || strncmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+	static_assert (assembly_dso_prefix.size () > 1, "assembly_dso_prefix must be longer than 1 byte");
+
+	if ( // library location is not overridable, so we can test for it beginning with a hardcoded 'l'
+		(entry_name.get ()[0] != 'l' || entry_name.length () < assembly_dso_prefix.size () || memcmp (assembly_dso_prefix.data (), entry_name.get (), assembly_dso_prefix.size () - 1) != 0) &&
+		(entry_name.get ()[0] != state.prefix[0] || entry_name.length () < state.prefix_len || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0)
+	) {
 		return false;
 	}
+	state.location = entry_name.get ()[0] == 'l' ? EntryLocation::Libs : EntryLocation::Assemblies;
 
 #if defined (NET)
-	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
+	if (application_config.have_runtime_config_blob && !runtime_config_blob_found && state.location == EntryLocation::Assemblies) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
@@ -72,9 +78,9 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 #endif // def NET
 
-	// assemblies must be 4-byte aligned, or Bad Things happen
+	// assemblies and shared libraries must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
-		log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
+		log_fatal (LOG_ASSEMBLY, "Entry '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
 		log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (state.apk_name, '/') + 1);
 		Helpers::abort_application ();
 	}
@@ -121,21 +127,9 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if !defined(NET)
-		if (utils.ends_with (entry_name, ".config")) {
-			char *assembly_name = strdup (basename (entry_name.get ()));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
+		if (state.location != EntryLocation::Assemblies || !utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
 			continue;
 		}
-#endif // ndef NET
-
-		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
-			continue;
 
 #if defined (DEBUG)
 		if (entry_is_overridden)
@@ -184,17 +178,54 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 		}
 
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
-		if (!interesting_entry) {
+		if (!interesting_entry || state.location != EntryLocation::Libs) {
 			continue;
 		}
 
-		// if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
-		// 	common_assembly_store_found = true;
-		// }
+		if (entry_name.length () < assembly_dso_min_length) {
+			log_warn (LOG_ASSEMBLY, "APK entry '%s' looks like an assembly DSO, but its name is not long enough. Expected at least %zu characters", entry_name.get (), assembly_dso_min_length);
+			continue;
+		}
 
-		// if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
-		// 	arch_assembly_store_found = true;
-		// }
+		number_of_found_assemblies++;
+
+		// We have an assembly DSO
+		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s", entry_name.get (), entry_name.get () + (entry_name.length () - 7));
+
+		bool valid_hex = true;
+		auto integer_from_hex_char = []<size_t TLen> (dynamic_local_string<TLen> const& s, size_t pos, bool &is_valid, size_t shift) -> uint16_t
+        {
+            uint8_t ch = s[pos];
+            if (ch >= '0' && ch <= '9') {
+	            return static_cast<uint16_t>((ch - 48) << shift); // 48 is ASCII '0'
+            }
+
+            if (ch >= 'A' && ch <= 'Z') {
+	            return static_cast<uint16_t>((ch - 55) << shift); // ASCII 'A' is 65, and it represents decimal 10
+            }
+
+            is_valid = false;
+            return static_cast<uint16_t>(0);
+        };
+
+		const size_t index_pos = entry_name.length () - assembly_index_start_offset;
+		uint16_t index =
+			integer_from_hex_char (entry_name, index_pos,     valid_hex, 12u) |
+			integer_from_hex_char (entry_name, index_pos + 1, valid_hex, 8u) |
+			integer_from_hex_char (entry_name, index_pos + 2, valid_hex, 4u) |
+			integer_from_hex_char (entry_name, index_pos + 3, valid_hex, 0u);
+
+		if (!valid_hex) [[unlikely]] {
+			log_fatal (LOG_ASSEMBLY, "Unable to determine DSO storage index from '%s'", entry_name.get ());
+			Helpers::abort_application ();
+		}
+
+		if (index >= xa_assemblies_config.assembly_dso_count) [[unlikely]] {
+			log_fatal (LOG_ASSEMBLY, "Index retrieved from '%s' exceeds the maximum allowed value of %u", entry_name.get (), xa_assemblies_config.assembly_dso_count - 1);
+			Helpers::abort_application ();
+		}
+
+		xa_assemblies_load_info[index].apk_offset = state.data_offset;
 	}
 }
 #endif
