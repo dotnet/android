@@ -121,7 +121,7 @@ namespace MonoDroid.Tuner
 					} else {
 						LogMessage ($"          Adding {key}");
 						output.Add (key, property.GetMethod);
-						caseInsensitiveLookup.Add (key, property.GetMethod);
+						caseInsensitiveLookup [key] = property.GetMethod;
 					}
 				}
 			}
