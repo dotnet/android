@@ -38,8 +38,6 @@
 # Development Workflow
 
   * [How to add support for a new Android API level](workflow/HowToAddNewApiLevel.md)
-  * [Using Your Build](workflow/UsingYourBuild.md)
-  * [OSS Build Artifacts](workflow/OSSBuildArtifacts.md)
   * [Development tips and native debugging](workflow/DevelopmentTips.md)
   * [Localization](workflow/Localization.md)
   * [Custom system properties](workflow/SystemProperties.md)

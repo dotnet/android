@@ -85,46 +85,14 @@ include build-tools/scripts/msbuild.mk
 
 ifeq ($(USE_MSBUILD),1)
 _SLN_BUILD  = $(MSBUILD)
-else    # $(MSBUILD) != 1
-_SLN_BUILD  = MSBUILD="$(MSBUILD)" tools/scripts/xabuild
 endif   # $(USE_MSBUILD) == 1
 
 ifneq ($(API_LEVEL),)
 MSBUILD_FLAGS += /p:AndroidApiLevel=$(API_LEVEL) /p:AndroidFrameworkVersion=$(word $(API_LEVEL), $(ALL_FRAMEWORKS)) /p:AndroidPlatformId=$(word $(a), $(ALL_PLATFORM_IDS))
 endif
 
-all-tests::
-	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
-
 pack-dotnet::
 	$(call DOTNET_BINLOG,pack-dotnet) $(MSBUILD_FLAGS) -m:1 $(SOLUTION) -t:PackDotNet
-
-install::
-	@if [ ! -d "bin/$(CONFIGURATION)" ]; then \
-		echo "run 'make all' before you execute 'make install'!"; \
-		exit 1; \
-	fi
-	-mkdir -p "$(prefix)/bin"
-	-mkdir -p "$(prefix)/lib/mono/xbuild-frameworks"
-	-mkdir -p "$(prefix)/lib/xamarin.android"
-	-mkdir -p "$(prefix)/lib/mono/xbuild/Xamarin/"
-	cp -a "bin/$(CONFIGURATION)/lib/xamarin.android/." "$(prefix)/lib/xamarin.android/"
-	-rm -rf "$(prefix)/lib/mono/xbuild/Novell"
-	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Xamarin.Android.Sdk.props"
-	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Xamarin.Android.Sdk.targets"
-	-rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
-	-rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
-	ln -s "$(prefix)/lib/xamarin.android/xbuild/Xamarin/Android/" "$(prefix)/lib/mono/xbuild/Xamarin/Android"
-	ln -s "$(prefix)/lib/xamarin.android/xbuild/Novell/" "$(prefix)/lib/mono/xbuild/Novell"
-	ln -s "$(prefix)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/" "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
-	if [ ! -e "$(prefix)/bin/mono" ]; then \
-		cp tools/scripts/xabuild "$(prefix)/bin/xabuild"; \
-	fi
-
-uninstall::
-	rm -rf "$(prefix)/lib/xamarin.android/" "$(prefix)/bin/xabuild"
-	rm -rf "$(prefix)/lib/mono/xbuild/Xamarin/Android"
-	rm -rf "$(prefix)/lib/mono/xbuild-frameworks/MonoAndroid"
 
 topdir  := $(shell pwd)
 
@@ -142,7 +110,6 @@ run-all-tests:
 
 clean:
 	$(call DOTNET_BINLOG,clean) -t:Clean $(SOLUTION) -m:1
-	tools/scripts/xabuild $(MSBUILD_FLAGS) /t:Clean Xamarin.Android-Tests.sln
 
 distclean:
 	# It may fail if we're cleaning a half-built tree, no harm done if we ignore it

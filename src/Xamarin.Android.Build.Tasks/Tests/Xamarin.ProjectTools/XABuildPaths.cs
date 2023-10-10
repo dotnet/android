@@ -16,8 +16,6 @@ namespace Xamarin.ProjectTools
 
 		public static readonly string PrefixDirectory = Path.Combine (TopDirectory, "bin", Configuration);
 		public static readonly string BinDirectory = Path.Combine (PrefixDirectory, "bin");
-		public static readonly string XABuildScript = Path.Combine (BinDirectory, "xabuild");
-		public static readonly string XABuildExe = Path.Combine (BinDirectory, "xabuild.exe");
 		public static readonly string TestAssemblyOutputDirectory = Path.Combine (TopDirectory, "bin", $"Test{Configuration}");
 		public static readonly string TestOutputDirectory = GetTestDirectoryRoot ();
 		public static readonly string BuildOutputDirectory = Path.Combine (TopDirectory, "bin", $"Build{Configuration}");
