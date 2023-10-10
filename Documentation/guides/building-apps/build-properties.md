@@ -469,6 +469,15 @@ Support for this property was added in Xamarin.Android 5.1.
 
 This property is `False` by default.
 
+## AndroidEnableObsoleteOverrideInheritance
+
+A boolean property that determines if bound methods automatically inherit `[Obsolete]`
+attributes from methods they override.
+
+Support for this property was added in .NET 8.
+
+This property is `True` by default.
+
 ## AndroidEnablePreloadAssemblies
 
 A boolean property that controls
