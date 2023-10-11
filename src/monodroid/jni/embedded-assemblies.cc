@@ -238,7 +238,7 @@ EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSI
 
 	if (index == -1) {
 		log_debug (LOG_ASSEMBLY, "assembly '%s' not found in the DSO assembly index array", name.get ());
-		return null;
+		return nullptr;
 	}
 
 	AssemblyIndexEntry const& entry = xa_assembly_index[index];
