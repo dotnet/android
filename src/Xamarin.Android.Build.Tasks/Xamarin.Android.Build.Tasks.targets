@@ -381,26 +381,4 @@
         SkipUnchangedFiles="True"
     />
   </Target>
-
-  <!-- XABuild will call this to copy required output to the legacy SDK location -->
-  <Target Name="CopyToLegacySdkOutDir"
-      DependsOnTargets="ConstructInstallerItems;_CopyVSExtensionTargets" >
-    <Copy
-        SourceFiles="@(MSBuildItemsWin)"
-        DestinationFiles="@(MSBuildItemsWin->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' == 'Windows' "
-    />
-    <Copy
-        SourceFiles="@(MSBuildItemsUnix)"
-        DestinationFiles="@(MSBuildItemsUnix->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' != 'Windows' "
-    />
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android"
-        SkipUnchangedFiles="true"
-    />
-  </Target>
 </Project>

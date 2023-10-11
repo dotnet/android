@@ -111,13 +111,6 @@ Several `.nupkg` files will be output in `./bin/Build$(Configuration)/nuget-unsi
 Commercial installers will be created by this command if the
 `make prepare-external-git-dependencies` command was ran before building.
 
-# Building Unit Tests
-
-Once `make all` or `make jenkins` have completed, the unit tests may
-be built with:
-
-    make all-tests
-
 
 # Running Unit Tests
 
@@ -199,13 +192,6 @@ All `.apk`-based unit test projects provide the following targets:
 To run an individual `.apk`-based test project, a package must be built, using the
 `SignAndroidPackage` target, installed, and executed.
 
-For example:
-
-	$ bin/Debug/bin/xabuild /t:SignAndroidPackage  tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ bin/Debug/bin/xabuild /t:DeployTestApks      tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ bin/Debug/bin/xabuild /t:RunTestApks         tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-
-
 ## Running `.apk` Projects with Include/Exclude
 
 If an `.apk`-based unit test uses the NUnit `[Category]` custom attribute, then
@@ -227,11 +213,7 @@ A single NUnit *Test Fixture* -- a class with the `[TestFixture]`
 custom attribute -- may be executed instead of executing *all* test fixtures.
 
 The `RunTestApks` target accepts a `TestFixture` MSBuild property
-to specify the test fixture class to execute:
-
-	$ bin/Debug/bin/xabuild /t:RunTestApks \
-	    /p:TestFixture=Xamarin.Android.LocaleTests.SatelliteAssemblyTests \
-	    tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
+to specify the test fixture class to execute.
 
 If using `Xamarin.Android.NUnitLite` for projects outside the `xamarin-android`
 repository, such as NUnit tests for a custom app, the `RunTestApks` target
@@ -360,7 +342,7 @@ where the "relevant directory" is the target of interest within
 `src/mono-runtimes/obj/$(Configuration)`. When `make` has completed,
 invoke the `_InstallRuntimes` target so that the updated native libraries
 are copied into `bin/$(Configuration)/lib`, which will allow subsequent
-top-level `make` and [`xabuild`](../../../tools/xabuild) invocations to use them.
+top-level `make` invocations to use them.
 
 For example, to rebuild Mono for armeabi-v7a:
 
