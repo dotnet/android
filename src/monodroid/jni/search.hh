@@ -11,21 +11,33 @@ namespace xamarin::android::internal {
 	class Search final
 	{
 	public:
-		force_inline static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
+		template<class T, bool (*equal) (T const&, hash_t), bool (*less_than) (T const&, hash_t)>
+		force_inline static ssize_t binary_search (hash_t key, const T *arr, size_t n) noexcept
 		{
+			static_assert (equal != nullptr, "equal is a required templae parameter");
+			static_assert (less_than != nullptr, "less_than is a required templae parameter");
+
 			ssize_t left = -1;
 			ssize_t right = static_cast<ssize_t>(n);
 
 			while (right - left > 1) {
 				ssize_t middle = (left + right) >> 1;
-				if (arr[middle] < key) {
+				if (less_than (arr[middle], key)) {
 					left = middle;
 				} else {
 					right = middle;
 				}
 			}
 
-			return arr[right] == key ? right : -1;
+			return equal (arr[right], key) ? right : -1;
+		}
+
+		force_inline static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
+		{
+			auto equal = [](hash_t const& entry, hash_t key) -> bool { return entry == key; };
+			auto less_than = [](hash_t const& entry, hash_t key) -> bool { return entry < key; };
+
+			return binary_search<hash_t, equal, less_than> (key, arr, n);
 		}
 
 		force_inline static ptrdiff_t binary_search_branchless (hash_t x, const hash_t *arr, uint32_t len) noexcept

@@ -186,6 +186,9 @@ namespace xamarin::android::internal {
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
 		template<LoaderData TLoaderData>
+		MonoAssembly* standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data) noexcept;
+
+		template<LoaderData TLoaderData>
 		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
 
 		template<LoaderData TLoaderData>
@@ -316,7 +319,7 @@ namespace xamarin::android::internal {
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
-		size_t                 number_of_found_assemblies = 0;
+		size_t                 number_of_found_assembly_dsos = 0;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;

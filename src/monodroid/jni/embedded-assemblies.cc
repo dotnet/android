@@ -224,6 +224,43 @@ EmbeddedAssemblies::load_bundled_assembly (
 	return a;
 }
 
+#if defined(RELEASE)
+template<LoaderData TLoaderData>
+force_inline MonoAssembly*
+EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data) noexcept
+{
+	hash_t hash = xxhash::hash (name.get (), name.length ());
+	log_debug (LOG_ASSEMBLY, "standalone_dso_open_from_bundles: looking for bundled name: '%s', hash 0x%zx", name.get (), hash);
+
+	auto equal = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+	auto less_than = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
+	ssize_t index = Search::binary_search<AssemblyIndexEntry, equal, less_than> (hash, xa_assembly_index, xa_assemblies_config.assembly_count);
+
+	if (index == -1) {
+		log_debug (LOG_ASSEMBLY, "assembly '%s' not found in the DSO assembly index array", name.get ());
+		return null;
+	}
+
+	AssemblyIndexEntry const& entry = xa_assembly_index[index];
+	log_debug (
+		LOG_ASSEMBLY,
+		"assembly '%s' found at index %zd; standalone? %s; name recorded at compilation time: '%s'; DSO name: '%s'",
+		name.get (),
+		index,
+		entry.is_standalone ? "yes" : "no",
+
+		// Pointer arithmetics **MUST** be used, because the **runtime** dimensions of the two arrays will always be
+		// different to the **compile** time ones.  We compile against the dummy `libxamarin-app.so` and the
+		// compiler optimizes code and does pointer arithmetics for the array dimensions in that dummy (via the
+		// xamarin-app.hh header)
+		reinterpret_cast<const char*>(xa_assembly_names) + (entry.assemblies_index * xa_assemblies_config.assembly_name_length),
+		reinterpret_cast<const char*>(xa_assembly_dso_names) + (entry.assemblies_index * xa_assemblies_config.shared_library_name_length)
+	);
+
+	return nullptr;
+}
+#endif // def RELEASE
+
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
@@ -279,7 +316,16 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 	}
 	name.append_c (asmname);
 
-	MonoAssembly *a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
+	MonoAssembly *a;
+#if defined (RELEASE)
+	if (application_config.have_standalone_assembly_dsos) {
+		a = standalone_dso_open_from_bundles (name, loader_data);
+	} else
+#endif // def RELEASE
+	{
+		a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
+	}
+
 	if (a == nullptr) {
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
@@ -1018,11 +1064,11 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
 {
-	size_t prev  = number_of_found_assemblies;
+	size_t prev  = number_of_found_assembly_dsos;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
-	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assemblies - prev);
+	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assembly_dsos - prev);
 
-	return number_of_found_assemblies;
+	return number_of_found_assembly_dsos;
 }

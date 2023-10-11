@@ -154,7 +154,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
 		bundled_assembly_index++;
-		number_of_found_assemblies = bundled_assembly_index;
+		number_of_found_assembly_dsos = bundled_assembly_index;
 	}
 
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
@@ -187,26 +187,26 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		number_of_found_assemblies++;
+		number_of_found_assembly_dsos++;
 
 		// We have an assembly DSO
 		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s", entry_name.get (), entry_name.get () + (entry_name.length () - 7));
 
 		bool valid_hex = true;
 		auto integer_from_hex_char = []<size_t TLen> (dynamic_local_string<TLen> const& s, size_t pos, bool &is_valid, size_t shift) -> uint16_t
-        {
-            uint8_t ch = s[pos];
-            if (ch >= '0' && ch <= '9') {
-	            return static_cast<uint16_t>((ch - 48) << shift); // 48 is ASCII '0'
-            }
+		{
+			uint8_t ch = s[pos];
+			if (ch >= '0' && ch <= '9') {
+				return static_cast<uint16_t>((ch - 48) << shift); // 48 is ASCII '0'
+			}
 
-            if (ch >= 'A' && ch <= 'Z') {
-	            return static_cast<uint16_t>((ch - 55) << shift); // ASCII 'A' is 65, and it represents decimal 10
-            }
+			if (ch >= 'A' && ch <= 'F') {
+				return static_cast<uint16_t>((ch - 55) << shift); // ASCII 'A' is 65, and it represents decimal 10
+			}
 
-            is_valid = false;
-            return static_cast<uint16_t>(0);
-        };
+			is_valid = false;
+			return static_cast<uint16_t>(0);
+		};
 
 		const size_t index_pos = entry_name.length () - assembly_index_start_offset;
 		uint16_t index =
