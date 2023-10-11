@@ -401,7 +401,7 @@ namespace Xamarin.Android.Manifest {
 			// When including a non-stable value you can cast the integer value
 			// to ForegroundService. We need to do this because the Build.Tasks
 			// only build against the latest STABLE api.
-			//if (value.HasFlag (ForegroundService()128))
+			//if (value.HasFlag ((ForegroundService)128))
 			//	values.Add ("newValue");
 
 			return string.Join ("|", values.ToArray ());
