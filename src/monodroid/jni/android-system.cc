@@ -669,7 +669,7 @@ AndroidSystem::setup_environment ()
 		}
 
 		if (aotMode != MonoAotMode::MONO_AOT_MODE_LAST) {
-			log_info (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
+			log_debug (LOG_DEFAULT, "Mono AOT mode: %s", mono_aot_mode_name);
 		} else {
 			if (!is_interpreter_enabled ()) {
 				log_warn (LOG_DEFAULT, "Unknown Mono AOT mode: %s", mono_aot_mode_name);

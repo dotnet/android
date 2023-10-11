@@ -1026,7 +1026,7 @@ MonodroidRuntime::init_android_runtime (
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold        = static_cast<int>(androidSystem.get_gref_gc_threshold ());
 
-	log_warn (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
+	log_info (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
 	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
@@ -1536,7 +1536,7 @@ MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, 
 {
 	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path_len);
 	utils.path_combine (dir, home.get_cstr (), home_len, relativePath, relative_path_len);
-	log_info (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
+	log_debug (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
 	int rv = utils.create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
 		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir.get (), strerror (errno));
@@ -2205,7 +2205,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
 		androidSystem.set_runtime_libdir (strdup (jstr.get_cstr ()));
-		log_info (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
+		log_debug (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
 	}
 
 	androidSystem.setup_process_args (runtimeApks);
@@ -2259,7 +2259,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	mono_config_parse_memory (reinterpret_cast<const char*> (monodroid_config));
 	mono_register_machine_config (reinterpret_cast<const char*> (monodroid_machine_config));
 #endif // ndef NET
-	log_info (LOG_DEFAULT, "Probing for Mono AOT mode\n");
+	log_debug (LOG_DEFAULT, "Probing for Mono AOT mode\n");
 
 	MonoAotMode mode = MonoAotMode::MONO_AOT_MODE_NONE;
 	if (androidSystem.is_mono_aot_enabled ()) {
@@ -2281,20 +2281,20 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		}
 #else   // defined (NET)
 		if (mode != MonoAotMode::MONO_AOT_MODE_INTERP_ONLY) {
-			log_info (LOG_DEFAULT, "Enabling AOT mode in Mono");
+			log_debug (LOG_DEFAULT, "Enabling AOT mode in Mono");
 		} else {
-			log_info (LOG_DEFAULT, "Enabling Mono Interpreter");
+			log_debug (LOG_DEFAULT, "Enabling Mono Interpreter");
 		}
 #endif  // !defined (NET)
 	}
 	mono_jit_set_aot_mode (mode);
 
-	log_info (LOG_DEFAULT, "Probing if we should use LLVM\n");
+	log_debug (LOG_DEFAULT, "Probing if we should use LLVM\n");
 
 	if (androidSystem.is_mono_llvm_enabled ()) {
 		char *args [1];
 		args[0] = const_cast<char*> ("--llvm");
-		log_info (LOG_DEFAULT, "Enabling LLVM mode in Mono\n");
+		log_debug (LOG_DEFAULT, "Enabling LLVM mode in Mono\n");
 		mono_jit_parse_options (1,  args);
 		mono_set_use_llvm (true);
 	}
@@ -2336,17 +2336,15 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (XA_UNLIKELY (utils.should_log (LOG_DEFAULT))) {
 		log_info_nocheck (
 			LOG_DEFAULT,
-			"Xamarin.Android version: %s (%s; %s); built on %s",
+			".NET Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
 			BuildInfo::xa_version,
 			BuildInfo::architecture,
 			BuildInfo::kind,
-			BuildInfo::date
+			BuildInfo::date,
+			BuildInfo::ndk_version,
+			BuildInfo::ndk_api_level,
+			mono_get_runtime_build_info ()
 		);
-
-#if defined (ANDROID)
-		log_info_nocheck (LOG_DEFAULT, "NDK version: %s; API level: %s", BuildInfo::ndk_version, BuildInfo::ndk_api_level);
-		log_info_nocheck (LOG_DEFAULT, "MonoVM version: %s", mono_get_runtime_build_info ());
-#endif // def ANDROID
 	}
 
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
