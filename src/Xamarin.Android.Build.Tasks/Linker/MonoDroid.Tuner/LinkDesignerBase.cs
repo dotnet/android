@@ -16,6 +16,9 @@ using Microsoft.Android.Sdk.ILLink;
 
 namespace MonoDroid.Tuner  {
 	public abstract class LinkDesignerBase : BaseStep {
+		HashSet<AssemblyDefinition> allAssemblies = new ();
+		HashSet<AssemblyDefinition> processedAssemblies = new ();
+
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -198,6 +201,7 @@ namespace MonoDroid.Tuner  {
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
+			allAssemblies.Add (assembly);
 			LoadDesigner ();
 
 			var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
@@ -205,12 +209,42 @@ namespace MonoDroid.Tuner  {
 				return;
 
 			if (ProcessAssemblyDesigner (assembly)) {
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy)
+				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy) {
 					Annotations.SetAction (assembly, AssemblyAction.Save);
+					processedAssemblies.Add (assembly);
+				}
 			}
 		}
 
-		internal abstract bool ProcessAssemblyDesigner (AssemblyDefinition assemblyDefinition);
+		protected override void EndProcess ()
+		{
+			if (processedAssemblies.Count > 0) {
+				foreach (var assembly in allAssemblies) {
+					if (processedAssemblies.Contains (assembly))
+						continue;
+
+					var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
+					if (action == AssemblyAction.Delete)
+						continue;
+
+					foreach (var processedAssembly in processedAssemblies) {
+						if (assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName)) {
+							LogMessage ($"   {assembly.Name.Name} has an assembly reference to {processedAssembly.Name}");
+							if (FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _)) {
+								if (ProcessAssemblyDesigner (assembly, designer) &&
+										(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
+									Annotations.SetAction (assembly, AssemblyAction.Save);
+								}
+							} else {
+								LogMessage ($"   {processedAssembly.Name} did not have a designer");
+							}
+						}
+					}
+				}
+			}
+		}
+
+		internal abstract bool ProcessAssemblyDesigner (AssemblyDefinition assemblyDefinition, TypeDefinition designer = null);
 		protected abstract void LoadDesigner ();
 		protected abstract void FixBody (MethodBody body, TypeDefinition designer);
 	}

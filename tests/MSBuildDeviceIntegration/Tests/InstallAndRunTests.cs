@@ -1115,5 +1115,58 @@ namespace UnnamedProject
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
+		[Test]
+		public void FixLegacyResourceDesignerStep ([Values (false, true)] bool isRelease)
+		{
+			string previousTargetFramework = "net7.0-android";
+
+			var library1 = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+				TargetFramework = previousTargetFramework,
+				ProjectName = "Library1",
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hello"">Hi!</string>
+</resources>",
+					},
+				},
+			};
+			var library2 = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+				TargetFramework = previousTargetFramework,
+				ProjectName = "Library2",
+				OtherBuildItems = {
+					new BuildItem.Source("Foo.cs") {
+						TextContent = () => "public class Foo { public static int Hello => Library1.Resource.String.hello; } ",
+					}
+				}
+			};
+			library2.AndroidResources.Clear ();
+			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
+			library2.AddReference (library1);
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ProjectName = "MyApp",
+			};
+			proj.AddReference (library2);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
+
+			using (var library1Builder = CreateDllBuilder (Path.Combine ("temp", TestName, library1.ProjectName)))
+			using (var library2Builder = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName))) {
+				builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName));
+				Assert.IsTrue (library1Builder.Build (library1, doNotCleanupOnUpdate: true), $"Build of {library1.ProjectName} should have succeeded.");
+				Assert.IsTrue (library2Builder.Build (library2, doNotCleanupOnUpdate: true), $"Build of {library2.ProjectName} should have succeeded.");
+				Assert.IsTrue (builder.Build (proj), $"Build of {proj.ProjectName} should have succeeded.");
+
+				RunProjectAndAssert (proj, builder);
+
+				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+				bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+			}
+		}
 	}
 }
