@@ -2336,7 +2336,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (XA_UNLIKELY (utils.should_log (LOG_DEFAULT))) {
 		log_info_nocheck (
 			LOG_DEFAULT,
-			"Xamarin.Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
+			".NET Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
 			BuildInfo::xa_version,
 			BuildInfo::architecture,
 			BuildInfo::kind,
