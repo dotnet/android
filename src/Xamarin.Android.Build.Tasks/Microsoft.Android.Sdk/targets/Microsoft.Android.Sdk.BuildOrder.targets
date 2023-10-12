@@ -118,6 +118,7 @@ properties that determine build ordering.
       _BuildResourceDesigner;
       UpdateAndroidInterfaceProxies;
       _SetAndroidGenerateManagedBindings;
+      _ClearGeneratedManagedBindings;
       AddBindingsToCompile;
       _CheckForInvalidDesignerConfig;
     </ResolveReferencesDependsOn>
