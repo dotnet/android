@@ -19,6 +19,12 @@ namespace MonoDroid.Tuner  {
 		HashSet<AssemblyDefinition> allAssemblies = new ();
 		HashSet<AssemblyDefinition> processedAssemblies = new ();
 
+		string[] knownDesigners = new string [] {
+			"Microsoft.Maui",
+			"Microsoft.Maui.Core",
+			"Microsoft.Maui.Controls",
+		};
+
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -63,8 +69,19 @@ namespace MonoDroid.Tuner  {
 
 				}
 			}
-			if (string.IsNullOrEmpty(designerFullName))
+			if (string.IsNullOrEmpty(designerFullName)) {
+				// Check for known designers which have been removed.
+				LogMessage ($"    c");
+				foreach (var d in knownDesigners) {
+					LogMessage ($"    Checking {d} against {assembly.Name.Name}");
+					if (d.Contains (assembly.Name.Name)) {
+						designer = new TypeDefinition (d, "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
+						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
+						return true;
+					}
+				}
 				return false;
+			}
 
 			foreach (ModuleDefinition module in assembly.Modules)
 			{
@@ -77,6 +94,7 @@ namespace MonoDroid.Tuner  {
 					}
 				}
 			}
+			
 			return false;
 		}
 
