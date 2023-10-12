@@ -5,7 +5,6 @@ using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using System;
 using System.IO;
-using System.Linq;
 using System.Collections.Generic;
 using Microsoft.Android.Build.Tasks;
 
@@ -118,6 +117,8 @@ namespace Xamarin.Android.Tasks
 
 					CopyIfChanged (source, destination);
 				}
+
+				// Run a "second pass" for the FixLegacyResourceDesignerStep
 				if (UseDesignerAssembly && processedAssemblies.Count > 0) {
 					foreach (var kvp in allAssemblies) {
 						var assembly = kvp.Key;
@@ -126,11 +127,7 @@ namespace Xamarin.Android.Tasks
 							continue;
 						bool save = false;
 						foreach (var processedAssembly in processedAssemblies) {
-							if (!assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName))
-								continue;
-							if (fixLegacyResourceDesignerStep.FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _)) {
-								save |= fixLegacyResourceDesignerStep.ProcessAssemblyDesigner (assembly, designer);
-							}
+							save |= fixLegacyResourceDesignerStep.ProcessAssemblyDesignerSecondPass (assembly, processedAssembly);
 						}
 						if (save) {
 							writerParameters.WriteSymbols = assembly.MainModule.HasSymbols;

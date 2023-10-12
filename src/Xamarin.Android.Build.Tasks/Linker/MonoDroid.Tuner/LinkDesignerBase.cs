@@ -223,6 +223,7 @@ namespace MonoDroid.Tuner  {
 
 		protected override void EndProcess ()
 		{
+			// This is a "second pass" to fix assemblies with references to assemblies with a designer
 			if (processedAssemblies.Count > 0) {
 				foreach (var assembly in allAssemblies) {
 					if (processedAssemblies.Contains (assembly))
@@ -233,20 +234,27 @@ namespace MonoDroid.Tuner  {
 						continue;
 
 					foreach (var processedAssembly in processedAssemblies) {
-						if (assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName)) {
-							LogMessage ($"   {assembly.Name.Name} has an assembly reference to {processedAssembly.Name}");
-							if (FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _)) {
-								if (ProcessAssemblyDesigner (assembly, designer) &&
-										(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
-									Annotations.SetAction (assembly, AssemblyAction.Save);
-								}
-							} else {
-								LogMessage ($"   {processedAssembly.Name} did not have a designer");
-							}
+						if (ProcessAssemblyDesignerSecondPass (assembly, processedAssembly) &&
+								(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
+							Annotations.SetAction (assembly, AssemblyAction.Save);
 						}
 					}
 				}
 			}
+		}
+
+		public bool ProcessAssemblyDesignerSecondPass (AssemblyDefinition assembly, AssemblyDefinition processedAssembly)
+		{
+			if (assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName)) {
+				LogMessage ($"   {assembly.Name.Name} has an assembly reference to {processedAssembly.Name}");
+				if (FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _) &&
+						ProcessAssemblyDesigner (assembly, designer)) {
+					return true;
+				} else {
+					LogMessage ($"   {processedAssembly.Name} did not have a designer");
+				}
+			}
+			return false;
 		}
 
 		internal abstract bool ProcessAssemblyDesigner (AssemblyDefinition assemblyDefinition, TypeDefinition designer = null);
