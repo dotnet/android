@@ -5,6 +5,8 @@ using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using System;
 using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -67,6 +69,8 @@ namespace Xamarin.Android.Tasks
 				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
 				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log, UsingAndroidNETSdk);
 				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log);
+				Dictionary<AssemblyDefinition, ITaskItem> allAssemblies = new ();
+				HashSet<AssemblyDefinition> processedAssemblies = new ();
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -94,9 +98,14 @@ namespace Xamarin.Android.Tasks
 						if (assemblyDefinition == null)
 							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 
+						allAssemblies.Add (assemblyDefinition, destination);
+
 						bool save = fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
-						if (UseDesignerAssembly)
+						if (UseDesignerAssembly) {
 							save |= fixLegacyResourceDesignerStep.ProcessAssemblyDesigner (assemblyDefinition);
+							if (save)
+								processedAssemblies.Add (assemblyDefinition);
+						}
 						if (AddKeepAlives)
 							save |= addKeepAliveStep.AddKeepAlives (assemblyDefinition);
 						if (save) {
@@ -108,6 +117,26 @@ namespace Xamarin.Android.Tasks
 					}
 
 					CopyIfChanged (source, destination);
+				}
+				if (UseDesignerAssembly && processedAssemblies.Count > 0) {
+					foreach (var kvp in allAssemblies) {
+						var assembly = kvp.Key;
+						var destination = kvp.Value;
+						if (processedAssemblies.Contains (assembly))
+							continue;
+						bool save = false;
+						foreach (var processedAssembly in processedAssemblies) {
+							if (!assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName))
+								continue;
+							if (fixLegacyResourceDesignerStep.FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _)) {
+								save |= fixLegacyResourceDesignerStep.ProcessAssemblyDesigner (assembly, designer);
+							}
+						}
+						if (save) {
+							writerParameters.WriteSymbols = assembly.MainModule.HasSymbols;
+							assembly.Write (destination.ItemSpec, writerParameters);
+						}
+					}
 				}
 			}
 

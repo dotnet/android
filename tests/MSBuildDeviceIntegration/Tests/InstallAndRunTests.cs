@@ -1116,7 +1116,7 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void FixLegacyResourceDesignerStep ([Values (false, true)] bool isRelease)
+		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
 			string previousTargetFramework = "net7.0-android";
 

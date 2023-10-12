@@ -38,7 +38,7 @@ namespace MonoDroid.Tuner  {
 			return Context.Resolve (name);
 		}
 
-		protected bool FindResourceDesigner (AssemblyDefinition assembly, bool mainApplication, out TypeDefinition designer, out CustomAttribute designerAttribute)
+		internal bool FindResourceDesigner (AssemblyDefinition assembly, bool mainApplication, out TypeDefinition designer, out CustomAttribute designerAttribute)
 		{
 			string designerFullName = null;
 			designer = null;
@@ -214,6 +214,11 @@ namespace MonoDroid.Tuner  {
 					processedAssemblies.Add (assembly);
 				}
 			}
+		}
+
+		internal void ProcessNonDesignerAssemblies ()
+		{
+			
 		}
 
 		protected override void EndProcess ()
