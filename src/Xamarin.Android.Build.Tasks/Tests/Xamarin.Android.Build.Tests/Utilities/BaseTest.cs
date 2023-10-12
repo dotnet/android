@@ -45,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
+		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
 
 		public string TestName {
 			get {
