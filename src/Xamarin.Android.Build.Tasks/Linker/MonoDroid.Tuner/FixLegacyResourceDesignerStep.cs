@@ -167,7 +167,7 @@ namespace MonoDroid.Tuner
 						found = lookupCaseInsensitive.TryGetValue (key, out method);
 					}
 					if (found) {
-						var importedMethod = designer.Module.ImportReference (method);
+						var importedMethod = body.Method.Module.ImportReference (method);
 						var newIn = Instruction.Create (OpCodes.Call, importedMethod);
 						instructions.Add (i, newIn);
 					} else {
