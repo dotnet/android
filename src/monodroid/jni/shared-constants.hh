@@ -18,6 +18,18 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+#if defined (RELEASE)
+		static constexpr bool is_release = true;
+#else
+		static constexpr bool is_release = false;
+#endif
+
+#if defined (RELEASE)
+		static constexpr bool is_debug = false;
+#else
+		static constexpr bool is_debug = true;
+#endif
+
 #if defined (NET)
 		static constexpr char MONO_ANDROID_RUNTIME_ASSEMBLY_NAME[] = "Mono.Android.Runtime";
 #endif

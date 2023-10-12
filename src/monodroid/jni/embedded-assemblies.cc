@@ -39,6 +39,7 @@
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
 #include "search.hh"
+#include "assembly-data-provider.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -66,6 +67,20 @@ public:
 private:
 	char *guid = nullptr;
 };
+
+void EmbeddedAssemblies::init () noexcept
+{
+	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+#if defined (RELEASE)
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+		assembly_data_provider = new SO_APK_AssemblyDataProvider;
+	} else {
+		assembly_data_provider = new SO_FILESYSTEM_AssemblyDataProvider;
+	}
+#else
+	assembly_data_provider = new DLL_APK_AssemblyDataProvider;
+#endif
+}
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
@@ -237,25 +252,29 @@ EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSI
 	ssize_t index = Search::binary_search<AssemblyIndexEntry, equal, less_than> (hash, xa_assembly_index, xa_assemblies_config.assembly_count);
 
 	if (index == -1) {
-		log_debug (LOG_ASSEMBLY, "assembly '%s' not found in the DSO assembly index array", name.get ());
+		log_warn (LOG_ASSEMBLY, "assembly '%s' not found in the DSO assembly index", name.get ());
 		return nullptr;
 	}
 
-	AssemblyIndexEntry const& entry = xa_assembly_index[index];
+	AssemblyIndexEntry const& index_entry = xa_assembly_index[index];
 	log_debug (
 		LOG_ASSEMBLY,
 		"assembly '%s' found at index %zd; standalone? %s; name recorded at compilation time: '%s'; DSO name: '%s'",
 		name.get (),
 		index,
-		entry.is_standalone ? "yes" : "no",
+		index_entry.is_standalone ? "yes" : "no",
 
 		// Pointer arithmetics **MUST** be used, because the **runtime** dimensions of the two arrays will always be
 		// different to the **compile** time ones.  We compile against the dummy `libxamarin-app.so` and the
 		// compiler optimizes code and does pointer arithmetics for the array dimensions in that dummy (via the
 		// xamarin-app.hh header)
-		reinterpret_cast<const char*>(xa_assembly_names) + (entry.assemblies_index * xa_assemblies_config.assembly_name_length),
-		reinterpret_cast<const char*>(xa_assembly_dso_names) + (entry.assemblies_index * xa_assemblies_config.shared_library_name_length)
+		reinterpret_cast<const char*>(xa_assembly_names) + (index_entry.assemblies_index * xa_assemblies_config.assembly_name_length),
+		reinterpret_cast<const char*>(xa_assembly_dso_names) + (index_entry.assemblies_index * xa_assemblies_config.shared_library_name_length)
 	);
+
+	AssemblyEntry const& entry = xa_assemblies[index_entry.assemblies_index];
+	const uint8_t *assembly_data = assembly_data_provider->get_data (entry, index_entry.is_standalone);
+	log_debug (LOG_ASSEMBLY, "assembly_data == %p", assembly_data);
 
 	return nullptr;
 }

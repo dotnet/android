@@ -19,6 +19,8 @@
 #include <mono/metadata/mono-private-unstable.h>
 #endif
 
+#include "android-system.hh"
+#include "assembly-data-provider.hh"
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
@@ -123,10 +125,10 @@ namespace xamarin::android::internal {
 		using monodroid_should_register = bool (*)(const char *filename);
 
 	public:
-#if defined (RELEASE) && defined (ANDROID)
 		EmbeddedAssemblies () noexcept
 		{}
-#endif  // def RELEASE && def ANDROID
+
+		void init () noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
@@ -335,6 +337,7 @@ namespace xamarin::android::internal {
 		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
 		std::mutex             assembly_decompress_mutex;
+		AssemblyDataProvider*  assembly_data_provider;
 	};
 }
 
