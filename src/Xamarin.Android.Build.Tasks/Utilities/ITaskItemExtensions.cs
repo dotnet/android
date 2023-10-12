@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Xml.Linq;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks
 {
@@ -19,5 +21,30 @@ namespace Xamarin.Android.Tasks
 				yield return e;
 			}
 		}
+
+		public static string GetMetadataOrDefault (this ITaskItem item, string name, string defaultValue)
+		{
+			var value = item.GetMetadata (name);
+
+			if (string.IsNullOrWhiteSpace (value))
+				return defaultValue;
+
+			return value;
+		}
+
+		public static string? GetRequiredMetadata (this ITaskItem item, string name, TaskLoggingHelper log)
+		{
+			var value = item.GetMetadata (name);
+
+			if (string.IsNullOrWhiteSpace (value)) {
+				log.LogError ("Item is missing required metadata '{0}'", name);
+				return null;
+			}
+
+			return value;
+		}
+
+		public static bool HasMetadata (this ITaskItem item, string name)
+			=> item.MetadataNames.OfType<string> ().Contains (name, StringComparer.OrdinalIgnoreCase);
 	}
 }

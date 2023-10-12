@@ -1,0 +1,35 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.Maven.targets
+
+This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.MavenDownloadTask" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <PropertyGroup>
+    <!-- Maven cache directory, locations copied from XBD which should be sufficiently battle-tested -->
+    <MavenCacheDirectory Condition="'$(OS)'=='Unix' and '$(MavenCacheDirectory)'==''">$(HOME)\Library\Caches\MavenCacheDirectory\</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="'$(OS)'!='Unix' and '$(MavenCacheDirectory)'==''">$(LocalAppData)\MavenCacheDirectory\</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="'$(MavenCacheDirectory)' != '' and !HasTrailingSlash('$(MavenCacheDirectory)')">$(MavenCacheDirectory)\</MavenCacheDirectory>
+  </PropertyGroup>
+
+  <Target Name="MavenRestore" BeforeTargets="_CategorizeAndroidLibraries" DependsOnTargets="ResolvePackageAssets">
+
+    <!-- Download artifacts and POMs from Maven to a local cache. -->
+    <MavenDownloadTask MavenCacheDirectory="$(MavenCacheDirectory)" AndroidMavenLibraries="@(AndroidMavenLibrary)">
+      <Output TaskParameter="ResolvedAndroidMavenLibraries" ItemName="_ResolvedAndroidMavenLibraries" />
+    </MavenDownloadTask>
+
+    <!-- Add @(AndroidMavenLibrary)'s to @(AndroidLibrary)'s. -->
+    <ItemGroup>
+      <AndroidLibrary Include="@(_ResolvedAndroidMavenLibraries)" />
+    </ItemGroup>
+
+  </Target>
+
+</Project>
