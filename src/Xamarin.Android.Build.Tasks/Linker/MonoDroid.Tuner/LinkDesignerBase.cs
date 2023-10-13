@@ -67,9 +67,9 @@ namespace MonoDroid.Tuner  {
 			}
 			if (string.IsNullOrEmpty(designerFullName)) {
 				// Check for known designers which have been removed.
-				foreach (var d in KnownDesignerAssemblies) {
-					if (string.Compare (d, assembly.Name.Name, StringComparison.Ordinal) == 0) {
-						designer = new TypeDefinition (d, "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
+				foreach (var knownDesigner in KnownDesignerAssemblies) {
+					if (string.Compare (knownDesigner, assembly.Name.Name, StringComparison.Ordinal) == 0) {
+						designer = new TypeDefinition (knownDesigner, "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						return true;
 					}
