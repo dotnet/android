@@ -58,7 +58,7 @@ namespace MonoDroid.Tuner
 			return changed;
 		}
 
-		static bool ProcessType (TypeDefinition type)
+		bool ProcessType (TypeDefinition type)
 		{
   			bool changed = false;
 			if (MightNeedFix (type))
