@@ -127,6 +127,8 @@ namespace Xamarin.Android.Tasks
 				return state;
 			}
 
+			public abstract void SetCodeBehindDir (string path);
+
 			protected abstract void BeginPartialClassFile (State state, string classNamespace, string className);
 			public abstract void EndPartialClassFile (State state);
 			public abstract void WritePartialClassProperty (State state, LayoutWidget widget);

@@ -107,6 +107,8 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
+			generator.SetCodeBehindDir (MonoAndroidCodeBehindDir);
+
 			LogDebugMessage ($"Generating {generator.LanguageName} binding sources");
 
 			var layoutGroups = new Dictionary <string, LayoutGroup> (StringComparer.Ordinal);
