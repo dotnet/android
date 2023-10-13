@@ -72,13 +72,11 @@ void EmbeddedAssemblies::init () noexcept
 {
 	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 #if defined (RELEASE)
-	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		assembly_data_provider = new SO_APK_AssemblyDataProvider;
+	if (BasicAndroidSystem::is_embedded_dso_mode_enabled ()) {
+		get_assembly_data_dso_impl = get_assembly_data_dso_apk;
 	} else {
-		assembly_data_provider = new SO_FILESYSTEM_AssemblyDataProvider;
+		get_assembly_data_dso_impl = get_assembly_data_dso_fs;
 	}
-#else
-	assembly_data_provider = new DLL_APK_AssemblyDataProvider;
 #endif
 }
 
@@ -273,8 +271,8 @@ EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSI
 	);
 
 	AssemblyEntry const& entry = xa_assemblies[index_entry.assemblies_index];
-	const uint8_t *assembly_data = assembly_data_provider->get_data (entry, index_entry.is_standalone);
-	log_debug (LOG_ASSEMBLY, "assembly_data == %p", assembly_data);
+	const AssemblyData assembly_data = get_assembly_data_dso (entry, index_entry.is_standalone);
+	log_debug (LOG_ASSEMBLY, "assembly_data == %p; size == %u", assembly_data.data, assembly_data.size);
 
 	return nullptr;
 }

@@ -96,7 +96,9 @@ namespace xamarin::android::internal {
 			uint32_t              file_size;
 			EntryLocation         location;
 		};
-
+#if defined (RELEASE)
+		using get_assembly_data_dso_fn = const AssemblyData (*)(AssemblyEntry const& entry, bool fast_path);
+#endif
 	private:
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
 		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
@@ -234,6 +236,23 @@ namespace xamarin::android::internal {
 		void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
+#if defined (RELEASE)
+		static const AssemblyData get_assembly_data_dso_apk (AssemblyEntry const& entry, bool standalone) noexcept
+		{
+			return SO_APK_AssemblyDataProvider::get_data (entry, standalone);
+		}
+
+		static const AssemblyData get_assembly_data_dso_fs (AssemblyEntry const& entry, bool standalone) noexcept
+		{
+			return SO_FILESYSTEM_AssemblyDataProvider::get_data (entry, standalone);
+		}
+
+		force_inline
+		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, bool standalone) const noexcept
+		{
+			return (*get_assembly_data_dso_impl) (entry, standalone);
+		}
+#endif
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
 		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
@@ -337,7 +356,9 @@ namespace xamarin::android::internal {
 		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
 		std::mutex             assembly_decompress_mutex;
-		AssemblyDataProvider*  assembly_data_provider;
+#if defined (RELEASE)
+		get_assembly_data_dso_fn   get_assembly_data_dso_impl = nullptr;
+#endif
 	};
 }
 

@@ -3,6 +3,7 @@
 #include "basic-android-system.hh"
 #include "cpp-util.hh"
 #include "globals.hh"
+#include "monodroid-glue-internal.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -13,24 +14,9 @@ size_t BasicAndroidSystem::app_lib_directories_size = 0;
 const char* BasicAndroidSystem::built_for_abi_name = nullptr;
 
 void
-BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
-{
-	// appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
-	std::unique_ptr<char> libmonodroid_path {utils.path_combine (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr (), "libmonodroid.so")};
-	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
-	if (!utils.file_exists (libmonodroid_path.get ())) {
-		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
-		set_embedded_dso_mode_enabled (true);
-	} else {
-		log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
-		set_embedded_dso_mode_enabled (false);
-	}
-}
-
-void
 BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks)
 {
-	if (!is_embedded_dso_mode_enabled ()) {
+	if (!BasicAndroidSystem::is_embedded_dso_mode_enabled ()) {
 		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();

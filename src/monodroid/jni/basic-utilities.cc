@@ -117,7 +117,7 @@ BasicUtilities::set_user_executable ([[maybe_unused]] const char *path)
 }
 
 bool
-BasicUtilities::file_exists (const char *file)
+BasicUtilities::file_exists (const char *file) noexcept
 {
 	monodroid_stat_t s;
 	if (monodroid_stat (file, &s) == 0 && (s.st_mode & S_IFMT) == S_IFREG)
@@ -221,7 +221,7 @@ BasicUtilities::monodroid_fopen (const char *filename, const char *mode)
 }
 
 int
-BasicUtilities::monodroid_stat (const char *path, monodroid_stat_t *s)
+BasicUtilities::monodroid_stat (const char *path, monodroid_stat_t *s) noexcept
 {
 	int result;
 

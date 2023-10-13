@@ -254,7 +254,7 @@ namespace xamarin::android::internal
 		static void mono_log_standard_streams_handler (const char *str, mono_bool is_stdout);
 
 		// A reference to unique_ptr is not the best practice ever, but it's faster this way
-		void setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc);
+		void setup_mono_tracing (dynamic_local_string<PROP_VALUE_MAX> const& mono_log_mask, bool have_log_assembly, bool have_log_gc);
 		void install_logging_handlers ();
 #endif // def ANDROID
 

@@ -444,6 +444,11 @@ namespace xamarin::android::internal
 			return *this;
 		}
 
+		force_inline string_base& append (const TChar *s) noexcept
+		{
+			return append (s, strlen (s));
+		}
+
 		template<size_t LocalMaxStackSize, typename LocalTStorage, typename LocalTChar = char>
 		force_inline string_base& append (internal::string_base<LocalMaxStackSize, LocalTStorage, LocalTChar> const& str) noexcept
 		{
@@ -454,6 +459,11 @@ namespace xamarin::android::internal
 		force_inline string_base& append (const char (&s)[Size]) noexcept
 		{
 			return append (s, Size - 1);
+		}
+
+		force_inline string_base& append (string_segment const& s, size_t start_pos = 0) noexcept
+		{
+			return append (s.start () + start_pos);
 		}
 
 		force_inline string_base& append_c (const char *s) noexcept

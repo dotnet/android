@@ -16,6 +16,7 @@
 #include "debug.hh"
 #include "util.hh"
 #include "globals.hh"
+#include "strings.hh"
 
 #undef DO_LOG
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
@@ -145,11 +146,8 @@ set_category (const char (&name)[NameSize], string_segment& arg, unsigned int en
 }
 
 void
-init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
+init_logging_categories (xamarin::android::internal::dynamic_local_string<PROP_VALUE_MAX>& mono_log_mask, xamarin::android::internal::dynamic_local_string<PROP_VALUE_MAX>& mono_log_level) noexcept
 {
-	mono_log_mask = nullptr;
-	mono_log_level = nullptr;
-
 #if !ANDROID
 	log_categories = LOG_DEFAULT;
 #endif
@@ -254,14 +252,14 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		constexpr char MONO_LOG_MASK_ARG[] = "mono_log_mask=";
 		constexpr size_t MONO_LOG_MASK_ARG_LEN = sizeof(MONO_LOG_MASK_ARG) - 1;
 		if (param.starts_with (MONO_LOG_MASK_ARG)) {
-			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG_LEN);
+			mono_log_mask.append (param, MONO_LOG_MASK_ARG_LEN);
 			continue;
 		}
 
 		constexpr char MONO_LOG_LEVEL_ARG[] = "mono_log_level=";
 		constexpr size_t MONO_LOG_LEVEL_ARG_LEN = sizeof(MONO_LOG_LEVEL_ARG) - 1;
 		if (param.starts_with (MONO_LOG_LEVEL_ARG)) {
-			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG_LEN);
+			mono_log_level.append (param, MONO_LOG_LEVEL_ARG_LEN);
 			continue;
 		}
 

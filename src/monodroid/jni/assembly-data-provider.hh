@@ -7,10 +7,10 @@
 
 namespace xamarin::android::internal
 {
-	class AssemblyDataProvider
+	struct AssemblyData
 	{
-	public:
-		virtual auto get_data (AssemblyEntry const& entry, bool fast_path) noexcept -> uint8_t* = 0;
+		const uint8_t *data;
+		const uint32_t size;
 	};
 
 #if defined (RELEASE)
@@ -22,7 +22,8 @@ namespace xamarin::android::internal
 			SO_AssemblyDataProvider () = delete;
 			~SO_AssemblyDataProvider () = delete;
 
-			static auto get_data_fastpath (AssemblyEntry const& entry) noexcept -> uint8_t*
+			force_inline
+			static auto get_data_fastpath (AssemblyEntry const& entry) noexcept -> const AssemblyData
 			{
 				log_debug (LOG_ASSEMBLY, "Loading assembly from libxamarin-app.so, fast path");
 				if (entry.uncompressed_data_size == 0) {
@@ -32,47 +33,48 @@ namespace xamarin::android::internal
 					           entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.input_data_offset, entry.uncompressed_data_offset);
 				}
 
-				return nullptr;
+				return {nullptr, 0};
 			}
 		};
 	}
 
-	class SO_APK_AssemblyDataProvider final : public AssemblyDataProvider
+	class SO_APK_AssemblyDataProvider
 	{
 	public:
-		auto get_data (AssemblyEntry const& entry, bool fast_path) noexcept -> uint8_t* override final
+		force_inline
+		static auto get_data (AssemblyEntry const& entry, bool standalone) noexcept -> const AssemblyData
 		{
 			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-			if (fast_path) {
+			if (!standalone) {
 				return detail::SO_AssemblyDataProvider::get_data_fastpath (entry);
 			}
 			log_debug (LOG_ASSEMBLY, "Looking for assembly in the APK");
 
-			return nullptr;
+			return {nullptr, 0};
 		}
 	};
 
-	class SO_FILESYSTEM_AssemblyDataProvider : public AssemblyDataProvider
+	class SO_FILESYSTEM_AssemblyDataProvider
 	{
 	public:
-		auto get_data (AssemblyEntry const& entry, bool fast_path) noexcept -> uint8_t* override final
+		force_inline
+		static auto get_data (AssemblyEntry const& entry, bool standalone) noexcept -> const AssemblyData
 		{
 			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+			if (!standalone) {
+				return detail::SO_AssemblyDataProvider::get_data_fastpath (entry);
+			}
+
 			log_debug (LOG_ASSEMBLY, "Loading assembly from a standalone DSO");
 			log_debug (LOG_ASSEMBLY, "Looking for assembly on the filesystem");
 
-			return nullptr;
+			return {nullptr, 0};
 		}
 	};
 #else // def RELEASE
-	class DLL_APK_AssemblyDataProvider : public AssemblyDataProvider
+	class DLL_APK_AssemblyDataProvider
 	{
 	public:
-		auto get_data (AssemblyEntry const& entry, bool fast_path) noexcept -> uint8_t* override final
-		{
-			log_fatal (LOG_ASSEMBLY, "DSO assembly loading not supported in Debug mode");
-			Helpers::abort_application ();
-		}
 	};
 #endif // ndef RELEASE
 }
