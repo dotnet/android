@@ -86,18 +86,13 @@ namespace MonoDroid.Tuner
 		{
 			bool changed = false;
 			foreach (MethodDefinition method in type.Methods) {
-				if (!method.CustomAttributes.Any (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
-					continue;
-
 				if (method.Parameters.Count == 0)
 					continue;
 
-				var processor = method.Body.GetILProcessor ();
-				var module = method.DeclaringType.Module;
+				if (!method.CustomAttributes.Any (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
+					continue;
+
 				var instructions = method.Body.Instructions;
-				var end = instructions.Last ();
-				if (end.Previous.OpCode == OpCodes.Endfinally)
-					end = end.Previous;
 
 				var found = false;
 				for (int off = Math.Max (0, instructions.Count - 6); off < instructions.Count; off++) {
@@ -110,6 +105,12 @@ namespace MonoDroid.Tuner
 
 				if (found)
 					continue;
+
+				var processor = method.Body.GetILProcessor ();
+				var module = method.DeclaringType.Module;
+				var end = instructions.Last ();
+				if (end.Previous.OpCode == OpCodes.Endfinally)
+					end = end.Previous;
 
 				for (int i = 0; i < method.Parameters.Count; i++) {
 					if (method.Parameters [i].ParameterType.IsValueType || method.Parameters [i].ParameterType.FullName == "System.String")
