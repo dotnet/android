@@ -185,7 +185,40 @@ If you see runtime errors such as
 System.TypeLoadException: 'Could not resolve type with token 010001d8 from typeref (expected class 'Style' in assembly '')'
 ```
 
-If you see this you can figure out which assembly is missing the designer and add its name to this 
+or build errors such as
+
+```
+error NETSDK1144: Optimizing assemblies for size failed. Optimization can be disabled by setting the PublishTrimmed property to false
+```
+
+or 
+
+```
+Unhandled exception. Mono.Linker.LinkerFatalErrorException: ILLink: error IL1013: Error processing '…/dotnet-sdk-8.0.100-rc.1.23455.8-osx-x64/packs/Microsoft.Android.Sdk.Darwin/34.0.0-rc.1.432/targets/../PreserveLists/Mono.Android.xml'.
+ ---> System.ArgumentNullException: Value cannot be null. (Parameter 'key')
+   at System.Collections.Generic.Dictionary`2.TryInsert(TKey key, TValue value, InsertionBehavior behavior)
+   at System.Collections.Generic.Dictionary`2.Add(TKey key, TValue value)
+   at Mono.Linker.AssemblyResolver.GetAssembly(String file)
+   at Mono.Linker.AssemblyResolver.ResolveFromReferences(AssemblyNameReference name)
+   at Mono.Linker.AssemblyResolver.Resolve(AssemblyNameReference name, Boolean probing)
+   at Mono.Linker.LinkContext.TryResolve(AssemblyNameReference name)
+   at Mono.Linker.Steps.ProcessLinkerXmlBase.ProcessAssemblies(XPathNavigator nav)
+   at Mono.Linker.Steps.ProcessLinkerXmlBase.ProcessXml(Boolean stripResource, Boolean ignoreResource)
+   --- End of inner exception stack trace ---
+   at Mono.Linker.Steps.ProcessLinkerXmlBase.ProcessXml(Boolean stripResource, Boolean ignoreResource)
+   at Mono.Linker.Steps.DescriptorMarker.Mark()
+   at Mono.Linker.Steps.ResolveFromXmlStep.Process()
+   at Mono.Linker.Steps.BaseStep.Process(LinkContext context)
+   at Mono.Linker.Pipeline.ProcessStep(LinkContext context, IStep step)
+   at Mono.Linker.Pipeline.Process(LinkContext context)
+   at Mono.Linker.Driver.Run(ILogger customLogger)
+   at Mono.Linker.Driver.Main(String[] args)
+The command exited with code 134.
+```
+
+You can make use of this ItemGroup to work around these issues.
+
+You need to figure out which assembly is missing the designer and add its name to this 
 ItemGroup 
 
 ```
