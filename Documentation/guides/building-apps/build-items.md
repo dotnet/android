@@ -174,6 +174,29 @@ installing app bundles.
 
 This build action was introduced in Xamarin.Android 11.3.
 
+## AndroidKnownDesignerAssemblies
+
+This is an ItemGroup that is used to work around issues when upgrading the old `Resource.designer.cs`
+system to the new Resource Assembly system. This can happen if an assembly is referencing a 
+`Resource.designer.cs` class from anther assembly which was built on an older framework. 
+If you see runtime errors such as 
+
+```
+System.TypeLoadException: 'Could not resolve type with token 010001d8 from typeref (expected class 'Style' in assembly '')'
+```
+
+If you see this you can figure out which assembly is missing the designer and add its name to this 
+ItemGroup 
+
+```
+<AndroidKnownDesignerAssemblies Include="Some.Assembly" />
+```
+
+This will enable some additional processing to ensure the IL is fixed.
+
+This build item was introduced in .NET 8.
+
+
 ## AndroidNativeLibrary
 
 [Native libraries](~/android/platform/native-libraries.md)
