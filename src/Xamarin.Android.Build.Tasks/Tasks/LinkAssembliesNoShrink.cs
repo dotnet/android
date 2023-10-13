@@ -43,6 +43,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool Deterministic { get; set; }
 
+		public string[] KnownDesignerAssemblies { get; set; }
+
 		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
@@ -67,7 +69,7 @@ namespace Xamarin.Android.Tasks
 				var cache = new TypeDefinitionCache ();
 				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
 				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log, UsingAndroidNETSdk);
-				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log);
+				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log, KnownDesignerAssemblies);
 				Dictionary<AssemblyDefinition, ITaskItem> allAssemblies = new ();
 				HashSet<AssemblyDefinition> processedAssemblies = new ();
 				for (int i = 0; i < SourceFiles.Length; i++) {
@@ -157,10 +159,11 @@ namespace Xamarin.Android.Tasks
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
 
-			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger, string[] knownDesignerAssemblies)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
+				this.KnownDesignerAssemblies = knownDesignerAssemblies;
 			}
 
 			public override void LogMessage (string message)

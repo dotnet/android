@@ -45,6 +45,7 @@ This file contains the .NET 5-specific targets to customize ILLink
           Include="ProguardConfiguration"
           Value="$(_ProguardProjectConfiguration)"
       />
+      <_TrimmerCustomData Include="AndroidKnownDesignerAssemblies" Value="@(AndroidKnownDesignerAssemblies)" />
 
       <!--
         Used for the <ILLink CustomSteps="@(_TrimmerCustomSteps)" /> value:

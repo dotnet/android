@@ -361,6 +361,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <ItemGroup>
 	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
+	<AndroidKnownDesignerAssemblies Include="Microsoft.Maui;Microsoft.Maui.Core;Microsoft.Maui.Controls;Microsoft.Maui.Graphics" />
 </ItemGroup>
 
 <!-- Assets build properties -->
@@ -1464,6 +1465,7 @@ because xbuild doesn't support framework reference assemblies.
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
+      KnownDesignerAssemblies="@(AndroidKnownDesignerAssemblies)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />

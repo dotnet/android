@@ -19,11 +19,7 @@ namespace MonoDroid.Tuner  {
 		HashSet<AssemblyDefinition> allAssemblies = new ();
 		HashSet<AssemblyDefinition> processedAssemblies = new ();
 
-		string[] knownDesigners = new string [] {
-			"Microsoft.Maui",
-			"Microsoft.Maui.Core",
-			"Microsoft.Maui.Controls",
-		};
+		public string[] KnownDesignerAssemblies { get; set; } = Array.Empty<string> ();
 
 		public virtual void LogMessage (string message)
 		{
@@ -71,10 +67,8 @@ namespace MonoDroid.Tuner  {
 			}
 			if (string.IsNullOrEmpty(designerFullName)) {
 				// Check for known designers which have been removed.
-				LogMessage ($"    c");
-				foreach (var d in knownDesigners) {
-					LogMessage ($"    Checking {d} against {assembly.Name.Name}");
-					if (d.Contains (assembly.Name.Name)) {
+				foreach (var d in KnownDesignerAssemblies) {
+					if (string.Compare (d, assembly.Name.Name, StringComparison.Ordinal) == 0) {
 						designer = new TypeDefinition (d, "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						return true;
@@ -234,9 +228,13 @@ namespace MonoDroid.Tuner  {
 			}
 		}
 
-		internal void ProcessNonDesignerAssemblies ()
+		protected override void Process ()
 		{
-			
+#if ILLINK
+			if (Context.TryGetCustomData ("AndroidKnownDesignerAssemblies", out string knownDesignerAssemblies)) {
+				KnownDesignerAssemblies = knownDesignerAssemblies.Split (';');
+			}
+#endif
 		}
 
 		protected override void EndProcess ()
