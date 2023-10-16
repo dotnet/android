@@ -143,6 +143,32 @@ namespace MonoDroid.Tuner
 			}
 		}
 
+		string GetFixupKey (Instruction instruction, string designerFullName)
+		{
+			string line = instruction.ToString ();
+			int idx = line.IndexOf (designerFullName, StringComparison.Ordinal);
+			if (idx >= 0) {
+				return line.Substring (idx + designerFullName.Length);
+			}
+			if (instruction.Operand is FieldReference fieldRef &&
+					(fieldRef.DeclaringType?.ToString()?.Contains (".Resource/") ?? false)) {
+				var canResolve = false;
+				try {
+					var resolved  = fieldRef.Resolve ();
+					canResolve    = resolved != null;
+				} catch (Exception) {
+				}
+				if (canResolve)
+					return null;
+				var type  = fieldRef.DeclaringType.FullName;
+				var s     = type.LastIndexOf ('/');
+				type      = type.Substring (s + 1);
+				var key   = type + "::" + fieldRef.Name;
+				return key;
+			}
+			return null;
+		}
+
 		protected override void FixBody (MethodBody body, TypeDefinition designer)
 		{
 			// replace
@@ -156,10 +182,8 @@ namespace MonoDroid.Tuner
 			{
 				if (i.OpCode != OpCodes.Ldsfld)
 					continue;
-				string line = i.ToString ();
-				int idx = line.IndexOf (designerFullName, StringComparison.Ordinal);
-				if (idx >= 0) {
-					string key = line.Substring (idx + designerFullName.Length);
+				var key = GetFixupKey (i, designerFullName);
+				if (key != null) {
 					LogMessage ($"Looking for {key}.");
 					var found = lookup.TryGetValue (key, out MethodDefinition method);
 					if (!found) {

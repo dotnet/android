@@ -19,8 +19,6 @@ namespace MonoDroid.Tuner  {
 		HashSet<AssemblyDefinition> allAssemblies = new ();
 		HashSet<AssemblyDefinition> processedAssemblies = new ();
 
-		public string[] KnownDesignerAssemblies { get; set; } = Array.Empty<string> ();
-
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -65,17 +63,42 @@ namespace MonoDroid.Tuner  {
 
 				}
 			}
+
 			if (string.IsNullOrEmpty(designerFullName)) {
-				// Check for known designers which have been removed.
-				foreach (var knownDesigner in KnownDesignerAssemblies) {
-					if (string.Compare (knownDesigner, assembly.Name.Name, StringComparison.Ordinal) == 0) {
-						designer = new TypeDefinition (knownDesigner, "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
+				var memberRefs = assembly.MainModule.GetMemberReferences ();
+				var memberIdx = 0;
+				LogMessage ($"# jonp: LinkDesignerBase.FindResourceDesigner: looking at assembly: {assembly.FullName};");
+				foreach (var memberRef in memberRefs) {
+					memberIdx++;
+					string declaringType = memberRef.DeclaringType?.ToString () ?? string.Empty;
+					if (!declaringType.Contains (".Resource/")) {
+						continue;
+					}
+					if (declaringType.Contains ("_Microsoft.Android.Resource.Designer")) {
+						continue;
+					}
+					LogMessage ($"# jonp: memberRefs[{memberIdx}].Name={memberRef?.Name}; .FullName={memberRef.FullName}; .DeclaringType={memberRef.DeclaringType}");
+					var resolved = false;
+					try {
+						var def = memberRef.Resolve ();
+						resolved = def != null;
+						LogMessage ($"# jonp:   memberRef '{memberRef?.Name}' resolved to: {def?.FullName} [{def != null} {def?.GetType().FullName}]");
+					}
+					catch (Exception _ex) {
+						LogMessage ($"# jonp: exception resolving memberRef {memberRef?.Name}! {_ex}");
+						resolved = false;
+					}
+					if (!resolved) {
+						LogMessage ($"# jonp: Adding _Linker.Generated.Resource to {assembly.Name.Name}");
+						designer = new TypeDefinition ("_Linker.Generated", "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						return true;
 					}
 				}
-				return false;
 			}
+
+			if (string.IsNullOrEmpty(designerFullName))
+				return false;
 
 			foreach (ModuleDefinition module in assembly.Modules)
 			{
@@ -228,15 +251,6 @@ namespace MonoDroid.Tuner  {
 			}
 		}
 
-		protected override void Process ()
-		{
-#if ILLINK
-			if (Context.TryGetCustomData ("AndroidKnownDesignerAssemblies", out string knownDesignerAssemblies)) {
-				KnownDesignerAssemblies = knownDesignerAssemblies.Split (';');
-			}
-#endif
-		}
-
 		protected override void EndProcess ()
 		{
 			// This is a "second pass" to fix assemblies with references to assemblies with a designer
@@ -249,12 +263,12 @@ namespace MonoDroid.Tuner  {
 					if (action == AssemblyAction.Delete)
 						continue;
 
-					foreach (var processedAssembly in processedAssemblies) {
-						if (ProcessAssemblyDesignerSecondPass (assembly, processedAssembly) &&
-								(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
-							Annotations.SetAction (assembly, AssemblyAction.Save);
-						}
-					}
+					// foreach (var processedAssembly in processedAssemblies) {
+					// 	if (ProcessAssemblyDesignerSecondPass (assembly, processedAssembly) &&
+					// 			(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
+					// 		Annotations.SetAction (assembly, AssemblyAction.Save);
+					// 	}
+					// }
 				}
 			}
 		}
