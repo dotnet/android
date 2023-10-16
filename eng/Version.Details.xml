@@ -4,13 +4,13 @@
       <Uri>https://github.com/dotnet/installer</Uri>
       <Sha>c65382f00216756e0fb192cc2fd6513448d2679d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="8.0.0-rtm.23511.16">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="8.0.0-rtm.23513.17">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>256bf22a3ddf920516752701da2b95e1847ff708</Sha>
+      <Sha>60b77a63df30362ed1c66a834fcb8f8956ea113b</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="8.0.0-rtm.23511.16">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="8.0.0-rtm.23513.17">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>256bf22a3ddf920516752701da2b95e1847ff708</Sha>
+      <Sha>60b77a63df30362ed1c66a834fcb8f8956ea113b</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-8.0.100.Transport" Version="8.0.0-rtm.23504.4" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
