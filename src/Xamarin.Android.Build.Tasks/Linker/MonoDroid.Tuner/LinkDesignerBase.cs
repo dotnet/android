@@ -62,9 +62,9 @@ namespace MonoDroid.Tuner  {
 			}
 
 			if (string.IsNullOrEmpty(designerFullName)) {
+				LogMessage ($"Inspecting member references for assembly: {assembly.FullName};");
 				var memberRefs = assembly.MainModule.GetMemberReferences ();
 				var memberIdx = 0;
-				LogMessage ($"# jonp: LinkDesignerBase.FindResourceDesigner: looking at assembly: {assembly.FullName};");
 				foreach (var memberRef in memberRefs) {
 					memberIdx++;
 					string declaringType = memberRef.DeclaringType?.ToString () ?? string.Empty;
@@ -74,19 +74,18 @@ namespace MonoDroid.Tuner  {
 					if (declaringType.Contains ("_Microsoft.Android.Resource.Designer")) {
 						continue;
 					}
-					LogMessage ($"# jonp: memberRefs[{memberIdx}].Name={memberRef?.Name}; .FullName={memberRef.FullName}; .DeclaringType={memberRef.DeclaringType}");
 					var resolved = false;
 					try {
 						var def = memberRef.Resolve ();
-						resolved = def != null;
-						LogMessage ($"# jonp:   memberRef '{memberRef?.Name}' resolved to: {def?.FullName} [{def != null} {def?.GetType().FullName}]");
-					}
-					catch (Exception _ex) {
-						LogMessage ($"# jonp: exception resolving memberRef {memberRef?.Name}! {_ex}");
+						if (resolved = def != null) {
+							LogMessage ($"Resolved member `{memberRef?.Name}`");
+						}
+					} catch (Exception ex) {
+						LogMessage ($"Exception resolving member `{memberRef?.Name}`: {ex}");
 						resolved = false;
 					}
 					if (!resolved) {
-						LogMessage ($"# jonp: Adding _Linker.Generated.Resource to {assembly.Name.Name}");
+						LogMessage ($"Adding _Linker.Generated.Resource to {assembly.Name.Name}");
 						designer = new TypeDefinition ("_Linker.Generated", "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						return true;
