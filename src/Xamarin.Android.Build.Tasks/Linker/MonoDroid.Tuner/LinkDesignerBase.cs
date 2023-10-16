@@ -107,7 +107,6 @@ namespace MonoDroid.Tuner  {
 					}
 				}
 			}
-
 			return false;
 		}
 
