@@ -84,7 +84,7 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly, TypeDefinition designer = null)
+		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{
 			if (mainDesigner == null)
 				return false;

@@ -34,8 +34,6 @@ namespace MonoDroid.Tuner
 
 		protected override void EndProcess ()
 		{
-			base.EndProcess ();
-
 			if (designerAssembly != null) {
 				LogMessage ($"  Setting Action on {designerAssembly.Name} to Link.");
 				Annotations.SetAction (designerAssembly, AssemblyAction.Link);
@@ -70,20 +68,18 @@ namespace MonoDroid.Tuner
 			}
 		}
 
-		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly, TypeDefinition designer = null)
+		internal override bool ProcessAssemblyDesigner (AssemblyDefinition assembly)
 		{
-			if (designer is not null) {
-				LogMessage ($"   {assembly.Name.Name} has an assembly reference with a designer.");
-			} else if (!FindResourceDesigner (assembly, mainApplication: false, out designer, out _)) {
+			if (!FindResourceDesigner (assembly, mainApplication: false, out TypeDefinition designer, out CustomAttribute designerAttribute)) {
 				LogMessage ($"   {assembly.Name.Name} has no designer. ");
 				return false;
-			} else {
-				LogMessage ($"   {assembly.Name.Name} has a designer. ");
-				LogMessage ($"   BaseType: {designer.BaseType.FullName}. ");
-				if (designer.BaseType.FullName == $"{DesignerAssemblyNamespace}.Resource") {
-					LogMessage ($"   {assembly.Name.Name} has already been processed. ");
-					return false;
-				}
+			}
+
+			LogMessage ($"   {assembly.Name.Name} has a designer. ");
+			LogMessage ($"   BaseType: {designer.BaseType.FullName}. ");
+			if (designer.BaseType.FullName == $"{DesignerAssemblyNamespace}.Resource") {
+				LogMessage ($"   {assembly.Name.Name} has already been processed. ");
+				return false;
 			}
 
 			// This is expected for the first call, in <LinkAssembliesNoShrink/>

@@ -16,9 +16,6 @@ using Microsoft.Android.Sdk.ILLink;
 
 namespace MonoDroid.Tuner  {
 	public abstract class LinkDesignerBase : BaseStep {
-		HashSet<AssemblyDefinition> allAssemblies = new ();
-		HashSet<AssemblyDefinition> processedAssemblies = new ();
-
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -38,7 +35,7 @@ namespace MonoDroid.Tuner  {
 			return Context.Resolve (name);
 		}
 
-		internal bool FindResourceDesigner (AssemblyDefinition assembly, bool mainApplication, out TypeDefinition designer, out CustomAttribute designerAttribute)
+		protected bool FindResourceDesigner (AssemblyDefinition assembly, bool mainApplication, out TypeDefinition designer, out CustomAttribute designerAttribute)
 		{
 			string designerFullName = null;
 			designer = null;
@@ -111,7 +108,7 @@ namespace MonoDroid.Tuner  {
 					}
 				}
 			}
-			
+
 			return false;
 		}
 
@@ -236,7 +233,6 @@ namespace MonoDroid.Tuner  {
 
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
-			allAssemblies.Add (assembly);
 			LoadDesigner ();
 
 			var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
@@ -244,50 +240,12 @@ namespace MonoDroid.Tuner  {
 				return;
 
 			if (ProcessAssemblyDesigner (assembly)) {
-				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy) {
+				if (action == AssemblyAction.Skip || action == AssemblyAction.Copy)
 					Annotations.SetAction (assembly, AssemblyAction.Save);
-					processedAssemblies.Add (assembly);
-				}
 			}
 		}
 
-		protected override void EndProcess ()
-		{
-			// This is a "second pass" to fix assemblies with references to assemblies with a designer
-			if (processedAssemblies.Count > 0) {
-				foreach (var assembly in allAssemblies) {
-					if (processedAssemblies.Contains (assembly))
-						continue;
-
-					var action = Annotations.HasAction (assembly) ? Annotations.GetAction (assembly) : AssemblyAction.Skip;
-					if (action == AssemblyAction.Delete)
-						continue;
-
-					// foreach (var processedAssembly in processedAssemblies) {
-					// 	if (ProcessAssemblyDesignerSecondPass (assembly, processedAssembly) &&
-					// 			(action == AssemblyAction.Skip || action == AssemblyAction.Copy)) {
-					// 		Annotations.SetAction (assembly, AssemblyAction.Save);
-					// 	}
-					// }
-				}
-			}
-		}
-
-		public bool ProcessAssemblyDesignerSecondPass (AssemblyDefinition assembly, AssemblyDefinition processedAssembly)
-		{
-			if (assembly.MainModule.AssemblyReferences.Any (r => r.FullName == processedAssembly.Name.FullName)) {
-				LogMessage ($"   {assembly.Name.Name} has an assembly reference to {processedAssembly.Name}");
-				if (FindResourceDesigner (processedAssembly, mainApplication: false, out TypeDefinition designer, out _) &&
-						ProcessAssemblyDesigner (assembly, designer)) {
-					return true;
-				} else {
-					LogMessage ($"   {processedAssembly.Name} did not have a designer");
-				}
-			}
-			return false;
-		}
-
-		internal abstract bool ProcessAssemblyDesigner (AssemblyDefinition assemblyDefinition, TypeDefinition designer = null);
+		internal abstract bool ProcessAssemblyDesigner (AssemblyDefinition assemblyDefinition);
 		protected abstract void LoadDesigner ();
 		protected abstract void FixBody (MethodBody body, TypeDefinition designer);
 	}
