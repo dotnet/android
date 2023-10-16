@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -17,7 +16,7 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 	public ITaskItem[] Assemblies { get; set; }
 
 	[Required]
-	public string[] FastPathAssemblyNames { get; set; }
+	public ITaskItem[] FastPathAssemblies { get; set; }
 
 	[Required]
 	public string SharedLibraryOutputDir { get; set; }
@@ -34,16 +33,17 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 	List<ITaskItem> PrepareItems ()
 	{
 		var sharedLibraries = new List<ITaskItem> ();
-
-		if (FastPathAssemblyNames.Length == 0) {
-			return sharedLibraries;
-		}
-
-		var fastPathItems = new HashSet<string> (FastPathAssemblyNames, StringComparer.OrdinalIgnoreCase);
 		var seenAbis = new HashSet<string> (StringComparer.Ordinal);
 		var satelliteAssemblies = new List<ITaskItem> ();
 		ushort dsoIndexCounter = 0;
 		var assemblyIndexes = new Dictionary<string, ushort> (StringComparer.OrdinalIgnoreCase);
+		var fastPathItems = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+		if (FastPathAssemblies.Length != 0) {
+			foreach (ITaskItem item in FastPathAssemblies) {
+				fastPathItems.Add (item.ItemSpec);
+			}
+		}
 
 		foreach (ITaskItem assembly in Assemblies) {
 			if (fastPathItems.Contains (Path.GetFileName (assembly.ItemSpec))) {
@@ -97,6 +97,7 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 			item.SetMetadata (DSOMetadata.InputAssemblyPath, assembly.ItemSpec);
 			item.SetMetadata (DSOMetadata.SourceFileBaseName, baseName);
 			item.SetMetadata (DSOMetadata.AssemblyLoadInfoIndex, MonoAndroidHelper.CultureInvariantToString (index));
+
 			string skipCompression = assembly.GetMetadata ("AndroidSkipCompression");
 			if (!String.IsNullOrEmpty (skipCompression)) {
 				item.SetMetadata (DSOMetadata.AndroidSkipCompression, skipCompression);

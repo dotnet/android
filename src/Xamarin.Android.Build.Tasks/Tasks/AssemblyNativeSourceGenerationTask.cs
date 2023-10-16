@@ -56,8 +56,31 @@ public abstract class AssemblyNativeSourceGenerationTask : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
+	protected static bool ShouldSkipCompression (ITaskItem item)
+	{
+		string val = item.GetMetadata (DSOMetadata.AndroidSkipCompression);
+		if (String.IsNullOrEmpty (val)) {
+			return false;
+		}
+
+		if (!Boolean.TryParse (val, out bool skipCompression)) {
+			throw new InvalidOperationException ($"Internal error: unable to parse '{val}' as a boolean value, in item '{item.ItemSpec}', from the '{DSOMetadata.AndroidSkipCompression}' metadata");
+		}
+
+		return skipCompression;
+	}
+
 	protected CompressionResult Compress (ITaskItem assembly)
 	{
+		if (ShouldSkipCompression (assembly)) {
+			return new CompressionResult {
+				Compressed = false,
+				CompressedSize = 0,
+				OutputFile = assembly.ItemSpec,
+				InputFileInfo = new FileInfo (assembly.ItemSpec)
+			};
+		}
+
 		return Compress (assembly.ItemSpec, assembly.GetMetadata ("DestinationSubDirectory"));
 	}
 

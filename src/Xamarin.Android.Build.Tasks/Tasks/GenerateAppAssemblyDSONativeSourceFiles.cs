@@ -49,7 +49,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 			CompressionResult cres = Compress (assembly);
 			string inputFile = cres.OutputFile;
 
-			Log.LogDebugMessage ($"  Fast path input: {assembly.ItemSpec}");
+			Log.LogDebugMessage ($"  Fast path input: {assembly.ItemSpec}; compressed? {cres.Compressed}");
 			inputAssemblyDataSize += cres.Compressed ? (ulong)cres.InputFileInfo.Length : cres.CompressedSize;
 			uncompressedAssemblyDataSize += (ulong)cres.InputFileInfo.Length;
 

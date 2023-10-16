@@ -67,6 +67,9 @@
       <_DSOFastPathAssembly Include="System.Private.CoreLib.dll" />
       <_DSOFastPathAssembly Include="System.Runtime.dll" />
       <_DSOFastPathAssembly Include="$(AssemblyName).dll" />
+      <_DSOFastPathAssembly Include="$(_DesignerAssemblyName).dll">
+        <AndroidSkipCompression>true</AndroidSkipCompression>
+      </_DSOFastPathAssembly>
     </ItemGroup>
 
     <!-- These source files will be built into `libxamarin-app.so` and will include data
@@ -86,7 +89,7 @@
     -->
     <PrepareAssemblyStandaloneDSOAbiItems
         Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
-        FastPathAssemblyNames="@(_DSOFastPathAssembly)"
+        FastPathAssemblies="@(_DSOFastPathAssembly)"
         SharedLibraryOutputDir="$(_AndroidApplicationSharedLibraryPath)">
       <Output TaskParameter="SharedLibraries" ItemName="_StandaloneAssemblyDSOTarget" />
     </PrepareAssemblyStandaloneDSOAbiItems>

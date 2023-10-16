@@ -20,6 +20,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		public readonly string SourceFileBaseName;
 		public readonly string DSOPath;
 		public readonly string? Culture;
+		public readonly bool SkipCompression;
 		public readonly ITaskItem TaskItem;
 		public readonly uint AssemblyLoadInfoIndex;
 
@@ -36,6 +37,8 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			if (!UInt32.TryParse (index, out AssemblyLoadInfoIndex)) {
 				throw new InvalidOperationException ($"Internal error: unable to parse string '{index}' as an unsigned 32-bit integer");
 			}
+
+			SkipCompression = ShouldSkipCompression (dso);
 
 			string EnsureValidMetadata (string what)
 			{
@@ -304,11 +307,24 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			destinationSubdirectory = Path.Combine (destinationSubdirectory, dso.Culture);
 		}
 
-		CompressionResult cres = Compress (dso.OriginalAssemblyPath, destinationSubdirectory);
-		string inputFile = cres.OutputFile;
+		string inputFile;
+		uint compressedSize;
+		uint inputFileSize;
+
+		if (!dso.SkipCompression) {
+			CompressionResult cres = Compress (dso.OriginalAssemblyPath, destinationSubdirectory);
+			inputFile = cres.OutputFile; // It will be set to the **original** assembly path if compression wasn't done
+			compressedSize = cres.CompressedSize;
+			inputFileSize = (uint)cres.InputFileInfo.Length;
+		} else {
+			inputFile = dso.OriginalAssemblyPath;
+			compressedSize = 0;
+			var fi = new FileInfo (inputFile);
+			inputFileSize = (uint)fi.Length;
+		}
 
 		AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (dso.Abi);
-		DSOAssemblyInfo dsoInfo = new LocalDSOAssemblyInfo (dso, dsoItem, GetAssemblyName (dso.TaskItem), inputFile, (uint)cres.InputFileInfo.Length, cres.CompressedSize);
+		DSOAssemblyInfo dsoInfo = new LocalDSOAssemblyInfo (dso, dsoItem, GetAssemblyName (dso.TaskItem), inputFile, inputFileSize, compressedSize);
 
 		try {
 			infos.Add (targetArch, dsoInfo);
