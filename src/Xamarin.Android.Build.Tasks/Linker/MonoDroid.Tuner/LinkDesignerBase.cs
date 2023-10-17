@@ -64,9 +64,7 @@ namespace MonoDroid.Tuner  {
 			if (string.IsNullOrEmpty(designerFullName)) {
 				LogMessage ($"Inspecting member references for assembly: {assembly.FullName};");
 				var memberRefs = assembly.MainModule.GetMemberReferences ();
-				var memberIdx = 0;
 				foreach (var memberRef in memberRefs) {
-					memberIdx++;
 					string declaringType = memberRef.DeclaringType?.ToString () ?? string.Empty;
 					if (!declaringType.Contains (".Resource/")) {
 						continue;
@@ -85,7 +83,7 @@ namespace MonoDroid.Tuner  {
 						resolved = false;
 					}
 					if (!resolved) {
-						LogMessage ($"Adding _Linker.Generated.Resource to {assembly.Name.Name}");
+						LogMessage ($"Adding _Linker.Generated.Resource to {assembly.Name.Name}. Could not resolve {memberRef?.Name} : {declaringType}");
 						designer = new TypeDefinition ("_Linker.Generated", "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
 						return true;
