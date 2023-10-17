@@ -257,11 +257,7 @@ namespace Android.Runtime
 		static bool _unhandled_exception (Exception e)
 		{
 			if (Debugger.IsAttached || !JNIEnvInit.PropagateExceptions) {
-#if NETCOREAPP
 				AndroidRuntimeInternal.mono_unhandled_exception?.Invoke (e);
-#else
-				JNIEnvInit.mono_unhandled_exception?.Invoke (e);
-#endif
 				return false;
 			}
 			return true;

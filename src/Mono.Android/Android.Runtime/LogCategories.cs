@@ -1,4 +1,4 @@
-#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 
 namespace Android.Runtime
@@ -20,4 +20,4 @@ namespace Android.Runtime
 		Netlink   = 1 << 9,
 	}
 }
-#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#endif // INSIDE_MONO_ANDROID_RUNTIME

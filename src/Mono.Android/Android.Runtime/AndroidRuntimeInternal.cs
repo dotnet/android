@@ -1,4 +1,4 @@
-#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Reflection;
 
@@ -7,11 +7,7 @@ namespace Android.Runtime
 	public static class AndroidRuntimeInternal
 	{
 		internal static MethodInfo? mono_unhandled_exception_method = null;
-#if NETCOREAPP
 		internal static Action<Exception> mono_unhandled_exception = RuntimeNativeMethods.monodroid_debugger_unhandled_exception;
-#else
-		internal static Action<Exception>? mono_unhandled_exception = null;
-#endif
 
 #pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
 		internal static volatile bool BridgeProcessing; // = false
@@ -38,4 +34,4 @@ namespace Android.Runtime
 		}
 	}
 }
-#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#endif // INSIDE_MONO_ANDROID_RUNTIME

@@ -40,6 +40,7 @@ namespace Xamarin.Android.Net
 	///
 	/// var httpClient = new HttpClient (handler);
 	/// var response = httpClient.GetAsync ("http://example.com")?.Result as AndroidHttpResponseMessage;
+	/// </example></para>
 	/// <para>
 	/// The class supports pre-authentication of requests albeit in a slightly "manual" way. Namely, whenever a request to a server requiring authentication
 	/// is made and no authentication credentials are provided in the <see cref="PreAuthenticationData"/> property (which is usually the case on the first
@@ -269,9 +270,7 @@ namespace Xamarin.Android.Net
 		/// If <c>true</c> then the server requested authorization and the application must use information
 		/// found in <see cref="RequestedAuthentication"/> to set the value of <see cref="PreAuthenticationData"/>
 		/// </summary>
-#if NETCOREAPP
 		[MemberNotNullWhen(true, nameof(RequestedAuthentication))]
-#endif
 		public bool RequestNeedsAuthorization {
 			get { return RequestedAuthentication?.Count > 0; }
 		}
@@ -309,7 +308,6 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
-#if !MONOANDROID1_0
 		/// <summary>
 		/// A feature switch that determines whether the message handler should attempt to authenticate the user
 		/// using the NTLM/Negotiate authentication method. Enable the feature by adding
@@ -317,7 +315,6 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		static bool NegotiateAuthenticationIsEnabled =>
 			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", out bool isEnabled) && isEnabled;
-#endif
 
 		/// <summary>
 		/// <para>
@@ -388,16 +385,13 @@ namespace Xamarin.Android.Net
 		/// <param name="cancellationToken">Cancellation token.</param>
 		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-#if !MONOANDROID1_0
 			if (NegotiateAuthenticationIsEnabled) {
 				return SendWithNegotiateAuthenticationAsync (request, cancellationToken);
 			}
-#endif
 
 			return DoSendAsync (request, cancellationToken);
 		}
 
-#if !MONOANDROID1_0
 		async Task <HttpResponseMessage> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
@@ -410,7 +404,6 @@ namespace Xamarin.Android.Net
 
 			return response;
 		}
-#endif
 
 		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
@@ -750,13 +743,11 @@ namespace Xamarin.Android.Net
 			} else if (encodings.Contains (DEFLATE_ENCODING)) {
 				supportedEncoding = DEFLATE_ENCODING;
 				ret = new DeflateStream (inputStream, CompressionMode.Decompress);
-			}
-#if NETCOREAPP
-			else if (encodings.Contains (BROTLI_ENCODING)) {
+			} else if (encodings.Contains (BROTLI_ENCODING)) {
 				supportedEncoding = BROTLI_ENCODING;
 				ret = new BrotliStream (inputStream, CompressionMode.Decompress);
 			}
-#endif
+
 			if (!String.IsNullOrEmpty (supportedEncoding)) {
 				contentState.RemoveContentLengthHeader = true;
 
@@ -1105,12 +1096,11 @@ namespace Xamarin.Android.Net
 					AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
 					decompress_here = true;
 				}
-#if NETCOREAPP
+
 				if ((AutomaticDecompression & DecompressionMethods.Brotli) != 0) {
 					AppendEncoding (BROTLI_ENCODING, ref accept_encoding);
 					decompress_here = true;
 				}
-#endif
 			}
 
 			if (accept_encoding?.Count > 0)
@@ -1158,15 +1148,6 @@ namespace Xamarin.Android.Net
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
 			}
-
-#if MONOANDROID1_0
-			// Context: https://github.com/xamarin/xamarin-android/issues/1615
-			int apiLevel = (int)Build.VERSION.SdkInt;
-			if (apiLevel >= 16 && apiLevel <= 20) {
-				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
-				return;
-			}
-#endif
 
 			var keyStore = InitializeKeyStore (out bool gotCerts);
 			keyStore = ConfigureKeyStore (keyStore);

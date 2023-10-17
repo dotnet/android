@@ -4,7 +4,7 @@ namespace Android.Views
 {
 	partial class WindowManagerLayoutParams
 	{
-#if NET && ANDROID_34
+#if ANDROID_34
 		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0", "These flags are deprecated. Use WindowInsetsController instead.")]
 		public SystemUiFlags SystemUiFlags {
 			get => (SystemUiFlags) SystemUiVisibility;
