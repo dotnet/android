@@ -115,7 +115,8 @@ stages:
 
     - script: >
         mkdir -p $(Build.StagingDirectory)/docs-binaries &&
-        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/ $(Build.StagingDirectory)/docs-binaries/
+        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.dll $(Build.StagingDirectory)/docs-binaries/ &&
+        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/*.xml $(Build.StagingDirectory)/docs-binaries/
       displayName: copy docs files
 
     - task: PublishPipelineArtifact@1
