@@ -141,6 +141,7 @@ struct AssembliesConfig
 	uint32_t uncompressed_assembly_data_size;
 	uint32_t assembly_name_length;
 	uint32_t assembly_count;
+	uint32_t assembly_index_count;
 	uint32_t assembly_dso_count;
 	uint32_t shared_library_name_length;
 };

@@ -93,6 +93,7 @@ partial class AssemblyDSOGenerator
 		public uint uncompressed_assembly_data_size;
 		public uint assembly_name_length;
 		public uint assembly_count;
+		public uint assembly_index_count;
 		public uint assembly_dso_count;
 		public uint shared_library_name_length;
 	};
@@ -100,6 +101,9 @@ partial class AssemblyDSOGenerator
 	// Members with underscores correspond to the native fields we output.
 	sealed class ArchState
 	{
+		// Currently we hash assembly name with and without the extension
+		const int AssemblyNameVariationsCount = 2;
+
 		public readonly List<StructureInstance<AssemblyEntry>> xa_assemblies;
 		public readonly List<StructureInstance<AssemblyIndexEntry32>>? xa_assembly_index32;
 		public readonly List<StructureInstance<AssemblyIndexEntry64>>? xa_assembly_index64;
@@ -116,7 +120,7 @@ partial class AssemblyDSOGenerator
 
 			StandaloneAssembly = standaloneAssembly;
 			xa_assemblies = new List<StructureInstance<AssemblyEntry>> (assemblyCount);
-			xa_assembly_names = new List<byte[]> (assemblyCount);
+			xa_assembly_names = new List<byte[]> (assemblyCount * AssemblyNameVariationsCount);
 			xa_assembly_dso_names = new List<byte[]> (assemblyCount);
 
 			switch (arch) {
@@ -139,6 +143,7 @@ partial class AssemblyDSOGenerator
 				uncompressed_assembly_data_size = 0,
 				assembly_name_length = 0,
 				assembly_count = (uint)assemblyCount,
+				assembly_index_count = (uint)assemblyCount * AssemblyNameVariationsCount,
 			};
 		}
 	}

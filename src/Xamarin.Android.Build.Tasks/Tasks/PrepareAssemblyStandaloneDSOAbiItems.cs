@@ -37,13 +37,7 @@ public class PrepareAssemblyStandaloneDSOAbiItems : AndroidTask
 		var satelliteAssemblies = new List<ITaskItem> ();
 		ushort dsoIndexCounter = 0;
 		var assemblyIndexes = new Dictionary<string, ushort> (StringComparer.OrdinalIgnoreCase);
-		var fastPathItems = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-		if (FastPathAssemblies.Length != 0) {
-			foreach (ITaskItem item in FastPathAssemblies) {
-				fastPathItems.Add (item.ItemSpec);
-			}
-		}
+		HashSet<string> fastPathItems = MonoAndroidHelper.MakeHashSet (FastPathAssemblies);
 
 		foreach (ITaskItem assembly in Assemblies) {
 			if (fastPathItems.Contains (Path.GetFileName (assembly.ItemSpec))) {

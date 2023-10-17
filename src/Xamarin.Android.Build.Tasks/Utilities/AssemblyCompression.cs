@@ -61,6 +61,7 @@ namespace Xamarin.Android.Tasks
 			this.compressedOutputDir = compressedOutputDir;
 		}
 
+		// TODO: consider using https://github.com/emmanuel-marty/lz4ultra
 		CompressionResult Compress (AssemblyData data, string outputDirectory)
 		{
 			if (data == null) {

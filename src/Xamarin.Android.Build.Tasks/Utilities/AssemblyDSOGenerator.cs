@@ -436,6 +436,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 			uint assemblyIndex = (uint)archState.xa_assemblies.Count - 1;
 			uint loadInfoIndex = isStandalone ? info.AssemblyLoadInfoIndex.Value : UInt32.MaxValue;
 
+			// If the number of assembly name variations in the index changes, ArchState.AssemblyNameVariationsCount **MUST** be updated accordingly
 			if (is64Bit) {
 				var indexEntry = new AssemblyIndexEntry64 {
 					Name = info.Name,

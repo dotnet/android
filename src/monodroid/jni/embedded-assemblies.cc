@@ -68,6 +68,110 @@ private:
 	char *guid = nullptr;
 };
 
+namespace {
+#if defined (RELEASE)
+	class SO_AssemblyDataProvider
+	{
+	public:
+		SO_AssemblyDataProvider () = delete;
+		~SO_AssemblyDataProvider () = delete;
+
+	private:
+		force_inline
+		static auto uncompress (const uint8_t *const compressed_start, size_t compressed_size, uint8_t *dest, size_t expected_uncompressed_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> void
+		{
+			StartupAwareLock decompress_lock (assembly_decompress_mutex);
+			const char *data_start = reinterpret_cast<const char*>(compressed_start);
+			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(dest), static_cast<int>(compressed_size), static_cast<int>(expected_uncompressed_size));
+
+			if (ret < 0) {
+				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", assembly_name.get (), ret);
+				Helpers::abort_application ();
+			}
+
+			if (static_cast<size_t>(ret) != expected_uncompressed_size) {
+				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %zu)", assembly_name.get (), expected_uncompressed_size, static_cast<size_t>(ret));
+				Helpers::abort_application ();
+			}
+		}
+
+		force_inline
+		static auto get_compressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		{
+			log_debug (LOG_ASSEMBLY, "Assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; input offset: %u; output offset: %u",
+			           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.input_data_offset, entry.uncompressed_data_offset);
+			const uint8_t *const compressed_start = xa_input_assembly_data + entry.input_data_offset;
+			uint8_t *dest = xa_uncompressed_assembly_data + entry.uncompressed_data_offset;
+			uncompress (compressed_start, entry.input_data_size, dest, entry.uncompressed_data_size, assembly_name);
+			return {dest, entry.uncompressed_data_size};
+		}
+
+		force_inline
+		static auto get_uncompressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		{
+			log_debug (LOG_ASSEMBLY, "Assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
+			return {nullptr, 0};
+		}
+
+	public:
+		force_inline
+		static auto get_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		{
+			log_debug (LOG_ASSEMBLY, "Loading assembly from libxamarin-app.so, fast path");
+			if (entry.uncompressed_data_size > 0) {
+				return get_compressed_data_fastpath (entry, assembly_name);
+			}
+
+			return get_uncompressed_data_fastpath (entry, assembly_name);
+		}
+
+	private:
+		static inline std::mutex assembly_decompress_mutex;
+	};
+
+	class SO_APK_AssemblyDataProvider
+	{
+	public:
+		force_inline
+		static auto get_data (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		{
+			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+			if (!index_entry.is_standalone) {
+				return SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
+			}
+
+			AssemblyLoadInfo const& load_info = xa_assemblies_load_info[index_entry.load_info_index];
+			log_debug (LOG_ASSEMBLY, "Looking for assembly in the APK; Data offset in the archive: %u; mmap address: %p", load_info.apk_offset, load_info.mmap_addr);
+
+			return {nullptr, 0};
+		}
+	};
+
+	class SO_FILESYSTEM_AssemblyDataProvider
+	{
+	public:
+		force_inline
+		static auto get_data (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		{
+			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+			if (!index_entry.is_standalone) {
+				return SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
+			}
+
+			log_debug (LOG_ASSEMBLY, "Loading assembly from a standalone DSO");
+			log_debug (LOG_ASSEMBLY, "Looking for assembly on the filesystem");
+
+			return {nullptr, 0};
+		}
+	};
+#else // def RELEASE
+	class DLL_APK_AssemblyDataProvider
+	{
+	public:
+	};
+#endif // ndef RELEASE
+}
+
 void EmbeddedAssemblies::init () noexcept
 {
 	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
@@ -93,6 +197,20 @@ EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 	dest_assembly_data = source_assembly_data;
 	dest_assembly_data_size = source_assembly_data_size;
 }
+
+#if defined (RELEASE)
+const AssemblyData
+EmbeddedAssemblies::get_assembly_data_dso_apk (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept
+{
+	return SO_APK_AssemblyDataProvider::get_data (entry, index_entry, assembly_name);
+}
+
+const AssemblyData
+EmbeddedAssemblies::get_assembly_data_dso_fs (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept
+{
+	return SO_FILESYSTEM_AssemblyDataProvider::get_data (entry, index_entry, assembly_name);
+}
+#endif // def RELEASE
 
 force_inline void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
@@ -240,14 +358,14 @@ EmbeddedAssemblies::load_bundled_assembly (
 #if defined(RELEASE)
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data) noexcept
+EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, TLoaderData loader_data) noexcept
 {
-	hash_t hash = xxhash::hash (name.get (), name.length ());
-	log_debug (LOG_ASSEMBLY, "standalone_dso_open_from_bundles: looking for bundled name: '%s', hash 0x%zx", name.get (), hash);
+	hash_t name_hash = xxhash::hash (name.get (), name.length ());
+	log_debug (LOG_ASSEMBLY, "standalone_dso_open_from_bundles: looking for bundled name: '%s', hash 0x%zx", name.get (), name_hash);
 
 	auto equal = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
 	auto less_than = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
-	ssize_t index = Search::binary_search<AssemblyIndexEntry, equal, less_than> (hash, xa_assembly_index, xa_assemblies_config.assembly_count);
+	ssize_t index = Search::binary_search<AssemblyIndexEntry, equal, less_than> (name_hash, xa_assembly_index, xa_assemblies_config.assembly_index_count);
 
 	if (index == -1) {
 		log_warn (LOG_ASSEMBLY, "assembly '%s' not found in the DSO assembly index", name.get ());
@@ -271,10 +389,23 @@ EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSI
 	);
 
 	AssemblyEntry const& entry = xa_assemblies[index_entry.assemblies_index];
-	const AssemblyData assembly_data = get_assembly_data_dso (entry, index_entry.is_standalone);
+	const AssemblyData assembly_data = get_assembly_data_dso (entry, index_entry, name);
 	log_debug (LOG_ASSEMBLY, "assembly_data == %p; size == %u", assembly_data.data, assembly_data.size);
 
-	return nullptr;
+	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, const_cast<uint8_t*>(assembly_data.data), assembly_data.size);
+	if (image == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
+		return nullptr;
+	}
+
+	MonoImageOpenStatus status;
+	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, false /* ref_only */);
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
+		return nullptr;
+	}
+
+	return a;
 }
 #endif // def RELEASE
 

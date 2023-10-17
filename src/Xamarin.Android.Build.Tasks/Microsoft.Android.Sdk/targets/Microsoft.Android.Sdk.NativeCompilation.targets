@@ -148,7 +148,7 @@
         CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
         SupportedAbis="@(_BuildTargetAbis)"
         Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
-        FastPathAssemblyNames="@(_DSOFastPathAssembly)"
+        FastPathAssemblies="@(_DSOFastPathAssembly)"
         StandaloneAssemblyDSOs="@(_StandaloneAssemblyDSO)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"/>
   </Target>

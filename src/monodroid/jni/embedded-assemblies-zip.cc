@@ -190,7 +190,7 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 		number_of_found_assembly_dsos++;
 
 		// We have an assembly DSO
-		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s", entry_name.get (), entry_name.get () + (entry_name.length () - 7));
+		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s; data offset: %u", entry_name.get (), entry_name.get () + (entry_name.length () - 7), state.data_offset);
 
 		bool valid_hex = true;
 		auto integer_from_hex_char = []<size_t TLen> (dynamic_local_string<TLen> const& s, size_t pos, bool &is_valid, size_t shift) -> uint16_t

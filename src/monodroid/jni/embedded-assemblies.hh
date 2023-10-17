@@ -97,7 +97,7 @@ namespace xamarin::android::internal {
 			EntryLocation         location;
 		};
 #if defined (RELEASE)
-		using get_assembly_data_dso_fn = const AssemblyData (*)(AssemblyEntry const& entry, bool fast_path);
+		using get_assembly_data_dso_fn = const AssemblyData (*)(AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name);
 #endif
 	private:
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
@@ -190,7 +190,7 @@ namespace xamarin::android::internal {
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
 		template<LoaderData TLoaderData>
-		MonoAssembly* standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data) noexcept;
+		MonoAssembly* standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, TLoaderData loader_data) noexcept;
 
 		template<LoaderData TLoaderData>
 		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
@@ -237,20 +237,13 @@ namespace xamarin::android::internal {
 		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
 #if defined (RELEASE)
-		static const AssemblyData get_assembly_data_dso_apk (AssemblyEntry const& entry, bool standalone) noexcept
-		{
-			return SO_APK_AssemblyDataProvider::get_data (entry, standalone);
-		}
-
-		static const AssemblyData get_assembly_data_dso_fs (AssemblyEntry const& entry, bool standalone) noexcept
-		{
-			return SO_FILESYSTEM_AssemblyDataProvider::get_data (entry, standalone);
-		}
+		static const AssemblyData get_assembly_data_dso_apk (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept;
+		static const AssemblyData get_assembly_data_dso_fs (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept;
 
 		force_inline
-		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, bool standalone) const noexcept
+		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) const noexcept
 		{
-			return (*get_assembly_data_dso_impl) (entry, standalone);
+			return (*get_assembly_data_dso_impl) (entry, index_entry, assembly_name);
 		}
 #endif
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
@@ -355,7 +348,6 @@ namespace xamarin::android::internal {
 #endif // def NET
 		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
-		std::mutex             assembly_decompress_mutex;
 #if defined (RELEASE)
 		get_assembly_data_dso_fn   get_assembly_data_dso_impl = nullptr;
 #endif

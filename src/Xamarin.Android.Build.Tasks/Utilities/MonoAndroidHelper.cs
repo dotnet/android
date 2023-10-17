@@ -666,5 +666,20 @@ namespace Xamarin.Android.Tasks
 				return String.Compare (data, expectedValue, StringComparison.Ordinal) == 0;
 			}
 		}
+
+		public static HashSet<string> MakeHashSet (ICollection<ITaskItem> items)
+		{
+			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			if (items.Count == 0) {
+				return ret;
+			}
+
+			foreach (ITaskItem item in items) {
+				ret.Add (item.ItemSpec);
+			}
+
+			return ret;
+		}
 	}
 }

@@ -20,7 +20,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 	public ITaskItem[] Assemblies { get; set; }
 
 	[Required]
-	public string[] FastPathAssemblyNames { get; set; }
+	public ITaskItem[] FastPathAssemblies { get; set; }
 
 	[Required]
 	public ITaskItem[] StandaloneAssemblyDSOs { get; set; }
@@ -28,7 +28,6 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 	protected override void Generate ()
 	{
 		Dictionary<AndroidTargetArch, List<DSOAssemblyInfo>> dsoAssembliesInfo = new ();
-
 		var satelliteAssemblies = new List<DSOAssemblyInfo> ();
 
 		// The figure here includes only the "fast path" assemblies, that is those which end up in libxamarin-app.so
@@ -38,12 +37,28 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 		// their respective .so shared libraries.
 		ulong uncompressedAssemblyDataSize = 0;
 		AndroidTargetArch arch;
-		var fastPathAssemblies = new HashSet<string> (FastPathAssemblyNames, StringComparer.OrdinalIgnoreCase);
+		var fastPathAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+
+		if (FastPathAssemblies.Length > 0) {
+			foreach (ITaskItem item in FastPathAssemblies) {
+				if (fastPathAssemblies.ContainsKey (item.ItemSpec)) {
+					continue;
+				}
+				fastPathAssemblies.Add (item.ItemSpec, item);
+			}
+		};
 
 		Log.LogDebugMessage ("Processing input assemblies");
 		foreach (ITaskItem assembly in Assemblies) {
-			if (!fastPathAssemblies.Contains (Path.GetFileName (assembly.ItemSpec))) {
+			if (!fastPathAssemblies.TryGetValue (Path.GetFileName (assembly.ItemSpec), out ITaskItem fastPathItem)) {
 				continue;
+			}
+
+			string? skipCompression = fastPathItem.GetMetadata (DSOMetadata.AndroidSkipCompression);
+			if (!String.IsNullOrEmpty (skipCompression)) {
+				// It can potentially override the same metadata item in `assembly`, but that's fine, since the item's just a copy and we want the fast path items
+				// to dictate whether or not the assembly is compressed.
+				assembly.SetMetadata (DSOMetadata.AndroidSkipCompression, skipCompression);
 			}
 
 			CompressionResult cres = Compress (assembly);
@@ -87,7 +102,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 			Log.LogDebugMessage ($"  {kvp.Key}: {kvp.Value.Count} assemblies");
 		}
 
-		var generator = new AssemblyDSOGenerator (FastPathAssemblyNames, dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
+		var generator = new AssemblyDSOGenerator (fastPathAssemblies.Keys, dsoAssembliesInfo, inputAssemblyDataSize, uncompressedAssemblyDataSize);
 		GenerateSources (SupportedAbis, generator, generator.Construct (), PrepareAbiItems.AssemblyDSOBase);
 
 		void StoreAssembly (AndroidTargetArch arch, ITaskItem assembly, string inputFile, long fileLength, uint compressedSize, DSOAssemblyInfo? info = null)
