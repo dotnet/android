@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using MavenNet;
 using MavenNet.Models;
@@ -73,7 +74,7 @@ static class MavenExtensions
 	}
 
 	// Returns artifact output path
-	public static async Task<string?> DownloadPayload (Artifact artifact, string cacheDir, TaskLoggingHelper log)
+	public static async Task<string?> DownloadPayload (Artifact artifact, string cacheDir, TaskLoggingHelper log, CancellationToken cancellationToken)
 	{
 		var version = artifact.Versions.First ();
 
@@ -92,10 +93,10 @@ static class MavenExtensions
 		if (File.Exists (aar_filename))
 			return aar_filename;
 
-		if (await TryDownloadPayload (artifact, jar_filename) is not string jar_error)
+		if (await TryDownloadPayload (artifact, jar_filename, cancellationToken) is not string jar_error)
 			return jar_filename;
 
-		if (await TryDownloadPayload (artifact, aar_filename) is not string aar_error)
+		if (await TryDownloadPayload (artifact, aar_filename, cancellationToken) is not string aar_error)
 			return aar_filename;
 
 		log.LogError ("Cannot download artifact '{0}:{1}'.\n- {2}: {3}\n- {4}: {5}", artifact.GroupId, artifact.Id, Path.GetFileName (jar_filename), jar_error, Path.GetFileName (aar_filename), aar_error);
@@ -104,7 +105,7 @@ static class MavenExtensions
 	}
 
 	// Returns artifact output path
-	public static async Task<string?> DownloadPom (Artifact artifact, string cacheDir, TaskLoggingHelper log, bool isParent = false)
+	public static async Task<string?> DownloadPom (Artifact artifact, string cacheDir, TaskLoggingHelper log, CancellationToken cancellationToken, bool isParent = false)
 	{
 		var version = artifact.Versions.First ();
 		var output_directory = Path.Combine (cacheDir, artifact.GetRepositoryCacheName (), artifact.GroupId, artifact.Id, version);
@@ -118,7 +119,7 @@ static class MavenExtensions
 		if (File.Exists (pom_filename))
 			return pom_filename;
 
-		if (await TryDownloadPayload (artifact, pom_filename) is not string pom_error)
+		if (await TryDownloadPayload (artifact, pom_filename, cancellationToken) is not string pom_error)
 			return pom_filename;
 
 		log.LogError ("Cannot download {4}POM file for artifact '{0}:{1}'.\n- {2}: {3}", artifact.GroupId, artifact.Id, Path.GetFileName (pom_filename), pom_error, isParent ? "parent " : "");
@@ -127,13 +128,13 @@ static class MavenExtensions
 	}
 
 	// Return value indicates download success
-	static async Task<string?> TryDownloadPayload (Artifact artifact, string filename)
+	static async Task<string?> TryDownloadPayload (Artifact artifact, string filename, CancellationToken cancellationToken)
 	{
 		try {
 			using var src = await artifact.OpenLibraryFile (artifact.Versions.First (), Path.GetExtension (filename));
 			using var sw = File.Create (filename);
 
-			await src.CopyToAsync (sw);
+			await src.CopyToAsync (sw, 81920, cancellationToken);
 
 			return null;
 		} catch (Exception ex) {
@@ -215,9 +216,9 @@ static class MavenExtensions
 		return version;
 	}
 
-	public static bool IsCompileDependency (this Dependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || string.IndexOf("compile", StringComparison.OrdinalIgnoreCase) != -1;
+	public static bool IsCompileDependency (this Dependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || dependency.Scope.IndexOf ("compile", StringComparison.OrdinalIgnoreCase) != -1;
 
-	public static bool IsRuntimeDependency (this Dependency dependency) => dependency?.Scope != null && string.IndexOf("runtime", StringComparison.OrdinalIgnoreCase) != -1;
+	public static bool IsRuntimeDependency (this Dependency dependency) => dependency?.Scope != null && dependency.Scope.IndexOf ("runtime", StringComparison.OrdinalIgnoreCase) != -1;
 
 	public static Dependency? FindParentDependency (this Project project, Dependency dependency)
 	{
