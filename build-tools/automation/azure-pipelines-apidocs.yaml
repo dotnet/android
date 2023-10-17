@@ -29,6 +29,12 @@ parameters:
   type: string
   default: default
 
+- name: javadocVerbosity
+  displayName: AndroidJavadocVerbosity property value
+  type: string
+  default: default
+
+
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
@@ -39,6 +45,8 @@ variables:
 - name: DocsFxVersionArg
   value: ''
 - name: MdocPackageVersionArg
+  value: ''
+- name: AndroidJavadocVerbosity
   value: ''
 
 
@@ -79,6 +87,10 @@ stages:
       - script: echo "##vso[task.setvariable variable=MdocPackageVersionArg]-p:MdocPackageVersion=${{ parameters.mdocVersion }}"
         displayName: set MdocPackageVersionArg
 
+    - ${{ if ne(parameters.javadocVerbosity, 'default') }}:
+      - script: echo "##vso[task.setvariable variable=AndroidJavadocVerbosity]-p:AndroidJavadocVerbosity=${{ parameters.javadocVerbosity }}"
+        displayName: set AndroidJavadocVerbosity
+
     - template: yaml-templates/use-dot-net.yaml
 
     - task: NuGetAuthenticate@0
@@ -97,15 +109,20 @@ stages:
 
     - script: >-
         make update-api-docs CONFIGURATION=$(XA.Build.Configuration)
-        MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg)'
+        MSBUILD_ARGS='$(DocsApiLevelArg) $(DocsPlatformIdArg) $(DocsFxVersionArg) $(MdocPackageVersionArg) $(AndroidJavadocVerbosity)'
       workingDirectory: $(Build.SourcesDirectory)
       displayName: make update-api-docs
 
-    - template: yaml-templates/upload-results.yaml
-      parameters:
-        artifactName: Build Results - API Docs Update
-        includeBuildResults: true
-        condition: always()
+    - script: >
+        mkdir -p $(Build.StagingDirectory)/docs-binaries &&
+        ln $(Build.SourcesDirectory)/bin/$(XA.Build.Configuration)/lib/xamarin.android/xbuild-frameworks/Microsoft.Android/34/ $(Build.StagingDirectory)/docs-binaries/
+      displayName: copy docs files
+
+    - task: PublishPipelineArtifact@1
+      displayName: upload docs files
+      inputs:
+        artifactName: Binaries
+        targetPath: $(Build.StagingDirectory)/docs-binaries
 
     - script: >
         mkdir -p $(Build.StagingDirectory)/api-doc-diff &&
@@ -117,6 +134,12 @@ stages:
       inputs:
         artifactName: Api Docs Diff
         targetPath: $(Build.StagingDirectory)/api-doc-diff
+
+    - template: yaml-templates/upload-results.yaml
+      parameters:
+        artifactName: Build Results - API Docs Update
+        includeBuildResults: true
+        condition: always()
 
     - powershell: |
         $docsUpdateBinlog = Get-ChildItem -Path "$(Build.SourcesDirectory)/bin/Build$(XA.Build.Configuration)" -Filter *UpdateApiDocs-*.binlog | Select-Object -First 1
