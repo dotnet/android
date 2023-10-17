@@ -215,9 +215,9 @@ static class MavenExtensions
 		return version;
 	}
 
-	public static bool IsCompileDependency (this Dependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || dependency.Scope.ToLowerInvariant ().Equals ("compile");
+	public static bool IsCompileDependency (this Dependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || string.IndexOf("compile", StringComparison.OrdinalIgnoreCase) != -1;
 
-	public static bool IsRuntimeDependency (this Dependency dependency) => dependency?.Scope != null && dependency.Scope.ToLowerInvariant ().Equals ("runtime");
+	public static bool IsRuntimeDependency (this Dependency dependency) => dependency?.Scope != null && string.IndexOf("runtime", StringComparison.OrdinalIgnoreCase) != -1;
 
 	public static Dependency? FindParentDependency (this Project project, Dependency dependency)
 	{
