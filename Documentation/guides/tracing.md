@@ -2,13 +2,17 @@
 
 ## Startup profiling
 ### Set up reverse port forwarding:
-```
+
+Note that you can skip this step if the Android application is running on an
+Android emulator; it is only required for physical Android devices.
+
+```sh
 $ adb reverse tcp:9000 tcp:9001
 ```
 This will forward port 9000 on device to port 9001.
 
 _Alternatively:_
-```
+```sh
 $ adb reverse tcp:0 tcp:9001
 43399
 ```
@@ -16,42 +20,83 @@ This will allocate a random port on remote and forward it to port 9001 on the ho
 
 ### Configure the device so that the profiled app suspends until tracing utility connects
 
-```
+```sh
 $ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend'
 ```
 
 ### Install `dotnet-dsrouter`
 
-Use a build from the feed `https://aka.ms/dotnet-tools/index.json`:
+Generally, you can use a stable `dotnet-dsrouter` from NuGet:
 
-```
-$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
+```sh
+$ dotnet tool install -g dotnet-dsrouter
 You can invoke the tool using the following command: dotnet-dsrouter
-Tool 'dotnet-dsrouter' (version '6.0.306901') was successfully installed.
+Tool 'dotnet-dsrouter' was successfully installed.
+```
+
+Or use a build from the nightly feed `https://aka.ms/dotnet-tools/index.json`:
+
+```sh
+$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
 ```
 
 ### Start the tracing router/proxy on host
-We assume ports as given above, in the first example.
-```
-$ dotnet-dsrouter client-server -tcps 127.0.0.1:9001 -ipcc /tmp/maui-app --verbose debug
-WARNING: dotnet-dsrouter is an experimental development tool not intended for production environments.
 
-info: dotnet-dsrounter[0]
-      Starting IPC client (/tmp/maui-app) <--> TCP server (127.0.0.1:9001) router.
-dbug: dotnet-dsrounter[0]
-      Trying to create a new router instance.
-dbug: dotnet-dsrounter[0]
-      Waiting for a new tcp connection at endpoint "127.0.0.1:9001".
+For profiling an Android application running on an Android emulator:
+```sh
+$ dotnet-dsrouter android-emu --verbose debug
+WARNING: dotnet-dsrouter is a development tool not intended for production environments.
+
+Start an application on android emulator with one of the following environment variables set:
+DOTNET_DiagnosticPorts=10.0.2.2:9000,nosuspend,connect
+DOTNET_DiagnosticPorts=10.0.2.2:9000,suspend,connect
+
+info: dotnet-dsrouter[0]
+      Starting dotnet-dsrouter using pid=21352
+dbug: dotnet-dsrouter[0]
+      Using default IPC server path, dotnet-diagnostic-dsrouter-21352.
+dbug: dotnet-dsrouter[0]
+      Attach to default dotnet-dsrouter IPC server using --process-id 21352 diagnostic tooling argument.
+info: dotnet-dsrouter[0]
+      Starting IPC server (dotnet-diagnostic-dsrouter-21352) <--> TCP server (127.0.0.1:9000) router.
+dbug: dotnet-dsrouter[0]
+      Trying to create new router instance.
+dbug: dotnet-dsrouter[0]
+      Waiting for a new TCP connection at endpoint "127.0.0.1:9000".
+dbug: dotnet-dsrouter[0]
+      Waiting for new ipc connection at endpoint "dotnet-diagnostic-dsrouter-21352".
 ```
 
-This starts a `dsrouter` TCP/IP server on host port `9000` and an IPC (Unix socket on *nix machines) client with the socket name/path `/tmp/maui-app`
+### For Android devices
+
+For profiling an Android application running on an Android device:
+
+```
+$ dotnet-dsrouter server-server -tcps 127.0.0.1:9001 --verbose debug
+```
+
+Eventually, we will be able to simply do `dotnet-dsrouter android` when
+[dotnet/diagnostics#4337][4337] is resolved. `adb reverse tcp:9000 tcp:9001` is
+also currently required as mentioned above.
+
+[4337]: https://github.com/dotnet/diagnostics/issues/4337
 
 ### Start the tracing client
 
-Before starting the client make sure that the socket file does **not** exist.
+First, run `dotnet-trace ps` to find a list of processes:
 
 ```
-$ dotnet-trace collect --diagnostic-port /tmp/maui-app --format speedscope
+> dotnet-trace ps
+ 38604  dotnet-dsrouter  C:\Users\myuser\.dotnet\tools\dotnet-dsrouter.exe  "C:\Users\myuser\.dotnet\tools\dotnet-dsrouter.exe" android-emu --verbose debug
+```
+
+`dotnet-trace` knows how to tell if a process ID is `dotnet-dsrouter` and
+connect *through it* appropriately.
+
+Using the process ID from the previous step, run `dotnet-trace collect`:
+
+```
+$ dotnet-trace collect -p 38604 --format speedscope
 No profile or providers specified, defaulting to trace profile 'cpu-sampling'
 
 Provider Name                           Keywords            Level               Enabled By
@@ -65,16 +110,12 @@ Start an application with the following environment variable: DOTNET_DiagnosticP
 The `--format` argument is optional and it defaults to `nettrace`. However, `nettrace` files can be viewed only with
 Perfview on Windows, while the speedscope JSON files can be viewed "on" Unix by uploading them to https://speedscope.app
 
-_NOTE: on Windows, we found the `speedscope` format sometimes shows
-`???` for method names. You can also open `.nettrace` files in
-PerfView and export them to `speedscope` format._
-
 ### Compile and run the application
 
 ```
-$ dotnet build -f net6.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
+$ dotnet build -f net8.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
 ```
-_NOTE: `-f net6.0-android` is only needed for projects with multiple `$(TargetFrameworks)`._
+_NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`._
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 
@@ -118,12 +159,11 @@ Press <ENTER> to continue
 # Then from another shell...
 
 # Determine which process ID to dump
-$ ps | grep 'dotnet.*hw-re'
-33972 ttys049    0:01.86 dotnet run --project hw-readline.csproj
-33977 ttys050    0:00.00 grep dotnet.*hw-re
+$ dotnet-gcdump ps
+33972  hw-readline  /path/to/hw-readline/bin/Debug/hw-readline
 
 # Collect the GC info
-$ dotnet gcdump collect --process-id 33972
+$ dotnet-gcdump collect -p 33972
 Writing gcdump to '.../hw-readline/20230314_113922_33972.gcdump'...
 	Finished writing 5624131 bytes.
 ```
@@ -135,12 +175,27 @@ open this file in Visual Studio on Windows, for example:
 
 ![Visual Studio GC Heap Dump](../images/VS-GC-Dump.png)
 
-To get this data from an Android application, you need all the above
-setup for `adb shell`, `dsrouter`, etc. except you need to change the
-provider for `dotnet-trace`:
+## Memory Dumps for Android in .NET 8+
+
+In .NET 8, we have a simplified method for collecing `*.gcdump` files for
+Android applications. To get this data from an Android application, you need all
+the above setup for `adb shell`, `dsrouter`, etc. except you need to simply use
+`dotnet-gcdump` instead of `dotnet-trace`:
 
 ```sh
-$  dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
+$ dotnet-gcdump collect -p 38604
+```
+
+This will create a `*.gcdump` file in the current directory.
+
+## Memory Dumps for Android in .NET 7
+
+In .NET 7, we have to use th older, more complicated method for collecting
+`*.gcdump` files for Android applications. To get this data from an Android
+application, you need all the above setup for `adb shell`, `dsrouter`, etc.
+
+```sh
+$ dotnet-trace collect --diagnostic-port /tmp/maui-app --providers Microsoft-DotNETRuntimeMonoProfiler:0xC900001:4
 ```
 
 `0xC900001`, a bitmask, enables the following event types:
