@@ -16,23 +16,12 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string ClientHandlerType { get; set; }
-		[Required]
-		public string ValidHandlerType { get; set; }
+
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
-		public bool UsingAndroidNETSdk { get; set; }
 
 		public override bool RunTask ()
 		{
-			// Fast path for known types
-			if (UsingAndroidNETSdk) {
-				if (ClientHandlerType == "Xamarin.Android.Net.AndroidMessageHandler")
-					return !Log.HasLoggedErrors;
-			} else {
-				if (ClientHandlerType == "Xamarin.Android.Net.AndroidClientHandler")
-					return !Log.HasLoggedErrors;
-			}
-
 			string[] types = ClientHandlerType.Split (',');
 			string type = types[0].Trim ();
 			string assembly = "Mono.Android";
@@ -77,9 +66,12 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				string[] valueHandlerTypes = ValidHandlerType.Split (',');
-				if (!Extends (handlerType, valueHandlerTypes [0].Trim ())) {
-					Log.LogCodedError ("XA1031", Xamarin.Android.Tasks.Properties.Resources.XA1031, type, valueHandlerTypes [0]);
+				if (Extends (handlerType, "System.Net.Http.HttpClientHandler")) {
+					Log.LogCodedError ("XA1031", Xamarin.Android.Tasks.Properties.Resources.XA1031_HCH, type);
+				}
+
+				if (!Extends (handlerType, "System.Net.Http.HttpMessageHandler")) {
+					Log.LogCodedError ("XA1031", Xamarin.Android.Tasks.Properties.Resources.XA1031, type, "System.Net.Http.HttpMessageHandler");
 				}
 
 				return !Log.HasLoggedErrors;
