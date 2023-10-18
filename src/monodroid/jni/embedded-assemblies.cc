@@ -70,78 +70,151 @@ private:
 
 namespace {
 #if defined (RELEASE)
-	class SO_AssemblyDataProvider
-	{
-	public:
-		SO_AssemblyDataProvider () = delete;
-		~SO_AssemblyDataProvider () = delete;
-
-	private:
-		force_inline
-		static auto uncompress (const uint8_t *const compressed_start, size_t compressed_size, uint8_t *dest, size_t expected_uncompressed_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> void
+	namespace detail {
+		class SO_AssemblyDataProvider
 		{
-			StartupAwareLock decompress_lock (assembly_decompress_mutex);
-			const char *data_start = reinterpret_cast<const char*>(compressed_start);
-			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(dest), static_cast<int>(compressed_size), static_cast<int>(expected_uncompressed_size));
+		public:
+			SO_AssemblyDataProvider () = delete;
+			~SO_AssemblyDataProvider () = delete;
 
-			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", assembly_name.get (), ret);
-				Helpers::abort_application ();
+		private:
+			force_inline
+			static auto acquire_lock (std::atomic_flag &lock) noexcept -> void
+			{
+				if (monodroidRuntime.is_startup_in_progress ()) {
+					return; // no need to acquire before we start the managed code
+				}
+
+				while (lock.test_and_set (std::memory_order_acquire)) {
+					while (lock.test (std::memory_order_relaxed)) {
+						;
+					}
+				}
 			}
 
-			if (static_cast<size_t>(ret) != expected_uncompressed_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %zu)", assembly_name.get (), expected_uncompressed_size, static_cast<size_t>(ret));
-				Helpers::abort_application ();
-			}
-		}
+			force_inline
+			static auto release_lock (std::atomic_flag &lock) noexcept -> void
+			{
+				if (monodroidRuntime.is_startup_in_progress ()) {
+					return; // no need to release before we start the managed code
+				}
 
-		force_inline
-		static auto get_compressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
-		{
-			log_debug (LOG_ASSEMBLY, "Assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; input offset: %u; output offset: %u",
-			           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.input_data_offset, entry.uncompressed_data_offset);
-			const uint8_t *const compressed_start = xa_input_assembly_data + entry.input_data_offset;
-			uint8_t *dest = xa_uncompressed_assembly_data + entry.uncompressed_data_offset;
-			uncompress (compressed_start, entry.input_data_size, dest, entry.uncompressed_data_size, assembly_name);
-			return {dest, entry.uncompressed_data_size};
-		}
-
-		force_inline
-		static auto get_uncompressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
-		{
-			log_debug (LOG_ASSEMBLY, "Assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
-			return {nullptr, 0};
-		}
-
-	public:
-		force_inline
-		static auto get_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
-		{
-			log_debug (LOG_ASSEMBLY, "Loading assembly from libxamarin-app.so, fast path");
-			if (entry.uncompressed_data_size > 0) {
-				return get_compressed_data_fastpath (entry, assembly_name);
+				lock.clear (std::memory_order_release);
 			}
 
-			return get_uncompressed_data_fastpath (entry, assembly_name);
-		}
+			force_inline
+			static auto decompress (const uint8_t *const compressed_start, size_t compressed_size, uint8_t *dest, size_t expected_uncompressed_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> void
+			{
+				acquire_lock (decompression_flag);
 
-	private:
-		static inline std::mutex assembly_decompress_mutex;
-	};
+				const char *data_start = reinterpret_cast<const char*>(compressed_start);
+				int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(dest), static_cast<int>(compressed_size), static_cast<int>(expected_uncompressed_size));
+
+				if (ret < 0) {
+					log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", assembly_name.get (), ret);
+					Helpers::abort_application ();
+				}
+
+				if (static_cast<size_t>(ret) != expected_uncompressed_size) {
+					log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %zu)", assembly_name.get (), expected_uncompressed_size, static_cast<size_t>(ret));
+					Helpers::abort_application ();
+				}
+
+				release_lock (decompression_flag);
+			}
+
+			force_inline
+			static auto get_compressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "Assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; input offset: %u; output offset: %u",
+				           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.input_data_offset, entry.uncompressed_data_offset);
+				const uint8_t *const compressed_start = xa_input_assembly_data + entry.input_data_offset;
+				uint8_t *dest = xa_uncompressed_assembly_data + entry.uncompressed_data_offset;
+				decompress (compressed_start, entry.input_data_size, dest, entry.uncompressed_data_size, assembly_name);
+				return {dest, entry.uncompressed_data_size};
+			}
+
+			force_inline
+			static auto get_uncompressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "Assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
+				return {nullptr, 0};
+			}
+
+		public:
+			force_inline
+			static auto get_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "Loading assembly from libxamarin-app.so, fast path");
+				if (entry.uncompressed_data_size > 0) {
+					return get_compressed_data_fastpath (entry, assembly_name);
+				}
+
+				return get_uncompressed_data_fastpath (entry, assembly_name);
+			}
+
+			force_inline
+			static auto acquire_data_load_lock () noexcept -> void
+			{
+				acquire_lock (data_load_flag);
+			}
+
+			force_inline
+			static auto release_data_load_lock () noexcept -> void
+			{
+				release_lock (data_load_flag);
+			}
+
+			// Returns `true` if data load lock has been acquired, `false` otherwise.  Caller is responsible for releasing
+			// the lock
+			force_inline
+			static auto mmap_dso (AssemblyLoadInfo &load_info, int fd, off_t data_offset, size_t data_length) noexcept -> bool
+			{
+				if (__atomic_load_n (&load_info.mmap_addr, __ATOMIC_CONSUME) != nullptr) {
+					return false; // lock not acquired
+				}
+
+				acquire_data_load_lock ();
+				log_debug (LOG_ASSEMBLY, "Will mmap from fd %d, at offset %zd with length %zu", fd, data_offset, data_length);
+				// TODO: map here
+
+				return true; // lock acquired
+			}
+
+		private:
+			static inline std::atomic_flag decompression_flag = ATOMIC_FLAG_INIT;
+			static inline std::atomic_flag data_load_flag = ATOMIC_FLAG_INIT;
+		};
+	}
 
 	class SO_APK_AssemblyDataProvider
 	{
 	public:
 		force_inline
-		static auto get_data (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		static auto get_data (int apk_fd, AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
 		{
 			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 			if (!index_entry.is_standalone) {
-				return SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
+				return detail::SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
 			}
 
-			AssemblyLoadInfo const& load_info = xa_assemblies_load_info[index_entry.load_info_index];
-			log_debug (LOG_ASSEMBLY, "Looking for assembly in the APK; Data offset in the archive: %u; mmap address: %p", load_info.apk_offset, load_info.mmap_addr);
+			AssemblyLoadInfo &load_info = xa_assemblies_load_info[index_entry.load_info_index];
+			log_debug (LOG_ASSEMBLY, "Looking for assembly in the APK; Data offset in the archive: %u; mmap address: %p; data address: %p; data size: %u", load_info.apk_offset, load_info.mmap_addr, load_info.data_addr, load_info.data_size);
+
+			if (__atomic_load_n (&load_info.data_addr, __ATOMIC_CONSUME) != nullptr) {
+				return {load_info.data_addr, load_info.data_size};
+			}
+
+			bool lock_acquired = detail::SO_AssemblyDataProvider::mmap_dso (load_info, apk_fd, static_cast<off_t>(load_info.apk_offset), entry.input_data_size);
+			if (!lock_acquired) {
+				detail::SO_AssemblyDataProvider::acquire_data_load_lock ();
+				lock_acquired = true;
+				// TODO: actually load data here
+			}
+
+			if (lock_acquired) {
+				detail::SO_AssemblyDataProvider::release_data_load_lock ();
+			}
 
 			return {nullptr, 0};
 		}
@@ -151,11 +224,11 @@ namespace {
 	{
 	public:
 		force_inline
-		static auto get_data (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+		static auto get_data ([[maybe_unused]] int apk_fd, AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
 		{
 			log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 			if (!index_entry.is_standalone) {
-				return SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
+				return detail::SO_AssemblyDataProvider::get_data_fastpath (entry, assembly_name);
 			}
 
 			log_debug (LOG_ASSEMBLY, "Loading assembly from a standalone DSO");
@@ -170,18 +243,6 @@ namespace {
 	public:
 	};
 #endif // ndef RELEASE
-}
-
-void EmbeddedAssemblies::init () noexcept
-{
-	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-#if defined (RELEASE)
-	if (BasicAndroidSystem::is_embedded_dso_mode_enabled ()) {
-		get_assembly_data_dso_impl = get_assembly_data_dso_apk;
-	} else {
-		get_assembly_data_dso_impl = get_assembly_data_dso_fs;
-	}
-#endif
 }
 
 void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
@@ -199,16 +260,15 @@ EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 }
 
 #if defined (RELEASE)
+force_inline
 const AssemblyData
-EmbeddedAssemblies::get_assembly_data_dso_apk (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept
+EmbeddedAssemblies::get_assembly_data_dso (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) const noexcept
 {
-	return SO_APK_AssemblyDataProvider::get_data (entry, index_entry, assembly_name);
-}
+	if (BasicAndroidSystem::is_embedded_dso_mode_enabled ()) {
+		return SO_APK_AssemblyDataProvider::get_data (apk_fd, entry, index_entry, assembly_name);
+	}
 
-const AssemblyData
-EmbeddedAssemblies::get_assembly_data_dso_fs (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept
-{
-	return SO_FILESYSTEM_AssemblyDataProvider::get_data (entry, index_entry, assembly_name);
+	return SO_FILESYSTEM_AssemblyDataProvider::get_data (apk_fd, entry, index_entry, assembly_name);
 }
 #endif // def RELEASE
 
@@ -922,15 +982,13 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
 {
-	int fd;
-
-	if ((fd = open (apk, O_RDONLY)) < 0) {
+	if ((apk_fd = open (apk, O_RDONLY)) < 0) {
 		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
 		Helpers::abort_application ();
 	}
-	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
+	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, apk_fd);
 
-	zip_load_entries (fd, apk, should_register);
+	zip_load_entries (apk_fd, apk, should_register);
 }
 
 #if defined (DEBUG) || !defined (ANDROID)

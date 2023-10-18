@@ -97,7 +97,7 @@ namespace xamarin::android::internal {
 			EntryLocation         location;
 		};
 #if defined (RELEASE)
-		using get_assembly_data_dso_fn = const AssemblyData (*)(AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name);
+		using get_assembly_data_dso_fn = const AssemblyData (*)(int apk_fd, AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name);
 #endif
 	private:
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
@@ -129,8 +129,6 @@ namespace xamarin::android::internal {
 	public:
 		EmbeddedAssemblies () noexcept
 		{}
-
-		void init () noexcept;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
@@ -237,14 +235,7 @@ namespace xamarin::android::internal {
 		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
 #if defined (RELEASE)
-		static const AssemblyData get_assembly_data_dso_apk (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept;
-		static const AssemblyData get_assembly_data_dso_fs (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept;
-
-		force_inline
-		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) const noexcept
-		{
-			return (*get_assembly_data_dso_impl) (entry, index_entry, assembly_name);
-		}
+		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) const noexcept;
 #endif
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
@@ -348,6 +339,7 @@ namespace xamarin::android::internal {
 #endif // def NET
 		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
+		int                    apk_fd = -1;
 #if defined (RELEASE)
 		get_assembly_data_dso_fn   get_assembly_data_dso_impl = nullptr;
 #endif

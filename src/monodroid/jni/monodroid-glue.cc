@@ -2156,7 +2156,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // def NET
 
 	android_api_level = apiLevel;
-	embeddedAssemblies.init (); // **MUST** be called after androidSystem.detect_embedded_dso_mode!
 	androidSystem.set_running_in_emulator (isEmulator);
 
 	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);

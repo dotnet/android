@@ -84,6 +84,11 @@ partial class AssemblyDSOGenerator
 
 		// Address at which the assembly data was mmapped
 		public IntPtr mmap_addr;
+
+		// Address at which the assembly data is available. It may be the same as `mmap_addr` if the
+		// data wasn't compressed, different otherwise.
+		public IntPtr data_addr;
+		public uint data_size;
 	};
 
 	// Must be identical to AssembliesConfig in src/monodroid/jni/xamarin-app.hh
