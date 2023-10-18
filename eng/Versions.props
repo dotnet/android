@@ -1,7 +1,7 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>9.0.100-alpha.1.23512.15</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>9.0.100-alpha.1.23517.3</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkTasksPackageVersion>8.0.0-rc.1.23414.4</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>8.0.0-rc.1.23414.4</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
