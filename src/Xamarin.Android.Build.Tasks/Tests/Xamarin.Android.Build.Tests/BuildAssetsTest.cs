@@ -58,9 +58,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckAssetsAreIncludedInAPK ([Values (true, false)] bool useAapt2)
+		public void CheckAssetsAreIncludedInAPK ()
 		{
-			AssertAaptSupported (useAapt2);
 			var projectPath = Path.Combine ("temp", TestName);
 			var libproj = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -106,7 +105,6 @@ namespace Xamarin.Android.Build.Tests
 					},
 				}
 			};
-			proj.AndroidUseAapt2 = useAapt2;
 			proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, libproj.ProjectName))) {
 				Assert.IsTrue (libb.Build (libproj), "{0} should have built successfully.", libproj.ProjectName);
@@ -151,19 +149,12 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName, "SubDir"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var libraryProjectImports = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "__AndroidLibraryProjects__.zip");
-				if (Builder.UseDotNet) {
-					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-					FileAssert.Exists (aarPath);
-					using (var aar = ZipHelper.OpenZip (aarPath)) {
-						aar.AssertEntryContents (aarPath, "assets/foo.txt", contents: "bar");
-					}
-					FileAssert.DoesNotExist (libraryProjectImports);
-				} else {
-					FileAssert.Exists (libraryProjectImports);
-					using (var zip = ZipHelper.OpenZip (libraryProjectImports)) {
-						zip.AssertEntryContents (libraryProjectImports, "library_project_imports/assets/foo.txt", contents: "bar");
-					}
+				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+				FileAssert.Exists (aarPath);
+				using (var aar = ZipHelper.OpenZip (aarPath)) {
+					aar.AssertEntryContents (aarPath, "assets/foo.txt", contents: "bar");
 				}
+				FileAssert.DoesNotExist (libraryProjectImports);
 			}
 		}
 	}

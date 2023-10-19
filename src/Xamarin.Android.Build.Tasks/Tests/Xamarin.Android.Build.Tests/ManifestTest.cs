@@ -70,18 +70,15 @@ namespace Bug12935
 ";
 
 		[Test]
-		public void Bug12935 ([Values (true, false)] bool useAapt2)
+		public void Bug12935 ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.AndroidUseAapt2 = useAapt2;
-			var directory = $"temp/Bug12935_{useAapt2}";
+			var directory = $"temp/Bug12935";
 			using (var builder = CreateApkBuilder (directory)) {
 
-				proj.TargetFrameworkVersion = "v4.2";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
@@ -103,7 +100,6 @@ namespace Bug12935
 				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
 
 				builder.Cleanup ();
-				proj.TargetFrameworkVersion = "v4.1";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
 
@@ -119,25 +115,22 @@ namespace Bug12935
 
 				builder.Cleanup ();
 				builder.ThrowOnBuildFailure = false;
-				proj.TargetFrameworkVersion = "v4.0.3";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
-				StringAssertEx.Contains (useAapt2 ? "APT2259: " : "APT1134: ", builder.LastBuildOutput);
-				StringAssertEx.Contains (useAapt2 ? "APT2067" : "", builder.LastBuildOutput);
+				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
+				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
 				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
-				StringAssertEx.Contains ($"{(useAapt2 ? "2" : "1")} Error(s)", builder.LastBuildOutput);
+				StringAssertEx.Contains ("2 Error(s)", builder.LastBuildOutput);
 			}
 		}
 
 		[Test]
-		public void CheckElementReOrdering ([Values (true, false)] bool useAapt2)
+		public void CheckElementReOrdering ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				proj.AndroidManifest = ElementOrderManifest;
 				Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
@@ -305,7 +298,6 @@ namespace Bug12935
 		public void LayoutAttributeElement ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v7.0",
 				IsRelease = true,
 			};
 			string declHead = "public class MainActivity";
@@ -328,7 +320,6 @@ namespace Bug12935
 		public void DirectBootAwareAttribute ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v7.0",
 				IsRelease = true,
 			};
 			string attrHead = ", Activity (";

@@ -73,13 +73,6 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public const int MaxFileName = 255;
 
-		protected static void AssertAaptSupported (bool useAapt2)
-		{
-			if (Builder.UseDotNet && !useAapt2) {
-				Assert.Ignore ("aapt(1) is not supported in .NET 5+");
-			}
-		}
-
 		protected static void WaitFor(int milliseconds)
 		{
 			var pause = new ManualResetEvent(false);
@@ -452,36 +445,28 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
 		{
-			string path;
-			if (Builder.UseDotNet) {
-				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
-				}
-			} else {
-				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
+			string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
 		}
 
 		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
 		{
-			if (Builder.UseDotNet) {
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-					return decompiler.DecompileWholeModuleAsString ();
-				}
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+				return decompiler.DecompileWholeModuleAsString ();
 			}
+
 			return File.ReadAllText (path);
 		}
 
 		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
 		{
-			if (Builder.UseDotNet) {
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-					return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
-				}
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+				return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
 			}
 			return File.ReadAllLines (path);
 		}

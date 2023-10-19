@@ -167,47 +167,23 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ("root/assemblies/UnnamedProject.dll");
 			}
 
-			if (Builder.UseDotNet) {
-				//These are random files from Google Play Services .aar files
-				expectedFiles.Add ("root/play-services-base.properties");
-				expectedFiles.Add ("root/play-services-basement.properties");
-				expectedFiles.Add ("root/play-services-maps.properties");
-				expectedFiles.Add ("root/play-services-tasks.properties");
-			} else {
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}mscorlib.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Core.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Runtime.Serialization.dll");
-				} else {
-					expectedFiles.Add ("root/assemblies/mscorlib.dll");
-					expectedFiles.Add ("root/assemblies/System.Core.dll");
-					expectedFiles.Add ("root/assemblies/System.dll");
-					expectedFiles.Add ("root/assemblies/System.Runtime.Serialization.dll");
-				}
+			//These are random files from Google Play Services .aar files
+			expectedFiles.Add ("root/play-services-base.properties");
+			expectedFiles.Add ("root/play-services-basement.properties");
+			expectedFiles.Add ("root/play-services-maps.properties");
+			expectedFiles.Add ("root/play-services-tasks.properties");
 
-				//These are random files from Google Play Services .aar files
-				expectedFiles.Add ("root/build-data.properties");
-				expectedFiles.Add ("root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt");
-				expectedFiles.Add ("root/error_prone/Annotations.gwt.xml");
-				expectedFiles.Add ("root/protobuf.meta");
-			}
 			foreach (var abi in Abis) {
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
-				if (Builder.UseDotNet) {
-					if (usesAssemblyBlobs) {
-						expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
-					} else {
-						expectedFiles.Add ($"root/assemblies/{abi}/System.Private.CoreLib.dll");
-					}
-					expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
-					expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
 				} else {
-					expectedFiles.Add ($"lib/{abi}/libmono-native.so");
-					expectedFiles.Add ($"lib/{abi}/libmono-btls-shared.so");
+					expectedFiles.Add ($"root/assemblies/{abi}/System.Private.CoreLib.dll");
 				}
+				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
+				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
@@ -249,47 +225,23 @@ namespace Xamarin.Android.Build.Tests
 				expectedFiles.Add ("base/root/assemblies/UnnamedProject.dll");
 			}
 
-			if (Builder.UseDotNet) {
-				//These are random files from Google Play Services .aar files
-				expectedFiles.Add ("base/root/play-services-base.properties");
-				expectedFiles.Add ("base/root/play-services-basement.properties");
-				expectedFiles.Add ("base/root/play-services-maps.properties");
-				expectedFiles.Add ("base/root/play-services-tasks.properties");
-			} else {
-				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}mscorlib.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Core.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}System.Runtime.Serialization.dll");
-				} else {
-					expectedFiles.Add ("base/root/assemblies/mscorlib.dll");
-					expectedFiles.Add ("base/root/assemblies/System.Core.dll");
-					expectedFiles.Add ("base/root/assemblies/System.dll");
-					expectedFiles.Add ("base/root/assemblies/System.Runtime.Serialization.dll");
-				}
+			//These are random files from Google Play Services .aar files
+			expectedFiles.Add ("base/root/play-services-base.properties");
+			expectedFiles.Add ("base/root/play-services-basement.properties");
+			expectedFiles.Add ("base/root/play-services-maps.properties");
+			expectedFiles.Add ("base/root/play-services-tasks.properties");
 
-				//These are random files from Google Play Services .aar files
-				expectedFiles.Add ("base/root/build-data.properties");
-				expectedFiles.Add ("base/root/com/google/api/client/repackaged/org/apache/commons/codec/language/dmrules.txt");
-				expectedFiles.Add ("base/root/error_prone/Annotations.gwt.xml");
-				expectedFiles.Add ("base/root/protobuf.meta");
-			}
 			foreach (var abi in Abis) {
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
-				if (Builder.UseDotNet) {
-					if (usesAssemblyBlobs) {
-						expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
-					} else {
-						expectedFiles.Add ($"base/root/assemblies/{abi}/System.Private.CoreLib.dll");
-					}
-					expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
-					expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
+				if (usesAssemblyBlobs) {
+					expectedFiles.Add ($"{blobEntryPrefix}System.Private.CoreLib.dll");
 				} else {
-					expectedFiles.Add ($"base/lib/{abi}/libmono-native.so");
-					expectedFiles.Add ($"base/lib/{abi}/libmono-btls-shared.so");
+					expectedFiles.Add ($"base/root/assemblies/{abi}/System.Private.CoreLib.dll");
 				}
+				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
+				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");
