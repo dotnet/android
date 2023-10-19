@@ -1,7 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO;
 
 using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
@@ -81,6 +80,9 @@ partial class AssemblyDSOGenerator
 	{
 		// offset into the APK, or 0 if the assembly isn't in a standalone DSO or if the DSOs are extracted to disk at install time
 		public uint apk_offset;
+
+		// Size of the DSO in the APK
+		public uint apk_data_size;
 
 		// Address at which the assembly data was mmapped
 		public IntPtr mmap_addr;

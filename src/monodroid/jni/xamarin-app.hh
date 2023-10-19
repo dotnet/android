@@ -126,8 +126,9 @@ struct AssemblyLoadInfo
 {
 	uint32_t apk_offset; // offset into the APK, or 0 if the assembly isn't in a standalone DSO or if the DSOs are
 						 // extracted to disk at install time
+	uint32_t apk_data_size; // Size of the DSO in the APK
 	void *mmap_addr;     // Address at which the assembly data was mmapped
-	uint8_t *data_addr;  // Address at which the assembly data is available. It may be the same as `mmap_addr` if the
+	const uint8_t *data_addr;  // Address at which the assembly data is available. It may be the same as `mmap_addr` if the
 						 // data wasn't compressed, different otherwise.
 	uint32_t data_size;
 };

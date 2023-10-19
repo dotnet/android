@@ -126,8 +126,9 @@ namespace {
 			force_inline
 			static auto get_compressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
 			{
-				log_debug (LOG_ASSEMBLY, "Assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; input offset: %u; output offset: %u",
-				           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.input_data_offset, entry.uncompressed_data_offset);
+				log_debug (LOG_ASSEMBLY, "[fast path] assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; output offset: %u",
+				           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.uncompressed_data_offset);
+
 				const uint8_t *const compressed_start = xa_input_assembly_data + entry.input_data_offset;
 				uint8_t *dest = xa_uncompressed_assembly_data + entry.uncompressed_data_offset;
 				decompress (compressed_start, entry.input_data_size, dest, entry.uncompressed_data_size, assembly_name);
@@ -137,7 +138,28 @@ namespace {
 			force_inline
 			static auto get_uncompressed_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
 			{
-				log_debug (LOG_ASSEMBLY, "Assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
+				log_debug (LOG_ASSEMBLY, "[fast path] assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
+				return {nullptr, 0};
+			}
+
+			force_inline
+			static auto get_compressed_data_dso (AssemblyEntry const& entry, const void *const data_start, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "[slow path] assembly '%s' is compressed; input offset: %u; compressed data size: %u; uncompressed data size: %u; output offset: %u",
+				           assembly_name.get (), entry.input_data_offset, entry.input_data_size, entry.uncompressed_data_size, entry.uncompressed_data_offset);
+
+				// `data_start` points to the beginning of the .so file, `entry.input_data_offset` contains offset into
+				// that file where the actual assembly data begins
+				const uint8_t * const compressed_start = static_cast<const uint8_t * const>(data_start) + entry.input_data_offset;
+				uint8_t *dest = xa_uncompressed_assembly_data + entry.uncompressed_data_offset;
+				decompress (compressed_start, entry.input_data_size, dest, entry.uncompressed_data_size, assembly_name);
+				return {dest, entry.uncompressed_data_size};
+			}
+
+			force_inline
+			static auto get_uncompressed_data_dso (AssemblyEntry const& entry, void const * const data_start, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "[slow path] assembly %s' is not compressed; input offset: %u; data size: %u", assembly_name.get (), entry.input_data_offset, entry.input_data_size);
 				return {nullptr, 0};
 			}
 
@@ -146,11 +168,27 @@ namespace {
 			static auto get_data_fastpath (AssemblyEntry const& entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
 			{
 				log_debug (LOG_ASSEMBLY, "Loading assembly from libxamarin-app.so, fast path");
-				if (entry.uncompressed_data_size > 0) {
-					return get_compressed_data_fastpath (entry, assembly_name);
+				if (entry.uncompressed_data_size == 0) {
+					return get_uncompressed_data_fastpath (entry, assembly_name);
 				}
 
-				return get_uncompressed_data_fastpath (entry, assembly_name);
+				return get_compressed_data_fastpath (entry, assembly_name);
+			}
+
+			force_inline
+			static auto get_data_dso (AssemblyEntry const& entry, AssemblyLoadInfo &load_info, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> const AssemblyData
+			{
+				log_debug (LOG_ASSEMBLY, "Loading assembly from a DSO, slow path");
+				if (entry.uncompressed_data_size == 0) {
+					return get_uncompressed_data_dso (entry, load_info.mmap_addr, assembly_name);
+				}
+
+				AssemblyData ret = get_compressed_data_dso (entry, load_info.mmap_addr, assembly_name);
+				munmap (load_info.mmap_addr, load_info.data_size);
+				load_info.data_addr = ret.data;
+				load_info.mmap_addr = nullptr;
+
+				return ret;
 			}
 
 			force_inline
@@ -168,15 +206,23 @@ namespace {
 			// Returns `true` if data load lock has been acquired, `false` otherwise.  Caller is responsible for releasing
 			// the lock
 			force_inline
-			static auto mmap_dso (AssemblyLoadInfo &load_info, int fd, off_t data_offset, size_t data_length) noexcept -> bool
+			static auto mmap_dso (AssemblyLoadInfo &load_info, int fd, uint32_t data_offset, uint32_t data_length, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) noexcept -> bool
 			{
 				if (__atomic_load_n (&load_info.mmap_addr, __ATOMIC_CONSUME) != nullptr) {
 					return false; // lock not acquired
 				}
 
 				acquire_data_load_lock ();
+				if (load_info.mmap_addr != nullptr) {
+					log_debug (LOG_ASSEMBLY, "'%s' already mmapped from fd %d by some other thread while we were waiting for the lock. Map address: %p; size: %u", load_info.mmap_addr, load_info.data_size);
+					return true; // lock acquired
+				}
+
 				log_debug (LOG_ASSEMBLY, "Will mmap from fd %d, at offset %zd with length %zu", fd, data_offset, data_length);
-				// TODO: map here
+
+				EmbeddedAssemblies::md_mmap_info map_info = EmbeddedAssemblies::md_mmap_apk_file (fd, data_offset, data_length, assembly_name.get ());
+				load_info.mmap_addr = map_info.area;
+				load_info.data_size = data_length;
 
 				return true; // lock acquired
 			}
@@ -201,22 +247,25 @@ namespace {
 			AssemblyLoadInfo &load_info = xa_assemblies_load_info[index_entry.load_info_index];
 			log_debug (LOG_ASSEMBLY, "Looking for assembly in the APK; Data offset in the archive: %u; mmap address: %p; data address: %p; data size: %u", load_info.apk_offset, load_info.mmap_addr, load_info.data_addr, load_info.data_size);
 
-			if (__atomic_load_n (&load_info.data_addr, __ATOMIC_CONSUME) != nullptr) {
-				return {load_info.data_addr, load_info.data_size};
+			const uint8_t *data = __atomic_load_n (&load_info.data_addr, __ATOMIC_CONSUME);
+			if (data != nullptr) {
+				log_debug (LOG_ASSEMBLY, "Assembly data already loaded, at %p; size: %u", load_info.data_addr, load_info.data_size);
+				return {data, load_info.data_size};
 			}
 
-			bool lock_acquired = detail::SO_AssemblyDataProvider::mmap_dso (load_info, apk_fd, static_cast<off_t>(load_info.apk_offset), entry.input_data_size);
+			bool lock_acquired = detail::SO_AssemblyDataProvider::mmap_dso (load_info, apk_fd, load_info.apk_offset, load_info.apk_data_size, assembly_name);
 			if (!lock_acquired) {
 				detail::SO_AssemblyDataProvider::acquire_data_load_lock ();
 				lock_acquired = true;
-				// TODO: actually load data here
 			}
+
+			AssemblyData ret = detail::SO_AssemblyDataProvider::get_data_dso (entry, load_info, assembly_name);
 
 			if (lock_acquired) {
 				detail::SO_AssemblyDataProvider::release_data_load_lock ();
 			}
 
-			return {nullptr, 0};
+			return ret;
 		}
 	};
 
@@ -951,7 +1000,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 }
 
 EmbeddedAssemblies::md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename)
+EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename) noexcept
 {
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;

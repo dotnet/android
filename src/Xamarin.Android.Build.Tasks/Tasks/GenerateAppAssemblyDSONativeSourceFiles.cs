@@ -148,6 +148,7 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 
 		return new DSOAssemblyInfo (name, inputFile, dataSize, compressedDataSize, isStandalone: true, Path.GetFileName (dsoItem.ItemSpec)) {
 			AssemblyLoadInfoIndex = GetUintFromRequiredMetadata (DSOMetadata.AssemblyLoadInfoIndex),
+			AssemblyDataSymbolOffset = GetUlongFromRequiredMetadata (DSOMetadata.DataSymbolOffset),
 		};
 
 		string GetRequiredMetadata (string name)
@@ -165,6 +166,16 @@ public class GenerateAppAssemblyDSONativeSourceFiles : AssemblyNativeSourceGener
 			string metadata = GetRequiredMetadata (name);
 			if (!UInt32.TryParse (metadata, out uint value)) {
 				throw new InvalidOperationException ($"Internal error: unable to parse '{metadata}' as a UInt32 value, from the '{name}' metadata of item {dsoItem}");
+			}
+
+			return value;
+		}
+
+		ulong GetUlongFromRequiredMetadata (string name)
+		{
+			string metadata = GetRequiredMetadata (name);
+			if (!UInt64.TryParse (metadata, out ulong value)) {
+				throw new InvalidOperationException ($"Internal error: unable to parse '{metadata}' as a UInt64 value, from the '{name}' metadata of item {dsoItem}");
 			}
 
 			return value;

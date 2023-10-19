@@ -33,9 +33,9 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			SourceFileBaseName = EnsureValidMetadata (DSOMetadata.SourceFileBaseName);
 			Culture = dso.GetMetadata (DSOMetadata.SatelliteAssemblyCulture);
 
-			string index = EnsureValidMetadata (DSOMetadata.AssemblyLoadInfoIndex);
-			if (!UInt32.TryParse (index, out AssemblyLoadInfoIndex)) {
-				throw new InvalidOperationException ($"Internal error: unable to parse string '{index}' as an unsigned 32-bit integer");
+			string metadata = EnsureValidMetadata (DSOMetadata.AssemblyLoadInfoIndex);
+			if (!UInt32.TryParse (metadata, out AssemblyLoadInfoIndex)) {
+				throw new InvalidOperationException ($"Internal error: unable to parse string '{metadata}' as an unsigned 32-bit integer");
 			}
 
 			SkipCompression = ShouldSkipCompression (dso);
@@ -95,7 +95,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 			supportedAbis.Add (dso.Abi);
 
 			var dsoItem = new TaskItem (dso.DSOPath);
-			DSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
+			LocalDSOAssemblyInfo dsoInfo = AddAssembly (dso, dsoItem, assemblies);
 
 			dsoItem.SetMetadata (DSOMetadata.Abi, dso.Abi);
 			dsoItem.SetMetadata (DSOMetadata.AssemblyLoadInfoIndex, MonoAndroidHelper.CultureInvariantToString (dso.AssemblyLoadInfoIndex));
@@ -290,7 +290,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		return configs;
 	}
 
-	DSOAssemblyInfo AddAssembly (TargetDSO dso, ITaskItem dsoItem, Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> assemblies)
+	LocalDSOAssemblyInfo AddAssembly (TargetDSO dso, ITaskItem dsoItem, Dictionary<string, Dictionary<AndroidTargetArch, DSOAssemblyInfo>> assemblies)
 	{
 		string asmName = Path.GetFileNameWithoutExtension (dso.OriginalAssemblyPath);
 		if (!String.IsNullOrEmpty (dso.Culture)) {
@@ -324,7 +324,7 @@ public class BuildAndLinkStandaloneAssemblyDSOs : AssemblyNativeSourceGeneration
 		}
 
 		AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (dso.Abi);
-		DSOAssemblyInfo dsoInfo = new LocalDSOAssemblyInfo (dso, dsoItem, GetAssemblyName (dso.TaskItem), inputFile, inputFileSize, compressedSize);
+		var dsoInfo = new LocalDSOAssemblyInfo (dso, dsoItem, GetAssemblyName (dso.TaskItem), inputFile, inputFileSize, compressedSize);
 
 		try {
 			infos.Add (targetArch, dsoInfo);

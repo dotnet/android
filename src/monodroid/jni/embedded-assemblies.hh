@@ -38,6 +38,12 @@
 
 struct TypeMapHeader;
 
+namespace {
+	namespace detail {
+		class SO_AssemblyDataProvider;
+	}
+}
+
 namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
 	struct TypeMappingInfo;
@@ -78,6 +84,8 @@ namespace xamarin::android::internal {
 
 	class EmbeddedAssemblies final
 	{
+		friend class detail::SO_AssemblyDataProvider;
+
 		struct md_mmap_info {
 			void   *area;
 			size_t  size;
@@ -223,7 +231,7 @@ namespace xamarin::android::internal {
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
 #endif // DEBUG || !ANDROID
 
-		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename) noexcept;
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #if defined (NET)
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);

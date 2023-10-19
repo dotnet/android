@@ -225,7 +225,9 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 			Helpers::abort_application ();
 		}
 
-		xa_assemblies_load_info[index].apk_offset = state.data_offset;
+		AssemblyLoadInfo &load_info = xa_assemblies_load_info[index];
+		load_info.apk_offset = state.data_offset;
+		load_info.apk_data_size = state.file_size;
 	}
 }
 #endif

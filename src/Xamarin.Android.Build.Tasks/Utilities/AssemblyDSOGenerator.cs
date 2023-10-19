@@ -157,7 +157,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 		module.Add (xa_assembly_dso_names);
 
 		var xa_assemblies_load_info = new LlvmIrGlobalVariable (typeof(StructureInstance<AssemblyLoadInfo>[]), XAAssembliesLoadInfo) {
-			ArrayItemCount = (ulong)expectedAssemblyCount,
+			ArrayItemCount = (ulong)expectedAssemblyCount, // TODO: this should be equal to DSO count
 			Options = LlvmIrVariableOptions.GlobalWritable,
 			ZeroInitializeArray = true,
 		};
@@ -372,6 +372,11 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				if (!info.AssemblyLoadInfoIndex.HasValue) {
 					throw new InvalidOperationException ($"Internal error: item for assembly '{info.Name}' is missing the required assembly load index value");
 				}
+
+				if (!info.AssemblyDataSymbolOffset.HasValue) {
+					throw new InvalidOperationException ($"Internal error: item for assembly '{info.Name}' is missing the required assembly data offset value");
+				}
+
 				dso_count++;
 			}
 
@@ -388,7 +393,7 @@ partial class AssemblyDSOGenerator : LlvmIrComposer
 				IsStandalone = isStandalone,
 				Name = info.Name,
 				InputFilePath = info.InputFile,
-				input_data_offset = (uint)inputOffset,
+				input_data_offset = isStandalone ? (uint)info.AssemblyDataSymbolOffset : (uint)inputOffset,
 				input_data_size = inputSize,
 				uncompressed_data_size = info.CompressedDataSize == 0 ? 0 : (uint)info.DataSize,
 				uncompressed_data_offset = (uint)uncompressedOffset,

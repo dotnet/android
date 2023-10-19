@@ -31,6 +31,7 @@ class DSOAssemblyInfo
 
 	public string? StandaloneDSOName   { get; }
 	public uint? AssemblyLoadInfoIndex { get; set; }
+	public ulong? AssemblyDataSymbolOffset { get; set; }
 
 	/// <summary>
 	/// <paramref name="name"/> is the original assembly name, including culture prefix (e.g. `en_US/`) if it is a
