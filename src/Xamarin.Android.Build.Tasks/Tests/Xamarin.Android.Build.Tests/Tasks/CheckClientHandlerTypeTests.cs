@@ -22,15 +22,22 @@ namespace Xamarin.Android.Build.Tests
 			string path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			string intermediatePath;
+			bool targetSkipped;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
+			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
 			using (var b = CreateApkBuilder (path)) {
-				b.ThrowOnBuildFailure = false;
-				b.Build (proj); // we don't care it might error.
+				b.Build (proj);
 				intermediatePath = Path.Combine (path,proj.IntermediateOutputPath);
+				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType");
 			}
+
+			if (handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler"))
+				Assert.IsTrue (targetSkipped, "_CheckAndroidHttpClientHandlerType should not have run.");
+			else
+				Assert.IsFalse (targetSkipped, "_CheckAndroidHttpClientHandlerType should have run.");
+
 			string asmPath = Path.GetFullPath (Path.Combine (intermediatePath, "android", "assets"));
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
