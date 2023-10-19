@@ -6,6 +6,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Xml;
+using System.Xml.Serialization;
 using MavenNet;
 using MavenNet.Models;
 using Microsoft.Build.Utilities;
@@ -49,17 +51,18 @@ static class MavenExtensions
 		method.GetSetMethod (true).Invoke (artifact, new [] { repository });
 	}
 
-	// TODO: Fix this in MavenNet
 	public static Project ParsePom (string pomFile)
 	{
-		var parser = typeof (Project).Assembly.GetType ("MavenNet.PomParser");
-		var method = parser.GetMethod ("Parse");
+		Project result = null;
 
-		using var sr = File.OpenRead (pomFile);
+		var serializer = new XmlSerializer (typeof (Project));
 
-		var pom = method.Invoke (null, new [] { sr }) as Project;
+		using (var sr = File.OpenRead (pomFile))
+			result = (Project) serializer.Deserialize (new XmlTextReader (sr) {
+				Namespaces = false,
+			});
 
-		return pom!;
+		return result;
 	}
 
 	public static Artifact? CheckForNeededParentPom (string pomFile)

@@ -1,13 +1,11 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using MavenNet;
 using MavenNet.Models;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using MonoDroid.Utils;
 
 namespace Xamarin.Android.Tasks;
 
