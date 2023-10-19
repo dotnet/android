@@ -1478,11 +1478,22 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
+        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
+        ///Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.
         /// </summary>
         public static string XA1031 {
             get {
                 return ResourceManager.GetString("XA1031", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.
+        ///Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.
+        /// </summary>
+        public static string XA1031_HCH {
+            get {
+                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
             }
         }
 

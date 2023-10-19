@@ -15,28 +15,34 @@ namespace Xamarin.Android.Build.Tests
 	public class CheckClientHandlerTypeTests : BaseTest
 	{
 		[Test]
-		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler", "System.Net.Http.HttpMessageHandler, System.Net.Http")]
-		[TestCase ("Xamarin.Android.Net.AndroidClientHandler", "System.Net.Http.HttpClientHandler, System.Net.Http")]
-		[TestCase ("System.Net.Http.SocketsHttpHandler, System.Net.Http", "System.Net.Http.HttpMessageHandler, System.Net.Http")]
-		public void ErrorIsNotRaised (string handler, string validBaseType)
+		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler")]
+		[TestCase ("System.Net.Http.SocketsHttpHandler, System.Net.Http")]
+		public void ErrorIsNotRaised (string handler)
 		{
 			string path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
 			string intermediatePath;
+			bool targetSkipped;
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
 			};
-			proj.PackageReferences.Add (new Package() { Id = "System.Net.Http", Version = "*" });
+			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
 			using (var b = CreateApkBuilder (path)) {
-				b.ThrowOnBuildFailure = false;
-				b.Build (proj); // we don't care it might error.
+				b.Build (proj);
 				intermediatePath = Path.Combine (path,proj.IntermediateOutputPath);
+				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType");
 			}
+
+			if (handler.Contains ("Xamarin.Android.Net.AndroidMessageHandler"))
+				Assert.IsTrue (targetSkipped, "_CheckAndroidHttpClientHandlerType should not have run.");
+			else
+				Assert.IsFalse (targetSkipped, "_CheckAndroidHttpClientHandlerType should have run.");
+
 			string asmPath = Path.GetFullPath (Path.Combine (intermediatePath, "android", "assets"));
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
 			List<ITaskItem> assemblies = new List<ITaskItem> ();
-			string[] files = Directory.GetFiles (asmPath, "*.dll");
+			string[] files = Directory.GetFiles (asmPath, "*.dll", SearchOption.AllDirectories);
 			foreach (var file in files)
 				assemblies.Add (new TaskItem (file));
 			IBuildEngine4 engine = new MockBuildEngine (System.Console.Out, errors, warnings);
@@ -44,18 +50,13 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				ClientHandlerType = handler,
 				ResolvedAssemblies = assemblies.ToArray (),
-				ValidHandlerType = validBaseType,
 			};
 			Assert.True (task.Execute (), $"task should have succeeded. {string.Join (";", errors.Select (x => x.Message))}");
 		}
 
 		[Test]
-#if !NET_6
-		[TestCase ("Xamarin.Android.Net.AndroidMessageHandler", "System.Net.Http.HttpClientHandler, System.Net.Http")]
-#else
-		[TestCase ("Xamarin.Android.Net.AndroidClientHandler", "System.Net.Http.HttpMessageHandler, System.Net.Http")]
-#endif
-		public void ErrorIsRaised (string handler, string validBaseType)
+		[TestCase ("Xamarin.Android.Net.AndroidClientHandler")]
+		public void ErrorIsRaised (string handler)
 		{
 			var path = Path.Combine (Root, "temp", TestName);
 			Directory.CreateDirectory (path);
@@ -73,7 +74,7 @@ namespace Xamarin.Android.Build.Tests
 			var errors = new List<BuildErrorEventArgs> ();
 			var warnings = new List<BuildWarningEventArgs> ();
 			List<ITaskItem> assemblies = new List<ITaskItem> ();
-			string[] files = Directory.GetFiles (asmPath, "*.dll");
+			string[] files = Directory.GetFiles (asmPath, "*.dll", SearchOption.AllDirectories);
 			foreach (var file in files)
 				assemblies.Add (new TaskItem (file));
 			IBuildEngine4 engine = new MockBuildEngine (System.Console.Out, errors, warnings);
@@ -81,10 +82,10 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				ClientHandlerType = handler,
 				ResolvedAssemblies = assemblies.ToArray (),
-				ValidHandlerType = validBaseType,
 			};
 			Assert.False (task.Execute (), $"task should have failed.");
-			Assert.AreEqual (1, errors.Count, $"An Error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
+			Assert.AreEqual (1, errors.Count, $"One error should have been raised. {string.Join (" ", errors.Select (e => e.Message))}");
+			Assert.AreEqual ("XA1031", errors [0].Code, "Error code should have been XA1031.");
 		}
 	}
 }
