@@ -29,29 +29,11 @@
       <_EarlierFrameworkDir Include="@(_FrameworkDirsThatExist)" Exclude="$(_LatestStableFrameworkDir)" />
     </ItemGroup>
   </Target>
-  <Target Name="_WriteVersionFiles"
-      DependsOnTargets="GetXAVersionInfo" >
-    <WriteLinesToFile
-        File="$(MicrosoftAndroidSdkOutDir)Version"
-        Lines="$(ProductVersion)"
-        Overwrite="True"
-    />
-    <WriteLinesToFile
-        File="$(MicrosoftAndroidSdkOutDir)Version.commit"
-        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
-        Overwrite="True"
-    />
-    <WriteLinesToFile
-        File="$(MicrosoftAndroidSdkOutDir)Version.rev"
-        Lines="$(XAVersionCommitCount)"
-        Overwrite="True"
-    />
-    <ItemGroup>
-      <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version" />
-      <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version.commit" />
-      <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version.rev" />
-    </ItemGroup>
-  </Target>
+  <ItemGroup>
+    <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version" />
+    <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version.commit" />
+    <VersionFiles Include="$(MicrosoftAndroidSdkOutDir)Version.rev" />
+  </ItemGroup>
   <ItemGroup>
     <_DesignerFilesUnix Include="$(LegacyMSBuildSrcDir)$(HostOS)\bcl\**\*" />
     <_DesignerFilesWin Include="$(LegacyMSBuildSrcDir)bcl\**\* "/>
@@ -365,7 +347,7 @@
   <Import Project="$(_MonoDroidPath)\tools\scripts\installer-files.projitems" Condition=" '$(_HasCommercialFiles)' == 'True' And Exists ('$(_MonoDroidPath)\tools\scripts\installer-files.projitems') " />
   <!-- end monodroid -->
   <Target Name="ConstructInstallerItems"
-      DependsOnTargets="_FindFrameworkDirs;_WriteVersionFiles"
+      DependsOnTargets="_FindFrameworkDirs"
       Returns="@(FrameworkItemsWin);@(FrameworkItemsUnix);@(MSBuildItemsWin);@(LegacyMSBuildItemsWin);@(MSBuildItemsUnix);@(LegacyMSBuildItemsUnix)">
     <ItemGroup>
       <_FrameworkFiles Include="@(_FrameworkDirsThatExist->'%(Identity)\AndroidApiInfo.xml')" />

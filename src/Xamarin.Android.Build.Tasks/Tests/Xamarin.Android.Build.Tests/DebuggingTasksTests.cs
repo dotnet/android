@@ -34,7 +34,9 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 
 			var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-			var frameworksPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "v1.0");
+			var frameworksRoot = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref");
+			var mscorlibDll = Directory.GetFiles (frameworksRoot, "mscorlib.dll", SearchOption.AllDirectories).LastOrDefault ();
+			var frameworksPath = Path.GetDirectoryName (mscorlibDll);
 			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
 			{
 				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
@@ -52,6 +54,7 @@ namespace Xamarin.Android.Build.Tests
 				MonoAndroidToolsPath = TestEnvironment.AndroidMSBuildDirectory,
 				ReferenceAssemblyPaths = new string[] {
 					frameworksPath,
+					TestEnvironment.MonoAndroidFrameworkDirectory,
 				},
 			};
 			Assert.True (task.Execute (), "Task should have completed successfully.");
