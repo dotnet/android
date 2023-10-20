@@ -1,24 +1,14 @@
 namespace Xamarin.Android.Net
 {
 	/// <summary>
-#if MONOANDROID1_0
-	/// Contains all the information required to perform pre-authentication of HTTP requests. See <see cref="AndroidClientHandler"/>.
-#else
 	/// Contains all the information required to perform pre-authentication of HTTP requests. See <see cref="AndroidMessageHandler"/>.
-#endif
 	/// </summary>
 	public class AuthenticationData
 	{
 		/// <summary>
-#if MONOANDROID1_0
-		/// Gets the authentication scheme. If instance of AuthenticationData comes from the <see cref="AndroidClientHandler.RequestedAuthentication"/>
-		/// collection it will have this property set to the type of authentication as requested by the server, or to <c>AuthenticationScheme.Unsupported</c>/>. 
-		/// In the latter case the application is required to provide the authentication module in <see cref="AuthModule"/>.
-#else
 		/// Gets the authentication scheme. If instance of AuthenticationData comes from the <see cref="AndroidMessageHandler.RequestedAuthentication"/>
 		/// collection it will have this property set to the type of authentication as requested by the server, or to <c>AuthenticationScheme.Unsupported</c>/>. 
 		/// In the latter case the application is required to provide the authentication module in <see cref="AuthModule"/>.
-#endif
 		/// </summary>
 		/// <value>The authentication scheme.</value>
 		public AuthenticationScheme Scheme { get; set; } = AuthenticationScheme.None;
@@ -31,15 +21,9 @@ namespace Xamarin.Android.Net
 		public string? Challenge { get; internal set; }
 
 		/// <summary>
-#if MONOANDROID1_0
-		/// Indicates whether authentication performed using data in this instance should be done for the end server or a proxy. If instance of 
-		/// AuthenticationData comes from the <see cref="AndroidClientHandler.RequestedAuthentication"/> collection it will have this property set to
-		/// <c>true</c> if authentication request came from a proxy, <c>false</c> otherwise.
-#else
 		/// Indicates whether authentication performed using data in this instance should be done for the end server or a proxy. If instance of 
 		/// AuthenticationData comes from the <see cref="AndroidMessageHandler.RequestedAuthentication"/> collection it will have this property set to
 		/// <c>true</c> if authentication request came from a proxy, <c>false</c> otherwise.
-#endif
 		/// </summary>
 		/// <value><c>true</c> to use proxy authentication.</value>
 		public bool UseProxyAuthentication { get; set; }

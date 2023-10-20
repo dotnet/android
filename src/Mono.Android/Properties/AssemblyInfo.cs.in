@@ -22,10 +22,8 @@ using System.Runtime.Versioning;
 #if ANDROID_UNSTABLE
 [assembly: RequiresPreviewFeatures("This is an unstable Android API level. Opt into preview features by adding <EnablePreviewFeatures>True</EnablePreviewFeatures> to your project file.")]
 #endif
-#if !MONOANDROID1_0
 [assembly: TargetPlatform("Android@API_LEVEL@.0")]
 [assembly: SupportedOSPlatform("Android@MIN_API_LEVEL@.0")]
-#endif
 
 // PublicApiAnalyzers doesn't like TypeForwards
 #pragma warning disable RS0016 // Symbol is not part of the declared API

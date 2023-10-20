@@ -420,7 +420,6 @@ namespace Java.Interop {
 				TypeManager.n_Activate (jnienv, jclass, typename_ptr, signature_ptr, jobject, parameters_ptr);
 			}
 
-#if NETCOREAPP
 			[UnmanagedCallersOnly]
 			static void n_Activate_mm (IntPtr jnienv, IntPtr jclass, IntPtr typename_ptr, IntPtr signature_ptr, IntPtr jobject, IntPtr parameters_ptr)
 			{
@@ -431,7 +430,7 @@ namespace Java.Interop {
 					AndroidEnvironment.UnhandledException (ex);
 				}
 			}
-#endif
+
 			internal static Delegate GetActivateHandler ()
 			{
 				return TypeManager.GetActivateHandler ();

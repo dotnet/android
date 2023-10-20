@@ -124,11 +124,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-#if NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-#else   // NETCOREAPP
-			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-#endif  // NETCOREAPP
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
@@ -252,14 +248,6 @@ namespace Library1 {
 					},
 				},
 			};
-
-			if (!Builder.UseDotNet) {
-				// DataContractSerializer is not trimming safe
-				// https://github.com/dotnet/runtime/issues/45559
-				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
-					TextContent = () => getResource ("Bug36250")
-				});
-			}
 
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
@@ -396,41 +384,13 @@ namespace Library1 {
 			Console.WriteLine ($""JSON Person deserialized OK"");
 		}
 
-		void TestBinaryDeserialization (Person p)
-		{
-			var stream      = new MemoryStream ();
-			var serializer  = new BinaryFormatter();
-
-			serializer.Serialize (stream, p);
-
-			stream.Position = 0;
-			StreamReader sr = new StreamReader (stream);
-
-			stream.Position = 0;
-			serializer.Binder = new Person.Binder ();
-			Person p2 = (Person) serializer.Deserialize (stream);
-
-			Console.WriteLine ($""BinaryFormatter deserialzied: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
-
-			if (p2.Name != ""John Smith"")
-				throw new InvalidOperationException (""BinaryFormatter deserialization of Name"");
-			if (p2.Age != 900)
-				throw new InvalidOperationException (""BinaryFormatter deserialization of Age"");
-			if (p2.Handle == IntPtr.Zero)
-				throw new InvalidOperationException (""Failed to instantiate new Java instance for Person!"");
-
-			Console.WriteLine ($""BinaryFormatter Person deserialized OK"");
-		}
-
 		void TestJsonDeserializationCreatesJavaHandle ()
 		{
 			Person p = new Person () {
 				Name = ""John Smith"",
 				Age = 900,
 			};
-#if !NET
-			TestBinaryDeserialization (p);
-#endif
+
 			TestJsonDeserialization (p);").Replace ("//${AFTER_MAINACTIVITY}", @"
 	[DataContract]
 	[Serializable]

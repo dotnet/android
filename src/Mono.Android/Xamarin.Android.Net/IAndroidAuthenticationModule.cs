@@ -5,22 +5,13 @@ using Java.Net;
 namespace Xamarin.Android.Net
 {
 	/// <summary>
-#if MONOANDROID1_0
-	/// Implement this interface in order to provide support for HTTP authentication scheme not supported by <see cref="AndroidClientHandler"/>
-#else
 	/// Implement this interface in order to provide support for HTTP authentication scheme not supported by <see cref="AndroidMessageHandler"/>
-#endif
 	/// </summary>
 	public interface IAndroidAuthenticationModule
 	{
 		/// <summary>
-#if MONOANDROID1_0
-		/// The authentication scheme supported by the implementation. Should be set to <c>AuthenticationScheme.Unsupported</c> for
-		/// schemes unsupported by <see cref="AndroidClientHandler"/> natively.
-#else
 		/// The authentication scheme supported by the implementation. Should be set to <c>AuthenticationScheme.Unsupported</c> for
 		/// schemes unsupported by <see cref="AndroidMessageHandler"/> natively.
-#endif
 		/// </summary>
 		/// <value>The scheme.</value>
 		AuthenticationScheme Scheme { get; }
@@ -38,13 +29,8 @@ namespace Xamarin.Android.Net
 		bool CanPreAuthenticate { get; }
 
 		/// <summary>
-#if MONOANDROID1_0
-		/// Authenticate using the specified challenge, request and credentials. This is currently not used by <see cref="AndroidClientHandler"/>
-		/// since the requests aren't restarted automatically, but it can be used in the future implementations of <see cref="AndroidClientHandler"/>
-#else
 		/// Authenticate using the specified challenge, request and credentials. This is currently not used by <see cref="AndroidMessageHandler"/>
 		/// since the requests aren't restarted automatically, but it can be used in the future implementations of <see cref="AndroidMessageHandler"/>
-#endif
 		/// </summary>
 		/// <returns><see cref="Authorization"/> instance which contains the value of the response header to authorize the connection</returns>
 		/// <param name="challenge">Challenge.</param>
