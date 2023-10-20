@@ -32,9 +32,7 @@ using System;
 
 namespace Android.Runtime {
 
-#if NETCOREAPP
 	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]")]
-#endif  // NETCOREAPP
 	[AttributeUsage (
 		AttributeTargets.Class
 		| AttributeTargets.Struct

@@ -33,11 +33,9 @@ namespace Android.Runtime {
 					classLoader_loadClass,
 					jniAddNativeMethodRegistrationAttributePresent))
 		{
-#if NETCOREAPP
 			// This is not ideal, but we need to set this while the runtime is initializing but we can't do it directly from the `JNIEnvInit.Initialize` method, since
 			// it lives in an assembly that does not reference Mono.Android.  So we do it here, because this class is instantiated by JNIEnvInit.Initialize.
 			AndroidEnvironmentInternal.UnhandledExceptionHandler = AndroidEnvironment.UnhandledException;
-#endif
 		}
 
 		public override void FailFast (string? message)
@@ -268,11 +266,7 @@ namespace Android.Runtime {
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
-				return
-#if NET
-					GetReplacementTypeCore (j) ??
-#endif  // NET
-					j;
+				return GetReplacementTypeCore (j) ?? j;
 			}
 			if (JNIEnvInit.IsRunningOnDesktop) {
 				return JavaNativeTypeManager.ToJniName (type);
@@ -283,9 +277,8 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-#if NET
 			j   = GetReplacementTypeCore (j) ?? j;
-#endif  // NET
+
 			if (JNIEnvInit.IsRunningOnDesktop) {
 				string? d = JavaNativeTypeManager.ToJniName (type);
 				if (j != null && d != null) {
@@ -301,7 +294,6 @@ namespace Android.Runtime {
 			return Array.Empty<string> ();
 		}
 
-#if NET
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
 			ReadOnlySpan<char>  name    = jniSimpleReference;
@@ -383,7 +375,6 @@ namespace Android.Runtime {
 					TargetJniMethodInstanceToStatic = method.is_static,
 			};
 		}
-#endif  // NET
 
 		delegate Delegate GetCallbackHandler ();
 

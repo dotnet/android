@@ -37,12 +37,8 @@ namespace UnnamedProject
 			{
 				var asm = typeof(Library1.SomeClass).Assembly;
 				// TODO: ILLink removing .ctor: https://github.com/mono/linker/issues/1633
-#if NET
 				Android.Util.Log.Info(TAG, $"[PASS] Able to use 'typeof({typeof(Library1.SomeClass)})'.");
-#else
-				var o = Activator.CreateInstance(asm.GetType("Library1.SomeClass"));
-				Android.Util.Log.Info(TAG, $"[PASS] Able to create instance of '{o.GetType().Name}'.");
-#endif
+
 			}
 			catch (Exception ex)
 			{
@@ -126,9 +122,6 @@ namespace UnnamedProject
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug21578.MulticastOption_ShouldNotBeStripped2());
 			Android.Util.Log.Info(TAG, LinkTestLib.Bug35195.AttemptCreateTable());
-#if !NET
-			Android.Util.Log.Info(TAG, LinkTestLib.Bug36250.SerializeSearchRequestWithDictionary());
-#endif
 			Android.Util.Log.Info(TAG, "All regression tests completed.");
 		}
 	}
