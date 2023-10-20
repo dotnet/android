@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			proj.SetDefaultTargetDevice ();
@@ -90,7 +90,7 @@ namespace Xamarin.Android.Build.Tests
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 			};
-			if (!CommercialBuildAvailable) {
+			if (!TestEnvironment.CommercialBuildAvailable) {
 				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			app.SetDefaultTargetDevice ();

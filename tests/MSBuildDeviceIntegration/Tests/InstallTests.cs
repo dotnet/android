@@ -12,7 +12,7 @@ using System.Globalization;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Commercial"), Category ("UsesDevice")]
+	[Category ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
 		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)

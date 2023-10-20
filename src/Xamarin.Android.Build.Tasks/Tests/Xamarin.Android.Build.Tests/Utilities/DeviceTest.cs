@@ -203,7 +203,7 @@ namespace Xamarin.Android.Build.Tests
 			if (Builder.UseDotNet) {
 				builder.BuildLogFile = logName;
 				Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
-			} else if (CommercialBuildAvailable) {
+			} else if (TestEnvironment.CommercialBuildAvailable) {
 				builder.BuildLogFile = logName;
 				Assert.True (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
 			} else {

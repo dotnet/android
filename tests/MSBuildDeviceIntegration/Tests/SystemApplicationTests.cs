@@ -11,7 +11,7 @@ using System.Collections.Generic;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Commercial"), Category ("UsesDevice")]
+	[Category ("UsesDevice")]
 	public class SystemApplicationTests : DeviceTest
 	{
 		// All Tests here require the emulator to be started with -writable-system
