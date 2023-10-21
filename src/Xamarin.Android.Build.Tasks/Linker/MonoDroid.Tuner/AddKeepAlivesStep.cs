@@ -52,27 +52,25 @@ namespace MonoDroid.Tuner
 				return false;
 
 			bool changed = false;
-			List<TypeDefinition> types = assembly.MainModule.Types.ToList ();
 			foreach (TypeDefinition type in assembly.MainModule.Types)
-				AddNestedTypes (types, type);
-
-			foreach (TypeDefinition type in types)
-				if (MightNeedFix (type))
-					changed |= AddKeepAlives (type);
+				changed |= ProcessType (type);
 
 			return changed;
 		}
 
-		// Adapted from `MarkJavaObjects`
-		static void AddNestedTypes (List<TypeDefinition> types, TypeDefinition type)
+		bool ProcessType (TypeDefinition type)
 		{
-			if (!type.HasNestedTypes)
-				return;
+  			bool changed = false;
+			if (MightNeedFix (type))
+				changed |= AddKeepAlives (type);
 
-			foreach (var t in type.NestedTypes) {
-				types.Add (t);
-				AddNestedTypes (types, t);
+			if (type.HasNestedTypes) {
+				foreach (var t in type.NestedTypes) {
+					changed |= ProcessType (t);
+				}
 			}
+
+			return changed;
 		}
 
 		bool MightNeedFix (TypeDefinition type)
