@@ -558,6 +558,10 @@ set(XAMARIN_STUB_LIB_SOURCES
   libstub/stub.cc
 )
 
+set(XAMARIN_ASSEMBLY_BLOB_LIB_SOURCES
+  libstub/stub-assembly.cc
+)
+
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
@@ -706,10 +710,10 @@ target_link_libraries(
   )
 
 if(ANDROID AND (NOT ANALYZERS_ENABLED))
-  macro(xa_add_stub_library _libname)
+  macro(xa_add_stub_library _libname _sources)
     add_library(
       ${_libname}
-      SHARED ${XAMARIN_STUB_LIB_SOURCES}
+      SHARED ${_sources}
     )
 
     string(TOUPPER ${_libname} _libname_uc)
@@ -735,10 +739,13 @@ if(ANDROID AND (NOT ANALYZERS_ENABLED))
     )
   endmacro()
 
-  xa_add_stub_library(c)
-  xa_add_stub_library(m)
+  xa_add_stub_library(c ${XAMARIN_STUB_LIB_SOURCES})
+  xa_add_stub_library(m ${XAMARIN_STUB_LIB_SOURCES})
 
   # These two are used by the marshal methods tracing library when linking libxamarin-app.so
-  xa_add_stub_library(log)
-  xa_add_stub_library(dl)
+  xa_add_stub_library(log ${XAMARIN_STUB_LIB_SOURCES})
+  xa_add_stub_library(dl ${XAMARIN_STUB_LIB_SOURCES})
+
+  # Used as input when generating assembly blob DSO
+  xa_add_stub_library(assembly-blob ${XAMARIN_ASSEMBLY_BLOB_LIB_SOURCES})
 endif()
