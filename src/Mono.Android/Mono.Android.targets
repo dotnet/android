@@ -241,6 +241,7 @@
     <DocsApiLevel Condition=" '$(DocsApiLevel)' == '' ">34</DocsApiLevel>
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
+    <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
     <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
     <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/mdoc.exe"</_Mdoc>
@@ -249,7 +250,7 @@
   <!-- Generate documentation using MDoc -->
   <Target Name="UpdateExternalDocumentation">
     <MSBuild Projects="$(MSBuildThisFileDirectory)Mono.Android.csproj"
-        Properties="TargetFramework=$(DotNetTargetFramework)"
+        Properties="TargetFramework=$(DotNetTargetFramework);DocsExportOutput=$(BaseIntermediateOutputPath)Mono.Android.temp.xml"
         Targets="_UpdateExternalDocumentation;_RunMdoc;_ExportMsxDoc;_GenerateApiDocsDiff"
     />
   </Target>
@@ -286,7 +287,7 @@
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
       <_Lang>--lang fsharp</_Lang>
       <!-- $(FrameworksXmlContent) describes the docs versions found at android-api-docs/tree/master/docs/Mono.Android/en/FrameworksIndex/
-            and https://docs.microsoft.com/en-us/dotnet/api/android?view=xamarin-android-sdk-9 -->
+            and https://learn.microsoft.com/en-us/dotnet/api/android?view=xamarin-android-sdk-13 -->
       <FrameworksXmlContent>
 <![CDATA[
 <Frameworks>
@@ -296,7 +297,7 @@
       </FrameworksXmlContent>
     </PropertyGroup>
     <!-- Create a temporary directory which contains frameworks.xml and our framework assembly.
-         Copy Mono.Android.dll and Java.Interop.dll to the %(Source) path described in frameworks.xml (e.g. xamarin-android-sdk-12) -->
+         Copy Mono.Android.dll and Java.Interop.dll to the %(Source) path described in frameworks.xml (e.g. net-android-34.0) -->
     <RemoveDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)$(DocsFxMoniker)" />
@@ -338,9 +339,9 @@
   <Target Name="_ExportMsxDoc"
       DependsOnTargets="_FindDocSourceFiles"
       Inputs="@(_MsxDocSourceFile)"
-      Outputs="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml">
+      Outputs="$(_DocsExportOutput)">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
     />
   </Target>
 
