@@ -1,6 +1,7 @@
 #ifndef __SHARED_CONSTANTS_HH
 #define __SHARED_CONSTANTS_HH
 
+#include <string>
 #include "cpp-util.hh"
 
 namespace xamarin::android::internal
@@ -17,6 +18,18 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+#if defined (RELEASE)
+		static constexpr bool is_release = true;
+#else
+		static constexpr bool is_release = false;
+#endif
+
+#if defined (RELEASE)
+		static constexpr bool is_debug = false;
+#else
+		static constexpr bool is_debug = true;
+#endif
+
 #if defined (NET)
 		static constexpr char MONO_ANDROID_RUNTIME_ASSEMBLY_NAME[] = "Mono.Android.Runtime";
 #endif
@@ -51,15 +64,19 @@ namespace xamarin::android::internal
 
 #if __arm__
 		static constexpr char android_abi[] = "armeabi_v7a";
+		static constexpr char android_apk_abi[] = "armeabi_v7a";
 		static constexpr char runtime_identifier[] = "android-arm";
 #elif __aarch64__
 		static constexpr char android_abi[] = "arm64_v8a";
+		static constexpr char android_apk_abi[] { "arm64-v8a" };
 		static constexpr char runtime_identifier[] = "android-arm64";
 #elif __x86_64__
 		static constexpr char android_abi[] = "x86_64";
+		static constexpr char android_apk_abi[] = "x86_64";
 		static constexpr char runtime_identifier[] = "android-x64";
 #elif __i386__
 		static constexpr char android_abi[] = "x86";
+		static constexpr char android_apk_abi[] = "x86";
 		static constexpr char runtime_identifier[] = "android-x86";
 #endif
 

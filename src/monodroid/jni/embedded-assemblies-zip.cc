@@ -1,14 +1,11 @@
 #include <array>
 #include <cerrno>
-#include <cctype>
 #include <vector>
-#include <type_traits>
 #include <libgen.h>
 
 #include <mono/metadata/assembly.h>
 
 #include "embedded-assemblies.hh"
-#include "cpp-util.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
 
@@ -61,12 +58,18 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-	if (entry_name.get ()[0] != state.prefix[0] || strncmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+	static_assert (assembly_dso_prefix.size () > 1, "assembly_dso_prefix must be longer than 1 byte");
+
+	if ( // library location is not overridable, so we can test for it beginning with a hardcoded 'l'
+		(entry_name.get ()[0] != 'l' || entry_name.length () < assembly_dso_prefix.size () || memcmp (assembly_dso_prefix.data (), entry_name.get (), assembly_dso_prefix.size () - 1) != 0) &&
+		(entry_name.get ()[0] != state.prefix[0] || entry_name.length () < state.prefix_len || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0)
+	) {
 		return false;
 	}
+	state.location = entry_name.get ()[0] == 'l' ? EntryLocation::Libs : EntryLocation::Assemblies;
 
 #if defined (NET)
-	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
+	if (application_config.have_runtime_config_blob && !runtime_config_blob_found && state.location == EntryLocation::Assemblies) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
@@ -75,9 +78,9 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 #endif // def NET
 
-	// assemblies must be 4-byte aligned, or Bad Things happen
+	// assemblies and shared libraries must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
-		log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
+		log_fatal (LOG_ASSEMBLY, "Entry '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
 		log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (state.apk_name, '/') + 1);
 		Helpers::abort_application ();
 	}
@@ -124,21 +127,9 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if !defined(NET)
-		if (utils.ends_with (entry_name, ".config")) {
-			char *assembly_name = strdup (basename (entry_name.get ()));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
+		if (state.location != EntryLocation::Assemblies || !utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
 			continue;
 		}
-#endif // ndef NET
-
-		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
-			continue;
 
 #if defined (DEBUG)
 		if (entry_is_overridden)
@@ -163,88 +154,23 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
 		bundled_assembly_index++;
-		number_of_found_assemblies = bundled_assembly_index;
+		number_of_found_assembly_dsos = bundled_assembly_index;
 	}
 
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
+#if defined(RELEASE)
 force_inline void
-EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
-{
-	if (number_of_mapped_assembly_stores >= application_config.number_of_assembly_store_files) {
-		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", application_config.number_of_assembly_store_files);
-		Helpers::abort_application ();
-	}
-
-	md_mmap_info assembly_store_map = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
-
-	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid Xamarin.Android assembly store file", entry_name.get ());
-		Helpers::abort_application ();
-	}
-
-	if (header->version > ASSEMBLY_STORE_FORMAT_VERSION) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format v%u which is not understood by this version of Xamarin.Android", entry_name.get (), header->version);
-		Helpers::abort_application ();
-	}
-
-	if (header->store_id >= application_config.number_of_assembly_store_files) {
-		log_fatal (
-			LOG_ASSEMBLY,
-			"Assembly store '%s' index %u exceeds the number of stores known at application build time, %u",
-			entry_name.get (),
-			header->store_id,
-			application_config.number_of_assembly_store_files
-		);
-		Helpers::abort_application ();
-	}
-
-	AssemblyStoreRuntimeData &rd = assembly_stores[header->store_id];
-	if (rd.data_start != nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' has a duplicate ID (%u)", entry_name.get (), header->store_id);
-		Helpers::abort_application ();
-	}
-
-	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
-
-	rd.data_start = static_cast<uint8_t*>(assembly_store_map.area);
-	rd.assembly_count = header->local_entry_count;
-	rd.assemblies = reinterpret_cast<AssemblyStoreAssemblyDescriptor*>(rd.data_start + header_size);
-
-	number_of_found_assemblies += rd.assembly_count;
-
-	if (header->store_id == 0) {
-		constexpr size_t bundled_assembly_size = sizeof(AssemblyStoreAssemblyDescriptor);
-		constexpr size_t hash_entry_size = sizeof(AssemblyStoreHashEntry);
-
-		index_assembly_store_header = header;
-
-		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
-		if constexpr (std::is_same_v<hash_t, uint64_t>) {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes + (hash_entry_size * header->global_entry_count));
-		} else {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes);
-		}
-	}
-
-	number_of_mapped_assembly_stores++;
-	have_and_want_debug_symbols = register_debug_symbols;
-}
-
-force_inline void
-EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
 		return;
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool common_assembly_store_found = false;
-	bool arch_assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly DSOs in APK, at prefix %s", assembly_dso_prefix);
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -252,21 +178,59 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 		}
 
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
-		if (!interesting_entry) {
+		if (!interesting_entry || state.location != EntryLocation::Libs) {
 			continue;
 		}
 
-		if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
-			common_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
+		if (entry_name.length () < assembly_dso_min_length) {
+			log_warn (LOG_ASSEMBLY, "APK entry '%s' looks like an assembly DSO, but its name is not long enough. Expected at least %zu characters", entry_name.get (), assembly_dso_min_length);
+			continue;
 		}
 
-		if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
-			arch_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
+		number_of_found_assembly_dsos++;
+
+		// We have an assembly DSO
+		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s; data offset: %u", entry_name.get (), entry_name.get () + (entry_name.length () - 7), state.data_offset);
+
+		bool valid_hex = true;
+		auto integer_from_hex_char = []<size_t TLen> (dynamic_local_string<TLen> const& s, size_t pos, bool &is_valid, size_t shift) -> uint16_t
+		{
+			uint8_t ch = s[pos];
+			if (ch >= '0' && ch <= '9') {
+				return static_cast<uint16_t>((ch - 48) << shift); // 48 is ASCII '0'
+			}
+
+			if (ch >= 'A' && ch <= 'F') {
+				return static_cast<uint16_t>((ch - 55) << shift); // ASCII 'A' is 65, and it represents decimal 10
+			}
+
+			is_valid = false;
+			return static_cast<uint16_t>(0);
+		};
+
+		const size_t index_pos = entry_name.length () - assembly_index_start_offset;
+		uint16_t index =
+			integer_from_hex_char (entry_name, index_pos,     valid_hex, 12u) |
+			integer_from_hex_char (entry_name, index_pos + 1, valid_hex, 8u) |
+			integer_from_hex_char (entry_name, index_pos + 2, valid_hex, 4u) |
+			integer_from_hex_char (entry_name, index_pos + 3, valid_hex, 0u);
+
+		if (!valid_hex) [[unlikely]] {
+			log_fatal (LOG_ASSEMBLY, "Unable to determine DSO storage index from '%s'", entry_name.get ());
+			Helpers::abort_application ();
 		}
+
+		if (index >= xa_assemblies_config.assembly_dso_count) [[unlikely]] {
+			log_fatal (LOG_ASSEMBLY, "Index retrieved from '%s' exceeds the maximum allowed value of %u", entry_name.get (), xa_assemblies_config.assembly_dso_count - 1);
+			Helpers::abort_application ();
+		}
+
+		AssemblyLoadInfo &load_info = xa_assemblies_load_info[index];
+		load_info.apk_offset = state.data_offset;
+		load_info.apk_data_size = state.file_size;
 	}
 }
+#endif
 
 void
 EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register)
@@ -309,9 +273,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application ();
 	}
 
-	if (application_config.have_assembly_store) {
-		zip_load_assembly_store_entries (buf, cd_entries, state);
-	} else {
+#if defined (RELEASE)
+	if (application_config.have_standalone_assembly_dsos) {
+		zip_load_standalone_dso_entries (buf, cd_entries, state);
+	} else
+#endif // def RELEASE
+	{
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
 }

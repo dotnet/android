@@ -6,6 +6,8 @@
 
 #include "cpu-arch.hh"
 #include "jni-wrappers.hh"
+#include "strings.hh"
+#include "basic-utilities.hh"
 
 namespace xamarin::android::internal
 {
@@ -60,6 +62,29 @@ namespace xamarin::android::internal
 	public:
 		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
 
+		force_inline
+		static void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
+		{
+			// appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
+			dynamic_local_string<SENSIBLE_PATH_MAX> libmonodroid_path;
+			jstring_wrapper &libdir = appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX];
+			libmonodroid_path.append (libdir.get_cstr ()).append (MONODROID_PATH_SEPARATOR).append ("libmonodroid.so");
+
+			log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
+			if (!BasicUtilities::file_exists (libmonodroid_path.get ())) {
+				log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
+				embedded_dso_mode_enabled = true;
+			} else {
+				log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", libdir.get_cstr ());
+				embedded_dso_mode_enabled = false;
+			}
+		}
+
+		static bool is_embedded_dso_mode_enabled () noexcept
+		{
+			return embedded_dso_mode_enabled;
+		}
+
 		const char* get_override_dir (size_t index) const
 		{
 			if (index >= MAX_OVERRIDES)
@@ -75,13 +100,6 @@ namespace xamarin::android::internal
 
 			override_dirs [index] = const_cast <char*> (dir);
 		}
-
-		bool is_embedded_dso_mode_enabled () const
-		{
-			return embedded_dso_mode_enabled;
-		}
-
-		void detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept;
 
 		char *get_runtime_libdir () const
 		{
@@ -111,15 +129,10 @@ namespace xamarin::android::internal
 		void setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept;
 		char* determine_primary_override_dir (jstring_wrapper &home);
 
-		void set_embedded_dso_mode_enabled (bool yesno) noexcept
-		{
-			embedded_dso_mode_enabled = yesno;
-		}
-
 	private:
-		bool  embedded_dso_mode_enabled = false;
 		char *runtime_libdir = nullptr;
 		char *primary_override_dir = nullptr;
+		inline static bool embedded_dso_mode_enabled = false;
 	};
 }
 #endif // !__BASIC_ANDROID_SYSTEM_HH

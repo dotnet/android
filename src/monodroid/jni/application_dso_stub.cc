@@ -31,11 +31,6 @@ const TypeMapJava map_java[] = {};
 const xamarin::android::hash_t map_java_hashes[] = {};
 #endif
 
-CompressedAssemblies compressed_assemblies = {
-	.count = 0,
-	.descriptors = nullptr,
-};
-
 //
 // Config settings below **must** be valid for Desktop builds as the default `libxamarin-app.{dll,dylib,so}` is used by
 // the Designer
@@ -50,14 +45,14 @@ const ApplicationConfig application_config = {
 	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
-	.have_assembly_store = false,
+	.have_standalone_assembly_dsos = false,
+	.marshal_methods_enabled = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
-	.number_of_assembly_store_files = 2,
 	.number_of_dso_cache_entries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -94,36 +89,6 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 		.data = nullptr,
 		.name_length = 0,
 		.name = second_assembly_name,
-	},
-};
-
-AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-
-	{
-		.image_data = nullptr,
-		.debug_info_data = nullptr,
-		.config_data = nullptr,
-		.descriptor = nullptr,
-	},
-};
-
-AssemblyStoreRuntimeData assembly_stores[] = {
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
-	},
-
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
 	},
 };
 
@@ -201,6 +166,67 @@ const MarshalMethodName mm_method_names[] = {
 		.name = "two",
 	},
 };
+
+alignas(4096) const uint8_t xa_input_assembly_data[InputAssemblyDataSize] = {
+	0x04, 0x00, 0x30, 0x26, 0xfe, 0xfb, 0x37, 0xf4,  0xb7, 0x19, 0x0f, 0xdc, 0xad, 0xb5, 0x3c, 0x82,
+	0xf4, 0xd9, 0x64, 0xe3, 0x56, 0x95, 0x7a, 0xef,  0x0b, 0x79, 0xbe, 0x28, 0x2b, 0x2a, 0x31, 0x54,
+	0xf1, 0x2a, 0x76, 0xf9, 0x84, 0x5a, 0x5e, 0x0c,  0x11, 0x30, 0xaf, 0x5d, 0xb1, 0xff, 0x0f, 0x48,
+};
+
+alignas(4096) uint8_t xa_uncompressed_assembly_data[UncompressedAssemblyDataSize] = { };
+
+const AssemblyEntry xa_assemblies[AssemblyCount] = {
+	{
+		.input_data_offset = 0,
+		.input_data_size = 256,
+		.uncompressed_data_offset = 0,
+		.uncompressed_data_size = 0,
+	},
+
+	{
+		.input_data_offset = 256,
+		.input_data_size = 768,
+		.uncompressed_data_offset = 0,
+		.uncompressed_data_size = 2048,
+	},
+};
+
+const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
+	{
+		.name_hash = 11111u,
+		.assemblies_index = 0,
+		.has_extension = true,
+		.is_standalone = false,
+	},
+
+	{
+		.name_hash = 22222u,
+		.assemblies_index = 1,
+		.has_extension = true,
+		.is_standalone = true,
+	},
+};
+
+const char xa_assembly_names[AssemblyCount][AssemblyNameLength] = {
+	"Assembly1.dll",
+	"AnotherAssembly2.dll",
+};
+
+const char xa_assembly_dso_names[AssemblyCount][SharedLibraryNameLength] = {
+	"libxaAssembly1.so",
+	"libxaAnotherAssembly2.so",
+};
+
+const AssembliesConfig xa_assemblies_config = {
+	.input_assembly_data_size = InputAssemblyDataSize,
+	.uncompressed_assembly_data_size = UncompressedAssemblyDataSize,
+	.assembly_name_length = AssemblyNameLength,
+	.assembly_count = AssemblyCount,
+	.assembly_dso_count = 2,
+	.shared_library_name_length = SharedLibraryNameLength,
+};
+
+AssemblyLoadInfo xa_assemblies_load_info[AssemblyCount];
 
 void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_function_pointer_fn fn) noexcept
 {

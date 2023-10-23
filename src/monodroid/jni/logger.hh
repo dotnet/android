@@ -1,6 +1,9 @@
 #ifndef __MONODROID_LOGGER_H__
 #define __MONODROID_LOGGER_H__
 
+#include <cstdlib>
+#include <sys/system_properties.h>
+
 #include "java-interop-logger.h"
 
 #ifndef ANDROID
@@ -17,7 +20,13 @@ typedef enum android_LogPriority {
 } android_LogPriority;
 #endif
 
-void init_logging_categories (char*& mono_log_mask, char*& mono_log_level);
+namespace xamarin::android::internal
+{
+	template<size_t MaxStackSize, typename TChar>
+	class dynamic_local_string;
+}
+
+void init_logging_categories (xamarin::android::internal::dynamic_local_string<PROP_VALUE_MAX, char>& mono_log_mask, xamarin::android::internal::dynamic_local_string<PROP_VALUE_MAX, char>& mono_log_level) noexcept;
 
 void init_reference_logging (const char *override_dir);
 

@@ -15,6 +15,7 @@
 #include "debug-app-helper.hh"
 #include "shared-constants.hh"
 #include "jni-wrappers.hh"
+#include "monodroid-glue-internal.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -74,7 +75,7 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 
-	androidSystem.detect_embedded_dso_mode (applicationDirs);
+	BasicAndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_primary_override_dir (applicationDirs [0]);
 	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
 	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
@@ -206,7 +207,7 @@ get_libmonosgen_path ()
 	// storage location before loading it.
 	copy_native_libraries_to_internal_location ();
 
-	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+	if (BasicAndroidSystem::is_embedded_dso_mode_enabled ()) {
 		return SharedConstants::MONO_SGEN_SO;
 	}
 

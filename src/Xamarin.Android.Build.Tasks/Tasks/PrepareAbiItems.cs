@@ -13,9 +13,9 @@ namespace Xamarin.Android.Tasks
 		const string ArmV7a = "armeabi-v7a";
 		const string TypeMapBase = "typemaps";
 		const string EnvBase = "environment";
-		const string CompressedAssembliesBase = "compressed_assemblies";
 		const string JniRemappingBase = "jni_remap";
 		const string MarshalMethodsBase = "marshal_methods";
+		public const string AssemblyDSOBase = "assembly_dso";
 
 		public override string TaskPrefix => "PAI";
 
@@ -50,12 +50,12 @@ namespace Xamarin.Android.Tasks
 				baseName = TypeMapBase;
 			} else if (String.Compare ("environment", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = EnvBase;
-			} else if (String.Compare ("compressed", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
-				baseName = CompressedAssembliesBase;
 			} else if (String.Compare ("jniremap", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = JniRemappingBase;
 			} else if (String.Compare ("marshal_methods", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
 				baseName = MarshalMethodsBase;
+			} else if (String.Compare ("assembly_dsos", Mode, StringComparison.OrdinalIgnoreCase) == 0) {
+				baseName = AssemblyDSOBase;
 			} else {
 				Log.LogError ($"Unknown mode: {Mode}");
 				return false;
@@ -63,7 +63,7 @@ namespace Xamarin.Android.Tasks
 
 			TaskItem item;
 			foreach (string abi in BuildTargetAbis) {
-				item = new TaskItem (Path.Combine (NativeSourcesDir, $"{baseName}.{abi}.ll"));
+				item = new TaskItem (Path.Combine (NativeSourcesDir, MonoAndroidHelper.MakeNativeAssemblyFileName (baseName, abi)));
 				item.SetMetadata ("abi", abi);
 				sources.Add (item);
 			}

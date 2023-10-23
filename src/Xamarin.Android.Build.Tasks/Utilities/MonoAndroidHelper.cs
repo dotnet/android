@@ -543,6 +543,8 @@ namespace Xamarin.Android.Tasks
 				"arm64-v8a"   => AndroidTargetArch.Arm64,
 				"x86_64"      => AndroidTargetArch.X86_64,
 				"x86"         => AndroidTargetArch.X86,
+				""            => throw new ArgumentException ("must not be empty string", nameof (abi)),
+				null          => throw new ArgumentNullException (nameof (abi)),
 				_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
 			};
 		}
@@ -642,6 +644,42 @@ namespace Xamarin.Android.Tasks
 		{
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
+		}
+
+		public static string MakeNativeAssemblyFileName (string baseName, string abi) => $"{baseName}.{abi}.ll";
+
+		public static bool IsSatelliteAssembly (ITaskItem item)
+		{
+			return IsNotEmptyMetadataAndMaybeMatches (item, "AssetType", "resources") && IsNotEmptyMetadataAndMaybeMatches (item, "Culture");
+
+			bool IsNotEmptyMetadataAndMaybeMatches (ITaskItem item, string metadataName, string? expectedValue = null)
+			{
+				string? data = item.GetMetadata (metadataName);
+				if (String.IsNullOrEmpty (data)) {
+					return false;
+				}
+
+				if (String.IsNullOrEmpty (expectedValue)) {
+					return true;
+				}
+
+				return String.Compare (data, expectedValue, StringComparison.Ordinal) == 0;
+			}
+		}
+
+		public static HashSet<string> MakeHashSet (ICollection<ITaskItem> items)
+		{
+			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			if (items.Count == 0) {
+				return ret;
+			}
+
+			foreach (ITaskItem item in items) {
+				ret.Add (item.ItemSpec);
+			}
+
+			return ret;
 		}
 	}
 }

@@ -32,11 +32,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
 			generator.Generate (output, module);
 			output.Flush ();
+
+			CleanupAfterGeneration (arch);
 		}
 
-		public static ulong GetXxHash (string str, bool is64Bit)
+		protected virtual void CleanupAfterGeneration (AndroidTargetArch arch)
+		{}
+
+		public static byte[] StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
+
+		public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (StringToBytes (str), is64Bit);
+
+		public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
 		{
-			byte[] stringBytes = Encoding.UTF8.GetBytes (str);
 			if (is64Bit) {
 				return XxHash64.HashToUInt64 (stringBytes);
 			}

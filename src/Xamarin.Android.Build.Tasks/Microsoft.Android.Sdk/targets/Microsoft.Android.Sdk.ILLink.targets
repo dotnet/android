@@ -40,6 +40,7 @@ This file contains the .NET 5-specific targets to customize ILLink
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L147
         -->
       <_TrimmerCustomData Include="XATargetFrameworkDirectories" Value="$(_XATargetFrameworkDirectories)" />
+      <_TrimmerCustomData Include="XARuntimeIdentifier" Value="$(RuntimeIdentifier)"  Condition=" '$(_AndroidAddRuntimeIdentifierToAssemblies)' == 'true' " />
       <_TrimmerCustomData
           Condition=" '$(_ProguardProjectConfiguration)' != '' "
           Include="ProguardConfiguration"
@@ -93,6 +94,12 @@ This file contains the .NET 5-specific targets to customize ILLink
           Include="$(_AndroidLinkerCustomStepAssembly)"
           BeforeStep="MarkStep"
           Type="MonoDroid.Tuner.FixLegacyResourceDesignerStep"
+      />
+      <_TrimmerCustomSteps
+          Condition=" '$(_AndroidAddRuntimeIdentifierToAssemblies)' == 'true' "
+          Include="$(_AndroidLinkerCustomStepAssembly)"
+          AfterStep="CleanStep"
+          Type="MonoDroid.Tuner.AddRidMetadataAttributeStep"
       />
       <_PreserveLists Include="$(MSBuildThisFileDirectory)..\PreserveLists\*.xml" />
       <TrimmerRootDescriptor

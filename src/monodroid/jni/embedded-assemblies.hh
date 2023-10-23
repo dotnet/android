@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <functional>
+#include <string>
 #include <vector>
 #include <semaphore.h>
 
@@ -18,6 +19,8 @@
 #include <mono/metadata/mono-private-unstable.h>
 #endif
 
+#include "android-system.hh"
+#include "assembly-data-provider.hh"
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
@@ -34,6 +37,12 @@
 #endif // __has_include
 
 struct TypeMapHeader;
+
+namespace {
+	namespace detail {
+		class SO_AssemblyDataProvider;
+	}
+}
 
 namespace xamarin::android::internal {
 #if defined (DEBUG) || !defined (ANDROID)
@@ -67,8 +76,16 @@ namespace xamarin::android::internal {
 #define LoaderData typename
 #endif
 
+	enum class EntryLocation
+	{
+		Assemblies,
+		Libs,
+	};
+
 	class EmbeddedAssemblies final
 	{
+		friend class detail::SO_AssemblyDataProvider;
+
 		struct md_mmap_info {
 			void   *area;
 			size_t  size;
@@ -85,8 +102,11 @@ namespace xamarin::android::internal {
 			uint32_t              local_header_offset;
 			uint32_t              data_offset;
 			uint32_t              file_size;
+			EntryLocation         location;
 		};
-
+#if defined (RELEASE)
+		using get_assembly_data_dso_fn = const AssemblyData (*)(int apk_fd, AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name);
+#endif
 	private:
 		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
 		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
@@ -97,11 +117,14 @@ namespace xamarin::android::internal {
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
 
-		static constexpr char assembly_store_prefix[] = "assemblies";
-		static constexpr char assembly_store_extension[] = ".blob";
-		static constexpr auto assembly_store_common_file_name = concat_const ("/", assembly_store_prefix, assembly_store_extension);
-		static constexpr auto assembly_store_arch_file_name = concat_const ("/", assembly_store_prefix, ".", SharedConstants::android_abi, assembly_store_extension);
+		// if the `libXA` embedded assembly prefix changes here, it must be updated in
+		// src/src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyStandaloneDSOAbiItems.cs as well
+		static constexpr auto assembly_dso_prefix = concat_const ("lib/", SharedConstants::android_apk_abi, "/libXA");
 
+		// This includes the `.0000.so` suffix each assembly DSO must have and at least one name character (in addition
+		// to the `libXA` prefix)
+		static constexpr size_t assembly_dso_min_length = assembly_dso_prefix.size () - 1 + 9;
+		static constexpr size_t assembly_index_start_offset = 7;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
@@ -112,10 +135,8 @@ namespace xamarin::android::internal {
 		using monodroid_should_register = bool (*)(const char *filename);
 
 	public:
-#if defined (RELEASE) && defined (ANDROID)
 		EmbeddedAssemblies () noexcept
 		{}
-#endif  // def RELEASE && def ANDROID
 
 #if defined (DEBUG) || !defined (ANDROID)
 		void try_load_typemaps_from_directory (const char *path);
@@ -168,20 +189,14 @@ namespace xamarin::android::internal {
 			return need_to_scan_more_apks;
 		}
 
-		void ensure_valid_assembly_stores () const noexcept
-		{
-			if (!application_config.have_assembly_store) {
-				return;
-			}
-
-			abort_unless (index_assembly_store_header != nullptr && assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
-		}
-
 	private:
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from (const char *apk_file, monodroid_should_register should_register);
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
+
+		template<LoaderData TLoaderData>
+		MonoAssembly* standalone_dso_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX> const& name, TLoaderData loader_data) noexcept;
 
 		template<LoaderData TLoaderData>
 		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
@@ -216,7 +231,7 @@ namespace xamarin::android::internal {
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
 #endif // DEBUG || !ANDROID
 
-		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename) noexcept;
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 #if defined (NET)
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
@@ -226,14 +241,19 @@ namespace xamarin::android::internal {
 		void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
 		void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
-		void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
+#if defined (RELEASE)
+		const AssemblyData get_assembly_data_dso (AssemblyEntry const& entry, AssemblyIndexEntry const& index_entry, dynamic_local_string<SENSIBLE_PATH_MAX> const& assembly_name) const noexcept;
+#endif
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
 		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
-		void zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
 		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
 		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
+
+#if defined (RELEASE)
+		void zip_load_standalone_dso_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+#endif // def RELEASE
 
 		template<size_t BufSize>
 		bool zip_extract_cd_info (std::array<uint8_t, BufSize> const& buf, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -279,11 +299,8 @@ namespace xamarin::android::internal {
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files
-#if defined (NET)
-				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
-#endif // NET
-				;
+				number_of_standalone_dsos == xa_assemblies_config.assembly_dso_count &&
+				((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
 		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
@@ -307,7 +324,6 @@ namespace xamarin::android::internal {
 		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
 
 	private:
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
@@ -316,7 +332,7 @@ namespace xamarin::android::internal {
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
-		size_t                 number_of_found_assemblies = 0;
+		size_t                 number_of_found_assembly_dsos = 0;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
@@ -329,12 +345,12 @@ namespace xamarin::android::internal {
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
 #endif // def NET
-		uint32_t               number_of_mapped_assembly_stores = 0;
+		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;
-
-		AssemblyStoreHeader *index_assembly_store_header = nullptr;
-		AssemblyStoreHashEntry             *assembly_store_hashes;
-		std::mutex             assembly_decompress_mutex;
+		int                    apk_fd = -1;
+#if defined (RELEASE)
+		get_assembly_data_dso_fn   get_assembly_data_dso_impl = nullptr;
+#endif
 	};
 }
 

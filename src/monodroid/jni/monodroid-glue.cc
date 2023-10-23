@@ -395,8 +395,6 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			break;
 		}
 	}
-
-	embeddedAssemblies.ensure_valid_assembly_stores ();
 }
 
 #if defined (DEBUG) && !defined (WINDOWS)
@@ -853,15 +851,19 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	}
 #endif // def NET
 
-	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
+	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0) {
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
 #else
-		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
+		log_fatal (LOG_DEFAULT, "No assemblies (or assembly shared libraries) were found in the application APK file(s)");
 #endif
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `assemblies/` are STORED (not compressed)");
+		log_fatal (LOG_DEFAULT, "Make sure that all entries (if any) in the APK directory named `assemblies/` are STORED (not compressed)");
+#if defined (RELEASE)
+		log_fatal (LOG_DEFAULT, "Make sure that all the shared libraries (if any) found in the APK directory named lib/%s are STORED, or that they are extracted to the filesystem", SharedConstants::android_apk_abi);
+		log_fatal (LOG_DEFAULT, "Check the 'android:extractNativeLibs=' attribute of the 'application' element in your AndroidManifest.xml file to see whether shared libraries are extracted or not");
+#endif
 		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `assemblies/` are compressed");
 
 		Helpers::abort_application ();
@@ -2023,7 +2025,7 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 
 #if defined (ANDROID)
 force_inline void
-MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
+MonodroidRuntime::setup_mono_tracing (dynamic_local_string<PROP_VALUE_MAX> const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
 {
 	constexpr char   MASK_ASM[] = "asm";
 	constexpr size_t MASK_ASM_LEN = sizeof(MASK_ASM) - 1;
@@ -2034,7 +2036,7 @@ MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_ma
 	constexpr char   COMMA[] = ",";
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
-	if (mono_log_mask == nullptr || *mono_log_mask.get () == '\0') {
+	if (mono_log_mask.empty () || *mono_log_mask.get () == '\0') {
 		if (have_log_assembly) {
 			log_mask.append (MASK_ASM);
 			log_mask.append (COMMA);
@@ -2114,13 +2116,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
-	char *mono_log_mask_raw = nullptr;
-	char *mono_log_level_raw = nullptr;
+	dynamic_local_string<PROP_VALUE_MAX> mono_log_mask;
+	dynamic_local_string<PROP_VALUE_MAX> mono_log_level;
 
-	init_logging_categories (mono_log_mask_raw, mono_log_level_raw);
-
-	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
-	std::unique_ptr<char[]> mono_log_level (mono_log_level_raw);
+	init_logging_categories (mono_log_mask, mono_log_level);
 
 	// If fast logging is disabled, log messages immediately
 	FastTiming::initialize ((log_timing_categories & LOG_TIMING_FAST_BARE) == 0);
@@ -2133,6 +2132,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_wrapper &home = applicationDirs[SharedConstants::APP_DIRS_FILES_DIR_INDEX];
+
+	BasicAndroidSystem::detect_embedded_dso_mode (applicationDirs);
 
 #if defined (NET)
 	mono_opt_aot_lazy_assembly_load = application_config.aot_lazy_load ? TRUE : FALSE;
@@ -2155,7 +2156,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #endif // def NET
 
 	android_api_level = apiLevel;
-	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_running_in_emulator (isEmulator);
 
 	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
@@ -2189,7 +2189,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	bool have_log_assembly = (log_categories & LOG_ASSEMBLY) != 0;
 	bool have_log_gc = (log_categories & LOG_GC) != 0;
 
-	if (mono_log_level == nullptr || *mono_log_level.get () == '\0') {
+	if (mono_log_level.empty () || *mono_log_level.get () == '\0') {
 		mono_trace_set_level_string ((have_log_assembly || have_log_gc) ? "info" : "error");
 	} else {
 		mono_trace_set_level_string (mono_log_level.get ());

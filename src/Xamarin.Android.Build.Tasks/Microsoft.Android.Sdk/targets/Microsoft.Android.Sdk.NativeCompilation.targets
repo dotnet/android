@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <UsingTask TaskName="Xamarin.Android.Tasks.CompileNativeAssembly" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateAppAssemblyDSONativeSourceFiles" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJniRemappingNativeCode" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.BuildAndLinkStandaloneAssemblyDSOs" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAssemblyStandaloneDSOAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <PropertyGroup>
+    <_AndroidUseAssemblySharedLibraries Condition=" '$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' ">false</_AndroidUseAssemblySharedLibraries>
+    <_AndroidUseAssemblySharedLibraries Condition=" '$(_AndroidUseAssemblySharedLibraries)' == '' ">true</_AndroidUseAssemblySharedLibraries>
+
+    <_AndroidApplicationSharedLibraryPath>$(IntermediateOutputPath)app_shared_libraries\</_AndroidApplicationSharedLibraryPath>
+    <_CompressedAssembliesOutputDir>$(IntermediateOutputPath)android\lz4-2</_CompressedAssembliesOutputDir>
+
+    <_AndroidKeepStandaloneAssemblySources Condition=" '$(_AndroidKeepStandaloneAssemblySources)' == '' ">false</_AndroidKeepStandaloneAssemblySources>
+  </PropertyGroup>
+
+  <!-- Native code preparation targets -->
+  <Target Name="_PrepareNativeAssemblySources">
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="typemap">
+      <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
+      <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
+    </PrepareAbiItems>
+
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="marshal_methods">
+      <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
+    </PrepareAbiItems>
+  </Target>
+
+  <Target Name="_PrepareEnvironmentAssemblySources">
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="environment">
+      <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
+    </PrepareAbiItems>
+  </Target>
+
+  <Target Name="_PrepareAssemblyDSOSources">
+
+    <!-- These assemblies data will be placed in `libxamarin-app.so` instead of in
+         individual shared libraries.  This group should, in principle, include those
+         assemblies which are involved in the runtime startup process (before we call
+         the main activity's OnCreate.
+
+         Names must include the .dll extension.
+    -->
+    <ItemGroup>
+      <!-- <_DSOFastPathAssembly Include="Java.Interop.dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="Mono.Android.Runtime.dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="Mono.Android.dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="System.Private.CoreLib.dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="System.Runtime.dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="$(AssemblyName).dll" /> -->
+      <!-- <_DSOFastPathAssembly Include="$(_DesignerAssemblyName).dll"> -->
+      <!--   <AndroidSkipCompression>true</AndroidSkipCompression> -->
+      <!-- </_DSOFastPathAssembly> -->
+    </ItemGroup>
+
+    <!-- These source files will be built into `libxamarin-app.so` and will include data
+         of the above assemblies -->
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="assembly_dsos">
+      <Output TaskParameter="AssemblySources" ItemName="_AssemblyDSOSourceApplication" />
+    </PrepareAbiItems>
+
+    <!-- Prepares paths to **shared libraries** which will contain standalone assembly data.
+         We don't need to concern ourselves with source files here, as the sources and shared
+         libraries are produced in a single Task.
+    -->
+    <PrepareAssemblyStandaloneDSOAbiItems
+        Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        FastPathAssemblies="@(_DSOFastPathAssembly)"
+        SharedLibraryOutputDir="$(_AndroidApplicationSharedLibraryPath)">
+      <Output TaskParameter="SharedLibraries" ItemName="_StandaloneAssemblyDSOTarget" />
+    </PrepareAssemblyStandaloneDSOAbiItems>
+  </Target>
+
+  <Target Name="_PrepareAndroidRemapNativeAssemblySources">
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="jniremap">
+      <Output TaskParameter="AssemblySources" ItemName="_AndroidRemapAssemblySource" />
+    </PrepareAbiItems>
+  </Target>
+
+  <Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+    <ItemGroup>
+      <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_TypeMapAssemblySource.abi)</abi>
+      </_NativeAssemblyTarget>
+
+      <_NativeAssemblyTarget Include="@(_EnvironmentAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_EnvironmentAssemblySource.abi)</abi>
+      </_NativeAssemblyTarget>
+
+      <_NativeAssemblyTarget Include="@(_MarshalMethodsAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_MarshalMethodsAssemblySource.abi)</abi>
+      </_NativeAssemblyTarget>
+
+      <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_AndroidRemapAssemblySource.abi)</abi>
+      </_NativeAssemblyTarget>
+
+      <_NativeAssemblyTarget Include="@(_AssemblyDSOSourceApplication->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_AssemblyDSOSourceApplication.abi)</abi>
+      </_NativeAssemblyTarget>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_PrepareApplicationSharedLibraryItems">
+    <ItemGroup>
+      <_ApplicationSharedLibrary Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libxamarin-app.so">
+        <abi>%(_BuildTargetAbis.Identity)</abi>
+      </_ApplicationSharedLibrary>
+    </ItemGroup>
+  </Target>
+
+  <!-- Native source code generation targets -->
+  <Target Name="_GenerateApplicationAssemblyDsoNativeSourceFiles"
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
+          Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+          Outputs="@(_AssemblyDSOSourceApplication)">
+    <GenerateAppAssemblyDSONativeSourceFiles
+        SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
+        CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        FastPathAssemblies="@(_DSOFastPathAssembly)"
+        StandaloneAssemblyDSOs="@(_StandaloneAssemblyDSO)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"/>
+  </Target>
+
+  <Target Name="_GenerateEmptyAndroidRemapNativeCode"
+          DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
+          Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
+          Inputs="$(MSBuildProjectFullPath)"
+          Outputs="@(_AndroidRemapAssemblySource)">
+    <GenerateJniRemappingNativeCode
+        OutputDirectory="$(_NativeAssemblySourceDir)"
+        GenerateEmptyCode="True"
+        SupportedAbis="@(_BuildTargetAbis)"
+        />
+  </Target>
+
+  <Target Name="_GenerateAndroidRemapNativeCode"
+          DependsOnTargets="$(_GenerateAndroidRemapNativeCodeDependsOn)"
+          Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
+          Inputs="$(_XARemapMembersFilePath)"
+          Outputs="@(_AndroidRemapAssemblySource)">
+    <GenerateJniRemappingNativeCode
+        OutputDirectory="$(_NativeAssemblySourceDir)"
+        RemappingXmlFilePath="$(_XARemapMembersFilePath)"
+        SupportedAbis="@(_BuildTargetAbis)"
+        />
+  </Target>
+
+  <!-- Native code compilation targets -->
+  <Target Name="_CompileApplicationNativeAssemblySources"
+          DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateApplicationAssemblyDsoNativeSourceFiles"
+          Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
+          Outputs="@(_NativeAssemblyTarget)">
+    <CompileNativeAssembly
+        Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+        WorkingDirectory="$(_NativeAssemblySourceDir)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        />
+    <ItemGroup>
+      <FileWrites Include="@(_NativeAssemblyTarget)" />
+    </ItemGroup>
+  </Target>
+
+  <!-- Shared library creation targets -->
+  <Target Name="_CreateStandaloneAssemblyDSOs"
+          Condition=" '$(_AndroidUseAssemblySharedLibraries)' == 'true' "
+          Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+          Outputs="@(_StandaloneAssemblyDSOTarget)">
+    <BuildAndLinkStandaloneAssemblyDSOs
+        SourcesOutputDirectory="$(_NativeAssemblySourceDir)"
+        CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
+        TargetSharedLibraries="@(_StandaloneAssemblyDSOTarget)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+        KeepGeneratedSources="$(_AndroidKeepStandaloneAssemblySources)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        ParallelBuildsNumber="$(_AndroidNativeParallelBuildsNumber)">
+      <Output TaskParameter="SharedLibraries" ItemName="_StandaloneAssemblyDSO" />
+    </BuildAndLinkStandaloneAssemblyDSOs>
+    <ItemGroup>
+      <FileWrites Include="@(_StandaloneAssemblyDSO)" />
+    </ItemGroup>
+  </Target>
+
+  <PropertyGroup>
+    <!-- Order of targets is **crucial** here -->
+    <_CreateApplicationSharedLibrariesDependsOn>
+      _PrepareAssemblyDSOSources;
+      _CreateStandaloneAssemblyDSOs;
+      _CompileApplicationNativeAssemblySources;
+      _PrepareApplicationSharedLibraryItems
+    </_CreateApplicationSharedLibrariesDependsOn>
+  </PropertyGroup>
+
+  <Target Name="_CreateApplicationSharedLibraries"
+          DependsOnTargets="$(_CreateApplicationSharedLibrariesDependsOn)"
+          Inputs="@(_NativeAssemblyTarget);@(_StandaloneAssemblyDSO)"
+          Outputs="@(_ApplicationSharedLibrary)">
+    <LinkApplicationSharedLibraries
+        ObjectFiles="@(_NativeAssemblyTarget)"
+        ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
+        DebugBuild="$(AndroidIncludeDebugSymbols)"
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+    />
+    <ItemGroup>
+      <FileWrites Include="@(_ApplicationSharedLibrary)" />
+    </ItemGroup>
+  </Target>
+</Project>

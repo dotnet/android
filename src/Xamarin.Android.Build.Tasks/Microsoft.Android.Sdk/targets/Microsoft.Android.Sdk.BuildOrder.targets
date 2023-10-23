@@ -77,6 +77,35 @@ properties that determine build ordering.
       _IncludeNativeSystemLibraries;
       _CheckGoogleSdkRequirements;
     </_PrepareBuildApkDependsOnTargets>
+
+    <_GenerateJavaStubsDependsOnTargets>
+      _SetLatestTargetFrameworkVersion;
+      _PrepareAssemblies;
+      _PrepareNativeAssemblySources;
+      $(_AfterPrepareAssemblies);
+    </_GenerateJavaStubsDependsOnTargets>
+
+    <_GeneratePackageManagerJavaDependsOn>
+      _GenerateJavaStubs;
+      _RunAotForAllRIDs;
+      _ManifestMerger;
+      _ConvertCustomView;
+      $(_AfterConvertCustomView);
+      _AddStaticResources;
+      $(_AfterAddStaticResources);
+      _PrepareAssemblies;
+      _PrepareEnvironmentAssemblySources;
+      _GenerateEnvironmentFiles;
+      _GenerateAndroidRemapNativeCode;
+      _GenerateEmptyAndroidRemapNativeCode;
+      _IncludeNativeSystemLibraries;
+    </_GeneratePackageManagerJavaDependsOn>
+
+    <_GenerateAndroidRemapNativeCodeDependsOn>
+      _ConvertAndroidMamMappingFileToXml;
+      _CollectAndroidRemapMembers;
+      _PrepareAndroidRemapNativeAssemblySources
+    </_GenerateAndroidRemapNativeCodeDependsOn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">

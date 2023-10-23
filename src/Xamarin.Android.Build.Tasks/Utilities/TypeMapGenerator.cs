@@ -8,6 +8,7 @@ using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
@@ -96,27 +97,13 @@ namespace Xamarin.Android.Tasks
 
 			public readonly Dictionary<string, int> KnownAssemblies;
 			public readonly Dictionary <Guid, byte[]> MvidCache;
-			public readonly IDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> TempModules;
-
-			// Just a convenient way to access one of the temp modules dictionaries, to be used when dealing with ABI-agnostic
-			// types in ProcessReleaseType.
-			public readonly Dictionary<byte[], ModuleReleaseData> TempModulesAbiAgnostic;
+			public readonly Dictionary<byte[], ModuleReleaseData> TempModules;
 
 			public ReleaseGenerationState (string[] supportedAbis)
 			{
 				KnownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
 				MvidCache = new Dictionary<Guid, byte[]> ();
-
-				var tempModules = new Dictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> ();
-				foreach (string abi in supportedAbis) {
-					var dict = new Dictionary<byte[], ModuleReleaseData> ();
-					if (TempModulesAbiAgnostic == null) {
-						TempModulesAbiAgnostic = dict;
-					}
-					tempModules.Add (MonoAndroidHelper.AbiToTargetArch (abi), dict);
-				}
-
-				TempModules = new ReadOnlyDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> (tempModules);
+				TempModules = new Dictionary<byte[], ModuleReleaseData> ();
 			}
 
 			public void AddKnownAssembly (TypeDefinition td)
@@ -133,7 +120,8 @@ namespace Xamarin.Android.Tasks
 			public string GetAssemblyName (TypeDefinition td) => td.Module.Assembly.FullName;
 		}
 
-		Action<string> logger;
+		AndroidTargetArch targetArch;
+		readonly TaskLoggingHelper Log;
 		Encoding outputEncoding;
 		byte[] moduleMagicString;
 		byte[] typemapIndexMagicString;
@@ -141,11 +129,10 @@ namespace Xamarin.Android.Tasks
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (Action<string> logger, string[] supportedAbis)
+		public TypeMapGenerator (AndroidTargetArch targetArch, TaskLoggingHelper log, string[] supportedAbis)
 		{
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
-			if (supportedAbis == null)
-				throw new ArgumentNullException (nameof (supportedAbis));
+			this.targetArch = targetArch;
+			Log = log;
 			this.supportedAbis = supportedAbis;
 
 			outputEncoding = Files.UTF8withoutBOM;
@@ -168,7 +155,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public bool Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
+		public bool Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
 		{
 			if (String.IsNullOrEmpty (outputDirectory))
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
@@ -189,7 +176,7 @@ namespace Xamarin.Android.Tasks
 			return GenerateRelease (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, typemapsOutputDirectory, appConfState);
 		}
 
-		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
+		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
 		{
 			if (generateNativeAssembly) {
 				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, outputDirectory, appConfState);
@@ -197,15 +184,14 @@ namespace Xamarin.Android.Tasks
 			return GenerateDebugFiles (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, outputDirectory, appConfState);
 		}
 
-		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			var modules = new Dictionary<string, ModuleDebugData> (StringComparer.Ordinal);
 			int maxModuleFileNameWidth = 0;
 			int maxModuleNameWidth = 0;
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (JavaType jt in javaTypes) {
-				TypeDefinition td = jt.Type;
+			foreach (TypeDefinition td in javaTypes) {
 				UpdateApplicationConfig (td, appConfState);
 				string moduleName = td.Module.Assembly.Name.Name;
 				ModuleDebugData module;
@@ -263,14 +249,13 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			var javaToManaged = new List<TypeMapDebugEntry> ();
 			var managedToJava = new List<TypeMapDebugEntry> ();
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (JavaType jt in javaTypes) {
-				TypeDefinition td = jt.Type;
+			foreach (TypeDefinition td in javaTypes) {
 				UpdateApplicationConfig (td, appConfState);
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, cache);
@@ -375,7 +360,7 @@ namespace Xamarin.Android.Tasks
 			return $"{managedTypeName}, {td.Module.Assembly.Name.Name}";
 		}
 
-		void ProcessReleaseType (ReleaseGenerationState state, TypeDefinition td, AndroidTargetArch typeArch, ApplicationConfigTaskState appConfState, TypeDefinitionCache cache)
+		void ProcessReleaseType (ReleaseGenerationState state, TypeDefinition td, ApplicationConfigTaskState appConfState, TypeDefinitionCache cache)
 		{
 			UpdateApplicationConfig (td, appConfState);
 
@@ -390,21 +375,7 @@ namespace Xamarin.Android.Tasks
 				state.MvidCache.Add (td.Module.Mvid, moduleUUID);
 			}
 
-			bool abiAgnosticType = typeArch == AndroidTargetArch.None;
-			Dictionary<byte[], ModuleReleaseData> tempModules;
-			if (abiAgnosticType) {
-				tempModules = state.TempModulesAbiAgnostic;
-			} else {
-				// It will throw if `typeArch` isn't in the dictionary. This is intentional, since we must have no TypeDefinition entries for architectures not
-				// mentioned in `supportedAbis`.
-				try {
-					tempModules = state.TempModules[typeArch];
-				} catch (KeyNotFoundException ex) {
-					throw new InvalidOperationException ($"Internal error: cannot process type specific to architecture '{typeArch}', since that architecture isn't mentioned in the set of supported ABIs", ex);
-				}
-			}
-
-			if (!tempModules.TryGetValue (moduleUUID, out ModuleReleaseData moduleData)) {
+			if (!state.TempModules.TryGetValue (moduleUUID, out ModuleReleaseData moduleData)) {
 				moduleData = new ModuleReleaseData {
 					Mvid = td.Module.Mvid,
 					MvidBytes = moduleUUID,
@@ -414,15 +385,8 @@ namespace Xamarin.Android.Tasks
 					DuplicateTypes = new List<TypeMapReleaseEntry> (),
 				};
 
-				if (abiAgnosticType) {
-					// ABI-agnostic types must be added to all the ABIs
-					foreach (var kvp in state.TempModules) {
-						kvp.Value.Add (moduleUUID, moduleData);
-					}
-				} else {
-					// ABI-specific types are added only to their respective tempModules
-					tempModules.Add (moduleUUID, moduleData);
-				}
+				// ABI-specific types are added only to their respective tempModules
+				state.TempModules.Add (moduleUUID, moduleData);
 			}
 
 			string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache);
@@ -450,41 +414,30 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			var state = new ReleaseGenerationState (supportedAbis);
 
-			foreach (JavaType jt in javaTypes) {
-				if (!jt.IsABiSpecific) {
-					ProcessReleaseType (state, jt.Type, AndroidTargetArch.None, appConfState, cache);
+			foreach (TypeDefinition td in javaTypes) {
+				ProcessReleaseType (state, td, appConfState, cache);
+			}
+
+			ModuleReleaseData[] modules = state.TempModules.Values.ToArray ();
+			Array.Sort (modules, new ModuleUUIDArrayComparer ());
+
+			foreach (ModuleReleaseData module in modules) {
+				if (module.TypesScratch.Count == 0) {
+					module.Types = Array.Empty<TypeMapReleaseEntry> ();
 					continue;
 				}
 
-				foreach (var kvp in jt.PerAbiTypes) {
-					ProcessReleaseType (state, kvp.Value, kvp.Key, appConfState, cache);
-				}
+				// No need to sort here, the LLVM IR generator will compute hashes and sort
+				// the array on write.
+				module.Types = module.TypesScratch.Values.ToArray ();
 			}
 
-			foreach (var kvp in state.TempModules) {
-				AndroidTargetArch arch = kvp.Key;
-				Dictionary<byte[], ModuleReleaseData> tempModules = kvp.Value;
-				ModuleReleaseData[] modules = tempModules.Values.ToArray ();
-				Array.Sort (modules, new ModuleUUIDArrayComparer ());
-
-				foreach (ModuleReleaseData module in modules) {
-					if (module.TypesScratch.Count == 0) {
-						module.Types = Array.Empty<TypeMapReleaseEntry> ();
-						continue;
-					}
-
-					// No need to sort here, the LLVM IR generator will compute hashes and sort
-					// the array on write.
-					module.Types = module.TypesScratch.Values.ToArray ();
-				}
-
-				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
-				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
-			}
+			var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
+			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
@@ -494,29 +447,34 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
-		string GetOutputFilePath (string baseFileName, string abi) => $"{baseFileName}.{abi}.ll";
-
-		void GenerateNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
-		{
-			WriteNativeAssembly (
-				arch,
-				composer,
-				typeMapModule,
-				GetOutputFilePath (baseFileName, ArchToAbi (arch))
-			);
-		}
-
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
+			if (targetArch != AndroidTargetArch.None) {
+				DoWriteNativeAssembly (targetArch, MonoAndroidHelper.MakeNativeAssemblyFileName (baseFileName, ArchToAbi (targetArch)));
+				return;
+			}
+
 			foreach (string abi in supportedAbis) {
-				WriteNativeAssembly (
-					GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi),
-					composer,
-					typeMapModule,
-					GetOutputFilePath (baseFileName, abi)
-				);
+				DoWriteNativeAssembly (MonoAndroidHelper.AbiToTargetArch (abi), MonoAndroidHelper.MakeNativeAssemblyFileName (baseFileName, abi));
+			}
+
+			void DoWriteNativeAssembly (AndroidTargetArch arch, string outputFile)
+			{
+				WriteNativeAssembly (arch, composer, typeMapModule, outputFile);
 			}
 		}
+
+		// void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
+		// {
+		// 	foreach (string abi in supportedAbis) {
+		// 		WriteNativeAssembly (
+		// 			GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi),
+		// 			composer,
+		// 			typeMapModule,
+		// 			GetOutputFilePath (baseFileName, abi)
+		// 		);
+		// 	}
+		// }
 
 		void WriteNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string outputFile)
 		{

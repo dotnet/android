@@ -2,14 +2,12 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Mono.Cecil;
 
 
@@ -27,6 +25,22 @@ namespace Xamarin.Android.Tasks
 
 	public class GenerateJavaStubs : AndroidTask
 	{
+		sealed class RunState
+		{
+			public XAAssemblyResolver Resolver               { get; set; }
+			public ICollection<ITaskItem> JavaTypeAssemblies { get; set; }
+			public ICollection<ITaskItem> UserAssemblies     { get; set; }
+			public InputAssemblySet AssemblySet              { get; set; }
+			public bool UseMarshalMethods                    { get; set; }
+			public AndroidTargetArch TargetArch              { get; set; } = AndroidTargetArch.None;
+
+			/// <summary>
+			/// If `true`, generate code/data that doesn't depend on a specific RID (e.g. ACW maps or JCWs)
+			/// To be used once per multi-RID runs.
+			/// </summary>
+			public bool GenerateRidAgnosticParts             { get; set; }
+		}
+
 		public const string MarshalMethodsRegisterTaskKey = ".:!MarshalMethods!:.";
 
 		public override string TaskPrefix => "GJS";
@@ -101,12 +115,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			try {
-				bool useMarshalMethods = !Debug && EnableMarshalMethods;
-				// We're going to do 3 steps here instead of separate tasks so
-				// we can share the list of JLO TypeDefinitions between them
-				using (XAAssemblyResolver res = MakeResolver (useMarshalMethods)) {
-					Run (res, useMarshalMethods);
-				}
+				Run ();
 			} catch (XamarinAndroidException e) {
 				Log.LogCodedError (string.Format ("XA{0:0000}", e.Code), e.MessageWithoutCode);
 				if (MonoAndroidHelper.LogInternalExceptions)
@@ -141,23 +150,151 @@ namespace Xamarin.Android.Tasks
 			return res;
 		}
 
-		void Run (XAAssemblyResolver res, bool useMarshalMethods)
+		void Run ()
 		{
-			PackageNamingPolicy pnp;
-			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
-
-			Dictionary<string, List<ITaskItem>>? abiSpecificAssembliesByPath = null;
-			if (useMarshalMethods) {
-				abiSpecificAssembliesByPath = new Dictionary<string, List<ITaskItem>> (StringComparer.Ordinal);
+			if (Debug) {
+				if (LinkingEnabled) {
+					RunDebugWithLinking ();
+				} else {
+					RunDebugNoLinking ();
+				}
+				return;
 			}
 
-			// Put every assembly we'll need in the resolver
-			bool hasExportReference = false;
-			bool haveMonoAndroid = false;
-			var allTypemapAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
-			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+			bool useMarshalMethods = !Debug && EnableMarshalMethods;
+			if (LinkingEnabled) {
+				RunReleaseWithLinking (useMarshalMethods);
+			} else {
+				RunReleaseNoLinking (useMarshalMethods);
+			}
+		}
 
-			foreach (var assembly in ResolvedAssemblies) {
+		// * We have one set of assemblies in general, some RID-specific ones (e.g. `System.Private.CoreLib`, potentially others).
+		// * Typemaps don't use MVIDs or metadata tokens, so we can process one each of the RID-specific ones together with the others
+		// * Marshal methods are never used
+		void RunDebugNoLinking ()
+		{
+			LogRunMode ("Debug, no linking");
+
+			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
+			var assemblies = CollectInterestingAssemblies (new RidAgnosticInputAssemblySet (), (AndroidTargetArch arch) => resolver);
+			var state = new RunState {
+				UseMarshalMethods        = false,
+				AssemblySet              = assemblies,
+				JavaTypeAssemblies       = assemblies.JavaTypeAssemblies,
+				UserAssemblies           = assemblies.UserAssemblies,
+				GenerateRidAgnosticParts = true,
+				Resolver                 = resolver,
+				TargetArch               = AndroidTargetArch.None,
+			};
+			DoRun (state, out ApplicationConfigTaskState appConfState);
+			RegisterApplicationConfigState (appConfState);
+		}
+
+		// * We have as many sets of assemblies as there are RIDs, all assemblies are RID-specific
+		// * Typemaps don't use MVIDs or metadata tokens, so we can process a single set of RID-specific assemblies
+		// * Marshal methods are never used
+		void RunDebugWithLinking ()
+		{
+			LogRunMode ("Debug, with linking");
+
+			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods: false);
+			var assemblies = CollectInterestingAssemblies (new RidSpecificInputAssemblySet (), (AndroidTargetArch arch) => resolver);
+
+			AndroidTargetArch firstArch = assemblies.JavaTypeAssemblies.Keys.First ();
+			var state = new RunState {
+				UseMarshalMethods        = false,
+				AssemblySet              = assemblies,
+				JavaTypeAssemblies       = assemblies.JavaTypeAssemblies[firstArch].Values,
+				UserAssemblies           = assemblies.UserAssemblies[firstArch].Values,
+				GenerateRidAgnosticParts = true,
+				Resolver                 = resolver,
+				TargetArch               = AndroidTargetArch.None,
+			};
+			DoRun (state, out ApplicationConfigTaskState appConfState);
+			RegisterApplicationConfigState (appConfState);
+		}
+
+		// * We have one set of assemblies in general, some RID-specific ones (e.g. `System.Private.CoreLib`, potentially others).
+		// * Typemaps use MVIDs and metadata tokens, so we need to process all assemblies as per-RID ones (different MVIDs in the
+		//   actually RID-specific assemblies may affect sorting of the RID-agnostic ones)
+		// * Marshal methods may be used
+		void RunReleaseNoLinking (bool useMarshalMethods)
+		{
+			LogRunMode ("Release, no linking");
+
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (useMarshalMethods);
+
+			// All the RID-agnostic asseemblies will use resolvers of this architecture. This is because the RidAwareInputAssemblySet does not store
+			// such assemblies separately, but it copies them to **all** the target RIDs. This, in turn, is done because of typemaps and marshal methods
+			// which process data in a way that requires proper sorting of assemblies per MVID and it requires valid type and method token IDs.
+			AndroidTargetArch firstArch = resolvers.First ().Key;
+			resolvers.Add (AndroidTargetArch.None, resolvers[firstArch]);
+			var assemblies = CollectInterestingAssemblies (new RidAwareInputAssemblySet (resolvers.Keys), (AndroidTargetArch arch) => resolvers[arch]);
+			RunReleaseCommon (useMarshalMethods, assemblies, resolvers);
+		}
+
+		// * We have as many sets of assemblies as there are RIDs, all assemblies are RID-specific
+		// * Typemaps use MVIDs and metadata tokens, so we need per-RID set processing
+		// * Marshal methods may be used
+		void RunReleaseWithLinking (bool useMarshalMethods)
+		{
+			LogRunMode ("Release, with linking");
+
+			Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers = MakeResolvers (useMarshalMethods);
+			var assemblies = CollectInterestingAssemblies (new RidSpecificInputAssemblySet (), (AndroidTargetArch arch) => resolvers[arch]);
+			RunReleaseCommon (useMarshalMethods, assemblies, resolvers);
+		}
+
+		void RunReleaseCommon (bool useMarshalMethods, RidSensitiveInputAssemblySet assemblies, Dictionary<AndroidTargetArch, XAAssemblyResolver> resolvers)
+		{
+			bool first = true;
+
+			foreach (var kvp in resolvers) {
+				var state = new RunState {
+					UseMarshalMethods        = useMarshalMethods,
+					AssemblySet              = assemblies,
+					JavaTypeAssemblies       = assemblies.JavaTypeAssemblies[kvp.Key].Values,
+					UserAssemblies           = assemblies.UserAssemblies[kvp.Key].Values,
+					GenerateRidAgnosticParts = first,
+					Resolver                 = kvp.Value,
+					TargetArch               = kvp.Key,
+				};
+
+				DoRun (state, out ApplicationConfigTaskState appConfState);
+				if (first) {
+					RegisterApplicationConfigState (appConfState);
+					first = false;
+				}
+			}
+		}
+
+		Dictionary<AndroidTargetArch, XAAssemblyResolver> MakeResolvers (bool useMarshalMethods)
+		{
+			var resolvers = new Dictionary<AndroidTargetArch, XAAssemblyResolver> ();
+			foreach (string abi in SupportedAbis) {
+				// Each ABI gets its own resolver in this mode...
+				XAAssemblyResolver resolver = MakeResolver (useMarshalMethods);
+				resolvers.Add (MonoAndroidHelper.AbiToTargetArch (abi), resolver);
+			}
+
+			return resolvers;
+		}
+
+		void RegisterApplicationConfigState (ApplicationConfigTaskState appConfState)
+		{
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
+		}
+
+		void LogRunMode (string mode)
+		{
+			Log.LogDebugMessage ($"GenerateJavaStubs mode: {mode}");
+		}
+
+		T CollectInterestingAssemblies<T> (T assemblies, Func<AndroidTargetArch, XAAssemblyResolver> getResolver) where T: InputAssemblySet
+		{
+			AndroidTargetArch targetArch;
+			foreach (ITaskItem assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
@@ -166,212 +303,145 @@ namespace Xamarin.Android.Tasks
 
 				bool addAssembly = false;
 				string fileName = Path.GetFileName (assembly.ItemSpec);
-				if (!hasExportReference && String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					hasExportReference = true;
+				if (String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
-				} else if (!haveMonoAndroid && String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					haveMonoAndroid = true;
+				} else if (String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
 				} else if (MonoAndroidHelper.FrameworkAssembliesToTreatAsUserAssemblies.Contains (fileName)) {
 					if (!bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) || !value) {
 						string name = Path.GetFileNameWithoutExtension (fileName);
-						if (!userAssemblies.ContainsKey (name))
-							userAssemblies.Add (name, assembly.ItemSpec);
+						assemblies.AddUserAssembly (assembly);
 						addAssembly = true;
 					}
+				} else if (MonoAndroidHelper.IsSatelliteAssembly (assembly)) {
+					continue;
 				}
 
 				if (addAssembly) {
-					MaybeAddAbiSpecifcAssembly (assembly, fileName);
-					if (!allTypemapAssemblies.ContainsKey (assembly.ItemSpec)) {
-						allTypemapAssemblies.Add (assembly.ItemSpec, assembly);
-					}
+					assemblies.AddJavaTypeAssembly (assembly);
 				}
 
-				res.Load (MonoAndroidHelper.GetTargetArch (assembly), assembly.ItemSpec);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+
+				// We don't check whether we have a resolver for `targetArch` on purpose, if it throws then it means we have a bug which
+				// should be fixed since there shouldn't be any assemblies passed to this task that belong in ABIs other than those
+				// specified in `SupportedAbis` (and, perhaps, a RID-agnostic one)
+				try {
+					getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+				} catch (Exception ex) {
+					throw new InvalidOperationException ($"Internal error: failed to get resolver for assembly {assembly.ItemSpec}, target architecture '{targetArch}'", ex);
+				}
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
-			foreach (var asm in ResolvedUserAssemblies) {
-				if (bool.TryParse (asm.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
-					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
+			foreach (ITaskItem assembly in ResolvedUserAssemblies) {
+				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out bool value) && value) {
+					Log.LogDebugMessage ($"Skipping Java Stub Generation for {assembly.ItemSpec}");
 					continue;
 				}
-				res.Load (MonoAndroidHelper.GetTargetArch (asm), asm.ItemSpec);
-				MaybeAddAbiSpecifcAssembly (asm, Path.GetFileName (asm.ItemSpec));
-				if (!allTypemapAssemblies.ContainsKey (asm.ItemSpec)) {
-					allTypemapAssemblies.Add (asm.ItemSpec, asm);
-				}
 
-				string name = Path.GetFileNameWithoutExtension (asm.ItemSpec);
-				if (!userAssemblies.ContainsKey (name))
-					userAssemblies.Add (name, asm.ItemSpec);
+				targetArch = MonoAndroidHelper.GetTargetArch (assembly);
+				getResolver (targetArch).Load (targetArch, assembly.ItemSpec);
+
+				assemblies.AddJavaTypeAssembly (assembly);
+				assemblies.AddUserAssembly (assembly);
 			}
+
+			return assemblies;
+		}
+
+		void DoRun (RunState state, out ApplicationConfigTaskState? appConfState)
+		{
+			Log.LogDebugMessage ($"DoRun for arch {state.TargetArch}");
+			Log.LogDebugMessage ("Java type assemblies:");
+			foreach (ITaskItem assembly in state.JavaTypeAssemblies) {
+				Log.LogDebugMessage ($"  {assembly.ItemSpec}");
+			}
+
+			Log.LogDebugMessage ("User assemblies:");
+			foreach (ITaskItem assembly in state.UserAssemblies) {
+				Log.LogDebugMessage ($"  {assembly.ItemSpec}");
+			}
+			PackageNamingPolicy pnp;
+			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
 			// Step 1 - Find all the JLO types
 			var cache = new TypeDefinitionCache ();
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
-			var javaTypes = new List<JavaType> ();
+			ICollection<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (state.JavaTypeAssemblies, state.Resolver);
+			var javaTypes = new List<TypeDefinition> ();
 
-			foreach (JavaType jt in allJavaTypes) {
+			foreach (TypeDefinition javaType in allJavaTypes) {
 				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
-				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
+				if ((!state.UseMarshalMethods && !state.AssemblySet.IsUserAssembly (javaType.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (javaType, cache)) {
 					continue;
 				}
-				javaTypes.Add (jt);
+				javaTypes.Add (javaType);
 			}
 
-			MarshalMethodsClassifier classifier = null;
-			if (useMarshalMethods) {
-				classifier = new MarshalMethodsClassifier (cache, res, Log);
+			MarshalMethodsClassifier? classifier = null;
+			if (state.UseMarshalMethods) {
+				classifier = new MarshalMethodsClassifier (cache, state.Resolver, Log);
 			}
 
-			// Step 2 - Generate Java stub code
-			var success = CreateJavaSources (javaTypes, cache, classifier, useMarshalMethods);
-			if (!success)
-				return;
+			// TODO: JCWs don't need to be generated for every RID, but we do need the classifier for the marshal methods
+			// rewriter and generator.  Add a mode to only classify marshal methods without generating the files.
+			// For now, always generate the JCWs if marshal methods are enabled
+			if (state.UseMarshalMethods || state.GenerateRidAgnosticParts) {
+				// Step 2 - Generate Java stub code
+				bool success = CreateJavaSources (javaTypes, cache, classifier, state.UseMarshalMethods);
+				if (!success) {
+					appConfState = null;
+					return; // TODO: throw? Return `false`?
+				}
+			}
 
-			if (useMarshalMethods) {
+			if (state.UseMarshalMethods) {
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 				// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
 				// We don't care about those generated by us, since they won't contain the `XA_BROKEN_EXCEPTION_TRANSITIONS` variable we look for.
 				var environmentParser = new EnvironmentFilesParser ();
-
-				Dictionary<AssemblyDefinition, string> assemblyPaths = AddMethodsFromAbiSpecificAssemblies (classifier, res, abiSpecificAssembliesByPath);
-
-				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, assemblyPaths, Log);
-				rewriter.Rewrite (res, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
+				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, Log);
+				rewriter.Rewrite (state.Resolver, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
 			}
 
 			// Step 3 - Generate type maps
 			//   Type mappings need to use all the assemblies, always.
-			WriteTypeMappings (allJavaTypes, cache);
+			WriteTypeMappings (state.TargetArch, allJavaTypes, cache, out appConfState);
 
-			// We need to save a map of .NET type -> ACW type for resource file fixups
-			var managed = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
-			var java    = new Dictionary<string, TypeDefinition> (javaTypes.Count, StringComparer.Ordinal);
+			if (state.GenerateRidAgnosticParts) {
+				WriteAcwMaps (javaTypes, cache);
 
-			var managedConflicts = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
-			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
+				// Step 4 - Merge [Activity] and friends into AndroidManifest.xml
+				UpdateAndroidManifest (state, cache, allJavaTypes);
+				CreateAdditionalJavaSources (javaTypes, cache, classifier);
+			}
 
-			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				foreach (JavaType jt in javaTypes) {
-					TypeDefinition type = jt.Type;
-					string managedKey = type.FullName.Replace ('/', '.');
-					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
+			if (state.UseMarshalMethods) {
+				classifier.AddSpecialCaseMethods ();
 
-					acw_map.Write (type.GetPartialAssemblyQualifiedName (cache));
-					acw_map.Write (';');
-					acw_map.Write (javaKey);
-					acw_map.WriteLine ();
+				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
 
-					TypeDefinition conflict;
-					bool hasConflict = false;
-					if (managed.TryGetValue (managedKey, out conflict)) {
-						if (!conflict.Module.Name.Equals (type.Module.Name)) {
-							if (!managedConflicts.TryGetValue (managedKey, out var list))
-								managedConflicts.Add (managedKey, list = new List<string> { conflict.GetPartialAssemblyName (cache) });
-							list.Add (type.GetPartialAssemblyName (cache));
-						}
-						hasConflict = true;
-					}
-					if (java.TryGetValue (javaKey, out conflict)) {
-						if (!conflict.Module.Name.Equals (type.Module.Name)) {
-							if (!javaConflicts.TryGetValue (javaKey, out var list))
-								javaConflicts.Add (javaKey, list = new List<string> { conflict.GetAssemblyQualifiedName (cache) });
-							list.Add (type.GetAssemblyQualifiedName (cache));
-							success = false;
-						}
-						hasConflict = true;
-					}
-					if (!hasConflict) {
-						managed.Add (managedKey, type);
-						java.Add (javaKey, type);
-
-						acw_map.Write (managedKey);
-						acw_map.Write (';');
-						acw_map.Write (javaKey);
-						acw_map.WriteLine ();
-
-						acw_map.Write (JavaNativeTypeManager.ToCompatJniName (type, cache).Replace ('/', '.'));
-						acw_map.Write (';');
-						acw_map.Write (javaKey);
-						acw_map.WriteLine ();
-					}
+				if (classifier.RejectedMethodCount > 0) {
+					Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
 				}
 
-				acw_map.Flush ();
-				Files.CopyIfStreamChanged (acw_map.BaseStream, AcwMapFile);
+				if (classifier.WrappedMethodCount > 0) {
+					// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
+					Log.LogDebugMessage ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
+				}
 			}
+		}
 
-			foreach (var kvp in managedConflicts) {
-				Log.LogCodedWarning ("XA4214", Properties.Resources.XA4214, kvp.Key, string.Join (", ", kvp.Value));
-				Log.LogCodedWarning ("XA4214", Properties.Resources.XA4214_Result, kvp.Key, kvp.Value [0]);
-			}
-
-			foreach (var kvp in javaConflicts) {
-				Log.LogCodedError ("XA4215", Properties.Resources.XA4215, kvp.Key);
-				foreach (var typeName in kvp.Value)
-					Log.LogCodedError ("XA4215", Properties.Resources.XA4215_Details, kvp.Key, typeName);
-			}
-
-			// Step 3 - Merge [Activity] and friends into AndroidManifest.xml
-			var manifest = new ManifestDocument (ManifestTemplate) {
-				PackageName = PackageName,
-				VersionName = VersionName,
-				ApplicationLabel = ApplicationLabel ?? PackageName,
-				Placeholders = ManifestPlaceholders,
-				Resolver = res,
-				SdkDir = AndroidSdkDir,
-				TargetSdkVersion = AndroidSdkPlatform,
-				MinSdkVersion = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion).ToString (),
-				Debug = Debug,
-				MultiDex = MultiDex,
-				NeedsInternet = NeedsInternet,
-				InstantRunEnabled = InstantRunEnabled
-			};
-			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
-			if (manifest.HasVersionCode) {
-				Log.LogDebugMessage ($"Using existing versionCode in: {ManifestTemplate}");
-			} else if (!string.IsNullOrEmpty (VersionCode)) {
-				manifest.VersionCode = VersionCode;
-			}
-			manifest.Assemblies.AddRange (userAssemblies.Values);
-
-			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
-				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
-				// on then we need android:debuggable=true and android:extractNativeLibs=true
-				manifest.ForceDebuggable = true;
-				manifest.ForceExtractNativeLibs = true;
-			}
-
-			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
-
-			// Only write the new manifest if it actually changed
-			if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
-				Log.LogDebugMessage ($"Saving: {MergedAndroidManifestOutput}");
-			}
-
-			// Create additional runtime provider java sources.
-			string providerTemplateFile = "MonoRuntimeProvider.Bundled.java";
-			string providerTemplate = GetResource (providerTemplateFile);
-
-			foreach (var provider in additionalProviders) {
-				var contents = providerTemplate.Replace ("MonoRuntimeProvider", provider);
-				var real_provider = Path.Combine (OutputDirectory, "src", "mono", provider + ".java");
-				Files.CopyIfStringChanged (contents, real_provider);
-			}
-
-			// Create additional application java sources.
+		void CreateAdditionalJavaSources (ICollection<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier? classifier)
+		{
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
-			foreach (JavaType jt in javaTypes) {
-				TypeDefinition type = jt.Type;
+			foreach (TypeDefinition type in javaTypes) {
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
 					if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
 						continue;
@@ -388,38 +458,54 @@ namespace Xamarin.Android.Tasks
 			string applicationTemplateFile = "ApplicationRegistration.java";
 			SaveResource (applicationTemplateFile, applicationTemplateFile, real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ()));
+		}
 
-			if (useMarshalMethods) {
-				classifier.AddSpecialCaseMethods ();
-
-				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
-
-				if (classifier.RejectedMethodCount > 0) {
-					Log.LogWarning ($"Number of methods in the project that will be registered dynamically: {classifier.RejectedMethodCount}");
-				}
-
-				if (classifier.WrappedMethodCount > 0) {
-					// TODO: change to LogWarning once the generator can output code which requires no non-blittable wrappers
-					Log.LogDebugMessage ($"Number of methods in the project that need marshal method wrappers: {classifier.WrappedMethodCount}");
-				}
+		void UpdateAndroidManifest (RunState state, TypeDefinitionCache cache, ICollection<TypeDefinition> allJavaTypes)
+		{
+			var manifest = new ManifestDocument (ManifestTemplate) {
+				PackageName       = PackageName,
+				VersionName       = VersionName,
+				ApplicationLabel  = ApplicationLabel ?? PackageName,
+				Placeholders      = ManifestPlaceholders,
+				Resolver          = state.Resolver,
+				SdkDir            = AndroidSdkDir,
+				TargetSdkVersion  = AndroidSdkPlatform,
+				MinSdkVersion     = MonoAndroidHelper.ConvertSupportedOSPlatformVersionToApiLevel (SupportedOSPlatformVersion).ToString (),
+				Debug             = Debug,
+				MultiDex          = MultiDex,
+				NeedsInternet     = NeedsInternet,
+				InstantRunEnabled = InstantRunEnabled
+			};
+			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
+			if (manifest.HasVersionCode) {
+				Log.LogDebugMessage ($"Using existing versionCode in: {ManifestTemplate}");
+			} else if (!string.IsNullOrEmpty (VersionCode)) {
+				manifest.VersionCode = VersionCode;
 			}
 
-			void MaybeAddAbiSpecifcAssembly (ITaskItem assembly, string fileName)
-			{
-				if (abiSpecificAssembliesByPath == null) {
-					return;
-				}
-
-				string? abi = assembly.GetMetadata ("Abi");
-				if (!String.IsNullOrEmpty (abi)) {
-					if (!abiSpecificAssembliesByPath.TryGetValue (fileName, out List<ITaskItem>? items)) {
-						items = new List<ITaskItem> ();
-						abiSpecificAssembliesByPath.Add (fileName, items);
-					}
-
-					items.Add (assembly);
-				}
+			foreach (ITaskItem assembly in state.UserAssemblies) {
+				manifest.Assemblies.Add (Path.GetFileName (assembly.ItemSpec));
 			}
+
+			if (!String.IsNullOrWhiteSpace (CheckedBuild)) {
+				// We don't validate CheckedBuild value here, this will be done in BuildApk. We just know that if it's
+				// on then we need android:debuggable=true and android:extractNativeLibs=true
+				manifest.ForceDebuggable = true;
+				manifest.ForceExtractNativeLibs = true;
+			}
+
+			var additionalProviders = manifest.Merge (Log, cache, allJavaTypes, ApplicationJavaClass, EmbedAssemblies, BundledWearApplicationName, MergedManifestDocuments);
+
+			// Only write the new manifest if it actually changed
+			if (manifest.SaveIfChanged (Log, MergedAndroidManifestOutput)) {
+				Log.LogDebugMessage ($"Saving: {MergedAndroidManifestOutput}");
+			}
+		}
+
+		void WriteAcwMaps (List<TypeDefinition> javaTypes, TypeDefinitionCache cache)
+		{
+			var writer = new AcwMapWriter (Log, AcwMapFile);
+			writer.Write (javaTypes, cache);
 		}
 
 		AssemblyDefinition LoadAssembly (string path, XAAssemblyResolver? resolver = null)
@@ -452,7 +538,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		bool CreateJavaSources (IEnumerable<JavaType> newJavaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
+		bool CreateJavaSources (IEnumerable<TypeDefinition> newJavaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
 		{
 			if (useMarshalMethods && classifier == null) {
 				throw new ArgumentNullException (nameof (classifier));
@@ -464,8 +550,7 @@ namespace Xamarin.Android.Tasks
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
 
 			bool ok = true;
-			foreach (JavaType jt in newJavaTypes) {
-				TypeDefinition t = jt.Type; // JCW generator doesn't care about ABI-specific types or token ids
+			foreach (TypeDefinition t in newJavaTypes) {
 				if (t.IsInterface) {
 					// Interfaces are in typemap but they shouldn't have JCW generated for them
 					continue;
@@ -568,14 +653,14 @@ namespace Xamarin.Android.Tasks
 			Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
+		void WriteTypeMappings (AndroidTargetArch targetArch, ICollection<TypeDefinition> types, TypeDefinitionCache cache, out ApplicationConfigTaskState appConfState)
 		{
-			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
+			Log.LogDebugMessage ($"Generating typemaps for arch {targetArch}, {types.Count} types");
+			var tmg = new TypeMapGenerator (targetArch, Log, SupportedAbis);
+			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out appConfState)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
 		}
 
 		/// <summary>

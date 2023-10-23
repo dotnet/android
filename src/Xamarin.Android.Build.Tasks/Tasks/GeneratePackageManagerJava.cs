@@ -39,6 +39,9 @@ namespace Xamarin.Android.Tasks
 		public bool UseAssemblyStore { get; set; }
 
 		[Required]
+		public bool UseAssemblySharedLibraries { get; set; }
+
+		[Required]
 		public string OutputDirectory { get; set; }
 
 		[Required]
@@ -145,26 +148,6 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi)
-		{
-			switch (abi.Trim ()) {
-				case "armeabi-v7a":
-					return AndroidTargetArch.Arm;
-
-				case "arm64-v8a":
-					return AndroidTargetArch.Arm64;
-
-				case "x86":
-					return AndroidTargetArch.X86;
-
-				case "x86_64":
-					return AndroidTargetArch.X86_64;
-
-				default:
-					throw new InvalidOperationException ($"Unknown ABI {abi}");
-			}
-		}
-
 		static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 		static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
 		static readonly string[] defaultHttpMessageHandler = {"XA_HTTP_CLIENT_HANDLER_TYPE", "System.Net.Http.HttpClientHandler, System.Net.Http"};
@@ -246,7 +229,7 @@ namespace Xamarin.Android.Tasks
 			Encoding assemblyNameEncoding = Encoding.UTF8;
 
 			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
-				if (UseAssemblyStore) {
+				if (UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 					return;
 				}
 
@@ -269,7 +252,7 @@ namespace Xamarin.Android.Tasks
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				if (!UseAssemblyStore) {
+				if (!UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 					assemblyCount++;
 					return;
 				}
@@ -316,7 +299,7 @@ namespace Xamarin.Android.Tasks
 				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 			}
 
-			if (!UseAssemblyStore) {
+			if (!UseAssemblyStore) { // TODO: modify for assemblies embedded in DSOs
 				int abiNameLength = 0;
 				foreach (string abi in SupportedAbis) {
 					if (abi.Length <= abiNameLength) {
@@ -384,15 +367,11 @@ namespace Xamarin.Android.Tasks
 				InstantRunEnabled = InstantRunEnabled,
 				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
+				HaveStandaloneAssemblyDSOs = UseAssemblySharedLibraries,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
-				NumberOfAssemblyStoresInApks = 2, // Until feature APKs are a thing, we're going to have just two stores in each app - one for arch-agnostic
-				// and up to 4 other for arch-specific assemblies. Only **one** arch-specific store is ever loaded on the app
-				// runtime, thus the number 2 here. All architecture specific stores contain assemblies with the same names
-				// and in the same order.
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
-				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,
@@ -423,7 +402,7 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsBaseAsmFilePath = Path.Combine (EnvironmentOutputDirectory, $"marshal_methods.{targetAbi}");
 				string environmentLlFilePath  = $"{environmentBaseAsmFilePath}.ll";
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
-				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
+				AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
 
 				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {

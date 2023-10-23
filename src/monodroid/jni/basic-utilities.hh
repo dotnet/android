@@ -27,7 +27,7 @@ namespace xamarin::android
 	{
 	public:
 		FILE            *monodroid_fopen (const char* filename, const char* mode);
-		int              monodroid_stat (const char *path, monodroid_stat_t *s);
+		static int       monodroid_stat (const char *path, monodroid_stat_t *s) noexcept;
 		monodroid_dir_t *monodroid_opendir (const char *filename);
 		int              monodroid_closedir (monodroid_dir_t *dirp);
 		int              monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
@@ -40,7 +40,7 @@ namespace xamarin::android
 		int              create_directory (const char *pathname, mode_t mode);
 		void             set_world_accessable (const char *path);
 		void             set_user_executable (const char *path);
-		bool             file_exists (const char *file);
+		static bool      file_exists (const char *file) noexcept;
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
 
