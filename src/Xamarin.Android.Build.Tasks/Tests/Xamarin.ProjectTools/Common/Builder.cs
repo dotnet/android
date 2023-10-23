@@ -105,7 +105,7 @@ namespace Xamarin.ProjectTools
 			Version lastVersion     = null;
 			List<string> allTFVs    = new List<string> ();
 
-			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data") : TestEnvironment.MonoAndroidFrameworkDirectory;
+			var searchDir = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data");
 			foreach (var apiInfoFile in Directory.EnumerateFiles (searchDir, "AndroidApiInfo.xml", SearchOption.AllDirectories)) {
 				string frameworkVersion = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Version");
 				string apiLevel         = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Level");
@@ -135,16 +135,6 @@ namespace Xamarin.ProjectTools
 			var doc = XDocument.Load (androidApiInfo);
 			return doc.XPathSelectElement (elementPath)?.Value;
 		}
-
-		public bool TargetFrameworkExists (string targetFramework)
-		{
-			var path = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFramework);
-			if (!Directory.Exists (path)) {
-				return false;
-			}
-			return true;
-		}
-
 
 		public string Root {
 			get {
