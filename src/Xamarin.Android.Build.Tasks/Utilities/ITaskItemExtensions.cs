@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Xml.Linq;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
@@ -32,12 +33,12 @@ namespace Xamarin.Android.Tasks
 			return value;
 		}
 
-		public static string? GetRequiredMetadata (this ITaskItem item, string name, TaskLoggingHelper log)
+		public static string? GetRequiredMetadata (this ITaskItem item, string itemName, string name, TaskLoggingHelper log)
 		{
 			var value = item.GetMetadata (name);
 
 			if (string.IsNullOrWhiteSpace (value)) {
-				log.LogError ("Item is missing required metadata '{0}'", name);
+				log.LogCodedError ("XA4234", Properties.Resources.XA4234, itemName, item.ToString (), name);
 				return null;
 			}
 

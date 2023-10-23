@@ -10,6 +10,7 @@ using System.Xml;
 using System.Xml.Serialization;
 using MavenNet;
 using MavenNet.Models;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
@@ -34,7 +35,7 @@ static class MavenExtensions
 		var parts = id.Split (separator, StringSplitOptions.RemoveEmptyEntries);
 
 		if (parts.Length != 2 || parts.Any (string.IsNullOrWhiteSpace)) {
-			log.LogError ("Artifact specification '{0}' is invalid.", id);
+			log.LogCodedError ("XA4235", Properties.Resources.XA4235, id);
 			return null;
 		}
 
@@ -102,7 +103,7 @@ static class MavenExtensions
 		if (await TryDownloadPayload (artifact, aar_filename, cancellationToken) is not string aar_error)
 			return aar_filename;
 
-		log.LogError ("Cannot download artifact '{0}:{1}'.\n- {2}: {3}\n- {4}: {5}", artifact.GroupId, artifact.Id, Path.GetFileName (jar_filename), jar_error, Path.GetFileName (aar_filename), aar_error);
+		log.LogCodedError ("XA4236", Properties.Resources.XA4236, artifact.GroupId, artifact.Id, Path.GetFileName (jar_filename), jar_error, Path.GetFileName (aar_filename), aar_error);
 
 		return null;
 	}
@@ -125,7 +126,10 @@ static class MavenExtensions
 		if (await TryDownloadPayload (artifact, pom_filename, cancellationToken) is not string pom_error)
 			return pom_filename;
 
-		log.LogError ("Cannot download {4}POM file for artifact '{0}:{1}'.\n- {2}: {3}", artifact.GroupId, artifact.Id, Path.GetFileName (pom_filename), pom_error, isParent ? "parent " : "");
+		if (!isParent)
+			log.LogCodedError ("XA4237", Properties.Resources.XA4237, artifact.GroupId, artifact.Id, Path.GetFileName (pom_filename), pom_error);
+		else
+			log.LogCodedError ("XA4238", Properties.Resources.XA4238, artifact.GroupId, artifact.Id, Path.GetFileName (pom_filename), pom_error);
 
 		return null;
 	}

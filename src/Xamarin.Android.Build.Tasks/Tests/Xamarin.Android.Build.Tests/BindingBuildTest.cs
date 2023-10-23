@@ -819,6 +819,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		[Test]
 		public void AndroidMavenLibrary ()
 		{
+			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
 			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
 			item.Metadata.Add ("Version", "1.10.4");
 

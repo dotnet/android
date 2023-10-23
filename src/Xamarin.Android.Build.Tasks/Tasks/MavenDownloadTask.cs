@@ -39,7 +39,7 @@ public class MavenDownloadTask : AndroidAsyncTask
 
 			// Validate artifact
 			var id = library.ItemSpec;
-			var version = library.GetRequiredMetadata ("Version", Log);
+			var version = library.GetRequiredMetadata ("AndroidMavenLibrary", "Version", Log);
 
 			if (version is null)
 				continue;
@@ -100,7 +100,7 @@ public class MavenDownloadTask : AndroidAsyncTask
 
 	async System.Threading.Tasks.Task<TaskItem?> TryGetParentPom (ITaskItem item, TaskLoggingHelper log)
 	{
-		var child_pom_file = item.GetRequiredMetadata ("ArtifactPom", Log);
+		var child_pom_file = item.GetRequiredMetadata ("AndroidMavenLibrary", "ArtifactPom", Log);
 
 		// Shouldn't be possible because we just created this items
 		if (child_pom_file is null)
@@ -149,7 +149,7 @@ public class MavenDownloadTask : AndroidAsyncTask
 			repo = MavenRepository.FromUrl (type);
 
 		if (repo is null)
-			Log.LogError ("Unknown Maven repository: '{0}'.", type);
+			Log.LogCodedError ("XA4239", Properties.Resources.XA4239, type);
 
 		return repo;
 	}

@@ -22,7 +22,7 @@ public class MavenDownloadTaskTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Item is missing required metadata 'Version'", engine.Errors [0].Message);
+		Assert.AreEqual ("'<AndroidMavenLibrary>' item 'com.google.android.material:material' is missing required metadata 'Version'", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -37,7 +37,7 @@ public class MavenDownloadTaskTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Artifact specification 'com.google.android.material' is invalid.", engine.Errors [0].Message);
+		Assert.AreEqual ("Maven artifact specification 'com.google.android.material' is invalid. The correct format is 'group_id:artifact_id'.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -52,7 +52,7 @@ public class MavenDownloadTaskTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Artifact specification 'com.google.android.material: ' is invalid.", engine.Errors [0].Message);
+		Assert.AreEqual ("Maven artifact specification 'com.google.android.material: ' is invalid. The correct format is 'group_id:artifact_id'.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -83,7 +83,7 @@ public class MavenDownloadTaskTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Cannot download artifact 'com.example:dummy'.\n- com.example_dummy.jar: Response status code does not indicate success: 404 (Not Found).\n- com.example_dummy.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message);
+		Assert.AreEqual ($"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- com.example_dummy.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- com.example_dummy.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message.ReplaceLineEndings ());
 	}
 
 	[Test]
@@ -108,7 +108,7 @@ public class MavenDownloadTaskTests
 			await task.RunTaskAsync ();
 
 			Assert.AreEqual (1, engine.Errors.Count);
-			Assert.AreEqual ("Cannot download POM file for artifact 'com.example:dummy'.\n- com.example_dummy.pom: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message);
+			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy'.{Environment.NewLine}- com.example_dummy.pom: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message.ReplaceLineEndings ());
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
