@@ -339,7 +339,7 @@
   <Target Name="_ExportMsxDoc"
       DependsOnTargets="_FindDocSourceFiles"
       Inputs="@(_MsxDocSourceFile)"
-      Outputs="$(_DocsExportOutput)">
+      Outputs="$(DocsExportOutput)">
     <Exec
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
     />
