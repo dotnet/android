@@ -114,7 +114,6 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
-		public bool HaveStandaloneAssemblyDSOs { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public int AndroidRuntimeJNIEnvToken { get; set; }
@@ -167,7 +166,6 @@ namespace Xamarin.Android.Tasks
 				instant_run_enabled = InstantRunEnabled,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
-				have_standalone_assembly_dsos = HaveStandaloneAssemblyDSOs,
 				marshal_methods_enabled = MarshalMethodsEnabled,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,

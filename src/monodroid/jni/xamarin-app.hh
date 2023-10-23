@@ -87,82 +87,6 @@ struct XamarinAndroidBundledAssembly final
 	char    *name;
 };
 
-struct AssemblyEntry
-{
-	// offset into the `xa_input_assembly_data` array
-	uint32_t input_data_offset;
-
-	// number of bytes data of this assembly occupies
-	uint32_t input_data_size;
-
-	// offset into the `xa_uncompressed_assembly_data` array where the uncompressed
-	// assembly data (if any) lives.
-	uint32_t uncompressed_data_offset;
-
-	// Size of the uncompressed data. 0 if assembly wasn't compressed.
-	uint32_t uncompressed_data_size;
-};
-
-struct AssemblyIndexEntry
-{
-	xamarin::android::hash_t name_hash;
-
-	// Index into the `xa_assemblies` descriptor array
-	uint32_t assemblies_index;
-
-	// Index into the `xa_load_info` array.  We can't reuse the `assemblies_index` above because the order
-	// of entries in `xa_load_info` is determined in a different task than that of `xa_assemblies` and it
-	// also depends on the number of assemblies placed in the standalone DSOs.
-	uint32_t load_info_index;
-
-	// whether hashed name had extension
-	bool has_extension;
-
-	// whether assembly data lives in a separate DSO
-	bool is_standalone;
-};
-
-struct AssemblyLoadInfo
-{
-	uint32_t apk_offset; // offset into the APK, or 0 if the assembly isn't in a standalone DSO or if the DSOs are
-						 // extracted to disk at install time
-	uint32_t apk_data_size; // Size of the DSO in the APK
-	void *mmap_addr;     // Address at which the assembly data was mmapped
-	const uint8_t *data_addr;  // Address at which the assembly data is available. It may be the same as `mmap_addr` if the
-						 // data wasn't compressed, different otherwise.
-	uint32_t data_size;
-};
-
-constexpr uint32_t InputAssemblyDataSize = 1024;
-constexpr uint32_t UncompressedAssemblyDataSize = 2048;
-constexpr uint32_t AssemblyCount = 2;
-constexpr uint32_t AssemblyNameLength = 26; // including the terminating NUL
-constexpr uint32_t SharedLibraryNameLength = 32; // including the terminating NUL
-
-struct AssembliesConfig
-{
-	uint32_t input_assembly_data_size;
-	uint32_t uncompressed_assembly_data_size;
-	uint32_t assembly_name_length;
-	uint32_t assembly_count;
-	uint32_t assembly_index_count;
-	uint32_t assembly_dso_count;
-	uint32_t shared_library_name_length;
-};
-
-MONO_API MONO_API_EXPORT const AssembliesConfig xa_assemblies_config;
-MONO_API MONO_API_EXPORT const uint8_t xa_input_assembly_data[InputAssemblyDataSize];
-
-// All the compressed assemblies are uncompressed into this array, with offsets in `xa_assemblies`
-// pointing to the place where they start
-MONO_API MONO_API_EXPORT uint8_t xa_uncompressed_assembly_data[UncompressedAssemblyDataSize];
-
-MONO_API MONO_API_EXPORT const AssemblyEntry xa_assemblies[AssemblyCount];
-MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
-MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
-MONO_API MONO_API_EXPORT const char xa_assembly_dso_names[AssemblyCount][SharedLibraryNameLength];
-MONO_API MONO_API_EXPORT AssemblyLoadInfo xa_assemblies_load_info[AssemblyCount];
-
 enum class MonoComponent : uint32_t
 {
 	None      = 0x00,
@@ -181,7 +105,6 @@ struct ApplicationConfig
 	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
-	bool have_standalone_assembly_dsos;
 	bool marshal_methods_enabled;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;

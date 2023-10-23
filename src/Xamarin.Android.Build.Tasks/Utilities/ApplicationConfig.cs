@@ -32,7 +32,6 @@ namespace Xamarin.Android.Tasks
 		public bool   instant_run_enabled ;
 		public bool   jni_add_native_method_registration_attribute_present;
 		public bool   have_runtime_config_blob;
-		public bool   have_standalone_assembly_dsos;
 		public bool   marshal_methods_enabled;
 		public byte   bound_stream_io_exception_type;
 		public uint   package_naming_policy;

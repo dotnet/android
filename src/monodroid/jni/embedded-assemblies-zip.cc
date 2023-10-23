@@ -181,53 +181,6 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 		if (!interesting_entry || state.location != EntryLocation::Libs) {
 			continue;
 		}
-
-		if (entry_name.length () < assembly_dso_min_length) {
-			log_warn (LOG_ASSEMBLY, "APK entry '%s' looks like an assembly DSO, but its name is not long enough. Expected at least %zu characters", entry_name.get (), assembly_dso_min_length);
-			continue;
-		}
-
-		number_of_found_assembly_dsos++;
-
-		// We have an assembly DSO
-		log_info (LOG_ASSEMBLY, "Found an assembly DSO: %s; index: %s; data offset: %u", entry_name.get (), entry_name.get () + (entry_name.length () - 7), state.data_offset);
-
-		bool valid_hex = true;
-		auto integer_from_hex_char = []<size_t TLen> (dynamic_local_string<TLen> const& s, size_t pos, bool &is_valid, size_t shift) -> uint16_t
-		{
-			uint8_t ch = s[pos];
-			if (ch >= '0' && ch <= '9') {
-				return static_cast<uint16_t>((ch - 48) << shift); // 48 is ASCII '0'
-			}
-
-			if (ch >= 'A' && ch <= 'F') {
-				return static_cast<uint16_t>((ch - 55) << shift); // ASCII 'A' is 65, and it represents decimal 10
-			}
-
-			is_valid = false;
-			return static_cast<uint16_t>(0);
-		};
-
-		const size_t index_pos = entry_name.length () - assembly_index_start_offset;
-		uint16_t index =
-			integer_from_hex_char (entry_name, index_pos,     valid_hex, 12u) |
-			integer_from_hex_char (entry_name, index_pos + 1, valid_hex, 8u) |
-			integer_from_hex_char (entry_name, index_pos + 2, valid_hex, 4u) |
-			integer_from_hex_char (entry_name, index_pos + 3, valid_hex, 0u);
-
-		if (!valid_hex) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Unable to determine DSO storage index from '%s'", entry_name.get ());
-			Helpers::abort_application ();
-		}
-
-		if (index >= xa_assemblies_config.assembly_dso_count) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Index retrieved from '%s' exceeds the maximum allowed value of %u", entry_name.get (), xa_assemblies_config.assembly_dso_count - 1);
-			Helpers::abort_application ();
-		}
-
-		AssemblyLoadInfo &load_info = xa_assemblies_load_info[index];
-		load_info.apk_offset = state.data_offset;
-		load_info.apk_data_size = state.file_size;
 	}
 }
 #endif
@@ -273,11 +226,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application ();
 	}
 
-#if defined (RELEASE)
-	if (application_config.have_standalone_assembly_dsos) {
-		zip_load_standalone_dso_entries (buf, cd_entries, state);
-	} else
-#endif // def RELEASE
 	{
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}

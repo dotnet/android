@@ -367,7 +367,6 @@ namespace Xamarin.Android.Tasks
 				InstantRunEnabled = InstantRunEnabled,
 				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
-				HaveStandaloneAssemblyDSOs = UseAssemblySharedLibraries,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
 				MonoComponents = (MonoComponent)monoComponents,
