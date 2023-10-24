@@ -1,7 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  updateVS: false
   jdkTestFolder: $(JAVA_HOME_11_X64)
   remove_dotnet: false
   installTestSlicer: false
@@ -23,11 +22,6 @@ steps:
     commit: ${{ parameters.commit }}
     clean: true
     submodules: recursive
-
-- ${{ if eq(parameters.updateVS, true) }}:
-  - template: update-vs.yaml
-    parameters: 
-      xasourcePath: ${{ parameters.xaSourcePath }}
 
 - script: |
     echo "##vso[task.setvariable variable=JI_JAVA_HOME]${{ parameters.jdkTestFolder }}"

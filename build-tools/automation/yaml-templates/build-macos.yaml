@@ -11,7 +11,6 @@ parameters:
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
   nugetArtifactName: $(NuGetArtifactName)
-  provisionatorChannel: latest
   repositoryAlias: self
   stageName: mac_build
   stageDisplayName: Mac
@@ -49,7 +48,6 @@ stages:
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
 
     - powershell: |

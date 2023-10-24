@@ -694,6 +694,8 @@ namespace Lib2
 		[Test]
 		public void CSProjUserFileChanges ()
 		{
+			AssertCommercialBuild ();
+
 			var proj = new XamarinAndroidApplicationProject ();
 			var selectedDevice = "foo";
 			var csproj_user_file = $"{proj.ProjectName}.csproj.user";

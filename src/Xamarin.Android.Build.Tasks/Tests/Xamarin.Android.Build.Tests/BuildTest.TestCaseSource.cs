@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugSymbols */     true ,
 				/* optimize */         true ,
 				/* embedassebmlies */  false ,
-				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
+				/* expectedResult */   TestEnvironment.CommercialBuildAvailable ? "debug" : "release",
 			},
 			new object[] {
 				/* supportedAbi */     "armeabi-v7a",
@@ -145,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 				/* debugSymbols */     false ,
 				/* optimize */         null ,
 				/* embedassebmlies */  null ,
-				/* expectedResult */   CommercialBuildAvailable ? "debug" : "release",
+				/* expectedResult */   TestEnvironment.CommercialBuildAvailable ? "debug" : "release",
 			},
 		};
 #pragma warning restore 414
