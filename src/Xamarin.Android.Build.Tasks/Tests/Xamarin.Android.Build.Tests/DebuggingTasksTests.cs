@@ -10,15 +10,14 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2"), Category ("Commercial")]
+	[Category ("Node-2")]
 	[TestFixture, NonParallelizable]
 	public class DebuggingTasksTests : BaseTest
 	{
 		[OneTimeSetUp]
 		public void SetUp ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("DebuggingTasksTests require Xamarin.Android.Build.Debugging.Tasks.");
+			AssertCommercialBuild ();
 		}
 
 		// https://github.com/xamarin/monodroid/blob/63bbeb076d809c74811a8001d38bf2e9e8672627/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/ResolveXamarinAndroidToolsTests.cs
