@@ -22,6 +22,7 @@
       _GenerateBundledVersions;
       _CopyNetSdkTargets;
       _CopyVSExtensionTargets;
+      _WriteVersionFiles;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
@@ -379,6 +380,25 @@
         SourceFiles="@(_VSExtensionTargets)"
         DestinationFiles="@(_VSExtensionTargets->'$(XAInstallPrefix)xbuild\Xamarin\%(FileName)%(Extension)')"
         SkipUnchangedFiles="True"
+    />
+  </Target>
+
+  <Target Name="_WriteVersionFiles"
+      DependsOnTargets="GetXAVersionInfo" >
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version"
+        Lines="$(ProductVersion)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.commit"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
+        Overwrite="True"
+    />
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.rev"
+        Lines="$(XAVersionCommitCount)"
+        Overwrite="True"
     />
   </Target>
 </Project>

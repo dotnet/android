@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
 				}
 
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				RunProjectAndAssert (proj, builder);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 			}
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -344,7 +344,7 @@ namespace Library1 {
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 
@@ -576,6 +576,8 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
+			AssertCommercialBuild ();
+
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
