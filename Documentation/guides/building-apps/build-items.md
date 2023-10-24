@@ -174,6 +174,24 @@ installing app bundles.
 
 This build action was introduced in Xamarin.Android 11.3.
 
+## AndroidMavenLibrary
+
+`<AndroidMavenLibrary>` allows a Maven artifact to be specified which will 
+automatically be downloaded and added to a .NET Android binding project. 
+This can be useful to simplify maintenance of .NET Android bindings for artifacts 
+hosted in Maven.
+
+```xml
+<!-- Include format is {GroupId}:{ArtifactId} -->
+<ItemGroup>
+  <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp" Version="4.9.3" />
+</ItemGroup>
+```
+See the [AndroidMavenLibrary documentation](../AndroidMavenLibrary.md)
+for more details.
+
+This build action was introduced in .NET 9.
+
 ## AndroidNativeLibrary
 
 [Native libraries](~/android/platform/native-libraries.md)
