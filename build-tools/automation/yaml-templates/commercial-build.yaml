@@ -26,13 +26,14 @@ steps:
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
 - checkout: yaml-templates
 
-- ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+- ${{ if ne(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
   - script: >
       ls -l /Applications &&
       sudo xcode-select --switch /Applications/Xcode_14.2.app &&
       xcode-select --print-path
     displayName: Use Xcode 14.2
 
+- ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
   # Clone 'monodroid' without submodules
   - checkout: monodroid
     clean: true
