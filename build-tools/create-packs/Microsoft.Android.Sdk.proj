@@ -61,7 +61,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
       <_PackageFiles Include="$(XamarinAndroidSourcePath)src\profiled-aot\dotnet.aotprofile" PackagePath="targets" />
       <_PackageFiles Include="$(IntermediateOutputPath)UnixFilePermissions.xml" PackagePath="data" Condition=" '$(HostOS)' != 'Windows' " />
       <_PackageFiles Include="$(MSBuildThisFileDirectory)\linux-README.md" PackagePath="\README.md" Condition=" '$(HostOS)' == 'Linux' " />
-      <_PackageFiles Include="@(ThirdPartyNotice)" PackagePath="\" />
       <_PackageFiles Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\AndroidApiInfo.xml" PackagePath="data\$(DotNetAndroidTargetFramework)$(AndroidLatestStableApiLevel)" />
       <_PackageFiles
           Include="$(_MonoAndroidNETOutputRoot)$(AndroidDefaultTargetDotnetApiLevel)\AndroidApiInfo.xml"
