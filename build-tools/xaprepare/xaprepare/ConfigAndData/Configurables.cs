@@ -201,7 +201,7 @@ namespace Xamarin.Android.Prepare
 			///   Used in rules.mk generator. Files to include in the XA bundle archives.
 			/// </summary>
 			public static readonly List <string> BundleZipsInclude = new List <string> {
-				"$(ZIP_OUTPUT_BASENAME)/ThirdPartyNotices.txt",
+				"$(ZIP_OUTPUT_BASENAME)/THIRD-PARTY-NOTICES.TXT",
 				"$(ZIP_OUTPUT_BASENAME)/bin/Debug",
 				"$(ZIP_OUTPUT_BASENAME)/bin/Release",
 			};
