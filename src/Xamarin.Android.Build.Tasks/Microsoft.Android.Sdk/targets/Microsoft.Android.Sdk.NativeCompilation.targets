@@ -4,6 +4,8 @@
   <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJniRemappingNativeCode" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkApplicationSharedLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateAssemblyBlobDSO" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAssemblyBlobItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <PropertyGroup>
     <_AndroidUseAssemblySharedLibraries Condition=" '$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true' ">false</_AndroidUseAssemblySharedLibraries>
@@ -49,8 +51,14 @@
   </Target>
 
   <Target Name="_PrepareAssemblyDSOSources">
-
-
+    <PrepareAbiItems
+        BuildTargetAbis="@(_BuildTargetAbis)"
+        NativeSourcesDir="$(_NativeAssemblySourceDir)"
+        InstantRunEnabled="$(_InstantRunEnabled)"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        Mode="assembly_dsos">
+      <Output TaskParameter="AssemblySources" ItemName="_AssemblyDSOSource" />
+    </PrepareAbiItems>
   </Target>
 
   <Target Name="_PrepareAndroidRemapNativeAssemblySources">
@@ -82,8 +90,8 @@
         <abi>%(_AndroidRemapAssemblySource.abi)</abi>
       </_NativeAssemblyTarget>
 
-      <_NativeAssemblyTarget Include="@(_AssemblyDSOSourceApplication->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
-        <abi>%(_AssemblyDSOSourceApplication.abi)</abi>
+      <_NativeAssemblyTarget Include="@(_AssemblyDSOSource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+        <abi>%(_AssemblyDSOSource.abi)</abi>
       </_NativeAssemblyTarget>
     </ItemGroup>
   </Target>
@@ -96,7 +104,33 @@
     </ItemGroup>
   </Target>
 
+  <Target Name="_PrepareAssemblyBlobItems">
+    <PrepareAssemblyBlobItems
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        SharedLibraryOutputPath="$(_AndroidApplicationSharedLibraryPath)"
+        SupportedAbis="@(_BuildTargetAbis)">
+      <Output TaskParameter="AssemblyBlobDSOs" ItemName="_AndroidAssemblyBlobDSO" />
+    </PrepareAssemblyBlobItems>
+  </Target>
+
   <!-- Native source code generation targets -->
+  <Target Name="_GenerateAssemblyBlobDSOs"
+          DependsOnTargets="_PrepareNativeAssemblyItems;_PrepareAssemblyBlobItems"
+          Inputs="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+          Outputs="@(_AndroidAssemblyBlobDSO);@(_AssemblyDSOSource)">
+    <GenerateAssemblyBlobDSO
+        Assemblies="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)"
+        AssemblyBlobDSOs="@(_AndroidAssemblyBlobDSO)"
+        CompressedAssembliesOutputDirectory="$(_CompressedAssembliesOutputDir)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+        SourcesOutputDirectory="$(_NativeAssemblySourceDir)">
+    </GenerateAssemblyBlobDSO>
+
+    <ItemGroup>
+      <FileWrites Include="@(_AndroidAssemblyBlobDSO);@(_AssemblyDSOSource)" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="_GenerateEmptyAndroidRemapNativeCode"
           DependsOnTargets="_PrepareAndroidRemapNativeAssemblySources"
           Condition=" '@(_AndroidRemapMembers->Count())' == '0' "
@@ -124,10 +158,10 @@
   <!-- Native code compilation targets -->
   <Target Name="_CompileApplicationNativeAssemblySources"
           DependsOnTargets="_PrepareNativeAssemblyItems"
-          Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
+          Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSource)"
           Outputs="@(_NativeAssemblyTarget)">
     <CompileNativeAssembly
-        Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSourceApplication)"
+        Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_AssemblyDSOSource)"
         DebugBuild="$(AndroidIncludeDebugSymbols)"
         WorkingDirectory="$(_NativeAssemblySourceDir)"
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -142,6 +176,7 @@
     <!-- Order of targets is **crucial** here -->
     <_CreateApplicationSharedLibrariesDependsOn>
       _PrepareAssemblyDSOSources;
+      _GenerateAssemblyBlobDSOs;
       _CompileApplicationNativeAssemblySources;
       _PrepareApplicationSharedLibraryItems
     </_CreateApplicationSharedLibrariesDependsOn>

@@ -12,5 +12,6 @@ public static class DSOMetadata
 	public const string OriginalAssemblyPath     = "OriginalAssemblyPath";
 	public const string SatelliteAssemblyCulture = "SatelliteAssemblyCulture";
 	public const string SourceFileBaseName       = "SourceFileBaseName";
+	public const string BlobStubPath             = "BlobStubPath";
 	public const string UncompressedDataSize     = "UncompressedDataSize";
 }

@@ -50,6 +50,29 @@ struct TypeMap
 	const TypeMapEntry  *managed_to_java;
 };
 #else
+constexpr size_t AssemblyCount = 2;
+constexpr size_t AssemblyNameLength = 26;
+constexpr size_t AssemblyDataSize = 18404;
+constexpr size_t AssemblyBlobSize = 6171;
+
+struct AssemblyIndexEntry
+{
+	xamarin::android::hash_t name_hash;
+	uint32_t                 input_data_offset;
+	uint32_t                 input_data_size;
+	uint32_t                 output_data_offset;
+	uint32_t                 output_data_size;
+	uint32_t                 info_index;
+	bool                     is_compressed;
+};
+
+struct AssembliesConfig
+{
+	uint32_t assembly_blob_size;
+	uint32_t assembly_name_length;
+	uint32_t assembly_count;
+};
+
 struct TypeMapModuleEntry
 {
 	uint32_t       type_token_id;
@@ -179,6 +202,12 @@ MONO_API MONO_API_EXPORT const char* const java_type_names[];
 MONO_API MONO_API_EXPORT TypeMapModule map_modules[];
 MONO_API MONO_API_EXPORT const TypeMapJava map_java[];
 MONO_API MONO_API_EXPORT const xamarin::android::hash_t map_java_hashes[];
+
+MONO_API MONO_API_EXPORT const AssembliesConfig xa_assemblies_config;
+MONO_API MONO_API_EXPORT const uint8_t xa_assembly_data[AssemblyDataSize];
+MONO_API MONO_API_EXPORT const void* xa_loaded_assemblies[AssemblyCount];
+MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
+MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
 #endif
 
 MONO_API MONO_API_EXPORT const ApplicationConfig application_config;

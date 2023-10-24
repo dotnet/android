@@ -29,6 +29,42 @@ const char* const java_type_names[] = {};
 TypeMapModule map_modules[] = {};
 const TypeMapJava map_java[] = {};
 const xamarin::android::hash_t map_java_hashes[] = {};
+
+const AssembliesConfig xa_assemblies_config = {
+	.assembly_blob_size = AssemblyBlobSize,
+	.assembly_name_length = AssemblyNameLength,
+	.assembly_count = AssemblyCount,
+};
+
+const uint8_t xa_assembly_data[AssemblyDataSize] = {};
+const void* xa_loaded_assemblies[AssemblyCount] = {};
+
+const char xa_assembly_names[AssemblyCount][AssemblyNameLength] = {
+	"Assembly1.dll",
+	"AnotherAssembly2.dll",
+};
+
+const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
+	{
+		.name_hash = 11111u,
+		.input_data_offset = 0,
+		.input_data_size = 2048,
+		.output_data_offset = 0,
+		.output_data_size = 2048,
+		.info_index = 0,
+		.is_compressed = false,
+	},
+
+	{
+		.name_hash = 22222u,
+		.input_data_offset = 2048,
+		.input_data_size = 4123,
+		.output_data_offset = 2048,
+		.output_data_size = 16356,
+		.info_index = 1,
+		.is_compressed = true,
+	},
+};
 #endif
 
 //
