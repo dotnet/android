@@ -5,8 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	class BuildAndroidPlatforms
 	{
-		public const string AndroidNdkVersion = "26";
-		public const string AndroidNdkPkgRevision = "26.0.10792818";
+		public const string AndroidNdkVersion = "26b";
+		public const string AndroidNdkPkgRevision = "26.1.10909125";
 		public const int NdkMinimumAPI = 21;
 		public const int NdkMinimumAPILegacy32 = 21;
 
