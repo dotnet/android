@@ -650,7 +650,7 @@ public class Test
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var zip = ZipHelper.OpenZip (apk)) {
-					Assert.IsTrue (zip.ContainsEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been ignored.");
+					Assert.IsTrue (zip.ContainsEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
 				}
 			}
 		}
