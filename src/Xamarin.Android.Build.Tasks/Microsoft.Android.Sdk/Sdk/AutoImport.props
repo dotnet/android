@@ -61,4 +61,9 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <ProguardConfiguration Include="**\proguard.txt" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_m*'))" />
+  </ItemGroup>
+
 </Project>

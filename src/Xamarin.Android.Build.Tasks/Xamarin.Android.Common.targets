@@ -358,11 +358,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
-<ItemGroup>
-	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
-</ItemGroup>
-
 <!-- Assets build properties -->
 <PropertyGroup>
 	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
