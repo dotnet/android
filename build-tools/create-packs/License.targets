@@ -18,6 +18,7 @@
     />
     <ItemGroup>
       <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
+      <_PackageFiles Include="$(XAInstallPrefix)THIRD-PARTY-NOTICES.TXT" PackagePath="\" />
     </ItemGroup>
   </Target>
 </Project>

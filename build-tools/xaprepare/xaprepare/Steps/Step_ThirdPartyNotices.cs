@@ -60,12 +60,12 @@ implication, estoppel or otherwise."			}
 #pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
-			GenerateThirdPartyNotices (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "ThirdPartyNotices.txt"),
+			GenerateThirdPartyNotices (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "THIRD-PARTY-NOTICES.TXT"),
 			                           ThirdPartyLicenseType.Foundation,
 			                           includeExternalDeps: false,
 			                           includeBuildDeps: true);
 			Log.StatusLine ();
-			GenerateThirdPartyNotices (Path.Combine (context.XAInstallPrefix, "ThirdPartyNotices.txt"),
+			GenerateThirdPartyNotices (Path.Combine (context.XAInstallPrefix, "THIRD-PARTY-NOTICES.TXT"),
 			                           ThirdPartyLicenseType.MicrosoftOSS,
 			                           includeExternalDeps: true,
 			                           includeBuildDeps: false);
