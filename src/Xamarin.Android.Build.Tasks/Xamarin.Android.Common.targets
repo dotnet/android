@@ -2131,6 +2131,7 @@ because xbuild doesn't support framework reference assemblies.
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+    IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
@@ -2166,6 +2167,7 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">

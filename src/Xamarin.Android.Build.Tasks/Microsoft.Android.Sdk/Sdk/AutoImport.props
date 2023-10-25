@@ -63,7 +63,8 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
 
   <ItemGroup>
     <AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_m*'))" />
+    <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin*'))" />
+    <AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins'))" />
   </ItemGroup>
 
 </Project>
