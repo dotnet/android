@@ -2,12 +2,13 @@
   <!--Package versions-->
   <PropertyGroup>
     <MicrosoftDotnetSdkInternalPackageVersion>8.0.100-rtm.23524.17</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>8.0.0-rtm.23520.16</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>8.0.0-rtm.23520.16</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>8.0.0-rtm.23524.7</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>8.0.0</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>8.0.0</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest80100TransportVersion>8.0.0-rtm.23511.3</MicrosoftNETWorkloadEmscriptenCurrentManifest80100TransportVersion>
-    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest80100TransportVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>8.0.0</MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>
+    <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.4-alpha.23509.2</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
@@ -18,8 +19,8 @@
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
-    <DotNetMonoManifestVersionBand>8.0.100-rtm</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>8.0.100-rtm</DotNetEmscriptenManifestVersionBand>
+    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETCoreAppRefPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
     <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
   </PropertyGroup>
