@@ -696,6 +696,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1031_HCH" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der AndroidHttpClientHandlerType-Eigenschaftswert "{0}" muss nicht von "System.Net.Htt.HttpClientHandler" abgeleitet werden.]D;]A;Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System.Net.Http.HttpMessageHandler" erbt, oder entfernen Sie die Eigenschaft vollständig.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1032" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Failed to resolve '{0}' from '{1}'. Please check your `AndroidHttpClientHandlerType` setting.]]></Val>
