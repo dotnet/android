@@ -43,11 +43,11 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 			Log.LogDebugMessage ("Assembly compression DISABLED");
 		}
 
-		Generate ();
+		GenerateBlob ();
 		return !Log.HasLoggedErrors;
 	}
 
-	void Generate ()
+	void GenerateBlob ()
 	{
 		var assemblies = new Dictionary<AndroidTargetArch, List<BlobAssemblyInfo>> ();
 		var abis = new HashSet<string> (StringComparer.Ordinal);
@@ -63,6 +63,11 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 
 			var info = new BlobAssemblyInfo (assembly);
 			archAssemblies.Add (info);
+
+			string configFilePath = $"{assembly.ItemSpec}.config";
+			if (File.Exists (configFilePath)) {
+				info.Config = File.ReadAllText (configFilePath);
+			}
 
 			string inputAssembly;
 			if (!ShouldSkipCompression (assembly)) {
@@ -81,14 +86,14 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 
 		foreach (ITaskItem blobDSO in AssemblyBlobDSOs) {
 			AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (GetRequiredMetadata (blobDSO, DSOMetadata.Abi));
-			Generate (arch, blobDSO, assemblies[arch]);
+			GenerateBlob (arch, blobDSO, assemblies[arch]);
 		}
 
 		var generator = new AssemblyBlobDSOGenerator (assemblies);
 		LLVMIR.LlvmIrModule module = generator.Construct ();
 
 		foreach (string abi in abis) {
-			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, $"{PrepareAbiItems.AssemblyDSOBase}.{abi}.ll");
+			string outputAsmFilePath = Path.Combine (SourcesOutputDirectory, MonoAndroidHelper.MakeNativeAssemblyFileName (PrepareAbiItems.AssemblyDSOBase, abi));
 
                         using var sw = MemoryStreamPool.Shared.CreateStreamWriter ();
                         AndroidTargetArch targetArch = MonoAndroidHelper.AbiToTargetArch (abi);
@@ -112,7 +117,7 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 		return (ulong)fi.Length;
 	}
 
-	void Generate (AndroidTargetArch arch, ITaskItem blobDSO, List<BlobAssemblyInfo> assemblies)
+	void GenerateBlob (AndroidTargetArch arch, ITaskItem blobDSO, List<BlobAssemblyInfo> assemblies)
 	{
 		string stubPath = GetRequiredMetadata (blobDSO, DSOMetadata.BlobStubPath);
 		var stubInfo = new FileInfo (stubPath);

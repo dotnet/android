@@ -310,7 +310,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					return;
 				}
 
-				throw new InvalidOperationException ($"Internal error: variable of type {variable.Type} must not have a null value");
+				throw new InvalidOperationException ($"Internal error: variable '{variable.Name}'' of type {variable.Type} must not have a null value");
 			}
 
 			if (valueType != variable.Type && !LlvmIrModule.NameValueArrayType.IsAssignableFrom (variable.Type)) {

@@ -1922,7 +1922,7 @@ because xbuild doesn't support framework reference assemblies.
     EmbedAssemblies="$(EmbedAssembliesIntoApk)"
     ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
     ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-    FrameworkNativeLibraries="@(FrameworkNativeLibrary);@(_StandaloneAssemblyDSO)"
+    FrameworkNativeLibraries="@(FrameworkNativeLibrary);@(_AndroidAssemblyBlobDSO)"
     NativeLibraries="@(AndroidNativeLibrary)"
     ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
     AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
@@ -1957,7 +1957,7 @@ because xbuild doesn't support framework reference assemblies.
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
       ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-      FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
+      FrameworkNativeLibraries="@(FrameworkNativeLibrary);@(_AndroidAssemblyBlobDSO)"
       NativeLibraries="@(AndroidNativeLibrary)"
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
@@ -1979,7 +1979,8 @@ because xbuild doesn't support framework reference assemblies.
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
-      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)">
+      ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
+      UseAssemblySharedLibraries="$(_AndroidUseAssemblySharedLibraries)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle

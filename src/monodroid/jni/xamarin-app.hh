@@ -55,6 +55,9 @@ constexpr size_t AssemblyNameLength = 26;
 constexpr size_t AssemblyDataSize = 18404;
 constexpr size_t AssemblyBlobSize = 6171;
 
+constexpr uint32_t AssemblyEntry_IsCompressed = 1 << 0;
+constexpr uint32_t AssemblyEntry_HasConfig    = 1 << 1;
+
 struct AssemblyIndexEntry
 {
 	xamarin::android::hash_t name_hash;

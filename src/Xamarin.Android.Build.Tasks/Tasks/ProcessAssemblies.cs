@@ -105,9 +105,9 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			assembly.SetMetadata ("Abi", abi);
+			assembly.SetMetadata (DSOMetadata.Abi, abi);
 			if (symbol != null) {
-				symbol.SetMetadata ("Abi", abi);
+				symbol.SetMetadata (DSOMetadata.Abi, abi);
 			}
 		}
 
