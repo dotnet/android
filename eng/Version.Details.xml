@@ -4,6 +4,10 @@
       <Uri>https://github.com/dotnet/installer</Uri>
       <Sha>1657e2bb7b7766b5f0d27b9dbbb3be35634840c4</Sha>
     </Dependency>
+    <Dependency Name="Microsoft.NET.ILLink" Version="8.0.0-rtm.23524.7">
+      <Uri>https://github.com/dotnet/runtime</Uri>
+      <Sha>59edaad404d1b8e47080015ae8d0787f94c970df</Sha>
+    </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="8.0.0">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>59edaad404d1b8e47080015ae8d0787f94c970df</Sha>
