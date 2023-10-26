@@ -121,6 +121,10 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)bundletool.jar" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.jar" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_net6.dex" ExcludeFromLegacy="true" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java_runtime_fastdev_net6.dex" ExcludeFromLegacy="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)manifestmerger.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)protobuf-net.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.CodeDom.dll" />
