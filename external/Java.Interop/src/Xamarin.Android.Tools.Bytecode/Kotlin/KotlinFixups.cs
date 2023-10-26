@@ -272,8 +272,8 @@ namespace Xamarin.Android.Tools.Bytecode
 			if (getter is null && setter is null)
 				return;
 
-			// Hide property if it isn't Public/Protected
-			if (!metadata.Flags.IsPubliclyVisible ()) {
+			// Hide getters/setters if property is Internal
+			if (metadata.IsInternalVisibility) {
 
 				if (getter?.IsPubliclyVisible == true) {
 					Log.Debug ($"Kotlin: Hiding internal getter method {getter.DeclaringType?.ThisClass.Name.Value} - {getter.Name}");
@@ -384,7 +384,17 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo? FindJavaPropertyGetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"get{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
+			// Private properties do not have getters
+			if (property.IsPrivateVisibility)
+				return null;
+
+			// Public/protected getters look like "getFoo"
+			// Internal getters look like "getFoo$main"
+			var possible_methods = property.IsInternalVisibility ?
+				klass.Methods.Where (method => method.Name.StartsWith ($"get{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
+				klass.Methods.Where (method => method.Name.Equals ($"get{property.Name.Capitalize ()}", StringComparison.Ordinal));
+
+			possible_methods = possible_methods.Where (method =>
 					method.GetParameters ().Length == 0 &&
 					property.ReturnType != null &&
 					TypesMatch (method.ReturnType, property.ReturnType, kotlinClass));
@@ -394,11 +404,21 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		static MethodInfo? FindJavaPropertySetter (KotlinFile kotlinClass, KotlinProperty property, ClassFile klass)
 		{
-			var possible_methods = klass.Methods.Where (method => string.Compare (method.GetMethodNameWithoutSuffix (), $"set{property.Name}", StringComparison.OrdinalIgnoreCase) == 0 &&
-									      property.ReturnType != null &&
-									      method.GetParameters ().Length == 1 &&
-									      method.ReturnType.BinaryName == "V" &&
-									      TypesMatch (method.GetParameters () [0].Type, property.ReturnType, kotlinClass));
+			// Private properties do not have setters
+			if (property.IsPrivateVisibility)
+				return null;
+
+			// Public/protected setters look like "setFoo"
+			// Internal setters look like "setFoo$main"
+			var possible_methods = property.IsInternalVisibility ?
+				klass.Methods.Where (method => method.Name.StartsWith ($"set{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
+				klass.Methods.Where (method => method.Name.Equals ($"set{property.Name.Capitalize ()}", StringComparison.Ordinal));
+
+			possible_methods = possible_methods.Where (method => 
+						property.ReturnType != null &&
+						method.GetParameters ().Length == 1 &&
+						method.ReturnType.BinaryName == "V" &&
+						TypesMatch (method.GetParameters () [0].Type, property.ReturnType, kotlinClass));
 
 			return possible_methods.FirstOrDefault ();
 		}

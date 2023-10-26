@@ -324,7 +324,29 @@ namespace Xamarin.Android.Tools.BytecodeTests
 
 			Assert.True (klass.Methods.Single (m => m.Name == "count").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "hitCount").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Private property and explicit getter/setter
+			// There is no generated getter/setter, and explicit ones should be public
+			Assert.True (klass.Methods.Single (m => m.Name == "getType").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "setType").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Private immutable property and explicit getter/setter
+			// There is no generated getter/setter, and explicit ones should be public
+			Assert.True (klass.Methods.Single (m => m.Name == "getType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "setType2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Internal property and explicit getter/setter
+			// Generated getter/setter should not be public, and explicit ones should be public
+			Assert.False (klass.Methods.Single (m => m.Name == "getItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.False (klass.Methods.Single (m => m.Name == "setItype$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "getItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "setItype").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Internal immutable property and explicit getter/setter
+			// Generated getter should not be public, and explicit ones should be public
+			Assert.False (klass.Methods.Single (m => m.Name == "getItype2$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "getItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.True (klass.Methods.Single (m => m.Name == "setItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
 		}
 
 		[Test]

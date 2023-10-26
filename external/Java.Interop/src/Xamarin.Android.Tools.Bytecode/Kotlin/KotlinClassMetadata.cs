@@ -318,6 +318,10 @@ namespace Xamarin.Android.Tools.Bytecode
 		}
 
 		public override string? ToString () => Name;
+
+		public bool IsInternalVisibility => (Flags & KotlinPropertyFlags.VisibilityMask) == KotlinPropertyFlags.Internal;
+
+		public bool IsPrivateVisibility => (Flags & KotlinPropertyFlags.VisibilityMask) == KotlinPropertyFlags.Private;
 	}
 
 	public class KotlinType
@@ -688,6 +692,8 @@ namespace Xamarin.Android.Tools.Bytecode
 		PrivateToThis =		0b00_00_100_0,
 		Local =			0b00_00_101_0,
 
+		VisibilityMask =        0b00_00_111_0,
+
 		Final =			0b00_00_000_0,
 		Open =			0b00_01_000_0,
 		Abstract =		0b00_10_000_0,
@@ -698,15 +704,15 @@ namespace Xamarin.Android.Tools.Bytecode
 		Delegation =		0b10_00_000_0,
 		Synthesized =		0b11_00_000_0,
 
-		IsVar =			0b_000000001_000_00_000_0,
-		HasGetter =		0b_000000010_000_00_000_0,
-		HasSetter =		0b_000000100_000_00_000_0,
-		IsConst =		0b_000001000_000_00_000_0,
-		IsLateInit =		0b_000010000_000_00_000_0,
-		HasConstant =		0b_000100000_000_00_000_0,
-		IsExternalProperty =	0b_001000000_000_00_000_0,
-		IsDelegated =		0b_010000000_000_00_000_0,
-		IsExpectProperty =	0b_100000000_000_00_000_0
+		IsVar =			0b_000000001_00_00_000_0,
+		HasGetter =		0b_000000010_00_00_000_0,
+		HasSetter =		0b_000000100_00_00_000_0,
+		IsConst =		0b_000001000_00_00_000_0,
+		IsLateInit =		0b_000010000_00_00_000_0,
+		HasConstant =		0b_000100000_00_00_000_0,
+		IsExternalProperty =	0b_001000000_00_00_000_0,
+		IsDelegated =		0b_010000000_00_00_000_0,
+		IsExpectProperty =	0b_100000000_00_00_000_0
 	}
 
 	[Flags]

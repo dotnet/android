@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,6 +9,18 @@ namespace Xamarin.Android.Tools.Bytecode
 {
 	public static class KotlinUtilities
 	{
+		[return: NotNullIfNotNull (nameof (value))]
+		public static string? Capitalize (this string? value)
+		{
+			if (string.IsNullOrWhiteSpace (value))
+				return value;
+
+			if (value.Length < 1)
+				return value;
+
+			return char.ToUpperInvariant (value [0]) + value.Substring (1);
+		}
+
 		public static string ConvertKotlinTypeSignature (KotlinType? type, KotlinFile? metadata = null, bool convertUnsignedToPrimitive = true)
 		{
 			if (type is null)
