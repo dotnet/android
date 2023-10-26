@@ -44,14 +44,6 @@ static class MavenExtensions
 		return artifact;
 	}
 
-	// TODO: Fix this in MavenNet
-	public static void SetRepository (this Artifact artifact, MavenRepository repository)
-	{
-		var method = artifact.GetType ().GetProperty ("Repository");
-
-		method.GetSetMethod (true).Invoke (artifact, new [] { repository });
-	}
-
 	public static Project ParsePom (string pomFile)
 	{
 		Project result = null;

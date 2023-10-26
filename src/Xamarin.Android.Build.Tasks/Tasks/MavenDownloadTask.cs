@@ -75,7 +75,7 @@ public class MavenDownloadTask : AndroidAsyncTask
 		if (repository is null)
 			return null;
 
-		artifact.SetRepository (repository);
+		artifact.Repository = repository;
 
 		// Download artifact
 		var artifact_file = await MavenExtensions.DownloadPayload (artifact, MavenCacheDirectory, Log, CancellationToken);
@@ -116,7 +116,7 @@ public class MavenDownloadTask : AndroidAsyncTask
 		if (repository is null)
 			return null;
 
-		artifact.SetRepository (repository);
+		artifact.Repository = repository;
 
 		// Download POM
 		var pom_file = await MavenExtensions.DownloadPom (artifact, MavenCacheDirectory, Log, CancellationToken);
