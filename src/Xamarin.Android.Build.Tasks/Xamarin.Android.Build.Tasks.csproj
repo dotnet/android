@@ -23,9 +23,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Mono.CompilerServices.SymbolWriter.dll">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Mono.CompilerServices.SymbolWriter.dll</HintPath>
-    </Reference>
     <Reference Include="Xamarin.Android.Cecil">
       <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
     </Reference>
