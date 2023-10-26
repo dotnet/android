@@ -430,15 +430,6 @@ documentation on [D8 and R8][d8-r8].
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
 
-## AndroidEmitLegacyInterfaceInvokers
-
-A boolean property that determines whether or not "legacy" interface invokers are generated.
-This should only be done if using the new optimizerd interface invoker infrastructure results
-in build failures.
-
-The default value is `False`, and more optimized interface invokers are generated.
-
-Added in .NET 9.0.
 
 ## AndroidEnableDesugar
 
