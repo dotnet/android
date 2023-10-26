@@ -37,6 +37,7 @@ namespace Xamarin.Android.Binder
 		public string               ApiVersionsXmlFile {get; set;}
 		public Collection<string>   ApiVersionsXmlFiles {get; set;}
 		public Collection<string>   AnnotationsZipFiles {get; set;}
+		public bool                 EmitLegacyInterfaceInvokers { get; set; }
 		public string               EnumFieldsMapFile {get; set;}
 		public string               EnumFlagsFile {get; set;}
 		public string               EnumMethodsMapFile {get; set;}
@@ -105,8 +106,9 @@ namespace Xamarin.Android.Binder
 					"SDK Platform {VERSION}/API level.",
 					v => opts.ApiLevel = v },
 				{ "lang-features=",
-					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides)",
+					"For internal use. (Flags: interface-constants,default-interface-methods,nested-interface-types,nullable-reference-types,obsoleted-platform-attributes,restrict-to-attributes,do-not-fix-obsolete-overrides,emit-legacy-interface-invokers)",
 					v => {
+						opts.EmitLegacyInterfaceInvokers = v?.Contains ("emit-legacy-interface-invokers") == true;
 						opts.SupportInterfaceConstants = v?.Contains ("interface-constants") == true;
 						opts.SupportDefaultInterfaceMethods = v?.Contains ("default-interface-methods") == true;
 						opts.SupportNestedInterfaceTypes = v?.Contains ("nested-interface-types") == true;

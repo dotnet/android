@@ -11,6 +11,47 @@ public partial interface AnimatorListener : IJavaPeerable {
 
 }
 
+[global::Java.Interop.JniTypeSignature ("java/code/AnimatorListener", GenerateJavaPeer=false)]
+internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, AnimatorListener {
+	[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+	[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+	public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+		get { return _members_java_code_AnimatorListener; }
+	}
+
+	static readonly JniPeerMembers _members_java_code_AnimatorListener = new JniPeerMembers ("java/code/AnimatorListener", typeof (AnimatorListenerInvoker));
+
+	public AnimatorListenerInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+	{
+	}
+
+	public unsafe bool OnAnimationEnd (int param1)
+	{
+		const string __id = "OnAnimationEnd.(I)Z";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+			__args [0] = new JniArgumentValue (param1);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		} finally {
+		}
+	}
+
+	public unsafe bool OnAnimationEnd (int param1, int param2)
+	{
+		const string __id = "OnAnimationEnd.(II)Z";
+		try {
+			JniArgumentValue* __args = stackalloc JniArgumentValue [2];
+			__args [0] = new JniArgumentValue (param1);
+			__args [1] = new JniArgumentValue (param2);
+			var __rm = _members_java_code_AnimatorListener.InstanceMethods.InvokeAbstractBooleanMethod (__id, this, __args);
+			return __rm;
+		} finally {
+		}
+	}
+
+}
+
 // event args for java.code.AnimatorListener.OnAnimationEnd
 public partial class AnimationEndEventArgs : global::System.EventArgs {
 	bool handled;

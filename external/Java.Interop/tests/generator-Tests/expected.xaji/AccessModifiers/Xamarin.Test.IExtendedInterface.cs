@@ -20,57 +20,34 @@ namespace Xamarin.Test {
 
 	[global::Android.Runtime.Register ("xamarin/test/ExtendedInterface", DoNotGenerateAcw=true)]
 	internal partial class IExtendedInterfaceInvoker : global::Java.Lang.Object, IExtendedInterface {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_xamarin_test_ExtendedInterface; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_xamarin_test_ExtendedInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_xamarin_test_ExtendedInterface.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new XAPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
 
-		public static IExtendedInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
-		{
-			return global::Java.Lang.Object.GetObject<IExtendedInterface> (handle, transfer);
-		}
+		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new XAPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
 
-		static IntPtr Validate (IntPtr handle)
+		public IExtendedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'xamarin.test.ExtendedInterface'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public IExtendedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_extendedMethod;
@@ -89,12 +66,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_extendedMethod;
 		public unsafe void ExtendedMethod ()
 		{
-			if (id_extendedMethod == IntPtr.Zero)
-				id_extendedMethod = JNIEnv.GetMethodID (class_ref, "extendedMethod", "()V");
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_extendedMethod);
+			const string __id = "extendedMethod.()V";
+			try {
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
 		}
 
 		static Delegate cb_baseMethod;
@@ -113,12 +91,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_baseMethod;
 		public unsafe void BaseMethod ()
 		{
-			if (id_baseMethod == IntPtr.Zero)
-				id_baseMethod = JNIEnv.GetMethodID (class_ref, "baseMethod", "()V");
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_baseMethod);
+			const string __id = "baseMethod.()V";
+			try {
+				_members_xamarin_test_BaseInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
 		}
 
 	}

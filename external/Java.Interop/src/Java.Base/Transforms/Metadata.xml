@@ -1,7 +1,10 @@
 <metadata>
-  <!-- For now, just bind java.lang.* -->
-  <remove-node path="//api/package[not(starts-with(@name, 'java.lang')
-      or starts-with(@name, 'java.io')
+  <!-- For now, just bind a few packages  -->
+  <remove-node path="//api/package[
+      not(
+        starts-with(@name, 'java.lang')
+        or starts-with(@name, 'java.io')
+        or starts-with(@name, 'java.util.function')
       )]" />
 
   <!-- Type / Namespace conflicts -->
@@ -53,6 +56,9 @@
         @name='ObjectOutput'
       ]/method[@name='write']"
       name="explicitInterface">IDataOutput</attr>
+
+  <!-- CS0108 but for *static* members; TODO: how do we fix? -->
+  <remove-node path="/api/package[@name='java.util.function']/interface[@name='UnaryOperator']/method[@name='identity' and count(parameter)=0]" />
 
   <!-- AbstractStringBuilder is package-private; fixity fix -->
   <remove-node path="//api/package[@name='java.lang']/class[@name='AbstractStringBuilder']" />

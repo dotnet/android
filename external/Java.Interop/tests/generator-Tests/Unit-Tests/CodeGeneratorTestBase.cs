@@ -37,6 +37,7 @@ namespace generatortests
 		{
 			return new CodeGenerationOptions {
 				CodeGenerationTarget = Target,
+				EmitLegacyInterfaceInvokers = Target == Xamarin.Android.Binder.CodeGenerationTarget.XAJavaInterop1,
 			};
 		}
 

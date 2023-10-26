@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerProperty : PropertyWriter
@@ -42,33 +44,57 @@ namespace generator.SourceWriters
 			}
 
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
+
+			if (!opt.EmitLegacyInterfaceInvokers) {
+				if (HasGet) {
+					SourceWriterExtensions.AddMethodBody (GetBody, property.Getter, opt, $"_members_{property.Getter.DeclaringType.JavaFullNameId}");
+				}
+				if (HasSet) {
+					var pname = property.Setter.Parameters [0].Name;
+					property.Setter.Parameters [0].Name = "value";
+					SourceWriterExtensions.AddMethodBody (SetBody, property.Setter, opt, $"_members_{property.Setter.DeclaringType.JavaFullNameId}");
+					property.Setter.Parameters [0].Name = pname;
+				}
+			}
 		}
 
 		public override void Write (CodeWriter writer)
 		{
-			getter_callback?.Write (writer);
-			setter_callback?.Write (writer);
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1) {
+				getter_callback?.Write (writer);
+				setter_callback?.Write (writer);
+			}
 
-			if (property.Getter != null)
-				writer.WriteLine ($"IntPtr {property.Getter.EscapedIdName};");
+			if (opt.EmitLegacyInterfaceInvokers) {
+				if (property.Getter != null)
+					writer.WriteLine ($"IntPtr {property.Getter.EscapedIdName};");
 
-			if (property.Setter != null)
-				writer.WriteLine ($"IntPtr {property.Setter.EscapedIdName};");
+				if (property.Setter != null)
+					writer.WriteLine ($"IntPtr {property.Setter.EscapedIdName};");
+			}
 
 			base.Write (writer);
 		}
 
 		protected override void WriteGetterBody (CodeWriter writer)
 		{
-			SourceWriterExtensions.WriteMethodInvokerBody (writer, property.Getter, opt, context_this);
+			if (!opt.EmitLegacyInterfaceInvokers) {
+				base.WriteGetterBody (writer);
+				return;
+			}
+			SourceWriterExtensions.WriteMethodInvokerBodyLegacy (writer, property.Getter, opt, context_this);
 		}
 
 		protected override void WriteSetterBody (CodeWriter writer)
 		{
+			if (!opt.EmitLegacyInterfaceInvokers) {
+				base.WriteSetterBody (writer);
+				return;
+			}
 			var pname = property.Setter.Parameters [0].Name;
 			property.Setter.Parameters [0].Name = "value";
 
-			SourceWriterExtensions.WriteMethodInvokerBody (writer, property.Setter, opt, context_this);
+			SourceWriterExtensions.WriteMethodInvokerBodyLegacy (writer, property.Setter, opt, context_this);
 
 			property.Setter.Parameters [0].Name = pname;
 		}

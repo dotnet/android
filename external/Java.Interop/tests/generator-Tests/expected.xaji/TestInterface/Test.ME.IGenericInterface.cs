@@ -17,57 +17,32 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/GenericInterface", DoNotGenerateAcw=true)]
 	internal partial class IGenericInterfaceInvoker : global::Java.Lang.Object, IGenericInterface {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/GenericInterface", typeof (IGenericInterfaceInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_test_me_GenericInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_test_me_GenericInterface; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_test_me_GenericInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_test_me_GenericInterface.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_test_me_GenericInterface = new XAPeerMembers ("test/me/GenericInterface", typeof (IGenericInterfaceInvoker));
 
-		public static IGenericInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public IGenericInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			return global::Java.Lang.Object.GetObject<IGenericInterface> (handle, transfer);
-		}
-
-		static IntPtr Validate (IntPtr handle)
-		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'test.me.GenericInterface'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public IGenericInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_SetObject_Ljava_lang_Object_;
@@ -87,16 +62,18 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_SetObject_Ljava_lang_Object_;
 		public unsafe void SetObject (global::Java.Lang.Object value)
 		{
-			if (id_SetObject_Ljava_lang_Object_ == IntPtr.Zero)
-				id_SetObject_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "SetObject", "(Ljava/lang/Object;)V");
+			const string __id = "SetObject.(Ljava/lang/Object;)V";
 			IntPtr native_value = JNIEnv.ToLocalJniHandle (value);
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (native_value);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_SetObject_Ljava_lang_Object_, __args);
-			JNIEnv.DeleteLocalRef (native_value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members_test_me_GenericInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_value);
+				global::System.GC.KeepAlive (value);
+			}
 		}
 
 	}

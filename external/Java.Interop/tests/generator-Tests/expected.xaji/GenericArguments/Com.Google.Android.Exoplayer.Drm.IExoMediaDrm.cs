@@ -17,57 +17,32 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmOnEventListenerInvoker : global::Java.Lang.Object, IExoMediaDrmOnEventListener {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener", typeof (IExoMediaDrmOnEventListenerInvoker));
 
-		public static IExoMediaDrmOnEventListener GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public IExoMediaDrmOnEventListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			return global::Java.Lang.Object.GetObject<IExoMediaDrmOnEventListener> (handle, transfer);
-		}
-
-		static IntPtr Validate (IntPtr handle)
-		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'com.google.android.exoplayer.drm.ExoMediaDrm.OnEventListener'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public IExoMediaDrmOnEventListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB;
@@ -93,27 +68,31 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB;
 		public unsafe void OnEvent (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrm p0, byte[] p1, int p2, int p3, byte[] p4)
 		{
-			if (id_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB == IntPtr.Zero)
-				id_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB = JNIEnv.GetMethodID (class_ref, "onEvent", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm;[BII[B)V");
+			const string __id = "onEvent.(Lcom/google/android/exoplayer/drm/ExoMediaDrm;[BII[B)V";
 			IntPtr native_p1 = JNIEnv.NewArray (p1);
 			IntPtr native_p4 = JNIEnv.NewArray (p4);
-			JValue* __args = stackalloc JValue [5];
-			__args [0] = new JValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-			__args [1] = new JValue (native_p1);
-			__args [2] = new JValue (p2);
-			__args [3] = new JValue (p3);
-			__args [4] = new JValue (native_p4);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onEvent_Lcom_google_android_exoplayer_drm_ExoMediaDrm_arrayBIIarrayB, __args);
-			if (p1 != null) {
-				JNIEnv.CopyArray (native_p1, p1);
-				JNIEnv.DeleteLocalRef (native_p1);
-			}
-			if (p4 != null) {
-				JNIEnv.CopyArray (native_p4, p4);
-				JNIEnv.DeleteLocalRef (native_p4);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [5];
+				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+				__args [1] = new JniArgumentValue (native_p1);
+				__args [2] = new JniArgumentValue (p2);
+				__args [3] = new JniArgumentValue (p3);
+				__args [4] = new JniArgumentValue (native_p4);
+				_members_com_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				if (p1 != null) {
+					JNIEnv.CopyArray (native_p1, p1);
+					JNIEnv.DeleteLocalRef (native_p1);
+				}
+				if (p4 != null) {
+					JNIEnv.CopyArray (native_p4, p4);
+					JNIEnv.DeleteLocalRef (native_p4);
+				}
+				global::System.GC.KeepAlive (p0);
+				global::System.GC.KeepAlive (p1);
+				global::System.GC.KeepAlive (p4);
 			}
 		}
 
@@ -208,57 +187,32 @@ namespace Com.Google.Android.Exoplayer.Drm {
 
 	[global::Android.Runtime.Register ("com/google/android/exoplayer/drm/ExoMediaDrm", DoNotGenerateAcw=true)]
 	internal partial class IExoMediaDrmInvoker : global::Java.Lang.Object, IExoMediaDrm {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_com_google_android_exoplayer_drm_ExoMediaDrm.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_com_google_android_exoplayer_drm_ExoMediaDrm = new XAPeerMembers ("com/google/android/exoplayer/drm/ExoMediaDrm", typeof (IExoMediaDrmInvoker));
 
-		public static IExoMediaDrm GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public IExoMediaDrmInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			return global::Java.Lang.Object.GetObject<IExoMediaDrm> (handle, transfer);
-		}
-
-		static IntPtr Validate (IntPtr handle)
-		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'com.google.android.exoplayer.drm.ExoMediaDrm'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public IExoMediaDrmInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_;
@@ -278,14 +232,16 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_;
 		public unsafe void SetOnEventListener (global::Com.Google.Android.Exoplayer.Drm.IExoMediaDrmOnEventListener p0)
 		{
-			if (id_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ == IntPtr.Zero)
-				id_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_ = JNIEnv.GetMethodID (class_ref, "setOnEventListener", "(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V");
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_setOnEventListener_Lcom_google_android_exoplayer_drm_ExoMediaDrm_OnEventListener_, __args);
+			const string __id = "setOnEventListener.(Lcom/google/android/exoplayer/drm/ExoMediaDrm$OnEventListener;)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((p0 == null) ? IntPtr.Zero : ((global::Java.Lang.Object) p0).Handle);
+				_members_com_google_android_exoplayer_drm_ExoMediaDrm.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				global::System.GC.KeepAlive (p0);
+			}
 		}
 
 	}

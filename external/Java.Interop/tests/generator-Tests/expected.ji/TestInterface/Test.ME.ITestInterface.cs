@@ -4,49 +4,19 @@ using Java.Interop;
 
 namespace Test.ME {
 
-	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
-	public abstract class TestInterface : Java.Lang.Object {
-		internal TestInterface ()
-		{
-		}
-
-		// Metadata.xml XPath field reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/field[@name='SPAN_COMPOSING']"
-		public const int SpanComposing = (int) 256;
-
-
-		// Metadata.xml XPath field reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/field[@name='DEFAULT_FOO']"
-		public static global::Java.Lang.Object DefaultFoo {
-			get {
-				const string __id = "DEFAULT_FOO.Ljava/lang/Object;";
-
-				var __v = _members.StaticFields.GetObjectValue (__id);
-				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<global::Java.Lang.Object> (ref __v.Handle, JniObjectReferenceOptions.CopyAndDispose);
-			}
-		}
-
-		static readonly JniPeerMembers _members = new JniPeerMembers ("test/me/TestInterface", typeof (TestInterface));
-
-	}
-
-	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
-	[global::System.Obsolete ("Use the 'TestInterface' type. This type will be removed in a future release.", error: true)]
-	public abstract class TestInterfaceConsts : TestInterface {
-		private TestInterfaceConsts ()
-		{
-		}
-
-	}
-
 	// Metadata.xml XPath interface reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']"
 	[global::Java.Interop.JniTypeSignature ("test/me/TestInterface", GenerateJavaPeer=false)]
 	public partial interface ITestInterface : IJavaPeerable {
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='getSpanFlags' and count(parameter)=1 and parameter[1][@type='java.lang.Object']]"
+		[global::Java.Interop.JniMethodSignature ("getSpanFlags", "(Ljava/lang/Object;)I")]
 		int GetSpanFlags (global::Java.Lang.Object tag);
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='append' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+		[global::Java.Interop.JniMethodSignature ("append", "(Ljava/lang/CharSequence;)V")]
 		void Append (global::Java.Lang.ICharSequence value);
 
 		// Metadata.xml XPath method reference: path="/api/package[@name='test.me']/interface[@name='TestInterface']/method[@name='identity' and count(parameter)=1 and parameter[1][@type='java.lang.CharSequence']]"
+		[global::Java.Interop.JniMethodSignature ("identity", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;")]
 		global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value);
 
 	}
@@ -66,6 +36,60 @@ namespace Test.ME {
 			var __rsval = __result?.ToString ();
 			jls_value?.Dispose ();
 			return __rsval;
+		}
+
+	}
+
+	[global::Java.Interop.JniTypeSignature ("test/me/TestInterface", GenerateJavaPeer=false)]
+	internal partial class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
+		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members_test_me_TestInterface; }
+		}
+
+		static readonly JniPeerMembers _members_test_me_TestInterface = new JniPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
+
+		public ITestInterfaceInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+		{
+		}
+
+		public unsafe int GetSpanFlags (global::Java.Lang.Object tag)
+		{
+			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (tag);
+				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				global::System.GC.KeepAlive (tag);
+			}
+		}
+
+		public unsafe void Append (global::Java.Lang.ICharSequence value)
+		{
+			const string __id = "append.(Ljava/lang/CharSequence;)V";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				_members_test_me_TestInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				global::System.GC.KeepAlive (value);
+			}
+		}
+
+		public unsafe global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
+		{
+			const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (value);
+				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+				return global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(ref __rm, JniObjectReferenceOptions.CopyAndDispose);
+			} finally {
+				global::System.GC.KeepAlive (value);
+			}
 		}
 
 	}

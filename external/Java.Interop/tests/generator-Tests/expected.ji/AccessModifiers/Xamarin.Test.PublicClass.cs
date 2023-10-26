@@ -26,6 +26,31 @@ namespace Xamarin.Test {
 
 		}
 
+		[global::Java.Interop.JniTypeSignature ("xamarin/test/PublicClass$ProtectedInterface", GenerateJavaPeer=false)]
+		internal partial class IProtectedInterfaceInvoker : global::Java.Lang.Object, IProtectedInterface {
+			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+				get { return _members_xamarin_test_PublicClass_ProtectedInterface; }
+			}
+
+			static readonly JniPeerMembers _members_xamarin_test_PublicClass_ProtectedInterface = new JniPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
+
+			public IProtectedInterfaceInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+			{
+			}
+
+			public unsafe void Foo ()
+			{
+				const string __id = "foo.()V";
+				try {
+					_members_xamarin_test_PublicClass_ProtectedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+				} finally {
+				}
+			}
+
+		}
+
 		static readonly JniPeerMembers _members = new JniPeerMembers ("xamarin/test/PublicClass", typeof (PublicClass));
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]

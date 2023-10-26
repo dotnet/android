@@ -83,10 +83,7 @@ namespace generator.SourceWriters
 					post_sibling_types.Add (new InterfaceExtensionsClass (iface, null, opt));
 			}
 
-			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
-				// Worry about later; https://github.com/xamarin/java.interop/issues/910
-				post_sibling_types.Add (new InterfaceInvokerClass (iface, opt, context));
-			}
+			post_sibling_types.Add (new InterfaceInvokerClass (iface, opt, context));
 
 			AddInterfaceEventHandler (iface, opt, context);
 

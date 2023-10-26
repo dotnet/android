@@ -85,6 +85,7 @@ namespace Xamarin.Android.Binder
 				SupportNullableReferenceTypes = options.SupportNullableReferenceTypes,
 				UseObsoletedOSPlatformAttributes = options.UseObsoletedOSPlatformAttributes,
 				UseRestrictToAttributes = options.UseRestrictToAttributes,
+				EmitLegacyInterfaceInvokers      = options.EmitLegacyInterfaceInvokers,
 				FixObsoleteOverrides = options.FixObsoleteOverrides,
 			};
 			var resolverCache       = new TypeDefinitionCache ();

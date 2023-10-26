@@ -776,6 +776,41 @@ namespace Java.Interop.PerformanceTests {
 			total.Stop ();
 			Console.WriteLine ("## {0} Timing: {1}", nameof (GenericMarshalingOverhead_Int32ArrayArrayArray), total.Elapsed);
 		}
+
+	}
+
+	[TestFixture]
+	public class InterfaceInvokerTiming : Java.InteropTests.JavaVMFixture {
+
+		[Test]
+		public void InterfaceInvokers ()
+		{
+			const int JavaTiming_CreateRunnable_Invocations = 100;
+			const int Runnable_Run_Invocations              = 100;
+
+			var instanceIds   = Stopwatch.StartNew ();
+			for (int i = 0; i < JavaTiming_CreateRunnable_Invocations; ++i) {
+				var c = JavaTiming.CreateRunnable ();
+				IMyRunnable r = new LegacyRunnableInvoker (ref c, JniObjectReferenceOptions.CopyAndDispose);
+				for (int j = 0; j < Runnable_Run_Invocations; ++j) {
+					r.Run ();
+				}
+				r.Dispose ();
+			}
+			instanceIds.Stop ();
+			var peerMembers   = Stopwatch.StartNew ();
+			for (int i = 0; i < JavaTiming_CreateRunnable_Invocations; ++i) {
+				var c = JavaTiming.CreateRunnable ();
+				IMyRunnable r = new JniPeerMembersRunnableInvoker (ref c, JniObjectReferenceOptions.CopyAndDispose);
+				for (int j = 0; j < Runnable_Run_Invocations; ++j) {
+					r.Run ();
+				}
+				r.Dispose ();
+			}
+			peerMembers.Stop ();
+			Console.WriteLine ("## {0} Timing: instanceIds: {1}", nameof (InterfaceInvokers), instanceIds.Elapsed);
+			Console.WriteLine ("## {0} Timing: peerMembers: {1}", nameof (InterfaceInvokers), peerMembers.Elapsed);
+		}
 	}
 
 	class ManagedTiming {
@@ -891,6 +926,61 @@ namespace Java.Interop.PerformanceTests {
 		public override object GetValue ()
 		{
 			return null;
+		}
+	}
+
+	interface IMyRunnable : IJavaPeerable {
+		void Run();
+	}
+
+	class LegacyRunnableInvoker : JavaObject, IMyRunnable {
+		static readonly JniPeerMembers _members = new JniPeerMembers ("java/lang/Runnable", typeof (LegacyRunnableInvoker));
+		JniObjectReference class_ref;
+
+		public LegacyRunnableInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+			var r = JniEnvironment.Types.GetObjectClass (PeerReference);
+			class_ref = r.NewGlobalRef ();
+			JniObjectReference.Dispose (ref r);
+		}
+
+		public override JniPeerMembers JniPeerMembers {
+			get { return _members; }
+		}
+
+		protected override void Dispose (bool disposing)
+		{
+			JniObjectReference.Dispose (ref class_ref);
+			base.Dispose (disposing);
+		}
+
+		JniMethodInfo id_run;
+
+		public unsafe void Run ()
+		{
+			if (id_run == null) {
+				id_run = JniEnvironment.InstanceMethods.GetMethodID (class_ref, "run", "()V");
+			}
+			JniEnvironment.InstanceMethods.CallObjectMethod (PeerReference, id_run);
+		}
+	}
+
+	class JniPeerMembersRunnableInvoker : JavaObject, IMyRunnable {
+		public JniPeerMembersRunnableInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
+		}
+
+		static readonly JniPeerMembers _members_IRunnable = new JniPeerMembers ("java/lang/Runnable", typeof (JniPeerMembersRunnableInvoker));
+
+		public unsafe void Run ()
+		{
+			const string __id = "run.()V";
+			try {
+				_members_IRunnable.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
 		}
 	}
 }

@@ -34,28 +34,51 @@ namespace generator.SourceWriters
 
 			SourceWriterExtensions.AddObsolete (Attributes, iface.DeprecatedComment, opt, iface.IsDeprecated, deprecatedSince: iface.DeprecatedSince);
 
-			Fields.Add (new PeerMembersField (opt, iface.RawJniName, $"{iface.Name}Invoker", false));
-
-			if (!ji) {
-				Properties.Add (new InterfaceHandleGetter ());
+			if (opt.EmitLegacyInterfaceInvokers) {
+				Fields.Add (new PeerMembersField (opt, iface.RawJniName, $"{iface.Name}Invoker", false));
 			}
 
-			Properties.Add (new JniPeerMembersGetter ());
+			string members = opt.EmitLegacyInterfaceInvokers ? "_members" : $"_members_{iface.JavaFullNameId}";
 
 			if (!ji) {
-				Properties.Add (new InterfaceThresholdClassGetter ());
-				Properties.Add (new ThresholdTypeGetter ());
+				Properties.Add (new InterfaceHandleGetter (members));
 			}
 
-			Fields.Add (new FieldWriter { Name = "class_ref", Type = TypeReferenceWriter.IntPtr, IsShadow = opt.BuildingCoreAssembly });
+			Properties.Add (new JniPeerMembersGetter (members));
 
-			Methods.Add (new GetObjectMethod (iface, opt));
-			Methods.Add (new ValidateMethod (iface));
-			Methods.Add (new DisposeMethod ());
+			if (!ji) {
+				string thresholdClassGet = opt.EmitLegacyInterfaceInvokers
+					? "class_ref"
+					: $"{members}.JniPeerType.PeerReference.Handle";
+				Properties.Add (new InterfaceThresholdClassGetter (thresholdClassGet));
+				Properties.Add (new ThresholdTypeGetter (members));
+			}
+
+			if (opt.EmitLegacyInterfaceInvokers) {
+				Fields.Add (new FieldWriter { Name = "class_ref", Type = TypeReferenceWriter.IntPtr, IsShadow = opt.BuildingCoreAssembly });
+
+				Methods.Add (new GetObjectMethod (iface, opt));
+				Methods.Add (new ValidateMethod (iface));
+				Methods.Add (new DisposeMethod ());
+			} else {
+				foreach (var i in GetCompleteImplementedInterfaces (new (), iface).OrderBy (x => x.JavaFullNameId)) {
+					var mi = new PeerMembersField (opt, i.RawJniName, $"{iface.Name}Invoker", isInterface:false, name: $"_members_{i.JavaFullNameId}");
+					Fields.Add (mi);
+				}
+			}
 
 			Constructors.Add (new InterfaceInvokerConstructor (opt, iface, context));
 
 			AddMemberInvokers (iface, new HashSet<string> (), opt, context);
+		}
+
+		static HashSet<InterfaceGen> GetCompleteImplementedInterfaces (HashSet<InterfaceGen> ifaces, InterfaceGen toplevel)
+		{
+			ifaces.Add (toplevel);
+			foreach (var i in toplevel.GetAllImplementedInterfaces ()) {
+				GetCompleteImplementedInterfaces (ifaces, i);
+			}
+			return ifaces;
 		}
 
 		void AddMemberInvokers (InterfaceGen iface, HashSet<string> members, CodeGenerationOptions opt, CodeGeneratorContext context)
@@ -193,14 +216,25 @@ namespace generator.SourceWriters
 
 			IsPublic = true;
 
-			Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
-			Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				Parameters.Add (new MethodParameterWriter ("reference", new TypeReferenceWriter ("ref JniObjectReference")));
+				Parameters.Add (new MethodParameterWriter ("options", new TypeReferenceWriter ("JniObjectReferenceOptions")));
+				BaseCall = "base (ref reference, options)";
 
-			BaseCall = "base (Validate (handle), transfer)";
+			} else {
+				Parameters.Add (new MethodParameterWriter ("handle", TypeReferenceWriter.IntPtr));
+				Parameters.Add (new MethodParameterWriter ("transfer", new TypeReferenceWriter ("JniHandleOwnership")));
+				BaseCall = opt.EmitLegacyInterfaceInvokers
+					? "base (Validate (handle), transfer)"
+					: "base (handle, transfer)";
+			}
 
-			Body.Add ($"IntPtr local_ref = JNIEnv.GetObjectClass ({context.ContextType.GetObjectHandleProperty (opt, "this")});");
-			Body.Add ("this.class_ref = JNIEnv.NewGlobalRef (local_ref);");
-			Body.Add ("JNIEnv.DeleteLocalRef (local_ref);");
+
+			if (opt.EmitLegacyInterfaceInvokers) {
+				Body.Add ($"IntPtr local_ref = JNIEnv.GetObjectClass ({context.ContextType.GetObjectHandleProperty (opt, "this")});");
+				Body.Add ("this.class_ref = JNIEnv.NewGlobalRef (local_ref);");
+				Body.Add ("JNIEnv.DeleteLocalRef (local_ref);");
+			}
 		}
 	}
 }

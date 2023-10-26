@@ -18,6 +18,18 @@ namespace Java.BaseTests {
 			Assert.IsTrue (invoked);
 			r.Dispose ();
 		}
+
+		[Test]
+		public void InterfaceInvokerMethod ()
+		{
+			int value   = 0;
+			using var c = new MyIntConsumer (v => value = v);
+			using var r = JavaInvoker.CreateRunnable (c);
+			r?.Run ();
+			Assert.AreEqual (0, value);
+			r?.Run ();
+			Assert.AreEqual (1, value);
+		}
 	}
 
 	class JavaInvoker : JavaObject {
@@ -30,6 +42,14 @@ namespace Java.BaseTests {
 			JniArgumentValue* args = stackalloc JniArgumentValue [1];
 			args [0] = new JniArgumentValue (r);
 			_members.StaticMethods.InvokeVoidMethod ("run.(Ljava/lang/Runnable;)V", args);
+		}
+
+		public static unsafe Java.Lang.IRunnable? CreateRunnable (Java.Util.Function.IIntConsumer c)
+		{
+			JniArgumentValue* args = stackalloc JniArgumentValue [1];
+			args [0] = new JniArgumentValue (c);
+			var _rm  = _members.StaticMethods.InvokeObjectMethod ("createRunnable.(Ljava/util/function/IntConsumer;)Ljava/lang/Runnable;", args);
+			return Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.IRunnable> (ref _rm, JniObjectReferenceOptions.CopyAndDispose);
 		}
 	}
 
@@ -46,6 +66,22 @@ namespace Java.BaseTests {
 		public void Run ()
 		{
 			action ();
+		}
+	}
+
+	[JniTypeSignature ("example/MyIntConsumer")]
+	class MyIntConsumer : Java.Lang.Object, Java.Util.Function.IIntConsumer {
+
+		Action<int> action;
+
+		public MyIntConsumer (Action<int> action)
+		{
+			this.action = action;
+		}
+
+		public void Accept (int value)
+		{
+			action (value);
 		}
 	}
 }

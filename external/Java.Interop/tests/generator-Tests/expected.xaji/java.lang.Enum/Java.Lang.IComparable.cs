@@ -17,57 +17,32 @@ namespace Java.Lang {
 
 	[global::Android.Runtime.Register ("java/lang/Comparable", DoNotGenerateAcw=true)]
 	internal partial class IComparableInvoker : global::Java.Lang.Object, IComparable {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_java_lang_Comparable.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_java_lang_Comparable; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_java_lang_Comparable.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_java_lang_Comparable.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_java_lang_Comparable = new XAPeerMembers ("java/lang/Comparable", typeof (IComparableInvoker));
 
-		public static IComparable GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			return global::Java.Lang.Object.GetObject<IComparable> (handle, transfer);
-		}
-
-		static IntPtr Validate (IntPtr handle)
-		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'java.lang.Comparable'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public IComparableInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_compareTo_Ljava_lang_Object_;
@@ -88,17 +63,19 @@ namespace Java.Lang {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_compareTo_Ljava_lang_Object_;
 		public unsafe int CompareTo (global::Java.Lang.Object another)
 		{
-			if (id_compareTo_Ljava_lang_Object_ == IntPtr.Zero)
-				id_compareTo_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "compareTo", "(Ljava/lang/Object;)I");
+			const string __id = "compareTo.(Ljava/lang/Object;)I";
 			IntPtr native_another = JNIEnv.ToLocalJniHandle (another);
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (native_another);
-			var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_compareTo_Ljava_lang_Object_, __args);
-			JNIEnv.DeleteLocalRef (native_another);
-			return __ret;
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_another);
+				var __rm = _members_java_lang_Comparable.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				JNIEnv.DeleteLocalRef (native_another);
+				global::System.GC.KeepAlive (another);
+			}
 		}
 
 	}

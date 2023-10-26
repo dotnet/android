@@ -16,4 +16,40 @@ namespace Xamarin.Test {
 		void BaseMethod ();
 
 	}
+
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/ExtendedInterface", GenerateJavaPeer=false)]
+	internal partial class IExtendedInterfaceInvoker : global::Java.Lang.Object, IExtendedInterface {
+		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members_xamarin_test_ExtendedInterface; }
+		}
+
+		static readonly JniPeerMembers _members_xamarin_test_BaseInterface = new JniPeerMembers ("xamarin/test/BaseInterface", typeof (IExtendedInterfaceInvoker));
+
+		static readonly JniPeerMembers _members_xamarin_test_ExtendedInterface = new JniPeerMembers ("xamarin/test/ExtendedInterface", typeof (IExtendedInterfaceInvoker));
+
+		public IExtendedInterfaceInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+		{
+		}
+
+		public unsafe void ExtendedMethod ()
+		{
+			const string __id = "extendedMethod.()V";
+			try {
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
+		}
+
+		public unsafe void BaseMethod ()
+		{
+			const string __id = "baseMethod.()V";
+			try {
+				_members_xamarin_test_BaseInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
+		}
+
+	}
 }

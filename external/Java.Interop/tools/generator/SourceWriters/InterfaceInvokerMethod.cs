@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using MonoDroid.Generation;
 using Xamarin.SourceWriter;
 
+using CodeGenerationTarget = Xamarin.Android.Binder.CodeGenerationTarget;
+
 namespace generator.SourceWriters
 {
 	public class InterfaceInvokerMethod : MethodWriter
@@ -27,17 +29,30 @@ namespace generator.SourceWriters
 			IsUnsafe = true;
 			IsStatic = method.IsStatic;
 
-			method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
+			if (opt.CodeGenerationTarget != CodeGenerationTarget.JavaInterop1) {
+				method_callback = new MethodCallback (iface, method, opt, null, method.IsReturnCharSequence);
+			}
 			context_this = context.ContextType.GetObjectHandleProperty (opt, "this");
 
 			SourceWriterExtensions.AddSupportedOSPlatform (Attributes, method, opt);
 
 			this.AddMethodParameters (method.Parameters, opt);
+
+			if (!opt.EmitLegacyInterfaceInvokers) {
+				SourceWriterExtensions.AddMethodBody (Body, method, opt, $"_members_{method.DeclaringType.JavaFullNameId}");
+			}
 		}
 
 		public override void Write (CodeWriter writer)
 		{
-			method_callback?.Write (writer);
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.XAJavaInterop1) {
+				method_callback?.Write (writer);
+			}
+
+			if (!opt.EmitLegacyInterfaceInvokers) {
+				base.Write (writer);
+				return;
+			}
 
 			writer.WriteLine ($"IntPtr {method.EscapedIdName};");
 
@@ -46,7 +61,11 @@ namespace generator.SourceWriters
 
 		protected override void WriteBody (CodeWriter writer)
 		{
-			SourceWriterExtensions.WriteMethodInvokerBody (writer, method, opt, context_this);
+			if (opt.EmitLegacyInterfaceInvokers) {
+				SourceWriterExtensions.WriteMethodInvokerBodyLegacy (writer, method, opt, context_this);
+				return;
+			}
+			base.WriteBody (writer);
 		}
 	}
 }

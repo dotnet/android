@@ -78,57 +78,32 @@ namespace Test.ME {
 
 	[global::Android.Runtime.Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
 	internal partial class ITestInterfaceInvoker : global::Java.Lang.Object, ITestInterface {
-		static readonly JniPeerMembers _members = new XAPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
-
 		static IntPtr java_class_ref {
-			get { return _members.JniPeerType.PeerReference.Handle; }
+			get { return _members_test_me_TestInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-			get { return _members; }
+			get { return _members_test_me_TestInterface; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override IntPtr ThresholdClass {
-			get { return class_ref; }
+			get { return _members_test_me_TestInterface.JniPeerType.PeerReference.Handle; }
 		}
 
 		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 		protected override global::System.Type ThresholdType {
-			get { return _members.ManagedPeerType; }
+			get { return _members_test_me_TestInterface.ManagedPeerType; }
 		}
 
-		new IntPtr class_ref;
+		static readonly JniPeerMembers _members_test_me_TestInterface = new XAPeerMembers ("test/me/TestInterface", typeof (ITestInterfaceInvoker));
 
-		public static ITestInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 		{
-			return global::Java.Lang.Object.GetObject<ITestInterface> (handle, transfer);
-		}
-
-		static IntPtr Validate (IntPtr handle)
-		{
-			if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-				throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'test.me.TestInterface'.");
-			return handle;
-		}
-
-		protected override void Dispose (bool disposing)
-		{
-			if (this.class_ref != IntPtr.Zero)
-				JNIEnv.DeleteGlobalRef (this.class_ref);
-			this.class_ref = IntPtr.Zero;
-			base.Dispose (disposing);
-		}
-
-		public ITestInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-		{
-			IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-			this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-			JNIEnv.DeleteLocalRef (local_ref);
 		}
 
 		static Delegate cb_getSpanFlags_Ljava_lang_Object_;
@@ -149,15 +124,17 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_getSpanFlags_Ljava_lang_Object_;
 		public unsafe int GetSpanFlags (global::Java.Lang.Object tag)
 		{
-			if (id_getSpanFlags_Ljava_lang_Object_ == IntPtr.Zero)
-				id_getSpanFlags_Ljava_lang_Object_ = JNIEnv.GetMethodID (class_ref, "getSpanFlags", "(Ljava/lang/Object;)I");
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
-			var __ret = JNIEnv.CallIntMethod (((global::Java.Lang.Object) this).Handle, id_getSpanFlags_Ljava_lang_Object_, __args);
-			return __ret;
+			const string __id = "getSpanFlags.(Ljava/lang/Object;)I";
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue ((tag == null) ? IntPtr.Zero : ((global::Java.Lang.Object) tag).Handle);
+				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractInt32Method (__id, this, __args);
+				return __rm;
+			} finally {
+				global::System.GC.KeepAlive (tag);
+			}
 		}
 
 		static Delegate cb_append_Ljava_lang_CharSequence_;
@@ -177,16 +154,18 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_append_Ljava_lang_CharSequence_;
 		public unsafe void Append (global::Java.Lang.ICharSequence value)
 		{
-			if (id_append_Ljava_lang_CharSequence_ == IntPtr.Zero)
-				id_append_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "append", "(Ljava/lang/CharSequence;)V");
+			const string __id = "append.(Ljava/lang/CharSequence;)V";
 			IntPtr native_value = CharSequence.ToLocalJniHandle (value);
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (native_value);
-			JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_append_Ljava_lang_CharSequence_, __args);
-			JNIEnv.DeleteLocalRef (native_value);
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				_members_test_me_TestInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_value);
+				global::System.GC.KeepAlive (value);
+			}
 		}
 
 		static Delegate cb_identity_Ljava_lang_CharSequence_;
@@ -207,17 +186,19 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		IntPtr id_identity_Ljava_lang_CharSequence_;
 		public unsafe global::Java.Lang.ICharSequence IdentityFormatted (global::Java.Lang.ICharSequence value)
 		{
-			if (id_identity_Ljava_lang_CharSequence_ == IntPtr.Zero)
-				id_identity_Ljava_lang_CharSequence_ = JNIEnv.GetMethodID (class_ref, "identity", "(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;");
+			const string __id = "identity.(Ljava/lang/CharSequence;)Ljava/lang/CharSequence;";
 			IntPtr native_value = CharSequence.ToLocalJniHandle (value);
-			JValue* __args = stackalloc JValue [1];
-			__args [0] = new JValue (native_value);
-			var __ret = global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (JNIEnv.CallObjectMethod (((global::Java.Lang.Object) this).Handle, id_identity_Ljava_lang_CharSequence_, __args), JniHandleOwnership.TransferLocalRef);
-			JNIEnv.DeleteLocalRef (native_value);
-			return __ret;
+			try {
+				JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+				__args [0] = new JniArgumentValue (native_value);
+				var __rm = _members_test_me_TestInterface.InstanceMethods.InvokeAbstractObjectMethod (__id, this, __args);
+				return global::Java.Lang.Object.GetObject<Java.Lang.ICharSequence> (__rm.Handle, JniHandleOwnership.TransferLocalRef);
+			} finally {
+				JNIEnv.DeleteLocalRef (native_value);
+				global::System.GC.KeepAlive (value);
+			}
 		}
 
 	}

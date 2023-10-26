@@ -7,6 +7,41 @@
 			final="true" name="String" static="false" visibility="public">
 		</class>
 	</package>
+	<package name="java.util">
+    <interface abstract="true" deprecated="not deprecated" final="false" name="Collection" static="false" visibility="public" jni-signature="Ljava/util/Collection;">
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+      <method abstract="true" deprecated="not deprecated" final="false" name="add" jni-signature="(Ljava/lang/Object;)Z" bridge="false" native="false" return="boolean" jni-return="Z" static="false" synchronized="false" synthetic="false" visibility="public">
+        <parameter name="e" type="E" jni-type="TE;">
+        </parameter>
+      </method>
+      <method abstract="true" deprecated="not deprecated" final="false" name="clear" jni-signature="()V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+      </method>
+    </interface>
+    <interface abstract="true" deprecated="not deprecated" final="false" name="Queue" static="false" visibility="public" jni-signature="Ljava/util/Queue;">
+      <implements name="java.util.Collection" name-generic-aware="java.util.Collection&lt;E&gt;" jni-type="Ljava/util/Collection&lt;TE;&gt;;">
+      </implements>
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+      <method abstract="true" deprecated="not deprecated" final="false" name="add" jni-signature="(Ljava/lang/Object;)Z" bridge="false" native="false" return="boolean" jni-return="Z" static="false" synchronized="false" synthetic="false" visibility="public">
+        <parameter name="e" type="E" jni-type="TE;">
+        </parameter>
+      </method>
+    </interface>
+    <interface abstract="true" deprecated="not deprecated" final="false" name="Deque" static="false" visibility="public" jni-signature="Ljava/util/Deque;">
+      <implements name="java.util.Queue" name-generic-aware="java.util.Queue&lt;E&gt;" jni-type="Ljava/util/Queue&lt;TE;&gt;;">
+      </implements>
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+      <method abstract="true" deprecated="not deprecated" final="false" name="add" jni-signature="(Ljava/lang/Object;)Z" bridge="false" native="false" return="boolean" jni-return="Z" static="false" synchronized="false" synthetic="false" visibility="public">
+        <parameter name="e" type="E" jni-type="TE;">
+        </parameter>
+      </method>
+    </interface>
+	</package>
 	<package name="test.me">
 		<!--
 			public interface TestInterface {
@@ -100,7 +135,7 @@
 			<method abstract="true" deprecated="not deprecated" final="false" name="getObject" native="false" return="T" static="false" synchronized="false" visibility="public">
 			</method>
 			<method abstract="true" deprecated="not deprecated" final="false" name="setObject" native="false" return="void" static="false" synchronized="false" visibility="public">
-				<parameter name="value" type="T" />
+				<parameter name="object" type="T" />
 			</method>
 		</interface>
 		<!--
@@ -117,7 +152,7 @@
 			<method abstract="false" deprecated="not deprecated" final="false" name="getObject" native="false" return="java.lang.Object" static="false" synchronized="false" visibility="public">
 			</method>
 			<method abstract="false" deprecated="not deprecated" final="false" name="setObject" native="false" return="void" static="false" synchronized="false" visibility="public">
-				<parameter name="value" type="java.lang.Object" />
+				<parameter name="object" type="java.lang.Object" />
 			</method>
 		</class>
 		<!--
@@ -134,7 +169,7 @@
 			<method abstract="false" deprecated="not deprecated" final="false" name="getObject" native="false" return="java.lang.String" static="false" synchronized="false" visibility="public">
 			</method>
 			<method abstract="false" deprecated="not deprecated" final="false" name="SetObject" native="false" return="void" static="false" synchronized="false" visibility="public">
-				<parameter name="value" type="java.lang.String" />
+				<parameter name="object" type="java.lang.String" />
 			</method>
 		</class>
 	</package>

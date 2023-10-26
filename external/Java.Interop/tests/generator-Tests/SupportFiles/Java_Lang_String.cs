@@ -1,14 +1,15 @@
-﻿#if !JAVA_INTEROP1
-
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
 namespace Java.Lang {
 
-	public sealed partial class String : global::Java.Lang.Object, Java.Lang.ICharSequence
+	public sealed partial class String : global::Java.Lang.Object, Java.Lang.ICharSequence, IEnumerable
 	{
-		public String (string value)
+		public unsafe String (string value)
+#if JAVA_INTEROP1
+			: base (ref *InvalidJniObjectReference, Java.Interop.JniObjectReferenceOptions.None)
+#endif  // JAVA_INTEROP1
 		{
 		}
 
@@ -43,5 +44,3 @@ namespace Java.Lang {
 		}
 	}
 }
-
-#endif  // !JAVA_INTEROP1

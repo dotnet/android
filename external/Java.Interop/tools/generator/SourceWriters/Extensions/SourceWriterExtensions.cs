@@ -229,7 +229,7 @@ namespace generator.SourceWriters
 			}
 		}
 
-		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt)
+		public static void AddMethodBody (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
 			body.Add ($"const string __id = \"{method.JavaName}.{method.JniSignature}\";");
 
@@ -238,7 +238,7 @@ namespace generator.SourceWriters
 
 			body.Add ("try {");
 
-			AddMethodBodyTryBlock (body, method, opt);
+			AddMethodBodyTryBlock (body, method, opt, members);
 
 			if (method.IsCompatVirtualMethod) {
 				body.Add ("}");
@@ -257,7 +257,7 @@ namespace generator.SourceWriters
 			body.Add ("}");
 		}
 
-		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt)
+		public static void AddMethodBodyTryBlock (List<string> body, Method method, CodeGenerationOptions opt, string members = "_members")
 		{
 			AddParameterListCallArgs (body, method.Parameters, opt, false);
 
@@ -277,7 +277,7 @@ namespace generator.SourceWriters
 			var this_param = method.IsStatic ? $"__id{call_args}" : $"__id, this{call_args}";
 
 			// Example: var __rm = _members.InstanceMethods.InvokeVirtualObjectMethod (__id, this, __args);
-			body.Add ($"\t{return_var}_members.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
+			body.Add ($"\t{return_var}{members}.{method_type}.Invoke{virt_type}{invokeType}Method ({this_param});");
 
 			if (!method.IsVoid) {
 				var r = "__rm";
@@ -292,6 +292,8 @@ namespace generator.SourceWriters
 		{
 			if (parameters.Count == 0)
 				return;
+
+			invoker = invoker && opt.EmitLegacyInterfaceInvokers;
 
 			var JValue = invoker ? "JValue" : "JniArgumentValue";
 
@@ -363,7 +365,7 @@ namespace generator.SourceWriters
 			attributes.Add (new RestrictToAttr (isType));
 		}
 
-		public static void WriteMethodInvokerBody (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)
+		public static void WriteMethodInvokerBodyLegacy (CodeWriter writer, Method method, CodeGenerationOptions opt, string contextThis)
 		{
 			writer.WriteLine ($"if ({method.EscapedIdName} == IntPtr.Zero)");
 			writer.WriteLine ($"\t{method.EscapedIdName} = JNIEnv.GetMethodID (class_ref, \"{method.JavaName}\", \"{method.JniSignature}\");");
@@ -392,6 +394,8 @@ namespace generator.SourceWriters
 		{
 			if (parameters.Count == 0)
 				return;
+
+			invoker = invoker && opt.EmitLegacyInterfaceInvokers;
 
 			var JValue = invoker ? "JValue" : "JniArgumentValue";
 

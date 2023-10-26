@@ -9,6 +9,9 @@
     <Compile Include="$(MSBuildThisFileDirectory)IInterfaceWithoutNamespace.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.String.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Util.ICollection.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Util.IDeque.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Util.IQueue.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericImplementation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericObjectPropertyImplementation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Test.ME.GenericStringImplementation.cs" />

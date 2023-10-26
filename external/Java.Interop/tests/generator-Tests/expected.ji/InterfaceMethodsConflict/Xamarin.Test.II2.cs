@@ -12,4 +12,29 @@ namespace Xamarin.Test {
 		void Close ();
 
 	}
+
+	[global::Java.Interop.JniTypeSignature ("xamarin/test/I2", GenerateJavaPeer=false)]
+	internal partial class II2Invoker : global::Java.Lang.Object, II2 {
+		[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
+		[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
+		public override global::Java.Interop.JniPeerMembers JniPeerMembers {
+			get { return _members_xamarin_test_I2; }
+		}
+
+		static readonly JniPeerMembers _members_xamarin_test_I2 = new JniPeerMembers ("xamarin/test/I2", typeof (II2Invoker));
+
+		public II2Invoker (ref JniObjectReference reference, JniObjectReferenceOptions options) : base (ref reference, options)
+		{
+		}
+
+		public unsafe void Close ()
+		{
+			const string __id = "close.()V";
+			try {
+				_members_xamarin_test_I2.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+			} finally {
+			}
+		}
+
+	}
 }

@@ -132,7 +132,7 @@ steps:
   inputs:
     command: test
     testRunTitle: Java.Interop-Performance ($(DotNetTargetFramework) - ${{ parameters.platformName }})
-    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
+    arguments: --logger "console;verbosity=detailed" bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop-PerformanceTests.dll
   continueOnError: true
   retryCountOnTaskFailure: 1
 

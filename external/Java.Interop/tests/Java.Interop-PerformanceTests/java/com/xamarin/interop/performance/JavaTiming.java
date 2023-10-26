@@ -77,5 +77,14 @@ public class JavaTiming {
 	public static void StaticVoidMethod3IArgs (int obj1, int obj2, int obj3)
 	{
 	}
+
+	public static Runnable CreateRunnable ()
+	{
+		return new Runnable () {
+			public void run ()
+			{
+			}
+		};
+	}
 }
 

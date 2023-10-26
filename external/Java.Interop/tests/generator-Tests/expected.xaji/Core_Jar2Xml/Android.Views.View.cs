@@ -29,57 +29,32 @@ namespace Android.Views {
 
 		[global::Android.Runtime.Register ("android/view/View$OnClickListener", DoNotGenerateAcw=true)]
 		internal partial class IOnClickListenerInvoker : global::Java.Lang.Object, IOnClickListener {
-			static readonly JniPeerMembers _members = new XAPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
-
 			static IntPtr java_class_ref {
-				get { return _members.JniPeerType.PeerReference.Handle; }
+				get { return _members_android_view_View_OnClickListener.JniPeerType.PeerReference.Handle; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-				get { return _members; }
+				get { return _members_android_view_View_OnClickListener; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			protected override IntPtr ThresholdClass {
-				get { return class_ref; }
+				get { return _members_android_view_View_OnClickListener.JniPeerType.PeerReference.Handle; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
+				get { return _members_android_view_View_OnClickListener.ManagedPeerType; }
 			}
 
-			new IntPtr class_ref;
+			static readonly JniPeerMembers _members_android_view_View_OnClickListener = new XAPeerMembers ("android/view/View$OnClickListener", typeof (IOnClickListenerInvoker));
 
-			public static IOnClickListener GetObject (IntPtr handle, JniHandleOwnership transfer)
+			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
-				return global::Java.Lang.Object.GetObject<IOnClickListener> (handle, transfer);
-			}
-
-			static IntPtr Validate (IntPtr handle)
-			{
-				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-					throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'android.view.View.OnClickListener'.");
-				return handle;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				if (this.class_ref != IntPtr.Zero)
-					JNIEnv.DeleteGlobalRef (this.class_ref);
-				this.class_ref = IntPtr.Zero;
-				base.Dispose (disposing);
-			}
-
-			public IOnClickListenerInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-			{
-				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-				JNIEnv.DeleteLocalRef (local_ref);
 			}
 
 			static Delegate cb_onClick_Landroid_view_View_;
@@ -99,14 +74,16 @@ namespace Android.Views {
 			}
 #pragma warning restore 0169
 
-			IntPtr id_onClick_Landroid_view_View_;
 			public unsafe void OnClick (global::Android.Views.View v)
 			{
-				if (id_onClick_Landroid_view_View_ == IntPtr.Zero)
-					id_onClick_Landroid_view_View_ = JNIEnv.GetMethodID (class_ref, "onClick", "(Landroid/view/View;)V");
-				JValue* __args = stackalloc JValue [1];
-				__args [0] = new JValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
-				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_onClick_Landroid_view_View_, __args);
+				const string __id = "onClick.(Landroid/view/View;)V";
+				try {
+					JniArgumentValue* __args = stackalloc JniArgumentValue [1];
+					__args [0] = new JniArgumentValue ((v == null) ? IntPtr.Zero : ((global::Java.Lang.Object) v).Handle);
+					_members_android_view_View_OnClickListener.InstanceMethods.InvokeAbstractVoidMethod (__id, this, __args);
+				} finally {
+					global::System.GC.KeepAlive (v);
+				}
 			}
 
 		}

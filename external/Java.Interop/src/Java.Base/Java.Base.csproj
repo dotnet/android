@@ -4,7 +4,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
-    <NoWarn>$(NoWarn);8764</NoWarn>
+    <NoWarn>$(NoWarn);8764;0114</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />

@@ -335,14 +335,33 @@ namespace Java.Interop
 
 			static ConstructorInfo? GetActivationConstructor (Type type)
 			{
-				return
-					(from c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)
-					 let p = c.GetParameters ()
-					 where p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions)
-					 select c)
-				.FirstOrDefault ();
+				if (type.IsAbstract || type.IsInterface) {
+					type = GetInvokerType (type) ?? type;
+				}
+				foreach (var c in type.GetConstructors (BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance)) {
+					var p = c.GetParameters ();
+					if (p.Length == 2 && p [0].ParameterType == ByRefJniObjectReference && p [1].ParameterType == typeof (JniObjectReferenceOptions))
+						return c;
+				}
+				return null;
 			}
 
+			static Type? GetInvokerType (Type type)
+			{
+				const string suffix = "Invoker";
+				Type[] arguments = type.GetGenericArguments ();
+				if (arguments.Length == 0)
+					return type.Assembly.GetType (type + suffix);
+				Type definition = type.GetGenericTypeDefinition ();
+				int bt = definition.FullName!.IndexOf ("`", StringComparison.Ordinal);
+				if (bt == -1)
+					throw new NotSupportedException ("Generic type doesn't follow generic type naming convention! " + type.FullName);
+				Type? suffixDefinition = definition.Assembly.GetType (
+						definition.FullName.Substring (0, bt) + suffix + definition.FullName.Substring (bt));
+				if (suffixDefinition == null)
+					return null;
+				return suffixDefinition.MakeGenericType (arguments);
+			}
 
 			public object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null)
 			{

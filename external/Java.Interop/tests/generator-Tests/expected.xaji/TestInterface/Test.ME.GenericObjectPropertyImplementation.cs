@@ -88,11 +88,11 @@ namespace Test.ME {
 			return cb_setObject_Ljava_lang_Object_;
 		}
 
-		static void n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
+		static void n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)
 		{
 			var __this = global::Java.Lang.Object.GetObject<global::Test.ME.GenericObjectPropertyImplementation> (jnienv, native__this, JniHandleOwnership.DoNotTransfer);
-			var value = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native_value, JniHandleOwnership.DoNotTransfer);
-			__this.Object = value;
+			var @object = global::Java.Lang.Object.GetObject<global::Java.Lang.Object> (native__object, JniHandleOwnership.DoNotTransfer);
+			__this.Object = @object;
 		}
 #pragma warning restore 0169
 

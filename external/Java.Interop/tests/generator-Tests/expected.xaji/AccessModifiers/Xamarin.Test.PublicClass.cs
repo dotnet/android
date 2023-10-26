@@ -29,57 +29,32 @@ namespace Xamarin.Test {
 
 		[global::Android.Runtime.Register ("xamarin/test/PublicClass$ProtectedInterface", DoNotGenerateAcw=true)]
 		internal partial class IProtectedInterfaceInvoker : global::Java.Lang.Object, IProtectedInterface {
-			static readonly JniPeerMembers _members = new XAPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
-
 			static IntPtr java_class_ref {
-				get { return _members.JniPeerType.PeerReference.Handle; }
+				get { return _members_xamarin_test_PublicClass_ProtectedInterface.JniPeerType.PeerReference.Handle; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			public override global::Java.Interop.JniPeerMembers JniPeerMembers {
-				get { return _members; }
+				get { return _members_xamarin_test_PublicClass_ProtectedInterface; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			protected override IntPtr ThresholdClass {
-				get { return class_ref; }
+				get { return _members_xamarin_test_PublicClass_ProtectedInterface.JniPeerType.PeerReference.Handle; }
 			}
 
 			[global::System.Diagnostics.DebuggerBrowsable (global::System.Diagnostics.DebuggerBrowsableState.Never)]
 			[global::System.ComponentModel.EditorBrowsable (global::System.ComponentModel.EditorBrowsableState.Never)]
 			protected override global::System.Type ThresholdType {
-				get { return _members.ManagedPeerType; }
+				get { return _members_xamarin_test_PublicClass_ProtectedInterface.ManagedPeerType; }
 			}
 
-			new IntPtr class_ref;
+			static readonly JniPeerMembers _members_xamarin_test_PublicClass_ProtectedInterface = new XAPeerMembers ("xamarin/test/PublicClass$ProtectedInterface", typeof (IProtectedInterfaceInvoker));
 
-			public static IProtectedInterface GetObject (IntPtr handle, JniHandleOwnership transfer)
+			public IProtectedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (handle, transfer)
 			{
-				return global::Java.Lang.Object.GetObject<IProtectedInterface> (handle, transfer);
-			}
-
-			static IntPtr Validate (IntPtr handle)
-			{
-				if (!JNIEnv.IsInstanceOf (handle, java_class_ref))
-					throw new InvalidCastException ($"Unable to convert instance of type '{JNIEnv.GetClassNameFromInstance (handle)}' to type 'xamarin.test.PublicClass.ProtectedInterface'.");
-				return handle;
-			}
-
-			protected override void Dispose (bool disposing)
-			{
-				if (this.class_ref != IntPtr.Zero)
-					JNIEnv.DeleteGlobalRef (this.class_ref);
-				this.class_ref = IntPtr.Zero;
-				base.Dispose (disposing);
-			}
-
-			public IProtectedInterfaceInvoker (IntPtr handle, JniHandleOwnership transfer) : base (Validate (handle), transfer)
-			{
-				IntPtr local_ref = JNIEnv.GetObjectClass (((global::Java.Lang.Object) this).Handle);
-				this.class_ref = JNIEnv.NewGlobalRef (local_ref);
-				JNIEnv.DeleteLocalRef (local_ref);
 			}
 
 			static Delegate cb_foo;
@@ -98,12 +73,13 @@ namespace Xamarin.Test {
 			}
 #pragma warning restore 0169
 
-			IntPtr id_foo;
 			public unsafe void Foo ()
 			{
-				if (id_foo == IntPtr.Zero)
-					id_foo = JNIEnv.GetMethodID (class_ref, "foo", "()V");
-				JNIEnv.CallVoidMethod (((global::Java.Lang.Object) this).Handle, id_foo);
+				const string __id = "foo.()V";
+				try {
+					_members_xamarin_test_PublicClass_ProtectedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+				} finally {
+				}
 			}
 
 		}

@@ -11,9 +11,9 @@ namespace generator.SourceWriters
 	public class PeerMembersField : FieldWriter
 	{
 		// static readonly JniPeerMembers _members = new XAPeerMembers ("android/provider/ContactsContract$AggregationExceptions", typeof (AggregationExceptions));
-		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface)
+		public PeerMembersField (CodeGenerationOptions opt, string rawJniType, string declaringType, bool isInterface, string name = "_members")
 		{
-			Name = "_members";
+			Name = name;
 			Type = new TypeReferenceWriter ("JniPeerMembers");
 
 			IsPrivate = isInterface;

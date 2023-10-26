@@ -115,7 +115,7 @@ namespace MonoDroid.Generation {
 		{
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				if ((sym is GenericTypeParameter) || (sym is GenericSymbol)) {
-					return $"({var_name}.?PeerReference ?? default)";
+					return $"({var_name}?.PeerReference ?? default)";
 				}
 				return sym.ToNative (opt, var_name);
 			}

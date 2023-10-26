@@ -276,6 +276,11 @@ namespace Java.Interop.PerformanceTests
 			const string id = toString_name + "." + toString_sig;
 			return _members.InstanceMethods.InvokeVirtualObjectMethod (id, this, null);
 		}
+
+		public static unsafe JniObjectReference CreateRunnable ()
+		{
+			return _members.StaticMethods.InvokeObjectMethod ("CreateRunnable.()Ljava/lang/Runnable;", null);
+		}
 	}
 
 	[JniTypeSignature (JniTypeName)]

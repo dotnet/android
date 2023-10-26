@@ -107,7 +107,7 @@ namespace MonoDroid.Generation {
 			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
 				return new[]{
 					$"var {var_name} = global::Java.Interop.JniEnvironment.Runtime.ValueManager.GetValue<Java.Lang.ICharSequence>(" +
-						$"ref {TypeNameUtilities.GetNativeName (var_name)}, JniObjectReferenceOptions.Copy)",
+						$"ref {TypeNameUtilities.GetNativeName (var_name)}, JniObjectReferenceOptions.Copy);",
 				};
 			}
 			return new string[] { String.Format ("var {0} = global::Java.Lang.Object.GetObject<global::Java.Lang.ICharSequence> ({1}, JniHandleOwnership.DoNotTransfer);", var_name, TypeNameUtilities.GetNativeName (var_name)) };

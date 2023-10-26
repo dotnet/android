@@ -143,6 +143,7 @@ namespace generatortests
 			AdditionalSourceDirectories.Clear ();
 
 			Options.CodeGenerationTarget                        = target;
+			Options.EmitLegacyInterfaceInvokers                 = false;
 			Options.ApiDescriptionFile                          = FullPath (apiDescriptionFile);
 			Options.ManagedCallableWrapperSourceOutputDirectory = FullPath (outputPath);
 
