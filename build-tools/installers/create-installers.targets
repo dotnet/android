@@ -344,7 +344,7 @@
     <MonoDocFiles Include="$(_MonoDocOutputPath)MonoAndroid-lib.zip" />
   </ItemGroup>
   <ItemGroup>
-    <ThirdPartyNotice Include="$(XAInstallPrefix)ThirdPartyNotices.txt" />
+    <ThirdPartyNotice Include="$(XAInstallPrefix)THIRD-PARTY-NOTICES.TXT" />
   </ItemGroup>
   <!-- monodroid -->
   <!-- new files to be included from monodroid should be added to the following projitems file in that repo. -->

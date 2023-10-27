@@ -478,8 +478,8 @@ Modificare il valore in un nome di tipo con qualifica assembly che eredita da '{
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
   <data name="XA1031_HCH" xml:space="preserve">
-    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.
-Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.</value>
+    <value>Il valore della proprietà 'AndroidHttpClientHandlerType' '{0}' non deve derivare da 'System.Net.Htt.HttpClientHandler'.
+Modificare il valore in un nome di tipo con qualifica assembly che eredita da 'System.Net.Http.HttpMessageHandler' o rimuovere completamente la proprietà.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
 {0} - The value of the property.</comment>
   </data>

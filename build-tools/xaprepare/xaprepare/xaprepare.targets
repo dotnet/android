@@ -102,12 +102,6 @@
       <Replacement Include="@XABuildToolsPackagePrefixWindows@=$(XABuildToolsPackagePrefixWindows)" />
       <Replacement Include="@XABuildToolsPackagePrefixLinux@=$(XABuildToolsPackagePrefixLinux)" />
       <Replacement Include="@XABuildToolsPackagePrefix@=$(XABuildToolsPackagePrefix)" />
-      <Replacement Include="@XABuildTools30Folder@=$(XABuildTools30Folder)" />
-      <Replacement Include="@XABuildTools30Version@=$(XABuildTools30Version)" />
-      <Replacement Include="@XABuildTools30PackagePrefixMacOS@=$(XABuildTools30PackagePrefixMacOS)" />
-      <Replacement Include="@XABuildTools30PackagePrefixWindows@=$(XABuildTools30PackagePrefixWindows)" />
-      <Replacement Include="@XABuildTools30PackagePrefixLinux@=$(XABuildTools30PackagePrefixLinux)" />
-      <Replacement Include="@XABuildTools30PackagePrefix@=$(XABuildTools30PackagePrefix)" />
       <Replacement Include="@XAPlatformToolsVersion@=$(XAPlatformToolsVersion)" />
       <Replacement Include="@XAInstallPrefix@=$(XAInstallPrefix)" />
       <Replacement Include="@XABinRelativeInstallPrefix@=$(_XABinRelativeInstallPrefix)" />
