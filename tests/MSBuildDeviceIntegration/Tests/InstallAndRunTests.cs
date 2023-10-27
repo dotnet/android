@@ -1134,8 +1134,6 @@ namespace UnnamedProject
 		[Test]
 		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test is only valid in .NET 8+");
 			proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				PackageReferences = {
