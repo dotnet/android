@@ -1135,7 +1135,7 @@ namespace UnnamedProject
 		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
 		{
 			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test is only valid in .NET 7+");
+				Assert.Ignore ("Test is only valid in .NET 8+");
 			proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				PackageReferences = {
@@ -1143,7 +1143,9 @@ namespace UnnamedProject
 					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
 				},
 			};
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			builder = CreateApkBuilder ();
@@ -1152,10 +1154,10 @@ namespace UnnamedProject
 
 			RunProjectAndAssert (proj, builder);
 
-			var timeoutInSeconds = 120;
-			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
-				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
-			Assert.IsTrue (didStart, "Activity should have started.");
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 	}
 }
