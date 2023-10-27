@@ -141,6 +141,7 @@ public class JavaSourceTest {
 			nupkg.AssertDoesNotContainEntry (nupkgPath, "content/nopack.aar");
 			nupkg.AssertDoesNotContainEntry (nupkgPath, $"contentFiles/any/{dotnetVersion}-android{apiLevel}.0/nopack.aar");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/baz.aar");
+			nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/_Microsoft.Android.Resource.Designer.dll");
 		}
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
