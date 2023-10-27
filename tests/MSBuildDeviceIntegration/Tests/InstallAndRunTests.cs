@@ -1152,6 +1152,13 @@ namespace UnnamedProject
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+			var className = "Lcom/xamarin/microsoftintune/MainActivity;";
+			var methodName = "onMAMCreate";
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, methodName, "(Landroid/os/Bundle;)V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}` and `{methodName}!");
+
 			RunProjectAndAssert (proj, builder);
 
 			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
