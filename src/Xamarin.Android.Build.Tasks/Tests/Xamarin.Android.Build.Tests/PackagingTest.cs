@@ -100,6 +100,19 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
+		public void CheckProjectWithSpaceInNameWorks ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+				ProjectName = "Test Me",
+				RootNamespace = "Test.Me",
+			};
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "build failed");
+			}
+		}
+
+		[Test]
 		public void CheckClassesDexIsIncluded ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
