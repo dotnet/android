@@ -52,7 +52,7 @@ const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
 		.output_data_offset = 0,
 		.output_data_size = 2048,
 		.info_index = 0,
-		.is_compressed = false,
+		.flags = 0,
 	},
 
 	{
@@ -62,8 +62,13 @@ const AssemblyIndexEntry xa_assembly_index[AssemblyCount] = {
 		.output_data_offset = 2048,
 		.output_data_size = 16356,
 		.info_index = 1,
-		.is_compressed = true,
+		.flags = AssemblyEntry_IsCompressed,
 	},
+};
+
+const char *const xa_assembly_config_files[AssemblyCount] = {
+	nullptr,
+	nullptr,
 };
 #endif
 

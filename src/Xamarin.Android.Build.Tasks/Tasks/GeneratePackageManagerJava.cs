@@ -36,10 +36,8 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
-		public bool UseAssemblyStore { get; set; }
-
 		[Required]
-		public bool UseAssemblySharedLibraries { get; set; }
+		public bool UseAssemblyStore { get; set; }
 
 		[Required]
 		public string OutputDirectory { get; set; }

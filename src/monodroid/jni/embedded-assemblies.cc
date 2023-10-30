@@ -233,7 +233,50 @@ EmbeddedAssemblies::standalone_dso_open_from_bundles (dynamic_local_string<SENSI
 	hash_t name_hash = xxhash::hash (name.get (), name.length ());
 	log_debug (LOG_ASSEMBLY, "standalone_dso_open_from_bundles: looking for bundled name: '%s', hash 0x%zx", name.get (), name_hash);
 
-	return nullptr;
+	auto equal = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+	auto less_than = [](AssemblyIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
+
+	ssize_t idx = Search::binary_search<AssemblyIndexEntry, equal, less_than> (name_hash, xa_assembly_index, xa_assemblies_config.assembly_index_size);
+	log_debug (LOG_ASSEMBLY, " assembly found in index, at position %zd", idx);
+
+	if (idx < 0) {
+		log_warn (LOG_ASSEMBLY, "Assembly '%s' not found, the application may fail", name.get ());
+		return nullptr;
+	}
+
+	AssemblyIndexEntry const& entry = xa_assembly_index[idx];
+	const uint8_t *assembly_data = static_cast<const uint8_t*>(xa_loaded_assemblies[entry.info_index]);
+
+	if (assembly_data == nullptr) {
+		if ((entry.flags & AssemblyEntry_IsCompressed) == AssemblyEntry_IsCompressed) {
+			log_debug (LOG_ASSEMBLY, "Assembly '%s' is compressed", name.get ());
+		} else {
+			log_debug (LOG_ASSEMBLY, "Assembly '%s' is NOT compressed, using direct pointer to mmapped data", name.get ());
+			assembly_data = static_cast<uint8_t*>(assembly_blob.area) + entry.input_data_offset;
+		}
+
+		if ((entry.flags & AssemblyEntry_HasConfig) == AssemblyEntry_HasConfig) [[unlikely]] {
+			log_debug (LOG_ASSEMBLY, "Assembly '%s' has an associated config file", name.get ());
+		}
+
+		xa_loaded_assemblies[entry.info_index] = assembly_data;
+	}
+
+	// `output_data_size` is always the right thing to use, because even if the assembly data is not compressed, it will
+	// be identical to `input_data_size`
+	MonoImage *image = MonoImageLoader::load (name, loader_data, const_cast<uint8_t*>(assembly_data), entry.output_data_size);
+	if (image == nullptr) {
+		return nullptr;
+	}
+
+	MonoImageOpenStatus status;
+	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, false /* ref_only */);
+	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
+		return nullptr;
+	}
+
+	return a;
 }
 #endif // def RELEASE
 
@@ -280,35 +323,26 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 //       abort() if the assembly contains marshal callbacks.
 template<LoaderData TLoaderData>
 force_inline MonoAssembly*
-EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, bool ref_only) noexcept
+EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, [[maybe_unused]] MonoError *error, [[maybe_unused]] bool ref_only) noexcept
 {
 	const char *culture = mono_assembly_name_get_culture (aname);
 	const char *asmname = mono_assembly_name_get_name (aname);
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> name;
-	if (culture != nullptr && *culture != '\0') {
+	if (culture != nullptr && *culture != '\0') [[unlikely]] {
 		name.append_c (culture);
 		name.append (zip_path_separator);
 	}
 	name.append_c (asmname);
 
-	size_t time_index;
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
-		timing = new Timing ();
-		time_index = internal_timing->start_event (TimingEventKind::Unspecified);
-	}
-
 	MonoAssembly *a;
-	{
-		a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
-	}
+#if defined (RELEASE)
+	a = standalone_dso_open_from_bundles (name, loader_data);
+#else
+	a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
+#endif
 
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
-		internal_timing->end_event (time_index, true);
-		internal_timing->add_more_info (time_index, name.get ());
-	}
-
-	if (a == nullptr) {
+	if (a == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
 
@@ -1044,11 +1078,11 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 size_t
 EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
 {
-	size_t prev  = number_of_found_assembly_dsos;
+	size_t prev  = number_of_found_assemblies;
 
 	gather_bundled_assemblies_from_apk (apk_file, should_register);
 
-	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assembly_dsos - prev);
+	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assemblies - prev);
 
-	return number_of_found_assembly_dsos;
+	return number_of_found_assemblies;
 }

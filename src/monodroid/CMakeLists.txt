@@ -747,5 +747,9 @@ if(ANDROID AND (NOT ANALYZERS_ENABLED))
   xa_add_stub_library(dl ${XAMARIN_STUB_LIB_SOURCES})
 
   # Used as input when generating assembly blob DSO
-  xa_add_stub_library(assembly-blob ${XAMARIN_ASSEMBLY_BLOB_LIB_SOURCES})
+  # If the `libAssEmbLyBloB.s` name is changed here, it must also be changed in:
+	#   * src/src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyBlobItems.cs
+	#   * src/monodroid/jni/embedded-assemblies.hh
+	#   * build-tools/installers/create-installers.targets
+  xa_add_stub_library(AssembLyBloB ${XAMARIN_ASSEMBLY_BLOB_LIB_SOURCES})
 endif()

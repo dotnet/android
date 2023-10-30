@@ -11,7 +11,11 @@ namespace Xamarin.Android.Tasks;
 
 public class PrepareAssemblyBlobItems : AndroidTask
 {
-	const string BlobStubName = "libassembly-blob.so";
+	// If the name is changed here, it must also be changed in:
+	//   * src/monodroid/jni/embedded-assemblies.hh
+	//   * src/monodroid/CMakeLists.txt
+	//   * build-tools/installers/create-installers.targets
+	const string BlobStubName = "AssembLyBloB.so";
 
 	public override string TaskPrefix => "PABI";
 
@@ -42,5 +46,5 @@ public class PrepareAssemblyBlobItems : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	string GetStubPath (AndroidTargetArch arch) => Path.Combine (MonoAndroidHelper.GetLibstubsArchDirectoryPath (AndroidBinUtilsDirectory, arch), BlobStubName);
+	string GetStubPath (AndroidTargetArch arch) => Path.Combine (MonoAndroidHelper.GetLibstubsArchDirectoryPath (AndroidBinUtilsDirectory, arch), $"lib{BlobStubName}");
 }

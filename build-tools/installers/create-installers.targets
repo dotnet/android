@@ -168,16 +168,21 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ManifestOverlays\Timing.xml" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libassembly-blob.so" />
+
+    <!--  If the `libAssEmbLyBloB.so` name is changed here, it must also be changed in: -->
+	  <!--    * src/monodroid/jni/embedded-assemblies.hh -->
+	  <!--    * src/monodroid/CMakeLists.txt -->
+	  <!--    * src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyBlobItems.cs -->
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm64\libAssEmbLyBloB.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libassembly-blob.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-arm\libAssEmbLyBloB.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libassembly-blob.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libAssEmbLyBloB.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libassembly-blob.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libAssEmbLyBloB.so" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />

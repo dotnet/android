@@ -66,7 +66,7 @@ struct AssemblyIndexEntry
 	uint32_t                 output_data_offset;
 	uint32_t                 output_data_size;
 	uint32_t                 info_index;
-	bool                     is_compressed;
+	uint32_t                 flags;
 };
 
 struct AssembliesConfig
@@ -74,6 +74,7 @@ struct AssembliesConfig
 	uint32_t assembly_blob_size;
 	uint32_t assembly_name_length;
 	uint32_t assembly_count;
+	uint32_t assembly_index_size;
 };
 
 struct TypeMapModuleEntry
@@ -211,6 +212,7 @@ MONO_API MONO_API_EXPORT const uint8_t xa_assembly_data[AssemblyDataSize];
 MONO_API MONO_API_EXPORT const void* xa_loaded_assemblies[AssemblyCount];
 MONO_API MONO_API_EXPORT const char xa_assembly_names[AssemblyCount][AssemblyNameLength];
 MONO_API MONO_API_EXPORT const AssemblyIndexEntry xa_assembly_index[AssemblyCount];
+MONO_API MONO_API_EXPORT const char *const xa_assembly_config_files[AssemblyCount];
 #endif
 
 MONO_API MONO_API_EXPORT const ApplicationConfig application_config;

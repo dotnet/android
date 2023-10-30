@@ -42,6 +42,7 @@ partial class AssemblyBlobDSOGenerator
 		public uint assembly_blob_size;
 		public uint assembly_name_length;
 		public uint assembly_count;
+		public uint assembly_index_size;
 	}
 
 		// Generator support

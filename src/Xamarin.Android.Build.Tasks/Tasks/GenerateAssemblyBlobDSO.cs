@@ -43,11 +43,11 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 			Log.LogDebugMessage ("Assembly compression DISABLED");
 		}
 
-		GenerateBlob ();
+		Generate ();
 		return !Log.HasLoggedErrors;
 	}
 
-	void GenerateBlob ()
+	void Generate ()
 	{
 		var assemblies = new Dictionary<AndroidTargetArch, List<BlobAssemblyInfo>> ();
 		var abis = new HashSet<string> (StringComparer.Ordinal);
@@ -86,7 +86,7 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 
 		foreach (ITaskItem blobDSO in AssemblyBlobDSOs) {
 			AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (GetRequiredMetadata (blobDSO, DSOMetadata.Abi));
-			GenerateBlob (arch, blobDSO, assemblies[arch]);
+			Generate (arch, blobDSO, assemblies[arch]);
 		}
 
 		var generator = new AssemblyBlobDSOGenerator (assemblies);
@@ -117,7 +117,7 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 		return (ulong)fi.Length;
 	}
 
-	void GenerateBlob (AndroidTargetArch arch, ITaskItem blobDSO, List<BlobAssemblyInfo> assemblies)
+	void Generate (AndroidTargetArch arch, ITaskItem blobDSO, List<BlobAssemblyInfo> assemblies)
 	{
 		string stubPath = GetRequiredMetadata (blobDSO, DSOMetadata.BlobStubPath);
 		var stubInfo = new FileInfo (stubPath);
@@ -135,14 +135,14 @@ public class GenerateAssemblyBlobDSO : AndroidTask
 			Directory.CreateDirectory (outputDir);
 		}
 
-		File.Copy (stubPath, outputFile);
-		using var stubFS = File.Open (outputFile, FileMode.Open, FileAccess.Write, FileShare.Read);
-		if (padding > 0) {
-			long newLength = stubInfo.Length + padding;
-			stubFS.SetLength (newLength);
-		}
-		stubFS.Seek (0, SeekOrigin.End);
-
+		// File.Copy (stubPath, outputFile);
+		// using var stubFS = File.Open (outputFile, FileMode.Open, FileAccess.Write, FileShare.Read);
+		// if (padding > 0) {
+		// 	long newLength = stubInfo.Length + padding;
+		// 	stubFS.SetLength (newLength);
+		// }
+		// stubFS.Seek (0, SeekOrigin.End);
+		using var stubFS = File.Open (outputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
 		foreach (BlobAssemblyInfo info in assemblies) {
 			string inputFile = GetRequiredMetadata (info.Item, DSOMetadata.InputAssemblyPath);
 			info.OffsetInBlob = (ulong)stubFS.Position;

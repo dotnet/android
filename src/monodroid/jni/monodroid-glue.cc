@@ -1921,6 +1921,9 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
                                                 [[maybe_unused]] jstring_array_wrapper &assembliesPaths, jobject loader, bool is_root_domain,
                                                 bool force_preload_assemblies, bool have_split_apks)
 {
+	embeddedAssemblies.install_preload_hooks_for_alc ();
+	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
+
 	MonoDomain* domain = create_domain (env, runtimeApks, is_root_domain, have_split_apks);
 #if defined (ANDROID)
 	// Asserting this on desktop apparently breaks a Designer test
@@ -1935,11 +1938,10 @@ MonodroidRuntime::create_and_initialize_domain (JNIEnv* env, jclass runtimeClass
 	}
 
 #if defined (NET)
+	// TODO: hooks need to be installed before we initialize the JIT, but hooks require `default_alc` which we cannot
+	// get before we initialize the JIT...
 	default_alc = mono_alc_get_default_gchandle ();
 	abort_unless (default_alc != nullptr, "Default AssemblyLoadContext not found");
-
-	embeddedAssemblies.install_preload_hooks_for_alc ();
-	log_debug (LOG_ASSEMBLY, "ALC hooks installed");
 #endif // def NET
 
 #ifndef ANDROID

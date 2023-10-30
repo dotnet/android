@@ -58,10 +58,10 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-	static_assert (assembly_dso_prefix.size () > 1, "assembly_dso_prefix must be longer than 1 byte");
+	static_assert (assembly_blob_dso_name.size () > 1, "assembly_blob_dso_name must be longer than 1 byte");
 
 	if ( // library location is not overridable, so we can test for it beginning with a hardcoded 'l'
-		(entry_name.get ()[0] != 'l' || entry_name.length () < assembly_dso_prefix.size () || memcmp (assembly_dso_prefix.data (), entry_name.get (), assembly_dso_prefix.size () - 1) != 0) &&
+		(entry_name.get ()[0] != 'l') &&
 		(entry_name.get ()[0] != state.prefix[0] || entry_name.length () < state.prefix_len || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0)
 	) {
 		return false;
@@ -154,7 +154,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
 		bundled_assembly_index++;
-		number_of_found_assembly_dsos = bundled_assembly_index;
+		number_of_found_assemblies = bundled_assembly_index;
 	}
 
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
@@ -168,9 +168,9 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 		return;
 	}
 
-	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
+	log_debug (LOG_ASSEMBLY, "Looking for assembly blob DSO in APK, %s", assembly_blob_dso_name);
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly DSOs in APK, at prefix %s", assembly_dso_prefix);
+	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -180,6 +180,18 @@ EmbeddedAssemblies::zip_load_standalone_dso_entries (std::vector<uint8_t> const&
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry || state.location != EntryLocation::Libs) {
 			continue;
+		}
+
+		log_debug (LOG_ASSEMBLY, " Potentially interesting entry: %s (s: %zu, l: %zu)", entry_name.get (), entry_name.size (), entry_name.length ());
+		if (entry_name.length () != assembly_blob_dso_name.size () - 1) { // size includes the nul char, length doesn't
+			log_debug (LOG_ASSEMBLY, "  length different to the blob DSO name (s: %zu)", assembly_blob_dso_name.size ());
+			continue;
+		}
+
+		if (memcmp (entry_name.get (), assembly_blob_dso_name.data (), assembly_blob_dso_name.size ()) == 0) {
+			assembly_blob = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
+			number_of_found_assemblies = xa_assemblies_config.assembly_count; // All of them are in the blob
+			log_debug (LOG_ASSEMBLY, "  assembly blob DSO found");
 		}
 	}
 }
@@ -226,9 +238,11 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application ();
 	}
 
-	{
-		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
-	}
+#if defined (RELEASE)
+	zip_load_standalone_dso_entries (buf, cd_entries, state);
+#else
+	zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
+#endif
 }
 
 template<bool NeedsNameAlloc>

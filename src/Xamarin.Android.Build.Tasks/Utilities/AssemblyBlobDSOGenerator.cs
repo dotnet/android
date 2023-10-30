@@ -310,6 +310,7 @@ partial class AssemblyBlobDSOGenerator : LlvmIrComposer
 			assembly_blob_size = (uint)archState.BlobSize,
 			assembly_name_length = (uint)archState.AssemblyNameLength,
 			assembly_count = (uint)archState.AssemblyCount,
+			assembly_index_size = (uint)archState.AssemblyCount * 2,
 		};
 		variable.Value = new StructureInstance<AssembliesConfig> (assembliesConfigStructureInfo, cfg);
 	}

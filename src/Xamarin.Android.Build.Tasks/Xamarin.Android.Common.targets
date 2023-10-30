@@ -1647,7 +1647,7 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
-    UseAssemblySharedLibraries="$(_AndroidUseAssemblySharedLibraries)">
+    UseAssemblyStore="$(_AndroidUseAssemblySharedLibraries)">
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />

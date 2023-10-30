@@ -115,13 +115,15 @@ namespace xamarin::android::internal {
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
 
-		// if the `libXA` embedded assembly prefix changes here, it must be updated in
-		// src/src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyStandaloneDSOAbiItems.cs as well
-		static constexpr auto assembly_dso_prefix = concat_const ("lib/", SharedConstants::android_apk_abi, "/libXA");
+		// If the `AssembLyBloB.s` name is changed here, it must also be changed in:
+		//   * src/src/Xamarin.Android.Build.Tasks/Tasks/PrepareAssemblyBlobItems.cs
+		//   * src/monodroid/CMakeLists.txt
+		//   * build-tools/installers/create-installers.targets
+		static constexpr auto assembly_blob_dso_name = concat_const ("lib/", SharedConstants::android_apk_abi, "/AssembLyBloB.so");
 
 		// This includes the `.0000.so` suffix each assembly DSO must have and at least one name character (in addition
 		// to the `libXA` prefix)
-		static constexpr size_t assembly_dso_min_length = assembly_dso_prefix.size () - 1 + 9;
+		static constexpr size_t assembly_dso_min_length = assembly_blob_dso_name.size () - 1 + 9;
 		static constexpr size_t assembly_index_start_offset = 7;
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -293,6 +295,9 @@ namespace xamarin::android::internal {
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
+#if defined (RELEASE)
+				assembly_blob.area != nullptr &&
+#endif // def RELEASE
 				((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
@@ -325,7 +330,7 @@ namespace xamarin::android::internal {
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
 		size_t                 bundled_assembly_index = 0;
-		size_t                 number_of_found_assembly_dsos = 0;
+		size_t                 number_of_found_assemblies = 0;
 
 #if defined (DEBUG) || !defined (ANDROID)
 		TypeMappingInfo       *java_to_managed_maps;
@@ -337,6 +342,9 @@ namespace xamarin::android::internal {
 #if defined (NET)
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
+#if defined (RELEASE)
+		md_mmap_info           assembly_blob{};
+#endif // def RELEASE
 #endif // def NET
 		uint32_t               number_of_standalone_dsos = 0;
 		bool                   need_to_scan_more_apks = true;

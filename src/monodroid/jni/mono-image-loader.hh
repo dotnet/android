@@ -119,7 +119,7 @@ namespace xamarin::android::internal {
 
 #if defined (USE_CACHE)
 			ssize_t index = find_index (hash);
-			if (index < 0) {
+			if (index < 0 || index > static_cast<ssize_t>(number_of_cache_index_entries)) {
 				//log_warn (LOG_ASSEMBLY, "Failed to look up image index for hash 0x%zx", hash);
 				return image;
 			}
