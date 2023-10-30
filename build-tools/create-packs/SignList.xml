@@ -6,7 +6,6 @@
 
   <ItemGroup>
     <ThirdParty Include="HtmlAgilityPack.dll" />
-    <ThirdParty Include="ICSharpCode.SharpZipLib.dll" />
     <ThirdParty Include="INIFileParser.dll" />
     <ThirdParty Include="Irony.dll" />
     <ThirdParty Include="K4os.Compression.LZ4.dll" />
