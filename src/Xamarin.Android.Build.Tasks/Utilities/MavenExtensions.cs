@@ -18,6 +18,7 @@ namespace Xamarin.Android.Tasks;
 static class MavenExtensions
 {
 	static readonly char [] separator = [':'];
+	static XmlSerializer pom_serializer = new XmlSerializer (typeof (Project));
 
 	/// <summary>
 	/// Shortcut for !string.IsNullOrWhiteSpace (s)
@@ -27,7 +28,7 @@ static class MavenExtensions
 	// Helps to 'foreach' into a possibly null array
 	public static T [] OrEmpty<T> (this T []? value)
 	{
-		return value ?? Enumerable.Empty<T> ().ToArray ();
+		return value ?? Array.Empty<T> ();
 	}
 
 	public static Artifact? ParseArtifact (string id, string version, TaskLoggingHelper log)
@@ -48,10 +49,8 @@ static class MavenExtensions
 	{
 		Project result = null;
 
-		var serializer = new XmlSerializer (typeof (Project));
-
 		using (var sr = File.OpenRead (pomFile))
-			result = (Project) serializer.Deserialize (new XmlTextReader (sr) {
+			result = (Project) pom_serializer.Deserialize (new XmlTextReader (sr) {
 				Namespaces = false,
 			});
 

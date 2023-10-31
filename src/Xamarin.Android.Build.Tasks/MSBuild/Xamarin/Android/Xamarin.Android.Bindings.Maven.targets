@@ -13,8 +13,8 @@ This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support
 
   <PropertyGroup>
     <!-- Maven cache directory, locations copied from XBD which should be sufficiently battle-tested -->
-    <MavenCacheDirectory Condition="'$(OS)'=='Unix' and '$(MavenCacheDirectory)'==''">$(HOME)\Library\Caches\MavenCacheDirectory\</MavenCacheDirectory>
-    <MavenCacheDirectory Condition="'$(OS)'!='Unix' and '$(MavenCacheDirectory)'==''">$(LocalAppData)\MavenCacheDirectory\</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="'$(OS)'=='Unix' and '$(MavenCacheDirectory)'==''">$(HOME)/Library/Caches/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="'$(OS)'!='Unix' and '$(MavenCacheDirectory)'==''">$(LocalAppData)\dotnet-android\MavenCacheDirectory\</MavenCacheDirectory>
     <MavenCacheDirectory Condition="'$(MavenCacheDirectory)' != '' and !HasTrailingSlash('$(MavenCacheDirectory)')">$(MavenCacheDirectory)\</MavenCacheDirectory>
   </PropertyGroup>
 

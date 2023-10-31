@@ -21,6 +21,8 @@ This will do two things at build time:
 - Download the Java [artifact](https://central.sonatype.com/artifact/com.squareup.okhttp3/okhttp/4.9.3) with group id `com.squareup.okhttp3`, artifact id `okhttp`, and version `4.9.3` from [Maven Central](https://central.sonatype.com/) to a local cache (if not already cached).
 - Add the cached package to the .NET Android bindings build as an [`<AndroidLibrary>`](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/building-apps/build-items.md#androidlibrary).
 
+Note that only the requested Java artifact is added to the .NET Android bindings build. Any artifact dependencies are not added. If the requested artifact has dependencies, they must be fulfilled individually.
+
 ### Options
 
 `<AndroidMavenLibrary>` defaults to using Maven Central, however it should support any Maven repository that does not require authentication.  This can be controlled with the `Repository` attribute.
