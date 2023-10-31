@@ -58,13 +58,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// We only need to "dedup" assemblies when there is more than one RID
-			if (RuntimeIdentifiers.Length > 1) {
-				Log.LogDebugMessage ("Deduplicating assemblies per RuntimeIdentifier");
-				DeduplicateAssemblies (output, symbols);
-			} else {
+			// if (RuntimeIdentifiers.Length > 1) {
+			// 	Log.LogDebugMessage ("Deduplicating assemblies per RuntimeIdentifier");
+			// 	DeduplicateAssemblies (output, symbols);
+			// } else {
 				Log.LogDebugMessage ("Found a single RuntimeIdentifier");
 				SetMetadataForAssemblies (output, symbols);
-			}
+				//}
 
 			OutputAssemblies = output.ToArray ();
 			ResolvedSymbols = symbols.Values.ToArray ();
