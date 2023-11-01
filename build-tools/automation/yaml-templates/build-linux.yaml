@@ -40,6 +40,10 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
+    # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+    - checkout: maui
+
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
         clean: true
