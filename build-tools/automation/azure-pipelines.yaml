@@ -112,6 +112,8 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
+    - script: echo hello world
+
     # Set up dependencies to run tests in both debug and release configurations
     - task: DotNetCoreCLI@2
       displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
