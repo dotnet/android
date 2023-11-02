@@ -24,7 +24,7 @@ steps:
 
 # Always checkout a second resource to ensure we are using multi-repo checkout behavior
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
-- checkout: yaml-templates
+- checkout: maui
 
 - script: >
     ls -l /Applications &&
