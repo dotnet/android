@@ -14,15 +14,11 @@ class JavaType
 {
 	public readonly TypeDefinition Type;
 	public readonly IDictionary<AndroidTargetArch, TypeDefinition>? PerAbiTypes;
-	public bool IsABiSpecific { get; }
 
-	public JavaType (TypeDefinition type, IDictionary<AndroidTargetArch, TypeDefinition>? perAbiTypes)
+	public JavaType (TypeDefinition type, IDictionary<AndroidTargetArch, TypeDefinition> perAbiTypes)
 	{
 		Type = type;
-		if (perAbiTypes != null) {
-			PerAbiTypes = new ReadOnlyDictionary<AndroidTargetArch, TypeDefinition> (perAbiTypes);
-			IsABiSpecific = perAbiTypes.Count > 1 || (perAbiTypes.Count == 1 && !perAbiTypes.ContainsKey (AndroidTargetArch.None));
-		}
+		PerAbiTypes = new ReadOnlyDictionary<AndroidTargetArch, TypeDefinition> (perAbiTypes);
 	}
 }
 
@@ -32,8 +28,6 @@ class XAJavaTypeScanner
 	{
 		public readonly TypeDefinition FirstType;
 		public readonly Dictionary<AndroidTargetArch, TypeDefinition> PerAbi;
-
-		public bool IsAbiSpecific => !PerAbi.ContainsKey (AndroidTargetArch.None);
 
 		public TypeData (TypeDefinition firstType)
 		{
@@ -69,7 +63,7 @@ class XAJavaTypeScanner
 
 		var ret = new List<JavaType> ();
 		foreach (var kvp in types) {
-			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.IsAbiSpecific ? kvp.Value.PerAbi : null));
+			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.PerAbi));
 		}
 
 		return ret;

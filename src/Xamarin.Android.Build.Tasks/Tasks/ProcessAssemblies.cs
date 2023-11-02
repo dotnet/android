@@ -62,9 +62,9 @@ namespace Xamarin.Android.Tasks
 			// 	Log.LogDebugMessage ("Deduplicating assemblies per RuntimeIdentifier");
 			// 	DeduplicateAssemblies (output, symbols);
 			// } else {
-				Log.LogDebugMessage ("Found a single RuntimeIdentifier");
+			//	Log.LogDebugMessage ("Found a single RuntimeIdentifier");
 				SetMetadataForAssemblies (output, symbols);
-				//}
+			//}
 
 			OutputAssemblies = output.ToArray ();
 			ResolvedSymbols = symbols.Values.ToArray ();
@@ -101,7 +101,7 @@ namespace Xamarin.Android.Tasks
 
 		void SetAssemblyAbiMetadata (string abi, string assetType, ITaskItem assembly, ITaskItem? symbol, bool isDuplicate)
 		{
-			if (String.IsNullOrEmpty (abi) || (!isDuplicate && String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0)) {
+			if (String.IsNullOrEmpty (abi) /* || (!isDuplicate && String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0) */) {
 				return;
 			}
 
@@ -115,10 +115,10 @@ namespace Xamarin.Android.Tasks
 		{
 			string assetType = assembly.GetMetadata ("AssetType");
 			string rid = assembly.GetMetadata ("RuntimeIdentifier");
-			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
-				// Satellite assemblies are abi-agnostic, they shouldn't have the Abi metadata set
-				return;
-			}
+			// if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
+			// 	// Satellite assemblies are abi-agnostic, they shouldn't have the Abi metadata set
+			// 	return;
+			// }
 
 			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assetType, assembly, symbol, isDuplicate);
 		}

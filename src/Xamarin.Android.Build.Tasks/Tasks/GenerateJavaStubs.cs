@@ -152,10 +152,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Put every assembly we'll need in the resolver
-			bool hasExportReference = false;
-			bool haveMonoAndroid = false;
 			var allTypemapAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+			AndroidTargetArch arch;
+			string? assemblyKey;
 
 			foreach (var assembly in ResolvedAssemblies) {
 				bool value;
@@ -166,11 +166,9 @@ namespace Xamarin.Android.Tasks
 
 				bool addAssembly = false;
 				string fileName = Path.GetFileName (assembly.ItemSpec);
-				if (!hasExportReference && String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					hasExportReference = true;
+				if (String.Compare ("Mono.Android.Export.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
-				} else if (!haveMonoAndroid && String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
-					haveMonoAndroid = true;
+				} else if (String.Compare ("Mono.Android.dll", fileName, StringComparison.OrdinalIgnoreCase) == 0) {
 					addAssembly = true;
 				} else if (MonoAndroidHelper.FrameworkAssembliesToTreatAsUserAssemblies.Contains (fileName)) {
 					if (!bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) || !value) {
@@ -181,14 +179,15 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
+				assemblyKey = GetAssemblyKey (assembly, out arch);
 				if (addAssembly) {
 					MaybeAddAbiSpecifcAssembly (assembly, fileName);
-					if (!allTypemapAssemblies.ContainsKey (assembly.ItemSpec)) {
-						allTypemapAssemblies.Add (assembly.ItemSpec, assembly);
+					if (!allTypemapAssemblies.ContainsKey (assemblyKey)) {
+						allTypemapAssemblies.Add (assemblyKey, assembly);
 					}
 				}
 
-				res.Load (MonoAndroidHelper.GetTargetArch (assembly), assembly.ItemSpec);
+				res.Load (arch, assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
@@ -197,10 +196,12 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
-				res.Load (MonoAndroidHelper.GetTargetArch (asm), asm.ItemSpec);
+
+				assemblyKey = GetAssemblyKey (asm, out arch);
+				res.Load (arch, asm.ItemSpec);
 				MaybeAddAbiSpecifcAssembly (asm, Path.GetFileName (asm.ItemSpec));
-				if (!allTypemapAssemblies.ContainsKey (asm.ItemSpec)) {
-					allTypemapAssemblies.Add (asm.ItemSpec, asm);
+				if (!allTypemapAssemblies.ContainsKey (assemblyKey)) {
+					allTypemapAssemblies.Add (assemblyKey, asm);
 				}
 
 				string name = Path.GetFileNameWithoutExtension (asm.ItemSpec);
@@ -419,6 +420,16 @@ namespace Xamarin.Android.Tasks
 
 					items.Add (assembly);
 				}
+			}
+
+			string GetAssemblyKey (ITaskItem assembly, out AndroidTargetArch arch)
+			{
+				arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (arch == AndroidTargetArch.None) {
+					throw new InvalidOperationException ($"Internal error: assembly '{assembly.ItemSpec}' doesn't specify its ABI. This is not supported.");
+				}
+
+				return $"[{arch}]{assembly.ItemSpec}";
 			}
 		}
 

@@ -455,11 +455,6 @@ namespace Xamarin.Android.Tasks
 			var state = new ReleaseGenerationState (supportedAbis);
 
 			foreach (JavaType jt in javaTypes) {
-				if (!jt.IsABiSpecific) {
-					ProcessReleaseType (state, jt.Type, AndroidTargetArch.None, appConfState, cache);
-					continue;
-				}
-
 				foreach (var kvp in jt.PerAbiTypes) {
 					ProcessReleaseType (state, kvp.Value, kvp.Key, appConfState, cache);
 				}
