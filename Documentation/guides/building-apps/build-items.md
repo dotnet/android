@@ -248,7 +248,7 @@ However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
 This is so MSBuild does not try to interpret them as actual file wildcards.
 
 NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
-appropriate RegEx expressions.
+appropriate file globs.
 
 Added in .NET 9.
 
