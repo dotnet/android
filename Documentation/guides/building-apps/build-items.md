@@ -240,7 +240,7 @@ included from the final package. The default values are as follows
 
 ```
 <ItemGroup>
-	<AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*reflect.kotlin_builtins')" />
+	<AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins')" />
 </ItemGroup>
 ```
 Items can use file blob characters for wildcards such as `*` and `?`.
