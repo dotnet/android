@@ -39,17 +39,9 @@ MSBuild version 15 or later is required.
 
     This will clone and build external proprietary components such as `monodroid`.
 
-After the solution has built successfully, you can [use your
-build][using-your-build] to build Xamarin.Android application and library
-projects.  Note that by default `Xamarin.Android.sln` only builds support for
-the `$(TargetFrameworkVersion)` specified in the `$(AndroidFrameworkVersion)`
-property of the [`Configuration.props`][configprops-main] file (`v12.0` when
-this guide was last updated), so you will need to ensure that your application
-and library projects are configured to use that particular target framework
-version.
+After the solution has built successfully, you can use `dotnet-local.cmd` to create and build Android projects.
 
 [developer-prompt]: https://docs.microsoft.com/dotnet/framework/tools/developer-command-prompt-for-vs
-[using-your-build]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/workflow/UsingYourBuild.md
 [configprops-main]: https://github.com/xamarin/xamarin-android/blob/main/Configuration.props
 
 ## Windows Build Notes
@@ -141,10 +133,10 @@ command was ran before building.
 
 # Building Unit Tests
 
-Once `msbuild Xamarin.Android.sln` has completed, the unit tests may
+Once `dotnet msbuild Xamarin.Android.sln` has completed, the unit tests may
 be built with e.g.:
 
-	bin\Debug\bin\xabuild.exe Xamarin.Android-Tests.sln /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
+	dotnet-local.cmd build Xamarin.Android-Tests.sln /restore /p:Configuration=Debug /bl:bin\TestDebug\msbuild-build-tests.binlog
 
 Note that the `Debug` in `bin\Debug` must match the Configuration which was
 built.  If xamarin-android was built with `msbuild /p:Configuration=Release ...`,
@@ -192,13 +184,6 @@ All `.apk`-based unit test projects provide the following targets:
 
 To run an individual `.apk`-based test project, a package must be built, using the
 `SignAndroidPackage` target, installed, and executed.
-
-For example:
-
-	$ bin/Debug/bin/xabuild /t:SignAndroidPackage  tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ bin/Debug/bin/xabuild /t:DeployTestApks      tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-	$ bin/Debug/bin/xabuild /t:RunTestApks         tests/locales/Xamarin.Android.Locale-Tests/Xamarin.Android.Locale-Tests.csproj
-
 
 ## Running `.apk` Projects with Include/Exclude
 

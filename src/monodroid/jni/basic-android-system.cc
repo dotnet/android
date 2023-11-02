@@ -31,13 +31,13 @@ void
 BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks)
 {
 	if (!is_embedded_dso_mode_enabled ()) {
-		log_info (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
+		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
 		BasicAndroidSystem::app_lib_directories_size = 1;
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	} else {
-		log_info (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
+		log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
 		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
 		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
 

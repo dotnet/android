@@ -477,6 +477,12 @@ Veuillez remplacer la valeur par un nom de type qualifié par l’assembly qui h
 {0} - The value of the property.
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
+  <data name="XA1031_HCH" xml:space="preserve">
+    <value>La valeur de propriété « AndroidHttpClientHandlerType » « {0} » ne doit pas dériver de « System.Net.Htt.HttpClientHandler ».
+Remplacez la valeur par un nom de type assembly-qualifed qui hérite de « System.Net.Http.HttpMessageHandler » ou supprimez complètement la propriété.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
+{0} - The value of the property.</comment>
+  </data>
   <data name="XA1032" xml:space="preserve">
     <value>Échec de la résolution de « {0} » à partir de « {1} ». Vérifiez votre paramètre `AndroidHttpClientHandlerType`.</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',

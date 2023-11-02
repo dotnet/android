@@ -27,16 +27,14 @@ namespace Xamarin.Android.Build.Tests
 
 		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 
-		public static bool CommercialBuildAvailable => TestEnvironment.CommercialBuildAvailable;
-
 		/// <summary>
 		/// Checks if a commercial Xamarin.Android is available
 		/// * Defaults to Assert.Ignore ()
 		/// </summary>
 		public void AssertCommercialBuild (bool fail = false)
 		{
-			if (!CommercialBuildAvailable) {
-				var message = "This test requires a commercial build of Xamarin.Android.";
+			if (!TestEnvironment.CommercialBuildAvailable) {
+				var message = $"'{TestName}' requires a commercial build of Xamarin.Android.";
 				if (fail) {
 					Assert.Fail (message);
 				} else {
@@ -45,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
+		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
 
 		public string TestName {
 			get {

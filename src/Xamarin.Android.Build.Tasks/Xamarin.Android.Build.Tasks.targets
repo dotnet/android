@@ -22,6 +22,7 @@
       _GenerateBundledVersions;
       _CopyNetSdkTargets;
       _CopyVSExtensionTargets;
+      _WriteVersionFiles;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
@@ -382,25 +383,22 @@
     />
   </Target>
 
-  <!-- XABuild will call this to copy required output to the legacy SDK location -->
-  <Target Name="CopyToLegacySdkOutDir"
-      DependsOnTargets="ConstructInstallerItems;_CopyVSExtensionTargets" >
-    <Copy
-        SourceFiles="@(MSBuildItemsWin)"
-        DestinationFiles="@(MSBuildItemsWin->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' == 'Windows' "
+  <Target Name="_WriteVersionFiles"
+      DependsOnTargets="GetXAVersionInfo" >
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version"
+        Lines="$(ProductVersion)"
+        Overwrite="True"
     />
-    <Copy
-        SourceFiles="@(MSBuildItemsUnix)"
-        DestinationFiles="@(MSBuildItemsUnix->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' != 'Windows' "
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.commit"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
+        Overwrite="True"
     />
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android"
-        SkipUnchangedFiles="true"
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.rev"
+        Lines="$(XAVersionCommitCount)"
+        Overwrite="True"
     />
   </Target>
 </Project>

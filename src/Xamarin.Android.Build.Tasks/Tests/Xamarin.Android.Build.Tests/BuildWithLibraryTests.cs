@@ -605,11 +605,10 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("Commercial")]
 		public void LibraryProjectsShouldSkipGetPrimaryCpuAbi ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("Not required on Open Source Builds");
+			AssertCommercialBuild ();
+
 			const string target = "_GetPrimaryCpuAbi";
 			var proj = new XamarinAndroidLibraryProject ();
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
@@ -619,10 +618,10 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		[Category ("Commercial")]
 		public void LibraryReferenceWithHigherTFVShouldDisplayWarning ([Values (true, false)] bool isRelease)
 		{
-			if (!CommercialBuildAvailable || Builder.UseDotNet)
+
+			if (!TestEnvironment.CommercialBuildAvailable || Builder.UseDotNet)
 				Assert.Ignore ("Not applicable to One .NET or single framework OSS builds.");
 
 			var libproj = new XamarinAndroidLibraryProject () {
@@ -670,6 +669,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			if (Builder.UseDotNet) {
 				lib.RemoveProperty ("OutputType");
 			}
+			lib.AndroidManifest = lib.AndroidManifest.
+				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"com.test.foo\" ");
 
 			// Create an "app" that is basically empty and references the library
 			var app = new XamarinAndroidLibraryProject {

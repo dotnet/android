@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 	class Scenario_ThirdPartyNotices : Scenario
 	{
 		public Scenario_ThirdPartyNotices ()
-			: base ("ThirdPartyNotices", "Generate the `ThirdPartyNotices.txt` files.")
+			: base ("ThirdPartyNotices", "Generate the `THIRD-PARTY-NOTICES.TXT` files.")
 		{
 			NeedsGitSubmodules = true;
 		}

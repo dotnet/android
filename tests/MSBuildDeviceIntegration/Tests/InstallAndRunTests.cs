@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
 				}
 
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				RunProjectAndAssert (proj, builder);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 			}
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -124,11 +124,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			RunProjectAndAssert (proj, builder);
 
-#if NETCOREAPP
 			string expectedLogcatOutput = "# Unhandled Exception: sender=System.Object; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-#else   // NETCOREAPP
-			string expectedLogcatOutput = "# Unhandled Exception: sender=RootDomain; e.IsTerminating=True; e.ExceptionObject=System.Exception: CRASH";
-#endif  // NETCOREAPP
 			Assert.IsTrue (
 				MonitorAdbLogcat (CreateLineChecker (expectedLogcatOutput),
 					logcatFilePath: Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeout: 60),
@@ -253,14 +249,6 @@ namespace Library1 {
 				},
 			};
 
-			if (!Builder.UseDotNet) {
-				// DataContractSerializer is not trimming safe
-				// https://github.com/dotnet/runtime/issues/45559
-				lib2.Sources.Add (new BuildItem.Source ("Bug36250.cs") {
-					TextContent = () => getResource ("Bug36250")
-				});
-			}
-
 			proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = true,
 				AndroidLinkModeRelease = linkMode,
@@ -356,7 +344,7 @@ namespace Library1 {
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 
@@ -396,41 +384,13 @@ namespace Library1 {
 			Console.WriteLine ($""JSON Person deserialized OK"");
 		}
 
-		void TestBinaryDeserialization (Person p)
-		{
-			var stream      = new MemoryStream ();
-			var serializer  = new BinaryFormatter();
-
-			serializer.Serialize (stream, p);
-
-			stream.Position = 0;
-			StreamReader sr = new StreamReader (stream);
-
-			stream.Position = 0;
-			serializer.Binder = new Person.Binder ();
-			Person p2 = (Person) serializer.Deserialize (stream);
-
-			Console.WriteLine ($""BinaryFormatter deserialzied: Name '{p2.Name}' Age '{p2.Age}' Handle '0x{p2.Handle:X}'"");
-
-			if (p2.Name != ""John Smith"")
-				throw new InvalidOperationException (""BinaryFormatter deserialization of Name"");
-			if (p2.Age != 900)
-				throw new InvalidOperationException (""BinaryFormatter deserialization of Age"");
-			if (p2.Handle == IntPtr.Zero)
-				throw new InvalidOperationException (""Failed to instantiate new Java instance for Person!"");
-
-			Console.WriteLine ($""BinaryFormatter Person deserialized OK"");
-		}
-
 		void TestJsonDeserializationCreatesJavaHandle ()
 		{
 			Person p = new Person () {
 				Name = ""John Smith"",
 				Age = 900,
 			};
-#if !NET
-			TestBinaryDeserialization (p);
-#endif
+
 			TestJsonDeserialization (p);").Replace ("//${AFTER_MAINACTIVITY}", @"
 	[DataContract]
 	[Serializable]
@@ -616,6 +576,8 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
+			AssertCommercialBuild ();
+
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
@@ -1115,5 +1077,92 @@ namespace UnnamedProject
 			Assert.IsTrue(didLaunch, "Activity should have started.");
 		}
 
+		[Test]
+		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
+		{
+			string previousTargetFramework = "net7.0-android";
+
+			var library1 = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+				TargetFramework = previousTargetFramework,
+				ProjectName = "Library1",
+				AndroidResources = {
+					new AndroidItem.AndroidResource (() => "Resources\\values\\strings2.xml") {
+						TextContent = () => @"<?xml version=""1.0"" encoding=""utf-8""?>
+<resources>
+	<string name=""hello"">Hi!</string>
+</resources>",
+					},
+				},
+			};
+			var library2 = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
+				TargetFramework = previousTargetFramework,
+				ProjectName = "Library2",
+				OtherBuildItems = {
+					new BuildItem.Source("Foo.cs") {
+						TextContent = () => "public class Foo { public static int Hello => Library1.Resource.String.hello; } ",
+					}
+				}
+			};
+			library2.AndroidResources.Clear ();
+			library2.SetProperty ("AndroidGenerateResourceDesigner", "false"); // Disable Android Resource Designer generation
+			library2.AddReference (library1);
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				ProjectName = "MyApp",
+			};
+			proj.AddReference (library2);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine(Foo.Hello);");
+
+			using (var library1Builder = CreateDllBuilder (Path.Combine ("temp", TestName, library1.ProjectName)))
+			using (var library2Builder = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName))) {
+				builder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName));
+				Assert.IsTrue (library1Builder.Build (library1, doNotCleanupOnUpdate: true), $"Build of {library1.ProjectName} should have succeeded.");
+				Assert.IsTrue (library2Builder.Build (library2, doNotCleanupOnUpdate: true), $"Build of {library2.ProjectName} should have succeeded.");
+				Assert.IsTrue (builder.Build (proj), $"Build of {proj.ProjectName} should have succeeded.");
+
+				RunProjectAndAssert (proj, builder);
+
+				WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+				bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+				Assert.IsTrue (didLaunch, "Activity should have started.");
+			}
+		}
+
+		[Test]
+		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
+		{
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				PackageReferences = {
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			builder = CreateApkBuilder ();
+			builder.BuildLogFile = "install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+			var className = "Lcom/xamarin/microsoftintune/MainActivity;";
+			var methodName = "onMAMCreate";
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, methodName, "(Landroid/os/Bundle;)V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}` and `{methodName}!");
+
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
+		}
 	}
 }

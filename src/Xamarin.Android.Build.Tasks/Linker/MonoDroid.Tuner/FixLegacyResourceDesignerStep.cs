@@ -30,6 +30,7 @@ namespace MonoDroid.Tuner
 		AssemblyDefinition designerAssembly = null;
 		TypeDefinition designerType = null;
 		Dictionary<string, MethodDefinition> lookup;
+		Dictionary<string, MethodDefinition> lookupCaseInsensitive;
 
 		protected override void EndProcess ()
 		{
@@ -61,7 +62,7 @@ namespace MonoDroid.Tuner
 					LogMessage ($"   Did not find {DesignerAssemblyNamespace}.Resource type. It was probably linked out.");
 					return;
 				}
-				lookup = BuildResourceDesignerPropertyLookup (designerType);
+				lookup = BuildResourceDesignerPropertyLookup (designerType, out lookupCaseInsensitive);
 			} finally {
 				designerLoaded = true;
 			}
@@ -105,10 +106,11 @@ namespace MonoDroid.Tuner
 			return true;
 		}
 
-		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type)
+		Dictionary<string, MethodDefinition> BuildResourceDesignerPropertyLookup (TypeDefinition type, out Dictionary<string, MethodDefinition> caseInsensitiveLookup)
 		{
 			LogMessage ($"     Building Designer Lookups for {type.FullName}");
 			var output = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
+			caseInsensitiveLookup = new Dictionary<string, MethodDefinition> (StringComparer.OrdinalIgnoreCase);
 			foreach (TypeDefinition definition in type.NestedTypes)
 			{
 				foreach (PropertyDefinition property in definition.Properties)
@@ -117,7 +119,9 @@ namespace MonoDroid.Tuner
 					if (output.ContainsKey (key)) {
 						LogMessage ($"          Found duplicate {key}");
 					} else {
+						LogMessage ($"          Adding {key}");
 						output.Add (key, property.GetMethod);
+						caseInsensitiveLookup [key] = property.GetMethod;
 					}
 				}
 			}
@@ -135,6 +139,32 @@ namespace MonoDroid.Tuner
 			}
 		}
 
+		string GetFixupKey (Instruction instruction, string designerFullName)
+		{
+			string line = instruction.ToString ();
+			int idx = line.IndexOf (designerFullName, StringComparison.Ordinal);
+			if (idx >= 0) {
+				return line.Substring (idx + designerFullName.Length);
+			}
+			if (instruction.Operand is FieldReference fieldRef &&
+					(fieldRef.DeclaringType?.ToString()?.Contains (".Resource/") ?? false)) {
+				var canResolve = false;
+				try {
+					var resolved  = fieldRef.Resolve ();
+					canResolve    = resolved != null;
+				} catch (Exception) {
+				}
+				if (canResolve)
+					return null;
+				var type  = fieldRef.DeclaringType.FullName;
+				var s     = type.LastIndexOf ('/');
+				type      = type.Substring (s + 1);
+				var key   = type + "::" + fieldRef.Name;
+				return key;
+			}
+			return null;
+		}
+
 		protected override void FixBody (MethodBody body, TypeDefinition designer)
 		{
 			// replace
@@ -148,13 +178,16 @@ namespace MonoDroid.Tuner
 			{
 				if (i.OpCode != OpCodes.Ldsfld)
 					continue;
-				string line = i.ToString ();
-				int idx = line.IndexOf (designerFullName, StringComparison.Ordinal);
-				if (idx >= 0) {
-					string key = line.Substring (idx + designerFullName.Length);
+				var key = GetFixupKey (i, designerFullName);
+				if (key != null) {
 					LogMessage ($"Looking for {key}.");
-					if (lookup.TryGetValue (key, out MethodDefinition method)) {
-						var importedMethod = designer.Module.ImportReference (method);
+					var found = lookup.TryGetValue (key, out MethodDefinition method);
+					if (!found) {
+						LogMessage ($"DEBUG! Failed to find {key}! Trying case insensitive lookup.");
+						found = lookupCaseInsensitive.TryGetValue (key, out method);
+					}
+					if (found) {
+						var importedMethod = body.Method.Module.ImportReference (method);
 						var newIn = Instruction.Create (OpCodes.Call, importedMethod);
 						instructions.Add (i, newIn);
 					} else {

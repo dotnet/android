@@ -137,14 +137,6 @@
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
     <XABuildToolsVersion>34</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">34.0.0</XABuildToolsFolder>
-    <!-- build-tools 30, for DX tests -->
-    <XABuildTools30PackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildTools30PackagePrefixMacOS>
-    <XABuildTools30PackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildTools30PackagePrefixWindows>
-    <XABuildTools30PackagePrefixLinux></XABuildTools30PackagePrefixLinux>
-    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildTools30PackagePrefixMacOS)</XABuildTools30PackagePrefix>
-    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
-    <XABuildTools30Version>30.0.3</XABuildTools30Version>
-    <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>34.0.1</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>

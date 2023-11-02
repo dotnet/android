@@ -534,6 +534,8 @@ namespace Foo {
 
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "first build should succeed");
+			Assert.IsTrue (builder.DesignTimeBuild (proj), "Design time build should succeed.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("AddBindingsToCompile"), "AddBindingsToCompile should run.");
 
 			var assemblyPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
 			var typeName = "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceJarTest";

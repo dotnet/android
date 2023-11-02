@@ -1,4 +1,4 @@
-#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#if INSIDE_MONO_ANDROID_RUNTIME
 using System;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -76,13 +76,12 @@ namespace Android.Runtime
 
 		[DllImport (RuntimeConstants.InternalDllName, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int _monodroid_max_gref_get ();
-#if NETCOREAPP
+
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern void monodroid_unhandled_exception (Exception javaException);
 
 		[MethodImplAttribute(MethodImplOptions.InternalCall)]
 		internal static extern unsafe void monodroid_debugger_unhandled_exception (Exception e);
-#endif
 	}
 }
-#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#endif // INSIDE_MONO_ANDROID_RUNTIME

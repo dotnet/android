@@ -161,12 +161,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
-			var expectedDefaultValue = "System.Net.Http.HttpClientHandler, System.Net.Http";
-			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidClientHandler";
-			if (Builder.UseDotNet) {
-				expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
-				expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
-			}
+			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
+			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
 
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbis);

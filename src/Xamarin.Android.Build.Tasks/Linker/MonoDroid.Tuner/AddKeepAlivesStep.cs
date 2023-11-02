@@ -52,27 +52,25 @@ namespace MonoDroid.Tuner
 				return false;
 
 			bool changed = false;
-			List<TypeDefinition> types = assembly.MainModule.Types.ToList ();
 			foreach (TypeDefinition type in assembly.MainModule.Types)
-				AddNestedTypes (types, type);
-
-			foreach (TypeDefinition type in types)
-				if (MightNeedFix (type))
-					changed |= AddKeepAlives (type);
+				changed |= ProcessType (type);
 
 			return changed;
 		}
 
-		// Adapted from `MarkJavaObjects`
-		static void AddNestedTypes (List<TypeDefinition> types, TypeDefinition type)
+		bool ProcessType (TypeDefinition type)
 		{
-			if (!type.HasNestedTypes)
-				return;
+  			bool changed = false;
+			if (MightNeedFix (type))
+				changed |= AddKeepAlives (type);
 
-			foreach (var t in type.NestedTypes) {
-				types.Add (t);
-				AddNestedTypes (types, t);
+			if (type.HasNestedTypes) {
+				foreach (var t in type.NestedTypes) {
+					changed |= ProcessType (t);
+				}
 			}
+
+			return changed;
 		}
 
 		bool MightNeedFix (TypeDefinition type)
@@ -86,18 +84,13 @@ namespace MonoDroid.Tuner
 		{
 			bool changed = false;
 			foreach (MethodDefinition method in type.Methods) {
-				if (!method.CustomAttributes.Any (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
-					continue;
-
 				if (method.Parameters.Count == 0)
 					continue;
 
-				var processor = method.Body.GetILProcessor ();
-				var module = method.DeclaringType.Module;
+				if (!method.CustomAttributes.Any (a => a.AttributeType.FullName == "Android.Runtime.RegisterAttribute"))
+					continue;
+
 				var instructions = method.Body.Instructions;
-				var end = instructions.Last ();
-				if (end.Previous.OpCode == OpCodes.Endfinally)
-					end = end.Previous;
 
 				var found = false;
 				for (int off = Math.Max (0, instructions.Count - 6); off < instructions.Count; off++) {
@@ -110,6 +103,12 @@ namespace MonoDroid.Tuner
 
 				if (found)
 					continue;
+
+				var processor = method.Body.GetILProcessor ();
+				var module = method.DeclaringType.Module;
+				var end = instructions.Last ();
+				if (end.Previous.OpCode == OpCodes.Endfinally)
+					end = end.Previous;
 
 				for (int i = 0; i < method.Parameters.Count; i++) {
 					if (method.Parameters [i].ParameterType.IsValueType || method.Parameters [i].ParameterType.FullName == "System.String")

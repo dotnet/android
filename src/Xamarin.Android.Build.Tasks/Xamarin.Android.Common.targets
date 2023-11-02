@@ -275,7 +275,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
 	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' ">SHA-256</AndroidApkDigestAlgorithm>
-	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">legacy</AndroidManifestMerger>
+	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">manifestmerger.jar</AndroidManifestMerger>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -486,15 +486,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckAndroidHttpClientHandlerType"
-    Condition=" '$(AndroidHttpClientHandlerType)' != '' And  '$(AndroidApplication)' == 'True' ">
-  <PropertyGroup>
-    <ValidAndroidHttpClientHandlerBaseType Condition="'$(UsingAndroidNETSdk)' != 'true'">System.Net.Http.HttpClientHandler, System.Net.Http</ValidAndroidHttpClientHandlerBaseType>
-    <ValidAndroidHttpClientHandlerBaseType Condition="'$(UsingAndroidNETSdk)' == 'true'">System.Net.Http.HttpMessageHandler, System.Net.Http</ValidAndroidHttpClientHandlerBaseType>
-  </PropertyGroup>
+    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' And '$(AndroidApplication)' == 'True' ">
   <CheckClientHandlerType
     ClientHandlerType="$(AndroidHttpClientHandlerType)"
-    ValidHandlerType="$(ValidAndroidHttpClientHandlerBaseType)"
-    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
   />
 </Target>
@@ -917,7 +911,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<!-- NOTE: Kept for compatibility, prefer to use $(IntermediateOutputPath) instead -->
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
-	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)generated</MonoAndroidCodeBehindDir>
+	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)codebehind</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
 	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
@@ -2550,6 +2544,8 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)generated" Condition="Exists ('$(IntermediateOutputPath)generated')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)codebehind" Condition="Exists ('$(IntermediateOutputPath)codebehind')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)res" Condition="Exists ('$(IntermediateOutputPath)res')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)aidl" Condition="Exists ('$(IntermediateOutputPath)aidl')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)bundles" Condition="Exists ('$(IntermediateOutputPath)bundles')" />

@@ -1,4 +1,4 @@
-#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#if INSIDE_MONO_ANDROID_RUNTIME
 namespace Android.Runtime
 {
 	internal static class RuntimeConstants
@@ -6,4 +6,4 @@ namespace Android.Runtime
 		public const string InternalDllName = "xa-internal-api";
 	}
 }
-#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#endif // INSIDE_MONO_ANDROID_RUNTIME

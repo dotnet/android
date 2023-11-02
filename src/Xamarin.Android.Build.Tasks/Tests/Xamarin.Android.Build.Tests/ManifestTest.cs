@@ -755,6 +755,7 @@ namespace Bug12935
 					KnownPackages.SupportV7AppCompat_27_0_2_1,
 				},
 			};
+			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
@@ -904,6 +905,33 @@ class TestActivity : Activity { }"
 				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
 				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
+			}
+		}
+
+		[Test]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse")]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice")]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone")]
+		public void AllForegroundServiceTypes (string serviceType, string expected)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+			};
+
+ 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+ 				TextContent = () => $@"using Android.App;
+ using Android.Content.PM;
+ using Android.Views;
+ [Service (ForegroundServiceType      = {serviceType})]
+ class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
+ 			});
+			using (ProjectBuilder builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+ 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+ 				var doc = XDocument.Parse (manifest);
+ 				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+ 				IEnumerable<XElement> services = doc.Element ("manifest")?.Element ("application")?.Elements ("service");
+ 				XElement e = services.FirstOrDefault (x => x.Attribute (ns.GetName ("foregroundServiceType"))?.Value == expected);
+ 				Assert.IsNotNull (e, $"Manifest should contain an service with a foregroundServiceType of {expected}");
 			}
 		}
 

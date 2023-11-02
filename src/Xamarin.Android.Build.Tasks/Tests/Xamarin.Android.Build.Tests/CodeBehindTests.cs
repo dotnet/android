@@ -124,7 +124,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = projectName;
 
 				ObjPath = Path.Combine (rootDirectory, "obj");
-				GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "generated");
+				GeneratedPath = Path.Combine (ObjPath, XABuildPaths.Configuration, "codebehind");
 				BinPath = Path.Combine (rootDirectory, "bin", XABuildPaths.Configuration);
 				ProjectPath = Path.Combine (rootDirectory, $"{projectName}.csproj");
 

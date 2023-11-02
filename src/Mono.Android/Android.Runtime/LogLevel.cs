@@ -1,4 +1,4 @@
-#if !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#if INSIDE_MONO_ANDROID_RUNTIME
 namespace Android.Runtime
 {
 	// Keep in sync with the LogLevel enum in
@@ -15,4 +15,4 @@ namespace Android.Runtime
 		Silent  = 0x08
 	}
 }
-#endif // !NETCOREAPP || INSIDE_MONO_ANDROID_RUNTIME
+#endif // INSIDE_MONO_ANDROID_RUNTIME

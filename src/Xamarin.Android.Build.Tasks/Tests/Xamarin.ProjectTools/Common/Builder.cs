@@ -53,18 +53,6 @@ namespace Xamarin.ProjectTools
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
 
-		public string BuildTool {
-			get {
-				if (UseDotNet)
-					return Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
-
-				string xabuild = IsUnix ? XABuildPaths.XABuildScript : XABuildPaths.XABuildExe;
-				if (File.Exists (xabuild) && TestEnvironment.UseLocalBuildOutput)
-					return xabuild;
-				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
-			}
-		}
-
 		public bool CrossCompilerAvailable (string supportedAbis)
 		{
 			var crossCompilerLookup = new Dictionary<string, string> {
@@ -117,7 +105,7 @@ namespace Xamarin.ProjectTools
 			Version lastVersion     = null;
 			List<string> allTFVs    = new List<string> ();
 
-			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data") : TestEnvironment.MonoAndroidFrameworkDirectory;
+			var searchDir = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data");
 			foreach (var apiInfoFile in Directory.EnumerateFiles (searchDir, "AndroidApiInfo.xml", SearchOption.AllDirectories)) {
 				string frameworkVersion = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Version");
 				string apiLevel         = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Level");
@@ -147,16 +135,6 @@ namespace Xamarin.ProjectTools
 			var doc = XDocument.Load (androidApiInfo);
 			return doc.XPathSelectElement (elementPath)?.Value;
 		}
-
-		public bool TargetFrameworkExists (string targetFramework)
-		{
-			var path = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFramework);
-			if (!Directory.Exists (path)) {
-				return false;
-			}
-			return true;
-		}
-
 
 		public string Root {
 			get {
@@ -202,7 +180,7 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (BuildTool);
+			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
 			if (UseDotNet) {
 				args.Append ("build ");
@@ -224,11 +202,7 @@ namespace Xamarin.ProjectTools
 			args.Append (" -nodeReuse:false"); // Disable the MSBuild daemon everywhere!
 
 			if (MaxCpuCount != null) {
-				if (!string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "xabuild", StringComparison.OrdinalIgnoreCase)) {
-					args.Append ($" /maxCpuCount:{MaxCpuCount}");
-				} else {
-					Console.WriteLine ($"Ignoring MaxCpuCount={MaxCpuCount}, running with xabuild.");
-				}
+				args.Append ($" /maxCpuCount:{MaxCpuCount}");
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {

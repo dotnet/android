@@ -3,7 +3,6 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
-  provisionatorChannel: latest
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
 
 steps:
@@ -19,54 +18,49 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
-- task: provisionator@2
-  displayName: Install Xcode
-  inputs:
-    github_token: $(GitHub.Token)
-    provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
-    provisioning_extra_args: '-v -v -v -v'
-  env:
-    PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
-
 - script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-update-mono
 
-# Clone 'monodroid' without submodules
-- checkout: monodroid
-  clean: true
-  path: s/xamarin-android/external/monodroid
+# Always checkout a second resource to ensure we are using multi-repo checkout behavior
+#  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+- checkout: maui
 
-# Tell git to ignore the 'xamarin-android' submodule, which is large and unneeded
-- script: git config submodule."external/xamarin-android".update none
-  workingDirectory: xamarin-android/external/monodroid
-  displayName: Ignore XA submodule
+- script: >
+    ls -l /Applications &&
+    sudo xcode-select --switch /Applications/Xcode_14.2.app &&
+    xcode-select --print-path
+  displayName: Use Xcode 14.2
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
-# Clone 'monodroid' with the rest of the submodules
-- checkout: monodroid
-  submodules: recursive
-  path: s/xamarin-android/external/monodroid
-  persistCredentials: true
+- ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+  # Clone 'monodroid' without submodules
+  - checkout: monodroid
+    clean: true
+    path: s/xamarin-android/external/monodroid
 
-- script: rm -rf external/monodroid/external/xamarin-android
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy xamarin-android submodule
+  # Tell git to ignore the 'xamarin-android' submodule, which is large and unneeded
+  - script: git config submodule."external/xamarin-android".update none
+    workingDirectory: xamarin-android/external/monodroid
+    displayName: Ignore XA submodule
 
-- script: rm -rf external/opentk
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy opentk submodule
+  # Clone 'monodroid' with the rest of the submodules
+  - checkout: monodroid
+    submodules: recursive
+    path: s/xamarin-android/external/monodroid
+    persistCredentials: true
 
-- script: rm -rf external/sqlite
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy sqlite submodule
+  - script: rm -rf external/monodroid/external/xamarin-android
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: delete legacy xamarin-android submodule
+
+  - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: make prepare-external-git-dependencies
 
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-
-- script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make prepare-external-git-dependencies
 
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'

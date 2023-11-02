@@ -29,7 +29,7 @@ namespace Xamarin.Android.Prepare
 		string[] xaRootDirBuildFiles = {
 			"Configuration.OperatingSystem.props",
 			"Configuration.Override.props",
-			"ThirdPartyNotices.txt",
+			"THIRD-PARTY-NOTICES.TXT",
 			"config.log",
 			"config.status",
 			"config.h",

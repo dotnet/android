@@ -103,27 +103,9 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
-#if !NETCOREAPP
-		static Action<AppDomain, UnhandledExceptionEventArgs> AppDomain_DoUnhandledException = null!;
-#endif // ndef NETCOREAPP
-
 		static void Initialize ()
 		{
 			AndroidRuntimeInternal.InitializeUnhandledExceptionMethod ();
-#if !NETCOREAPP
-			if (AppDomain_DoUnhandledException == null) {
-				var ad_due = typeof (AppDomain)
-					.GetMethod ("DoUnhandledException",
-					            bindingAttr:  BindingFlags.NonPublic | BindingFlags.Instance,
-					            binder:       null,
-					            types:        new []{typeof (UnhandledExceptionEventArgs)},
-					            modifiers:    null);
-				if (ad_due != null) {
-					AppDomain_DoUnhandledException  = (Action<AppDomain, UnhandledExceptionEventArgs>) Delegate.CreateDelegate (
-						typeof (Action<AppDomain, UnhandledExceptionEventArgs>), ad_due);
-				}
-			}
-#endif // ndef NETCOREAPP
 		}
 
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
@@ -150,14 +132,7 @@ namespace Android.Runtime {
 				Logger.Log (LogLevel.Info, "MonoDroid", "UNHANDLED EXCEPTION:");
 				Logger.Log (LogLevel.Info, "MonoDroid", javaException.ToString ());
 
-#if !NETCOREAPP
-				var args  = new UnhandledExceptionEventArgs (innerException ?? javaException, isTerminating: true);
-				// Disabled until Linker error surfaced in https://github.com/xamarin/xamarin-android/pull/4302#issuecomment-596400025 is resolved
-				//AppDomain.CurrentDomain.DoUnhandledException (args);
-				AppDomain_DoUnhandledException?.Invoke (AppDomain.CurrentDomain, args);
-#else // ndef NETCOREAPP
 				RuntimeNativeMethods.monodroid_unhandled_exception (innerException ?? javaException);
-#endif // def NETCOREAPP
 			} catch (Exception e) {
 				Logger.Log (LogLevel.Error, "monodroid", "Exception thrown while raising AppDomain.UnhandledException event: " + e.ToString ());
 			}
