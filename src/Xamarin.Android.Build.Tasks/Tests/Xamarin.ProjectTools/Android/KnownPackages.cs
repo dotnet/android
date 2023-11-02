@@ -592,6 +592,10 @@ namespace Xamarin.ProjectTools
 			Id = "SkiaSharp.Views",
 			Version = "2.88.3",
 		};
+		public static Package Microsoft_Intune_Maui_Essentials_android = new Package {
+			Id = "Microsoft.Intune.Maui.Essentials.android",
+			Version = "10.0.0-beta",
+		};
 	}
 }
 
