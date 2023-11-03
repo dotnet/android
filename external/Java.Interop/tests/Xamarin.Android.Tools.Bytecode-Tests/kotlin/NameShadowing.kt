@@ -27,4 +27,8 @@ public class NameShadowing {
 	internal val itype2 = 0
 	fun getItype2(): Int = itype2
 	fun setItype2(type: Int) { }
+
+	// Unsigned types properties
+    internal var unsignedInternalProperty: UInt = 3u
+    var unsignedPublicProperty: UInt = 3u
 }

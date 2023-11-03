@@ -347,6 +347,17 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			Assert.False (klass.Methods.Single (m => m.Name == "getItype2$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "getItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
 			Assert.True (klass.Methods.Single (m => m.Name == "setItype2").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Internal property with unsigned type
+			// Generated getter/setter should not be public
+			Assert.False (klass.Methods.Single (m => m.Name == "getUnsignedInternalProperty-pVg5ArA$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+			Assert.False (klass.Methods.Single (m => m.Name == "setUnsignedInternalProperty-WZ4Q5Ns$main").AccessFlags.HasFlag (MethodAccessFlags.Public));
+
+			// Public property with unsigned type
+			// We want to check that KotlinType/KotlinReturnType are filled it as it proves our FindJavaProperty[Getter|Setter] functions are matching
+			// (We aren't changing the visibility of the getter/setter, so we can't just check the access flags)
+			Assert.AreEqual ("uint", klass.Methods.Single (m => m.Name == "getUnsignedPublicProperty-pVg5ArA").KotlinReturnType);
+			Assert.AreEqual ("uint", klass.Methods.Single (m => m.Name == "setUnsignedPublicProperty-WZ4Q5Ns").GetParameters () [0].KotlinType);
 		}
 
 		[Test]
@@ -417,6 +428,16 @@ namespace Xamarin.Android.Tools.BytecodeTests
 			// Ensure the fixup "fixed" the parameter "element" type to "ubyte"
 			Assert.AreEqual ("ubyte", java_methods.ElementAt (0).GetParameters ().Single (p => p.Name == "element").KotlinType);
 			Assert.AreEqual ("ubyte", java_methods.ElementAt (1).GetParameters ().Single (p => p.Name == "element").KotlinType);
+		}
+
+		[Test]
+		public void GetMethodNameWithoutUnsignedSuffix ()
+		{
+			// Just a few quick tests to ensure the various cases are covered
+			Assert.AreEqual ("setFoo", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo"));
+			Assert.AreEqual ("setFoo", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU"));
+			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo-7apg3OU$main"));
+			Assert.AreEqual ("setFoo$main", KotlinUtilities.GetMethodNameWithoutUnsignedSuffix ("setFoo$main"));
 		}
 	}
 }

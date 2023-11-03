@@ -76,16 +76,23 @@ namespace Xamarin.Android.Tools.Bytecode
 			return method.GetParameters ().Where (p => p.Type.BinaryName != "Lkotlin/jvm/internal/DefaultConstructorMarker;" && !p.Name.StartsWith ("$", StringComparison.Ordinal)).ToArray ();
 		}
 
-		public static string GetMethodNameWithoutSuffix (this MethodInfo method)
+		public static string GetMethodNameWithoutUnsignedSuffix (this MethodInfo method)
+			=> GetMethodNameWithoutUnsignedSuffix (method.Name);
+
+		public static string GetMethodNameWithoutUnsignedSuffix (string name)
 		{
-			// Kotlin will rename some of its constructs to hide them from the Java runtime
-			// These take the form of thing like:
-			// - add-impl
+			// Kotlin will add a type hash suffix to the end of the method name that use unsigned types
 			// - add-H3FcsT8
 			// We strip them for trying to match up the metadata to the MethodInfo
-			var index = method.Name.IndexOfAny (new [] { '-', '$' });
+			// Additionally, generated setters for unsigned types have multiple suffixes,
+			// we only want to remove the unsigned suffix.
+			// - getFoo-pVg5ArA$main
+			var dollar_index = name.IndexOf ('$');
+			var dollar_suffix = dollar_index >= 0 ? name.Substring (dollar_index) : string.Empty;
 
-			return index >= 0 ? method.Name.Substring (0, index) : method.Name;
+			var index = name.IndexOf ('-');
+
+			return index >= 0 ? name.Substring (0, index) + dollar_suffix : name;
 		}
 
 		public static bool IsDefaultConstructorMarker (this MethodInfo method)

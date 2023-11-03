@@ -389,10 +389,12 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			// Public/protected getters look like "getFoo"
+			// Public/protected getters with unsigned types look like "getFoo-abcdefg"
 			// Internal getters look like "getFoo$main"
+			// Internal getters with unsigned types look like "getFoo-WZ4Q5Ns$main"
 			var possible_methods = property.IsInternalVisibility ?
-				klass.Methods.Where (method => method.Name.StartsWith ($"get{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
-				klass.Methods.Where (method => method.Name.Equals ($"get{property.Name.Capitalize ()}", StringComparison.Ordinal));
+				klass.Methods.Where (method => method.GetMethodNameWithoutUnsignedSuffix ().StartsWith ($"get{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
+				klass.Methods.Where (method => method.GetMethodNameWithoutUnsignedSuffix ().Equals ($"get{property.Name.Capitalize ()}", StringComparison.Ordinal));
 
 			possible_methods = possible_methods.Where (method =>
 					method.GetParameters ().Length == 0 &&
@@ -409,10 +411,12 @@ namespace Xamarin.Android.Tools.Bytecode
 				return null;
 
 			// Public/protected setters look like "setFoo"
+			// Public/protected setters with unsigned types look like "setFoo-abcdefg"
 			// Internal setters look like "setFoo$main"
+			// Internal setters with unsigned types look like "setFoo-WZ4Q5Ns$main"
 			var possible_methods = property.IsInternalVisibility ?
-				klass.Methods.Where (method => method.Name.StartsWith ($"set{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
-				klass.Methods.Where (method => method.Name.Equals ($"set{property.Name.Capitalize ()}", StringComparison.Ordinal));
+				klass.Methods.Where (method => method.GetMethodNameWithoutUnsignedSuffix ().StartsWith ($"set{property.Name.Capitalize ()}$", StringComparison.Ordinal)) :
+				klass.Methods.Where (method => method.GetMethodNameWithoutUnsignedSuffix ().Equals ($"set{property.Name.Capitalize ()}", StringComparison.Ordinal));
 
 			possible_methods = possible_methods.Where (method => 
 						property.ReturnType != null &&
