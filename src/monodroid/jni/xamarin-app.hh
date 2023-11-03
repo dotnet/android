@@ -13,8 +13,16 @@
 static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 1; // Increase whenever an incompatible change is made to the
-															 // assembly store format
+
+#if INTPTR_MAX == INT64_MAX
+static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x80000000;
+#else
+static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x00000000;
+#endif
+
+// Increase whenever an incompatible change is made to the assembly store format
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64BIT_FLAG;
+
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs

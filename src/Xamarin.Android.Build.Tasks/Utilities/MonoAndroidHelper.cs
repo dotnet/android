@@ -574,7 +574,18 @@ namespace Xamarin.Android.Tasks
 				AndroidTargetArch.Arm    => "android-arm",
 				AndroidTargetArch.X86    => "android-x86",
 				AndroidTargetArch.X86_64 => "android-x64",
-				_                        => throw new InvalidOperationException ($"Internal error: unsupported ABI '{arch}'")
+				_                        => throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'")
+			};
+		}
+
+		public static string ArchToAbi (AndroidTargetArch arch)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm64  => "arm64-v8a",
+				AndroidTargetArch.Arm    => "armeabi-v7a",
+				AndroidTargetArch.X86    => "x86",
+				AndroidTargetArch.X86_64 => "x86_64",
+				_                        => throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'")
 			};
 		}
 

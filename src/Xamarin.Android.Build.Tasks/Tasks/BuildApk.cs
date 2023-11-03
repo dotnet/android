@@ -34,6 +34,9 @@ namespace Xamarin.Android.Tasks
 		public string ApkOutputPath { get; set; }
 
 		[Required]
+		public string AppSharedLibrariesDir { get; set; }
+
+		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
 		[Required]
@@ -212,10 +215,6 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
-					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, $"{AssembliesPath}rc.bin", compressionMethod: UncompressedMethod);
-				}
-
 				foreach (var file in files) {
 					var item = Path.Combine (file.archivePath.Replace (Path.DirectorySeparatorChar, '/'));
 					existingEntries.Remove (item);
@@ -367,29 +366,15 @@ namespace Xamarin.Android.Tasks
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-			AssemblyStoreGenerator storeGenerator;
+			AssemblyStoreGeneratorNew? storeGenerator;
 
 			if (UseAssemblyStore) {
-				storeGenerator = new AssemblyStoreGenerator (AssembliesPath, Log);
+				storeGenerator = new AssemblyStoreGeneratorNew (Log);
 			} else {
 				storeGenerator = null;
 			}
 
-			AssemblyStoreAssemblyInfo storeAssembly = null;
-
-			//
-			// NOTE
-			//
-			// The very first store (ID 0) **must** contain an index of all the assemblies included in the application, even if they
-			// are included in other APKs than the base one. The ID 0 store **must** be placed in the base assembly
-			//
-
-			// Currently, all the assembly stores end up in the "base" apk (the APK name is the key in the dictionary below) but the code is ready for the time when we
-			// partition assemblies into "feature" APKs
-			const string DefaultBaseApkName = "base";
-			if (String.IsNullOrEmpty (assemblyStoreApkName)) {
-				assemblyStoreApkName = DefaultBaseApkName;
-			}
+			AssemblyStoreAssemblyInfoNew? storeAssemblyInfo = null;
 
 			// Add user assemblies
 			AddAssembliesFromCollection (ResolvedUserAssemblies);
@@ -401,32 +386,38 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			Dictionary<string, List<string>> assemblyStorePaths = storeGenerator.Generate (Path.GetDirectoryName (ApkOutputPath));
-			if (assemblyStorePaths == null) {
+			Dictionary<AndroidTargetArch, string> assemblyStorePathsNew = storeGenerator.Generate (AppSharedLibrariesDir);
+
+			if (assemblyStorePathsNew.Count == 0) {
 				throw new InvalidOperationException ("Assembly store generator did not generate any stores");
 			}
 
-			if (!assemblyStorePaths.TryGetValue (assemblyStoreApkName, out List<string> baseAssemblyStores) || baseAssemblyStores == null || baseAssemblyStores.Count == 0) {
-				throw new InvalidOperationException ("Assembly store generator didn't generate the required base stores");
+			if (assemblyStorePathsNew.Count != SupportedAbis.Length) {
+				throw new InvalidOperationException ("Internal error: assembly store did not generate store for each supported ABI");
 			}
 
-			string assemblyStorePrefix = $"{assemblyStoreApkName}_";
-			foreach (string assemblyStorePath in baseAssemblyStores) {
-				string inArchiveName = Path.GetFileName (assemblyStorePath);
+			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
+			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
+			// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
+			// ABI-specific data+code.
+			bool addRuntimeConfig = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+			string libRootPath = "lib/";
+			foreach (var kvp in assemblyStorePathsNew) {
+				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
+				string inArchivePath = GetArchLibPath (abi, Path.GetFileName (kvp.Value));
+				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, UncompressedMethod);
 
-				if (inArchiveName.StartsWith (assemblyStorePrefix, StringComparison.Ordinal)) {
-					inArchiveName = inArchiveName.Substring (assemblyStorePrefix.Length);
+				if (!addRuntimeConfig) {
+					continue;
 				}
 
-				CompressionMethod compressionMethod;
-				if (inArchiveName.EndsWith (".manifest", StringComparison.Ordinal)) {
-					compressionMethod = CompressionMethod.Default;
-				} else {
-					compressionMethod = UncompressedMethod;
-				}
-
-				AddFileToArchiveIfNewer (apk, assemblyStorePath, AssembliesPath + inArchiveName, compressionMethod);
+				// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
+				// like since we can finish scanning the zip central directory earlier at startup.
+				inArchivePath = GetArchLibPath (abi, "arc.bin.so");
+				AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: UncompressedMethod);
 			}
+
+			string GetArchLibPath (string abi, string fileName) => libRootPath + abi + "/" + fileName;
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
 			{
@@ -445,7 +436,7 @@ namespace Xamarin.Android.Tasks
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
 					if (UseAssemblyStore) {
-						storeAssembly = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly.GetMetadata ("Abi"));
+						storeAssemblyInfo = new AssemblyStoreAssemblyInfoNew (sourcePath, assemblyPath, assembly);
 					} else {
 						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 					}
@@ -453,7 +444,9 @@ namespace Xamarin.Android.Tasks
 					// Try to add config if exists
 					var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
 					if (UseAssemblyStore) {
-						storeAssembly.SetConfigPath (config);
+						if (File.Exists (config)) {
+							storeAssemblyInfo.ConfigFile = new FileInfo (config);
+						}
 					} else {
 						AddAssemblyConfigEntry (apk, assemblyPath, config);
 					}
@@ -469,7 +462,7 @@ namespace Xamarin.Android.Tasks
 
 						if (!String.IsNullOrEmpty (symbolsPath)) {
 							if (UseAssemblyStore) {
-								storeAssembly.SetDebugInfoPath (symbolsPath);
+								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
 								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
 							}
@@ -477,7 +470,7 @@ namespace Xamarin.Android.Tasks
 					}
 
 					if (UseAssemblyStore) {
-						storeGenerator.Add (assemblyStoreApkName, storeAssembly);
+						storeGenerator.Add (storeAssemblyInfo);
 					}
 				}
 			}
