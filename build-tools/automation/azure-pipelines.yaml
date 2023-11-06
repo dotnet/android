@@ -37,9 +37,6 @@ resources:
     endpoint: xamarin
 
 parameters:
-- name: provisionatorChannel
-  type: string
-  default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 
@@ -83,8 +80,6 @@ variables:
 # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
 stages:
 - template: yaml-templates/build-macos.yaml
-  parameters:
-    provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - template: yaml-templates/build-windows.yaml
 
@@ -107,7 +102,6 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
@@ -267,8 +261,6 @@ stages:
     - template: yaml-templates/setup-ubuntu.yaml
 
     - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -347,7 +339,6 @@ stages:
       parameters:
         xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
         provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false

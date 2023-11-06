@@ -26,9 +26,6 @@ namespace Xamarin.Android.Prepare
 			string XABuildToolsFolder      = GetRequiredProperty (KnownProperties.XABuildToolsFolder);
 			string XABuildToolsVersion         = GetRequiredProperty (KnownProperties.XABuildToolsVersion);
 			string XABuildToolsPackagePrefix   = Context.Instance.Properties [KnownProperties.XABuildToolsPackagePrefix] ?? String.Empty;
-			string XABuildTools30Folder        = GetRequiredProperty (KnownProperties.XABuildTools30Folder);
-			string XABuildTools30Version       = GetRequiredProperty (KnownProperties.XABuildTools30Version);
-			string XABuildTools30PackagePrefix = Context.Instance.Properties [KnownProperties.XABuildTools30PackagePrefix] ?? String.Empty;
 			string XAPlatformToolsVersion  = GetRequiredProperty (KnownProperties.XAPlatformToolsVersion);
 			string XAPlatformToolsPackagePrefix = Context.Instance.Properties [KnownProperties.XAPlatformToolsPackagePrefix] ?? String.Empty;
 			bool isArm64Apple = Context.Instance.OS.Flavor == "macOS" && RuntimeInformation.OSArchitecture == Architecture.Arm64;
@@ -110,12 +107,6 @@ namespace Xamarin.Android.Prepare
 					isMultiVersion: true,
 					buildToolName: "android-sdk-build-tools",
 					buildToolVersion: $"{XABuildToolsVersion}"
-				),
-				new AndroidToolchainComponent ($"{XABuildTools30PackagePrefix}build-tools_r{XABuildTools30Version}-{altOsTag}",
-					destDir: Path.Combine ("build-tools", XABuildTools30Folder),
-					isMultiVersion: true,
-					buildToolName: "android-sdk-build-tools",
-					buildToolVersion: $"{XABuildTools30Version}"
 				),
 				new AndroidToolchainComponent ($"commandlinetools-{cltOsTag}-{CommandLineToolsVersion}",
 					destDir: Path.Combine ("cmdline-tools", CommandLineToolsFolder),

@@ -139,12 +139,12 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (XABuildConfig.AndroidDefaultTargetDotnetApiLevel.ToString(),
 				uses_sdk.Attribute (ns + "targetSdkVersion").Value);
 
-			bool expectEmbeddedAssembies = !(CommercialBuildAvailable && !isRelease);
+			bool expectEmbeddedAssembies = !(TestEnvironment.CommercialBuildAvailable && !isRelease);
 			var apkPath = Path.Combine (outputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apkPath);
 			var helper = new ArchiveAssemblyHelper (apkPath, usesAssemblyStore, rids);
 			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.dll", shouldContainEntry: expectEmbeddedAssembies);
-			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !CommercialBuildAvailable && !isRelease);
+			helper.AssertContainsEntry ($"assemblies/{proj.ProjectName}.pdb", shouldContainEntry: !TestEnvironment.CommercialBuildAvailable && !isRelease);
 			helper.AssertContainsEntry ($"assemblies/Mono.Android.dll",        shouldContainEntry: expectEmbeddedAssembies);
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
@@ -1030,6 +1030,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
+			AssertCommercialBuild ();
+
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};

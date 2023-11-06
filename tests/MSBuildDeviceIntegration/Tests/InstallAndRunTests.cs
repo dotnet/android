@@ -73,7 +73,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
 				}
 
-				Assert.True (builder.RunTarget (proj, "_Run"), "Project should have run.");
+				RunProjectAndAssert (proj, builder);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
 				                                     Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30), "Activity should have started.");
 			}
@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = isRelease,
 				SupportedOSPlatformVersion = "23",
 			};
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
@@ -344,7 +344,7 @@ namespace Library1 {
 			// error SYSLIB0011: 'BinaryFormatter.Serialize(Stream, object)' is obsolete: 'BinaryFormatter serialization is obsolete and should not be used. See https://aka.ms/binaryformatter for more information.'
 			proj.SetProperty ("NoWarn", "SYSLIB0011");
 
-			if (isRelease || !CommercialBuildAvailable) {
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			}
 
@@ -576,6 +576,8 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
+			AssertCommercialBuild ();
+
 			proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("ApplicationId", "com.i.should.get.overridden.by.the.manifest");
 			if (testOnly)
@@ -1127,6 +1129,40 @@ namespace UnnamedProject
 					Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 				Assert.IsTrue (didLaunch, "Activity should have started.");
 			}
+		}
+
+		[Test]
+		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
+		{
+			proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				PackageReferences = {
+					KnownPackages.AndroidXAppCompat,
+					KnownPackages.Microsoft_Intune_Maui_Essentials_android,
+				},
+			};
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("Icon = \"@drawable/icon\")]", "Icon = \"@drawable/icon\", Theme = \"@style/Theme.AppCompat.Light.DarkActionBar\")]")
+				.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
+			var abis = new string [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
+			proj.SetAndroidSupportedAbis (abis);
+			builder = CreateApkBuilder ();
+			builder.BuildLogFile = "install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
+
+			var intermediate = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath);
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+			var className = "Lcom/xamarin/microsoftintune/MainActivity;";
+			var methodName = "onMAMCreate";
+			Assert.IsTrue (DexUtils.ContainsClassWithMethod (className, methodName, "(Landroid/os/Bundle;)V", dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}` and `{methodName}!");
+
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue (didLaunch, "Activity should have started.");
 		}
 	}
 }
