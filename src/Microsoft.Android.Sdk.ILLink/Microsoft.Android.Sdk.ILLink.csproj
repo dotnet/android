@@ -19,6 +19,8 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Extensions.cs" Link="MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" Link="MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" Link="MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\GenerateProguardConfiguration.cs" Link="MonoDroid.Tuner\GenerateProguardConfiguration.cs" />
+    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\GetAssembliesStep.cs" Link="MonoDroid.Tuner\GetAssembliesStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkDesignerBase.cs" Link="MonoDroid.Tuner\LinkDesignerBase.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MarkJavaObjects.cs" Link="MonoDroid.Tuner\MarkJavaObjects.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveApplications.cs" Link="MonoDroid.Tuner\PreserveApplications.cs" />
