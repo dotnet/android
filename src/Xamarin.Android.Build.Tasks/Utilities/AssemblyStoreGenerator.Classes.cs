@@ -1,9 +1,6 @@
-using System;
-using System.IO;
-
 namespace Xamarin.Android.Tasks;
 
-partial class AssemblyStoreGeneratorNew
+partial class AssemblyStoreGenerator
 {
 	sealed class AssemblyStoreHeader
 	{
@@ -25,11 +22,13 @@ partial class AssemblyStoreGeneratorNew
 		public const uint NativeSize32 = 2 * sizeof (uint);
 		public const uint NativeSize64 = sizeof (ulong) + sizeof (uint);
 
+		public readonly string name;
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
 
-		public AssemblyStoreIndexEntry (ulong name_hash, uint descriptor_index)
+		public AssemblyStoreIndexEntry (string name, ulong name_hash, uint descriptor_index)
 		{
+			this.name = name;
 			this.name_hash = name_hash;
 			this.descriptor_index = descriptor_index;
 		}

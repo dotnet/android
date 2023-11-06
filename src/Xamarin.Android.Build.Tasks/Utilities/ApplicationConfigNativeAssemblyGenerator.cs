@@ -96,7 +96,7 @@ namespace Xamarin.Android.Tasks
 			public byte data_start;
 			public uint assembly_count;
 
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public AssemblyStoreAssemblyDescriptor assemblies;
 		}
 
@@ -159,7 +159,6 @@ namespace Xamarin.Android.Tasks
 		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssemblyStore { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public int AndroidRuntimeJNIEnvToken { get; set; }
 		public int JNIEnvInitializeToken { get; set; }
@@ -219,7 +218,6 @@ namespace Xamarin.Android.Tasks
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
-				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
@@ -274,12 +272,17 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (assembly_store_bundled_assemblies);
 
-			itemCount = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
-			var assembly_stores = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreRuntimeData>>), "assembly_stores", LlvmIrVariableOptions.GlobalWritable) {
-				ZeroInitializeArray = true,
-				ArrayItemCount = itemCount,
+			var storeRuntimeData = new AssemblyStoreRuntimeData {
+				data_start = 0,
+				assembly_count = 0,
 			};
-			module.Add (assembly_stores);
+
+			var assembly_store = new LlvmIrGlobalVariable (
+				new StructureInstance<AssemblyStoreRuntimeData>(assemblyStoreRuntimeDataStructureInfo, storeRuntimeData),
+				"assembly_store",
+				LlvmIrVariableOptions.GlobalWritable
+			);
+			module.Add (assembly_store);
 		}
 
 		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)

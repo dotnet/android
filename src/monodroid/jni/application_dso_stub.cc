@@ -57,7 +57,6 @@ const ApplicationConfig application_config = {
 	.system_property_count = 0,
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
-	.number_of_assembly_store_files = 2,
 	.number_of_dso_cache_entries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
@@ -113,18 +112,10 @@ AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
 	},
 };
 
-AssemblyStoreRuntimeData assembly_stores[] = {
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
-	},
-
-	{
-		.data_start = nullptr,
-		.assembly_count = 0,
-		.assemblies = nullptr,
-	},
+AssemblyStoreRuntimeData assembly_store = {
+	.data_start = nullptr,
+	.assembly_count = 0,
+	.assemblies = nullptr,
 };
 
 constexpr char fake_dso_name[] = "libaot-Some.Assembly.dll.so";

@@ -32,7 +32,7 @@ namespace xamarin::android::internal
 		static constexpr char DLL_EXTENSION[] = ".dll";
 
 #if defined (NET)
-		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "rc.bin";
+		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "arc.bin.so";
 #endif // def NET
 
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)
@@ -51,15 +51,19 @@ namespace xamarin::android::internal
 
 #if __arm__
 		static constexpr char android_abi[] = "armeabi_v7a";
+		static constexpr char android_lib_abi[] = "armeabi-v7a";
 		static constexpr char runtime_identifier[] = "android-arm";
 #elif __aarch64__
 		static constexpr char android_abi[] = "arm64_v8a";
+		static constexpr char android_lib_abi[] = "arm64-v8a";
 		static constexpr char runtime_identifier[] = "android-arm64";
 #elif __x86_64__
 		static constexpr char android_abi[] = "x86_64";
+		static constexpr char android_lib_abi[] = "x86_64";
 		static constexpr char runtime_identifier[] = "android-x64";
 #elif __i386__
 		static constexpr char android_abi[] = "x86";
+		static constexpr char android_lib_abi[] = "x86";
 		static constexpr char runtime_identifier[] = "android-x86";
 #endif
 

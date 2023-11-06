@@ -1,48 +1,28 @@
 using System;
 using System.IO;
 
-namespace Xamarin.Android.Tasks
+using Microsoft.Build.Framework;
+using Xamarin.Android.Tools;
+
+namespace Xamarin.Android.Tasks;
+
+class AssemblyStoreAssemblyInfo
 {
-	class AssemblyStoreAssemblyInfo
+	public AndroidTargetArch Arch    { get; }
+	public string InArchivePath      { get; }
+	public FileInfo SourceFile   { get; }
+
+	public FileInfo? SymbolsFile { get; set; }
+	public FileInfo? ConfigFile  { get; set; }
+
+	public AssemblyStoreAssemblyInfo (string sourceFilePath, string inArchiveAssemblyPath, ITaskItem assembly)
 	{
-		public string FilesystemAssemblyPath { get; }
-		public string ArchiveAssemblyPath { get; }
-		public string DebugInfoPath { get; private set; }
-		public string ConfigPath { get; private set; }
-		public string Abi { get; }
-
-		public AssemblyStoreAssemblyInfo (string filesystemAssemblyPath, string archiveAssemblyPath, string abi)
-		{
-			if (String.IsNullOrEmpty (filesystemAssemblyPath)) {
-				throw new ArgumentException ("must not be null or empty", nameof (filesystemAssemblyPath));
-			}
-
-			if (String.IsNullOrEmpty (archiveAssemblyPath)) {
-				throw new ArgumentException ("must not be null or empty", nameof (archiveAssemblyPath));
-			}
-
-			FilesystemAssemblyPath = filesystemAssemblyPath;
-			ArchiveAssemblyPath = archiveAssemblyPath;
-			Abi = abi;
+		Arch = MonoAndroidHelper.GetTargetArch (assembly);
+		if (Arch == AndroidTargetArch.None) {
+			throw new InvalidOperationException ($"Internal error: assembly item '{assembly}' lacks ABI information metadata");
 		}
 
-		public void SetDebugInfoPath (string path)
-		{
-			DebugInfoPath = GetExistingPath (path);
-		}
-
-		public void SetConfigPath (string path)
-		{
-			ConfigPath = GetExistingPath (path);
-		}
-
-		string GetExistingPath (string path)
-		{
-			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
-				return String.Empty;
-			}
-
-			return path;
-		}
+		SourceFile = new FileInfo (sourceFilePath);
+		InArchivePath = inArchiveAssemblyPath;
 	}
 }

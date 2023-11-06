@@ -366,15 +366,15 @@ namespace Xamarin.Android.Tasks
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-			AssemblyStoreGeneratorNew? storeGenerator;
+			AssemblyStoreGenerator? storeGenerator;
 
 			if (UseAssemblyStore) {
-				storeGenerator = new AssemblyStoreGeneratorNew (Log);
+				storeGenerator = new AssemblyStoreGenerator (Log);
 			} else {
 				storeGenerator = null;
 			}
 
-			AssemblyStoreAssemblyInfoNew? storeAssemblyInfo = null;
+			AssemblyStoreAssemblyInfo? storeAssemblyInfo = null;
 
 			// Add user assemblies
 			AddAssembliesFromCollection (ResolvedUserAssemblies);
@@ -436,7 +436,7 @@ namespace Xamarin.Android.Tasks
 					// Add assembly
 					var assemblyPath = GetAssemblyPath (assembly, frameworkAssembly: false);
 					if (UseAssemblyStore) {
-						storeAssemblyInfo = new AssemblyStoreAssemblyInfoNew (sourcePath, assemblyPath, assembly);
+						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly);
 					} else {
 						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
 					}

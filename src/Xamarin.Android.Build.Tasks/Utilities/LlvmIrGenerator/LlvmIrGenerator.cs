@@ -406,7 +406,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			if (IsStructureInstance (type)) {
 				if (value == null) {
-					throw new ArgumentException ("must not be null for structure instances", nameof (value));
+					throw new ArgumentException ($"must not be null for structure instances ({type})", nameof (value));
 				}
 
 				WriteStructureType (context, (StructureInstance)value, out typeInfo);

@@ -40,7 +40,6 @@ namespace Xamarin.Android.Tasks
 		public uint   system_property_count;
 		public uint   number_of_assemblies_in_apk;
 		public uint   bundled_assembly_name_width;
-		public uint   number_of_assembly_store_files;
 		public uint   number_of_dso_cache_entries;
 		public uint   android_runtime_jnienv_class_token;
 		public uint   jnienv_initialize_method_token;

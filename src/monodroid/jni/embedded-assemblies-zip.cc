@@ -67,7 +67,8 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 #if defined (NET)
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
+		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) { // TODO: fix this for rc.bin.so
+																					   // being in `lib/ARCH/` now
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
@@ -172,8 +173,8 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 force_inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
-	if (number_of_mapped_assembly_stores >= application_config.number_of_assembly_store_files) {
-		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", application_config.number_of_assembly_store_files);
+	if (number_of_mapped_assembly_stores > number_of_assembly_store_files) {
+		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", number_of_assembly_store_files);
 		Helpers::abort_application ();
 	}
 
@@ -190,45 +191,17 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 		Helpers::abort_application ();
 	}
 
-	if (header->store_id >= application_config.number_of_assembly_store_files) {
-		log_fatal (
-			LOG_ASSEMBLY,
-			"Assembly store '%s' index %u exceeds the number of stores known at application build time, %u",
-			entry_name.get (),
-			header->store_id,
-			application_config.number_of_assembly_store_files
-		);
-		Helpers::abort_application ();
-	}
-
-	AssemblyStoreRuntimeData &rd = assembly_stores[header->store_id];
-	if (rd.data_start != nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' has a duplicate ID (%u)", entry_name.get (), header->store_id);
-		Helpers::abort_application ();
-	}
-
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
+	constexpr size_t index_assembly_info_size = sizeof(AssemblyStoreIndexEntry) * 2; // We have two records for each assembly
+	const size_t index_size = (index_assembly_info_size * header->entry_count);
 
-	rd.data_start = static_cast<uint8_t*>(assembly_store_map.area);
-	rd.assembly_count = header->local_entry_count;
-	rd.assemblies = reinterpret_cast<AssemblyStoreAssemblyDescriptor*>(rd.data_start + header_size);
+	log_debug (LOG_ASSEMBLY, "Assembly store: index size == %zu; header size == %zu; entry size == %zu", index_size, header_size, index_assembly_info_size / 2);
+	assembly_store.data_start = static_cast<uint8_t*>(assembly_store_map.area);
+	assembly_store.assembly_count = header->entry_count;
+	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + index_size);
+	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
-	number_of_found_assemblies += rd.assembly_count;
-
-	if (header->store_id == 0) {
-		constexpr size_t bundled_assembly_size = sizeof(AssemblyStoreAssemblyDescriptor);
-		constexpr size_t hash_entry_size = sizeof(AssemblyStoreHashEntry);
-
-		index_assembly_store_header = header;
-
-		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
-		if constexpr (std::is_same_v<hash_t, uint64_t>) {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes + (hash_entry_size * header->global_entry_count));
-		} else {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes);
-		}
-	}
-
+	number_of_found_assemblies += assembly_store.assembly_count;
 	number_of_mapped_assembly_stores++;
 	have_and_want_debug_symbols = register_debug_symbols;
 }
@@ -241,28 +214,25 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool common_assembly_store_found = false;
-	bool arch_assembly_store_found = false;
+	bool assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_name.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
 			break;
 		}
 
+		//		log_debug (LOG_ASSEMBLY, "ZIP entry: %s", entry_name.get ());
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry) {
 			continue;
 		}
 
-		if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
-			common_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
-		}
-
-		if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
-			arch_assembly_store_found = true;
+		//		log_debug (LOG_ASSEMBLY, "Interesting entry: %s", entry_name.get ());
+		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_name)) {
+			assembly_store_found = true;
+			//			log_debug (LOG_ASSEMBLY, "Loading assembly store");
 			map_assembly_store (entry_name, state);
 		}
 	}

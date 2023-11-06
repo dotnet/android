@@ -319,21 +319,15 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	return nullptr;
 }
 
-force_inline const AssemblyStoreHashEntry*
-EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreHashEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
+force_inline const AssemblyStoreIndexEntry*
+EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreIndexEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
 {
 #if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
-	hash_t entry_hash;
-	const AssemblyStoreHashEntry *ret = nullptr;
+	const AssemblyStoreIndexEntry *ret = nullptr;
 
 	while (entry_count > 0) {
 		ret = entries + (entry_count / 2);
-		if constexpr (std::is_same_v<hash_t, uint64_t>) {
-			entry_hash = ret->hash64;
-		} else {
-			entry_hash = ret->hash32;
-		}
-		auto result = hash <=> entry_hash;
+		auto result = hash <=> ret->name_hash;
 
 		if (result < 0) {
 			entry_count /= 2;
@@ -363,39 +357,34 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	hash_t name_hash = xxhash::hash (name.get (), len);
 	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
-	const AssemblyStoreHashEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
+	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #0");
 	if (hash_entry == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
 	}
-
-	if (hash_entry->mapping_index >= application_config.number_of_assemblies_in_apk) {
-		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->mapping_index, application_config.number_of_assemblies_in_apk - 1);
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #1");
+	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
+		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->descriptor_index, assembly_store.assembly_count - 1);
 		Helpers::abort_application ();
 	}
-
-	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[hash_entry->mapping_index];
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #2 (descriptor_index: %u)", hash_entry->descriptor_index);
+	AssemblyStoreEntryDescriptor *store_entry = &assembly_store.assemblies[hash_entry->descriptor_index];
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #3 (mapping_index: %u)", store_entry->mapping_index);
+	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry->mapping_index];
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #4");
 	if (assembly_runtime_info.image_data == nullptr) {
-		if (hash_entry->store_id >= application_config.number_of_assembly_store_files) {
-			log_fatal (LOG_ASSEMBLY, "Invalid assembly store ID %u, exceeds the maximum of %u", hash_entry->store_id, application_config.number_of_assembly_store_files - 1);
-			Helpers::abort_application ();
-		}
-
-		AssemblyStoreRuntimeData &rd = assembly_stores[hash_entry->store_id];
-		if (hash_entry->local_store_index >= rd.assembly_count) {
-			log_fatal (LOG_ASSEMBLY, "Invalid index %u into local store assembly descriptor array", hash_entry->local_store_index);
-			Helpers::abort_application ();
-		}
-
-		AssemblyStoreAssemblyDescriptor *bba = &rd.assemblies[hash_entry->local_store_index];
-
+		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #5");
 		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
 		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = rd.data_start + bba->data_offset;
-		assembly_runtime_info.descriptor = bba;
-
-		if (bba->debug_data_offset != 0) {
-			assembly_runtime_info.debug_info_data = rd.data_start + bba->debug_data_offset;
+		assembly_runtime_info.image_data = assembly_store.data_start + store_entry->data_offset;
+		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #6");
+		assembly_runtime_info.descriptor = store_entry;
+		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #7");
+		if (store_entry->debug_data_offset != 0) {
+			log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #8");
+			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry->debug_data_offset;
+			log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #9");
 		}
 #if !defined (NET)
 		if (bba->config_data_size != 0) {
@@ -408,7 +397,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 			);
 		}
 #endif // NET
-
+		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #10");
 		log_debug (
 			LOG_ASSEMBLY,
 			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%s'",
@@ -421,7 +410,9 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 			assembly_runtime_info.descriptor->config_data_size,
 			name.get ()
 		);
+		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #11");
 	}
+	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #12");
 
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;

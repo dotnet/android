@@ -149,31 +149,19 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 {
 	uint32_t magic;
 	uint32_t version;
-	uint32_t local_entry_count;
-	uint32_t global_entry_count;
-	uint32_t store_id;
+	uint32_t entry_count;
 };
 
-struct [[gnu::packed]] AssemblyStoreHashEntry final
+struct [[gnu::packed]] AssemblyStoreIndexEntry final
 {
-	union {
-		uint64_t hash64;
-		uint32_t hash32;
-	};
+	xamarin::android::hash_t name_hash;
+	uint32_t descriptor_index;
+};
 
-	// Index into the array with pointers to assembly data.
-	// It **must** be unique across all the stores from all the apks
+struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
+{
 	uint32_t mapping_index;
 
-	// Index into the array with assembly descriptors inside a store
-	uint32_t local_store_index;
-
-	// Index into the array with assembly store mmap addresses
-	uint32_t store_id;
-};
-
-struct [[gnu::packed]] AssemblyStoreAssemblyDescriptor final
-{
 	uint32_t data_offset;
 	uint32_t data_size;
 
@@ -188,7 +176,7 @@ struct AssemblyStoreRuntimeData final
 {
 	uint8_t             *data_start;
 	uint32_t             assembly_count;
-	AssemblyStoreAssemblyDescriptor *assemblies;
+	AssemblyStoreEntryDescriptor *assemblies;
 };
 
 struct AssemblyStoreSingleAssemblyRuntimeData final
@@ -196,7 +184,7 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 	uint8_t             *image_data;
 	uint8_t             *debug_info_data;
 	uint8_t             *config_data;
-	AssemblyStoreAssemblyDescriptor *descriptor;
+	AssemblyStoreEntryDescriptor *descriptor;
 };
 
 enum class MonoComponent : uint32_t
@@ -225,7 +213,6 @@ struct ApplicationConfig
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
-	uint32_t number_of_assembly_store_files;
 	uint32_t number_of_dso_cache_entries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
@@ -304,7 +291,7 @@ MONO_API MONO_API_EXPORT const char* const mono_aot_mode_name;
 
 MONO_API MONO_API_EXPORT XamarinAndroidBundledAssembly bundled_assemblies[];
 MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
-MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
+MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_store;
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 

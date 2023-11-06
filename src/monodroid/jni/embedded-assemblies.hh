@@ -97,10 +97,9 @@ namespace xamarin::android::internal {
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
 
-		static constexpr char assembly_store_prefix[] = "assemblies";
-		static constexpr char assembly_store_extension[] = ".blob";
-		static constexpr auto assembly_store_common_file_name = concat_const ("/", assembly_store_prefix, assembly_store_extension);
-		static constexpr auto assembly_store_arch_file_name = concat_const ("/", assembly_store_prefix, ".", SharedConstants::android_abi, assembly_store_extension);
+		static constexpr uint32_t number_of_assembly_store_files = 1;
+		static constexpr char assembly_store_prefix[] = "lib/";
+		static constexpr auto assembly_store_file_name = concat_const (assembly_store_prefix, SharedConstants::android_lib_abi, "/assemblies.", SharedConstants::android_lib_abi, ".blob.so");
 
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -174,7 +173,7 @@ namespace xamarin::android::internal {
 				return;
 			}
 
-			abort_unless (index_assembly_store_header != nullptr && assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
+			abort_unless (assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
 		}
 
 	private:
@@ -268,18 +267,34 @@ namespace xamarin::android::internal {
 
 		const char* get_assemblies_prefix () const
 		{
-			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
+			if (assemblies_prefix_override != nullptr) {
+				return assemblies_prefix_override;
+			}
+
+			if (application_config.have_assembly_store) {
+				return assembly_store_prefix;
+			}
+
+			return assemblies_prefix;
 		}
 
 		uint32_t get_assemblies_prefix_length () const noexcept
 		{
-			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : sizeof(assemblies_prefix) - 1;
+			if (assemblies_prefix_override != nullptr) {
+				return static_cast<uint32_t>(strlen (assemblies_prefix_override));
+			}
+
+			if (application_config.have_assembly_store) {
+				return sizeof(assembly_store_prefix) - 1;
+			}
+
+			return sizeof(assemblies_prefix) - 1;
 		}
 
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files
+				number_of_mapped_assembly_stores == number_of_assembly_store_files
 #if defined (NET)
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
 #endif // NET
@@ -307,7 +322,7 @@ namespace xamarin::android::internal {
 		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
+		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
 
 	private:
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
@@ -332,8 +347,7 @@ namespace xamarin::android::internal {
 		uint32_t               number_of_mapped_assembly_stores = 0;
 		bool                   need_to_scan_more_apks = true;
 
-		AssemblyStoreHeader *index_assembly_store_header = nullptr;
-		AssemblyStoreHashEntry             *assembly_store_hashes;
+		AssemblyStoreIndexEntry             *assembly_store_hashes;
 		std::mutex             assembly_decompress_mutex;
 	};
 }
