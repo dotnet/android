@@ -873,11 +873,15 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {1} - The expected path of the android.jar file
 {2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
   </data>
-  <data name="XA5207_SDK_Manager_macOS" xml:space="preserve">
+  <data name="XA5207_SDK_Manager_VSCode" xml:space="preserve">
     <value>Tools &gt; Open Android SDK Manager...</value>
     <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
+    <value>Tools &gt; Android &gt; Android SDK Manager...</value>
+    <comment>This string is the location of a menu command in Visual Studio.</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
     <value>Tools &gt; Android &gt; Android SDK Manager...</value>
     <comment>This string is the location of a menu command in Visual Studio.</comment>
   </data>
