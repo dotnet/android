@@ -217,6 +217,7 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
+	uint32_t number_of_shared_libraries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
 	uint32_t jnienv_registerjninatives_method_token;
@@ -224,6 +225,11 @@ struct ApplicationConfig
 	uint32_t jni_remapping_replacement_method_index_entry_count;
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
+};
+
+struct DSOApkEntry
+{
+	uint32_t offset; // offset into the APK
 };
 
 struct DSOCacheEntry

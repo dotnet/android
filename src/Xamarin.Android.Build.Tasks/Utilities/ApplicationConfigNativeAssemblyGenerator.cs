@@ -218,6 +218,7 @@ namespace Xamarin.Android.Tasks
 				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
+				number_of_shared_libraries = (uint)NativeLibraries.Count,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,

@@ -61,8 +61,14 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-	if (entry_name.get ()[0] != state.prefix[0] || strncmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
-		return false;
+	if (entry_name.get ()[0] != state.prefix[0] || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+		if (state.prefix == apk_lib_prefix) {
+			return false;
+		}
+
+		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix, entry_name.get (), sizeof(apk_lib_prefix) - 1) != 0) {
+			return false;
+		}
 	}
 
 #if defined (NET)
@@ -229,6 +235,18 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_name)) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
+			continue;
+		}
+
+		if (number_of_zip_dso_entries >= application_config.number_of_shared_libraries) {
+			continue;
+		}
+
+		// Since it's not an assembly store, it's a shared library most likely and it is long enough for us not to have
+		// to check the length
+		if (utils.ends_with (entry_name, dso_suffix)) {
+			log_debug (LOG_ASSEMBLY, "Found a shared library: %s", entry_name.get ());
+			number_of_zip_dso_entries++;
 		}
 	}
 }
@@ -256,11 +274,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	}
 
 	std::vector<uint8_t>  buf (cd_size);
+	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.apk_fd              = fd,
 		.apk_name            = apk_name,
-		.prefix              = get_assemblies_prefix (),
-		.prefix_len          = get_assemblies_prefix_length (),
+		.prefix              = prefix,
+		.prefix_len          = prefix_len,
 		.buf_offset          = 0,
 		.compression_method  = 0,
 		.local_header_offset = 0,

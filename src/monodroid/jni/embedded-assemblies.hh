@@ -10,6 +10,7 @@
 #include <functional>
 #include <vector>
 #include <semaphore.h>
+#include <tuple>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
@@ -94,14 +95,15 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr auto  assemblies_prefix   = concat_const ("assemblies/", SharedConstants::android_lib_abi, "/");
 		static constexpr char  zip_path_separator[] = "/";
+		static constexpr auto  assemblies_prefix   = concat_const ("assemblies", zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 
 		// We have two records for each assembly, for names with and without the extension
 		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
 		static constexpr uint32_t number_of_assembly_store_files = 1;
-		static constexpr char assembly_store_prefix[] = "lib/";
-		static constexpr auto assembly_store_file_name = concat_const (assembly_store_prefix, SharedConstants::android_lib_abi, "/assemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr char dso_suffix[] = ".so";
+		static constexpr char apk_lib_prefix[] = "lib/";
+		static constexpr auto assembly_store_file_name = concat_const (apk_lib_prefix, SharedConstants::android_lib_abi, zip_path_separator, "assemblies.", SharedConstants::android_lib_abi, ".blob.so");
 
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -267,36 +269,23 @@ namespace xamarin::android::internal {
 
 		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
-		const char* get_assemblies_prefix () const
+		std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () const noexcept
 		{
 			if (assemblies_prefix_override != nullptr) {
-				return assemblies_prefix_override;
+				return { assemblies_prefix_override, static_cast<uint32_t>(strlen (assemblies_prefix_override)) };
 			}
 
 			if (application_config.have_assembly_store) {
-				return assembly_store_prefix;
+				return { apk_lib_prefix, sizeof(apk_lib_prefix) - 1 };
 			}
 
-			return assemblies_prefix.data ();
-		}
-
-		uint32_t get_assemblies_prefix_length () const noexcept
-		{
-			if (assemblies_prefix_override != nullptr) {
-				return static_cast<uint32_t>(strlen (assemblies_prefix_override));
-			}
-
-			if (application_config.have_assembly_store) {
-				return sizeof(assembly_store_prefix) - 1;
-			}
-
-			return assemblies_prefix.size () - 1;
+			return {assemblies_prefix.data (), assemblies_prefix.size () - 1};
 		}
 
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == number_of_assembly_store_files
+				number_of_mapped_assembly_stores == number_of_assembly_store_files && number_of_zip_dso_entries >= application_config.number_of_shared_libraries
 #if defined (NET)
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
 #endif // NET
@@ -347,6 +336,7 @@ namespace xamarin::android::internal {
 		bool                   runtime_config_blob_found = false;
 #endif // def NET
 		uint32_t               number_of_mapped_assembly_stores = 0;
+		uint32_t               number_of_zip_dso_entries = 0;
 		bool                   need_to_scan_more_apks = true;
 
 		AssemblyStoreIndexEntry *assembly_store_hashes;
