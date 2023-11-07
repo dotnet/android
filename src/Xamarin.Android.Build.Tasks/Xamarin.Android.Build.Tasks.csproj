@@ -23,15 +23,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Android.Cecil.Mdb">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.Mdb.dll</HintPath>
-    </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" GeneratePathProperty="true" />
     <PackageReference Include="ILRepack" Version="2.0.18" />
     <PackageReference Include="Irony" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />

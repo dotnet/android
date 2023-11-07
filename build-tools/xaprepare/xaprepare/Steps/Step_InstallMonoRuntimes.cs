@@ -53,8 +53,8 @@ namespace Xamarin.Android.Prepare
 
 			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
 			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
-			if (!await ConjureXamarinCecilAndRemapRef (context, haveManagedRuntime, managedRuntime))
-				return false;
+			//if (!await ConjureXamarinCecilAndRemapRef (context, haveManagedRuntime, managedRuntime))
+			//	return false;
 
 			if (!await InstallRuntimes (context, enabledRuntimes))
 				return false;
@@ -65,7 +65,7 @@ namespace Xamarin.Android.Prepare
 			if (!InstallUtilities (context, haveManagedRuntime, managedRuntime))
 				return false;
 
-			Utilities.PropagateXamarinAndroidCecil (context);
+			//Utilities.PropagateXamarinAndroidCecil (context);
 
 			return true;
 		}
@@ -84,7 +84,7 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
+		/*async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
 			StatusStep (context, "Building remap-assembly-ref");
 			bool result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
@@ -143,6 +143,7 @@ namespace Xamarin.Android.Prepare
 
 			return true;
 		}
+		*/
 
 		bool InstallUtilities (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
@@ -150,8 +151,8 @@ namespace Xamarin.Android.Prepare
 
 			Utilities.CreateDirectory (destDir);
 
-			string remapper = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue (KnownProperties.RemapAssemblyRefToolExecutable));
-			string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
+			//string remapper = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue (KnownProperties.RemapAssemblyRefToolExecutable));
+			//string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
 
 			StatusStep (context, "Installing runtime utilities");
 			EnsureAllRuntimes ();
@@ -165,7 +166,7 @@ namespace Xamarin.Android.Prepare
 						Log.DebugLine ($"Debug symbols not found for utility file {Path.GetFileName (muf.SourcePath)}");
 					}
 				}
-
+				/*
 				if (!muf.RemapCecil)
 					continue;
 
@@ -187,6 +188,7 @@ namespace Xamarin.Android.Prepare
 
 				Log.ErrorLine ($"Failed to remap cecil reference for {destFilePath}");
 				return false;
+				*/
 			}
 
 			return true;

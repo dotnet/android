@@ -713,6 +713,7 @@ namespace Xamarin.Android.Prepare
 				shared: true
 			),
 
+			/*
 			// Xamarin.Android.Cecil.dll
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"),
@@ -744,7 +745,7 @@ namespace Xamarin.Android.Prepare
 				strip: false,
 				shared: true
 			),
-
+			*/
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "lib", "libmonosgen-2.0.dll.a"),
 				destinationCreator: (Runtime runtime) => Path.Combine (GetRuntimeOutputDir (runtime), "libmonosgen-2.0.dll.a"),
