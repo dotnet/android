@@ -14,8 +14,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
     <PackageId>Microsoft.Android.Sdk.$(HostOS)</PackageId>
     <Description>C# Tools and Bindings for the Android SDK.</Description>
     <Description Condition=" '$(HostOS)' == 'Linux' ">$(Description) Please note that this package is not officially supported, and has not received extensive testing.</Description>
-    <!-- Exclude mono bundle components declared in `create-installers.targets`. -->
-    <IncludeMonoBundleComponents>false</IncludeMonoBundleComponents>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
 
@@ -30,8 +28,8 @@ core workload SDK packs imported by WorkloadManifest.targets.
   <Target Name="_GenerateXASdkContent"
       DependsOnTargets="ConstructInstallerItems;_GetLicense">
     <ItemGroup>
-      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '%(MSBuildItemsWin.ExcludeFromAndroidNETSdk)' != 'true' and '$(HostOS)' == 'Windows' " />
-      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '%(MSBuildItemsUnix.ExcludeFromAndroidNETSdk)' != 'true' and ('$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin') " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsWin)"  PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsWin.RelativePath)'))"  Condition=" '$(HostOS)' == 'Windows' " />
+      <AndroidSdkBuildTools Include="@(MSBuildItemsUnix)" PackagePath="tools\$([System.IO.Path]::GetDirectoryName('%(MSBuildItemsUnix.RelativePath)'))" Condition=" '$(HostOS)' == 'Linux' or '$(HostOS)' == 'Darwin' " />
     </ItemGroup>
 
     <GenerateUnixFilePermissions

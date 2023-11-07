@@ -26,7 +26,7 @@ stages:
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 90
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all

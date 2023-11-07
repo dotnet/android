@@ -478,8 +478,8 @@ In this message, the term "binding" means a piece of generated code that makes i
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
   </data>
   <data name="XA1031_HCH" xml:space="preserve">
-    <value>The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.
-Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.</value>
+    <value>'AndroidHttpClientHandlerType' プロパティ値 '{0}' は 'System.Net.Htt.HttpClientHandler' から派生することはできません。
+値を 'System.Net.Http.HttpMessageHandler' から継承する assembly-qualifed 型名に変更するか、プロパティを完全に削除してください。</value>
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
 {0} - The value of the property.</comment>
   </data>
