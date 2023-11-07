@@ -94,7 +94,7 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr char  assemblies_prefix[] = "assemblies/";
+		static constexpr auto  assemblies_prefix   = concat_const ("assemblies/", SharedConstants::android_lib_abi, "/");
 		static constexpr char  zip_path_separator[] = "/";
 
 		// We have two records for each assembly, for names with and without the extension
@@ -277,7 +277,7 @@ namespace xamarin::android::internal {
 				return assembly_store_prefix;
 			}
 
-			return assemblies_prefix;
+			return assemblies_prefix.data ();
 		}
 
 		uint32_t get_assemblies_prefix_length () const noexcept
@@ -290,7 +290,7 @@ namespace xamarin::android::internal {
 				return sizeof(assembly_store_prefix) - 1;
 			}
 
-			return sizeof(assemblies_prefix) - 1;
+			return assemblies_prefix.size () - 1;
 		}
 
 		bool all_required_zip_entries_found () const noexcept

@@ -269,25 +269,12 @@ namespace Xamarin.Android.Tasks
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				if (!UseAssemblyStore) {
+				string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+				if (!archAssemblyNames.Contains (assemblyName)) {
 					assemblyCount++;
-					return;
-				}
-
-				if (Boolean.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-					return;
-				}
-
-				string abi = assembly.GetMetadata ("Abi");
-				if (String.IsNullOrEmpty (abi)) {
-					assemblyCount++;
-				} else {
-					archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
-					if (!archAssemblyNames.Contains (assemblyName)) {
-						assemblyCount++;
-						archAssemblyNames.Add (assemblyName);
-					}
+					archAssemblyNames.Add (assemblyName);
 				}
 			};
 

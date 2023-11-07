@@ -382,6 +382,23 @@ namespace Xamarin.Android.Tasks
 			// Add framework assemblies
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
+			const string libRootPath = "lib/";
+			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
+			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
+			// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
+			// ABI-specific data+code.
+			bool addRuntimeConfig = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+			string inArchivePath;
+
+			if (addRuntimeConfig) {
+				foreach (string abi in SupportedAbis) {
+					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
+					// like since we can finish scanning the zip central directory earlier at startup.
+					inArchivePath = GetArchLibPath (abi, "arc.bin.so");
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: UncompressedMethod);
+				}
+			}
+
 			if (!UseAssemblyStore) {
 				return;
 			}
@@ -396,25 +413,10 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: assembly store did not generate store for each supported ABI");
 			}
 
-			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
-			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
-			// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
-			// ABI-specific data+code.
-			bool addRuntimeConfig = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			string libRootPath = "lib/";
 			foreach (var kvp in assemblyStorePathsNew) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
-				string inArchivePath = GetArchLibPath (abi, Path.GetFileName (kvp.Value));
+				inArchivePath = GetArchLibPath (abi, Path.GetFileName (kvp.Value));
 				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, UncompressedMethod);
-
-				if (!addRuntimeConfig) {
-					continue;
-				}
-
-				// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
-				// like since we can finish scanning the zip central directory earlier at startup.
-				inArchivePath = GetArchLibPath (abi, "arc.bin.so");
-				AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: UncompressedMethod);
 			}
 
 			string GetArchLibPath (string abi, string fileName) => libRootPath + abi + "/" + fileName;
@@ -570,8 +572,9 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		string GetAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
 		{
-			var assembliesPath = AssembliesPath;
 			var subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+			string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+			string assembliesPath = AssembliesPath + "/" + abi + "/";
 			if (!string.IsNullOrEmpty (subDirectory)) {
 				assembliesPath += subDirectory.Replace ('\\', '/');
 				if (!assembliesPath.EndsWith ("/", StringComparison.Ordinal)) {

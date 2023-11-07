@@ -615,15 +615,17 @@ namespace Xamarin.Android.Tasks
 			return apiLevel;
 		}
 
-		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem)
+		public static string GetAssemblyAbi (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("Abi");
 			if (String.IsNullOrEmpty (abi)) {
-				return AndroidTargetArch.None;
+				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks ABI metadata");
 			}
 
-			return AbiToTargetArch (abi);
+			return abi;
 		}
+
+		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
 
 		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
 		{
