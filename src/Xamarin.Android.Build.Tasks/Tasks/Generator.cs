@@ -48,6 +48,8 @@ namespace Xamarin.Android.Tasks
 
 		public string LangVersion { get; set; }
 
+		public bool EmitLegacyInterfaceInvokers { get; set; }
+
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
@@ -208,6 +210,10 @@ namespace Xamarin.Android.Tasks
 
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
+
+					if (EmitLegacyInterfaceInvokers) {
+						features.Add ("emit-legacy-interface-invokers");
+					}
 
 					if (EnableBindingInterfaceConstants)
 						features.Add ("interface-constants");
