@@ -67,8 +67,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 #if defined (NET)
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) { // TODO: fix this for rc.bin.so
-																					   // being in `lib/ARCH/` now
+		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
@@ -192,13 +191,11 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	}
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
-	constexpr size_t index_assembly_info_size = sizeof(AssemblyStoreIndexEntry) * 2; // We have two records for each assembly
-	const size_t index_size = (index_assembly_info_size * header->entry_count);
 
-	log_debug (LOG_ASSEMBLY, "Assembly store: index size == %zu; header size == %zu; entry size == %zu", index_size, header_size, index_assembly_info_size / 2);
 	assembly_store.data_start = static_cast<uint8_t*>(assembly_store_map.area);
 	assembly_store.assembly_count = header->entry_count;
-	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + index_size);
+	assembly_store.index_entry_count = header->index_entry_count;
+	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
 	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
 	number_of_found_assemblies += assembly_store.assembly_count;
@@ -223,16 +220,14 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			break;
 		}
 
-		//		log_debug (LOG_ASSEMBLY, "ZIP entry: %s", entry_name.get ());
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry) {
 			continue;
 		}
 
-		//		log_debug (LOG_ASSEMBLY, "Interesting entry: %s", entry_name.get ());
+		log_debug (LOG_ASSEMBLY, "Interesting entry: %s", entry_name.get ());
 		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_name)) {
 			assembly_store_found = true;
-			//			log_debug (LOG_ASSEMBLY, "Loading assembly store");
 			map_assembly_store (entry_name, state);
 		}
 	}

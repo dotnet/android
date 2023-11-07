@@ -367,6 +367,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
 	bool got_split_config_abi_apk = false;
+	bool got_base_apk = false;
 
 	for (int64_t i = 0; i < apk_count; i++) {
 		jstring_wrapper &apk_file = runtimeApks [static_cast<size_t>(i)];
@@ -378,6 +379,8 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			// configuration blob are in `lib/{ARCH}`, which in turn lives in the split config APK
 			if (!got_split_config_abi_apk && utils.ends_with (apk_file.get_cstr (), SharedConstants::split_config_abi_apk_name)) {
 				got_split_config_abi_apk = scan_apk = true;
+			} else if (!application_config.have_assembly_store && !got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
+				got_base_apk = scan_apk = true;
 			}
 
 			if (!scan_apk) {
@@ -1262,29 +1265,15 @@ MonodroidRuntime::init_internal_api_dso (void *handle)
 #endif // ndef NET
 
 force_inline DSOCacheEntry*
-MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
+MonodroidRuntime::find_dso_cache_entry (hash_t hash) noexcept
 {
-#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
-	hash_t entry_hash;
-	DSOCacheEntry *ret = nullptr;
-	size_t entry_count = application_config.number_of_dso_cache_entries;
-	DSOCacheEntry *entries = dso_cache;
-
-	while (entry_count > 0) {
-		ret = entries + (entry_count / 2);
-		entry_hash = static_cast<hash_t> (ret->hash);
-		auto result = hash <=> entry_hash;
-
-		if (result < 0) {
-			entry_count /= 2;
-		} else if (result > 0) {
-			entries = ret + 1;
-			entry_count -= entry_count / 2 + 1;
-		} else {
-			return ret;
-		}
+	auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
+	auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
+	ssize_t idx = Search::binary_search<DSOCacheEntry, equal, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
+	if (idx >= 0) {
+		return &dso_cache[idx];
 	}
-#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
+
 	return nullptr;
 }
 

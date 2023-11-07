@@ -320,25 +320,14 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 }
 
 force_inline const AssemblyStoreIndexEntry*
-EmbeddedAssemblies::find_assembly_store_entry ([[maybe_unused]] hash_t hash, [[maybe_unused]] const AssemblyStoreIndexEntry *entries, [[maybe_unused]] size_t entry_count) noexcept
+EmbeddedAssemblies::find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept
 {
-#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
-	const AssemblyStoreIndexEntry *ret = nullptr;
-
-	while (entry_count > 0) {
-		ret = entries + (entry_count / 2);
-		auto result = hash <=> ret->name_hash;
-
-		if (result < 0) {
-			entry_count /= 2;
-		} else if (result > 0) {
-			entries = ret + 1;
-			entry_count -= entry_count / 2 + 1;
-		} else {
-			return ret;
-		}
+	auto equal = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash == key; };
+	auto less_than = [](AssemblyStoreIndexEntry const& entry, hash_t key) -> bool { return entry.name_hash < key; };
+	ssize_t idx = Search::binary_search<AssemblyStoreIndexEntry, equal, less_than> (hash, entries, entry_count);
+	if (idx >= 0) {
+		return &entries[idx];
 	}
-#endif // ndef __MINGW32__ || (def __MINGW32__ && __GNUC__ >= 10)
 
 	return nullptr;
 }
@@ -347,44 +336,30 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
-	size_t len = name.length ();
-	bool have_dll_ext = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
-
-	if (have_dll_ext) {
-		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
-	}
-
-	hash_t name_hash = xxhash::hash (name.get (), len);
+	hash_t name_hash = xxhash::hash (name.get (), name.length ());
 	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: looking for bundled name: '%s' (hash 0x%zx)", name.get (), name_hash);
 
-	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, application_config.number_of_assemblies_in_apk);
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #0");
+	const AssemblyStoreIndexEntry *hash_entry = find_assembly_store_entry (name_hash, assembly_store_hashes, assembly_store.index_entry_count);
 	if (hash_entry == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Assembly '%s' (hash 0x%zx) not found", name.get (), name_hash);
 		return nullptr;
 	}
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #1");
+
 	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
-		log_fatal (LOG_ASSEMBLY, "Invalid assembly index %u, exceeds the maximum index of %u", hash_entry->descriptor_index, assembly_store.assembly_count - 1);
+		log_fatal (LOG_ASSEMBLY, "Invalid assembly descriptor index %u, exceeds the maximum value of %u", hash_entry->descriptor_index, assembly_store.assembly_count - 1);
 		Helpers::abort_application ();
 	}
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #2 (descriptor_index: %u)", hash_entry->descriptor_index);
-	AssemblyStoreEntryDescriptor *store_entry = &assembly_store.assemblies[hash_entry->descriptor_index];
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #3 (mapping_index: %u)", store_entry->mapping_index);
-	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry->mapping_index];
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #4");
+
+	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
+	AssemblyStoreSingleAssemblyRuntimeData &assembly_runtime_info = assembly_store_bundled_assemblies[store_entry.mapping_index];
+
 	if (assembly_runtime_info.image_data == nullptr) {
-		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #5");
 		// The assignments here don't need to be atomic, the value will always be the same, so even if two threads
 		// arrive here at the same time, nothing bad will happen.
-		assembly_runtime_info.image_data = assembly_store.data_start + store_entry->data_offset;
-		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #6");
-		assembly_runtime_info.descriptor = store_entry;
-		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #7");
-		if (store_entry->debug_data_offset != 0) {
-			log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #8");
-			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry->debug_data_offset;
-			log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #9");
+		assembly_runtime_info.image_data = assembly_store.data_start + store_entry.data_offset;
+		assembly_runtime_info.descriptor = &store_entry;
+		if (store_entry.debug_data_offset != 0) {
+			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
 		}
 #if !defined (NET)
 		if (bba->config_data_size != 0) {
@@ -397,7 +372,6 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 			);
 		}
 #endif // NET
-		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #10");
 		log_debug (
 			LOG_ASSEMBLY,
 			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%s'",
@@ -410,19 +384,10 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 			assembly_runtime_info.descriptor->config_data_size,
 			name.get ()
 		);
-		log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #11");
 	}
-	log_debug (LOG_ASSEMBLY, "assembly_store_open_from_bundles: #12");
 
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;
-
-	if (!have_dll_ext) {
-		// AOT needs this since Mono will form the DSO name by appending the .so suffix to the assembly name passed to
-		// functions below and `monodroid_dlopen` uses the `.dll.so` extension to check whether we're being asked to load
-		// the AOTd code for an assembly.
-		name.append (SharedConstants::DLL_EXTENSION);
-	}
 
 	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
 	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);

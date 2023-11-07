@@ -4,16 +4,22 @@ partial class AssemblyStoreGenerator
 {
 	sealed class AssemblyStoreHeader
 	{
-		public const uint NativeSize = 3 * sizeof (uint);
+		public const uint NativeSize = 5 * sizeof (uint);
 
 		public readonly uint magic = ASSEMBLY_STORE_MAGIC;
 		public readonly uint version;
-		public readonly uint entry_count = 0;
+		public readonly uint entry_count;
+		public readonly uint index_entry_count;
 
-		public AssemblyStoreHeader (uint version, uint entry_count)
+		// Index size in bytes
+		public readonly uint index_size;
+
+		public AssemblyStoreHeader (uint version, uint entry_count, uint index_entry_count, uint index_size)
 		{
 			this.version = version;
 			this.entry_count = entry_count;
+			this.index_entry_count = index_entry_count;
+			this.index_size = index_size;
 		}
 	}
 

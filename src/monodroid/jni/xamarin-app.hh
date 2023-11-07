@@ -150,6 +150,8 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 	uint32_t magic;
 	uint32_t version;
 	uint32_t entry_count;
+	uint32_t index_entry_count;
+	uint32_t index_size; // index size in bytes
 };
 
 struct [[gnu::packed]] AssemblyStoreIndexEntry final
@@ -176,6 +178,7 @@ struct AssemblyStoreRuntimeData final
 {
 	uint8_t             *data_start;
 	uint32_t             assembly_count;
+	uint32_t             index_entry_count;
 	AssemblyStoreEntryDescriptor *assemblies;
 };
 

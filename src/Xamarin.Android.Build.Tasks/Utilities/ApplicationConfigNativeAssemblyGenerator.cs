@@ -28,7 +28,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
@@ -48,7 +48,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public string HashedName;
 
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
 			public bool ignore;
 
@@ -92,9 +92,10 @@ namespace Xamarin.Android.Tasks
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
 		sealed class AssemblyStoreRuntimeData
 		{
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public byte data_start;
 			public uint assembly_count;
+			public uint index_entry_count;
 
 			[NativePointer (IsNull = true)]
 			public AssemblyStoreAssemblyDescriptor assemblies;
@@ -354,7 +355,14 @@ namespace Xamarin.Android.Tasks
 			{
 				nameMutations.Add (name);
 				if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
-					nameMutations.Add (Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!);
+					string nameNoExt = Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!;
+					nameMutations.Add (nameNoExt);
+
+					// This helps us at runtime, because sometimes MonoVM will ask for "AssemblyName" and sometimes for "AssemblyName.dll".
+					// In the former case, the runtime would ask for the "libaot-AssemblyName.so" image, which doesn't exist - we have
+					// "libaot-AssemblyName.dll.so" instead and, thus, we are forced to check for and append the missing ".dll" extension when
+					// loading the assembly, unnecessarily wasting time.
+					nameMutations.Add ($"{nameNoExt}.so");
 				} else {
 					nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
 				}

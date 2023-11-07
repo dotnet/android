@@ -97,6 +97,8 @@ namespace xamarin::android::internal {
 		static constexpr char  assemblies_prefix[] = "assemblies/";
 		static constexpr char  zip_path_separator[] = "/";
 
+		// We have two records for each assembly, for names with and without the extension
+		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
 		static constexpr uint32_t number_of_assembly_store_files = 1;
 		static constexpr char assembly_store_prefix[] = "lib/";
 		static constexpr auto assembly_store_file_name = concat_const (assembly_store_prefix, SharedConstants::android_lib_abi, "/assemblies.", SharedConstants::android_lib_abi, ".blob.so");
@@ -347,7 +349,7 @@ namespace xamarin::android::internal {
 		uint32_t               number_of_mapped_assembly_stores = 0;
 		bool                   need_to_scan_more_apks = true;
 
-		AssemblyStoreIndexEntry             *assembly_store_hashes;
+		AssemblyStoreIndexEntry *assembly_store_hashes;
 		std::mutex             assembly_decompress_mutex;
 	};
 }

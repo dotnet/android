@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tasks;
 //  [MAGIC]       uint; value: 0x41424158
 //  [FORMAT]      uint; store format version number
 //  [ENTRY_COUNT] uint; number of entries in the store
+//  [INDEX_ENTRY_COUNT] uint; number of entries in the index
+//  [INDEX_SIZE] uint; index size in bytes
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
 //  [NAME_HASH]        uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
@@ -126,11 +128,13 @@ partial class AssemblyStoreGenerator
 		fs.Seek (0, SeekOrigin.Begin);
 
 		uint storeVersion = is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_32BIT;
-		var header = new AssemblyStoreHeader (storeVersion, infoCount);
+		var header = new AssemblyStoreHeader (storeVersion, infoCount, (uint)index.Count, (uint)(index.Count * IndexEntrySize ()));
 		using var writer = new BinaryWriter (fs);
 		writer.Write (header.magic);
 		writer.Write (header.version);
 		writer.Write (header.entry_count);
+		writer.Write (header.index_entry_count);
+		writer.Write (header.index_size);
 
 		index.Sort ((AssemblyStoreIndexEntry a, AssemblyStoreIndexEntry b) => a.name_hash.CompareTo (b.name_hash));
 
