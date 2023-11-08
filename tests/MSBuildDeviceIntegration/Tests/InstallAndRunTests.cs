@@ -502,7 +502,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android")] string dotnetTargetFramework)
+		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android", "net9.0-android")] string dotnetTargetFramework)
 		{
 			// Build a NuGet Package
 			var nuget = new XamarinAndroidLibraryProject () {

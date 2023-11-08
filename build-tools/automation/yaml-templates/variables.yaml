@@ -40,9 +40,9 @@ variables:
 - name: TeamName
   value: XamarinAndroid
 - name: DotNetTargetFramework
-  value: net8.0
+  value: net9.0
 - name: DotNetStableTargetFramework
-  value: net7.0
+  value: net8.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
