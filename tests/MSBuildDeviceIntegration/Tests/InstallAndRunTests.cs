@@ -290,14 +290,13 @@ namespace Library1 {
 					},
 				},
 			};
-			if (Builder.UseDotNet) {
-				// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
-				// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
-				proj.PackageReferences.Add (new Package {
-					Id = "SQLitePCLRaw.provider.dynamic_cdecl",
-					Version = "2.0.3",
-				});
-			}
+
+			// NOTE: workaround for netcoreapp3.0 dependency being included along with monoandroid8.0
+			// See: https://www.nuget.org/packages/SQLitePCLRaw.bundle_green/2.0.3
+			proj.PackageReferences.Add (new Package {
+				Id = "SQLitePCLRaw.provider.dynamic_cdecl",
+				Version = "2.0.3",
+			});
 
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("</manifest>", "<uses-permission android:name=\"android.permission.INTERNET\" /></manifest>");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
@@ -349,9 +348,7 @@ namespace Library1 {
 			}
 
 			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization"));
-
-			if (Builder.UseDotNet)
-				proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
+			proj.References.Add (new BuildItem.Reference ("System.Runtime.Serialization.Json"));
 
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}",
 				@"TestJsonDeserializationCreatesJavaHandle();
@@ -443,13 +440,6 @@ using System.Runtime.Serialization.Json;
 			builder.BuildLogFile = "install.log";
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-			if (!Builder.UseDotNet) {
-				foreach (var abi in abis) {
-					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmono-native.so")), $"interpreter-{abi}/libmono-native.so should be used.");
-					Assert.IsTrue (builder.LastBuildOutput.ContainsText (Path.Combine ($"interpreter-{abi}", "libmonosgen-2.0.so")), $"interpreter-{abi}/libmonosgen-2.0.so should be used.");
-				}
-			}
-
 			RunAdbCommand ("shell setprop debug.mono.log all");
 			var logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
 			Assert.AreEqual (logProp, "all", "The debug.mono.log prop was not set correctly.");
@@ -465,7 +455,7 @@ using System.Runtime.Serialization.Json;
 				timeout: timeoutInSeconds);
 			var didStart = WaitForActivityToStart (proj.PackageName, "MainActivity",
 				Path.Combine (Root, builder.ProjectDirectory, "startup-logcat.log"), timeoutInSeconds);
-			RunAdbCommand ("shell setprop debug.mono.log \"''\"");
+			ClearShellProp ("debug.mono.log");
 			logProp = RunAdbCommand ("shell getprop debug.mono.log")?.Trim ();
 			Assert.AreEqual (logProp, string.Empty, "The debug.mono.log prop was not unset correctly.");
 			Assert.IsTrue (didPrintInterpMessage, "logcat output did not contain 'Enabling Mono Interpreter'.");
@@ -480,9 +470,6 @@ using System.Runtime.Serialization.Json;
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 			proj.SetProperty ("EnableLLVM", true.ToString ());
-			if (!Builder.UseDotNet) {
-				proj.AotAssemblies = true;
-			}
 
 			builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -517,10 +504,6 @@ using System.Runtime.Serialization.Json;
 		[Test]
 		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android")] string dotnetTargetFramework)
 		{
-			if (!Builder.UseDotNet) {
-				Assert.Ignore ("Skipping. Test not relevant under Classic.");
-			}
-
 			// Build a NuGet Package
 			var nuget = new XamarinAndroidLibraryProject () {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
@@ -837,10 +820,8 @@ namespace UnnamedProject
 
 
 		[Test]
-		public void CheckResouceIsOverridden ([Values (true, false)] bool useAapt2)
+		public void CheckResouceIsOverridden ()
 		{
-			AssertAaptSupported (useAapt2);
-
 			var library = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
 				AndroidResources = {
@@ -870,16 +851,12 @@ namespace UnnamedProject
 					new BuildItem.ProjectReference ("..\\Library2\\Library2.csproj"),
 				},
 			};
-			library.AndroidUseAapt2 =
-				library2.AndroidUseAapt2 =
-				app.AndroidUseAapt2 = useAapt2;
 			app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
 			using (var l1 = CreateDllBuilder (Path.Combine ("temp", TestName, library.ProjectName)))
 			using (var l2 = CreateDllBuilder (Path.Combine ("temp", TestName, library2.ProjectName)))
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				b.ThrowOnBuildFailure = false;
-				string apiLevel;
-				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				b.LatestTargetFrameworkVersion (out string apiLevel);
 				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">
@@ -914,9 +891,8 @@ namespace UnnamedProject
 				};
 
 				library2.References.Add (new BuildItem.ProjectReference ("..\\Library1\\Library1.csproj"));
-				app.AndroidUseAapt2 = useAapt2;
 				app.LayoutMain = app.LayoutMain.Replace ("@string/hello", "@string/hello_me");
-				app.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				b.LatestTargetFrameworkVersion (out apiLevel);
 				app.SupportedOSPlatformVersion  = "24";
 				app.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{app.PackageName}"">

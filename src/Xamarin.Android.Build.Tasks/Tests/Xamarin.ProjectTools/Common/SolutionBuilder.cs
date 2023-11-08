@@ -24,8 +24,6 @@ namespace Xamarin.ProjectTools
 			foreach (var p in Projects) {
 				using (var pb = new ProjectBuilder (Path.Combine (SolutionPath, p.ProjectName))) {
 					pb.Save (p);
-					if (AutomaticNuGetRestore)
-						p.NuGetRestore (Path.Combine (SolutionPath, p.ProjectName), Path.Combine (SolutionPath, "packages"));
 				}
 			}
 			// write a sln.

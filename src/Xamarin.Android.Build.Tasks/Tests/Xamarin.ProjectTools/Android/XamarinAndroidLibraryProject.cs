@@ -14,14 +14,8 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidLibraryProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			if (Builder.UseDotNet) {
-				SetProperty (KnownProperties.Nullable, "enable");
-				SetProperty (KnownProperties.ImplicitUsings, "enable");
-			} else {
-				SetProperty ("AndroidApplication", "False");
-				SetProperty ("AndroidResgenFile", Path.Combine ("Resources", "Resource.designer.cs"));
-			}
-
+			SetProperty (KnownProperties.Nullable, "enable");
+			SetProperty (KnownProperties.ImplicitUsings, "enable");
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\Strings.xml") { TextContent = () => StringsXml.Replace ("${PROJECT_NAME}", ProjectName) });
 			StringsXml = default_strings_xml;
 		}

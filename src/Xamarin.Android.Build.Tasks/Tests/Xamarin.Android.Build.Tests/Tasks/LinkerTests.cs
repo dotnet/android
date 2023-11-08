@@ -174,15 +174,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void PreserveCustomHttpClientHandlers ()
 		{
-			if (Builder.UseDotNet) {
-				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
-					"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
-				PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
-					"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
-			} else {
-				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
-					"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
-			}
+			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
+				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
+			PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
+				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
 		}
 
 		[Test]
@@ -216,8 +211,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
 			// NOTE: in .NET 6, we only emit IL6200 for Release builds
-			if (!Builder.UseDotNet || isRelease) {
-				string code = Builder.UseDotNet ? "IL6200" : "XA2000";
+			if (isRelease) {
+				string code = "IL6200";
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"warning {code}: Use of AppDomain.CreateDomain()"), $"Should warn {code} about creating AppDomain.");
 			}
@@ -260,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
 		{
-			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
+			string assembly_name = "System.Console";
 			string linker_xml = "<linker/>";
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -428,7 +423,7 @@ namespace UnnamedProject {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
 				var assemblyFile = "UnnamedProject.dll";
-				var assemblyPath = (Builder.UseDotNet && (!isRelease || setLinkModeNone)) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
+				var assemblyPath = (!isRelease || setLinkModeNone) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
@@ -461,9 +456,6 @@ namespace UnnamedProject {
 		[Test]
 		public void TypeRegistrationsFallback ([Values (true, false)] bool enabled)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET 6");
-
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			if (enabled)
 				proj.SetProperty (proj.ActiveConfigurationProperties, "VSAndroidDesigner", "true");
@@ -484,9 +476,6 @@ namespace UnnamedProject {
 		[Test]
 		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET");
-
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
@@ -519,9 +508,6 @@ namespace UnnamedProject {
 		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET");
-
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
 			lib.SetProperty ("IsTrimmable", "true");
