@@ -398,7 +398,8 @@ int xml myxml 0x7f140000
 			};
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			task.IsApplication = true;
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			return task;
 		}
 
@@ -496,7 +497,8 @@ int xml myxml 0x7f140000
 			task.CaseMapFile = Path.Combine (Root, path, "case_map.txt");
 			File.WriteAllText (task.ResourceFlagFile, string.Empty);
 			task.IsApplication = true;
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileExpected.cs");
@@ -811,7 +813,8 @@ int styleable ElevenAttributes_attr10 10";
 			task.ResourceDirectory = Path.Combine (Root, path, "res");
 			task.Resources = new TaskItem [] {};
 			task.IsApplication = true;
-			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", "android-27", "android.jar");
+			int platform = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			task.JavaPlatformJarPath = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{platform}", "android.jar");
 			Assert.IsTrue (task.Execute (), "Task should have executed successfully.");
 			Assert.IsTrue (File.Exists (task.NetResgenOutputFile), $"{task.NetResgenOutputFile} should have been created.");
 			var expected = Path.Combine (ExpectedOutputDir, "GenerateDesignerFileWithElevenStyleableAttributesExpected.cs");
