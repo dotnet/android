@@ -91,7 +91,7 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "MyApp",
 			};
 			if (!TestEnvironment.CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis (DeviceAbi);
+				app.SetAndroidSupportedAbis (DeviceAbi);
 			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
