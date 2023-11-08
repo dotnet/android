@@ -25,8 +25,7 @@ namespace Xamarin.ProjectTools
 
 		static XamarinAndroidApplicationProject ()
 		{
-			var folder = Builder.UseDotNet ? "DotNet" : "Base";
-			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.{folder}.MainActivity.cs")))
+			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.DotNet.MainActivity.cs")))
 				default_main_activity_cs = sr.ReadToEnd ();
 			using (var sr = new StreamReader (typeof(XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.MainActivity.fs")))
 				default_main_activity_fs = sr.ReadToEnd ();
@@ -40,39 +39,24 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
-			if (Builder.UseDotNet) {
-				SetProperty (KnownProperties.OutputType, "Exe");
-				SetProperty (KnownProperties.Nullable, "enable");
-				SetProperty (KnownProperties.ImplicitUsings, "enable");
-				SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
-				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
-				SupportedOSPlatformVersion = "21.0";
+			SetProperty (KnownProperties.OutputType, "Exe");
+			SetProperty (KnownProperties.Nullable, "enable");
+			SetProperty (KnownProperties.ImplicitUsings, "enable");
+			SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
+			SetProperty ("_FastDeploymentDiagnosticLogging", "True");
+			SupportedOSPlatformVersion = "21.0";
 
-				// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
-				Imports.Add (new Import (() => "Directory.Build.targets") {
-					TextContent = () =>
-						@"<Project>
-							<PropertyGroup>
-								<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
-							</PropertyGroup>
-						</Project>"
-				});
-			} else {
-				SetProperty ("_FastDeploymentDiagnosticLogging", "True");
-				SetProperty ("AndroidApplication", "True");
-				SetProperty ("AndroidResgenClass", "Resource");
-				SetProperty ("AndroidResgenFile", () => "Resources\\Resource.designer" + Language.DefaultDesignerExtension);
-				SetProperty ("AndroidManifest", "Properties\\AndroidManifest.xml");
-				SetProperty (DebugProperties, "AndroidLinkMode", "None");
-				SetProperty (ReleaseProperties, "AndroidLinkMode", "SdkOnly");
-				SetProperty (DebugProperties, KnownProperties.EmbedAssembliesIntoApk, "False", "'$(EmbedAssembliesIntoApk)' == ''");
-				SetProperty (ReleaseProperties, KnownProperties.EmbedAssembliesIntoApk, "True", "'$(EmbedAssembliesIntoApk)' == ''");
-				MinSdkVersion = "19";
-			}
+			// Workaround for AndroidX, see: https://github.com/xamarin/AndroidSupportComponents/pull/239
+			Imports.Add (new Import (() => "Directory.Build.targets") {
+				TextContent = () =>
+					@"<Project>
+						<PropertyGroup>
+							<VectorDrawableCheckBuildToolsVersionTaskBeforeTargets />
+						</PropertyGroup>
+					</Project>"
+			});
+
 			AndroidManifest = default_android_manifest;
-			if (!Builder.UseDotNet) {
-				TargetSdkVersion = AndroidSdkResolver.GetMaxInstalledPlatform ().ToString ();
-			}
 			LayoutMain = default_layout_main;
 			StringsXml = default_strings_xml;
 			PackageName = $"com.xamarin.{(packageName ?? ProjectName).ToLower ()}";
@@ -110,11 +94,9 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.SupportedOSPlatformVersion, value); }
 		}
 
-		string AotAssembliesPropertyName => Builder.UseDotNet ? KnownProperties.RunAOTCompilation : KnownProperties.AotAssemblies;
-
 		public bool AotAssemblies {
-			get { return string.Equals (GetProperty (AotAssembliesPropertyName), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (AotAssembliesPropertyName, value.ToString ()); }
+			get { return string.Equals (GetProperty (KnownProperties.RunAOTCompilation), "True", StringComparison.OrdinalIgnoreCase); }
+			set { SetProperty (KnownProperties.RunAOTCompilation, value.ToString ()); }
 		}
 
 		public bool AndroidEnableProfiledAot {

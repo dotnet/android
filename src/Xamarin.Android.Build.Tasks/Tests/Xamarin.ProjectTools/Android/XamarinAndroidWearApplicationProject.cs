@@ -28,8 +28,6 @@ namespace Xamarin.ProjectTools
 		public XamarinAndroidWearApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
 			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
-			TargetFrameworkVersion = Versions.KitkatWatch;
-			UseLatestPlatformSdk = true;
 			PackageReferences.Add (KnownPackages.AndroidWear_2_2_0);
 
 			MainActivity = default_main_activity;

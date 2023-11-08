@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Xamarin.ProjectTools
@@ -7,26 +8,20 @@ namespace Xamarin.ProjectTools
 		/// <summary>
 		/// Sets $(AndroidSupportedAbis) or $(RuntimeIdentifiers) depending if running under dotnet
 		/// </summary>
+		[Obsolete ("SetAndroidSupportedAbis is deprecated, please use SetRuntimeIdentifiers instead.")]
 		public static void SetAndroidSupportedAbis (this IShortFormProject project, params string [] abis)
 		{
-			if (Builder.UseDotNet) {
-				project.SetRuntimeIdentifiers (abis);
-			} else {
-				project.SetAndroidSupportedAbis (string.Join (";", abis));
-			}
+			project.SetRuntimeIdentifiers (abis);
 		}
 
 		/// <summary>
 		/// Sets $(AndroidSupportedAbis) or $(RuntimeIdentifiers) depending if running under dotnet
 		/// </summary>
-		/// <param name="abis">A semi-colon-delimited list of ABIs</param>
+		/// <param name="abis">A semi-colon-delimited list of ABIs</param> 
+		[Obsolete ("SetAndroidSupportedAbis is deprecated, please use SetRuntimeIdentifiers instead.")]
 		public static void SetAndroidSupportedAbis (this IShortFormProject project, string abis)
 		{
-			if (Builder.UseDotNet) {
-				project.SetRuntimeIdentifiers (abis.Split (';'));
-			} else {
-				project.SetProperty (KnownProperties.AndroidSupportedAbis, abis);
-			}
+			project.SetRuntimeIdentifiers (abis.Split (';'));
 		}
 
 		public static void SetRuntimeIdentifier (this IShortFormProject project, string androidAbi)

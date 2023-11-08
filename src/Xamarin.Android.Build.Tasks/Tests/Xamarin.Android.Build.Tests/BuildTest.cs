@@ -196,11 +196,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (MonoComponentMaskChecks))]
 		public void CheckMonoComponentsMask (bool enableProfiler, bool useInterpreter, bool debugBuild, uint expectedMask)
 		{
-			if (!Builder.UseDotNet) {
-				Assert.Ignore ("Valid only for NET6+ builds");
-				return;
-			}
-
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = !debugBuild,
 			};
@@ -308,7 +303,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
-			return Builder.UseDotNet && isRelease ?
+			return isRelease ?
 				builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", filename)) :
 				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
 		}
@@ -338,19 +333,6 @@ namespace Xamarin.Android.Build.Tests
 					var inApk = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/{runtime.Name}");
 					var inApkRuntime = runtimeInfo.FirstOrDefault (x => x.Abi == supportedAbi && x.Size == inApk.Length);
 					Assert.IsNotNull (inApkRuntime, "Could not find the actual runtime used.");
-					// TODO: file sizes will not match for .NET 5
-					// TODO: libmono-profiler-log.so is not available in .NET 5 yet
-					if (!Builder.UseDotNet) {
-						Assert.AreEqual (runtime.Size, inApkRuntime.Size, "expected {0} got {1}", expectedRuntime, inApkRuntime.Runtime);
-						inApk = ZipHelper.ReadFileFromZip (apk, $"lib/{supportedAbi}/libmono-profiler-log.so");
-						if (string.Compare (expectedRuntime, "debug", StringComparison.OrdinalIgnoreCase) == 0) {
-							if (inApk == null)
-								Assert.Fail ("libmono-profiler-log.so should exist in the apk.");
-						} else {
-							if (inApk != null)
-								Assert.Fail ("libmono-profiler-log.so should not exist in the apk.");
-						}
-					}
 				}
 			}
 		}
@@ -396,9 +378,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void CheckLogicalNamePathSeperators ([Values (false, true)] bool isRelease, [Values (false, true)] bool useDesignerAssembly)
 		{
-			if (useDesignerAssembly && !Builder.UseDotNet) {
-				Assert.Ignore ($"Skipping, {useDesignerAssembly} not supported in Legacy.");
-			}
 			var illegalSeperator = IsWindows ? "/" : @"\";
 			var dll = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -487,9 +466,8 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AarContentExtraction ([Values (false, true)] bool useAapt2)
+		public void AarContentExtraction ()
 		{
-			AssertAaptSupported (useAapt2);
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
 				// https://mvnrepository.com/artifact/com.soundcloud.android/android-crop/1.0.1
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
@@ -502,7 +480,6 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 			};
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
 				var cache = builder.Output.GetIntermediaryPath ("libraryprojectimports.cache");
@@ -807,12 +784,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", new ApiInfo [] { new ApiInfo { Id = "30" } });
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				UseLatestPlatformSdk = false,
 			};
 
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
-				if (!Builder.UseDotNet)
-					proj.TargetFrameworkVersion = builder.LatestTargetFrameworkVersion ();
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsTrue (builder.DesignTimeBuild (proj), "DesignTime build should succeed.");
 				Assert.IsFalse (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should not have been raised.");
@@ -1106,9 +1080,8 @@ class MonoPackageManager_Resources { }");
 public class ApplicationRegistration { }");
 				var oldMonoPackageManagerClass = Path.Combine (intermediate, "android", "bin", "classes" , "mono", "MonoPackageManager.class");
 				File.WriteAllText (oldMonoPackageManagerClass, "");
-				// Change $(XamarinAndroidVersion) to trigger _CleanIntermediateIfNeeded
-				var property = Builder.UseDotNet ? "AndroidNETSdkVersion" : "XamarinAndroidVersion";
-				Assert.IsTrue (b.Build (proj, parameters: new [] { $"{property}=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
+				// Change $(AndroidNETSdkVersion) to trigger _CleanIntermediateIfNeeded
+				Assert.IsTrue (b.Build (proj, parameters: new [] { "AndroidNETSdkVersion=99.99" }, doNotCleanupOnUpdate: true), "Build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped.");
 				}
@@ -1186,8 +1159,7 @@ public class MyWorker : Worker
 }
 "
 			});
-			proj.PackageReferences.Add (
-				Builder.UseDotNet ? KnownPackages.AndroidXWorkRuntime : KnownPackages.Android_Arch_Work_Runtime);
+			proj.PackageReferences.Add (KnownPackages.AndroidXWorkRuntime);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
@@ -1275,10 +1247,8 @@ namespace UnnamedProject
 				var values = new List<string> {
 					$"__XA_PACKAGE_NAMING_POLICY__={packageNamingPolicy}"
 				};
-				if (Builder.UseDotNet) {
-					values.Add ("mono.enable_assembly_preload=0");
-					values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
-				}
+				values.Add ("mono.enable_assembly_preload=0");
+				values.Add ("DOTNET_MODIFIABLE_ASSEMBLIES=Debug");
 				Assert.AreEqual (string.Join (Environment.NewLine, values), File.ReadAllText (environment).Trim ());
 			}
 		}
@@ -1341,16 +1311,13 @@ namespace UnnamedProject
 					new BuildItem.Reference (reference)
 				},
 			};
-			bool shouldSucceed = !Builder.UseDotNet;
-			string expectedText = shouldSucceed ? "succeeded" : "FAILED";
-			string warnOrError = shouldSucceed ? "warning" : "error";
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
-				Assert.AreEqual (shouldSucceed, builder.Build (proj), $"Build should have {expectedText}.");
+				Assert.IsFalse (builder.Build (proj), $"Build should have failed.");
 				string error = builder.LastBuildOutput
-						.SkipWhile (x => !x.StartsWith ($"Build {expectedText}.", StringComparison.Ordinal))
-						.FirstOrDefault (x => x.Contains ($"{warnOrError} XA4313"));
-				Assert.IsNotNull (error, $"Build should have {expectedText} with XA4313 {warnOrError}.");
+						.SkipWhile (x => !x.StartsWith ($"Build FAILED.", StringComparison.Ordinal))
+						.FirstOrDefault (x => x.Contains ("error XA4313"));
+				Assert.IsNotNull (error, $"Build should have failed with XA4313.");
 			}
 		}
 
@@ -1473,7 +1440,6 @@ namespace UnnamedProject
 					KnownPackages.SupportConstraintLayout_1_0_2_2,
 				},
 			};
-			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);
 			proj.SetProperty ("AndroidLintEnabledIssues", "");
@@ -1504,8 +1470,7 @@ namespace UnnamedProject
 			});
 			using (var b = CreateApkBuilder ("temp/CheckLintErrorsAndWarnings", cleanupOnDispose: false)) {
 				int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
-				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				b.LatestTargetFrameworkVersion (out string apiLevel);
 				if (int.TryParse (apiLevel, out int a) && a < maxApiLevel)
 					disabledIssues += ",OldTargetApi";
 				proj.SetProperty ("AndroidLintDisabledIssues", disabledIssues);

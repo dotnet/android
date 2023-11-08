@@ -385,14 +385,6 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
-			if (!Builder.UseDotNet) {
-				//NOTE: Mono.Data.Sqlite and Mono.Posix do not exist in .NET 5+
-				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite"));
-				proj.References.Add (new BuildItem.Reference ("Mono.Posix"));
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("int count = 1;", @"int count = 1;
-Mono.Data.Sqlite.SqliteConnection connection = null;
-Mono.Unix.UnixFileInfo fileInfo = null;");
-			}
 			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				Assert.IsTrue (b1.Build (dll2), "Build should have succeeded.");
@@ -416,25 +408,10 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 							Assert.IsNotNull (data, "libtest1.so for armeabi-v7a should exist in the apk.");
 							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libRSSupport.so");
 							Assert.IsNotNull (data, "libRSSupport.so for armeabi-v7a should exist in the apk.");
-							if (Builder.UseDotNet) {
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libSystem.Native.so");
-								Assert.IsNotNull (data, "libSystem.Native.so for x86 should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libSystem.Native.so");
-								Assert.IsNotNull (data, "libSystem.Native.so for armeabi-v7a should exist in the apk.");
-							} else {
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libmono-native.so");
-								Assert.IsNotNull (data, "libmono-native.so for x86 should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libmono-native.so");
-								Assert.IsNotNull (data, "libmono-native.so for armeabi-v7a should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libMonoPosixHelper.so");
-								Assert.IsNotNull (data, "libMonoPosixHelper.so for x86 should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libMonoPosixHelper.so");
-								Assert.IsNotNull (data, "libMonoPosixHelper.so for armeabi-v7a should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libsqlite3_xamarin.so");
-								Assert.IsNotNull (data, "libsqlite3_xamarin.so for x86 should exist in the apk.");
-								data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libsqlite3_xamarin.so");
-								Assert.IsNotNull (data, "libsqlite3_xamarin.so for armeabi-v7a should exist in the apk.");
-							}
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/x86/libSystem.Native.so");
+							Assert.IsNotNull (data, "libSystem.Native.so for x86 should exist in the apk.");
+							data = ZipHelper.ReadFileFromZip (zipFile, "lib/armeabi-v7a/libSystem.Native.so");
+							Assert.IsNotNull (data, "libSystem.Native.so for armeabi-v7a should exist in the apk.");
 						}
 					}
 				}
@@ -618,40 +595,8 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 		}
 
 		[Test]
-		public void LibraryReferenceWithHigherTFVShouldDisplayWarning ([Values (true, false)] bool isRelease)
+		public void AllResourcesInClassLibrary ([Values (false, true)] bool useDesignerAssembly)
 		{
-
-			if (!TestEnvironment.CommercialBuildAvailable || Builder.UseDotNet)
-				Assert.Ignore ("Not applicable to One .NET or single framework OSS builds.");
-
-			var libproj = new XamarinAndroidLibraryProject () {
-				IsRelease = isRelease,
-				ProjectName = "Library1",
-			};
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-				ProjectName = "App1",
-				UseLatestPlatformSdk = false,
-				TargetFrameworkVersion = "v9.0",
-				References = {
-					new BuildItem ("ProjectReference", $"..\\{libproj.ProjectName}\\{Path.GetFileName (libproj.ProjectFilePath)}")
-				},
-			};
-			using (var libBuilder = CreateDllBuilder (Path.Combine ("temp", TestName, libproj.ProjectName)))
-			using (var appBuilder = CreateApkBuilder (Path.Combine ("temp", TestName, proj.ProjectName))) {
-				Assert.IsTrue (libBuilder.Build (libproj), "Library build should have succeeded.");
-				Assert.IsTrue (appBuilder.Build (proj), "App build should have succeeded.");
-				StringAssertEx.Contains ("warning XA0105", appBuilder.LastBuildOutput, "Build should have produced warning XA0105.");
-			}
-		}
-
-		[Test]
-		public void AllResourcesInClassLibrary ([Values (true, false)] bool useAapt2, [Values (false, true)] bool useDesignerAssembly)
-		{
-			if (useDesignerAssembly && !Builder.UseDotNet) {
-				Assert.Ignore ($"Skipping, {useDesignerAssembly} not supported in Legacy.");
-			}
-			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 
 			// Create a "library" with all the application stuff in it
@@ -665,10 +610,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			};
 			lib.SetProperty ("AndroidApplication", "False");
 			lib.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
-			lib.AndroidUseAapt2 = useAapt2;
-			if (Builder.UseDotNet) {
-				lib.RemoveProperty ("OutputType");
-			}
+			lib.RemoveProperty ("OutputType");
 			lib.AndroidManifest = lib.AndroidManifest.
 				Replace ("application android:label=\"${PROJECT_NAME}\"", "application android:label=\"com.test.foo\" ");
 
@@ -688,14 +630,7 @@ Mono.Unix.UnixFileInfo fileInfo = null;");
 			};
 			app.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			app.AndroidResources.Clear (); // No Resources
-			if (Builder.UseDotNet) {
-				app.SetProperty (KnownProperties.OutputType, "Exe");
-			} else {
-				app.SetProperty ("AndroidResgenFile", "Resources\\Resource.designer.cs");
-				app.SetProperty ("AndroidApplication", "True");
-			}
-			app.AndroidUseAapt2 = useAapt2;
-
+			app.SetProperty (KnownProperties.OutputType, "Exe");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))

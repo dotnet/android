@@ -54,16 +54,15 @@ namespace Xamarin.Android.Build.Tests
 
 		void AssertProfiledAotBuildMessages(ProjectBuilder b)
 		{
-			string filename = Builder.UseDotNet ? "dotnet" : "startup";
-			StringAssertEx.ContainsRegex (@$"Using profile data file.*{filename}\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
+			StringAssertEx.ContainsRegex (@$"Using profile data file.*dotnet\.aotprofile", b.LastBuildOutput, "Should use default AOT profile", RegexOptions.IgnoreCase);
 			StringAssertEx.ContainsRegex (@$"Method.*emitted at", b.LastBuildOutput, "Should contain verbose AOT compiler output", RegexOptions.IgnoreCase);
 		}
 
 		[Test, Category ("ProfiledAOT")]
 		public void BuildBasicApplicationReleaseProfiledAot ([Values (true, false)] bool enableLLVM)
 		{
-			if (Builder.UseDotNet && enableLLVM) {
-				Assert.Ignore("https://github.com/dotnet/runtime/pull/71411");
+			if (TestEnvironment.IsWindows && enableLLVM) {
+				Assert.Ignore("https://github.com/dotnet/runtime/issues/93788");
 			}
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -108,8 +107,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
 			using var b = CreateApkBuilder ();
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			string filename = Builder.UseDotNet ? "dotnet" : "startup";
-			StringAssertEx.DoesNotContainRegex (@$"Using profile data file.*{filename}\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
+			StringAssertEx.DoesNotContainRegex (@$"Using profile data file.*dotnet\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
 		}
 
 		[Test]
@@ -199,31 +197,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (path)) {
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				//NOTE: Windows has shortened paths such as: C:\Users\myuser\ANDROI~3\ndk\PLATFO~1\AN3971~1\arch-x86\usr\lib\libc.so
-				if (checkMinLlvmPath && !IsWindows && !Builder.UseDotNet) {
-					Xamarin.Android.Tasks.NdkTools ndk = Xamarin.Android.Tasks.NdkTools.Create (AndroidNdkPath);
-					bool ndk22OrNewer = ndk.Version.Main.Major >= 22;
-
-					// LLVM passes a direct path to libc.so, and we need to use the libc.so
-					// which corresponds to the *minimum* SDK version specified in AndroidManifest.xml
-					// Since we overrode minSdkVersion=16, that means we should use libc.so from android-16.
-					if (ndk22OrNewer) {
-						// NDK r22 or newer store libc in [toolchain]/sysroot/usr/lib/[ARCH]/[API]/libc.so
-						StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*sysroot.*.usr.lib.*19.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
-					} else {
-						StringAssertEx.ContainsRegex (@"\s*\[aot-compiler stdout].*android-19.arch-.*.usr.lib.libc\.so", b.LastBuildOutput, "AOT+LLVM should use libc.so from minSdkVersion!");
-					}
-				}
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-					if (!Builder.UseDotNet) {
-						var libapp = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
-							"bundles", abi, "libmonodroid_bundle_app.so");
-						Assert.IsTrue (File.Exists (libapp), abi + " libmonodroid_bundle_app.so does not exist");
-					}
-					var aotNativeLibrary = Builder.UseDotNet ?
-						Path.Combine (intermediate, AbiUtils.AbiToRuntimeIdentifier (abi), "aot", "UnnamedProject.dll.so") :
-						Path.Combine (intermediate, "aot", abi, "libaot-UnnamedProject.dll.so");
+					var aotNativeLibrary = Path.Combine (intermediate, AbiUtils.AbiToRuntimeIdentifier (abi), "aot", "UnnamedProject.dll.so");
 					FileAssert.Exists (aotNativeLibrary);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
@@ -268,9 +244,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				foreach (var abi in supportedAbis.Split (new char [] { ';' })) {
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-					var aotNativeLibrary = Builder.UseDotNet ?
-						Path.Combine (intermediate, AbiUtils.AbiToRuntimeIdentifier (abi), "aot", "UnnamedProject.dll.so") :
-						Path.Combine (intermediate, "aot", abi, "libaot-UnnamedProject.dll.so");
+					var aotNativeLibrary = Path.Combine (intermediate, AbiUtils.AbiToRuntimeIdentifier (abi), "aot", "UnnamedProject.dll.so");
 					FileAssert.Exists (aotNativeLibrary);
 					var apk = Path.Combine (Root, b.ProjectDirectory,
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
@@ -304,19 +278,10 @@ namespace Xamarin.Android.Build.Tests
 				SolutionPath = Path.Combine (Root, testPath),
 			};
 			var app1 = new XamarinFormsMapsApplicationProject {
-				TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
 				ProjectName = "App1",
 				AotAssemblies = true,
 				IsRelease = true,
 			};
-			if (Builder.UseDotNet) {
-				//TODO Re-enable if this test fails.
-				// app1.PackageReferences.Clear ();
-				// app1.PackageReferences.Add (KnownPackages.XamarinForms_5_0_0_2515);
-				// app1.PackageReferences.Add (KnownPackages.XamarinFormsMaps_5_0_0_2515);
-				// app1.PackageReferences.Add (KnownPackages.Xamarin_Build_Download_0_11_3);
-
-			}
 			//NOTE: BuildingInsideVisualStudio prevents the projects from being built as dependencies
 			sb.BuildingInsideVisualStudio = false;
 			app1.Imports.Add (new Import ("foo.targets") {
@@ -348,7 +313,6 @@ namespace Xamarin.Android.Build.Tests
 			for (int i = 0; i < 128; i++) {
 				var libName = $"Lib{i}";
 				var lib = new XamarinAndroidLibraryProject () {
-					TargetFrameworkVersion = sb.LatestTargetFrameworkVersion (),
 					ProjectName = libName,
 					IsRelease = true,
 					OtherBuildItems = {
@@ -482,13 +446,8 @@ namespace "+ libName + @" {
 			proj.SetAndroidSupportedAbis (abis);
 
 			var libPaths = new List<string> ();
-			if (Builder.UseDotNet) {
-				libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
-				libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
-			} else {
-				libPaths.Add (Path.Combine ("aot", "arm64-v8a", "libaot-Mono.Android.dll.so"));
-				libPaths.Add (Path.Combine ("aot", "x86_64", "libaot-Mono.Android.dll.so"));
-			}
+			libPaths.Add (Path.Combine ("android-arm64", "aot", "Mono.Android.dll.so"));
+			libPaths.Add (Path.Combine ("android-x64", "aot", "Mono.Android.dll.so"));
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

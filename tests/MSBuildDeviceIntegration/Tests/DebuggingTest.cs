@@ -62,7 +62,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 			}
 			proj.SetDefaultTargetDevice ();
-			if (Builder.UseDotNet && isRelease) {
+			if (isRelease) {
 				// bundle tool does NOT support embeddedDex files it seems.
 				useEmbeddedDex = false;
 			}
