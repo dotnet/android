@@ -13,45 +13,12 @@ namespace Xamarin.ProjectTools
 			: base (debugConfigurationName, releaseConfigurationName)
 		{
 			Language = XamarinAndroidProjectLanguage.CSharp;
-
-			if (!Builder.UseDotNet) {
-				TargetFrameworkVersion = Versions.Android11;
-				UseLatestPlatformSdk = true;
-				AddReferences ("System.Core", "System.Xml", "Mono.Android");
-				ProjectGuid = Guid.NewGuid ().ToString ();
-				SetProperty ("ProjectTypeGuids", () => "{" + Language.ProjectTypeGuid + "};{" + ProjectTypeGuid + "}");
-				SetProperty ("ProjectGuid", () => "{" + ProjectGuid + "}");
-				SetProperty ("MonoAndroidAssetsPrefix", "Assets");
-				SetProperty ("MonoAndroidResourcePrefix", "Resources");
-				SetProperty (KnownProperties.AndroidUseLatestPlatformSdk, () => UseLatestPlatformSdk ? "True" : "False");
-				SetProperty (KnownProperties.TargetFrameworkVersion, () => TargetFrameworkVersion);
-			}
-
 			SetProperty (KnownProperties.OutputType, "Library");
 		}
 
 
 		public XamarinAndroidProjectLanguage XamarinAndroidLanguage {
 			get { return (XamarinAndroidProjectLanguage) Language; }
-		}
-
-		public bool UseLatestPlatformSdk { get; set; }
-
-		public string TargetFrameworkVersion { get; set; }
-
-		/// <summary>
-		/// TargetFrameworkVersion=v8.1 -> 81
-		/// </summary>
-		public string TargetFrameworkAbbreviated => TargetFrameworkVersion?.TrimStart ('v').Replace (".", "");
-
-		/// <summary>
-		/// TargetFrameworkVersion=v8.1 -> MonoAndroid81
-		/// </summary>
-		public string TargetFrameworkMoniker => "MonoAndroid" + TargetFrameworkAbbreviated;
-
-		public bool AndroidUseAapt2 {
-			get { return string.Equals (GetProperty (KnownProperties.AndroidUseAapt2), "True", StringComparison.OrdinalIgnoreCase); }
-			set { SetProperty (KnownProperties.AndroidUseAapt2, value.ToString ()); }
 		}
 	}
 }

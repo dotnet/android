@@ -42,9 +42,5 @@ namespace Xamarin.ProjectTools
 		{
 			return XmlUtils.ToXml (this);
 		}
-
-		public override void NuGetRestore (string directory, string packagesDirectory = null)
-		{
-		}
 	}
 }

@@ -9,6 +9,11 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice"), Category ("AOT"), Category ("ProfiledAOT")]
 	public class AotProfileTests : DeviceTest
 	{
+		[TearDown]
+		protected void ClearProp ()
+		{
+			ClearShellProp ("debug.mono.profile");
+		}
 
 		readonly string PermissionManifest = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""{0}"">
@@ -19,6 +24,7 @@ namespace Xamarin.Android.Build.Tests
 </manifest>";
 
 		[Test]
+		[NonParallelizable]
 		public void BuildBasicApplicationAndAotProfileIt ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -26,12 +32,10 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = false,
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
-			
-			if (Builder.UseDotNet) {
-				// TODO: only needed in .NET 6+
-				// See https://github.com/dotnet/runtime/issues/56989
-				proj.PackageReferences.Add (KnownPackages.Mono_AotProfiler_Android);
-			}
+
+			// TODO: only needed in .NET 6+
+			// See https://github.com/dotnet/runtime/issues/56989
+			proj.PackageReferences.Add (KnownPackages.Mono_AotProfiler_Android);
 
 			var port = 9000 + new Random ().Next (1000);
 			proj.SetProperty ("AndroidAotProfilerPort", port.ToString ());
@@ -44,7 +48,7 @@ namespace Xamarin.Android.Build.Tests
 				b.BuildLogFile = "build2.log";
 
 				// Need execute permission
-				if (Builder.UseDotNet && !IsWindows) {
+				if (!IsWindows) {
 					var aprofutil = Path.Combine (Root, b.ProjectDirectory, "aprofutil");
 					RunProcess ("chmod", $"u+x {aprofutil}");
 				}

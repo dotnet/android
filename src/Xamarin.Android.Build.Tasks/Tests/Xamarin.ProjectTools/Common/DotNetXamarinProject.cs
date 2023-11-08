@@ -25,29 +25,9 @@ namespace Xamarin.ProjectTools
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
-			if (Builder.UseDotNet) {
-				TargetFramework = "net8.0-android";
-				EnableDefaultItems = false;
-				AppendTargetFrameworkToOutputPath = false;
-			} else {
-				AddReferences ("System"); // default
-				SetProperty ("Platform", "AnyCPU", "'$(Platform)' == ''");
-				SetProperty ("ErrorReport", "prompt");
-				SetProperty ("WarningLevel", "4");
-				SetProperty ("ConsolePause", "false");
-
-				SetProperty ("BaseIntermediateOutputPath", "obj\\", " '$(BaseIntermediateOutputPath)' == '' ");
-
-				SetProperty (DebugProperties, "DebugSymbols", "true");
-				SetProperty (DebugProperties, "DebugType", "portable");
-				SetProperty (DebugProperties, "Optimize", "false");
-				SetProperty (DebugProperties, "DefineConstants", "DEBUG;");
-
-				SetProperty (ReleaseProperties, "Optimize", "true");
-				SetProperty (ReleaseProperties, "ErrorReport", "prompt");
-				SetProperty (ReleaseProperties, "WarningLevel", "4");
-				SetProperty (ReleaseProperties, "ConsolePause", "false");
-			}
+			TargetFramework = "net8.0-android";
+			EnableDefaultItems = false;
+			AppendTargetFrameworkToOutputPath = false;
 
 			// These are always set, so the OutputPath and IntermediateOutputPath properties work
 			SetProperty (DebugProperties,   KnownProperties.OutputPath,             Path.Combine ("bin", debugConfigurationName));
@@ -101,27 +81,8 @@ namespace Xamarin.ProjectTools
 
 		public virtual ProjectRootElement Construct ()
 		{
-			// Workaround for https://github.com/dotnet/msbuild/issues/2554 when using Microsoft.Build.Construction.ProjectRootElement.Create
-			var msbuildExePathVarName = "MSBUILD_EXE_PATH";
-			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-				Environment.SetEnvironmentVariable (msbuildExePathVarName, typeof (DotNetXamarinProject).Assembly.Location);
-			}
-			ProjectRootElement root = null;
-			try {
-				root = ProjectRootElement.Create ();
-			} finally {
-				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-					Environment.SetEnvironmentVariable (msbuildExePathVarName, null);
-				}
-			}
+			ProjectRootElement root = ProjectRootElement.Create ();
 
-			if (Packages.Any ())
-				root.AddItemGroup ().AddItem (BuildActions.None, "packages.config");
-			foreach (var pkg in Packages.Where (p => p.AutoAddReferences))
-				foreach (var reference in pkg.References)
-					if (!References.Any (r => r.Include == reference.Include))
-						References.Add (reference);
-			
 			foreach (var pg in PropertyGroups)
 				pg.AddElement (root);
 
@@ -141,37 +102,7 @@ namespace Xamarin.ProjectTools
 
 		public override string SaveProject ()
 		{
-			if (Builder.UseDotNet) {
-				return XmlUtils.ToXml (this);
-			}
-			XNamespace ns = "http://schemas.microsoft.com/developer/msbuild/2003";
-			var encoding = Encoding.UTF8;
-			var root = Construct ();
-			XDocument document;
-			using (var stream = new MemoryStream ())
-			using (var sw = new StreamWriter (stream, encoding, 8 * 1024, leaveOpen: true)) {
-				root.Save (sw);
-				stream.Position = 0;
-				document = XDocument.Load (stream);
-				document.Declaration.Encoding = encoding.HeaderName;
-				var pn = XName.Get ("Project", ns.NamespaceName);
-				var p = document.Element (pn);
-				if (p != null) {
-					//NOTE: when running tests inside VS 2019 "Current" was set here
-					p.SetAttributeValue ("ToolsVersion", "15.0");
-
-					var referenceGroup = p.Elements ().FirstOrDefault (x => x.Name.LocalName == "ItemGroup" && x.HasElements && x.Elements ().Any (e => e.Name.LocalName == "Reference"));
-					if (referenceGroup != null) {
-						foreach (var pr in PackageReferences) {
-							//NOTE: without the namespace it puts xmlns=""
-							var e = XElement.Parse ($"<PackageReference Include=\"{pr.Id}\" Version=\"{pr.Version}\"/>");
-							e.Name = ns + e.Name.LocalName;
-							referenceGroup.Add (e);
-						}
-					}
-				}
-				return document.ToString ();
-			}
+			return XmlUtils.ToXml (this);
 		}
 	}
 }

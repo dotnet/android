@@ -190,7 +190,12 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string ClearDebugProperty ()
 		{
-			return RunAdbCommand ("shell setprop debug.mono.extra \"\"");
+			return ClearShellProp ("debug.mono.extra");
+		}
+
+		protected static string ClearShellProp (string propName)
+		{
+			return RunAdbCommand ($"shell setprop {propName} \"''\"");
 		}
 
 		protected static string AdbStartActivity (string activity)
@@ -200,15 +205,8 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
-			if (Builder.UseDotNet) {
-				builder.BuildLogFile = logName;
-				Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
-			} else if (TestEnvironment.CommercialBuildAvailable) {
-				builder.BuildLogFile = logName;
-				Assert.True (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
-			} else {
-				StartActivityAndAssert (proj);
-			}
+			builder.BuildLogFile = logName;
+			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
 		}
 
 		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)

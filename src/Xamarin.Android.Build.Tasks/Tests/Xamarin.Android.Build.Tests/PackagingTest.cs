@@ -56,21 +56,10 @@ using System.Globalization;")
 				.Replace ("//${AFTER_ONCREATE}", @"var c = new CultureInfo (""es-ES"");
 Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 //${AFTER_ONCREATE}");
-			if (Builder.UseDotNet) {
-				proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
-				proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
-			}
-			if (!Builder.UseDotNet) {
-				proj.PackageReferences.Add (new Package {
-					Id = "System.Runtime.InteropServices.WindowsRuntime",
-					Version = "4.0.1",
-					TargetFramework = "monoandroid71",
-				});
-				proj.References.Add (new BuildItem.Reference ("Mono.Data.Sqlite.dll"));
-				proj.MainActivity = proj.MainActivity.Replace ("//${AFTER_ONCREATE}", "var command = new Mono.Data.Sqlite.SqliteCommand ();");
-			}
-			var expectedFiles = Builder.UseDotNet ?
-				new [] {
+			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
+			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
+
+			var expectedFiles = new [] {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"Mono.Android.Runtime.dll",
@@ -87,20 +76,8 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 					"System.Collections.dll",
 					"System.Collections.Concurrent.dll",
 					"System.Text.RegularExpressions.dll",
-				} :
-				new [] {
-					"Java.Interop.dll",
-					"Mono.Android.dll",
-					"mscorlib.dll",
-					"System.Core.dll",
-					"System.Data.dll",
-					"System.dll",
-					"UnnamedProject.dll",
-					"Mono.Data.Sqlite.dll",
-					"Mono.Data.Sqlite.dll.config",
-					"Humanizer.dll",
-					//"es/Humanizer.resources.dll", <- Bug in classic.
-				};
+			};
+
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -140,14 +117,12 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 
 		[Test]
 		[Parallelizable (ParallelScope.Self)]
-		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries, [Values (true, false)] bool useAapt2)
+		public void CheckIncludedNativeLibraries ([Values (true, false)] bool compressNativeLibraries)
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.PackageReferences.Add(KnownPackages.SQLitePCLRaw_Core);
-			proj.AndroidUseAapt2 = useAapt2;
 			proj.SetAndroidSupportedAbis ("x86");
 			proj.SetProperty (proj.ReleaseProperties, "AndroidStoreUncompressedFileExtensions", compressNativeLibraries ? "" : "so");
 			using (var b = CreateApkBuilder ()) {
@@ -583,7 +558,7 @@ public class Test
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
-					var jar = Builder.UseDotNet ? "2965D0C9A2D5DB1E.jar" : "test.jar";
+					var jar = "2965D0C9A2D5DB1E.jar";
 					string expected = $"Ignoring jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";
 					Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"AndroidManifest.xml for {jar} should have been ignored.");
 				}

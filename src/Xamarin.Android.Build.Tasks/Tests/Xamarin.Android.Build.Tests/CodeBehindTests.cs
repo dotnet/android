@@ -153,9 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			TestProjectRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", "BuildTests"));
 			CommonSampleLibraryRootDirectory = Path.GetFullPath (Path.Combine (XABuildPaths.TopDirectory, "tests", "CodeBehind", CommonSampleLibraryName));
 			TestOutputDir = Path.Combine (XABuildPaths.TestOutputDirectory, "temp", "CodeBehind");
-			if (Builder.UseDotNet) {
-				ProjectName += ".NET";
-			}
+			ProjectName += ".NET";
 
 			generated_sources = new List <SourceFile> {
 				new SourceFile ("Binding.Main.g.cs") {
@@ -272,14 +270,9 @@ namespace Xamarin.Android.Build.Tests
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
 				$"{PackageName}-Signed.apk",
+				$"{PackageName}.aab",
+				$"{PackageName}-Signed.aab",
 			};
-
-			if (!Builder.UseDotNet) {
-				produced_binaries.Add ($"{PackageName}.apk");
-			} else {
-				produced_binaries.Add ($"{PackageName}.aab");
-				produced_binaries.Add ($"{PackageName}-Signed.aab");
-			}
 		}
 
 		[Test]
