@@ -53,8 +53,6 @@ namespace Xamarin.Android.Prepare
 
 			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
 			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
-			//if (!await ConjureXamarinCecilAndRemapRef (context, haveManagedRuntime, managedRuntime))
-			//	return false;
 
 			if (!await InstallRuntimes (context, enabledRuntimes))
 				return false;
@@ -64,8 +62,6 @@ namespace Xamarin.Android.Prepare
 
 			if (!InstallUtilities (context, haveManagedRuntime, managedRuntime))
 				return false;
-
-			//Utilities.PropagateXamarinAndroidCecil (context);
 
 			return true;
 		}
@@ -84,75 +80,11 @@ namespace Xamarin.Android.Prepare
 			}
 		}
 
-		/*async Task<bool> ConjureXamarinCecilAndRemapRef (Context context, bool haveManagedRuntime, string managedRuntime)
-		{
-			StatusStep (context, "Building remap-assembly-ref");
-			bool result = await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime, quiet: true);
-			if (!result)
-				return false;
-
-			var msbuild = new MSBuildRunner (context);
-			StatusStep (context, "Building conjure-xamarin-android-cecil");
-			string projectPath = Path.Combine (Configurables.Paths.BuildToolsDir, "conjure-xamarin-android-cecil", "conjure-xamarin-android-cecil.csproj");
-			result = await msbuild.Run (
-				projectPath: projectPath,
-				logTag: "conjure-xamarin-android-cecil",
-				binlogName: "build-conjure-xamarin-android-cecil"
-			);
-
-			if (!result) {
-				Log.ErrorLine ("Failed to build conjure-xamarin-android-cecil");
-				return false;
-			}
-
-			StatusStep (context, "Conjuring Xamarin.Android.Cecil and Xamari.Android.Cecil.Mdb");
-			string conjurer = Path.Combine (Configurables.Paths.BuildBinDir, "conjure-xamarin-android-cecil.dll");
-
-			result = Utilities.RunManagedCommand (
-				conjurer, // command
-				BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
-				true, // ignoreEmptyArguments
-
-				// arguments
-				Configurables.Paths.MonoProfileToolsDir, // source dir
-				Configurables.Paths.BuildBinDir // destination dir
-			);
-
-			StatusStep (context, "Re-signing Xamarin.Android.Cecil.dll");
-			var sn = new SnRunner (context);
-			string snkPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "mono.snk");
-			string assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll");
-			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil");
-			if (!result) {
-				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.dll");
-				return false;
-			}
-			var classicInstallMSBuildDir =  Path.Combine (Configurables.Paths.XAInstallPrefix, "xbuild", "Xamarin", "Android");
-			Utilities.CreateDirectory (classicInstallMSBuildDir);
-			Utilities.CopyFile (assemblyPath, Path.Combine (classicInstallMSBuildDir, "Xamarin.Android.Cecil.dll"));
-
-			StatusStep (context, "Re-signing Xamarin.Android.Cecil.Mdb.dll");
-			assemblyPath = Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll");
-			result = await sn.ReSign (snkPath, assemblyPath, $"sign-xamarin-android-cecil-mdb");
-			if (!result) {
-				Log.ErrorLine ("Failed to re-sign Xamarin.Android.Cecil.Mdb.dll");
-				return false;
-			}
-
-			Utilities.CopyFile (assemblyPath, Path.Combine (classicInstallMSBuildDir, "Xamarin.Android.Cecil.Mdb.dll"));
-
-			return true;
-		}
-		*/
-
 		bool InstallUtilities (Context context, bool haveManagedRuntime, string managedRuntime)
 		{
 			string destDir = MonoRuntimesHelpers.UtilitiesDestinationDir;
 
 			Utilities.CreateDirectory (destDir);
-
-			//string remapper = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, context.Properties.GetRequiredValue (KnownProperties.RemapAssemblyRefToolExecutable));
-			//string targetCecil = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"));
 
 			StatusStep (context, "Installing runtime utilities");
 			EnsureAllRuntimes ();
@@ -166,29 +98,6 @@ namespace Xamarin.Android.Prepare
 						Log.DebugLine ($"Debug symbols not found for utility file {Path.GetFileName (muf.SourcePath)}");
 					}
 				}
-				/*
-				if (!muf.RemapCecil)
-					continue;
-
-				string relDestFilePath = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, destFilePath);
-				StatusSubStep (context, $"Remapping Cecil references for {relDestFilePath}");
-				bool result = Utilities.RunManagedCommand (
-					remapper, // command
-					BuildPaths.XamarinAndroidSourceRoot, // workingDirectory
-					true, // ignoreEmptyArguments
-
-					// arguments
-					Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, muf.SourcePath),
-					relDestFilePath,
-					"Mono.Cecil",
-					targetCecil);
-
-				if (result)
-					continue;
-
-				Log.ErrorLine ($"Failed to remap cecil reference for {destFilePath}");
-				return false;
-				*/
 			}
 
 			return true;

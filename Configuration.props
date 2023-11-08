@@ -224,10 +224,6 @@
     <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetAotAbisForConditionalChecks)</AndroidSupportedTargetAotAbisForConditionalChecks>
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
   </PropertyGroup>
-  <PropertyGroup>
-    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref\remap-assembly-ref.dll</RemapAssemblyRefToolExecutable>
-    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
-  </PropertyGroup>
 
   <!-- Unit Test Properties -->
   <PropertyGroup>

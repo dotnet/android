@@ -16,17 +16,7 @@ namespace Xamarin.Android.Prepare
 #pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
-			string monoSourceDir = Configurables.Paths.MonoSourceFullPath;
 			string javaInteropDir = Configurables.Paths.ExternalJavaInteropDir;
-
-			LogStep (context, "Copying Mono.Cecil files");
-			Utilities.CopyFilesSimple (
-				Directory.EnumerateFiles (Path.Combine (javaInteropDir, "external"), "Mono.Cecil*"),
-				Path.Combine (monoSourceDir, "external")
-			);
-
-			LogStep (context, "Copying code signing keys");
-			Utilities.CopyFileToDir (Path.Combine (javaInteropDir, "product.snk"), monoSourceDir);
 
 			LogStep (context, "Configuring Java.Interop property overrides");
 			var jiOverrideProps = new GeneratedPlaceholdersFile (
