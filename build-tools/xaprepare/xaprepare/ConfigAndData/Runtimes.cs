@@ -713,39 +713,6 @@ namespace Xamarin.Android.Prepare
 				shared: true
 			),
 
-			/*
-			// Xamarin.Android.Cecil.dll
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.dll"),
-				destinationCreator: (Runtime runtime) => "Xamarin.Android.Cecil.dll",
-				strip: false,
-				shared: true
-			),
-
-			// Xamarin.Android.Cecil.pdb
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.pdb"),
-				destinationCreator: (Runtime runtime) => "Xamarin.Android.Cecil.pdb",
-				strip: false,
-				shared: true
-			),
-
-			// Xamarin.Android.Cecil.Mdb.dll
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.dll"),
-				destinationCreator: (Runtime runtime) => "Xamarin.Android.Cecil.Mdb.dll",
-				strip: false,
-				shared: true
-			),
-
-			// Xamarin.Android.Cecil.Mdb.pdb
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (Configurables.Paths.BuildBinDir, "Xamarin.Android.Cecil.Mdb.pdb"),
-				destinationCreator: (Runtime runtime) => "Xamarin.Android.Cecil.Mdb.pdb",
-				strip: false,
-				shared: true
-			),
-			*/
 			new RuntimeFile (
 				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "lib", "libmonosgen-2.0.dll.a"),
 				destinationCreator: (Runtime runtime) => Path.Combine (GetRuntimeOutputDir (runtime), "libmonosgen-2.0.dll.a"),
