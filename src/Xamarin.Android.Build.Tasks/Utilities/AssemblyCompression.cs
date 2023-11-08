@@ -69,6 +69,7 @@ namespace Xamarin.Android.Tasks
 			data.DestinationPath = Path.Combine (outputDirectory, $"{Path.GetFileName (data.SourcePath)}.lz4");
 			data.SourceSize = (uint)fi.Length;
 
+			Console.WriteLine ($"Compressing: {data.SourcePath} => {data.DestinationPath}; Index: {data.DescriptorIndex}");
 			byte[] sourceBytes = null;
 			byte[] destBytes = null;
 			try {

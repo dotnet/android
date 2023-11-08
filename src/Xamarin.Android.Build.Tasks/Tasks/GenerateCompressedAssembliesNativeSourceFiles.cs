@@ -4,6 +4,8 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks
 {
 	public class GenerateCompressedAssembliesNativeSourceFiles : AndroidTask
@@ -41,7 +43,8 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			var assemblies = new SortedDictionary<string, CompressedAssemblyInfo> (StringComparer.Ordinal);
+			var assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.Ordinal);
+			var counters = new Dictionary<AndroidTargetArch, uint> ();
 			foreach (ITaskItem assembly in ResolvedAssemblies) {
 				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
 					continue;
@@ -59,12 +62,12 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length)));
-			}
-
-			uint index = 0;
-			foreach (var kvp in assemblies) {
-				kvp.Value.DescriptorIndex = index++;
+				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (!counters.TryGetValue (arch, out uint counter)) {
+					counter = 0;
+				}
+				assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length), counter++, arch, Path.GetFileNameWithoutExtension (assembly.ItemSpec)));
+				counters[arch] = counter;
 			}
 
 			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);

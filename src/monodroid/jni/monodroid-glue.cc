@@ -16,10 +16,12 @@
 #include <dlfcn.h>
 #endif  // def APPLE_OX_X
 
+#include <dlfcn.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <cstdint>
 
+#include <android/dlext.h>
 #include <sys/time.h>
 #include <sys/types.h>
 
@@ -1281,7 +1283,11 @@ force_inline void*
 MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, [[maybe_unused]] bool need_api_init)
 {
 	if (handle == nullptr && err != nullptr) {
-		*err = utils.monodroid_strdup_printf ("Could not load library: Library '%s' not found.", full_name);
+		const char *load_error = dlerror ();
+		if (load_error == nullptr) {
+			load_error = "Unknown error";
+		}
+		*err = utils.monodroid_strdup_printf ("Could not load library '%s'. %s", full_name, load_error);
 	}
 
 	if (free_memory) {
@@ -1294,6 +1300,7 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 	init_internal_api_dso (handle);
 #endif // ndef NET
 
+	log_debug (LOG_ASSEMBLY, "DSO '%s' loaded", full_name);
 	return handle;
 }
 
@@ -1363,9 +1370,33 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 	}
 
 	StartupAwareLock lock (dso_handle_write_lock);
-	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+#if defined (RELEASE)
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+		DSOApkEntry *apk_entry = dso_apk_entries;
+		for (size_t i = 0; i < application_config.number_of_shared_libraries; i++) {
+			if (apk_entry->name_hash != dso->real_name_hash) {
+				apk_entry++;
+				continue;
+			}
 
+			log_debug (LOG_ASSEMBLY, "Loading DSO '%s' from apk: offset == %u; fd == %d", dso->name, apk_entry->offset, apk_entry->fd);
+
+			android_dlextinfo dli;
+			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
+			dli.library_fd = apk_entry->fd;
+			dli.library_fd_offset = apk_entry->offset;
+			dso->handle = android_dlopen_ext (dso->name, flags, &dli);
+
+			if (dso->handle != nullptr) {
+				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+			}
+			break;
+		}
+	}
+#endif
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	dso->handle = androidSystem.load_dso_from_any_directories (dso->name, dl_flags);
+
 	if (dso->handle != nullptr) {
 		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 	}

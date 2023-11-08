@@ -50,12 +50,22 @@ namespace Xamarin.Android.Tasks
 
 			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
+
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+			public ulong real_name_hash;
 			public bool ignore;
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string name;
 			public IntPtr handle = IntPtr.Zero;
 		}
+
+		sealed class DSOApkEntry
+		{
+			public ulong name_hash;
+			public uint  offset; // offset into the APK
+			public int   fd; // apk file descriptor
+		};
 
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreAssemblyDescriptor structure
@@ -143,6 +153,7 @@ namespace Xamarin.Android.Tasks
 
 		StructureInfo? applicationConfigStructureInfo;
 		StructureInfo? dsoCacheEntryStructureInfo;
+		StructureInfo? dsoApkEntryStructureInfo;
 		StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
 		StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 		StructureInfo? assemblyStoreRuntimeDataStructureInfo;
@@ -238,6 +249,13 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (dso_cache);
 
+			var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
+				ArrayItemCount = (ulong)NativeLibraries.Count,
+				Options = LlvmIrVariableOptions.GlobalWritable,
+				ZeroInitializeArray = true,
+			};
+			module.Add (dso_apk_entries);
+
 			if (!HaveAssemblyStore) {
 				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
 
@@ -291,7 +309,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
 			if (cache == null) {
-				throw new InvalidOperationException ($"Internal error: DSO cache must no be empty");
+				throw new InvalidOperationException ($"Internal error: DSO cache must not be empty");
 			}
 
 			bool is64Bit = target.Is64Bit;
@@ -306,6 +324,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+				entry.real_name_hash = GetXxHash (entry.name, is64Bit);
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
@@ -388,6 +407,7 @@ namespace Xamarin.Android.Tasks
 			assemblyStoreRuntimeDataStructureInfo = module.MapStructure<AssemblyStoreRuntimeData> ();
 			xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
 			dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
+			dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		}
 	}
 }

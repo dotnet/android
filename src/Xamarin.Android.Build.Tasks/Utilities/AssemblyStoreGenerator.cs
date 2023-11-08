@@ -112,10 +112,19 @@ partial class AssemblyStoreGenerator
 				throw new InvalidOperationException ($"Internal error: corrupted store '{storePath}' stream");
 			}
 
-			string name_with_ext = Path.GetFileName (info.SourceFile.Name);
+			string? name = Path.GetFileName (info.SourceFile.Name);
+			if (name == null) {
+				throw new InvalidOperationException ("Internal error: info without assembly name");
+			}
+
+			if (name.EndsWith (".lz4", StringComparison.OrdinalIgnoreCase)) {
+				name = Path.GetFileNameWithoutExtension (name);
+			}
+
+			string name_with_ext = Path.GetFileName (name);
 			ulong name_with_ext_hash = LLVMIR.LlvmIrComposer.GetXxHash (name_with_ext, is64Bit);
 
-			string name_no_ext = Path.GetFileNameWithoutExtension (info.SourceFile.Name);
+			string name_no_ext = Path.GetFileNameWithoutExtension (name);
 			ulong name_no_ext_hash = LLVMIR.LlvmIrComposer.GetXxHash (name_no_ext, is64Bit);
 			index.Add (new AssemblyStoreIndexEntry (name_with_ext, name_with_ext_hash, desc.mapping_index));
 			index.Add (new AssemblyStoreIndexEntry (name_no_ext, name_no_ext_hash, desc.mapping_index));

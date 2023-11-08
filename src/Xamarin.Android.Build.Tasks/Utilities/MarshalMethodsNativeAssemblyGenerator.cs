@@ -1047,7 +1047,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
-			gv.OverrideValueAndType (type, value);
+			gv.OverrideTypeAndValue (type, value);
 		}
 
 		string? GetAssemblyImageCacheItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
@@ -1081,7 +1081,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
-			gv.OverrideValueAndType (variable.Type, value);
+			gv.OverrideTypeAndValue (variable.Type, value);
 		}
 
 		AssemblyCacheState EnsureAssemblyCacheState (object? callerState)

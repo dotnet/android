@@ -229,12 +229,15 @@ struct ApplicationConfig
 
 struct DSOApkEntry
 {
+	uint64_t name_hash;
 	uint32_t offset; // offset into the APK
+	int32_t  fd; // apk file descriptor
 };
 
 struct DSOCacheEntry
 {
 	uint64_t       hash;
+	uint64_t       real_name_hash;
 	bool           ignore;
 	const char    *name;
 	void          *handle;
@@ -303,6 +306,7 @@ MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_b
 MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_store;
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
+MONO_API MONO_API_EXPORT DSOApkEntry dso_apk_entries[];
 
 //
 // Support for marshal methods

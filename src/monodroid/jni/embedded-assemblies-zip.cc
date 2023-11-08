@@ -11,6 +11,7 @@
 #include "cpp-util.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
+#include "xxhash.hh"
 
 using namespace xamarin::android::internal;
 
@@ -62,11 +63,11 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 
 	if (entry_name.get ()[0] != state.prefix[0] || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
-		if (state.prefix == apk_lib_prefix) {
+		if (state.prefix == apk_lib_prefix.data ()) {
 			return false;
 		}
 
-		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix, entry_name.get (), sizeof(apk_lib_prefix) - 1) != 0) {
+		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix.data (), entry_name.get (), apk_lib_prefix.size () - 1) != 0) {
 			return false;
 		}
 	}
@@ -231,7 +232,6 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		log_debug (LOG_ASSEMBLY, "Interesting entry: %s", entry_name.get ());
 		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_name)) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
@@ -245,7 +245,16 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 		// Since it's not an assembly store, it's a shared library most likely and it is long enough for us not to have
 		// to check the length
 		if (utils.ends_with (entry_name, dso_suffix)) {
-			log_debug (LOG_ASSEMBLY, "Found a shared library: %s", entry_name.get ());
+			constexpr size_t apk_lib_prefix_len = apk_lib_prefix.size () - 1;
+
+			const char *const name = entry_name.get () + apk_lib_prefix_len;
+			DSOApkEntry *apk_entry = reinterpret_cast<DSOApkEntry*>(reinterpret_cast<uint8_t*>(dso_apk_entries) + (sizeof(DSOApkEntry) * number_of_zip_dso_entries));
+
+			apk_entry->name_hash = xxhash::hash (name, entry_name.length () - apk_lib_prefix_len);
+			apk_entry->offset = state.data_offset;
+			apk_entry->fd = state.apk_fd;
+
+			log_debug (LOG_ASSEMBLY, "Found a shared library entry %s (index: %u; name: %s; hash: 0x%zx; apk offset: %u)", entry_name.get (), number_of_zip_dso_entries, name, apk_entry->name_hash, apk_entry->offset);
 			number_of_zip_dso_entries++;
 		}
 	}

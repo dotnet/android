@@ -2,6 +2,8 @@ using System;
 using System.IO;
 using Microsoft.Build.Framework;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks
 {
 	class CompressedAssemblyInfo
@@ -9,12 +11,16 @@ namespace Xamarin.Android.Tasks
 		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
 
 		public uint FileSize { get; }
-		public uint DescriptorIndex { get; set; }
+		public uint DescriptorIndex { get; }
+		public AndroidTargetArch TargetArch { get; }
+		public string AssemblyName { get; }
 
-		public CompressedAssemblyInfo (uint fileSize)
+		public CompressedAssemblyInfo (uint fileSize, uint descriptorIndex, AndroidTargetArch targetArch, string assemblyName)
 		{
 			FileSize = fileSize;
-			DescriptorIndex = 0;
+			DescriptorIndex = descriptorIndex;
+			TargetArch = targetArch;
+			AssemblyName = assemblyName;
 		}
 
 		public static string GetKey (string projectFullPath)
@@ -27,14 +33,15 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetDictionaryKey (ITaskItem assembly)
 		{
+			string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
 			// Prefer %(DestinationSubPath) if set
 			var path = assembly.GetMetadata ("DestinationSubPath");
 			if (!string.IsNullOrEmpty (path)) {
-				return path;
+				return Path.Combine (abi, path);
 			}
 			// MSBuild sometimes only sets %(DestinationSubDirectory)
 			var subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-			return Path.Combine (subDirectory, Path.GetFileName (assembly.ItemSpec));
+			return Path.Combine (abi, subDirectory, Path.GetFileName (assembly.ItemSpec));
 		}
 	}
 }

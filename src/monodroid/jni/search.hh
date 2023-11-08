@@ -35,7 +35,6 @@ namespace xamarin::android::internal {
 
 		force_inline static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept
 		{
-			log_debug (LOG_ASSEMBLY, "binary search over %zu entries for hash 0x%zx", n, key);
 			auto equal = [](hash_t const& entry, hash_t key) -> bool { return entry == key; };
 			auto less_than = [](hash_t const& entry, hash_t key) -> bool { return entry < key; };
 

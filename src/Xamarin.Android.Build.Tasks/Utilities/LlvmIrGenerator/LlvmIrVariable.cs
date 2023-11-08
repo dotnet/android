@@ -274,10 +274,15 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// generating output for a specific target (e.g. 32-bit vs 64-bit integer variables).  If the variable requires such
 	/// type changes, this should be done at generation time from within the <see cref="BeforeWriteCallback"/> method.
 	/// </summary>
-	public void OverrideValueAndType (Type newType, object? newValue)
+	public void OverrideTypeAndValue (Type newType, object? newValue)
 	{
 		Type = newType;
 		Value = newValue;
+	}
+
+	public void OverrideName (string newName)
+	{
+		Name = newName;
 	}
 }
 

@@ -291,7 +291,7 @@ namespace Xamarin.Android.Tasks
 				hashes = list;
 			}
 
-			gv.OverrideValueAndType (listType, hashes);
+			gv.OverrideTypeAndValue (listType, hashes);
 		}
 
 		ConstructionState EnsureConstructionState (object? callerState)

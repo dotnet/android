@@ -501,10 +501,12 @@ namespace Xamarin.Android.Tasks
 					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
 					string assemblyOutputDir;
 					string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-					if (!String.IsNullOrEmpty (subDirectory))
-						assemblyOutputDir = Path.Combine (compressedOutputDir, subDirectory);
-					else
-						assemblyOutputDir = compressedOutputDir;
+					string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+					if (!String.IsNullOrEmpty (subDirectory)) {
+						assemblyOutputDir = Path.Combine (compressedOutputDir, abi, subDirectory);
+					} else {
+						assemblyOutputDir = Path.Combine (compressedOutputDir, abi);
+					}
 					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
 					if (result != AssemblyCompression.CompressionResult.Success) {
 						switch (result) {

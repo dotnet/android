@@ -124,6 +124,7 @@ constexpr char fake_dso_name2[] = "libaot-Another.Assembly.dll.so";
 DSOCacheEntry dso_cache[] = {
 	{
 		.hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
+		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name, sizeof(fake_dso_name) - 1),
 		.ignore = true,
 		.name = fake_dso_name,
 		.handle = nullptr,
@@ -131,11 +132,14 @@ DSOCacheEntry dso_cache[] = {
 
 	{
 		.hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
+		.real_name_hash = xamarin::android::xxhash::hash (fake_dso_name2, sizeof(fake_dso_name2) - 1),
 		.ignore = true,
 		.name = fake_dso_name2,
 		.handle = nullptr,
 	},
 };
+
+DSOApkEntry dso_apk_entries[2] {};
 
 //
 // Support for marshal methods
