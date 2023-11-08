@@ -58,32 +58,9 @@ namespace Xamarin.Android.Build.Tests
 			using (var wearBuilder = CreateDllBuilder (Path.Combine (path, wear.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.IsTrue (wearBuilder.Build (wear), "first wear build should have succeeded.");
-				// In .NET 5+, just check for a build error
-				if (Builder.UseDotNet) {
-					appBuilder.ThrowOnBuildFailure = false;
-					Assert.IsFalse (appBuilder.Build (app), "'dotnet' app build should have failed.");
-					StringAssertEx.Contains ($"error XA4312", appBuilder.LastBuildOutput, "Error should be XA4312");
-					return;
-				}
-				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
-				StringAssertEx.Contains ($"warning XA4312", appBuilder.LastBuildOutput, "Warning should be XA4312");
-				// Build with no changes
-				Assert.IsTrue (wearBuilder.Build (wear, doNotCleanupOnUpdate: true), "second wear build should have succeeded.");
-				Assert.IsTrue (wearBuilder.Output.IsTargetSkipped (target), $"`{target}` in wear build should be skipped!");
-				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true), "second app build should have succeeded.");
-				Assert.IsTrue (appBuilder.LastBuildOutput.ContainsOccurances ($"Skipping target \"{target}\"", 2), $"`{target}` in app build should be skipped!");
-				// Check the APK for the special Android Wear files
-				var files = new [] {
-					"res/raw/wearable_app.apk",
-					"res/xml/wearable_app_desc.xml"
-				};
-				var apk = Path.Combine (Root, appBuilder.ProjectDirectory, app.OutputPath, $"{app.PackageName}.apk");
-				FileAssert.Exists (apk);
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					foreach (var file in files) {
-						Assert.IsTrue (zipFile.ContainsEntry (file, caseSensitive: true), $"{file} should be in the apk!");
-					}
-				}
+				appBuilder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (appBuilder.Build (app), "'dotnet' app build should have failed.");
+				StringAssertEx.Contains ($"error XA4312", appBuilder.LastBuildOutput, "Error should be XA4312");
 			}
 		}
 

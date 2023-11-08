@@ -53,11 +53,6 @@ namespace Xamarin.ProjectTools
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
 				}
 
-				// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
-				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-					p.StartInfo.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
-				}
-
 				p.ErrorDataReceived += (sender, e) => {
 					if (e.Data != null) {
 						procOutput.AppendLine (e.Data);

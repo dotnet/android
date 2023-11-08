@@ -18,13 +18,6 @@ namespace Xamarin.ProjectTools
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
 		const int DefaultBuildTimeOut = 30;
 
-		string Arm32AbiDir => UseDotNet ? "android-arm" : "armeabi-v7a";
-
-		/// <summary>
-		/// If true, use `dotnet build` and IShortFormProject throughout the tests
-		/// </summary>
-		public static bool UseDotNet => Environment.Version.Major >= 5;
-
 		string root;
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
@@ -182,21 +175,18 @@ namespace Xamarin.ProjectTools
 			var args  = new StringBuilder ();
 			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
-			if (UseDotNet) {
-				args.Append ("build ");
-				if (TestEnvironment.UseLocalBuildOutput) {
-					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
-					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
-				}
+			args.Append ("build ");
+
+			if (TestEnvironment.UseLocalBuildOutput) {
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
 			}
+
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (UseDotNet) {
-				if (!AutomaticNuGetRestore) {
-					args.Append (" --no-restore");
-				}
-			} else if (AutomaticNuGetRestore && restore) {
-				args.Append (" /restore");
+
+			if (!AutomaticNuGetRestore) {
+				args.Append (" --no-restore");
 			}
 
 			args.Append (" -nodeReuse:false"); // Disable the MSBuild daemon everywhere!
@@ -248,13 +238,8 @@ namespace Xamarin.ProjectTools
 			psi.SetEnvironmentVariable ("BUILD_SOURCEVERSIONMESSAGE", "");
 
 			// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
-			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-				psi.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
-			}
-			if (Builder.UseDotNet) {
-				psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
-			}
+			psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 
 			psi.Arguments = args.ToString ();
 

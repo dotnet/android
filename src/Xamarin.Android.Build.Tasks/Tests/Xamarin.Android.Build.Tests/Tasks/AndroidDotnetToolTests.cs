@@ -37,12 +37,11 @@ namespace Xamarin.Android.Build.Tests
 				BuildEngine = engine,
 				NetCoreRoot = dotnetDir,
 				ToolPath = TestEnvironment.AndroidMSBuildDirectory,
-				ToolExe = Builder.UseDotNet ? "class-parse.dll" : "class-parse.exe",
+				ToolExe = "class-parse.dll",
 			};
 
 			Assert.True (classParseTask.Execute (), "Task should have succeeded.");
-			var expectedTool = Builder.UseDotNet ? dotnetPath : Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "class-parse.exe");
-			Assert.IsTrue (messages.Any (m => m.Message.StartsWith (expectedTool)), "Task did not use expected tool path.");
+			Assert.IsTrue (messages.Any (m => m.Message.StartsWith (dotnetPath)), "Task did not use expected tool path.");
 		}
 	}
 

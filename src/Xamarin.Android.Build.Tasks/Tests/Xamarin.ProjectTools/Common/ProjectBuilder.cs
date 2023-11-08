@@ -21,7 +21,6 @@ namespace Xamarin.ProjectTools
 
 		public bool CleanupOnDispose { get; set; }
 		public bool CleanupAfterSuccessfulBuild { get; set; }
-		public string PackagesDirectory { get; set; }
 		public string ProjectDirectory { get; set; }
 		public string Target { get; set; }
 
@@ -49,9 +48,6 @@ namespace Xamarin.ProjectTools
 						FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
 						Directory.Delete (ProjectDirectory, true);
 					}
-					if (Directory.Exists (PackagesDirectory)) {
-						Directory.Delete (PackagesDirectory, true);
-					}
 					project.Populate (ProjectDirectory, files);
 				}
 
@@ -66,10 +62,6 @@ namespace Xamarin.ProjectTools
 			Save (project, doNotCleanupOnUpdate, saveProject);
 
 			Output = project.CreateBuildOutput (this);
-
-			if (AutomaticNuGetRestore) {
-				project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
-			}
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences, binlogName: Path.GetFileNameWithoutExtension (BuildLogFile));
 			built_before = true;

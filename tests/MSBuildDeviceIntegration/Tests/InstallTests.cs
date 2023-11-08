@@ -173,13 +173,10 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ReleaseProperties, "Optimize", false);
 			proj.SetProperty (proj.ReleaseProperties, "DebugType", "none");
-			if (Builder.UseDotNet) {
-				// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
-				proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
-				proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
-			} else {
-				proj.RemoveProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk");
-			}
+			// NOTE: in .NET 6, EmbedAssembliesIntoApk=true by default for Release builds
+			proj.SetProperty (proj.ReleaseProperties, "EmbedAssembliesIntoApk", "false");
+			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
+
 			var abis = new [] { "armeabi-v7a", "x86", "x86_64" };
 			proj.SetAndroidSupportedAbis (abis);
 			using (var builder = CreateApkBuilder ()) {
@@ -191,12 +188,7 @@ namespace Xamarin.Android.Build.Tests
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				using (var apk = ZipHelper.OpenZip (apkPath)) {
 					foreach (var abi in abis) {
-						string runtimeAbiName;
-						if (Builder.UseDotNet) {
-							runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
-						} else {
-							runtimeAbiName = abi;
-						}
+						string runtimeAbiName = AbiUtils.AbiToRuntimeIdentifier (abi);
 						var runtime = runtimeInfo.FirstOrDefault (x => x.Abi == runtimeAbiName && x.Runtime == "debug");
 						Assert.IsNotNull (runtime, "Could not find the expected runtime.");
 						var inApk = ZipHelper.ReadFileFromZip (apk, String.Format ("lib/{0}/{1}", abi, runtime.Name));
@@ -210,11 +202,7 @@ namespace Xamarin.Android.Build.Tests
 				//	"The Shared Runtime should not have been installed.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
-				if (Builder.UseDotNet)
-					StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__ directory.");
-				else
-					StringAssert.Contains ($"System.dll", directorylist, $"System.dll should exist in the .__override__ directory.");
-
+				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__ directory.");
 				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
@@ -263,10 +251,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
-				// Configuration files are not supported in One .NET, we don't need to make sure that they're fast deployed.
-				if (!Builder.UseDotNet) {
-					StringAssert.Contains ($"{proj.ProjectName}.dll.config", directorylist, $"{proj.ProjectName}.dll.config should exist in the .__override__ directory.");
-				}
 
 				//Now toggle FastDev to OFF
 				proj.EmbedAssembliesIntoApk = true;
@@ -340,22 +324,16 @@ namespace Xamarin.Android.Build.Tests
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
 
-			string wantedFile;
-			if (Builder.UseDotNet) {
-				wantedFile = "methods.txt";
-			} else {
-				wantedFile = "counters.txt";
-			}
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 				RunAdbCommand ("shell setprop debug.mono.log timing");
 				RunProjectAndAssert (proj, builder);
 				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
-				RunAdbCommand ("shell setprop debug.mono.log \"\"");
+				ClearShellProp ("debug.mono.log");
 				Assert.True (didLaunch, "Activity should have started.");
 				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
 				builder.Uninstall (proj);
-				StringAssert.Contains (wantedFile, directorylist, $"{wantedFile} did not exist in the .__override__ directory.\nFound:{directorylist}");
+				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
 		}
 

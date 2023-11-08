@@ -24,53 +24,36 @@ namespace Xamarin.Android.Build.Tests
 	{
 		static object [] MarshalMethodsDefaultStatusSource = new object [] {
 			new object[] {
-				/* isClassic */              false,
 				/* isRelease */              true,
 				/* marshalMethodsEnabled */  false,
 			},
 			new object[] {
-				/* isClassic */              false,
-				/* isRelease */              false,
-				/* marshalMethodsEnabled */  false,
-			},
-			new object[] {
-				/* isClassic */              true,
-				/* isRelease */              false,
-				/* marshalMethodsEnabled */  false,
-			},
-			new object[] {
-				/* isClassic */              true,
 				/* isRelease */              true,
-				/* marshalMethodsEnabled */  false,
+				/* marshalMethodsEnabled */  true,
+			},
+			new object[] {
+				/* isRelease */              false,
+				/* marshalMethodsEnabled */  true,
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (MarshalMethodsDefaultStatusSource))]
-		public void MarshalMethodsDefaultEnabledStatus (bool isClassic, bool isRelease, bool marshalMethodsEnabled)
+		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
-			if (isClassic) {
-				if (Builder.UseDotNet) {
-					Assert.Ignore ("Ignored in .NET6+");
-					return;
-				}
-			} else if (!Builder.UseDotNet) {
-				Assert.Ignore ("Ignored in classic");
-				return;
-			}
-
 			var abis = new [] { "armeabi-v7a", "x86" };
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
-
+			proj.SetProperty (KnownProperties.AndroidEnableMarshalMethods, marshalMethodsEnabled.ToString ());
 			proj.SetAndroidSupportedAbis (abis);
+			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
-					StringAssertEx.ContainsText (b.LastBuildOutput, $"_AndroidUseMarshalMethods = {marshalMethodsEnabled}"),
-					$"The '_AndroidUseMarshalMethods' MSBuild property should have had the value of '{marshalMethodsEnabled}'"
+					StringAssertEx.ContainsText (b.LastBuildOutput, $"_AndroidUseMarshalMethods = {shouldMarshalMethodsBeEnabled}"),
+					$"The '_AndroidUseMarshalMethods' MSBuild property should have had the value of '{shouldMarshalMethodsBeEnabled}'"
 				);
 
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -78,7 +61,7 @@ namespace Xamarin.Android.Build.Tests
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
-				Assert.AreEqual (app_config.marshal_methods_enabled, marshalMethodsEnabled, $"Marshal methods enabled status should be '{marshalMethodsEnabled}', but it was '{app_config.marshal_methods_enabled}'");
+				Assert.AreEqual (app_config.marshal_methods_enabled, shouldMarshalMethodsBeEnabled, $"Marshal methods enabled status should be '{shouldMarshalMethodsBeEnabled}', but it was '{app_config.marshal_methods_enabled}'");
 			}
 		}
 
@@ -94,22 +77,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public static string [] SupportedTargetFrameworks ()
-		{
-			using (var b = new Builder ()) {
-				if (Builder.UseDotNet)
-					return new string [] { b.LatestTargetFrameworkVersion () };
-				else
-					return b.GetAllSupportedTargetFrameworkVersions ();
-			}
-		}
-
 		[Test]
-		public void BuildBasicApplication ([ValueSource (nameof (SupportedTargetFrameworks))] string tfv, [Values (true, false)] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
+		public void BuildBasicApplication ([Values (true, false)] bool isRelease, [Values ("", "en_US.UTF-8", "sv_SE.UTF-8")] string langEnvironmentVariable)
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
-				TargetFrameworkVersion = tfv,
 			};
 
 			Dictionary<string, string> envvar = null;
@@ -158,7 +130,7 @@ namespace Xamarin.Android.Build.Tests
 
 		public static string GetLinkedPath (ProjectBuilder builder, bool isRelease, string filename)
 		{
-			return Builder.UseDotNet && isRelease ?
+			return isRelease ?
 				builder.Output.GetIntermediaryPath (Path.Combine ("android-arm64", "linked", filename)) :
 				builder.Output.GetIntermediaryPath (Path.Combine ("android", "assets", filename));
 		}
@@ -181,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			byte [] apkDescData;
-			var flavor = (forms ? "XForms" : "Simple") + (Builder.UseDotNet ? "DotNet" : "Legacy");
+			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
 			var apkDescReference = "reference.apkdesc";
 			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}")) {
@@ -194,9 +166,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = BuildHelper.CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				var depsFile = Builder.UseDotNet
-					? GetLinkedPath (b, true, "linker-dependencies.xml")
-					: Path.Combine (proj.Root, b.ProjectDirectory, "linker-dependencies.xml.gz");
+				var depsFile = GetLinkedPath (b, true, "linker-dependencies.xml");
 				FileAssert.Exists (depsFile);
 
 				const int ApkSizeThreshold = 5 * 1024;
@@ -204,10 +174,8 @@ namespace Xamarin.Android.Build.Tests
 				const int ApkPercentChangeThreshold = 3;
 				const int FilePercentChangeThreshold = 5;
 				var regressionCheckArgs = $"--test-apk-size-regression={ApkSizeThreshold} --test-assembly-size-regression={AssemblySizeThreshold}";
-				// Make .NET 6 checks more lenient during previews. Report if any files increase by more than 5% or if the package size increases by more than 3%
-				if (Builder.UseDotNet) {
-					regressionCheckArgs = $"--test-apk-percentage-regression=\"{ApkPercentChangeThreshold}\" --test-content-percentage-regression=\"{FilePercentChangeThreshold}\"";
-				}
+				//TODO Only make these checks more lenient during early previews. Report if any files increase by more than 5% or if the package size increases by more than 3%
+				regressionCheckArgs = $"--test-apk-percentage-regression=\"{ApkPercentChangeThreshold}\" --test-content-percentage-regression=\"{FilePercentChangeThreshold}\"";
 				var apkFile = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, proj.PackageName + "-Signed.apk");
 				var apkDescPath = Path.Combine (Root, apkDescFilename);
 				var apkDescReferencePath = Path.Combine (Root, b.ProjectDirectory, apkDescReference);
@@ -279,9 +247,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
-			if (proj.IsRelease = isRelease && !Builder.UseDotNet) {
-				proj.SetProperty ("MonoSymbolArchive", "True");
-			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
@@ -305,24 +270,10 @@ namespace Xamarin.Android.Build.Tests
 				b.AssertHasNoWarnings ();
 
 				// $(AndroidEnableMultiDex) should not add android-support-multidex.jar!
-				if (Builder.UseDotNet) {
-					var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
-					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
-					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
-						$"{aarPath} should not contain a .jar file!");
-				} else {
-					var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
-					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
-					const string libraryProjects = "__AndroidLibraryProjects__.zip";
-					var resource = assembly.MainModule.Resources.OfType<EmbeddedResource> ()
-						.FirstOrDefault (e => e.Name == libraryProjects);
-					Assert.IsNotNull (resource, $"{assemblyPath} should contain {libraryProjects}");
-
-					using var stream = resource.GetResourceStream ();
-					using var zip = Xamarin.Tools.Zip.ZipArchive.Open (stream);
-					Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
-						$"{resource.Name} should not contain a .jar file!");
-				}
+				var aarPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.aar");
+				using var zip = Xamarin.Tools.Zip.ZipArchive.Open (aarPath, FileMode.Open);
+				Assert.IsFalse (zip.Any (e => e.FullName.EndsWith (".jar", StringComparison.OrdinalIgnoreCase)),
+					$"{aarPath} should not contain a .jar file!");
 			}
 		}
 
@@ -398,25 +349,11 @@ class MemTest {
 
 		[Test]
 		[NonParallelizable]
-		public void BuildBasicApplicationAppCompat ([Values (true, false)] bool usePackageReference)
+		public void BuildBasicApplicationAppCompat ()
 		{
-			if (Builder.UseDotNet && !usePackageReference) {
-				Assert.Ignore ("'packages.config' is not supported in .NET 5+.");
-			}
-
 			var proj = new XamarinAndroidApplicationProject ();
-			var packages = usePackageReference ? proj.PackageReferences : proj.Packages;
+			var packages = proj.PackageReferences;
 			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			// packages.config needs every dependency listed
-			if (!usePackageReference) {
-				packages.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-				packages.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-				packages.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-				packages.Add (KnownPackages.SupportFragment_27_0_2_1);
-				packages.Add (KnownPackages.SupportCompat_27_0_2_1);
-				packages.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-				packages.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			}
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
@@ -527,27 +464,12 @@ class MemTest {
 			}
 		}
 
-		[Test, Ignore ("Deprecated CodeAnalysis feature is broken in 16.8: https://developercommunity.visualstudio.com/solutions/1255925/view.html")]
-		public void CodeAnalysis ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				IsRelease = true
-			};
-			proj.SetProperty ("RunCodeAnalysis", "True");
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				b.Target = "Build";
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
 		[Test]
 		[NonParallelizable]
-		public void SkipConvertResourcesCases ([Values (false, true)] bool useAapt2)
+		public void SkipConvertResourcesCases ()
 		{
-			AssertAaptSupported (useAapt2);
 			var target = "ConvertResourcesCases";
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.AndroidUseAapt2 = useAapt2;
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAarLibrary", "Jars\\material-menu-1.1.0.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
@@ -591,26 +513,14 @@ class MemTest {
 				var files = new List<string> {
 					"material-menu-1.1.0.aar",
 				};
-				// .NET 6 tests use AndroidX, others use Support
-				if (Builder.UseDotNet) {
-					files.Add ("androidx.core.core.aar");
-					files.Add ("androidx.transition.transition.aar");
-					files.Add ("androidx.recyclerview.recyclerview.aar");
-					files.Add ("androidx.coordinatorlayout.coordinatorlayout.aar");
-					files.Add ("androidx.cardview.cardview.aar");
-					files.Add ("androidx.appcompat.appcompat-resources.aar");
-					files.Add ("androidx.appcompat.appcompat.aar");
-					files.Add ("com.google.android.material.material.aar");
-				} else {
-					files.Add ("Xamarin.Android.Support.Compat.dll");
-					files.Add ("Xamarin.Android.Support.Design.dll");
-					files.Add ("Xamarin.Android.Support.Media.Compat.dll");
-					files.Add ("Xamarin.Android.Support.Transition.dll");
-					files.Add ("Xamarin.Android.Support.v7.AppCompat.dll");
-					files.Add ("Xamarin.Android.Support.v7.CardView.dll");
-					files.Add ("Xamarin.Android.Support.v7.MediaRouter.dll");
-					files.Add ("Xamarin.Android.Support.v7.RecyclerView.dll");
-				}
+				files.Add ("androidx.core.core.aar");
+				files.Add ("androidx.transition.transition.aar");
+				files.Add ("androidx.recyclerview.recyclerview.aar");
+				files.Add ("androidx.coordinatorlayout.coordinatorlayout.aar");
+				files.Add ("androidx.cardview.cardview.aar");
+				files.Add ("androidx.appcompat.appcompat-resources.aar");
+				files.Add ("androidx.appcompat.appcompat.aar");
+				files.Add ("com.google.android.material.material.aar");
 				foreach (var file in files) {
 					Assert.IsTrue (StringAssertEx.ContainsText (skipped, file), $"`{target}` should skip `{file}`.");
 				}
@@ -632,7 +542,6 @@ class MemTest {
 				//We don't want these things stepping on each other
 				b.BuildLogFile = null;
 				b.Save (proj, saveProject: true);
-				proj.NuGetRestore (Path.Combine (Root, b.ProjectDirectory), b.PackagesDirectory);
 
 				Parallel.For (0, 5, i => {
 					try {
@@ -822,7 +731,6 @@ namespace UnamedProject
 			const string filePattern = ".NETCoreApp,Version=*.AssemblyAttributes.cs";
 			var proj = new XamarinAndroidApplicationProject {
 			};
-			proj.SetProperty ("AndroidUseLatestPlatformSdk", "True");
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
@@ -858,7 +766,7 @@ namespace UnamedProject
 				foreach (var file in files) {
 					//NOTE: ILLink from the dotnet/sdk currently copies assemblies with older timestamps, and only $(_LinkSemaphore) is touched
 					//see: https://github.com/dotnet/sdk/blob/a245b6ff06b483927e57d953b803a390ad31db95/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L113-L116
-					if (Builder.UseDotNet && Directory.GetParent (file).Name == "linked") {
+					if (Directory.GetParent (file).Name == "linked") {
 						continue;
 					}
 					var info = new FileInfo (file);
@@ -975,10 +883,8 @@ namespace UnamedProject
 		public void BuildIncrementingAssemblyVersion ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			if (Builder.UseDotNet) {
-				proj.SetProperty ("GenerateAssemblyInfo", "false");
-				proj.SetProperty ("Deterministic", "false"); // Required for AssemblyVersion wildcards
-			}
+			proj.SetProperty ("GenerateAssemblyInfo", "false");
+			proj.SetProperty ("Deterministic", "false"); // Required for AssemblyVersion wildcards
 			proj.Sources.Add (new BuildItem ("Compile", "AssemblyInfo.cs") {
 				TextContent = () => "[assembly: System.Reflection.AssemblyVersion (\"1.0.0.*\")]"
 			});
@@ -1103,9 +1009,6 @@ namespace UnamedProject
 				LinkTool = linkTool,
 			};
 			if (!string.IsNullOrEmpty (rid)) {
-				if (!Builder.UseDotNet) {
-					Assert.Ignore ("Skipping test, as it is valid for .NET 6+ only.");
-				}
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{linkTool}{rid}"))) {
@@ -1118,7 +1021,7 @@ namespace UnamedProject
 					intermediate = Path.Combine (intermediate, rid);
 				}
 
-				var toolbar_class = Builder.UseDotNet ? "androidx.appcompat.widget.Toolbar" : "android.support.v7.widget.Toolbar";
+				var toolbar_class = "androidx.appcompat.widget.Toolbar";
 				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
 					var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
 					FileAssert.Exists (proguardProjectPrimary);
@@ -1181,28 +1084,12 @@ namespace UnamedProject
 		public void BuildMultiDexApplication ()
 		{
 			var proj = CreateMultiDexRequiredApplication ();
-			proj.UseLatestPlatformSdk = false;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
-			if (IsWindows && !Builder.UseDotNet) {
-				proj.SetProperty ("AppendTargetFrameworkToIntermediateOutputPath", "True");
-			}
-
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
-				string intermediateDir;
-				if (IsWindows && !Builder.UseDotNet) {
-					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, proj.TargetFrameworkAbbreviated);
-				} else {
-					intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				}
+				string intermediateDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, intermediateDir, "android/bin/classes.dex")),
 					"multidex-ed classes.zip exists");
-				if (!Builder.UseDotNet) {
-					var multidexKeepPath = Path.Combine (Root, b.ProjectDirectory, intermediateDir, "multidex.keep");
-					Assert.IsTrue (File.Exists (multidexKeepPath), "multidex.keep exists");
-					Assert.IsTrue (File.ReadAllLines (multidexKeepPath).Length > 1, "multidex.keep must contain more than one line.");
-					Assert.IsTrue (b.LastBuildOutput.ContainsText (Path.Combine (proj.TargetFrameworkVersion, "mono.android.jar")), proj.TargetFrameworkVersion + "/mono.android.jar should be used.");
-				}
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 			}
 		}
@@ -1463,13 +1350,7 @@ namespace App1
 				};
 				proj.OtherBuildItems.Add (config);
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				if (Builder.UseDotNet) {
-					StringAssertEx.Contains ("XA1024", b.LastBuildOutput, "Output should contain XA1024 warnings");
-				} else {
-					FileAssert.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.dll.config"));
-					Assert.IsTrue (b.Build (proj), "second build failed");
-					b.Output.AssertTargetIsSkipped ("_CopyConfigFiles");
-				}
+				StringAssertEx.Contains ("XA1024", b.LastBuildOutput, "Output should contain XA1024 warnings");
 			}
 		}
 
