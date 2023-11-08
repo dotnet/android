@@ -31,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				AotAssemblies = false,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 
 			// TODO: only needed in .NET 6+
 			// See https://github.com/dotnet/runtime/issues/56989
