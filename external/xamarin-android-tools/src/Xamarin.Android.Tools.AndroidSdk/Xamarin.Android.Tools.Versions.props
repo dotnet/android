@@ -10,7 +10,7 @@
     along with any other repo which references androidtools.
     -->
     <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">32.0.0</AndroidSdkBuildToolsVersion>
-    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">7.0</AndroidCommandLineToolsVersion>
+    <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">11.0</AndroidCommandLineToolsVersion>
     <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">34.0.5</AndroidSdkPlatformToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-34</AndroidSdkPlatformVersion>
