@@ -41,13 +41,9 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsAndroidApplicationProject (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release", [CallerMemberName] string packageName = "")
 			: base (debugConfigurationName, releaseConfigurationName, packageName)
 		{
-			if (Builder.UseDotNet) {
-				// Don't opt into ImplicitUsings
-				RemoveProperty (KnownProperties.ImplicitUsings);
-				PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-			} else {
-				PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
-			}
+			// Don't opt into ImplicitUsings
+			RemoveProperty (KnownProperties.ImplicitUsings);
+			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,

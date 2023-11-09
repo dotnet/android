@@ -133,9 +133,7 @@ namespace Xamarin.Android.Build.Tests
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFrameworkVersion = "v8.0",
 				TargetSdkVersion = "26",
-				UseLatestPlatformSdk = false,
 			};
 			var parameters = new string [] {
 				$"TargetFrameworkRootPath={referencesPath}",
@@ -147,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? XABuildConfig.AndroidDefaultTargetDotnetApiLevel : 26;
+				int apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
@@ -168,9 +166,7 @@ namespace Xamarin.Android.Build.Tests
 			var referencesPath = CreateFauxReferencesDirectory (Path.Combine (path, "xbuild-frameworks"), apis);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
-				TargetFrameworkVersion = "v8.0",
 				TargetSdkVersion = "26",
-				UseLatestPlatformSdk = false,
 			};
 			var parameters = new string [] {
 				$"TargetFrameworkRootPath={referencesPath}",
@@ -183,7 +179,7 @@ namespace Xamarin.Android.Build.Tests
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
 					string.Format ("First Build should have succeeded"));
-				int apiLevel = Builder.UseDotNet ? XABuildConfig.AndroidDefaultTargetDotnetApiLevel : 26;
+				int apiLevel = XABuildConfig.AndroidDefaultTargetDotnetApiLevel;
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");

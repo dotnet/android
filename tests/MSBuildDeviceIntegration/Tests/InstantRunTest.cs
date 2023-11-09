@@ -17,7 +17,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -51,7 +50,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
@@ -127,7 +125,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
@@ -143,7 +140,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
@@ -182,7 +178,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			foreach (var pkg in packages)
@@ -212,7 +207,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -244,7 +238,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -273,15 +266,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 				OtherBuildItems = {
 					nativeLib,
 				},
 			};
-			if (Builder.UseDotNet) {
-				//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
-				proj.SetAndroidSupportedAbis (DeviceAbi);
-			}
+			//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
@@ -311,7 +301,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");

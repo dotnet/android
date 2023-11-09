@@ -17,19 +17,13 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsMapsApplicationProject ([CallerMemberName] string packageName = "")
 			: base (packageName: packageName)
 		{
-			if (Builder.UseDotNet) {
-				PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_7_0_1142);
-				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
-				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
-				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
-				PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
-				PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
+			PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_7_0_1142);
+			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
+			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
+			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);
+			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Tasks);
+			PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
 
-				//TODO: temporary fix for <Import/> ordering breakage and workloads
-				SetProperty ("AndroidApplication", "True");
-			} else {
-				PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_0_0_425677);
-			}
 			MainActivity = MainActivity.Replace ("//${AFTER_FORMS_INIT}", "Xamarin.FormsMaps.Init (this, savedInstanceState);");
 			//NOTE: API_KEY metadata just has to *exist*
 			AndroidManifest = AndroidManifest.Replace ("</application>", "<meta-data android:name=\"com.google.android.maps.v2.API_KEY\" android:value=\"\" /></application>");
