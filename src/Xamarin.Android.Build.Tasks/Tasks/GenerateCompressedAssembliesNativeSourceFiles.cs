@@ -43,16 +43,22 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			var assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.Ordinal);
+			var archAssemblies = new Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> ();
 			var counters = new Dictionary<AndroidTargetArch, uint> ();
 			foreach (ITaskItem assembly in ResolvedAssemblies) {
 				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
 					continue;
 				}
 
+				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (!archAssemblies.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assemblies)) {
+					assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
+					archAssemblies.Add (arch, assemblies);
+				}
+
 				var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 				if (assemblies.ContainsKey (assemblyKey)) {
-					Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec}");
+					Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetAssemblyAbi(assembly)})");
 					continue;
 				}
 
@@ -62,7 +68,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+
 				if (!counters.TryGetValue (arch, out uint counter)) {
 					counter = 0;
 				}
@@ -72,10 +78,10 @@ namespace Xamarin.Android.Tasks
 
 			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
 			Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, assemblies, RegisteredTaskObjectLifetime.Build);
-			Generate (assemblies);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, archAssemblies, RegisteredTaskObjectLifetime.Build);
+			Generate (archAssemblies);
 
-			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)
+			void Generate (Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> dict)
 			{
 				var composer = new CompressedAssembliesNativeAssemblyGenerator (dict);
 				LLVMIR.LlvmIrModule compressedAssemblies = composer.Construct ();

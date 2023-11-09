@@ -133,7 +133,7 @@ namespace Xamarin.Android.Tasks
 
 		List<Regex> excludePatterns = new List<Regex> ();
 
-		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
+		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
@@ -312,12 +312,12 @@ namespace Xamarin.Android.Tasks
 
 			bool debug = _Debug;
 			bool compress = !debug && EnableCompression;
-			IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo = null;
+			IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo = null;
 
 			if (compress) {
 				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
 				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
-				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<string, CompressedAssemblyInfo>> (key, RegisteredTaskObjectLifetime.Build);
+				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
 				if (compressedAssembliesInfo == null)
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}
@@ -361,7 +361,7 @@ namespace Xamarin.Android.Tasks
 			return new Regex (sb.ToString (), options);
 		}
 
-		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<string, CompressedAssemblyInfo> compressedAssembliesInfo, string assemblyStoreApkName)
+		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
@@ -496,40 +496,44 @@ namespace Xamarin.Android.Tasks
 					return assembly.ItemSpec;
 				}
 
-				var key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
-				if (compressedAssembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) && info != null) {
-					EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
-					string assemblyOutputDir;
-					string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-					string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
-					if (!String.IsNullOrEmpty (subDirectory)) {
-						assemblyOutputDir = Path.Combine (compressedOutputDir, abi, subDirectory);
-					} else {
-						assemblyOutputDir = Path.Combine (compressedOutputDir, abi);
-					}
-					AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
-					if (result != AssemblyCompression.CompressionResult.Success) {
-						switch (result) {
-							case AssemblyCompression.CompressionResult.EncodingFailed:
-								Log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
-								break;
-
-							case AssemblyCompression.CompressionResult.InputTooBig:
-								Log.LogMessage ($"Input assembly {assembly.ItemSpec} exceeds maximum input size");
-								break;
-
-							default:
-								Log.LogMessage ($"Unknown error compressing {assembly.ItemSpec}");
-								break;
-						}
-						return assembly.ItemSpec;
-					}
-					return compressedAssembly.DestinationPath;
-				} else {
-					Log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
+				string key = CompressedAssemblyInfo.GetDictionaryKey (assembly);
+				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (!compressedAssembliesInfo.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assembliesInfo)) {
+					throw new InvalidOperationException ($"Internal error: compression assembly info for architecture {arch} not available");
 				}
 
-				return assembly.ItemSpec;
+				if (!assembliesInfo.TryGetValue (key, out CompressedAssemblyInfo info) || info == null) {
+					Log.LogDebugMessage ($"Assembly missing from {nameof (CompressedAssemblyInfo)}: {key}");
+					return assembly.ItemSpec;
+				}
+
+				EnsureCompressedAssemblyData (assembly.ItemSpec, info.DescriptorIndex);
+				string assemblyOutputDir;
+				string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+				string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+				if (!String.IsNullOrEmpty (subDirectory)) {
+					assemblyOutputDir = Path.Combine (compressedOutputDir, abi, subDirectory);
+				} else {
+					assemblyOutputDir = Path.Combine (compressedOutputDir, abi);
+				}
+				AssemblyCompression.CompressionResult result = AssemblyCompression.Compress (compressedAssembly, assemblyOutputDir);
+				if (result != AssemblyCompression.CompressionResult.Success) {
+					switch (result) {
+						case AssemblyCompression.CompressionResult.EncodingFailed:
+							Log.LogMessage ($"Failed to compress {assembly.ItemSpec}");
+							break;
+
+						case AssemblyCompression.CompressionResult.InputTooBig:
+							Log.LogMessage ($"Input assembly {assembly.ItemSpec} exceeds maximum input size");
+							break;
+
+						default:
+							Log.LogMessage ($"Unknown error compressing {assembly.ItemSpec}");
+							break;
+					}
+					return assembly.ItemSpec;
+				}
+				return compressedAssembly.DestinationPath;
 			}
 		}
 

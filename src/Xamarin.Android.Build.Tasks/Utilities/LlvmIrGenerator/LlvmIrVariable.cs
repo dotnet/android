@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Globalization;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks.LLVMIR;
 
 [Flags]
@@ -215,6 +217,13 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// <seealso href="https://llvm.org/docs/LangRef.html#global-variables"/>
 	/// </summary>
 	public virtual LlvmIrVariableOptions? Options { get; set; }
+
+	/// <summary>
+	/// There are situations when a variable differs enough between architectures, that the difference cannot be
+	/// handled with <seealso cref="BeforeWriteCallback"/>.  In such situations one can create a separate variable
+	/// for each architecture and set this property.
+	/// </summary>
+	public AndroidTargetArch? TargetArch { get; set; }
 
 	/// <summary>
 	/// If set to `true`, initialize the array with a shortcut zero-initializer statement.  Useful when pre-allocating

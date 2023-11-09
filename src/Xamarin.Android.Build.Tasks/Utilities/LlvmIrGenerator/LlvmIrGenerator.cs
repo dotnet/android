@@ -233,6 +233,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					continue;
 				}
 
+				if (gv.TargetArch.HasValue && gv.TargetArch.Value != target.TargetArch) {
+					continue;
+				}
+
 				if (gv.BeforeWriteCallback != null) {
 					gv.BeforeWriteCallback (gv, target, gv.BeforeWriteCallbackCallerState);
 				}

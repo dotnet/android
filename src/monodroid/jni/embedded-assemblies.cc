@@ -385,24 +385,28 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 			name.get ()
 		);
 	}
+	log_debug (LOG_ASSEMBLY, "here #1.0");
 
 	uint8_t *assembly_data;
 	uint32_t assembly_data_size;
 
 	get_assembly_data (assembly_runtime_info, assembly_data, assembly_data_size);
+	log_debug (LOG_ASSEMBLY, "here #1.1");
 	MonoImage *image = MonoImageLoader::load (name, loader_data, name_hash, assembly_data, assembly_data_size);
+	log_debug (LOG_ASSEMBLY, "here #1.2");
 	if (image == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Failed to load MonoImage of '%s'", name.get ());
 		return nullptr;
 	}
-
+	log_debug (LOG_ASSEMBLY, "here #1.3");
 	if (have_and_want_debug_symbols && assembly_runtime_info.debug_info_data != nullptr) {
 		log_debug (LOG_ASSEMBLY, "Registering debug data for assembly '%s'", name.get ());
 		mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*> (assembly_runtime_info.debug_info_data), static_cast<int>(assembly_runtime_info.descriptor->debug_data_size));
 	}
-
+	log_debug (LOG_ASSEMBLY, "here #1.5");
 	MonoImageOpenStatus status;
 	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
+	log_debug (LOG_ASSEMBLY, "here #1.6");
 	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
 		return nullptr;
@@ -437,11 +441,11 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 	} else {
 		a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
 	}
-
+	log_debug (LOG_ASSEMBLY, "here #1.7");
 	if (a == nullptr) {
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
 	}
-
+	log_debug (LOG_ASSEMBLY, "here #1.8");
 	return a;
 }
 
