@@ -11,7 +11,7 @@
     -->
     <AndroidSdkBuildToolsVersion Condition="'$(AndroidSdkBuildToolsVersion)' == ''">32.0.0</AndroidSdkBuildToolsVersion>
     <AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">7.0</AndroidCommandLineToolsVersion>
-    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">34.0.1</AndroidSdkPlatformToolsVersion>
+    <AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">34.0.5</AndroidSdkPlatformToolsVersion>
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-34</AndroidSdkPlatformVersion>
     <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">24.0.8215888</AndroidNdkVersion>
