@@ -482,41 +482,13 @@ namespace Xamarin.Android.Tasks
 			yield return executable;
 		}
 
-		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false)
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false)
 		{
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
 				if (!designTimeBuild) {
 					var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
-					var sdkManagerMenuPath = OS.IsWindows ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_VSCode;
-					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, Path.Combine (expectedPath, "android.jar"), sdkManagerMenuPath);
-				}
-				return null;
-			}
-			return Path.Combine (platformPath, "android.jar");
-		}
-
-		internal enum IDE {
-			CLI,
-			VisualStudio,
-			VSCode,
-		}
-
-		public static string TryGetAndroidJarPathForIDE (TaskLoggingHelper log, string platform, bool designTimeBuild = false, IDE ide = IDE.CLI)
-		{
-			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
-			if (platformPath == null) {
-				if (!designTimeBuild) {
-					var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
-					var sdkManagerMenuPath = Properties.Resources.XA5207_SDK_Manager_CLI;
-					switch (ide) {
-						case IDE.VSCode:
-						sdkManagerMenuPath = Properties.Resources.XA5207_SDK_Manager_VSCode;
-						break;
-						case IDE.VisualStudio:
-						sdkManagerMenuPath =Properties.Resources.XA5207_SDK_Manager_Windows
-						break;
-					}
+					var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
 					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, Path.Combine (expectedPath, "android.jar"), sdkManagerMenuPath);
 				}
 				return null;

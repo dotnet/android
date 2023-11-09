@@ -1455,15 +1455,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
-        /// </summary>
-        public static string XA5207_SDK_Manager_VSCode {
-            get {
-                return ResourceManager.GetString("XA5207_SDK_Manager_VSCode", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Tools &gt; Android &gt; Android SDK Manager....
         /// </summary>
         public static string XA5207_SDK_Manager_Windows {

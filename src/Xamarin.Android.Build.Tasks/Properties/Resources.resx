@@ -867,23 +867,19 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The missing tool name</comment>
   </data>
   <data name="XA5207" xml:space="preserve">
-    <value>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)</value>
+    <value>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. {2} ({1} missing.)</value>
     <comment>The following are literal names and should not be translated: android.jar
 {0} - The API level name
 {1} - The expected path of the android.jar file
-{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
-  </data>
-  <data name="XA5207_SDK_Manager_VSCode" xml:space="preserve">
-    <value>Tools &gt; Open Android SDK Manager...</value>
-    <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
+{2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>Tools &gt; Android &gt; Android SDK Manager...</value>
-    <comment>This string is the location of a menu command in Visual Studio.</comment>
+    <value>Either install it in the Android SDK Manager (Tools &gt; Android &gt; Android SDK Manager...), or change the Xamarin.Android project to target an API version that is installed.</value>
+    <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
-    <value>Tools &gt; Android &gt; Android SDK Manager...</value>
-    <comment>This string is the location of a menu command in Visual Studio.</comment>
+    <value>You can install the missing APU level by running `dotnet build -t:InstallAndroidDependencies -f net8.0-android`, or change the Xamarin.Android project to target an API version that is installed.</value>
+    <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5211" xml:space="preserve">
     <value>Embedded Wear app package name differs from handheld app package name ({0} != {1}).</value>

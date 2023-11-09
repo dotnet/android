@@ -25,6 +25,8 @@ namespace Xamarin.Android.Tasks
 
 		public bool DesignTimeBuild { get; set; }
 
+		public bool BuildingInsideVisualStudio { get; set; }
+
 		public string SupportedOSPlatformVersion { get; set; }
 
 		[Output]
@@ -95,7 +97,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			platform            = GetTargetSdkVersion (platform, target_sdk);
-			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, designTimeBuild: DesignTimeBuild);
+			JavaPlatformJarPath =  MonoAndroidHelper.TryGetAndroidJarPath (Log, platform, designTimeBuild: DesignTimeBuild, buildingInsideVisualStudio: BuildingInsideVisualStudio);
 			TargetSdkVersion = MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (platform).ToString ();
 			if (JavaPlatformJarPath == null)
 				return !Log.HasLoggedErrors;
