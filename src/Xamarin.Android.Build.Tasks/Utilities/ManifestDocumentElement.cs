@@ -8,7 +8,6 @@ using Mono.Cecil;
 
 using Monodroid;
 using MonoDroid.Tuner;
-using MonoDroid.Utils;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
