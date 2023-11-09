@@ -35,12 +35,12 @@ about the various Microsoft.Android workloads.
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.json"
         DestinationFile="$(WorkloadManifestJsonPath)"
-        Replacements="@WORKLOAD_VERSION@=$(WorkloadVersion);@NET7_VERSION@=$(AndroidNet7Version)">
+        Replacements="@WORKLOAD_VERSION@=$(WorkloadVersion);@NET8_VERSION@=$(AndroidNet8Version)">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="$(XamarinAndroidSourcePath)src\Xamarin.Android.Build.Tasks\Microsoft.NET.Sdk.Android\WorkloadManifest.in.targets"
         DestinationFile="$(WorkloadManifestTargetsPath)"
-        Replacements="@NET7_VERSION@=$(AndroidNet7Version)">
+        Replacements="@NET8_VERSION@=$(AndroidNet8Version)">
     </ReplaceFileContents>
 
     <ItemGroup>
