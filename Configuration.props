@@ -101,7 +101,6 @@
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
-    <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\sdks\out\android-sources\external\linker\src</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
@@ -144,7 +143,6 @@
     <AndroidSdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidSdkDirectory)'))</AndroidSdkFullPath>
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
-    <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
   </PropertyGroup>

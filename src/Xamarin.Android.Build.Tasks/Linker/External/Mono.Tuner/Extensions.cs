@@ -5,11 +5,10 @@ using Mono.Cecil;
 
 using Mono.Linker;
 
-namespace Mono.Tuner
-{
+namespace Mono.Tuner {
 
-	public static partial class Extensions
-	{
+	public static partial class Extensions {
+
 		public static bool TryGetLinkedAssembly (this LinkContext context, string name, out AssemblyDefinition assembly)
 		{
 			assembly = GetAssembly (context, name);
