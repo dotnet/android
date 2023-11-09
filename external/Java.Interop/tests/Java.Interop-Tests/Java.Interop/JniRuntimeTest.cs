@@ -36,6 +36,25 @@ namespace Java.InteropTests
 				Assert.Fail ("Expected NotSupportedException; got: {0}", e);
 			}
 		}
+
+		[Test]
+		public void UseInvocationPointerOnNewThread ()
+		{
+			var InvocationPointer = JniRuntime.CurrentRuntime.InvocationPointer;
+
+			var t = new Thread (() => {
+				try {
+					var second = new JreRuntimeOptions () {
+						InvocationPointer   = InvocationPointer,
+					}.CreateJreVM ();
+				}
+				catch (Exception e) {
+					Assert.Fail ("Expected no exception, got: {0}", e);
+				}
+			});
+			t.Start ();
+			t.Join ();
+		}
 #endif  // !__ANDROID__
 
 		[Test]

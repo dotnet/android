@@ -165,8 +165,8 @@ namespace Java.Interop
 		{
 			if (options == null)
 				throw new ArgumentNullException (nameof (options));
-			if (options.InvocationPointer == IntPtr.Zero)
-				throw new ArgumentException ("options.InvocationPointer is null", nameof (options));
+			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer == IntPtr.Zero)
+				throw new ArgumentException ("Need either options.InvocationPointer or options.EnvironmentPointer!", nameof (options));
 
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
@@ -175,7 +175,12 @@ namespace Java.Interop
 			NewObjectRequired   = options.NewObjectRequired;
 
 			JniVersion          = options.JniVersion;
-			InvocationPointer   = options.InvocationPointer;
+
+			if (options.InvocationPointer == IntPtr.Zero && options.EnvironmentPointer != IntPtr.Zero) {
+				InvocationPointer   = GetInvocationPointerFromEnvironmentPointer (options.EnvironmentPointer);
+			} else {
+				InvocationPointer   = options.InvocationPointer;
+			}
 			Invoker             = CreateInvoker (InvocationPointer);
 
 			SetValueManager (options);
@@ -228,6 +233,26 @@ namespace Java.Interop
 #if !XA_JI_EXCLUDE
 			ManagedPeer.Init ();
 #endif  // !XA_JI_EXCLUDE
+		}
+
+		static unsafe IntPtr GetInvocationPointerFromEnvironmentPointer (IntPtr envp)
+		{
+			IntPtr vm   = IntPtr.Zero;
+#if FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
+			if (JniNativeMethods.GetJavaVM (envp, &vm) is int r &&
+					r != JNI_OK) {
+				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
+			}
+#elif FEATURE_JNIENVIRONMENT_JI_PINVOKES
+			if (NativeMethods.java_interop_jnienv_get_java_vm (envp, out vm) is int r &&
+					r != JNI_OK) {
+				throw new InvalidOperationException ($"Could not obtain JavaVM* from JNIEnv*; JNIEnv::GetJavaVM() returned {r}!");
+			}
+#else   // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+			throw new NotSupportedException ("Cannot obtain JavaVM* from JNIEnv*! " +
+				"Rebuild with FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS or FEATURE_JNIENVIRONMENT_JI_PINVOKES set!");
+#endif  // !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES
+			return vm;
 		}
 
 		T SetRuntime<T> (T value)
