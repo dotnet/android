@@ -11,8 +11,8 @@
   <ItemGroup Condition=" '$(TargetPlatformIdentifier)' == 'android' and $([MSBuild]::VersionEquals($(TargetFrameworkVersion), '8.0')) ">
     <KnownFrameworkReference
         Update="Microsoft.Android"
-        LatestRuntimeFrameworkVersion="@NET8_VERSION@"
-        TargetingPackVersion="@NET8_VERSION@"
+        LatestRuntimeFrameworkVersion="@NET_PREVIOUS_VERSION@"
+        TargetingPackVersion="@NET_PREVIOUS_VERSION@"
     />
   </ItemGroup>
 

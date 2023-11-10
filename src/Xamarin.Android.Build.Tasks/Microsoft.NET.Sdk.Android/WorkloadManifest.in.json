@@ -37,7 +37,7 @@
     },
     "Microsoft.Android.Sdk.net8": {
       "kind": "sdk",
-      "version": "@NET8_VERSION@",
+      "version": "@NET_PREVIOUS_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
