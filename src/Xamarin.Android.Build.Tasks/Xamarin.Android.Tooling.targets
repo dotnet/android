@@ -101,6 +101,7 @@ projects.
         AndroidSdkPlatform="$(_AndroidApiLevel)"
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"
+        BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
     >
       <Output TaskParameter="JavaPlatformJarPath" PropertyName="JavaPlatformJarPath" />
