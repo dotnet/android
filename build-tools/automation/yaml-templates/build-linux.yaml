@@ -44,6 +44,8 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
+    - template: setup-ubuntu.yaml
+
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
         clean: true
@@ -58,8 +60,6 @@ stages:
       - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
         workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
         displayName: make prepare-external-git-dependencies
-
-    - template: setup-ubuntu.yaml
 
     - task: NuGetAuthenticate@0
       displayName: authenticate with azure artifacts
