@@ -51,195 +51,40 @@
     <None Remove="Tests\**" />
     <Compile Include="$(IntermediateOutputPath)Profile.g.cs" />
     <Compile Include="..\..\bin\Build$(Configuration)\XABuildConfig.cs" />
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\AdjustVisibility.cs">
-      <Link>Linker\Mono.Tuner\AdjustVisibility.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CecilRocks.cs">
-      <Link>Linker\Mono.Tuner\CecilRocks.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CheckVisibility.cs">
-      <Link>Linker\Mono.Tuner\CheckVisibility.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Annotations.cs">
-      <Link>Linker\Linker\Annotations.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyAction.cs">
-      <Link>Linker\Linker\AssemblyAction.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyResolver.cs">
-      <Link>Linker\Linker\AssemblyResolver.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\AssemblyUtilities.cs">
-      <Link>Linker\Linker\AssemblyUtilities.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\I18nAssemblies.cs">
-      <Link>Linker\Linker\I18nAssemblies.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Inflater.cs">
-      <Link>Linker\Linker\Inflater.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IXApiVisitor.cs">
-      <Link>Linker\Linker\IXApiVisitor.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LinkContext.cs">
-      <Link>Linker\Linker\LinkContext.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodAction.cs">
-      <Link>Linker\Linker\MethodAction.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodReferenceExtensions.cs">
-      <Link>Linker\Linker\MethodReferenceExtensions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OutputException.cs">
-      <Link>Linker\Linker\OutputException.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\OverrideInformation.cs">
-      <Link>Linker\Linker\OverrideInformation.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Pipeline.cs">
-      <Link>Linker\Linker\Pipeline.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeNameParser.cs">
-      <Link>Linker\Linker\TypeNameParser.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypePreserve.cs">
-      <Link>Linker\Linker\TypePreserve.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeReferenceExtensions.cs">
-      <Link>Linker\Linker\TypeReferenceExtensions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\XApiReader.cs">
-      <Link>Linker\Linker\XApiReader.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BlacklistStep.cs">
-      <Link>Linker\Linker.Steps\BlacklistStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BaseStep.cs">
-      <Link>Linker\Linker.Steps\BaseStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\CleanStep.cs">
-      <Link>Linker\Linker.Steps\CleanStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\IStep.cs">
-      <Link>Linker\Linker.Steps\IStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\LoadI18nAssemblies.cs">
-      <Link>Linker\Linker.Steps\LoadI18nAssemblies.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\LoadReferencesStep.cs">
-      <Link>Linker\Linker.Steps\LoadReferencesStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\OutputStep.cs">
-      <Link>Linker\Linker.Steps\OutputStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\RegenerateGuidStep.cs">
-      <Link>Linker\Linker.Steps\RegenerateGuidStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromAssemblyStep.cs">
-      <Link>Linker\Linker.Steps\ResolveFromAssemblyStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromXApiStep.cs">
-      <Link>Linker\Linker.Steps\ResolveFromXApiStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveFromXmlStep.cs">
-      <Link>Linker\Linker.Steps\ResolveFromXmlStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\ResolveStep.cs">
-      <Link>Linker\Linker.Steps\ResolveStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\TypeMapStep.cs">
-      <Link>Linker\Linker.Steps\TypeMapStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\SweepStep.cs">
-      <Link>Linker\Linker.Steps\SweepStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\MarkStep.cs">
-      <Link>Linker\Linker.Steps\MarkStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\PreserveDependencyLookupStep.cs">
-      <Link>Linker\Linker.Steps\PreserveDependencyLookupStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker.Steps\BodySubstituterStep.cs">
-      <Link>Linker\Linker.Steps\BodySubstituterStep.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IDependencyRecorder.cs">
-      <Link>Linker\Linker\IDependencyRecorder.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\IReflectionPatternRecorder.cs">
-      <Link>Linker\Linker\IReflectionPatternRecorder.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoggingReflectionPatternRecorder.cs">
-      <Link>Linker\Linker\LoggingReflectionPatternRecorder.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\XmlDependencyRecorder.cs">
-      <Link>Linker\Linker\XmlDependencyRecorder.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\LoadException.cs">
-      <Link>Linker\Linker\LoadException.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkException.cs">
-      <Link>Linker\Linker\MarkException.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\ConsoleLogger.cs">
-      <Link>Linker\Linker\ConsoleLogger.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\ILogger.cs">
-      <Link>Linker\Linker\ILogger.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\Tracer.cs">
-      <Link>Linker\Linker\Tracer.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MarkingHelpers.cs">
-      <Link>Linker\Linker\MarkingHelpers.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\KnownMembers.cs">
-      <Link>Linker\Linker\KnownMembers.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodDefinitionExtensions.cs">
-      <Link>Linker\Linker\MethodDefinitionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\MethodBodyScanner.cs">
-      <Link>Linker\Linker\MethodBodyScanner.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\TypeDefinitionExtensions.cs">
-      <Link>Linker\Linker\TypeDefinitionExtensions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\linker\Linker\BCL.cs">
-      <Link>Linker\Linker\BCL.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\ApplyPreserveAttributeBase.cs">
-      <Link>Linker\Mono.Tuner\ApplyPreserveAttributeBase.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Dispatcher.cs">
-      <Link>Linker\Mono.Tuner\Dispatcher.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\CustomizeActions.cs">
-      <Link>Linker\Mono.Tuner\CustomizeActions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Extensions.cs">
-      <Link>Linker\Mono.Tuner\Extensions.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FixModuleFlags.cs">
-      <Link>Linker\Mono.Tuner\FixModuleFlags.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveCrypto.cs">
-      <Link>Linker\Mono.Tuner\PreserveCrypto.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PreserveSoapHttpClients.cs">
-      <Link>Linker\Mono.Tuner\PreserveSoapHttpClients.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\Profile.cs">
-      <Link>Linker\Mono.Tuner\Profile.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveAttributesBase.cs">
-      <Link>Linker\Mono.Tuner\RemoveAttributesBase.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveResources.cs">
-      <Link>Linker\Mono.Tuner\RemoveResources.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveSecurity.cs">
-      <Link>Linker\Mono.Tuner\RemoveSecurity.cs</Link>
-    </Compile>
+
+    <!-- Include only the linker sources required for LinkAssembliesNoShrink - AddKeepAlivesStep, FixAbstractMethodsStep, FixLegacyResourceDesignerStep -->
+    <Compile Remove="Linker\**" />
+    <Compile Include="Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\Extensions.cs"/>
+    <Compile Include="Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\LinkDesignerBase.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
+    <Compile Include="Linker\MonoDroid.Tuner\MonoDroidProfile.cs" />
+    <Compile Include="Linker\Mobile.Tuner\MobileProfile.cs" />
+    <Compile Include="Linker\External\Linker\Annotations.cs" />
+    <Compile Include="Linker\External\Linker\AssemblyAction.cs" />
+    <Compile Include="Linker\External\Linker\AssemblyResolver.cs" />
+    <Compile Include="Linker\External\Linker\LinkContext.cs" />
+    <Compile Include="Linker\External\Linker\MethodAction.cs" />
+    <Compile Include="Linker\External\Linker\OverrideInformation.cs" />
+    <Compile Include="Linker\External\Linker\Pipeline.cs" />
+    <Compile Include="Linker\External\Linker\TypePreserve.cs" />
+    <Compile Include="Linker\External\Linker.Steps\BaseStep.cs" />
+    <Compile Include="Linker\External\Linker.Steps\IStep.cs" />
+    <Compile Include="Linker\External\Linker\IDependencyRecorder.cs" />
+    <Compile Include="Linker\External\Linker\IReflectionPatternRecorder.cs" />
+    <Compile Include="Linker\External\Linker\LoggingReflectionPatternRecorder.cs" />
+    <Compile Include="Linker\External\Linker\ConsoleLogger.cs" />
+    <Compile Include="Linker\External\Linker\ILogger.cs" />
+    <Compile Include="Linker\External\Linker\Tracer.cs" />
+    <Compile Include="Linker\External\Linker\MarkingHelpers.cs" />
+    <Compile Include="Linker\External\Linker\KnownMembers.cs" />
+    <Compile Include="Linker\External\Mono.Tuner\CecilRocks.cs" />
+    <Compile Include="Linker\External\Mono.Tuner\Extensions.cs" />
+    <Compile Include="Linker\External\Mono.Tuner\Profile.cs" />
+
     <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
       <Link>Mono.Android\IntentFilterAttribute.cs</Link>
     </Compile>
@@ -257,21 +102,6 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\FilterAttributes.cs">
-      <Link>Linker\Mono.Tuner\FilterAttributes.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\InjectSecurityAttributes.cs">
-      <Link>Linker\Mono.Tuner\InjectSecurityAttributes.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\PrintStatus.cs">
-      <Link>Linker\Mono.Tuner\PrintStatus.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\RemoveSerialization.cs">
-      <Link>Linker\Mono.Tuner\RemoveSerialization.cs</Link>
-    </Compile>
-    <Compile Include="$(LinkerSourceFullPath)\tuner\Mono.Tuner\TunerAnnotations.cs">
-      <Link>Linker\Mono.Tuner\TunerAnnotations.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
