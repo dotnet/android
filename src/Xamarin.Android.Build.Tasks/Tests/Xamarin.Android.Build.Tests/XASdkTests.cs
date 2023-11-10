@@ -47,16 +47,6 @@ namespace Xamarin.Android.Build.Tests
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
 			new object[] {
-				"net7.0",
-				"android",
-				33,
-			},
-			new object[] {
-				"net7.0",
-				"android33",
-				33,
-			},
-			new object[] {
 				"net8.0",
 				"android",
 				34,
@@ -156,11 +146,6 @@ public class JavaSourceTest {
 
 		static readonly object[] DotNetTargetFrameworks = new object[] {
 			new object[] {
-				"net7.0",
-				"android",
-				33,
-			},
-			new object[] {
 				"net8.0",
 				"android",
 				34,
@@ -239,9 +224,7 @@ public class JavaSourceTest {
 
 			// NOTE: Preview API levels emit XA4211
 			if (!preview) {
-				// TODO: disabled in .NET 7 due to: https://github.com/dotnet/runtime/issues/77385
-				if (dotnetVersion != "net7.0")
-					dotnet.AssertHasNoWarnings ();
+				dotnet.AssertHasNoWarnings ();
 			}
 
 			// Only check latest TFM, as previous will come from NuGet
@@ -275,7 +258,7 @@ public class JavaSourceTest {
 		}
 
 		[Test]
-		public void XamarinLegacySdk ([Values ("net7.0-android33.0", "net8.0-android34.0", "net9.0-android34.0")] string dotnetTargetFramework)
+		public void XamarinLegacySdk ([Values ("net8.0-android34.0", "net9.0-android34.0")] string dotnetTargetFramework)
 		{
 			var proj = new XamarinAndroidLibraryProject {
 				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",

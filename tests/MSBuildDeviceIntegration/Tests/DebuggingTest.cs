@@ -427,8 +427,8 @@ namespace ${ROOT_NAMESPACE} {
 				AndroidFastDeploymentType = fastDevType
 			};
 			if (!useLatestSdk) {
-				lib.TargetFramework = "net7.0-android";
-				app.TargetFramework = "net7.0-android";
+				lib.TargetFramework = "net8.0-android";
+				app.TargetFramework = "net8.0-android";
 			}
 
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
@@ -441,7 +441,7 @@ namespace ${ROOT_NAMESPACE} {
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
-				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net7.0-android" ? 33 : null);
+				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net8.0-android" ? 34 : null);
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {

@@ -919,7 +919,7 @@ namespace UnnamedProject
 		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = "net7.0-android",
+				TargetFramework = "net8.0-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
@@ -1056,7 +1056,7 @@ namespace UnnamedProject
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
-			string previousTargetFramework = "net7.0-android";
+			string previousTargetFramework = "net8.0-android";
 
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
