@@ -18,8 +18,10 @@ This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support
     <MavenCacheDirectory Condition="'$(MavenCacheDirectory)' != '' and !HasTrailingSlash('$(MavenCacheDirectory)')">$(MavenCacheDirectory)\</MavenCacheDirectory>
   </PropertyGroup>
 
-  <Target Name="MavenRestore" BeforeTargets="_CategorizeAndroidLibraries" DependsOnTargets="ResolvePackageAssets"
-      Condition=" '@(AndroidMavenLibrary->Count())' != '0' ">
+  <Target Name="MavenRestore"
+      Condition=" '@(AndroidMavenLibrary->Count())' != '0' "
+      BeforeTargets="_CategorizeAndroidLibraries"
+      DependsOnTargets="ResolvePackageAssets">
 
     <!-- Download artifacts and POMs from Maven to a local cache. -->
     <MavenDownloadTask MavenCacheDirectory="$(MavenCacheDirectory)" AndroidMavenLibraries="@(AndroidMavenLibrary)">
