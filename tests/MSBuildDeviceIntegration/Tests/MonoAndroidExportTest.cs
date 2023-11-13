@@ -104,7 +104,7 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {

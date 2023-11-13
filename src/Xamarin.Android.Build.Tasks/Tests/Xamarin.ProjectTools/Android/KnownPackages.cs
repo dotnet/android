@@ -594,7 +594,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package Microsoft_Intune_Maui_Essentials_android = new Package {
 			Id = "Microsoft.Intune.Maui.Essentials.android",
-			Version = "10.0.0-beta",
+			Version = "10.0.0-beta2",
 		};
 	}
 }
