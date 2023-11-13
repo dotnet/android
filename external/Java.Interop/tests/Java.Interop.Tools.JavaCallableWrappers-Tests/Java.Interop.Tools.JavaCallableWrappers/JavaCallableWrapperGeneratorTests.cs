@@ -449,7 +449,7 @@ public class ExportsConstructors
 	{
 		super (p0);
 		if (getClass () == ExportsConstructors.class) {
-			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib"", this, new java.lang.Object[] { p0 });
 		}
 	}
 
@@ -505,7 +505,7 @@ public class ExportsThrowsConstructors
 	{
 		super (p0);
 		if (getClass () == ExportsThrowsConstructors.class) {
-			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib"", this, new java.lang.Object[] { p0 });
 		}
 	}
 
@@ -514,7 +514,7 @@ public class ExportsThrowsConstructors
 	{
 		super (p0);
 		if (getClass () == ExportsThrowsConstructors.class) {
-			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] { p0 });
+			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.String, System.Private.CoreLib"", this, new java.lang.Object[] { p0 });
 		}
 	}
 

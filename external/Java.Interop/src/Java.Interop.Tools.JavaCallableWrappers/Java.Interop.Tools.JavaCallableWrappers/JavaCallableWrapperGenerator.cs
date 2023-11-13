@@ -295,7 +295,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 					if (!string.IsNullOrEmpty (eattr.Name)) {
 						// Diagnostic.Warning (log, "Use of ExportAttribute.Name property is invalid on constructors");
 					}
-					ctors.Add (new Signature (ctor, eattr, cache));
+					ctors.Add (new Signature (ctor, eattr, managedParameters, cache));
 					curCtors.Add (ctor);
 					return;
 				}
@@ -481,7 +481,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				if (type.HasGenericParameters)
 					Diagnostic.Error (4206, LookupSource (implementedMethod), Localization.Resources.JavaCallableWrappers_XA4206);
 
-				var msig = new Signature (implementedMethod, attr, cache);
+				var msig = new Signature (implementedMethod, attr, managedParameters: null, cache: cache);
 				if (!string.IsNullOrEmpty (attr.SuperArgumentsString)) {
 					// Diagnostic.Warning (log, "Use of ExportAttribute.SuperArgumentsString property is invalid on methods");
 				}
@@ -834,7 +834,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				IsDynamicallyRegistered = shouldBeDynamicallyRegistered;
 			}
 
-			public Signature (MethodDefinition method, ExportAttribute export, IMetadataResolver cache)
+			public Signature (MethodDefinition method, ExportAttribute export, string? managedParameters, IMetadataResolver cache)
 				: this (method.Name, GetJniSignature (method, cache), "__export__", null, null, export.SuperArgumentsString)
 			{
 				IsExport = true;
@@ -842,6 +842,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				JavaAccess = JavaCallableWrapperGenerator.GetJavaAccess (method.Attributes & MethodAttributes.MemberAccessMask);
 				ThrownTypeNames = export.ThrownNames;
 				JavaNameOverride = export.Name;
+				ManagedParameters = managedParameters;
 				Annotations = JavaCallableWrapperGenerator.GetAnnotationsString ("\t", method.CustomAttributes, cache);
 			}
 
