@@ -16,7 +16,7 @@ variables:
 - name: ApkDiffToolVersion
   value: 0.0.15
 - name: TestSlicerToolVersion
-  value: 0.1.0-alpha6
+  value: 0.1.0-alpha7
 - name: BootsToolVersion
   value: 1.1.0.36
 - name: NUnitConsoleVersion
