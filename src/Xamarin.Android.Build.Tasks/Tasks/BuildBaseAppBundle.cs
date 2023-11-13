@@ -12,7 +12,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "BBA";
 
 		/// <summary>
-		/// Files that need to land in the final APK need to go in `root/`
+		/// Files that need to land in the final APK need to go in `root`
 		/// </summary>
 		protected override string RootPath => "root/";
 

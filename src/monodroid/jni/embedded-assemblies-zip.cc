@@ -319,6 +319,7 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, int ap
 	} else {
 		// entry.name is preallocated on build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
+		log_debug (LOG_ASSEMBLY, "Storing data for assembly entry '%s'", entry_name.get ());
 		strncpy (entry.name, entry_name.get () + prefix_len, max_name_size);
 	}
 	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - prefix_len, max_name_size);

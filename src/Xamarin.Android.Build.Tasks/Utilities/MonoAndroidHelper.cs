@@ -21,6 +21,7 @@ namespace Xamarin.Android.Tasks
 {
 	public partial class MonoAndroidHelper
 	{
+		static readonly char[] ZipPathTrimmedChars = {'/', '\\'};
 		static Lazy<string> uname = new Lazy<string> (GetOSBinDirName, System.Threading.LazyThreadSafetyMode.PublicationOnly);
 
 		// Set in ResolveSdks.Execute();
@@ -655,6 +656,34 @@ namespace Xamarin.Android.Tasks
 		{
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
+		}
+
+		public static string MakeZipArchivePath (string part1, params string[]? pathParts)
+		{
+			return MakeZipArchivePath (part1, (ICollection<string>?)pathParts);
+		}
+
+		public static string MakeZipArchivePath (string part1, ICollection<string>? pathParts)
+		{
+			var parts = new List<string> ();
+			if (!String.IsNullOrEmpty (part1)) {
+				parts.Add (part1.TrimEnd (ZipPathTrimmedChars));
+			};
+
+			if (pathParts != null && pathParts.Count > 0) {
+				foreach (string p in pathParts) {
+					if (String.IsNullOrEmpty (p)) {
+						continue;
+					}
+					parts.Add (p.TrimEnd (ZipPathTrimmedChars));
+				}
+			}
+
+			if (parts.Count == 0) {
+				return String.Empty;
+			}
+
+			return String.Join ("/", parts);
 		}
 	}
 }
