@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Runtime.InteropServices;
 using System.Text;
 
 using Java.Interop;
@@ -58,7 +59,7 @@ public class ExpressionAssemblyBuilder {
 		return mmDef;
 	}
 
-	public MethodDefinition CreateRegistrationMethod (IList<ExpressionMethodRegistration> methods)
+	public void AddRegistrationMethod (TypeDefinition declaringType, IList<ExpressionMethodRegistration> methods)
 	{
 		var registrations = new MethodDefinition (
 			name:       "__RegisterNativeMembers",
@@ -69,6 +70,8 @@ public class ExpressionAssemblyBuilder {
 				InitLocals      = true,
 			},
 		};
+
+		declaringType.Methods.Add (registrations);
 
 		var ctor    = typeof (JniAddNativeMethodRegistrationAttribute).GetConstructor (Type.EmptyTypes);
 		var attr    = new CustomAttribute (DeclaringAssemblyDefinition.MainModule.ImportReference (ctor));
@@ -83,7 +86,7 @@ public class ExpressionAssemblyBuilder {
 		registrations.Body.Variables.Add (array);
 
 		var il = registrations.Body.GetILProcessor ();
-		EmitConsoleWriteLine (il, $"# jonp: called __RegisterNativeMembers w/ {methods.Count} methods to register.");
+		EmitConsoleWriteLine (il, $"# jonp: called `{declaringType.FullName}.__RegisterNativeMembers()` w/ {methods.Count} methods to register.");
 		il.Emit (OpCodes.Ldc_I4, methods.Count);
 		il.Emit (OpCodes.Newarr, DeclaringAssemblyDefinition.MainModule.ImportReference (arrayType.GetElementType ()));
 		// il.Emit (OpCodes.Stloc_0);
@@ -116,9 +119,6 @@ public class ExpressionAssemblyBuilder {
 		il.Emit (OpCodes.Ldloc_0);
 		il.Emit (OpCodes.Call, DeclaringAssemblyDefinition.MainModule.ImportReference (addRegistrations.Method));
 		il.Emit (OpCodes.Ret);
-
-
-		return registrations;
 	}
 
 	void EmitConsoleWriteLine (ILProcessor il, string message)
@@ -187,6 +187,15 @@ public class ExpressionAssemblyBuilder {
 		);
 		delegateDef.BaseType = DeclaringAssemblyDefinition.MainModule.ImportReference (typeof (MulticastDelegate));
 
+		var ufpCtor     = typeof (UnmanagedFunctionPointerAttribute).GetConstructor (new[]{typeof (CallingConvention)});
+		var ufpCtorRef  = DeclaringAssemblyDefinition.MainModule.ImportReference (ufpCtor);
+		var ufpAttr     = new CustomAttribute (ufpCtorRef);
+		ufpAttr.ConstructorArguments.Add (
+				new CustomAttributeArgument (
+					DeclaringAssemblyDefinition.MainModule.ImportReference (typeof (CallingConvention)),
+					CallingConvention.Winapi));
+		delegateDef.CustomAttributes.Add (ufpAttr);
+
 		var delegateCtor = new MethodDefinition (
 				name:       ".ctor",
 				attributes: MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName,
@@ -237,22 +246,10 @@ public class ExpressionAssemblyBuilder {
 		};
 		var newAsm              = AssemblyDefinition.ReadAssembly (c, rp);
 		module                  = newAsm.MainModule;
-		var systemRuntimeRef    = module.AssemblyReferences.FirstOrDefault (r => r.Name == "System.Runtime");
-		var privateCorelibRef   = module.AssemblyReferences.FirstOrDefault (r => r.Name == "System.Private.CoreLib");
-
-		if (systemRuntimeRef == null && privateCorelibRef != null) {
-			systemRuntimeRef    = GetSystemRuntimeReference ();
-			module.AssemblyReferences.Add (systemRuntimeRef);
-		}
 
 		var selfRef             = module.AssemblyReferences.FirstOrDefault (r => r.Name == newAsm.Name.Name);
 		foreach (var member in module.GetMemberReferences ()) {
 			Logger (TraceLevel.Verbose, $"# jonp: looking at ref for member: [{member.DeclaringType.Scope?.Name}]{member}");
-			if (member.DeclaringType.Scope == privateCorelibRef) {
-				Logger (TraceLevel.Verbose, $"# jonp: Fixing scope ref for member: {member}");
-				member.DeclaringType.Scope = systemRuntimeRef;
-				continue;
-			}
 			if (member.DeclaringType.Scope == selfRef) {
 				Logger (TraceLevel.Verbose, $"# jonp: Fixing scope self ref for member: {member}");
 				member.DeclaringType.Scope = null;
@@ -261,18 +258,12 @@ public class ExpressionAssemblyBuilder {
 		}
 		foreach (var type in module.GetTypeReferences ()) {
 			Logger (TraceLevel.Verbose, $"# jonp: looking at ref for type: [{type.Scope}]{type}");
-			if (type.Scope == privateCorelibRef) {
-				Logger (TraceLevel.Verbose, $"# jonp: Fixing scope ref for type: {type}");
-				type.Scope = systemRuntimeRef;
-				continue;
-			}
 			if (type.Scope == selfRef) {
 				Logger (TraceLevel.Verbose, $"# jonp: Fixing scope self ref for type: {type}");
 				type.Scope = null;
 				continue;
 			}
 		}
-		module.AssemblyReferences.Remove (privateCorelibRef);
 		if (selfRef != null) {
 			module.AssemblyReferences.Remove (selfRef);
 		}

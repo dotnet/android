@@ -1,3 +1,4 @@
+#nullable enable
 using System;
 
 namespace Java.Interop {

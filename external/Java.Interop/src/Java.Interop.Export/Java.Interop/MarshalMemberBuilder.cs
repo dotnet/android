@@ -68,7 +68,7 @@ namespace Java.Interop {
 
 		string GetJniMethodName (JavaCallableAttribute export, MethodInfo method)
 		{
-			return export.Name ?? "n_" + method.Name;
+			return "n_" + method.Name;
 		}
 
 		public string GetJniMethodSignature (JavaCallableAttribute export, MethodInfo method)

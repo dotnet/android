@@ -102,13 +102,14 @@ public class Name
 			Assert.AreEqual (expected, actual);
 		}
 
-		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null)
+		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null, JavaPeerStyle style = JavaPeerStyle.XAJavaInterop1)
 		{
 			var td  = SupportDeclarations.GetTypeDefinition (type);
 			var g   = new JavaCallableWrapperGenerator (td, log: null, cache: null) {
 				ApplicationJavaClass        = applicationJavaClass,
 				GenerateOnCreateOverrides   = true,
 				MonoRuntimeInitialization   = monoRuntimeInit,
+				CodeGenerationTarget        = style,
 			};
 			var o   = new StringWriter ();
 			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
@@ -618,6 +619,62 @@ public class ExampleInstrumentation
 			refList.clear ();
 	}}
 }}
+";
+			Assert.AreEqual (expected, actual);
+		}
+
+		[Test]
+		public void GenerateJavaInteropExample ()
+		{
+			var actual = Generate (typeof (JavaInteropExample), style: JavaPeerStyle.JavaInterop1);
+			var expected = @"package register;
+
+
+public class JavaInteropExample
+	extends java.lang.Object
+	implements
+		com.xamarin.java_interop.GCUserPeerable
+{
+/** @hide */
+	public static final String __md_methods;
+	static {
+		__md_methods = 
+			""n_Example:()V:__export__\n"" +
+			"""";
+		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (JavaInteropExample.class, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", __md_methods);
+	}
+
+
+	public JavaInteropExample (int p0, int p1)
+	{
+		super ();
+		if (getClass () == JavaInteropExample.class) {
+			com.xamarin.java_interop.ManagedPeer.construct (this, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib:System.Int32, System.Private.CoreLib"", new java.lang.Object[] { p0, p1 });
+		}
+	}
+
+
+	public void example ()
+	{
+		n_Example ();
+	}
+
+	private native void n_Example ();
+
+	private java.util.ArrayList refList;
+	public void jiAddManagedReference (java.lang.Object obj)
+	{
+		if (refList == null)
+			refList = new java.util.ArrayList ();
+		refList.add (obj);
+	}
+
+	public void jiClearManagedReferences ()
+	{
+		if (refList != null)
+			refList.clear ();
+	}
+}
 ";
 			Assert.AreEqual (expected, actual);
 		}

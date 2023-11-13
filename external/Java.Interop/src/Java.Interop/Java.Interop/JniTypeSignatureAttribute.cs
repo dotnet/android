@@ -11,7 +11,9 @@ namespace Java.Interop
 
 		public JniTypeSignatureAttribute (string simpleReference)
 		{
+#if !JCW_ONLY_TYPE_NAMES
 			JniRuntime.JniTypeManager.AssertSimpleReference (simpleReference, nameof (simpleReference));
+#endif  // !JCW_ONLY_TYPE_NAMES
 
 			SimpleReference     = simpleReference;
 		}

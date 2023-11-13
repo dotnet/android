@@ -1,0 +1,53 @@
+﻿<Project>
+
+  <Target Name="_CreateJavaCallableWrappers"
+      Condition=" '$(TargetPath)' != '' "
+      BeforeTargets="BuildExportTestJar"
+      Inputs="$(TargetPath)"
+      Outputs="$(IntermediateOutputPath)java\.stamp">
+    <RemoveDir Directories="$(IntermediateOutputPath)java" />
+    <MakeDir Directories="$(IntermediateOutputPath)java" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_RefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
+      <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="BuildExportTestJar"
+      AfterTargets="Build"
+      Inputs="$(TargetPath);@(JavaExportTestJar)"
+      Outputs="$(OutputPath)export-test.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)et-classes" />
+    <ItemGroup>
+      <_JcwSource Include="$(IntermediateOutputPath)java\**\*.java" />
+    </ItemGroup>
+    <ItemGroup>
+      <_Source Include="@(_JcwSource->Replace('%5c', '/'))" />
+      <_Source Include="@(JavaExportTestJar->Replace('%5c', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)_java_sources.txt"
+        Lines="@(_Source)"
+        Overwrite="True"
+    />
+    <ItemGroup>
+      <_JavacOpt Include="$(_JavacSourceOptions)" />
+      <_JavacOpt Include="-d &quot;$(IntermediateOutputPath)et-classes&quot; " />
+      <_JavacOpt Include="-classpath &quot;$(OutputPath)java-interop.jar&quot; " />
+      <_JavacOpt Include="&quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
+      <_JavacOpt Include="-h &quot;$(IntermediateOutputPath)et-classes&quot; " />
+    </ItemGroup>
+    <Exec Command="&quot;$(JavaCPath)&quot; @(_JavacOpt, ' ')" />
+    <Delete Files="$(IntermediateOutputPath)_java_sources.txt" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />
+  </Target>
+
+</Project>

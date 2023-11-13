@@ -24,10 +24,10 @@ namespace Java.InteropTests
 					.ToList ();
 				Assert.AreEqual (11, methods.Count);
 
-				Assert.AreEqual ("action",  methods [0].Name);
-				Assert.AreEqual ("()V",     methods [0].Signature);
+				Assert.AreEqual ("n_InstanceAction",    methods [0].Name);
+				Assert.AreEqual ("()V",                 methods [0].Signature);
 
-				Assert.AreEqual ("staticAction",        methods [1].Name);
+				Assert.AreEqual ("n_StaticAction",      methods [1].Name);
 				Assert.AreEqual ("()V",                 methods [1].Signature);
 
 #if NET

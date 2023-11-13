@@ -412,11 +412,17 @@ namespace Java.Interop {
 			bool TryLoadJniMarshalMethods (JniType nativeClass, Type type, string? methods)
 			{
 				var marshalType = type?.GetNestedType ("__<$>_jni_marshal_methods", BindingFlags.NonPublic);
-				if (marshalType == null)
+				if (marshalType == null) {
 					return false;
+				}
 
-				var registerMethod = marshalType.GetRuntimeMethod ("__RegisterNativeMembers", registerMethodParameters);
-
+				var registerMethod = marshalType.GetMethod (
+						name:           "__RegisterNativeMembers",
+						bindingAttr:    BindingFlags.Static | BindingFlags.NonPublic | BindingFlags.Public,
+						binder:         null,
+						callConvention: default,
+						types:          registerMethodParameters,
+						modifiers:      null);
 				return TryRegisterNativeMembers (nativeClass, marshalType, methods, registerMethod);
 			}
 
@@ -466,8 +472,10 @@ namespace Java.Interop {
 						continue;
 					}
 
+					var declaringTypeName = methodInfo.DeclaringType?.FullName ?? "<no-decl-type>";
+
 					if ((methodInfo.Attributes & MethodAttributes.Static) != MethodAttributes.Static) {
-						throw new InvalidOperationException ($"The method {methodInfo} marked with {nameof (JniAddNativeMethodRegistrationAttribute)} must be static");
+						throw new InvalidOperationException ($"The method `{declaringTypeName}.{methodInfo}` marked with [{nameof (JniAddNativeMethodRegistrationAttribute)}] must be static!");
 					}
 
 					var register = (Action<JniNativeMethodRegistrationArguments>)methodInfo.CreateDelegate (typeof (Action<JniNativeMethodRegistrationArguments>));

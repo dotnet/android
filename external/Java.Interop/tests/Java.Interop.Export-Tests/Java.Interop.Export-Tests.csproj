@@ -22,19 +22,16 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Java.Base\Java.Base.csproj" />
     <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
   </ItemGroup>
   
   <ItemGroup>
-    <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\export\ExportType.java" />
+    <JavaExportTestJar Include="$(MSBuildThisFileDirectory)java\**\*.java" />
   </ItemGroup>
 
-  <Target Name="BuildExportTestJar" BeforeTargets="Build" Inputs="@(JavaExportTestJar)" Outputs="$(OutputPath)export-test.jar">
-    <MakeDir Directories="$(IntermediateOutputPath)et-classes" />
-    <Exec Command="&quot;$(JavaCPath)&quot; -classpath &quot;$(OutputPath)java-interop.jar&quot; $(_JavacSourceOptions) -d &quot;$(IntermediateOutputPath)et-classes&quot; @(JavaExportTestJar->'%(Identity)', ' ')" />
-    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)export-test.jar&quot; -C &quot;$(IntermediateOutputPath)et-classes&quot; ." />
-  </Target>
+  <Import Project="Java.Interop.Export-Tests.targets" />
 
 </Project>

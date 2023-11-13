@@ -25,12 +25,54 @@ public class ExportType
 			throw new Error ("staticFuncMyEnum_MyEnum should return 42!");
 	}
 
-	public static native void staticAction ();
-	public static native void staticActionIJavaObject (Object test);
-	public static native void staticActionInt32String (int i, String s);
-	public static native int  staticFuncMyLegacyColorMyColor_MyColor (int color1, int color2);
+	public  static          void    staticAction () {n_StaticAction ();}
+	private static  native  void    n_StaticAction ();
 
-	public static native boolean staticFuncThisMethodTakesLotsOfParameters (
+	public  static          void    staticActionIJavaObject (Object test) {n_StaticActionIJavaObject(test);}
+	private static  native  void    n_StaticActionIJavaObject (Object test);
+
+	public  static          void    staticActionInt32String (int i, String s) {n_StaticActionInt32String (i, s);}
+	private static  native  void    n_StaticActionInt32String (int i, String s);
+
+	public  static          int     staticFuncMyLegacyColorMyColor_MyColor (int color1, int color2) {return n_StaticFuncMyLegacyColorMyColor_MyColor (color1, color2);}
+	private static  native  int     n_StaticFuncMyLegacyColorMyColor_MyColor (int color1, int color2);
+
+	public static boolean staticFuncThisMethodTakesLotsOfParameters (
+			boolean             a,
+			byte                b,
+			char                c,
+			short               d,
+			int                 e,
+			long                f,
+			float               g,
+			double              h,
+			Object              i,
+			String              j,
+			ArrayList<String>   k,
+			String              l,
+			Object              m,
+			double              n,
+			float               o,
+			long                p) {
+		return n_StaticFuncThisMethodTakesLotsOfParameters (
+				a,
+				b,
+				c,
+				d,
+				e,
+				f,
+				g,
+				h,
+				i,
+				j,
+				k,
+				l,
+				m,
+				n,
+				o,
+				p);
+	}
+	private static native boolean n_StaticFuncThisMethodTakesLotsOfParameters (
 			boolean             a,
 			byte                b,
 			char                c,
@@ -86,12 +128,23 @@ public class ExportType
 			throw new Error ("staticFuncThisMethodTakesLotsOfParameters should return true!");
 	}
 
-	public native void action ();
-	public native void actionIJavaObject (Object test);
-	public native long funcInt64 ();
-	public native Object funcIJavaObject ();
-	public native void staticActionInt (int i);
-	public native void staticActionFloat (float f);
+	public          void    action () {n_InstanceAction ();}
+	private native  void    n_InstanceAction ();
+
+	public          void    actionIJavaObject (Object test) {n_InstanceActionIJavaObject (test);}
+	private native  void    n_InstanceActionIJavaObject (Object test);
+
+	public          long    funcInt64 () {return n_FuncInt64 ();}
+	private native  long    n_FuncInt64 ();
+
+	public          Object  funcIJavaObject () {return n_FuncIJavaObject ();}
+	private native  Object  n_FuncIJavaObject ();
+
+	public          void    staticActionInt (int i) {n_StaticActionInt (i);}
+	private native  void    n_StaticActionInt (int i);
+
+	public          void    staticActionFloat (float f) {n_StaticActionFloat (f);}
+	private native  void    n_StaticActionFloat (float f);
 
 	ArrayList<Object>       managedReferences     = new ArrayList<Object>();
 

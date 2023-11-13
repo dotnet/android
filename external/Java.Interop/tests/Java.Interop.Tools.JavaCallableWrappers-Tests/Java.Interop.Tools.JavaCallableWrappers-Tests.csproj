@@ -4,6 +4,7 @@
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <IsPackable>false</IsPackable>
     <DefineConstants>$(DefineConstants);HAVE_CECIL;JCW_ONLY_TYPE_NAMES</DefineConstants>
+    <NoWarn>$(NoWarn);CA1019;CA1813</NoWarn>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
@@ -28,5 +29,11 @@
   </ItemGroup>
 
   <Import Project="..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\..\src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems')" />
+
+  <ItemGroup>
+    <Compile Include="..\..\src\Java.Interop\Java.Interop\JniTypeSignatureAttribute.cs" />
+    <Compile Include="..\..\src\Java.Interop.Export\Java.Interop\JavaCallableAttribute.cs" />
+    <Compile Include="..\..\src\Java.Interop.Export\Java.Interop\JavaCallableConstructorAttribute.cs" />
+  </ItemGroup>
 
 </Project>

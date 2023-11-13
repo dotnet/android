@@ -164,7 +164,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 				var baseRegisteredMethod = GetBaseRegisteredMethod (minfo);
 				if (baseRegisteredMethod != null)
 					AddMethod (baseRegisteredMethod, minfo);
-				else if (minfo.AnyCustomAttributes (typeof(ExportFieldAttribute))) {
+				else if (minfo.AnyCustomAttributes ("Java.Interop.JavaCallableAttribute")) {
+					AddMethod (null, minfo);
+					HasExport = true;
+				} else if (minfo.AnyCustomAttributes ("Java.Interop.JavaCallableConstructorAttribute")) {
+					AddMethod (null, minfo);
+					HasExport = true;
+				} else if (minfo.AnyCustomAttributes (typeof(ExportFieldAttribute))) {
 					AddMethod (null, minfo);
 					HasExport = true;
 				} else if (minfo.AnyCustomAttributes (typeof (ExportAttribute))) {
@@ -412,6 +418,25 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return new ExportAttribute (name) {ThrownNames = thrown, SuperArgumentsString = superArgs};
 		}
 
+		ExportAttribute ToExportAttributeFromJavaCallableAttribute (CustomAttribute attr, IMemberDefinition declaringMember)
+		{
+			var name = attr.ConstructorArguments.Count > 0
+				? (string) attr.ConstructorArguments [0].Value
+				: declaringMember.Name;
+			return new ExportAttribute (name);
+		}
+
+		ExportAttribute ToExportAttributeFromJavaCallableConstructorAttribute (CustomAttribute attr, IMemberDefinition declaringMember)
+		{
+			var superArgs = (string) attr.Properties
+				.FirstOrDefault (p => p.Name == "SuperConstructorExpression")
+				.Argument
+				.Value;
+			return new ExportAttribute (".ctor") {
+				SuperArgumentsString = superArgs,
+			};
+		}
+
 		internal static ExportFieldAttribute ToExportFieldAttribute (CustomAttribute attr)
 		{
 			return new ExportFieldAttribute ((string) attr.ConstructorArguments [0].Value);
@@ -447,7 +472,11 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 		IEnumerable<ExportAttribute> GetExportAttributes (IMemberDefinition p)
 		{
-			return GetAttributes<ExportAttribute> (p, a => ToExportAttribute (a, p));
+			return GetAttributes<ExportAttribute> (p, a => ToExportAttribute (a, p))
+				.Concat (GetAttributes<ExportAttribute> (p, "Java.Interop.JavaCallableAttribute",
+					a => ToExportAttributeFromJavaCallableAttribute (a, p)))
+				.Concat (GetAttributes<ExportAttribute> (p, "Java.Interop.JavaCallableConstructorAttribute",
+					a => ToExportAttributeFromJavaCallableConstructorAttribute (a, p)));
 		}
 
 		static IEnumerable<ExportFieldAttribute> GetExportFieldAttributes (Mono.Cecil.ICustomAttributeProvider p)
@@ -458,7 +487,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		static IEnumerable<TAttribute> GetAttributes<TAttribute> (Mono.Cecil.ICustomAttributeProvider p, Func<CustomAttribute, TAttribute?> selector)
 			where TAttribute : class
 		{
-			return p.GetCustomAttributes (typeof (TAttribute))
+			return GetAttributes (p, typeof (TAttribute).FullName, selector);
+		}
+
+		static IEnumerable<TAttribute> GetAttributes<TAttribute> (Mono.Cecil.ICustomAttributeProvider p, string attributeName, Func<CustomAttribute, TAttribute?> selector)
+			where TAttribute : class
+		{
+			return p.GetCustomAttributes (attributeName)
 				.Select (selector)
 				.Where (v => v != null)
 				.Select (v => v!);

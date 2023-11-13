@@ -52,6 +52,10 @@ namespace Java.Interop {
 				registrations.Add (new JniNativeMethodRegistration (name, signature, marshaler!));
 			}
 
+			foreach (var registration in Runtime.MarshalMemberBuilder.GetExportedMemberRegistrations (type)) {
+				registrations.Add (registration);
+			}
+
 			nativeClass.RegisterNativeMethods (registrations.ToArray ());
 		}
 

@@ -216,7 +216,7 @@ namespace Java.Interop {
 
 			}
 			catch (Exception e) when (JniEnvironment.Runtime.ExceptionShouldTransitionToJni (e)) {
-				Debug.WriteLine (e.ToString ());
+				Debug.WriteLine ($"Exception when trying to register native methods with JNI: {e}");
 				envp.SetPendingException (e);
 			}
 			finally {
