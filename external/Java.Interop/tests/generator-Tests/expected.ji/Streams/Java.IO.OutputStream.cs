@@ -30,6 +30,7 @@ namespace Java.IO {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='java.io']/class[@name='OutputStream']/constructor[@name='OutputStream' and count(parameter)=0]"
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe OutputStream () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";

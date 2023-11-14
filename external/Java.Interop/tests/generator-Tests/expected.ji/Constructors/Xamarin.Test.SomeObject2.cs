@@ -30,6 +30,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject2']/constructor[@name='SomeObject2' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniConstructorSignature ("(I)V")]
 		public unsafe SomeObject2 (int aint) : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "(I)V";

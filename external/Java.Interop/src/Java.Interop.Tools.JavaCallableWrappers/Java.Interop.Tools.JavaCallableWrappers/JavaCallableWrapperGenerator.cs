@@ -391,6 +391,19 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			return r;
 		}
 
+		internal static RegisterAttribute? RegisterFromJniConstructorSignatureAttribute (CustomAttribute attr)
+		{
+			// attr.Resolve ();
+			RegisterAttribute? r = null;
+			if (attr.ConstructorArguments.Count == 1)
+				r = new RegisterAttribute (
+					name:             ".ctor",
+					signature:        (string) attr.ConstructorArguments [0].Value,
+					connector:        "",
+					originAttribute:  attr);
+			return r;
+		}
+
 		internal static RegisterAttribute? RegisterFromJniMethodSignatureAttribute (CustomAttribute attr)
 		{
 			// attr.Resolve ();
@@ -460,6 +473,13 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 		{
 			foreach (var a in GetAttributes<RegisterAttribute> (p, a => ToRegisterAttribute (a))) {
 				yield return a;
+			}
+			foreach (var c in p.GetCustomAttributes ("Java.Interop.JniConstructorSignatureAttribute")) {
+				var r = RegisterFromJniConstructorSignatureAttribute (c);
+				if (r == null) {
+					continue;
+				}
+				yield return r;
 			}
 			foreach (var c in p.GetCustomAttributes ("Java.Interop.JniMethodSignatureAttribute")) {
 				var r = RegisterFromJniMethodSignatureAttribute (c);

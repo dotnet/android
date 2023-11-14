@@ -16,6 +16,12 @@ class JavaCallableExampleTest : JavaVMFixture
 		Assert.IsTrue (z);
 	}
 
+	[Test]
+	public void ManagedCtorInvokesJavaDefaultCtor ()
+	{
+		using var o = new JavaCallableExample (42);
+	}
+
 	static JniType CreateUseJavaCallableExampleType () =>
 		new JniType ("net/dot/jni/test/UseJavaCallableExample");
 }

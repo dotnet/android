@@ -30,6 +30,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=0]"
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		[global::System.Obsolete (@"deprecated")]
 		public unsafe SomeObject () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
@@ -47,6 +48,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='SomeObject']/constructor[@name='SomeObject' and count(parameter)=1 and parameter[1][@type='int']]"
+		[global::Java.Interop.JniConstructorSignature ("(I)V")]
 		public unsafe SomeObject (int aint) : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "(I)V";

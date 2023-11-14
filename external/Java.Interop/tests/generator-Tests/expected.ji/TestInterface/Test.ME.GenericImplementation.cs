@@ -30,6 +30,7 @@ namespace Test.ME {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='GenericImplementation']/constructor[@name='GenericImplementation' and count(parameter)=0]"
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe GenericImplementation () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";

@@ -24,7 +24,7 @@
       <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
       <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
     </PropertyGroup>
-    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) -v &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
     <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
   </Target>
 

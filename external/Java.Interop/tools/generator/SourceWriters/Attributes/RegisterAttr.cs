@@ -66,6 +66,9 @@ namespace generator.SourceWriters
 				case MemberTypes.TypeInfo:
 					writer.WriteLine ($"[global::Java.Interop.JniTypeSignature (\"{Name}\", GenerateJavaPeer={(DoNotGenerateAcw ? "false" : "true")})]");
 					break;
+				case MemberTypes.Constructor:
+					writer.WriteLine ($"[global::Java.Interop.JniConstructorSignature (\"{Signature}\")]");
+					break;
 				case MemberTypes.Method:
 					writer.WriteLine ($"[global::Java.Interop.JniMethodSignature (\"{Name}\", \"{Signature}\")]");
 					break;

@@ -30,6 +30,7 @@ namespace Xamarin.Test {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='xamarin.test']/class[@name='ExtendPublicClass']/constructor[@name='ExtendPublicClass' and count(parameter)=0]"
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe ExtendPublicClass () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";

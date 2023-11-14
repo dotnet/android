@@ -49,6 +49,7 @@ namespace Test.ME {
 		}
 
 		// Metadata.xml XPath constructor reference: path="/api/package[@name='test.me']/class[@name='TestInterfaceImplementation']/constructor[@name='TestInterfaceImplementation' and count(parameter)=0]"
+		[global::Java.Interop.JniConstructorSignature ("()V")]
 		public unsafe TestInterfaceImplementation () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
 			const string __id = "()V";

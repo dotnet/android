@@ -28,6 +28,7 @@ public abstract partial class ClassWithoutNamespace : global::Java.Lang.Object, 
 	}
 
 	// Metadata.xml XPath constructor reference: path="/api/package[@name='']/class[@name='ClassWithoutNamespace']/constructor[@name='ClassWithoutNamespace' and count(parameter)=0]"
+	[global::Java.Interop.JniConstructorSignature ("()V")]
 	public unsafe ClassWithoutNamespace () : base (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 	{
 		const string __id = "()V";
