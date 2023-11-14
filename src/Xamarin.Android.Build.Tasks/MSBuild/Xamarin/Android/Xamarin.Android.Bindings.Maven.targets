@@ -15,8 +15,8 @@ This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support
     <!-- Maven cache directory location -->
     <MavenCacheDirectory Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(MavenCacheDirectory)'==''">$(LocalAppData)\dotnet-android\MavenCacheDirectory\</MavenCacheDirectory>
     <MavenCacheDirectory Condition="$([MSBuild]::IsOSPlatform('OSX')) and '$(MavenCacheDirectory)'==''">$(HOME)/Library/Caches/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
-    <MavenCacheDirectory Condition="$'$(MavenCacheDirectory)'==''">$(HOME)/.cache/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
-    <MavenCacheDirectory>$([MSBuild]::EnsureTrailingSlash('$(MavenCacheDirectory)')</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="'$(MavenCacheDirectory)'==''">$(HOME)/.cache/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
+    <MavenCacheDirectory>$([MSBuild]::EnsureTrailingSlash('$(MavenCacheDirectory)'))</MavenCacheDirectory>
   </PropertyGroup>
 
   <Target Name="MavenRestore"
@@ -25,9 +25,9 @@ This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support
       DependsOnTargets="ResolvePackageAssets">
 
     <!-- Download artifacts and POMs from Maven to a local cache. -->
-    <MavenDownloadTask MavenCacheDirectory="$(MavenCacheDirectory)" AndroidMavenLibraries="@(AndroidMavenLibrary)">
+    <MavenDownload MavenCacheDirectory="$(MavenCacheDirectory)" AndroidMavenLibraries="@(AndroidMavenLibrary)">
       <Output TaskParameter="ResolvedAndroidMavenLibraries" ItemName="_ResolvedAndroidMavenLibraries" />
-    </MavenDownloadTask>
+    </MavenDownload>
 
     <!-- Add @(AndroidMavenLibrary)'s to @(AndroidLibrary)'s. -->
     <ItemGroup>
