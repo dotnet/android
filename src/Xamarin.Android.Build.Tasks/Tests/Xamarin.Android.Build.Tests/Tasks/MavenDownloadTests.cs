@@ -8,13 +8,13 @@ using Xamarin.Android.Tasks;
 using Task = System.Threading.Tasks.Task;
 namespace Xamarin.Android.Build.Tests;
 
-public class MavenDownloadTaskTests
+public class MavenDownloadTests
 {
 	[Test]
 	public async Task MissingVersionMetadata ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var task = new MavenDownloadTask {
+		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", null)],
 		};
@@ -29,7 +29,7 @@ public class MavenDownloadTaskTests
 	public async Task InvalidArtifactSpecification_WrongNumberOfParts ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var task = new MavenDownloadTask {
+		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material", "1.0.0")],
 		};
@@ -44,7 +44,7 @@ public class MavenDownloadTaskTests
 	public async Task InvalidArtifactSpecification_EmptyPart ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var task = new MavenDownloadTask {
+		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material: ", "1.0.0")],
 		};
@@ -59,7 +59,7 @@ public class MavenDownloadTaskTests
 	public async Task UnknownRepository ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var task = new MavenDownloadTask {
+		var task = new MavenDownload {
 			BuildEngine = engine,
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.android.material:material", "1.0.0", "bad-repo")],
 		};
@@ -74,7 +74,7 @@ public class MavenDownloadTaskTests
 	public async Task UnknownArtifact ()
 	{
 		var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-		var task = new MavenDownloadTask {
+		var task = new MavenDownload {
 			BuildEngine = engine,
 			MavenCacheDirectory = Path.GetTempPath (),
 			AndroidMavenLibraries = [CreateMavenTaskItem ("com.example:dummy", "1.0.0")],
@@ -93,7 +93,7 @@ public class MavenDownloadTaskTests
 
 		try {
 			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-			var task = new MavenDownloadTask {
+			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
 				AndroidMavenLibraries = [CreateMavenTaskItem ("com.example:dummy", "1.0.0")],
@@ -121,7 +121,7 @@ public class MavenDownloadTaskTests
 
 		try {
 			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-			var task = new MavenDownloadTask {
+			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
 				AndroidMavenLibraries = [CreateMavenTaskItem ("com.google.auto.value:auto-value-annotations", "1.10.4")],
@@ -152,7 +152,7 @@ public class MavenDownloadTaskTests
 
 		try {
 			var engine = new MockBuildEngine (TestContext.Out, new List<BuildErrorEventArgs> ());
-			var task = new MavenDownloadTask {
+			var task = new MavenDownload {
 				BuildEngine = engine,
 				MavenCacheDirectory = temp_cache_dir,
 				AndroidMavenLibraries = [CreateMavenTaskItem ("androidx.core:core", "1.12.0", "Google")],

@@ -9,13 +9,14 @@ This file contains MSBuild targets used to enable @(AndroidMavenLibrary) support
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <UsingTask TaskName="Xamarin.Android.Tasks.MavenDownloadTask" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.MavenDownload" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
-    <!-- Maven cache directory, locations copied from XBD which should be sufficiently battle-tested -->
-    <MavenCacheDirectory Condition="'$(OS)'=='Unix' and '$(MavenCacheDirectory)'==''">$(HOME)/Library/Caches/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
-    <MavenCacheDirectory Condition="'$(OS)'!='Unix' and '$(MavenCacheDirectory)'==''">$(LocalAppData)\dotnet-android\MavenCacheDirectory\</MavenCacheDirectory>
-    <MavenCacheDirectory Condition="'$(MavenCacheDirectory)' != '' and !HasTrailingSlash('$(MavenCacheDirectory)')">$(MavenCacheDirectory)\</MavenCacheDirectory>
+    <!-- Maven cache directory location -->
+    <MavenCacheDirectory Condition="$([MSBuild]::IsOSPlatform('Windows')) and '$(MavenCacheDirectory)'==''">$(LocalAppData)\dotnet-android\MavenCacheDirectory\</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="$([MSBuild]::IsOSPlatform('OSX')) and '$(MavenCacheDirectory)'==''">$(HOME)/Library/Caches/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
+    <MavenCacheDirectory Condition="$'$(MavenCacheDirectory)'==''">$(HOME)/.cache/dotnet-android/MavenCacheDirectory/</MavenCacheDirectory>
+    <MavenCacheDirectory>$([MSBuild]::EnsureTrailingSlash('$(MavenCacheDirectory)')</MavenCacheDirectory>
   </PropertyGroup>
 
   <Target Name="MavenRestore"
