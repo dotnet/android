@@ -14,8 +14,8 @@ body:
       description: In what type(s) of Android application(s) do you see this issue?
       multiple: true
       options:
-      - Classic Xamarin.Android (MonoAndroid12.0, etc.)
-      - .NET Android (net7.0-android, etc.)
+      - Classic Xamarin.Android (MonoAndroid13.0, etc.)
+      - .NET Android (net7.0-android, net8.0-android, etc.)
     validations:
       required: true
   - type: input
@@ -23,7 +23,7 @@ body:
     attributes:
       label: Affected platform version
       description: Please provide the version number of the platform you see this issue on.
-      placeholder: E.g. VS 2022 17.0.1, VSMac 8.10, .NET 6.0.100, etc.
+      placeholder: E.g. VS 2022 17.8.0, VSMac 17.6.7, .NET 8.0.100, etc.
     validations:
       required: true
   - type: textarea
@@ -40,7 +40,7 @@ body:
       label: Steps to Reproduce
       description: Describe all the steps we need to take to show the behavior that you have observed.
       placeholder: | 
-        1. Create a File > New Android App (Xamarin)
+        1. File > New Project > New Android Application
         2. Add the following code: ...
         3. Run the app and observe the bug 🐞
     validations:

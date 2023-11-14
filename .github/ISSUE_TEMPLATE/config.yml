@@ -7,5 +7,5 @@ contact_links:
     url: https://developercommunity.visualstudio.com
     about: Feature requests are tracked on Visual Studio Developer Community because it provides good prioritization features like voting. Filing there helps ensure new features are properly considered.
   - name: "🙋‍♀️ Community Support"
-    url: https://docs.microsoft.com/answers/topics/164819/dotnet-xamarin.html
+    url: https://learn.microsoft.com/en-us/answers/tags/18/xamarin
     about: For issues that likely aren't bugs, Microsoft Q&A is a good place to ask for help.
