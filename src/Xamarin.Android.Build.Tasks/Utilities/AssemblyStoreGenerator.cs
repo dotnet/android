@@ -21,15 +21,15 @@ namespace Xamarin.Android.Tasks;
 // Formats of the sections above are as follows:
 //
 // HEADER (fixed size)
-//  [MAGIC]       uint; value: 0x41424158
-//  [FORMAT]      uint; store format version number
-//  [ENTRY_COUNT] uint; number of entries in the store
-//  [INDEX_ENTRY_COUNT] uint; number of entries in the index
-//  [INDEX_SIZE] uint; index size in bytes
+//  [MAGIC]              uint; value: 0x41424158
+//  [FORMAT_VERSION]     uint; store format version number
+//  [ENTRY_COUNT]        uint; number of entries in the store
+//  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
+//  [INDEX_SIZE]         uint; index size in bytes
 //
 // INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
-//  [NAME_HASH]        uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
-//  [DESCRIPTOR_INDEX] uint; index into in-store assembly descriptor array
+//  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
+//  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
 //
 // ASSEMBLY_DESCRIPTORS (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
 //  [MAPPING_INDEX]      uint; index into a runtime array where assembly data pointers are stored
@@ -48,6 +48,11 @@ partial class AssemblyStoreGenerator
         // Bit 31 is set for 64-bit platforms, cleared for the 32-bit ones
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_64BIT = 0x80000002; // Must match the ASSEMBLY_STORE_FORMAT_VERSION native constant
 	const uint ASSEMBLY_STORE_FORMAT_VERSION_32BIT = 0x00000002;
+
+	const uint ASSEMBLY_STORE_ABI_AARCH64 = 0x00010000;
+	const uint ASSEMBLY_STORE_ABI_ARM = 0x00020000;
+	const uint ASSEMBLY_STORE_ABI_X64 = 0x00030000;
+	const uint ASSEMBLY_STORE_ABI_X86 = 0x00040000;
 
 	readonly TaskLoggingHelper log;
 	readonly Dictionary<AndroidTargetArch, List<AssemblyStoreAssemblyInfo>> assemblies;
@@ -82,11 +87,11 @@ partial class AssemblyStoreGenerator
 
 	string Generate (string baseOutputDirectory, AndroidTargetArch arch, List<AssemblyStoreAssemblyInfo> infos)
 	{
-		bool is64Bit = arch switch {
-			AndroidTargetArch.Arm => false,
-			AndroidTargetArch.X86 => false,
-			AndroidTargetArch.Arm64 => true,
-			AndroidTargetArch.X86_64 => true,
+		(bool is64Bit, uint abiFlag) = arch switch {
+			AndroidTargetArch.Arm    => (false, ASSEMBLY_STORE_ABI_ARM),
+			AndroidTargetArch.X86    => (false, ASSEMBLY_STORE_ABI_X86),
+			AndroidTargetArch.Arm64  => (true, ASSEMBLY_STORE_ABI_AARCH64),
+			AndroidTargetArch.X86_64 => (true, ASSEMBLY_STORE_ABI_X64),
 			_ => throw new NotSupportedException ($"Internal error: arch {arch} not supported")
 		};
 
@@ -137,7 +142,7 @@ partial class AssemblyStoreGenerator
 		fs.Seek (0, SeekOrigin.Begin);
 
 		uint storeVersion = is64Bit ? ASSEMBLY_STORE_FORMAT_VERSION_64BIT : ASSEMBLY_STORE_FORMAT_VERSION_32BIT;
-		var header = new AssemblyStoreHeader (storeVersion, infoCount, (uint)index.Count, (uint)(index.Count * IndexEntrySize ()));
+		var header = new AssemblyStoreHeader (storeVersion | abiFlag, infoCount, (uint)index.Count, (uint)(index.Count * IndexEntrySize ()));
 		using var writer = new BinaryWriter (fs);
 		writer.Write (header.magic);
 		writer.Write (header.version);

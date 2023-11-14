@@ -69,7 +69,6 @@ namespace Xamarin.Android.Tasks
 			data.DestinationPath = Path.Combine (outputDirectory, $"{Path.GetFileName (data.SourcePath)}.lz4");
 			data.SourceSize = (uint)fi.Length;
 
-			Console.WriteLine ($"Compressing: {data.SourcePath} => {data.DestinationPath}; Index: {data.DescriptorIndex}");
 			byte[] sourceBytes = null;
 			byte[] destBytes = null;
 			try {
@@ -79,7 +78,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (sourceBytes.Length));
-				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, checked((int)fi.Length), destBytes, 0, destBytes.Length, LZ4Level.L09_HC);
+				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, checked((int)fi.Length), destBytes, 0, destBytes.Length, LZ4Level.L12_MAX);
 				if (encodedLength < 0)
 					return CompressionResult.EncodingFailed;
 

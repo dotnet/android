@@ -10,10 +10,10 @@ namespace Xamarin.Android.Tasks
 	{
 		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
 
-		public uint FileSize { get; }
-		public uint DescriptorIndex { get; }
+		public uint FileSize                { get; }
+		public uint DescriptorIndex         { get; }
 		public AndroidTargetArch TargetArch { get; }
-		public string AssemblyName { get; }
+		public string AssemblyName          { get; }
 
 		public CompressedAssemblyInfo (uint fileSize, uint descriptorIndex, AndroidTargetArch targetArch, string assemblyName)
 		{

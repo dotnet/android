@@ -14,14 +14,26 @@ static constexpr uint64_t FORMAT_TAG = 0x015E6972616D58;
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
+// The highest bit of assembly store version is a 64-bit ABI flag
 #if INTPTR_MAX == INT64_MAX
 static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x80000000;
 #else
 static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x00000000;
 #endif
 
+// The second-to-last byte denotes the actual ABI
+#if defined(__aarch64__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00010000;
+#elif defined(__arm__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00020000;
+#elif defined(__x86_64__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00030000;
+#elif defined(__i386__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
+#endif
+
 // Increase whenever an incompatible change is made to the assembly store format
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64BIT_FLAG;
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
 
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian

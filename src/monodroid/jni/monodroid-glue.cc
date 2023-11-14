@@ -1372,12 +1372,9 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 	StartupAwareLock lock (dso_handle_write_lock);
 #if defined (RELEASE)
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_ASSEMBLY, "here #2.0");
 		DSOApkEntry *apk_entry = dso_apk_entries;
 		for (size_t i = 0; i < application_config.number_of_shared_libraries; i++) {
-			log_debug (LOG_ASSEMBLY, "here #2.1");
 			if (apk_entry->name_hash != dso->real_name_hash) {
-				log_debug (LOG_ASSEMBLY, "here #2.2");
 				apk_entry++;
 				continue;
 			}

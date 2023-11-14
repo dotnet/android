@@ -192,8 +192,8 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 		Helpers::abort_application ();
 	}
 
-	if (header->version > ASSEMBLY_STORE_FORMAT_VERSION) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format v%u which is not understood by this version of Xamarin.Android", entry_name.get (), header->version);
+	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
+		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x", entry_name.get (), header->version, ASSEMBLY_STORE_FORMAT_VERSION);
 		Helpers::abort_application ();
 	}
 
@@ -317,9 +317,8 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, int ap
 	if constexpr (NeedsNameAlloc) {
 		entry.name = utils.strdup_new (entry_name.get () + prefix_len);
 	} else {
-		// entry.name is preallocated on build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
+		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
-		log_debug (LOG_ASSEMBLY, "Storing data for assembly entry '%s'", entry_name.get ());
 		strncpy (entry.name, entry_name.get () + prefix_len, max_name_size);
 	}
 	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - prefix_len, max_name_size);

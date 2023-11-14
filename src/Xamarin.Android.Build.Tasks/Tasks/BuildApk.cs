@@ -395,14 +395,13 @@ namespace Xamarin.Android.Tasks
 			// Add framework assemblies
 			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
 
+			string inArchivePath;
+
 			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
 			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
 			// of cases these days, since AAB enforces that split).  `base.apk` contains only ABI-agnostic file, while one of the split config files contains only
 			// ABI-specific data+code.
-			bool addRuntimeConfig = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			string inArchivePath;
-
-			if (addRuntimeConfig) {
+			if (!String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath)) {
 				foreach (string abi in SupportedAbis) {
 					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 					// like since we can finish scanning the zip central directory earlier at startup.
@@ -466,7 +465,7 @@ namespace Xamarin.Android.Tasks
 					// Try to add symbols if Debug
 					if (debug) {
 						var symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-						string symbolsPath = null;
+						string? symbolsPath = null;
 
 						if (File.Exists (symbols)) {
 							symbolsPath = symbols;
