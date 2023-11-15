@@ -24,7 +24,6 @@ namespace Xamarin.Android.Prepare
 			new DebianLinuxProgram ("linux-libc-dev"),
 			new DebianLinuxProgram ("make"),
 			new DebianLinuxProgram ("ninja-build", "ninja"),
-			new DebianLinuxProgram ("nuget"),
 			new DebianLinuxProgram ("p7zip-full", "7z"),
 			new DebianLinuxProgram ("sqlite3"),
 			new DebianLinuxProgram ("vim-common"),
