@@ -36,8 +36,6 @@ namespace Xamarin.Android.Prepare
 			Steps.Add (new Step_InstallGNUBinutils ());
 			Steps.Add (new Step_GenerateCGManifest ());
 			Steps.Add (new Step_Get_Android_BuildTools ());
-
-			AddRequiredOSSpecificSteps (false);
 		}
 
 		protected override void AddEndSteps (Context context)

@@ -20,10 +20,6 @@ namespace Xamarin.Android.Prepare
 			},
 		};
 
-		static readonly HomebrewProgram mingw = new HomebrewProgram ("mingw-w64") {
-			MinimumVersion = "7.0.0_2",
-		};
-
 		static readonly HomebrewProgram git = new HomebrewProgram ("git") {
 			MinimumVersion = "2.20.0",
 		};
@@ -31,8 +27,6 @@ namespace Xamarin.Android.Prepare
 		protected override void InitializeDependencies ()
 		{
 			Dependencies.AddRange (programs);
-			if (!Context.Instance.NoMingwW64)
-				Dependencies.Add (mingw);
 
 			// Allow using git from $PATH if it has the right version
 			(bool success, string bv) = Utilities.GetProgramVersion (git.Name);

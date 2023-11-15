@@ -17,7 +17,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidMxeFullPath,                  StripQuotes (@"@AndroidMxeFullPath@"));
 			properties.Add (KnownProperties.AndroidNdkDirectory,                 StripQuotes (@"@AndroidNdkDirectory@"));
 			properties.Add (KnownProperties.AndroidSdkDirectory,                 StripQuotes (@"@AndroidSdkDirectory@"));
-			properties.Add (KnownProperties.AndroidSupportedHostJitAbis,         StripQuotes ("@AndroidSupportedHostJitAbis@"));
 			properties.Add (KnownProperties.AndroidSupportedTargetAotAbis,       StripQuotes ("@AndroidSupportedTargetAotAbis@"));
 			properties.Add (KnownProperties.AndroidSupportedTargetJitAbis,       StripQuotes ("@AndroidSupportedTargetJitAbis@"));
 			properties.Add (KnownProperties.AndroidToolchainCacheDirectory,      StripQuotes (@"@AndroidToolchainCacheDirectory@"));
@@ -47,12 +46,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.LibZipSourceFullPath,                StripQuotes (@"@LibZipSourceFullPath@"));
 			properties.Add (KnownProperties.ManagedRuntime,                      StripQuotes (@"@ManagedRuntime@"));
 			properties.Add (KnownProperties.MicrosoftAndroidSdkOutDir,           StripQuotes (@"@MicrosoftAndroidSdkOutDir@"));
-			properties.Add (KnownProperties.MingwCommandPrefix32,                StripQuotes ("@MingwCommandPrefix32@"));
-			properties.Add (KnownProperties.MingwCommandPrefix64,                StripQuotes ("@MingwCommandPrefix64@"));
-			properties.Add (KnownProperties.MingwDependenciesRootDirectory,      StripQuotes (@"@MingwDependenciesRootDirectory@"));
-			properties.Add (KnownProperties.MingwZlibLibraryName,                StripQuotes ("@MingwZlibLibraryName@"));
-			properties.Add (KnownProperties.MingwZlibRootDirectory32,            StripQuotes (@"@MingwZlibRootDirectory32@"));
-			properties.Add (KnownProperties.MingwZlibRootDirectory64,            StripQuotes (@"@MingwZlibRootDirectory64@"));
 			properties.Add (KnownProperties.MonoCecilVersion,                    StripQuotes ("@MonoCecilVersion@"));
 			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));

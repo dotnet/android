@@ -43,7 +43,6 @@ namespace Xamarin.Android.Prepare
 		bool? useColor;
 		bool? dullMode;
 		Scenario? defaultScenario;
-		HashSet<string>? hostJitAbis;
 		HashSet<string>? targetAotAbis;
 		HashSet<string>? targetJitAbis;
 		List<RuleGenerator>? ruleGenerators;
@@ -287,13 +286,6 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   <c>true</c> if any Windows ABI targets are enabled
-		/// </summary>
-		public bool WindowsJitAbisEnabled {
-			get => IsHostJitAbiEnabled (AbiNames.HostJit.Win32) || IsHostJitAbiEnabled (AbiNames.HostJit.Win64);
-		}
-
-		/// <summary>
 		///   <c>true</c> if any Android device AOT targets are enabled
 		/// </summary>
 		public bool TargetAotAbisEnabled {
@@ -370,11 +362,6 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Do not install mingw-w64 with brew on MacOS, default false
-		/// </summary>
-		public bool NoMingwW64 { get; set; } = false;
-
-		/// <summary>
 		///   Collection of programs or dependencies which should be written to the Build Tools Inventory .csv file.
 		/// </summary>
 		public Dictionary<string, string> BuildToolsInventory { get; set; } = new Dictionary<string, string> ();
@@ -442,11 +429,6 @@ namespace Xamarin.Android.Prepare
 				return;
 			}
 
-			if (String.Compare (KnownProperties.AndroidSupportedHostJitAbis, args.Name, StringComparison.Ordinal) == 0) {
-				hostJitAbis = null;
-				return;
-			}
-
 			if (String.Compare (KnownProperties.AndroidSupportedTargetAotAbis, args.Name, StringComparison.Ordinal) == 0) {
 				targetAotAbis = null;
 			}
@@ -461,17 +443,6 @@ namespace Xamarin.Android.Prepare
 		{
 			PopulateTargetJitAbis ();
 			return IsAbiEnabled (abiName, targetJitAbis);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> names an enabled host OS ABI target.
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.HostJit"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsHostJitAbiEnabled (string	abiName)
-		{
-			PopulateHostJitAbis ();
-			return IsAbiEnabled (abiName, hostJitAbis);
 		}
 
 		/// <summary>
@@ -546,96 +517,6 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsMingwHostAbi (string abiName)
-		{
-			return AbiNames.AllMingwHostAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows 32-bit cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool Is32BitMingwHostAbi (string abiName)
-		{
-			return AbiNames.All32BitMingwHostAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows 64-bit cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool Is64BitMingwHostAbi (string abiName)
-		{
-			return AbiNames.All64BitMingwHostAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsNativeHostAbi (string abiName)
-		{
-			return AbiNames.AllNativeHostAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows AOT cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsCrossAotWindowsAbi (string abiName)
-		{
-			return AbiNames.AllCrossWindowsAotAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS AOT 64-bit cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool Is64BitCrossAbi (string abiName)
-		{
-			return AbiNames.All64BitCrossAotAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows 32-bit cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool Is32BitCrossAbi (string abiName)
-		{
-			return AbiNames.All32BitCrossAotAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS AOT cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsHostCrossAotAbi (string abiName)
-		{
-			return AbiNames.AllCrossHostAotAbis.Contains (abiName);
-		}
-
-		/// <summary>
-		///   Checks whether <paramref name="abiName"/> refers to a host OS Windows AOT cross-compiler target
-		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
-		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
-		/// </summary>
-		public bool IsWindowsCrossAotAbi (string abiName)
-		{
-			return AbiNames.AllCrossWindowsAotAbis.Contains (abiName);
-		}
-
-		/// <summary>
 		///   Checks whether <paramref name="abiName"/> refers to a Windows LLVM target
 		///   <seealso cref="Xamarin.Android.Prepare.AbiNames.TargetAot"/>
 		///   <seealso cref="Xamarin.Android.Prepare.Abi"/>
@@ -700,19 +581,6 @@ namespace Xamarin.Android.Prepare
 				return;
 
 			Utilities.AddAbis (Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis).Trim (), ref targetAotAbis);
-		}
-
-		void PopulateHostJitAbis ()
-		{
-			if (hostJitAbis != null) {
-				return;
-			}
-			Utilities.AddAbis (Properties.GetRequiredValue (KnownProperties.AndroidSupportedHostJitAbis).Trim (), ref hostJitAbis);
-		}
-
-		void OnPropertiesChanged (object sender, EventArgs args)
-		{
-			hostJitAbis = null;
 		}
 
 		/// <summary>
@@ -785,7 +653,6 @@ namespace Xamarin.Android.Prepare
 
 			if (EnableAllTargets) {
 				Properties.Set (KnownProperties.AndroidSupportedTargetJitAbis, Utilities.ToXamarinAndroidPropertyValue (AbiNames.AllJitAbis));
-				Properties.Set (KnownProperties.AndroidSupportedHostJitAbis, Utilities.ToXamarinAndroidPropertyValue (AbiNames.AllHostAbis));
 				Properties.Set (KnownProperties.AndroidSupportedTargetAotAbis, Utilities.ToXamarinAndroidPropertyValue (AbiNames.AllAotAbis));
 			}
 
