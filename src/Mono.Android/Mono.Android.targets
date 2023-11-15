@@ -283,13 +283,17 @@
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
       <_ExtraMdocArgs>-lang docid -lang fsharp --debug --delete</_ExtraMdocArgs>
     </PropertyGroup>
+    <ItemGroup>
+      <_FxAssembly Include="$(_MonoAndroidNETDefaultOutDir)*.dll" />
+      <_FxAssemblyXml Include="@(_FxAssembly->'%(RelativeDir)%(Filename).xml')" Condition=" Exists('%(RelativeDir)%(Filename).xml') " />
+    </ItemGroup>
     <!-- Create a docs framework directory which contains:
           src/Mono.Android/obj/docs-gen-temp
-          ├── dependencies
-          │   └── net-android-34.0
-          |       └──Java.Interop.dll
           ├── frameworks.xml
           └── net-android-34.0
+              ├── Java.Interop.dll
+              ├── Java.Interop.xml
+              ├── Mono.Android.Runtime.dll
               ├── Mono.Android.dll
               └── Mono.Android.xml
     -->
@@ -297,13 +301,8 @@
     <MakeDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)$(DocsFxMoniker)" />
     <Copy
-        SourceFiles="$(_MonoAndroidNETDefaultOutDir)Mono.Android.dll;$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml"
+        SourceFiles="@(_FxAssembly);@(_FxAssemblyXml)"
         DestinationFolder="$(_RootFxDir)$(DocsFxMoniker)"
-    />
-    <MakeDir Directories="$(_RootFxDir)dependencies/$(DocsFxMoniker)" />
-    <Copy
-        SourceFiles="$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll"
-        DestinationFolder="$(_RootFxDir)dependencies/$(DocsFxMoniker)"
     />
     <WriteLinesToFile
         File="$(_RootFxDir)frameworks.xml"
