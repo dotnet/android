@@ -45,8 +45,6 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
-			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe");
-
 			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 
 			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
@@ -238,7 +236,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly string BuildToolsScriptsDir             = Path.Combine (BuildToolsDir, "scripts");
 			public static readonly string BinDirRoot                       = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "bin");
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
-			public static readonly string LocalNugetPath                   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".nuget", "NuGet.exe");
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");
 			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
