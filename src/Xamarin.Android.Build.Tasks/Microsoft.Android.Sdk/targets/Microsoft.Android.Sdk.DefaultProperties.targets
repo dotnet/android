@@ -39,7 +39,7 @@
     <AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods Condition=" '$(AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods)' == '' ">true</AndroidBoundInterfacesContainStaticAndDefaultInterfaceMethods>
     <AndroidBoundInterfacesContainTypes Condition=" '$(AndroidBoundInterfacesContainTypes)' == '' ">true</AndroidBoundInterfacesContainTypes>
     <AndroidBoundInterfacesContainConstants Condition=" '$(AndroidBoundInterfacesContainConstants)' == '' ">true</AndroidBoundInterfacesContainConstants>
-    <_AndroidEmitLegacyInterfaceInvokers Condition=" '$(AndroidEmitLegacyInterfaceInvokers)' == '' ">false</_AndroidEmitLegacyInterfaceInvokers>
+    <_AndroidEmitLegacyInterfaceInvokers Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == '' ">false</_AndroidEmitLegacyInterfaceInvokers>
     <AndroidEnableObsoleteOverrideInheritance Condition=" '$(AndroidEnableObsoleteOverrideInheritance)' == '' ">true</AndroidEnableObsoleteOverrideInheritance>
     <AndroidEnableRestrictToAttributes Condition=" '$(AndroidEnableRestrictToAttributes)' == '' ">obsolete</AndroidEnableRestrictToAttributes>
 
