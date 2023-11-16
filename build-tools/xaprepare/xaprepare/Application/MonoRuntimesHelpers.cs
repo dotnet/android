@@ -42,46 +42,6 @@ namespace Xamarin.Android.Prepare
 				if (enableLogging)
 					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
 			}
-
-			if (enableLogging) {
-				Log.Instance.StatusLine ();
-				Log.Instance.StatusLine ("Enabled Mono host runtimes:", ConsoleColor.White);
-			}
-			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoHostRuntime && r.Enabled)) {
-				enabledRuntimes.Add (runtime);
-				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
-			}
-
-			bool anyCrossEnabled = false;
-			if (enableLogging) {
-				Log.Instance.StatusLine ();
-				Log.Instance.StatusLine ("Enabled Mono cross compilers:", ConsoleColor.White);
-			}
-			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is MonoCrossRuntime && r.Enabled)) {
-				anyCrossEnabled = true;
-				enabledRuntimes.Add (runtime);
-				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
-			}
-
-			if (enableLogging && !anyCrossEnabled)
-				Log.Instance.StatusLine ($"  NONE", ConsoleColor.DarkCyan);
-
-			anyCrossEnabled = false;
-			if (enableLogging) {
-				Log.Instance.StatusLine ();
-				Log.Instance.StatusLine ("Enabled LLVM cross compilers:", ConsoleColor.White);
-			}
-			foreach (Runtime runtime in allRuntimes.Items.Where (r => r is LlvmRuntime && r.Enabled)) {
-				anyCrossEnabled = true;
-				enabledRuntimes.Add (runtime);
-				if (enableLogging)
-					Log.Instance.StatusLine ($"  {context.Characters.Bullet} {runtime.DisplayName}");
-			}
-			if (enableLogging && !anyCrossEnabled)
-				Log.Instance.StatusLine ($"  NONE", ConsoleColor.DarkCyan);
-
 			return enabledRuntimes;
 		}
 

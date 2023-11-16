@@ -69,15 +69,6 @@
     <MicrosoftAndroidx64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-x64\$(AndroidPackVersion)\runtimes\android-x64\</MicrosoftAndroidx64PackDir>
     <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
-    <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
-    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
-    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc32)</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx32)</HostCxx>
-    <HostCc Condition=" '$(HostCc)' == '' ">cc</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">c++</HostCxx>
-    <HostCcName Condition=" '$(HostCcName)' == '' ">cc</HostCcName>
-    <HostCxxName Condition=" '$(HostCxxName)' == '' ">c++</HostCxxName>
     <MakeConcurrency Condition=" '$(MakeConcurrency)' == '' And '$(HostCpuCount)' != '' ">-j$(HostCpuCount)</MakeConcurrency>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <ManagedRuntimeArgs Condition=" '$(ManagedRuntimeArgs)' == '' And '$(ManagedRuntime)' == 'mono' ">--debug=casts</ManagedRuntimeArgs>
@@ -102,7 +93,6 @@
     <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)build-tools\gradle</GradleHome>
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
-    <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == ''  And '$(HostOS)' == 'Windows' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == '' ">armeabi-v7a:arm64:x86:x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
@@ -114,11 +104,6 @@
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
-    <MingwZlibRootDirectory Condition=" '$(ZlibRootDirectory)' == '' And '$(HostOS)' == 'Linux' ">\usr</MingwZlibRootDirectory>
-    <MingwZlibRootDirectory Condition=" '$(ZlibRootDirectory)' == '' And '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)\opt\mingw-zlib\usr</MingwZlibRootDirectory>
-    <MingwZlibRootDirectory32>$(MingwZlibRootDirectory)\i686-w64-mingw32</MingwZlibRootDirectory32>
-    <MingwZlibRootDirectory64>$(MingwZlibRootDirectory)\x86_64-w64-mingw32</MingwZlibRootDirectory64>
-    <MingwZlibLibraryName>libz.a</MingwZlibLibraryName>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
@@ -146,10 +131,6 @@
     <_TestsAotName Condition=" '$(AotAssemblies)' == 'true' ">-Aot</_TestsAotName>
     <_TestsProfiledAotName Condition=" '$(AndroidEnableProfiledAot)' == 'true' ">-Profiled</_TestsProfiledAotName>
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)</TestsFlavor>
-  </PropertyGroup>
-  <PropertyGroup>
-    <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>
-    <MingwCommandPrefix64>x86_64-w64-mingw32</MingwCommandPrefix64>
   </PropertyGroup>
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
@@ -192,19 +173,6 @@
   <PropertyGroup>
     <SourceLink Condition=" Exists('$(MSBuildThisFileDirectory)bin/Build$(Configuration)/SourceLink.json') ">$(MSBuildThisFileDirectory)bin/Build$(Configuration)/SourceLink.json</SourceLink>
   </PropertyGroup>
-  <!--
-    "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere
-    can use `:ABI-NAME:`, to avoid substring mismatches.
-    -->
-  <PropertyGroup>
-    <AndroidSupportedHostJitAbisForConditionalChecks>$(AndroidSupportedHostJitAbis)</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedHostJitAbisForConditionalChecks):</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedHostJitAbisForConditionalChecks)</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisSplit>$(AndroidSupportedHostJitAbis.Split(':'))</AndroidSupportedHostJitAbisSplit>
-  </PropertyGroup>
-  <ItemGroup>
-    <AndroidSupportedHostJitAbi Include="$(AndroidSupportedHostJitAbisSplit)" />
-  </ItemGroup>
   <!--
     "Fixup" $(AndroidSupportedTargetJitAbis) so that Condition attributes elsewhere
     can use `:ABI-NAME:`, to avoid substring mismatches.

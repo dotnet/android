@@ -366,11 +366,6 @@ namespace Xamarin.Android.Prepare
 					return true;
 				}
 
-				if (context.OS.IsWindows && (context.IsWindowsCrossAotAbi (monoRuntime.Name) || context.IsMingwHostAbi (monoRuntime.Name))) {
-					Log.WarningLine ($"Unable to strip '{monoRuntime.DisplayName}' on Windows.");
-					return true;
-				}
-
 				bool result;
 				if (!String.IsNullOrEmpty (monoRuntime.StripFlags))
 					result = Utilities.RunCommand (monoRuntime.Strip, monoRuntime.StripFlags, filePath);

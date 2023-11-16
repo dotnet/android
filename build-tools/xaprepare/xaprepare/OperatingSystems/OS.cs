@@ -85,51 +85,6 @@ namespace Xamarin.Android.Prepare
 		public string Architecture   { get; protected set; } = String.Empty;
 
 		/// <summary>
-		///   Path to the C compiler to build binaries with the native OS bitness
-		/// </summary>
-		public string CC             { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Path to the C compiler to build binaries with 32-bit bitness
-		/// </summary>
-		public string CC32           { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Path to the C compiler to build binaries with 64-bit bitness
-		/// </summary>
-		public string CC64           { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Path to the C++ compiler to build binaries with the native OS bitness
-		/// </summary>
-		public string CXX            { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Path to the C+ compiler to build binaries with 32-bit bitness
-		/// </summary>
-		public string CXX32          { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Path to the C compiler to build binaries with 64-bit bitness
-		/// </summary>
-		public string CXX64          { get; set; } = String.Empty;
-
-		/// <summary>
-		///   Default compiler target triple
-		/// </summary>
-		public string Triple         { get; set; } = String.Empty;
-
-		/// <summary>
-		///   32-bit compiler target triple
-		/// </summary>
-		public string Triple32       { get; set; } = String.Empty;
-
-		/// <summary>
-		///   64-bit compiler target triple
-		/// </summary>
-		public string Triple64       { get; set; } = String.Empty;
-
-		/// <summary>
 		///   Prefix where Homebrew is installed (relevant only on macOS, but present in all operating system for
 		///   compatibility reasons)
 		/// </summary>
@@ -209,11 +164,6 @@ namespace Xamarin.Android.Prepare
 		///   it is not.
 		/// </summary>
 		protected abstract string AssertIsExecutable (string fullPath);
-
-		/// <summary>
-		///   Detect the required C and C++ compilers on the system.
-		/// </summary>
-		protected abstract void DetectCompilers ();
 
 		protected OS (Context context)
 		{
@@ -368,77 +318,6 @@ namespace Xamarin.Android.Prepare
 				string value = kvp.Value ?? String.Empty;
 				Log.DebugLine ($"Setting environment variable: {name} = {value}");
 				Environment.SetEnvironmentVariable (name, value);
-			}
-
-			if (Context.SelectedScenario.NeedsCompilers)
-				DetectCompilers ();
-		}
-
-		/// <summary>
-		///   Verifies whether the configured compilers can in fact be found, throws an exception if they aren't.
-		/// </summary>
-		protected void VerifyCompilersExist ()
-		{
-			Log.DebugLine ($"Verifying {CC} compiler name is set");
-			AssertCompilerSet (CC, "C");
-
-			Log.DebugLine ($"Verifying {CXX} compiler name is set");
-			AssertCompilerSet (CXX, "C++");
-
-			Log.DebugLine ($"Verifying {CC} compiler exists");
-			AssertCompilerFound (Which (CC), CC, "C");
-
-			Log.DebugLine ($"Verifying {CXX} compiler exists");
-			AssertCompilerFound (Which (CXX), CXX, "C++");
-
-			void AssertCompilerFound (string path, string variable, string name)
-			{
-				if (String.IsNullOrEmpty (path))
-					throw new InvalidOperationException ($"{name} compiler not found. Tried to find: {variable}");
-			}
-
-			void AssertCompilerSet (string variable, string name)
-			{
-				if (String.IsNullOrEmpty (variable))
-					throw new InvalidOperationException ($"{name} compiler not set");
-			}
-		}
-
-		protected void LogCompilerDetails ()
-		{
-			const ConsoleColor prefixColor = ConsoleColor.White;
-			const ConsoleColor languageColor = ConsoleColor.Yellow;
-			const ConsoleColor unsupportedColor = ConsoleColor.Red;
-
-			LogCompiler ("  Default", "C", CC);
-			LogCompiler ("   32-bit", "C", CC32);
-			LogCompiler ("   64-bit", "C", CC64);
-
-			LogCompiler ("Default", "C++", CXX);
-			LogCompiler (" 32-bit", "C++", CXX32);
-			LogCompiler (" 64-bit", "C++", CXX64);
-
-			Log.Status ("      Default triple: ", prefixColor);
-			LogCompilerInfo (Triple);
-			Log.Status ("       32-bit triple: ", prefixColor);
-			LogCompilerInfo (Triple32);
-			Log.Status ("       64-bit triple: ", prefixColor);
-			LogCompilerInfo (Triple64);
-
-			void LogCompiler (string variationName, string languageName, string compiler)
-			{
-				Log.Status ($"{variationName} ", prefixColor);
-				Log.Status (languageName, languageColor);
-				Log.Status (" compiler: ", prefixColor);
-				LogCompilerInfo (compiler);
-			}
-
-			void LogCompilerInfo (string compiler)
-			{
-				if (String.IsNullOrEmpty (compiler))
-					Log.StatusLine ("unsupported", unsupportedColor);
-				else
-					Log.StatusLine (compiler);
 			}
 		}
 

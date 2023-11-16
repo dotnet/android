@@ -69,7 +69,6 @@ namespace Xamarin.Android.Prepare
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";
-			public const string MonoHostMingwRuntimeNativeLibraryExtension = WindowsDLLSuffix;
 			public const string MonoJitRuntimeNativeLibraryExtension       = ".so";
 			public const string MonoRuntimeOutputMonoBtlsFilename          = "libmono-btls-shared";
 			public const string MonoRuntimeOutputMonoPosixHelperFilename   = "libMonoPosixHelper";
@@ -271,7 +270,6 @@ namespace Xamarin.Android.Prepare
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
-			public static string MingwBinDir                         => GetCachedPath (ref mingwBinDir, ()                         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidMxeFullPath), "bin"));
 			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
 			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
 
@@ -292,12 +290,6 @@ namespace Xamarin.Android.Prepare
 			public static string OutputIncludeDir                    => GetCachedPath (ref outputIncludeDir, ()                    => Path.Combine (BinDirRoot, ctx.Configuration, "include"));
 			public static string MonoRuntimesEnabledAbisCachePath    => GetCachedPath (ref monoRuntimesEnabledAbisCachePath, ()    => Path.Combine (BuildBinDir, "mono-runtimes-abi.cache"));
 			public static string FrameworkListInstallPath            => GetCachedPath (ref frameworkListInstallPath, ()            => Path.Combine (InstallBCLFrameworkRedistListDir, "FrameworkList.xml"));
-
-			// Cmake + MinGW
-			public static string Mingw32CmakeTemplatePath            => GetCachedPath (ref mingw32CmakeTemplatePath, ()            => Path.Combine (BuildToolsScriptsDir, "mingw-32.cmake.in"));
-			public static string Mingw64CmakeTemplatePath            => GetCachedPath (ref mingw64CmakeTemplatePath, ()            => Path.Combine (BuildToolsScriptsDir, "mingw-64.cmake.in"));
-			public static string Mingw32CmakePath                    => GetCachedPath (ref mingw32CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-32.cmake"));
-			public static string Mingw64CmakePath                    => GetCachedPath (ref mingw64CmakePath, ()                    => Path.Combine (BuildBinDir, "mingw-64.cmake"));
 
 			// AdoptOpenJDK
 			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
@@ -407,7 +399,6 @@ namespace Xamarin.Android.Prepare
 
 			static string? testBinDir;
 			static string? buildBinDir;
-			static string? mingwBinDir;
 			static string? binDir;
 			static string? monoSDKsOutputDir;
 			static string? androidToolchainRootDirectory;
@@ -426,10 +417,6 @@ namespace Xamarin.Android.Prepare
 			static string? installBCLFrameworkRedistListDir;
 			static string? installMSBuildDir;
 			static string? outputIncludeDir;
-			static string? mingw32CmakePath;
-			static string? mingw64CmakePath;
-			static string? mingw32CmakeTemplatePath;
-			static string? mingw64CmakeTemplatePath;
 			static string? monoRuntimesEnabledAbisCachePath;
 			static string? frameworkListInstallPath;
 			static string? profileAssembliesProjitemsPath;

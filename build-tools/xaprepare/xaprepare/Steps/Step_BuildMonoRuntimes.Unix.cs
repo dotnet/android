@@ -449,18 +449,11 @@ namespace Xamarin.Android.Prepare
 				runtimeBuildMakeOptions.AddRange (standardArgs);
 			}
 
-			AddHostTargets (runtimes.Where (r => r is MonoHostRuntime));
 			AddPackageTargets (runtimes.Where (r => r is MonoJitRuntime));
-			AddPackageTargets (runtimes.Where (r => r is MonoCrossRuntime));
 			ret.Add ("package-android-bcl");
 			AddTargets ("provision-llvm", runtimes.Where (r => r is LlvmRuntime));
 
 			return ret;
-
-			void AddHostTargets (IEnumerable<Runtime> items)
-			{
-				AddTargets ("package-android-host", items);
-			}
 
 			void AddPackageTargets (IEnumerable<Runtime> items)
 			{

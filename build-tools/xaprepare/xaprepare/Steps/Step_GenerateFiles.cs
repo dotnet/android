@@ -67,8 +67,6 @@ namespace Xamarin.Android.Prepare
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
-						Get_mingw_32_cmake (context),
-						Get_mingw_64_cmake (context),
 						Get_MonoGitHash_props (context),
 						Get_Omnisharp_Json (context),
 					};
@@ -133,17 +131,8 @@ namespace Xamarin.Android.Prepare
 				{ "@OS_NAME@",              context.OS.Name ?? String.Empty },
 				{ "@HOST_OS_FLAVOR@",       context.OS.Flavor ?? String.Empty },
 				{ "@OS_RELEASE@",           context.OS.Release ?? String.Empty },
-				{ "@HOST_TRIPLE@",          context.OS.Triple ?? String.Empty },
-				{ "@HOST_TRIPLE32@",        context.OS.Triple32 ?? String.Empty },
-				{ "@HOST_TRIPLE64@",        context.OS.Triple64 ?? String.Empty },
 				{ "@HOST_CPUS@",            context.OS.CPUCount.ToString () },
 				{ "@ARCHITECTURE_BITS@",    context.OS.Is64Bit ? "64" : "32" },
-				{ "@HOST_CC@",              context.OS.CC ?? String.Empty },
-				{ "@HOST_CXX@",             context.OS.CXX ?? String.Empty },
-				{ "@HOST_CC32@",            context.OS.CC32 ?? String.Empty },
-				{ "@HOST_CC64@",            context.OS.CC64 ?? String.Empty },
-				{ "@HOST_CXX32@",           context.OS.CXX32 ?? String.Empty },
-				{ "@HOST_CXX64@",           context.OS.CXX64 ?? String.Empty },
 				{ "@HOST_HOMEBREW_PREFIX@", context.OS.HomebrewPrefix ?? String.Empty },
 				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
 				{ "@javac@",                context.OS.JavaCPath },
@@ -211,25 +200,6 @@ namespace Xamarin.Android.Prepare
 				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
 				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
 			);
-		}
-
-		GeneratedFile Get_mingw_32_cmake (Context context)
-		{
-			return Get_mingw_cmake (context, Configurables.Paths.Mingw32CmakeTemplatePath, Configurables.Paths.Mingw32CmakePath);
-		}
-
-		GeneratedFile Get_mingw_64_cmake (Context context)
-		{
-			return Get_mingw_cmake (context, Configurables.Paths.Mingw64CmakeTemplatePath, Configurables.Paths.Mingw64CmakePath);
-		}
-
-		GeneratedFile Get_mingw_cmake (Context context, string input, string output)
-		{
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@HOMEBREW_PREFIX@", context.OS.HomebrewPrefix ?? String.Empty },
-			};
-
-			return new GeneratedPlaceholdersFile (replacements, Path.Combine (input), Path.Combine (output));
 		}
 
 		public GeneratedFile Get_MonoGitHash_props (Context context)
