@@ -109,11 +109,6 @@ namespace Xamarin.Android.Prepare
 			return true;
 		}
 
-		protected override void DetectCompilers ()
-		{
-			Log.Todo ("Implement compiler detection");
-		}
-
 		string GetHomeDir ()
 		{
 			string? homeDir = Environment.GetEnvironmentVariable ("USERPROFILE");

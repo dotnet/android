@@ -51,7 +51,6 @@
       <Replacement Include="@AndroidNdkDirectory@=$(AndroidNdkDirectory)" />
       <Replacement Include="@AndroidNdkVersion@=$(AndroidNdkVersion)" />
       <Replacement Include="@AndroidSdkDirectory@=$(AndroidSdkDirectory)" />
-      <Replacement Include="@AndroidSupportedHostJitAbis@=$(AndroidSupportedHostJitAbis)" />
       <Replacement Include="@AndroidSupportedTargetAotAbis@=$(AndroidSupportedTargetAotAbis)" />
       <Replacement Include="@AndroidSupportedTargetJitAbis@=$(AndroidSupportedTargetJitAbis)" />
       <Replacement Include="@AndroidToolchainCacheDirectory@=$(AndroidToolchainCacheDirectory)" />
@@ -80,12 +79,6 @@
       <Replacement Include="@LibZipSourceFullPath@=$(LibZipSourceFullPath)" />
       <Replacement Include="@ManagedRuntime@=$(ManagedRuntime)" />
       <Replacement Include="@MicrosoftAndroidSdkOutDir@=$(MicrosoftAndroidSdkOutDir)" />
-      <Replacement Include="@MingwCommandPrefix32@=$(MingwCommandPrefix32)" />
-      <Replacement Include="@MingwCommandPrefix64@=$(MingwCommandPrefix64)" />
-      <Replacement Include="@MingwDependenciesRootDirectory@=$(MingwDependenciesRootDirectory)" />
-      <Replacement Include="@MingwZlibLibraryName@=$(MingwZlibLibraryName)" />
-      <Replacement Include="@MingwZlibRootDirectory32@=$(MingwZlibRootDirectory32)" />
-      <Replacement Include="@MingwZlibRootDirectory64@=$(MingwZlibRootDirectory64)" />
       <Replacement Include="@MonoCecilVersion@=$(MonoCecilVersion)" />
       <Replacement Include="@MonoDarwinPackageUrl@=$(MonoDarwinPackageUrl)" />
       <Replacement Include="@MonoRequiredMinimumVersion@=$(MonoRequiredMinimumVersion)" />
