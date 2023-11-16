@@ -655,8 +655,10 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
-				var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "FormsViewGroup.dll"));
-				File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				foreach (string abi in proj.GetProperty (KnownProperties.AndroidSupportedAbis).Split (';')) {
+					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
+					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped (KnownTargets.LinkAssembliesNoShrink);
 
