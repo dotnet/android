@@ -27,7 +27,6 @@ namespace Xamarin.Android.Prepare
 			new ArchLinuxProgram ("libzip"),
 			new ArchLinuxProgram ("m4"),
 			new ArchLinuxProgram ("make"),
-			new ArchLinuxProgram ("nuget"),
 			new ArchLinuxProgram ("patch"),
 			new ArchLinuxProgram ("pkg-config"),
 			new ArchLinuxProgram ("referenceassemblies-pcl"),
