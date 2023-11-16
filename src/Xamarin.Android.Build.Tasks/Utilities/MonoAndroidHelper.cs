@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.IO;
+using System.IO.Hashing;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Security.Cryptography;
@@ -684,6 +685,19 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return String.Join ("/", parts);
+		}
+
+		public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
+
+		public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);
+
+		public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
+		{
+			if (is64Bit) {
+				return XxHash64.HashToUInt64 (stringBytes);
+			}
+
+			return (ulong)XxHash32.HashToUInt32 (stringBytes);
 		}
 	}
 }

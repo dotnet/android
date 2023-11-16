@@ -8,12 +8,13 @@ namespace Xamarin.Android.Tasks;
 
 class AssemblyStoreAssemblyInfo
 {
-	public AndroidTargetArch Arch { get; }
-	public string InArchivePath   { get; }
-	public FileInfo SourceFile    { get; }
-
-	public FileInfo? SymbolsFile  { get; set; }
-	public FileInfo? ConfigFile   { get; set; }
+	public AndroidTargetArch Arch   { get; }
+	public string InArchivePath     { get; }
+	public FileInfo SourceFile      { get; }
+	public string AssemblyName      { get; }
+	public byte[] AssemblyNameBytes { get; }
+	public FileInfo? SymbolsFile    { get; set; }
+	public FileInfo? ConfigFile     { get; set; }
 
 	public AssemblyStoreAssemblyInfo (string sourceFilePath, string inArchiveAssemblyPath, ITaskItem assembly)
 	{
@@ -24,5 +25,17 @@ class AssemblyStoreAssemblyInfo
 
 		SourceFile = new FileInfo (sourceFilePath);
 		InArchivePath = inArchiveAssemblyPath;
+
+		string? name = Path.GetFileName (SourceFile.Name);
+		if (name == null) {
+			throw new InvalidOperationException ("Internal error: info without assembly name");
+		}
+
+		if (name.EndsWith (".lz4", StringComparison.OrdinalIgnoreCase)) {
+			name = Path.GetFileNameWithoutExtension (name);
+		}
+
+		AssemblyName = name;
+		AssemblyNameBytes = MonoAndroidHelper.Utf8StringToBytes (name);
 	}
 }

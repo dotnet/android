@@ -39,19 +39,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		protected virtual void CleanupAfterGeneration (AndroidTargetArch arch)
 		{}
 
-		public static byte[] StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
-
-		public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (StringToBytes (str), is64Bit);
-
-		public static ulong GetXxHash (byte[] stringBytes, bool is64Bit)
-		{
-			if (is64Bit) {
-				return XxHash64.HashToUInt64 (stringBytes);
-			}
-
-			return (ulong)XxHash32.HashToUInt32 (stringBytes);
-		}
-
 		protected LlvmIrGlobalVariable EnsureGlobalVariable (LlvmIrVariable variable)
 		{
 			var gv = variable as LlvmIrGlobalVariable;

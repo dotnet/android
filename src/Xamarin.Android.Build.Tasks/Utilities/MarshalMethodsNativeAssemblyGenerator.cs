@@ -982,10 +982,10 @@ namespace Xamarin.Android.Tasks
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
 				string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
-				ulong hashFull32 = GetXxHash (name, is64Bit: false);
-				ulong hashClipped32 = GetXxHash (clippedName, is64Bit: false);
-				ulong hashFull64 = GetXxHash (name, is64Bit: true);
-				ulong hashClipped64 = GetXxHash (clippedName, is64Bit: true);
+				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);
+				ulong hashClipped32 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: false);
+				ulong hashFull64 = MonoAndroidHelper.GetXxHash (name, is64Bit: true);
+				ulong hashClipped64 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: true);
 
 				//
 				// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the

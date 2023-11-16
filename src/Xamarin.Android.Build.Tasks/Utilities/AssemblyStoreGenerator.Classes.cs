@@ -21,6 +21,13 @@ partial class AssemblyStoreGenerator
 			this.index_entry_count = index_entry_count;
 			this.index_size = index_size;
 		}
+#if XABT_TESTS
+		public AssemblyStoreHeader (uint magic, uint version, uint entry_count, uint index_entry_count, uint index_size)
+			: this (version, entry_count, index_entry_count, index_size)
+		{
+			this.magic = magic;
+		}
+#endif
 	}
 
 	sealed class AssemblyStoreIndexEntry

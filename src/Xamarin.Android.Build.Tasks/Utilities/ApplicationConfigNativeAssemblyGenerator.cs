@@ -323,8 +323,8 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 				}
 
-				entry.hash = GetXxHash (entry.HashedName, is64Bit);
-				entry.real_name_hash = GetXxHash (entry.name, is64Bit);
+				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
+				entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name, is64Bit);
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
