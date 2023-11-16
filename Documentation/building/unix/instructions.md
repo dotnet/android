@@ -348,8 +348,7 @@ The `ForceBuild` target can be executed as:
 
 The `ForceBuild` target will build mono for *all* configured architectures,
 then invoke the `_InstallRuntimes` target when all the mono's have finished
-building; see the `$(AndroidSupportedHostJitAbis)`,
-`$(AndroidSupportedTargetAotAbis)`, and `$(AndroidSupportedTargetJitAbis)`
+building; see the `$(AndroidSupportedTargetAotAbis)`, and `$(AndroidSupportedTargetJitAbis)`
 MSBuild properties within [README.md](../../README.md). This may not always be
 desirable, for example if you're trying to fix a Mono runtime bug for a
 specific ABI, and improving turnaround time is paramount.

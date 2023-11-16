@@ -13,7 +13,6 @@ namespace Xamarin.Android.Prepare
 		public const string AndroidMxeFullPath                  = "AndroidMxeFullPath";
 		public const string AndroidNdkDirectory                 = "AndroidNdkDirectory";
 		public const string AndroidSdkDirectory                 = "AndroidSdkDirectory";
-		public const string AndroidSupportedHostJitAbis         = "AndroidSupportedHostJitAbis";
 		public const string AndroidSupportedTargetAotAbis       = "AndroidSupportedTargetAotAbis";
 		public const string AndroidSupportedTargetJitAbis       = "AndroidSupportedTargetJitAbis";
 		public const string AndroidToolchainCacheDirectory      = "AndroidToolchainCacheDirectory";
@@ -43,12 +42,6 @@ namespace Xamarin.Android.Prepare
 		public const string LibZipSourceFullPath                = "LibZipSourceFullPath";
 		public const string ManagedRuntime                      = "ManagedRuntime";
 		public const string MicrosoftAndroidSdkOutDir           = "MicrosoftAndroidSdkOutDir";
-		public const string MingwCommandPrefix32                = "MingwCommandPrefix32";
-		public const string MingwCommandPrefix64                = "MingwCommandPrefix64";
-		public const string MingwDependenciesRootDirectory      = "MingwDependenciesRootDirectory";
-		public const string MingwZlibLibraryName                = "MingwZlibLibraryName";
-		public const string MingwZlibRootDirectory32            = "MingwZlibRootDirectory32";
-		public const string MingwZlibRootDirectory64            = "MingwZlibRootDirectory64";
 		public const string MonoCecilVersion                    = "MonoCecilVersion";
 		public const string MonoDarwinPackageUrl                = "MonoDarwinPackageUrl";
 		public const string MonoRequiredMinimumVersion          = "MonoRequiredMinimumVersion";

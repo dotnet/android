@@ -64,22 +64,6 @@ Overridable MSBuild properties include:
     building `src/Mono.Android`. This is usually the same value as
     `$(AndroidApiLevel)`, but may differ with Android Preview releases.
 
-  * `$(AndroidSupportedHostJitAbis)`: The Android ABIs for which to build a
-    host JIT *and* Xamarin.Android base class libraries (`mscorlib.dll`/etc.).
-    The "host JIT" is used e.g. with the Xamarin Studio Designer, to render
-    Xamarin.Android apps on the developer's machine.
-    There can also be support for cross-compiling mono for a different
-    host, e.g. to build Windows `libmonosgen-2.0.dll` from OS X.
-    Supported host values include:
-
-      * `Darwin`
-      * `Linux`
-      * `mxe-Win64`: Cross-compile Windows 64-bit binaries from Unix.
-
-    The default value is `$(HostOS)`, where `$(HostOS)` is based on probing
-    various environment variables and filesystem locations.
-    On OS X, the default would be `Darwin`.
-
   * `$(AndroidSupportedTargetAotAbis)`: The Android ABIs for which to build the
     Mono AOT compilers. The AOT compilers are required in order to set the
     [`$(RunAOTCompilation)`][runaotcompilation] app configuration property to True.
@@ -106,9 +90,6 @@ Overridable MSBuild properties include:
   * `$(DisableApiCompatibilityCheck)`: disable running the API compatibility
     check when building Mono.Android if set to `True`. The check is performed
     by default.
-
-  * `$(HostCc)`, `$(HostCxx)`: The C and C++ compilers to use to generate
-    host-native binaries.
 
   * `$(IgnoreMaxMonoVersion)`: Skip the enforcement of the `$(MonoRequiredMaximumVersion)`
     property. This is so that developers can run against the latest

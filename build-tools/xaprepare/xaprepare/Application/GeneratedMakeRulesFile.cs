@@ -85,7 +85,6 @@ namespace Xamarin.Android.Prepare
 			}
 
 			var enabledJitAbis = AbiNames.AllJitAbis.Where (a => context.IsTargetJitAbiEnabled (a));
-			var enabledHostAbis = AbiNames.AllHostAbis.Where (a => context.IsHostJitAbiEnabled (a));
 			var enabledAotAbis = AbiNames.AllAotAbis.Where (a => context.IsTargetAotAbiEnabled (a));
 
 			WriteVariable ("ALL_API_LEVELS",    ToValue (allApiLevels));
@@ -96,7 +95,6 @@ namespace Xamarin.Android.Prepare
 			WriteVariable ("FRAMEWORKS",        ToValue (frameworks));
 			WriteVariable ("STABLE_FRAMEWORKS", ToValue (stableFrameworks));
 			WriteVariable ("ALL_JIT_ABIS",      ToValue (enabledJitAbis.ToList()));
-			WriteVariable ("ALL_HOST_ABIS",     ToValue (enabledHostAbis.ToList ()));
 			WriteVariable ("ALL_AOT_ABIS",      ToValue (enabledAotAbis.ToList ()));
 			WriteVariable ("ANDROID_TOOLCHAIN_DIR", context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory));
 			if (context.MonoOptions != null && context.MonoOptions.Count > 0) {
@@ -106,7 +104,6 @@ namespace Xamarin.Android.Prepare
 
 			sw.WriteLine ("_MSBUILD_ARGS = \\");
 			sw.WriteLine ($"\t/p:{KnownProperties.AndroidSupportedTargetJitAbis}={context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis)} \\");
-			sw.WriteLine ($"\t/p:{KnownProperties.AndroidSupportedHostJitAbis}={context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedHostJitAbis)} \\");
 			sw.WriteLine ($"\t/p:{KnownProperties.AndroidSupportedTargetAotAbis}={context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis)}");
 
 			OutputOSVariables (context, sw);
