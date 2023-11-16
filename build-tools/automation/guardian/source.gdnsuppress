@@ -231,6 +231,20 @@
       "createdDate": "2023-02-22 23:55:29Z",
       "expirationDate": null,
       "type": null
+    },
+    "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e": {
+      "signature": "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e",
+      "alternativeSignatures": [],
+      "target": "build-tools/xaprepare/xaprepare/ThirdPartyNotices/MavenNet.cs",
+      "memberOf": [
+        "default"
+      ],
+      "tool": "policheck",
+      "ruleId": "79607",
+      "justification": "Reference to a proper name.",
+      "createdDate": "2023-10-26 21:20:54Z",
+      "expirationDate": null,
+      "type": null
     }
   }
 }
