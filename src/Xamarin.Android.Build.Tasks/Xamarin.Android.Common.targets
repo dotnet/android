@@ -1448,11 +1448,11 @@ because xbuild doesn't support framework reference assemblies.
     DependsOnTargets="_LinkAssembliesNoShrinkInputs"
     Condition="'$(AndroidLinkMode)' == 'None'"
     Inputs="@(ResolvedAssemblies);$(_AndroidBuildPropertiesCache)"
-    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(RuntimeIdentifier)\%(DestinationSubPath)')">
+    Outputs="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')">
   <LinkAssembliesNoShrink
       ResolvedAssemblies="@(_AllResolvedAssemblies)"
       SourceFiles="@(ResolvedAssemblies)"
-      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(RuntimeIdentifier)\%(DestinationSubPath)')"
+      DestinationFiles="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"
       TargetName="$(TargetName)"
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"

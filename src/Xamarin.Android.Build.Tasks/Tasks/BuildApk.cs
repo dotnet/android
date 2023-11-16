@@ -593,12 +593,15 @@ namespace Xamarin.Android.Tasks
 			if (haveRootPath) {
 				parts.Add (ArchiveAssembliesPath);
 			}
-			parts.Add (MonoAndroidHelper.GetAssemblyAbi (assembly));
 
 			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-			if (!string.IsNullOrEmpty (subDirectory)) {
-				parts.Add (subDirectory.Replace ('\\', '/'));
-			} else if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
+			if (string.IsNullOrEmpty (subDirectory)) {
+				throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
+			}
+			parts.Add (subDirectory.Replace ('\\', '/'));
+
+			// Even satellite assemblies are treated as RID-specific
+			if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
 				parts.Add (culture);
 			}
 			return MonoAndroidHelper.MakeZipArchivePath (haveRootPath ? RootPath : ArchiveAssembliesPath, parts) + "/";
