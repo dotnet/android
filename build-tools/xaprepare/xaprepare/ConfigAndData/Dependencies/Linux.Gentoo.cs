@@ -27,7 +27,6 @@ namespace Xamarin.Android.Prepare
 			new GentooLinuxProgram ("dev-libs/libzip"),
 			new GentooLinuxProgram ("sys-devel/m4"),
 			new GentooLinuxProgram ("sys-devel/make"),
-			//new GentooLinuxProgram ("nuget"),
 			new GentooLinuxProgram ("sys-devel/patch"),
 			new GentooLinuxProgram ("dev-util/pkgconf"),
 			//new GentooLinuxProgram ("referenceassemblies-pcl"),

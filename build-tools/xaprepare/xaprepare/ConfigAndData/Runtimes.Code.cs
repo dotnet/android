@@ -74,22 +74,6 @@ namespace Xamarin.Android.Prepare
 			return Path.Combine (GetRuntimeOutputDir (runtime), $"{monoRuntime.OutputProfilerFilename}{GetDebugInfix (debug)}{monoRuntime.NativeLibraryExtension}");
 		}
 
-		static string GetCrossRuntimeOutputSourcePath (Runtime runtime)
-		{
-			var crossRuntime = EnsureRuntimeType<MonoCrossRuntime> (runtime, "cross compilation");
-			return Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "bin", $"{crossRuntime.ExePrefix}mono-sgen{crossRuntime.ExeSuffix}");
-		}
-
-		static string GetCrossRuntimeOutputDestinationPath (Runtime runtime, bool debug)
-		{
-			var crossRuntime = EnsureRuntimeType<MonoCrossRuntime> (runtime, "cross compilation");
-			string runtimeName = $"{crossRuntime.CrossMonoName}{GetDebugInfix (debug)}{crossRuntime.ExeSuffix}";
-			if (String.IsNullOrEmpty (crossRuntime.InstallPath))
-				return runtimeName;
-
-			return Path.Combine (crossRuntime.InstallPath, runtimeName);
-		}
-
 		static string GetRuntimeOutputSourcePath (Runtime runtime)
 		{
 			var monoRuntime = EnsureRuntimeType<MonoRuntime> (runtime, "Mono");
@@ -124,7 +108,7 @@ namespace Xamarin.Android.Prepare
 
 		static bool IsHostOrTargetRuntime (Runtime runtime)
 		{
-			return IsRuntimeType<MonoJitRuntime> (runtime) || IsRuntimeType<MonoHostRuntime> (runtime);
+			return IsRuntimeType<MonoJitRuntime> (runtime);
 		}
 
 		static T EnsureRuntimeType<T> (Runtime runtime, string typeName) where T: Runtime

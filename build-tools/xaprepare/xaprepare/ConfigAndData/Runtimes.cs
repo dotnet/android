@@ -56,70 +56,6 @@ namespace Xamarin.Android.Prepare
 				enabledCheck: (Context ctx) => ctx.IsTargetJitAbiEnabled (AbiNames.TargetJit.AndroidX86_64)
 			),
 
-			new MonoHostRuntime (
-				name: AbiNames.HostJit.Linux,
-				mingw: false,
-				enabledCheck: (Context ctx) => ctx.IsHostJitAbiEnabled (AbiNames.HostJit.Linux)
-			),
-
-			new MonoHostRuntime (
-				name: AbiNames.HostJit.Darwin,
-				mingw: false,
-				enabledCheck: (Context ctx) => ctx.IsHostJitAbiEnabled (AbiNames.HostJit.Darwin)
-			),
-
-			new MonoHostRuntime (
-				name: AbiNames.HostJit.Win32,
-				mingw: true,
-				enabledCheck: (Context ctx) => ctx.IsHostJitAbiEnabled (AbiNames.HostJit.Win32)
-			),
-
-			new MonoHostRuntime (
-				name: AbiNames.HostJit.Win64,
-				mingw: true,
-				enabledCheck: (Context ctx) => ctx.IsHostJitAbiEnabled (AbiNames.HostJit.Win64)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.ArmV7a,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.ArmV7a)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.ArmV8a,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.ArmV8a)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.X86,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.X86)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.X86_64,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.X86_64)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.WinArmV7a,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.WinArmV7a)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.WinArmV8a,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.WinArmV8a)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.WinX86,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.WinX86)
-			),
-
-			new MonoCrossRuntime (
-				name: AbiNames.CrossAot.WinX86_64,
-				enabledCheck: (Context ctx) => ctx.IsTargetAotAbiEnabled (AbiNames.TargetAot.WinX86_64)
-			),
-
 			new LlvmRuntime (
 				name: AbiNames.Llvm.Host64Bit,
 				enabledCheck: (Context ctx) => IsLlvmRuntimeEnabled (ctx, AbiNames.Llvm.Host64Bit)
@@ -767,32 +703,6 @@ namespace Xamarin.Android.Prepare
 				sourceCreator: (Runtime runtime) => GetMonoNativeOutputSourcePath (runtime),
 				destinationCreator: (Runtime runtime) => GetMonoNativeOutputDestinationPath (runtime, debug: true),
 				shouldSkip: (Runtime runtime) => !IsHostOrTargetRuntime (runtime) || IsAbi (runtime, AbiNames.HostJit.Darwin, AbiNames.HostJit.Win32, AbiNames.HostJit.Win64),
-				type: RuntimeFileType.StrippableBinary,
-				strip: false
-			),
-
-			// Unstripped host mono binary
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => Path.Combine (MonoRuntimesHelpers.GetRootDir (runtime), "bin", "mono"),
-				destinationCreator: (Runtime runtime) => Path.Combine (runtime.Name, "mono"),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<MonoHostRuntime> (runtime) || IsAbi (runtime, AbiNames.HostJit.Win32, AbiNames.HostJit.Win64),
-				type: RuntimeFileType.StrippableBinary,
-				strip: false
-			),
-
-			// Stripped cross runtime
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => GetCrossRuntimeOutputSourcePath (runtime),
-				destinationCreator: (Runtime runtime) => GetCrossRuntimeOutputDestinationPath (runtime, debug: false),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<MonoCrossRuntime> (runtime),
-				type: RuntimeFileType.StrippableBinary
-			),
-
-			// Untripped cross runtime
-			new RuntimeFile (
-				sourceCreator: (Runtime runtime) => GetCrossRuntimeOutputSourcePath (runtime),
-				destinationCreator: (Runtime runtime) => GetCrossRuntimeOutputDestinationPath (runtime, debug: true),
-				shouldSkip: (Runtime runtime) => !IsRuntimeType<MonoCrossRuntime> (runtime),
 				type: RuntimeFileType.StrippableBinary,
 				strip: false
 			),

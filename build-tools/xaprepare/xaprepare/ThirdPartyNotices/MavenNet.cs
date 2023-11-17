@@ -5,17 +5,17 @@ using System.IO;
 namespace Xamarin.Android.Prepare
 {
 	[TPN]
-	class witwall_mman_TPN : ThirdPartyNotice
+	class MavenNet_TPN : ThirdPartyNotice
 	{
-		static readonly Uri    url         = new Uri ("https://github.com/witwall/mman-win32/");
+		static readonly Uri    url         = new Uri ("https://github.com/Redth/MavenNet/");
 
 		public override string LicenseFile => string.Empty;
-		public override string Name        => "witwall/mman-win32";
+		public override string Name        => "Redth/MavenNet";
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => @"
 MIT License
 
-Copyright (c) 2018 Steven Lee
+Copyright (c) 2017 Jonathan Dick
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the ""Software""), to deal
@@ -33,8 +33,7 @@ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
 AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-";
+SOFTWARE.";
 
 		public override bool   Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 	}

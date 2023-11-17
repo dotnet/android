@@ -38,20 +38,6 @@
           - win-x86_64
     -->
     <AndroidSupportedTargetAotAbis>armeabi-v7a:win-armeabi-v7a:arm64:win-arm64:x86:win-x86:x86_64:win-x86_64</AndroidSupportedTargetAotAbis>
-    <!--
-      Colon-separated list of ABIs to build a "host" mono JIT for.
-      The host JIT is used for the designer in Visual Studio, among other things.
-      Supported ABIs include:
-      - Darwin
-      - Linux
-      - mxe-Win64
-      Note: Why colon? Because comma `,` and semicolon `;` can't be specified on the command-line.
-      -->
-    <AndroidSupportedHostJitAbis>Darwin:mxe-Win64</AndroidSupportedHostJitAbis>
-
-    <!-- C and C++ compilers to emit host-native binaries -->
-    <HostCc>clang</HostCc>
-    <HostCxx>clang++</HostCxx>
 
     <!-- These must be FULL PATHS -->
     <AndroidToolchainCacheDirectory>$(HOME)\android-archives</AndroidToolchainCacheDirectory>
