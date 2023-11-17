@@ -49,20 +49,12 @@ class Program
 			return WriteErrorAndReturn ($"File '{inputFile}' does not exist.");
 		}
 
-		var stores = new List<AssemblyStoreExplorer> ();
-		switch (format) {
-			case FileFormat.Unknown:
-				return WriteErrorAndReturn ($"File '{inputFile}' has an unknown format.");
-
-			case FileFormat.Zip:
-				return WriteErrorAndReturn ($"File '{inputFile}' is a ZIP archive, but not an Android one.");
-
-			case FileFormat.AssemblyStore:
-				stores.Add (new AssemblyStoreExplorer (info));
-				break;
+		(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (inputFile);
+		if (explorers == null) {
+			return WriteErrorAndReturn (errorMessage ?? "Unknown error");
 		}
 
-		foreach (AssemblyStoreExplorer store in stores) {
+		foreach (AssemblyStoreExplorer store in explorers) {
 			var printer = new StorePrettyPrinter (store);
 			printer.Show ();
 		}

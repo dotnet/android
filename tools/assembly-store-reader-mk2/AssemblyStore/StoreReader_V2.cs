@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 
 using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.AssemblyStore;
 
@@ -22,9 +23,51 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 	public override string Description => "Assembly store v2";
 
+	public static IList<string> ApkPaths      { get; }
+	public static IList<string> AabPaths      { get; }
+	public static IList<string> AabBasePaths  { get; }
+
 	readonly HashSet<uint> supportedVersions;
 
 	Header? header;
+
+	static StoreReader_V2 ()
+	{
+		var paths = new List<string> {
+			GetArchPath (AndroidTargetArch.Arm64),
+			GetArchPath (AndroidTargetArch.Arm),
+			GetArchPath (AndroidTargetArch.X86_64),
+			GetArchPath (AndroidTargetArch.X86),
+		};
+		ApkPaths = paths.AsReadOnly ();
+		AabBasePaths = ApkPaths;
+
+		const string AabBaseDir = "base";
+		paths = new List<string> {
+			GetArchPath (AndroidTargetArch.Arm64, AabBaseDir),
+			GetArchPath (AndroidTargetArch.Arm, AabBaseDir),
+			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir),
+			GetArchPath (AndroidTargetArch.X86, AabBaseDir),
+		};
+		AabPaths = paths.AsReadOnly ();
+
+		string GetArchPath (AndroidTargetArch arch, string? root = null)
+		{
+			const string LibDirName = "lib";
+
+			string abi = MonoAndroidHelper.ArchToAbi (arch);
+			var parts = new List <string> ();
+			if (!String.IsNullOrEmpty (root)) {
+				parts.Add (LibDirName);
+			} else {
+				root = LibDirName;
+			}
+			parts.Add (abi);
+			parts.Add (GetBlobName (abi));
+
+			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
+		}
+	}
 
 	public StoreReader_V2 (Stream store, string path)
 		: base (store, path)
@@ -36,6 +79,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			ASSEMBLY_STORE_FORMAT_VERSION_32BIT | ASSEMBLY_STORE_ABI_X86,
 		};
 	}
+
+	static string GetBlobName (string abi) => $"assemblies.{abi}.blob.so";
 
 	protected override bool IsSupported ()
 	{
@@ -141,7 +186,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		var storeItems = new List<AssemblyStoreItem> ();
 		foreach (var kvp in tempItems) {
 			TemporaryItem ti = kvp.Value;
-			var item = new StoreItem_V2 (ti.Name, Is64Bit, ti.IndexEntries, ti.Descriptor);
+			var item = new StoreItem_V2 (TargetArch, ti.Name, Is64Bit, ti.IndexEntries, ti.Descriptor);
 			storeItems.Add (item);
 		}
 		Assemblies = storeItems.AsReadOnly ();

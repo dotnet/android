@@ -5,6 +5,8 @@ using System.IO;
 using System.Linq;
 
 using Xamarin.Android.AssemblyStore;
+using Xamarin.Android.Tools;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using Xamarin.Tools.Zip;
 
@@ -19,13 +21,6 @@ namespace Xamarin.Android.Build.Tests
 			".dll",
 			".config",
 			".pdb",
-		};
-
-		static readonly Dictionary<string, string> ArchToAbi = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-			{"x86", "x86"},
-			{"x86_64", "x86_64"},
-			{"armeabi_v7a", "armeabi-v7a"},
-			{"arm64_v8a", "arm64-v8a"},
 		};
 
 		static readonly ArrayPool<byte> buffers = ArrayPool<byte>.Shared;
@@ -60,16 +55,16 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		public Stream ReadEntry (string path)
+		public Stream? ReadEntry (string path, AndroidTargetArch arch = AndroidTargetArch.None, bool uncompressIfNecessary = false)
 		{
 			if (useAssemblyStores) {
-				return ReadStoreEntry (path);
+				return ReadStoreEntry (path, arch, uncompressIfNecessary);
 			}
 
-			return ReadZipEntry (path);
+			return ReadZipEntry (path, arch, uncompressIfNecessary);
 		}
 
-		Stream ReadZipEntry (string path)
+		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
 		{
 			using (var zip = ZipHelper.OpenZip (archivePath)) {
 				ZipEntry entry = zip.ReadEntry (path);
@@ -80,61 +75,39 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		Stream ReadStoreEntry (string path)
+		Stream? ReadStoreEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
 		{
-			AssemblyStoreReader storeReader = null;
-			AssemblyStoreAssembly assembly = null;
 			string name = Path.GetFileNameWithoutExtension (path);
-			var explorer = new AssemblyStoreExplorer (archivePath);
-
-			foreach (var asm in explorer.Assemblies) {
-				if (String.Compare (name, asm.Name, StringComparison.Ordinal) != 0) {
-					continue;
-				}
-				assembly = asm;
-				storeReader = asm.Store;
-				break;
-			}
-
-			if (storeReader == null) {
-				Console.WriteLine ($"Store for entry {path} not found, will try a standard Zip read");
-				return ReadZipEntry (path);
-			}
-
-			string storeEntryName;
-			if (String.IsNullOrEmpty (storeReader.Arch)) {
-				storeEntryName = $"{assembliesRootDir}assemblies.blob";
-			} else {
-				storeEntryName = $"{assembliesRootDir}assemblies_{storeReader.Arch}.blob";
-			}
-
-			Stream store = ReadZipEntry (storeEntryName);
-			if (store == null) {
-				Console.WriteLine ($"Store zip entry {storeEntryName} does not exist");
+			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
+			AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
+			if (explorer == null) {
+				Console.WriteLine ($"Failed to read assembly '{name}' from '{archivePath}'. {errorMessage}");
 				return null;
 			}
 
-			store.Seek (assembly.DataOffset, SeekOrigin.Begin);
-			var ret = new MemoryStream ();
-			byte[] buffer = buffers.Rent (AssemblyStoreReadBufferSize);
-			int toRead = (int)assembly.DataSize;
-			while (toRead > 0) {
-				int nread = store.Read (buffer, 0, AssemblyStoreReadBufferSize);
-				if (nread <= 0) {
+			IList<AssemblyStoreItem>? assemblies = explorer.Find (name, arch);
+			if (assemblies == null) {
+				Console.WriteLine ($"Failed to locate assembly '{name}' in assembly store for architecture '{arch}', in archive '{archivePath}'");
+				return null;
+			}
+
+			AssemblyStoreItem? assembly = null;
+			foreach (AssemblyStoreItem item in assemblies) {
+				if (arch == AndroidTargetArch.None || item.TargetArch == arch) {
+					assembly = item;
 					break;
 				}
-
-				ret.Write (buffer, 0, nread);
-				toRead -= nread;
 			}
-			ret.Flush ();
-			store.Dispose ();
-			buffers.Return (buffer);
 
-			return ret;
+			if (assembly == null) {
+				Console.WriteLine ($"Failed to find assembly '{name}' in assembly store for architecture '{arch}', in archive '{archivePath}'");
+				return null;
+			}
+
+			return explorer.Read (assembly, uncompressIfNecessary);
 		}
 
-		public List<string> ListArchiveContents (string storeEntryPrefix = DefaultAssemblyStoreEntryPrefix, bool forceRefresh = false)
+		public List<string> ListArchiveContents (string storeEntryPrefix = DefaultAssemblyStoreEntryPrefix, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
 			if (!forceRefresh && archiveContents != null) {
 				return archiveContents;
@@ -158,22 +131,24 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			Console.WriteLine ($"Creating AssemblyStoreExplorer for archive '{archivePath}'");
-			var explorer = new AssemblyStoreExplorer (archivePath);
-			Console.WriteLine ($"Explorer found {explorer.Assemblies.Count} assemblies");
-			foreach (var asm in explorer.Assemblies) {
+			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
+			AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
+			Console.WriteLine ($"Explorer found {explorer.AssemblyCount} assemblies");
+
+			foreach (AssemblyStoreItem asm in explorer.Assemblies) {
 				string prefix = storeEntryPrefix;
 
-				if (haveMultipleRids && !String.IsNullOrEmpty (asm.Store.Arch)) {
-					string arch = ArchToAbi[asm.Store.Arch];
-					prefix = $"{prefix}{arch}/";
+				if (haveMultipleRids && asm.TargetArch != AndroidTargetArch.None) {
+					string abi = MonoAndroidHelper.ArchToAbi (asm.TargetArch);
+					prefix = $"{prefix}{abi}/";
 				}
 
 				entries.Add ($"{prefix}{asm.Name}.dll");
-				if (asm.DebugDataOffset > 0) {
+				if (asm.DebugOffset > 0) {
 					entries.Add ($"{prefix}{asm.Name}.pdb");
 				}
 
-				if (asm.ConfigDataOffset > 0) {
+				if (asm.ConfigOffset > 0) {
 					entries.Add ($"{prefix}{asm.Name}.dll.config");
 				}
 			}
@@ -184,6 +159,30 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			return entries;
+		}
+
+		AssemblyStoreExplorer? SelectExplorer (IList<AssemblyStoreExplorer>? explorers, AndroidTargetArch arch)
+		{
+			if (explorers == null || explorers.Count == 0) {
+				return null;
+			}
+
+			// If we don't care about target architecture, we check the first store, since all of them will have the same
+			// assemblies. Otherwise we try to locate the correct store.
+			if (arch == AndroidTargetArch.None) {
+				return explorers[0];
+			}
+
+			foreach (AssemblyStoreExplorer e in explorers) {
+				if (e.TargetArch == null || e.TargetArch != arch) {
+					continue;
+				}
+				return e;
+			}
+
+
+			Console.WriteLine ($"Failed to find assembly store for architecture '{arch}' in archive '{archivePath}'");
+			return null;
 		}
 
 		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false)
@@ -217,7 +216,7 @@ namespace Xamarin.Android.Build.Tests
 			return contents.Contains (entryPath);
 		}
 
-		public void Contains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)
+		public void Contains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
 			if (fileNames == null) {
 				throw new ArgumentNullException (nameof (fileNames));
@@ -228,13 +227,13 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (useAssemblyStores) {
-				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles);
+				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, arch);
 			} else {
-				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles);
+				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, arch);
 			}
 		}
 
-		void ArchiveContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)
+		void ArchiveContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
 		{
 			using (var zip = ZipHelper.OpenZip (archivePath)) {
 				existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
@@ -243,11 +242,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		void StoreContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles)
+		void StoreContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
 		{
 			var assemblyNames = fileNames.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var configFiles = fileNames.Where (x => x.EndsWith (".config", StringComparison.OrdinalIgnoreCase)).ToList ();
-			var debugFiles = fileNames.Where (x => x.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase) || x.EndsWith (".mdb", StringComparison.OrdinalIgnoreCase)).ToList ();
+			var debugFiles = fileNames.Where (x => x.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var otherFiles = fileNames.Where (x => !SpecialExtensions.Contains (Path.GetExtension (x))).ToList ();
 
 			existingFiles = new List<string> ();
@@ -265,38 +264,38 @@ namespace Xamarin.Android.Build.Tests
 				}
 			}
 
-			var explorer = new AssemblyStoreExplorer (archivePath, customLogger: (a, s) => {
-				Console.WriteLine ($"DEBUG! {s}");
-			});
+			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
+			AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
+			if (explorer == null) {
+				return;
+			}
 
 			foreach (var f in explorer.AssembliesByName) {
 				Console.WriteLine ($"DEBUG!\tKey:{f.Key}");
 			}
 
-			// Assembly stores don't store the assembly extension
-			var storeAssemblies = explorer.AssembliesByName.Keys.Select (x => $"{x}.dll");
 			if (explorer.AssembliesByName.Count != 0) {
-				existingFiles.AddRange (storeAssemblies);
+				existingFiles.AddRange (explorer.AssembliesByName.Keys);
 
 				// We need to fake config and debug files since they have no named entries in the storeReader
 				foreach (string file in configFiles) {
-					AssemblyStoreAssembly asm = GetStoreAssembly (file);
+					AssemblyStoreItem asm = GetStoreAssembly (file);
 					if (asm == null) {
 						continue;
 					}
 
-					if (asm.ConfigDataOffset > 0) {
+					if (asm.ConfigOffset > 0) {
 						existingFiles.Add (file);
 					}
 				}
 
 				foreach (string file in debugFiles) {
-					AssemblyStoreAssembly asm = GetStoreAssembly (file);
+					AssemblyStoreItem asm = GetStoreAssembly (file);
 					if (asm == null) {
 						continue;
 					}
 
-					if (asm.DebugDataOffset > 0) {
+					if (asm.DebugOffset > 0) {
 						existingFiles.Add (file);
 					}
 				}
@@ -311,14 +310,10 @@ namespace Xamarin.Android.Build.Tests
 
 			additionalFiles = existingFiles.Where (x => !fileNames.Contains (x)).ToList ();
 
-			AssemblyStoreAssembly GetStoreAssembly (string file)
+			AssemblyStoreItem GetStoreAssembly (string file)
 			{
 				string assemblyName = Path.GetFileNameWithoutExtension (file);
-				if (assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
-					assemblyName = Path.GetFileNameWithoutExtension (assemblyName);
-				}
-
-				if (!explorer.AssembliesByName.TryGetValue (assemblyName, out AssemblyStoreAssembly asm) || asm == null) {
+				if (!explorer.AssembliesByName.TryGetValue (assemblyName, out AssemblyStoreItem asm) || asm == null) {
 					return null;
 				}
 

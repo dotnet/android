@@ -14,7 +14,7 @@ abstract class AssemblyStoreReader
 	public abstract string Description          { get; }
 	public string StorePath                     { get; }
 
-	public AndroidTargetArch? TargetArch        { get; protected set; }
+	public AndroidTargetArch TargetArch         { get; protected set; } = AndroidTargetArch.Arm;
 	public uint AssemblyCount                   { get; protected set; }
 	public uint IndexEntryCount                 { get; protected set; }
 	public IList<AssemblyStoreItem>? Assemblies { get; protected set; }

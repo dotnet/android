@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.AssemblyStore;
 
 partial class StoreReader_V2
@@ -28,7 +30,6 @@ partial class StoreReader_V2
 
 	sealed class IndexEntry
 	{
-		public string? name;
 		public readonly ulong name_hash;
 		public readonly uint  descriptor_index;
 
@@ -55,7 +56,7 @@ partial class StoreReader_V2
 
 	sealed class StoreItem_V2 : AssemblyStoreItem
 	{
-		public StoreItem_V2 (string name, bool is64Bit, List<IndexEntry> indexEntries, EntryDescriptor descriptor)
+		public StoreItem_V2 (AndroidTargetArch targetArch, string name, bool is64Bit, List<IndexEntry> indexEntries, EntryDescriptor descriptor)
 			: base (name, is64Bit, IndexToHashes (indexEntries))
 		{
 			DataOffset = descriptor.data_offset;
@@ -64,6 +65,7 @@ partial class StoreReader_V2
 			DebugSize = descriptor.debug_data_size;
 			ConfigOffset = descriptor.config_data_offset;
 			ConfigSize = descriptor.config_data_size;
+			TargetArch = targetArch;
 		}
 
 		static List<ulong> IndexToHashes (List<IndexEntry> indexEntries)

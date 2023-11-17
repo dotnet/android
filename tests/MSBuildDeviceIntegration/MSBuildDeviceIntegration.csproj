@@ -24,7 +24,7 @@
 
    <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
-    <Compile Include="..\..\tools\assembly-store-reader\AssemblyStore*.cs" />
+    <Compile Include="..\..\tools\assembly-store-reader-mk2\AssemblyStore\*.cs" />
     <EmbeddedResource Include="Resources\LinkDescTest\*.*" />
   </ItemGroup>
   <ItemGroup>

@@ -27,47 +27,67 @@ class StorePrettyPrinter
 			Console.WriteLine ("NO ASSEMBLIES!");
 			return;
 		}
+
+		var assemblies = new List<AssemblyStoreItem> (explorer.Assemblies);
+		assemblies.Sort ((AssemblyStoreItem a, AssemblyStoreItem b) => a.Name.CompareTo (b.Name));
+
 		Console.WriteLine ("Assemblies:");
 		var line = new StringBuilder ();
-		foreach (AssemblyStoreItem assembly in explorer.Assemblies) {
+		foreach (AssemblyStoreItem assembly in assemblies) {
 			line.Clear ();
 			line.Append ("  ");
-			line.Append (assembly.Name);
-			line.Append (' ');
-			line.Append (FormatOffsetAndSize (assembly.DataOffset, assembly.DataSize));
-			line.Append (' ');
-			line.Append (FormatOffsetAndSize (assembly.DebugOffset, assembly.DebugSize));
-			line.Append (' ');
-			line.Append (FormatOffsetAndSize (assembly.ConfigOffset, assembly.ConfigSize));
-			line.Append (" [");
-			line.Append (FormatHashes (assembly.Hashes));
-			line.Append (']');
+			line.AppendLine (assembly.Name);
+			line.Append ("    PE image data: ");
+			FormatOffsetAndSize (line, assembly.DataOffset, assembly.DataSize);
+			line.AppendLine ();
+			line.Append ("       Debug data: ");
+			FormatOffsetAndSize (line, assembly.DebugOffset, assembly.DebugSize);
+			line.AppendLine ();
+			line.Append ("      Config data: ");
+			FormatOffsetAndSize (line, assembly.ConfigOffset, assembly.ConfigSize);
+			line.AppendLine ();
+			line.Append ("      Name hashes: ");
+			FormatHashes (line, assembly.Hashes);
+			line.AppendLine ();
 			Console.WriteLine (line.ToString ());
 		}
 		Console.WriteLine ();
 	}
 
-	static string FormatOffsetAndSize (uint offset, uint size)
+	static void FormatOffsetAndSize (StringBuilder sb, uint offset, uint size)
 	{
 		if (offset == 0) {
-			return "none";
+			FormatNone (sb);
+			return;
 		}
 
-		return $"{offset} ({size})";
+		sb.Append ("offset ");
+		sb.Append (offset);
+		sb.Append (", size ");
+		sb.Append (size);
 	}
 
-	static string FormatHashes (IList<ulong> hashes)
+	static void FormatHashes (StringBuilder sb, IList<ulong> hashes)
 	{
 		if (hashes.Count == 0) {
-			return "none";
+			FormatNone (sb);
+			return;
 		}
 
-		var ret = new List<string> ();
+		bool first = true;
 		foreach (ulong hash in hashes) {
-			ret.Add ($"0x{hash:x}");
+			if (first) {
+				first = false;
+			} else {
+				sb.Append (", ");
+			}
+			sb.Append ($"0x{hash:x}");
 		}
+	}
 
-		return String.Join (',', ret);
+	static void FormatNone (StringBuilder sb)
+	{
+		sb.Append ("none");
 	}
 
 	static string GetBitness (bool is64bit) => is64bit ? "64" : "32";
