@@ -795,5 +795,25 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 			}
 		}
+
+		[Test]
+		public void AndroidMavenLibrary ()
+		{
+			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
+			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
+			item.Metadata.Add ("Version", "1.10.4");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item }
+			};
+
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				// Ensure the generated file exists
+				var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Com.Google.Auto.Value.AutoValueAttribute.cs"));
+				FileAssert.Exists (cs_file);
+			}
+		}
 	}
 }
