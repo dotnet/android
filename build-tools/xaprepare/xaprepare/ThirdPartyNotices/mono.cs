@@ -12,64 +12,35 @@ namespace Xamarin.Android.Prepare
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
 			new mono_mono_mono_TPN (),
 			new mono_mono_cecil_TPN (),
-			new mono_mono_boringssl_TPN (),
 			new mono_mono_ikdasm_TPN (),
-			new mono_mono_ikvm_fork_TPN (),
 			new mono_mono_linker_TPN (),
-			new mono_mono_NuGet_BuildTasks_TPN (),
-			new mono_mono_NUnitLite_TPN (),
-			new mono_mono_rx_net_TPN (),
-			new mono_mono_Ix_net_TPN (),
-			new mono_llvm_Group (),
 		};
 	}
 
 	class mono_mono_cecil_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/cecil/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "external", "cecil", "LICENSE.txt");
+		static readonly string licenseFile = String.Empty;
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/cecil";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
+		public override string LicenseText => Utilities.GetUrlContent (
+			new Uri ("https://raw.githubusercontent.com/dotnet/cecil/acd8ad7bca1aa560576ef07875282e285cf20d53/LICENSE.txt"))
+			.GetAwaiter ().GetResult ();
 	}
 
 	class mono_mono_mono_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "LICENSE");
+		static readonly string licenseFile = String.Empty;
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/mono";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_mono_aspnetwebstack_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/aspnetwebstack/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnPath, "aspnetwebstack", "License.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/aspnetwebstack";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
-	}
-
-	class mono_mono_boringssl_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/boringssl");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "boringssl", "LICENSE");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/boringssl";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
+		public override string LicenseText => Utilities.GetUrlContent (
+			new Uri ("https://raw.githubusercontent.com/mono/mono/12dd9040252e5b9c63b8df9ef53777eb01232405/LICENSE"))
+			.GetAwaiter ().GetResult ();
 	}
 
 	class mono_mono_ikdasm_TPN : ThirdPartyNotice
@@ -105,173 +76,16 @@ jeroen@frijters.net
 		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
-	class mono_mono_ikvm_fork_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/ikvm-fork/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "ikvm", "LICENSE");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/ikvm-fork";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
-	}
-
 	class mono_mono_linker_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/mono/linker/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "linker", "LICENSE");
+		static readonly string licenseFile = String.Empty;
 
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/linker";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_mono_NuGet_BuildTasks_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/NuGet.BuildTasks/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "nuget-buildtasks", "LICENSE.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/NuGet.BuildTasks";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
-	}
-
-	class mono_mono_NUnitLite_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/NUnitLite/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "nunit-lite", "NUnitLite-1.0.0", "LICENSE.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/NUnitLite";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
-	}
-
-	class mono_mono_rx_net_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/rx/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "rx", "Rx", "NET", "Source", "license.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/rx.net";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
-	}
-
-	class mono_mono_Ix_net_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/rx/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoSdksTpnExternalPath, "rx", "Ix", "NET", "license.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/Ix.net";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
-	}
-
-	class mono_llvm_Group : ThirdPartyNoticeGroup
-	{
-		protected override bool ShouldInclude (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && (includeBuildDeps || Context.Instance.TargetAotAbisEnabled);
-
-		public override List<ThirdPartyNotice> Notices => new List<ThirdPartyNotice> {
-			new mono_llvm_llvm_TPN (),
-			new mono_llvm_google_test_TPN (),
-			new mono_llvm_openbsd_regex_TPN (),
-			new mono_llvm_pyyaml_tests_TPN (),
-			new mono_llvm_arm_contributions_TPN (),
-			new mono_llvm_md5_contributions_TPN (),
-		};
-	}
-
-	class mono_llvm_llvm_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "LICENSE.TXT");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/llvm";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_llvm_google_test_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/utils/unittest/googletest/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "utils", "unittest", "googletest", "LICENSE.TXT");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/llvm Google Test";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_llvm_openbsd_regex_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Support/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "lib", "Support", "COPYRIGHT.regex");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/llvm OpenBSD Regex";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_llvm_pyyaml_tests_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/test/YAMLParser/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "test", "YAMLParser", "LICENSE.txt");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/llvm pyyaml tests";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_llvm_arm_contributions_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/tree/master/lib/Target/ARM/");
-		static readonly string licenseFile = Path.Combine (Configurables.Paths.MonoLlvmTpnPath, "lib", "Target", "ARM", "LICENSE.TXT");
-
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/llvm ARM contributions";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => String.Empty;
-	}
-
-	class mono_llvm_md5_contributions_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/llvm/blob/master/lib/Support/MD5.cpp");
-
-		public override string LicenseFile => String.Empty;
-		public override string Name        => "mono/llvm md5 contributions";
-		public override Uri    SourceUrl   => url;
-
-		public override string LicenseText => @"
-        This software was written by Alexander Peslyak in 2001.  No copyright is
-        claimed, and the software is hereby placed in the public domain.
-        In case this attempt to disclaim copyright and place the software in the
-        public domain is deemed null and void, then the software is
-        Copyright (c) 2001 Alexander Peslyak and it is hereby released to the
-        general public under the following terms:
-
-        Redistribution and use in source and binary forms, with or without
-        modification, are permitted.
-
-        There's ABSOLUTELY NO WARRANTY, express or implied.
-
-        (This is a heavily cut-down ""BSD license"".)
-";
+		public override string LicenseText => Utilities.GetUrlContent (
+			new Uri ("https://raw.githubusercontent.com/dotnet/linker/6b3a3050c70577bd1b3fd7611eef56679e22a4f1/LICENSE.txt"))
+			.GetAwaiter ().GetResult ();
 	}
 }

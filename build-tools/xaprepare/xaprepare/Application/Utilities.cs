@@ -53,60 +53,6 @@ namespace Xamarin.Android.Prepare
 			return false;
 		}
 
-		public static bool AbiChoiceChanged (Context context)
-		{
-			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
-			if (!File.Exists (cacheFile)) {
-				Log.DebugLine ($"Enabled ABI cache file not found at {cacheFile}");
-				return true;
-			}
-
-			var oldAbis = new HashSet<string> (StringComparer.Ordinal);
-			foreach (string l in File.ReadAllLines (cacheFile)) {
-				string line = l.Trim ();
-				if (String.IsNullOrEmpty (line) || oldAbis.Contains (line))
-					continue;
-				oldAbis.Add (line);
-			}
-
-			HashSet<string>? currentAbis = null;
-			FillCurrentAbis (context, ref currentAbis);
-
-			if (currentAbis == null)
-				return false;
-
-			if (oldAbis.Count != currentAbis.Count)
-				return true;
-
-			foreach (string abi in oldAbis) {
-				if (!currentAbis.Contains (abi))
-					return true;
-			}
-
-			return false;
-		}
-
-		public static void SaveAbiChoice (Context context)
-		{
-			HashSet<string>? currentAbis = null;
-			FillCurrentAbis (context, ref currentAbis);
-
-			if (currentAbis == null || currentAbis.Count == 0) {
-				Log.WarningLine ("Cannot save ABI choice, no current ABIs");
-				return;
-			}
-
-			string cacheFile = Configurables.Paths.MonoRuntimesEnabledAbisCachePath;
-			Log.DebugLine ($"Writing ABI cache file {cacheFile}");
-			File.WriteAllLines (cacheFile, currentAbis);
-		}
-
-		static void FillCurrentAbis (Context context, ref HashSet<string>? currentAbis)
-		{
-			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Trim (), ref currentAbis);
-			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis).Trim (), ref currentAbis);
-		}
-
 		public static string ToXamarinAndroidPropertyValue (ICollection<string> coll)
 		{
 			if (coll == null)
@@ -469,6 +415,27 @@ namespace Xamarin.Android.Prepare
 				}
 			}
 			return (false, 0, HttpStatusCode.InternalServerError);
+		}
+
+		public static async Task<string> GetUrlContent (Uri url)
+		{
+			TimeSpan delay = ExceptionRetryInitialDelay;
+			Exception? e = null;
+			for (int i = 0; i < ExceptionRetries; i++) {
+				try {
+					using (HttpClient httpClient = CreateHttpClient ()) {
+						httpClient.Timeout = WebRequestTimeout;
+						return await httpClient.GetStringAsync (url).ConfigureAwait (true);
+					}
+				} catch (Exception ex) {
+					if (i < ExceptionRetries - 1) {
+						WaitAWhile ($"GetUrlContent {url}", i, ref ex, ref delay);
+					} else {
+						e = ex;
+					}
+				}
+			}
+			throw new Exception ($"Unable to get content from URL: {url}\n{e}");
 		}
 
 		public static async Task<bool> Download (Uri url, string targetFile, DownloadStatus status)

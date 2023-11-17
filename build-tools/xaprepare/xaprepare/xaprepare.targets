@@ -47,7 +47,6 @@
       <Replacement Include="@AndroidDefaultTargetDotnetApiLevel@=$(AndroidDefaultTargetDotnetApiLevel)" />
       <Replacement Include="@AndroidLatestStableApiLevel@=$(AndroidLatestStableApiLevel)" />
       <Replacement Include="@AndroidLatestUnstableApiLevel@=$(AndroidLatestUnstableApiLevel)" />
-      <Replacement Include="@AndroidMxeFullPath@=$(AndroidMxeFullPath)" />
       <Replacement Include="@AndroidNdkDirectory@=$(AndroidNdkDirectory)" />
       <Replacement Include="@AndroidNdkVersion@=$(AndroidNdkVersion)" />
       <Replacement Include="@AndroidSdkDirectory@=$(AndroidSdkDirectory)" />
