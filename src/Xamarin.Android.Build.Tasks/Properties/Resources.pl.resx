@@ -949,4 +949,51 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>'&lt;{0}&gt;' item '{1}' is missing required metadata '{2}'</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id'.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>Cannot download Maven artifact '{0}:{1}'.
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>Cannot download POM file for Maven artifact '{0}:{1}'.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Cannot download parent POM file for Maven artifact '{0}:{1}'.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>Unknown Maven repository: '{0}'.</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
 </root>
