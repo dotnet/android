@@ -6,6 +6,7 @@ namespace Xamarin.Android.AssemblyStore;
 class StoreReader_V1 : AssemblyStoreReader
 {
 	public override string Description => "Assembly store v1";
+	public override bool NeedsExtensionInName => false;
 
 	public static IList<string> ApkPaths      { get; }
 	public static IList<string> AabPaths      { get; }

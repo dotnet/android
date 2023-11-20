@@ -66,13 +66,25 @@ namespace Xamarin.Android.Build.Tests
 
 		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
 		{
-			using (var zip = ZipHelper.OpenZip (archivePath)) {
-				ZipEntry entry = zip.ReadEntry (path);
+			List<string>? potentialEntries = TransformArchiveAssemblyPath (path, arch);
+			if (potentialEntries == null || potentialEntries.Count == 0) {
+				return null;
+			}
+
+			using var zip = ZipHelper.OpenZip (archivePath);
+			foreach (string assemblyPath in potentialEntries) {
+				if (!zip.ContainsEntry (assemblyPath)) {
+					continue;
+				}
+
+				ZipEntry entry = zip.ReadEntry (assemblyPath);
 				var ret = new MemoryStream ();
 				entry.Extract (ret);
 				ret.Flush ();
 				return ret;
 			}
+
+			return null;
 		}
 
 		Stream? ReadStoreEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
@@ -85,6 +97,15 @@ namespace Xamarin.Android.Build.Tests
 				return null;
 			}
 
+			if (arch == AndroidTargetArch.None) {
+				if (explorer.TargetArch == null) {
+					throw new InvalidOperationException ($"Internal error: explorer should not have its TargetArch unset");
+				}
+
+				arch = (AndroidTargetArch)explorer.TargetArch;
+			}
+
+			Console.WriteLine ($"Trying to read store entry: {name}");
 			IList<AssemblyStoreItem>? assemblies = explorer.Find (name, arch);
 			if (assemblies == null) {
 				Console.WriteLine ($"Failed to locate assembly '{name}' in assembly store for architecture '{arch}', in archive '{archivePath}'");
@@ -104,7 +125,7 @@ namespace Xamarin.Android.Build.Tests
 				return null;
 			}
 
-			return explorer.Read (assembly, uncompressIfNecessary);
+			return explorer.ReadImageData (assembly, uncompressIfNecessary);
 		}
 
 		public List<string> ListArchiveContents (string storeEntryPrefix = DefaultAssemblyStoreEntryPrefix, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
@@ -138,18 +159,18 @@ namespace Xamarin.Android.Build.Tests
 			foreach (AssemblyStoreItem asm in explorer.Assemblies) {
 				string prefix = storeEntryPrefix;
 
-				if (haveMultipleRids && asm.TargetArch != AndroidTargetArch.None) {
+//				if (haveMultipleRids && asm.TargetArch != AndroidTargetArch.None) {
 					string abi = MonoAndroidHelper.ArchToAbi (asm.TargetArch);
 					prefix = $"{prefix}{abi}/";
-				}
+//				}
 
-				entries.Add ($"{prefix}{asm.Name}.dll");
+				entries.Add ($"{prefix}{asm.Name}");
 				if (asm.DebugOffset > 0) {
-					entries.Add ($"{prefix}{asm.Name}.pdb");
+					entries.Add ($"{prefix}{Path.GetFileNameWithoutExtension (asm.Name)}.pdb");
 				}
 
 				if (asm.ConfigOffset > 0) {
-					entries.Add ($"{prefix}{asm.Name}.dll.config");
+					entries.Add ($"{prefix}{asm.Name}.config");
 				}
 			}
 
@@ -185,7 +206,7 @@ namespace Xamarin.Android.Build.Tests
 			return null;
 		}
 
-		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false)
+		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
 			var dlls = contents.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase));
@@ -206,14 +227,106 @@ namespace Xamarin.Android.Build.Tests
 			}).Count ();
 		}
 
-		public bool Exists (string entryPath, bool forceRefresh = false)
+		/// <summary>
+		/// Takes "old style" `assemblies/assembly.dll` path and returns (if possible) a set of paths that reflect the new
+		/// location of `assemblies/{ARCH}/assembly.dll`. A list is returned because, if `arch` is `None`, we'll return all
+		/// the possible architectural paths.
+		/// An exception is thrown if we cannot transform the path for some reason. It should **not** be handled.
+		/// </summary>
+		static List<string>? TransformArchiveAssemblyPath (string path, AndroidTargetArch arch)
 		{
-			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
-			if (contents.Count == 0) {
+			const string AssembliesPath = "assemblies";
+			const string AssembliesPathTerminated = AssembliesPath + "/";
+
+			if (String.IsNullOrEmpty (path)) {
+				throw new ArgumentException (nameof (path), "must not be null or empty");
+			}
+
+			if (!path.StartsWith (AssembliesPathTerminated, StringComparison.Ordinal)) {
+				throw new InvalidOperationException ($"Path '{path}' does not start with '{AssembliesPathTerminated}'");
+			}
+
+			string[] parts = path.Split ('/');
+			if (parts.Length < 2) {
+				throw new InvalidOperationException ($"Path '{path}' must consist of at least two segments separated by `/`");
+			}
+
+			// We accept:
+			//   assemblies/assembly.dll
+			//   assemblies/{CULTURE}/assembly.dll
+			//   assemblies/{ARCH}/assembly.dll
+			//   assemblies/{ARCH}/{CULTURE}/assembly.dll
+			if (parts.Length > 4) {
+				throw new InvalidOperationException ($"Path '{path}' must not consist of more than 4 segments separated by `/`");
+			}
+
+			var ret = new List<string> ();
+			if (parts.Length == 4) {
+				// It's a full satellite assembly path that includes the ABI, no need to change anything
+				ret.Add (path);
+				return ret;
+			}
+
+			if (parts.Length == 3) {
+				// We need to check whether the middle part is a culture or an ABI
+				if (MonoAndroidHelper.IsValidAbi (parts[1])) {
+					// Nothing more to do
+					ret.Add (path);
+					return ret;
+				}
+			}
+
+			// We need to add the ABI(s)
+			var newParts = new List<string> {
+				String.Empty, // ABI placeholder
+			};
+
+			for (int i = 1; i < parts.Length; i++) {
+				newParts.Add (parts[i]);
+			}
+
+			if (arch != AndroidTargetArch.None) {
+				ret.Add (MakeAbiArchivePath (arch));
+			} else {
+				foreach (AndroidTargetArch targetArch in MonoAndroidHelper.SupportedTargetArchitectures) {
+					ret.Add (MakeAbiArchivePath (targetArch));
+				}
+			}
+
+			return ret;
+
+			string MakeAbiArchivePath (AndroidTargetArch targetArch)
+			{
+				newParts[0] = MonoAndroidHelper.ArchToAbi (targetArch);
+				return MonoAndroidHelper.MakeZipArchivePath (AssembliesPath, newParts);
+			}
+		}
+
+		static bool ArchiveContains (List<string> archiveContents, string entryPath, AndroidTargetArch arch)
+		{
+			if (archiveContents.Count == 0) {
 				return false;
 			}
 
-			return contents.Contains (entryPath);
+			List<string>? potentialEntries = TransformArchiveAssemblyPath (entryPath, arch);
+			if (potentialEntries == null || potentialEntries.Count == 0) {
+				return false;
+			}
+
+			foreach (string existingEntry in archiveContents) {
+				foreach (string wantedEntry in potentialEntries) {
+					if (String.Compare (existingEntry, wantedEntry, StringComparison.Ordinal) == 0) {
+						return true;
+					}
+				}
+			}
+
+			return false;
+		}
+
+		public bool Exists (string entryPath, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
+		{
+			return ArchiveContains (ListArchiveContents (assembliesRootDir, forceRefresh), entryPath, arch);
 		}
 
 		public void Contains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch = AndroidTargetArch.None)

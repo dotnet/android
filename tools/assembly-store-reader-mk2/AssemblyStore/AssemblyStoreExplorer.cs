@@ -149,9 +149,25 @@ class AssemblyStoreExplorer
 		return (ret, null, true);
 	}
 
-	public Stream Read (AssemblyStoreItem item, bool uncompressIfNeeded = false)
+	public Stream? ReadImageData (AssemblyStoreItem item, bool uncompressIfNeeded = false)
 	{
-		throw new NotImplementedException ();
+		return reader.ReadEntryImageData (item, uncompressIfNeeded);
+	}
+
+	string EnsureCorrectAssemblyName (string assemblyName)
+	{
+		assemblyName = Path.GetFileName (assemblyName);
+		if (reader.NeedsExtensionInName) {
+			if (!assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+				return $"{assemblyName}.dll";
+			}
+		} else {
+			if (assemblyName.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+				return Path.GetFileNameWithoutExtension (assemblyName);
+			}
+		}
+
+		return assemblyName;
 	}
 
 	public IList<AssemblyStoreItem>? Find (string assemblyName, AndroidTargetArch? targetArch = null)
@@ -160,6 +176,7 @@ class AssemblyStoreExplorer
 			return null;
 		}
 
+		assemblyName = EnsureCorrectAssemblyName (assemblyName);
 		var items = new List<AssemblyStoreItem> ();
 		foreach (AssemblyStoreItem item in Assemblies) {
 			if (String.CompareOrdinal (assemblyName, item.Name) != 0) {

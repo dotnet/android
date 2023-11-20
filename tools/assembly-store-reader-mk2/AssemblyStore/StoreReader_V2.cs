@@ -22,6 +22,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	const uint ASSEMBLY_STORE_ABI_MASK             = 0x00FF0000;
 
 	public override string Description => "Assembly store v2";
+	public override bool NeedsExtensionInName => true;
 
 	public static IList<string> ApkPaths      { get; }
 	public static IList<string> AabPaths      { get; }

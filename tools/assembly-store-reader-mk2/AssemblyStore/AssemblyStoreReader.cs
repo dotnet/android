@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -11,7 +12,9 @@ abstract class AssemblyStoreReader
 	static readonly UTF8Encoding ReaderEncoding = new UTF8Encoding (false);
 
 	protected Stream StoreStream                { get; }
+
 	public abstract string Description          { get; }
+	public abstract bool NeedsExtensionInName   { get; }
 	public string StorePath                     { get; }
 
 	public AndroidTargetArch TargetArch         { get; protected set; } = AndroidTargetArch.Arm;
@@ -55,4 +58,27 @@ abstract class AssemblyStoreReader
 
 	protected abstract bool IsSupported ();
 	protected abstract void Prepare ();
+
+	public Stream ReadEntryImageData (AssemblyStoreItem entry, bool uncompressIfNeeded = false)
+	{
+		StoreStream.Seek (entry.DataOffset, SeekOrigin.Begin);
+		var stream = new MemoryStream ();
+
+		if (uncompressIfNeeded) {
+			throw new NotImplementedException ();
+		}
+
+		const long BufferSize = 65535;
+		byte[] buffer = Utils.BytePool.Rent ((int)BufferSize);
+		long remainingToRead = entry.DataSize;
+
+		while (remainingToRead > 0) {
+			int nread = StoreStream.Read (buffer, 0, (int)Math.Min (BufferSize, remainingToRead));
+			stream.Write (buffer, 0, nread);
+			remainingToRead -= (long)nread;
+		}
+		stream.Flush ();
+
+		return stream;
+	}
 }

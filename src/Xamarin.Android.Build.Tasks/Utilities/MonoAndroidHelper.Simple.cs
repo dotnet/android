@@ -10,6 +10,29 @@ namespace Xamarin.Android.Tasks;
 
 partial class MonoAndroidHelper
 {
+	public static class AndroidAbi
+	{
+		public const string Arm32 = "armeabi-v7a";
+		public const string Arm64 = "arm64-v8a";
+		public const string X86   = "x86";
+		public const string X64   = "x86_64";
+	}
+
+	public static class RuntimeIdentifier
+	{
+		public const string Arm32 = "android-arm";
+		public const string Arm64 = "android-arm64";
+		public const string X86   = "android-x86";
+		public const string X64   = "android-x64";
+	}
+
+	public static readonly HashSet<AndroidTargetArch> SupportedTargetArchitectures = new HashSet<AndroidTargetArch> {
+		AndroidTargetArch.Arm,
+		AndroidTargetArch.Arm64,
+		AndroidTargetArch.X86,
+		AndroidTargetArch.X86_64,
+	};
+
 	static readonly char[] ZipPathTrimmedChars = {'/', '\\'};
 
 	static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
@@ -19,49 +42,87 @@ partial class MonoAndroidHelper
 		{"x86_64",      "x86_64"}
 	};
 
+	static readonly Dictionary<string, AndroidTargetArch> AbiToArchMap = new Dictionary<string, AndroidTargetArch> (StringComparer.OrdinalIgnoreCase) {
+		{ AndroidAbi.Arm32, AndroidTargetArch.Arm },
+		{ AndroidAbi.Arm64, AndroidTargetArch.Arm64 },
+		{ AndroidAbi.X86,   AndroidTargetArch.X86 },
+		{ AndroidAbi.X64,   AndroidTargetArch.X86_64 },
+	};
+
+	static readonly Dictionary<string, string> AbiToRidMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+		{ AndroidAbi.Arm32, RuntimeIdentifier.Arm32 },
+		{ AndroidAbi.Arm64, RuntimeIdentifier.Arm64 },
+		{ AndroidAbi.X86,   RuntimeIdentifier.X86 },
+		{ AndroidAbi.X64,   RuntimeIdentifier.X64 },
+	};
+
+	static readonly Dictionary<string, string> RidToAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+		{ RuntimeIdentifier.Arm32, AndroidAbi.Arm32 },
+		{ RuntimeIdentifier.Arm64, AndroidAbi.Arm64 },
+		{ RuntimeIdentifier.X86,   AndroidAbi.X86 },
+		{ RuntimeIdentifier.X64,   AndroidAbi.X64 },
+	};
+
+	static readonly Dictionary<AndroidTargetArch, string> ArchToRidMap = new Dictionary<AndroidTargetArch, string> {
+		{ AndroidTargetArch.Arm,    RuntimeIdentifier.Arm32 },
+		{ AndroidTargetArch.Arm64,  RuntimeIdentifier.Arm64 },
+		{ AndroidTargetArch.X86,    RuntimeIdentifier.X86 },
+		{ AndroidTargetArch.X86_64, RuntimeIdentifier.X64 },
+	};
+
+	static readonly Dictionary<AndroidTargetArch, string> ArchToAbiMap = new Dictionary<AndroidTargetArch, string> {
+		{ AndroidTargetArch.Arm,    AndroidAbi.Arm32 },
+		{ AndroidTargetArch.Arm64,  AndroidAbi.Arm64 },
+		{ AndroidTargetArch.X86,    AndroidAbi.X86 },
+		{ AndroidTargetArch.X86_64, AndroidAbi.X64 },
+	};
+
 	public static AndroidTargetArch AbiToTargetArch (string abi)
 	{
-		return abi switch {
-			"armeabi-v7a" => AndroidTargetArch.Arm,
-			"arm64-v8a"   => AndroidTargetArch.Arm64,
-			"x86_64"      => AndroidTargetArch.X86_64,
-			"x86"         => AndroidTargetArch.X86,
-			_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
+		if (!AbiToArchMap.TryGetValue (abi, out AndroidTargetArch arch)) {
+			throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'");
 		};
+
+		return arch;
 	}
 
 	public static string AbiToRid (string abi)
 	{
-		return abi switch {
-			"armeabi-v7a" => "android-arm",
-			"arm64-v8a"   => "android-arm64",
-			"x86_64"      => "android-x64",
-			"x86"         => "android-x86",
-			_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
+		if (!AbiToRidMap.TryGetValue (abi, out string rid)) {
+			throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'");
 		};
+
+		return rid;
+	}
+
+	public static string RidToAbi (string rid)
+	{
+		if (!RidToAbiMap.TryGetValue (rid, out string abi)) {
+			throw new NotSupportedException ($"Internal error: unsupported Runtime Identifier '{rid}'");
+		};
+
+		return abi;
 	}
 
 	public static string ArchToRid (AndroidTargetArch arch)
 	{
-		return arch switch {
-			AndroidTargetArch.Arm64  => "android-arm64",
-			AndroidTargetArch.Arm    => "android-arm",
-			AndroidTargetArch.X86    => "android-x86",
-			AndroidTargetArch.X86_64 => "android-x64",
-			_                        => throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'")
+		if (!ArchToRidMap.TryGetValue (arch, out string rid)) {
+			throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'");
 		};
+
+		return rid;
 	}
 
 	public static string ArchToAbi (AndroidTargetArch arch)
 	{
-		return arch switch {
-			AndroidTargetArch.Arm64  => "arm64-v8a",
-			AndroidTargetArch.Arm    => "armeabi-v7a",
-			AndroidTargetArch.X86    => "x86",
-			AndroidTargetArch.X86_64 => "x86_64",
-			_                        => throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'")
+		if (!ArchToAbiMap.TryGetValue (arch, out string abi)) {
+			throw new InvalidOperationException ($"Internal error: unsupported architecture '{arch}'");
 		};
+
+		return abi;
 	}
+
+	public static bool IsValidAbi (string abi) => AbiToRidMap.ContainsKey (abi);
 
 	public static string? CultureInvariantToString (object? obj)
 	{
