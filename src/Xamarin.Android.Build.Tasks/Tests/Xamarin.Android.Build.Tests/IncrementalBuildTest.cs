@@ -655,7 +655,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
-				foreach (string rid in proj.GetProperty (KnownProperties.RuntimeIdentifiers).Split (';')) {
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
 					string abi = MonoAndroidHelper.RidToAbi (rid);
 					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
 					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));

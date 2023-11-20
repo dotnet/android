@@ -565,8 +565,8 @@ public abstract class MyRunner {
 
 				/*
 				 * IL snippet
-				 * .method private hidebysig specialname rtspecialname static 
-				 * void .cctor () cil managed 
+				 * .method private hidebysig specialname rtspecialname static
+				 * void .cctor () cil managed
 				 * {
 				 *   // Is64Bits = 4 >= 8;
 				 *   IL_0000: ldc.i4 4
