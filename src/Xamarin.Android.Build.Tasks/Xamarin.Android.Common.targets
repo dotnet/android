@@ -94,6 +94,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <UsingTask TaskName="GenerateCompressedAssembliesNativeSourceFiles" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.UnzipToFolder" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.GenerateJniRemappingNativeCode" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.PrepareSatelliteAssemblies" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <!--
 *******************************************
   Extensibility hook that allows VS to
@@ -1975,13 +1976,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_ResolveSatellitePaths"
-    DependsOnTargets="_ResolveAssemblies"
->
-  <ItemGroup>
-    <_AndroidResolvedSatellitePaths Include="@(ReferenceSatellitePaths)" />
-    <!-- Satellites from the current project, see: https://github.com/microsoft/msbuild/blob/master/src/Tasks/Microsoft.Common.CurrentVersion.targets#L4283-L4299 -->
-    <_AndroidResolvedSatellitePaths Include="@(IntermediateSatelliteAssembliesWithTargetPath->'$(OutDir)%(Culture)\$(TargetName).resources.dll')" />
-  </ItemGroup>
+    DependsOnTargets="_ResolveAssemblies">
+  <!-- Satellites from the current project, see: https://github.com/microsoft/msbuild/blob/master/src/Tasks/Microsoft.Common.CurrentVersion.targets#L4283-L4299 -->
+  <PrepareSatelliteAssemblies
+      BuildTargetAbis="@(_BuildTargetAbis)"
+      ReferenceSatellitePaths="@(ReferenceSatellitePaths)"
+      IntermediateSatelliteAssemblies="@(IntermediateSatelliteAssembliesWithTargetPath->'$(OutDir)%(Culture)\$(TargetName).resources.dll')">
+    <Output TaskParameter="ProcessedSatelliteAssemblies" ItemName="_AndroidResolvedSatellitePaths" />
+  </PrepareSatelliteAssemblies>
 </Target>
 
 <Target Name="_CheckApkPerAbiFlag">
