@@ -100,6 +100,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		}
 
 		[Test]
+		[Category ("SmokeTests")]
 		public void CheckProjectWithSpaceInNameWorks ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
