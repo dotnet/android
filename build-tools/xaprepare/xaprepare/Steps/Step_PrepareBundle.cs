@@ -90,13 +90,6 @@ namespace Xamarin.Android.Prepare
 				Utilities.DeleteDirectorySilent (tempDir);
 			}
 
-			string managedRuntime = context.Properties.GetRequiredValue (KnownProperties.ManagedRuntime);
-			bool haveManagedRuntime = !String.IsNullOrEmpty (managedRuntime);
-			if (!await Utilities.BuildRemapRef (context, haveManagedRuntime, managedRuntime))
-				return false;
-
-			Utilities.PropagateXamarinAndroidCecil (context);
-
 			if (String.IsNullOrEmpty (context.XABundleCopyDir))
 				return HaveEverything ();
 
