@@ -476,10 +476,14 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					continue;
 
 				var existingMarshalMethodsType = td.GetNestedType (TypeMover.NestedName);
-				if (existingMarshalMethodsType != null && !forceRegeneration) {
-					Warning (Message.WarningMarshalMethodsTypeAlreadyExists, existingMarshalMethodsType.GetAssemblyQualifiedName (cache), assemblyName);
+				if (existingMarshalMethodsType != null) {
 
-					return;
+					if (forceRegeneration) {
+						td.NestedTypes.Remove (existingMarshalMethodsType);
+					} else {
+						Warning (Message.WarningMarshalMethodsTypeAlreadyExists, existingMarshalMethodsType.GetAssemblyQualifiedName (cache), assemblyName);
+						return;
+					}
 				}
 
 				if (Verbose)
@@ -512,7 +516,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 					if (exportObj != null) {
 						dynamic e = exportObj;
-						name = e.Name;
+						name = "n_" + methodName;
 						signature = e.Signature;
 					}
 					else {
@@ -550,7 +554,6 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					Log (TraceLevel.Verbose, $"## Dumping contents of marshal method for `{td.FullName}::{method.Name}({string.Join (", ", method.GetParameters ().Select (p => p.ParameterType))})`:");
 					Console.WriteLine (lambda.ToCSharpCode ());
 #endif  // _DUMP_REGISTER_NATIVE_MEMBERS
-					name = export?.Name ?? method.Name;
 
 					var mmDef = assemblyBuilder.Compile (lambda);
 					mmDef.Name = name;
@@ -558,7 +561,7 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 					signature = export?.Signature ?? builder.GetJniMethodSignature (method);
 
-					registrations.Add (new ExpressionMethodRegistration ("n_" + method.Name, signature, mmDef));
+					registrations.Add (new ExpressionMethodRegistration (name, signature, mmDef));
 
 					addedMethods.Add (methodName);
 				}
@@ -739,35 +742,19 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 
 		static bool CheckMethod (MethodDefinition m, ref string name, ref string methodName, ref string signature)
 		{
-			foreach (var registerAttribute in m.GetCustomAttributes ("Android.Runtime.RegisterAttribute")) {
+			var registerAttrs = m.GetCustomAttributes ("Android.Runtime.RegisterAttribute")
+				.Concat (m.GetCustomAttributes ("Java.Interop.JniMethodSignatureAttribute"));
+			foreach (var registerAttribute in registerAttrs) {
 				if (registerAttribute == null || !registerAttribute.HasConstructorArguments)
 					continue;
 
-				var constructorParameters = registerAttribute.Constructor.Parameters.ToArray ();
-				var constructorArguments = registerAttribute.ConstructorArguments.ToArray ();
-
-				for (int i = 0; i < constructorArguments.Length; i++) {
-					switch (constructorParameters [i].Name) {
-					case "name":
-						name = constructorArguments [i].Value.ToString ();
-						break;
-					case "signature":
-						signature = constructorArguments [i].Value.ToString ();
-						break;
-					}
-
-				}
-
-				if ((string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature)) && constructorArguments.Length != 3)
+				if (registerAttribute.ConstructorArguments.Count < 2)
 					continue;
 
-				if (string.IsNullOrEmpty (name))
-					name = constructorArguments [0].Value.ToString ();
+				name        = registerAttribute.ConstructorArguments [0].Value.ToString ();
+				signature   = registerAttribute.ConstructorArguments [1].Value.ToString ();
 
-				if (string.IsNullOrEmpty (signature))
-					signature = constructorArguments [1].Value.ToString ();
-
-				if (string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature))
+				if ((string.IsNullOrEmpty (name) || string.IsNullOrEmpty (signature)))
 					continue;
 
 				methodName = MarshalMemberBuilder.GetMarshalMethodName (name, signature);
@@ -808,13 +795,14 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 					continue;
 				}
 
-				for (int i = 0; i < ifaceMap.TargetMethods.Length; i++)
+				for (int i = 0; i < ifaceMap.TargetMethods.Length; i++) {
 					if (ifaceMap.TargetMethods [i] == method) {
 						var imd = id.GetMethodDefinition (ifaceMap.InterfaceMethods [i]);
 
 						if (CheckMethod (imd, ref name, ref methodName, ref signature))
 							return true;
 					}
+				}
 			}
 
 			return false;

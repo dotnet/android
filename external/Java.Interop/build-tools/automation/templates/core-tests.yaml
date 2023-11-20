@@ -147,6 +147,26 @@ steps:
   retryCountOnTaskFailure: 1
 
 - task: DotNetCoreCLI@2
+  displayName: 'jnimarshalmethod-gen Java.Base-Tests.dll'
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+  inputs:
+    command: custom
+    custom: bin/$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/jnimarshalmethod-gen.dll
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll -v -v --keeptemp
+  continueOnError: true
+  retryCountOnTaskFailure: 1
+
+- task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Base'
+  condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
+  inputs:
+    command: test
+    testRunTitle: Java.Base ($(DotNetTargetFramework) - ${{ parameters.platformName }})
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Base-Tests.dll
+  continueOnError: true
+  retryCountOnTaskFailure: 1
+
+- task: DotNetCoreCLI@2
   displayName: 'Tests: java-source-utils'
   inputs:
     command: build
