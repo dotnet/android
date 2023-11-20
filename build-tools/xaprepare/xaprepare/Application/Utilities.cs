@@ -107,37 +107,6 @@ namespace Xamarin.Android.Prepare
 			Utilities.AddAbis (context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetAotAbis).Trim (), ref currentAbis);
 		}
 
-		public static void PropagateXamarinAndroidCecil (Context context)
-		{
-			const string CecilAssembly = "Xamarin.Android.Cecil.dll";
-
-			CopyFile (
-				Path.Combine (Configurables.Paths.InstallMSBuildDir, CecilAssembly),
-				Path.Combine (Configurables.Paths.ExternalJavaInteropDir, "bin", context.Configuration, CecilAssembly)
-			);
-		}
-
-		public static async Task<bool> BuildRemapRef (Context context, bool haveManagedRuntime, string managedRuntime, bool quiet = false)
-		{
-			if (!quiet)
-				Log.StatusLine ("Building remap-assembly-ref");
-
-			var msbuild = new MSBuildRunner (context);
-			string projectPath = Path.Combine (Configurables.Paths.BuildToolsDir, "remap-assembly-ref", "remap-assembly-ref.csproj");
-			bool result = await msbuild.Run (
-				projectPath: projectPath,
-				logTag: "remap-assembly-ref",
-				binlogName: "build-remap-assembly-ref"
-			);
-
-			if (!result) {
-				Log.ErrorLine ("Failed to build remap-assembly-ref");
-				return false;
-			}
-
-			return true;
-		}
-
 		public static string ToXamarinAndroidPropertyValue (ICollection<string> coll)
 		{
 			if (coll == null)

@@ -307,6 +307,10 @@
     <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
     <_ExtraPackageSource Include="$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Xamarin.Build.AsyncTask.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.Mdb.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
     <_ExtraPackageSource Include="$(PkgMavenNet)\lib\netstandard2.0\MavenNet.pdb" />

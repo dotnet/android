@@ -586,6 +586,51 @@ public class Test
 		}
 
 		[Test]
+		public void CheckExcludedFilesCanBeModified ()
+		{
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
+				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+				}
+				proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsExclude") {
+					Remove = () => "$([MSBuild]::Escape('*.kotlin*'))",
+				});
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
+				}
+			}
+		}
+
+		[Test]
+		public void CheckIncludedFilesArePresent ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_Reflect);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
+				}
+			}
+		}
+
+		[Test]
 		[TestCase (1, -1)]
 		[TestCase (5, -1)]
 		[TestCase (50, -1)]

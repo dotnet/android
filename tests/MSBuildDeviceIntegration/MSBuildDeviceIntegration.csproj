@@ -37,9 +37,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="NodaTime" Version="2.4.5" />
     <PackageReference Include="MSBuild.StructuredLogger" Version="2.1.787" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
@@ -54,7 +52,5 @@
     <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
     <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj" />
   </ItemGroup>
-
-  <Import Project="MSBuildDeviceIntegration.targets" />
 
 </Project>

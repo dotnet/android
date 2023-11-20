@@ -359,11 +359,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
-<ItemGroup>
-	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
-</ItemGroup>
-
 <!-- Assets build properties -->
 <PropertyGroup>
 	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
@@ -2139,6 +2134,7 @@ because xbuild doesn't support framework reference assemblies.
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+    IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
@@ -2175,6 +2171,7 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">

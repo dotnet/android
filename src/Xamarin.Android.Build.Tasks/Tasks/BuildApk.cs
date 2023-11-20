@@ -82,6 +82,8 @@ namespace Xamarin.Android.Tasks
 
 		public string [] ExcludeFiles { get; set; }
 
+		public string [] IncludeFiles { get; set; }
+
 		public string Debug { get; set; }
 
 		public string AndroidSequencePointsMode { get; set; }
@@ -134,6 +136,8 @@ namespace Xamarin.Android.Tasks
 		List<string> existingEntries = new List<string> ();
 
 		List<Regex> excludePatterns = new List<Regex> ();
+
+		List<Regex> includePatterns = new List<Regex> ();
 
 		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
@@ -259,11 +263,20 @@ namespace Xamarin.Android.Tasks
 							}
 							// check for ignored items
 							bool exclude = false;
-							foreach (var pattern in excludePatterns) {
-								if(pattern.IsMatch (path)) {
-									Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
-									exclude = true;
+							bool forceInclude = false;
+							foreach (var include in includePatterns) {
+								if (include.IsMatch (path)) {
+									forceInclude = true;
 									break;
+								}
+							}
+							if (!forceInclude) {
+								foreach (var pattern in excludePatterns) {
+									if(pattern.IsMatch (path)) {
+										Log.LogDebugMessage ($"Ignoring jar entry '{name}' from '{Path.GetFileName (jarFile)}'. Filename matched the exclude pattern '{pattern}'.");
+										exclude = true;
+										break;
+									}
 								}
 							}
 							if (exclude)
@@ -321,6 +334,9 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var pattern in ExcludeFiles ?? Array.Empty<string> ()) {
 				excludePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
+			}
+			foreach (var pattern in IncludeFiles ?? Array.Empty<string> ()) {
+				includePatterns.Add (FileGlobToRegEx (pattern, RegexOptions.IgnoreCase | RegexOptions.Compiled));
 			}
 
 			bool debug = _Debug;

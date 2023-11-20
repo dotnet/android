@@ -11,9 +11,7 @@
   <Import Project="..\..\Configuration.props" />
 
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
   </ItemGroup>
 
   <ItemGroup>
