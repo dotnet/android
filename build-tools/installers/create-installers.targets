@@ -220,10 +220,10 @@
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\Xamarin.Android.Build.Tasks.resources.dll')" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\Xamarin.Android.Tools.AndroidSdk.resources.dll')" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.BuildInfo.txt" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.Mdb.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.Mdb.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Cecil.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Cecil.pdb" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Cecil.Mdb.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Cecil.Mdb.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.props" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.CSharp.targets" ExcludeFromAndroidNETSdk="true" />
