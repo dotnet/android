@@ -523,6 +523,10 @@ namespace Xamarin.ProjectTools
 			Id = "Xamarin.Kotlin.Stdlib.Common",
 			Version = "1.6.20.1"
 		};
+		public static Package Xamarin_Kotlin_Reflect = new Package {
+			Id = "Xamarin.Kotlin.Reflect",
+			Version = "1.9.10.2"
+		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",
 			Version = "8.0.1",
