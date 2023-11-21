@@ -82,6 +82,7 @@ projects.
       <Output TaskParameter="AndroidNdkPath"            PropertyName="_AndroidNdkDirectory" />
       <Output TaskParameter="AndroidSdkPath"            PropertyName="_AndroidSdkDirectory" />
       <Output TaskParameter="JavaSdkPath"               PropertyName="_JavaSdkDirectory" />
+      <Output TaskParameter="JavaSdkVersion"            PropertyName="_JavaSdkVersion" />
       <Output TaskParameter="MonoAndroidToolsPath"      PropertyName="MonoAndroidToolsDirectory" />
       <Output TaskParameter="MonoAndroidBinPath"        PropertyName="MonoAndroidBinDirectory" />
       <Output TaskParameter="MonoAndroidLibPath"        PropertyName="MonoAndroidLibDirectory" />
