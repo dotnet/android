@@ -5,6 +5,7 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -46,7 +47,10 @@ public class PrepareSatelliteAssemblies : AndroidTask
 	{
 		string? culture = item.GetMetadata ("Culture");
 		if (String.IsNullOrEmpty (culture)) {
-			throw new InvalidOperationException ($"Assembly item '{item}' is missing the 'Culture' metadata");
+			if (!SatelliteAssembly.TryGetSatelliteCultureAndFileName (item.ItemSpec, out culture, out _)) {
+				throw new InvalidOperationException ($"Assembly item '{item}' is missing the 'Culture' metadata and it wasn't possible to obtain it from the path");
+			}
+			item.SetMetadata ("Culture", culture);
 		}
 
 		string assemblyName = Path.GetFileName (item.ItemSpec);
