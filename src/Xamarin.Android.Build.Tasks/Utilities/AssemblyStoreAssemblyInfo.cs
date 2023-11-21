@@ -35,6 +35,11 @@ class AssemblyStoreAssemblyInfo
 			name = Path.GetFileNameWithoutExtension (name);
 		}
 
+		string? culture = assembly.GetMetadata ("Culture");
+		if (!String.IsNullOrEmpty (culture)) {
+			name = $"{culture}/{name}";
+		}
+
 		AssemblyName = name;
 		AssemblyNameBytes = MonoAndroidHelper.Utf8StringToBytes (name);
 	}

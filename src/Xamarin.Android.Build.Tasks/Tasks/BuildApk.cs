@@ -610,16 +610,14 @@ namespace Xamarin.Android.Tasks
 				parts.Add (ArchiveAssembliesPath);
 			}
 
+			// There's no need anymore to treat satellite assemblies specially here. The PrepareSatelliteAssemblies task takes care of
+			// properly setting `DestinationSubDirectory`, so we can just use it here.
 			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
 			if (string.IsNullOrEmpty (subDirectory)) {
 				throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
 			}
 			parts.Add (subDirectory.Replace ('\\', '/'));
 
-			// Even satellite assemblies are treated as RID-specific
-			if (!frameworkAssembly && SatelliteAssembly.TryGetSatelliteCultureAndFileName (assembly.ItemSpec, out var culture, out _)) {
-				parts.Add (culture);
-			}
 			return MonoAndroidHelper.MakeZipArchivePath (haveRootPath ? RootPath : ArchiveAssembliesPath, parts) + "/";
 		}
 

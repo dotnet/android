@@ -157,25 +157,17 @@ namespace Xamarin.Android.Build.Tests
 
 			Console.WriteLine ($"Creating AssemblyStoreExplorer for archive '{archivePath}'");
 			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
-			AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
-			Console.WriteLine ($"Explorer found {explorer.AssemblyCount} assemblies");
 
-			foreach (AssemblyStoreItem asm in explorer.Assemblies) {
-				string prefix = storeEntryPrefix;
-
-//				if (haveMultipleRids && asm.TargetArch != AndroidTargetArch.None) {
-					string abi = MonoAndroidHelper.ArchToAbi (asm.TargetArch);
-					prefix = $"{prefix}{abi}/";
-//				}
-
-				entries.Add ($"{prefix}{asm.Name}");
-				if (asm.DebugOffset > 0) {
-					entries.Add ($"{prefix}{Path.GetFileNameWithoutExtension (asm.Name)}.pdb");
+			if (arch == AndroidTargetArch.None) {
+				if (explorers == null || explorers.Count == 0) {
+					return entries;
 				}
 
-				if (asm.ConfigOffset > 0) {
-					entries.Add ($"{prefix}{asm.Name}.config");
+				foreach (AssemblyStoreExplorer? explorer in explorers) {
+					SynthetizeAssemblies (explorer);
 				}
+			} else {
+				SynthetizeAssemblies (SelectExplorer (explorers, arch));
 			}
 
 			Console.WriteLine ("Archive entries with synthetised assembly storeReader entries:");
@@ -184,6 +176,29 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			return entries;
+
+			void SynthetizeAssemblies (AssemblyStoreExplorer? explorer)
+			{
+				if (explorer == null) {
+					return;
+				}
+
+				Console.WriteLine ($"Explorer for {explorer.TargetArch} found {explorer.AssemblyCount} assemblies");
+				foreach (AssemblyStoreItem asm in explorer.Assemblies) {
+					string prefix = storeEntryPrefix;
+					string abi = MonoAndroidHelper.ArchToAbi (asm.TargetArch);
+					prefix = $"{prefix}{abi}/";
+
+					entries.Add ($"{prefix}{asm.Name}");
+					if (asm.DebugOffset > 0) {
+						entries.Add ($"{prefix}{Path.GetFileNameWithoutExtension (asm.Name)}.pdb");
+					}
+
+					if (asm.ConfigOffset > 0) {
+						entries.Add ($"{prefix}{asm.Name}.config");
+					}
+				}
+			}
 		}
 
 		AssemblyStoreExplorer? SelectExplorer (IList<AssemblyStoreExplorer>? explorers, AndroidTargetArch arch)
@@ -247,7 +262,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			if (!path.StartsWith (AssembliesPathTerminated, StringComparison.Ordinal)) {
-				throw new InvalidOperationException ($"Path '{path}' does not start with '{AssembliesPathTerminated}'");
+				return new List<string> { path };
 			}
 
 			string[] parts = path.Split ('/');

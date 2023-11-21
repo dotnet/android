@@ -49,27 +49,19 @@ public class PrepareSatelliteAssemblies : AndroidTask
 			throw new InvalidOperationException ($"Assembly item '{item}' is missing the 'Culture' metadata");
 		}
 
-		string? targetPath = item.GetMetadata ("TargetPath");
-		bool haveTargetPath = !String.IsNullOrEmpty (targetPath);
 		string assemblyName = Path.GetFileName (item.ItemSpec);
-		char sep = Path.DirectorySeparatorChar;
-
 		foreach (string abi in BuildTargetAbis) {
 			var newItem = new TaskItem (item);
 			newItem.SetMetadata ("Abi", abi);
 
-			if (haveTargetPath) {
-				SetDestinationPathsMetadata (newItem, targetPath);
-			} else {
-				SetDestinationPathsMetadata (newItem, culture + sep + assemblyName);
-			}
+			SetDestinationPathsMetadata (newItem, MonoAndroidHelper.MakeZipArchivePath (abi, culture, assemblyName));
 			output.Add (newItem);
 		}
 
-		void SetDestinationPathsMetadata (ITaskItem item, string path)
+		void SetDestinationPathsMetadata (ITaskItem item, string zipArchivePath)
 		{
-			item.SetMetadata ("DestinationSubDirectory", path);
-			item.SetMetadata ("DestinationSubPath", path);
+			item.SetMetadata ("DestinationSubPath", zipArchivePath);
+			item.SetMetadata ("DestinationSubDirectory", Path.GetDirectoryName (zipArchivePath));
 		}
 	}
 }
