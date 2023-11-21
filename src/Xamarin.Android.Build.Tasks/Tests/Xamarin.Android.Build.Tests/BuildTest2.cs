@@ -1236,8 +1236,12 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1247,11 +1251,22 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
+
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1304,34 +1319,68 @@ namespace App1
 					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
-					var binSrc = Path.Combine (outputPath, "Library1.pdb");
+
+					const string LibraryBaseName = "Library1";
+					const string AppBaseName = "App1";
+					const string LibraryPdbName = LibraryBaseName + ".pdb";
+					const string LibraryDllName = LibraryBaseName + ".dll";
+					const string AppPdbName = AppBaseName + ".pdb";
+					const string AppDllName = AppBaseName + ".dll";
+
+					string libraryPdbBinSrc = Path.Combine (outputPath, LibraryPdbName);
+					string appPdbBinSrc = Path.Combine (outputPath, AppPdbName);
+
 					Assert.IsTrue (
-						File.Exists (Path.Combine (intermediate, "android", "assets", "Mono.Android.pdb")),
-						"Mono.Android.pdb must be copied to Intermediate directory");
+						File.Exists (libraryPdbBinSrc),
+						$"{LibraryPdbName} must be copied to bin directory");
+
 					Assert.IsTrue (
-						File.Exists (assetsPdb),
-						"Library1.pdb must be copied to Intermediate directory");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"Library1.pdb must be copied to bin directory");
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
-						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
-						if (data == null)
-							data = File.ReadAllBytes (assetsPdb);
-						var filedata = File.ReadAllBytes (binSrc);
-						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", binSrc);
+						File.Exists (appPdbBinSrc),
+						$"{AppPdbName} must be copied to bin directory");
+
+					var fileNames = new List<string> {
+						"Mono.Android.pdb",
+						AppPdbName,
+						LibraryPdbName,
+						AppDllName,
+						LibraryDllName,
+					};
+
+					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
+					foreach (string abi in b.GetBuildAbis ()) {
+						foreach (string fileName in fileNames) {
+							EnsureFilesAreTheSame (intermediate, outputPath, fileName, abi, helper, fileName.EndsWith (".dll", StringComparison.Ordinal));
+						}
 					}
-					var androidAssets = Path.Combine (intermediate, "android", "assets", "App1.pdb");
-					binSrc = Path.Combine (outputPath, "App1.pdb");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"App1.pdb must be copied to bin directory");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should not differ.", binSrc, androidAssets);
-					androidAssets = Path.Combine (intermediate, "android", "assets", "App1.dll");
-					binSrc = Path.Combine (outputPath, "App1.dll");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should match.", binSrc, androidAssets);
 				}
+			}
+
+			void EnsureFilesAreTheSame (string intermediatePath, string binPath, string fileName, string abi, ArchiveAssemblyHelper helper, bool uncompressIfNecessary)
+			{
+				string assetsPath = Path.Combine (intermediatePath, "android", "assets", abi, fileName);
+				Assert.IsTrue (File.Exists (assetsPath), $"{fileName} must be copied to Intermediate directory for ABI {abi}");
+
+				string apkPath = MonoAndroidHelper.MakeZipArchivePath ("assemblies", abi, fileName);
+				Stream? apkFileStream = helper.ReadEntry (apkPath, MonoAndroidHelper.AbiToTargetArch (abi), uncompressIfNecessary);
+				Assert.NotNull (apkFileStream, $"'{apkPath}' not found in the APK");
+
+				using var assetsFileStream = File.OpenRead (assetsPath);
+				FileAssert.AreEqual (apkFileStream, assetsFileStream, $"{0} and {1} should not differ", apkPath, assetsPath);
+
+				// TODO: compare `bin` copies with those in `assets` and the apk. Right now:
+				// we mustn't compare against the pdb copy in `bin/` since we don't know which ABI was copied there, and the DLLs (and thus their debug data)
+				// may differ between ABIs/RIDs
+
+				// assetsFileStream.Seek (0, SeekOrigin.Begin);
+				// apkFileStream.Seek (0, SeekOrigin.Begin);
+
+				// string outputBinPath = Path.Combine (binPath, abi, fileName);
+				// using var outputBinStream = File.OpenRead (outputBinPath);
+				// FileAssert.AreEqual (assetsFileStream, outputBinStream, $"{0} and {1} should not differ", assetsPath, outputBinPath);
+
+				// outputBinStream.Seek (0, SeekOrigin.Begin);
+				// FileAssert.AreEqual (apkFileStream, outputBinStream,  $"{0} and {1} should not differ", apkPath, outputBinPath);
 			}
 		}
 

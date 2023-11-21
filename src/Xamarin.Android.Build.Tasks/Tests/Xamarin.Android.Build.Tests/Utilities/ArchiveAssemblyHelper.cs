@@ -57,11 +57,15 @@ namespace Xamarin.Android.Build.Tests
 
 		public Stream? ReadEntry (string path, AndroidTargetArch arch = AndroidTargetArch.None, bool uncompressIfNecessary = false)
 		{
+			Stream? ret;
 			if (useAssemblyStores) {
-				return ReadStoreEntry (path, arch, uncompressIfNecessary);
+				ret = ReadStoreEntry (path, arch, uncompressIfNecessary);
+			} else {
+				ret = ReadZipEntry (path, arch, uncompressIfNecessary);
 			}
 
-			return ReadZipEntry (path, arch, uncompressIfNecessary);
+			ret?.Seek (0, SeekOrigin.Begin);
+			return ret;
 		}
 
 		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)

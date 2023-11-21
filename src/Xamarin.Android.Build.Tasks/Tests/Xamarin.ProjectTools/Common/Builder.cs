@@ -10,6 +10,8 @@ using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
 
+using Xamarin.Android.Tasks;
+
 namespace Xamarin.ProjectTools
 {
 	public class Builder : IDisposable
@@ -132,7 +134,6 @@ namespace Xamarin.ProjectTools
 		public HashSet<string> GetBuildRuntimeIdentifiers ()
 		{
 			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-
 			foreach (string l in LastBuildOutput) {
 				string line = l.Trim ();
 				if (line.Length == 0 || line[0] != 'R') {
@@ -148,6 +149,16 @@ namespace Xamarin.ProjectTools
 					ret.Add (r.Trim ());
 				}
 				break;
+			}
+
+			return ret;
+		}
+
+		public HashSet<string> GetBuildAbis ()
+		{
+			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			foreach (string rid in GetBuildRuntimeIdentifiers ()) {
+				ret.Add (MonoAndroidHelper.RidToAbi (rid));
 			}
 
 			return ret;

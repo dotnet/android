@@ -59,11 +59,11 @@ public class PrepareSatelliteAssemblies : AndroidTask
 			newItem.SetMetadata ("Abi", abi);
 
 			if (haveTargetPath) {
-				SetDestinationPathsMetadata (item, targetPath);
+				SetDestinationPathsMetadata (newItem, targetPath);
 			} else {
-				SetDestinationPathsMetadata (item, culture + sep + assemblyName);
+				SetDestinationPathsMetadata (newItem, culture + sep + assemblyName);
 			}
-
+			output.Add (newItem);
 		}
 
 		void SetDestinationPathsMetadata (ITaskItem item, string path)
