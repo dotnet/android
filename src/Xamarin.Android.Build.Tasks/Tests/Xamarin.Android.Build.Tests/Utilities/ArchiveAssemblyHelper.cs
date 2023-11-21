@@ -367,6 +367,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void ArchiveContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
 		{
+			// TODO: make it work with ABIs when arch == None
 			using (var zip = ZipHelper.OpenZip (archivePath)) {
 				existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
 				missingFiles = fileNames.Where (x => !zip.ContainsEntry (assembliesRootDir + x)).ToList ();
@@ -376,6 +377,7 @@ namespace Xamarin.Android.Build.Tests
 
 		void StoreContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
 		{
+			// TODO: make it work with ABIs when arch == None
 			var assemblyNames = fileNames.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var configFiles = fileNames.Where (x => x.EndsWith (".config", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var debugFiles = fileNames.Where (x => x.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase)).ToList ();

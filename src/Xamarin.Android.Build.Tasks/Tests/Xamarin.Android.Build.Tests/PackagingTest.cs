@@ -59,11 +59,10 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
 
-			var expectedFiles = new [] {
+			var expectedFilesList = new List<string> {
 					"Java.Interop.dll",
 					"Mono.Android.dll",
 					"Mono.Android.Runtime.dll",
-					"rc.bin",
 					"System.Console.dll",
 					"System.Private.CoreLib.dll",
 					"System.Runtime.dll",
@@ -78,6 +77,13 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 					"System.Text.RegularExpressions.dll",
 			};
 
+			if (usesAssemblyStores) {
+				expectedFilesList.Add ("arc.bin.so");
+			} else {
+				expectedFilesList.Add ("rc.bin");
+			}
+
+			var expectedFiles = expectedFilesList.ToArray ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
