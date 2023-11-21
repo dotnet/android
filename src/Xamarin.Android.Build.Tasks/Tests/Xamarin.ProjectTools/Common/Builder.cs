@@ -182,8 +182,8 @@ namespace Xamarin.ProjectTools
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
 			}
 
-			args.AppendFormat ("\"{0}\" /t:{1} {2}",
-					Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution), target, logger);
+			args.AppendFormat ("{0} /t:{1} {2}",
+					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
 
 			if (!AutomaticNuGetRestore) {
 				args.Append (" --no-restore");
