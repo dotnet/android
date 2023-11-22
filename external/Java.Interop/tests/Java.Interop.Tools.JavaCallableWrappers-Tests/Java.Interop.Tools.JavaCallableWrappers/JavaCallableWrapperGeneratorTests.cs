@@ -633,7 +633,7 @@ public class ExampleInstrumentation
 public class JavaInteropExample
 	extends java.lang.Object
 	implements
-		com.xamarin.java_interop.GCUserPeerable
+		net.dot.jni.GCUserPeerable
 {
 /** @hide */
 	public static final String __md_methods;
@@ -641,7 +641,7 @@ public class JavaInteropExample
 		__md_methods = 
 			""n_Example:()V:__export__\n"" +
 			"""";
-		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (JavaInteropExample.class, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", __md_methods);
+		net.dot.jni.ManagedPeer.registerNativeMembers (JavaInteropExample.class, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", __md_methods);
 	}
 
 
@@ -649,7 +649,7 @@ public class JavaInteropExample
 	{
 		super ();
 		if (getClass () == JavaInteropExample.class) {
-			com.xamarin.java_interop.ManagedPeer.construct (this, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib:System.Int32, System.Private.CoreLib"", new java.lang.Object[] { p0, p1 });
+			net.dot.jni.ManagedPeer.construct (this, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib:System.Int32, System.Private.CoreLib"", new java.lang.Object[] { p0, p1 });
 		}
 	}
 

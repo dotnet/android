@@ -1,14 +1,14 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class TestType implements GCUserPeerable {
 
 	static  final   String  assemblyQualifiedName   = "Java.InteropTests.TestType, Java.Interop-Tests";
 	static {
-		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+		net.dot.jni.ManagedPeer.registerNativeMembers (
 				TestType.class,
 				assemblyQualifiedName,
 				"");
@@ -18,7 +18,7 @@ public class TestType implements GCUserPeerable {
 
 	public TestType () {
 		if (TestType.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""
@@ -29,7 +29,7 @@ public class TestType implements GCUserPeerable {
 	// For test purposes; DO NOT provide this constructor in the TestType.cs!
 	public TestType (TestType a, int b) {
 		if (TestType.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					assemblyQualifiedName + ":System.Int32",

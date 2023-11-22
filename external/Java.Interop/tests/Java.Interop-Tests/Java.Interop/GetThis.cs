@@ -7,7 +7,7 @@ namespace Java.InteropTests
 	[JniTypeSignature (GetThis.JniTypeName)]
 	public class GetThis : JavaObject
 	{
-		internal const string JniTypeName = "com/xamarin/interop/GetThis";
+		internal const string JniTypeName = "net/dot/jni/test/GetThis";
 
 		bool _isDisposed;
 
@@ -23,7 +23,7 @@ namespace Java.InteropTests
 
 		public unsafe GetThis This {
 			get {
-				var o   = _members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lcom/xamarin/interop/GetThis;", this, null);
+				var o   = _members.InstanceMethods.InvokeNonvirtualObjectMethod ("getThis.()Lnet/dot/jni/test/GetThis;", this, null);
 				return JniEnvironment.Runtime.ValueManager.GetValue<GetThis> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 			}
 		}

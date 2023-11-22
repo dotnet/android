@@ -6,7 +6,7 @@ namespace Java.InteropTests
 {
 	[JniTypeSignature (CallVirtualFromConstructorDerived.JniTypeName)]
 	public class CallVirtualFromConstructorDerived : CallVirtualFromConstructorBase {
-		new internal    const   string          JniTypeName = "com/xamarin/interop/CallVirtualFromConstructorDerived";
+		new internal    const   string          JniTypeName = "net/dot/jni/test/CallVirtualFromConstructorDerived";
 		static  readonly        JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (CallVirtualFromConstructorDerived));
 
 		[JniAddNativeMethodRegistrationAttribute]
@@ -53,7 +53,7 @@ namespace Java.InteropTests
 		{
 			JniArgumentValue* args = stackalloc JniArgumentValue [1];
 			args [0]    = new JniArgumentValue (value);
-			var o       = _members.StaticMethods.InvokeObjectMethod ("newInstance.(I)Lcom/xamarin/interop/CallVirtualFromConstructorDerived;", args);
+			var o       = _members.StaticMethods.InvokeObjectMethod ("newInstance.(I)Lnet/dot/jni/test/CallVirtualFromConstructorDerived;", args);
 			return JniEnvironment.Runtime.ValueManager.GetValue<CallVirtualFromConstructorDerived> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
 

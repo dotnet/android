@@ -1,4 +1,4 @@
-package com.xamarin.java_interop;
+package net.dot.jni;
 
 public interface GCUserPeerable {
 

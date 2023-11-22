@@ -176,7 +176,7 @@ namespace Java.InteropTests
 		[Test]
 		public void RegisterNativeMethods ()
 		{
-			using (var TestType_class = new JniType ("com/xamarin/interop/CallNonvirtualBase")) {
+			using (var TestType_class = new JniType ("net/dot/jni/test/CallNonvirtualBase")) {
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);
 				TestType_class.RegisterNativeMethods ();
 				Assert.AreEqual (JniObjectReferenceType.Global, TestType_class.PeerReference.Type);

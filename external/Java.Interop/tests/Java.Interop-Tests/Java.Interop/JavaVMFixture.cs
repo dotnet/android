@@ -97,7 +97,7 @@ namespace Java.InteropTests {
 		}
 
 		Dictionary<string, string> ReplacmentTypes = new() {
-			["com/xamarin/interop/RenameClassBase1"] = "com/xamarin/interop/RenameClassBase2",
+			["net/dot/jni/test/RenameClassBase1"] = "net/dot/jni/test/RenameClassBase2",
 		};
 
 		protected override string? GetReplacementTypeCore (string jniSimpleReference) =>
@@ -107,12 +107,12 @@ namespace Java.InteropTests {
 
 		Dictionary<(string SourceType, string SourceName, string? SourceSignature), (string? TargetType, string? TargetName, string? TargetSignature, int? ParamCount, bool TurnStatic)> ReplacementMethods = new() {
 			[("java/lang/Object",                       "remappedToToString",       "()Ljava/lang/String;")]    = (null, "toString", null, null, false),
-			[("java/lang/Object",                       "remappedToStaticHashCode", null)]                      = ("com/xamarin/interop/ObjectHelper", "getHashCodeHelper", null, null, true),
+			[("java/lang/Object",                       "remappedToStaticHashCode", null)]                      = ("net/dot/jni/test/ObjectHelper", "getHashCodeHelper", null, null, true),
 			[("java/lang/Runtime",                      "remappedToGetRuntime",     null)]                      = (null, "getRuntime", null, null, false),
 
 			// NOTE: key must use *post-renamed* value, not pre-renamed value
 			// NOTE: SourceSignature lacking return type; "closer in spirit" to what `remapping-config.json` allows
-			[("com/xamarin/interop/RenameClassBase2",   "hashCode",                 "()")]                      = ("com/xamarin/interop/RenameClassBase2", "myNewHashCode", null, null, false),
+			[("net/dot/jni/test/RenameClassBase2",   "hashCode",                 "()")]                      = ("net/dot/jni/test/RenameClassBase2", "myNewHashCode", null, null, false),
 		};
 
 		protected override JniRuntime.ReplacementMethodInfo? GetReplacementMethodInfoCore (string jniSourceType, string jniMethodName, string jniMethodSignature)

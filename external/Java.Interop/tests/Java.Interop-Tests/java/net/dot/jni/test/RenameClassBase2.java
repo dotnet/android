@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class RenameClassBase2
 	extends RenameClassBase1
@@ -15,7 +15,7 @@ public class RenameClassBase2
 	public RenameClassBase2 () {
 		System.out.println("RenameClassBase.<init>()");
 		if (RenameClassBase2.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""

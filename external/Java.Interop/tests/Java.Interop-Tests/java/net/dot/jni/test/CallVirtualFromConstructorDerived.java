@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class CallVirtualFromConstructorDerived
 		extends CallVirtualFromConstructorBase
@@ -10,7 +10,7 @@ public class CallVirtualFromConstructorDerived
 {
 	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests";
 	static {
-		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+		net.dot.jni.ManagedPeer.registerNativeMembers (
 				CallVirtualFromConstructorDerived.class,
 				assemblyQualifiedName,
 				"");
@@ -21,7 +21,7 @@ public class CallVirtualFromConstructorDerived
 	public CallVirtualFromConstructorDerived (int value) {
 		super (value);
 		if (CallVirtualFromConstructorDerived.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					"System.Int32",

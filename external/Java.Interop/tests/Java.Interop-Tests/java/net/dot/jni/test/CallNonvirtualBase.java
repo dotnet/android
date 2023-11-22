@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class CallNonvirtualBase implements GCUserPeerable {
 
@@ -12,7 +12,7 @@ public class CallNonvirtualBase implements GCUserPeerable {
 
 	public CallNonvirtualBase () {
 		if (CallNonvirtualBase.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""

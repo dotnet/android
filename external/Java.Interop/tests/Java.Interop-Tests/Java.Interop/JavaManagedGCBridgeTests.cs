@@ -54,7 +54,7 @@ namespace Java.InteropTests {
 
 	[JniTypeSignature (JniTypeName)]
 	public class CrossReferenceBridge : JavaObject {
-		internal    const    string         JniTypeName = "com/xamarin/interop/CrossReferenceBridge";
+		internal    const    string         JniTypeName = "net/dot/jni/test/CrossReferenceBridge";
 
 		public  string          id;
 		public  List<object>    link        = new List<object> ();

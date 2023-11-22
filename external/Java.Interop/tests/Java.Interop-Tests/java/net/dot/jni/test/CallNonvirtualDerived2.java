@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class CallNonvirtualDerived2
 		extends CallNonvirtualDerived
@@ -14,7 +14,7 @@ public class CallNonvirtualDerived2
 
 	public CallNonvirtualDerived2 () {
 		if (CallNonvirtualDerived2.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""

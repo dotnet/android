@@ -33,21 +33,21 @@
   </ItemGroup>
 
   <ItemGroup>
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CrossReferenceBridge.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualBase.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallNonvirtualDerived2.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorBase.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\CallVirtualFromConstructorDerived.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\GetThis.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\ObjectHelper.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassBase1.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassBase2.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\RenameClassDerived.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\AndroidInterface.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\DesugarAndroidInterface$_CC.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\SelfRegistration.java" />
-    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\com\xamarin\interop\TestType.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CrossReferenceBridge.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualBase.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallNonvirtualDerived2.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorBase.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\GetThis.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\ObjectHelper.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassBase1.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassBase2.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassDerived.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\AndroidInterface.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\DesugarAndroidInterface$_CC.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\SelfRegistration.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\TestType.java" />
   </ItemGroup>
 
   <Import Project="Java.Interop-Tests.targets" />

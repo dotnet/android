@@ -13,8 +13,8 @@ namespace Java.InteropTests
 		[Test]
 		public unsafe void CallNonvirtualVoidMethod_WithBaseMethodIDAndDerivedType ()
 		{
-			using (var b = new JniType ("com/xamarin/interop/CallNonvirtualBase"))
-			using (var d = new JniType ("com/xamarin/interop/CallNonvirtualDerived")) {
+			using (var b = new JniType ("net/dot/jni/test/CallNonvirtualBase"))
+			using (var d = new JniType ("net/dot/jni/test/CallNonvirtualDerived")) {
 				var m = b.GetInstanceMethod ("method", "()V");
 				var f = b.GetInstanceField ("methodInvoked", "Z");
 

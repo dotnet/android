@@ -12,7 +12,7 @@ namespace Java.InteropTests
 	[JniTypeSignature (TestType.JniTypeName)]
 	public partial class TestType : JavaObject
 	{
-		internal    const    string         JniTypeName = "com/xamarin/interop/TestType";
+		internal    const    string         JniTypeName = "net/dot/jni/test/TestType";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (TestType));
 
 		[JniAddNativeMethodRegistrationAttribute]
@@ -52,13 +52,13 @@ namespace Java.InteropTests
 
 		public static unsafe TestType NewTestType ()
 		{
-			var o   = _members.StaticMethods.InvokeObjectMethod ("newTestType.()Lcom/xamarin/interop/TestType;", null);
+			var o   = _members.StaticMethods.InvokeObjectMethod ("newTestType.()Lnet/dot/jni/test/TestType;", null);
 			return JniEnvironment.Runtime.ValueManager.GetValue<TestType> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
 		public static unsafe TestType NewTestTypeWithUnboundConstructor ()
 		{
-			const string id = "newTestTypeWithUnboundConstructor.()Lcom/xamarin/interop/TestType;";
+			const string id = "newTestTypeWithUnboundConstructor.()Lnet/dot/jni/test/TestType;";
 			var o   = _members.StaticMethods.InvokeObjectMethod (id, null);
 			return JniEnvironment.Runtime.ValueManager.GetValue<TestType> (ref o, JniObjectReferenceOptions.CopyAndDispose);
 		}

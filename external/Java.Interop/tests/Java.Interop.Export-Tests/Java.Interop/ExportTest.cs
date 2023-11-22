@@ -30,7 +30,7 @@ delegate bool _JniMarshal_PPZBCSIJFDLLLLLDFJ_Z (
 
 namespace Java.InteropTests
 {
-	[JniTypeSignature ("com/xamarin/interop/export/ExportType")]
+	[JniTypeSignature ("net/dot/jni/test/ExportType")]
 	public class ExportTest : JavaObject
 	{
 		[JniAddNativeMethodRegistrationAttribute]

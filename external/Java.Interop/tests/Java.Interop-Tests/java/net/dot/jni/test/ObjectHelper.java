@@ -1,4 +1,4 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 public class ObjectHelper {
 	private ObjectHelper()

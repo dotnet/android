@@ -1,8 +1,8 @@
-package com.xamarin.java_interop.internal;
+package net.dot.jni.internal;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 /* package */ final class JavaProxyObject
 		extends java.lang.Object
@@ -10,7 +10,7 @@ import com.xamarin.java_interop.GCUserPeerable;
 {
 	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyObject, Java.Interop";
 	static {
-		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+		net.dot.jni.ManagedPeer.registerNativeMembers (
 				JavaProxyObject.class,
 				assemblyQualifiedName,
 				"");

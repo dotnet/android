@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <ItemGroup>
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyObject.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\internal\JavaProxyThrowable.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\GCUserPeerable.java" />
-    <CompileJavaInteropJar Include="java\com\xamarin\java_interop\ManagedPeer.java" />
+    <CompileJavaInteropJar Include="java\net\dot\jni\internal\JavaProxyObject.java" />
+    <CompileJavaInteropJar Include="java\net\dot\jni\internal\JavaProxyThrowable.java" />
+    <CompileJavaInteropJar Include="java\net\dot\jni\GCUserPeerable.java" />
+    <CompileJavaInteropJar Include="java\net\dot\jni\ManagedPeer.java" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="$(OutputPath)java-interop.jar">

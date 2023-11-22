@@ -7,7 +7,7 @@ namespace Java.InteropTests
 	[JniTypeSignature (CallNonvirtualBase.JniTypeName)]
 	public class CallNonvirtualBase : JavaObject
 	{
-		internal const string JniTypeName = "com/xamarin/interop/CallNonvirtualBase";
+		internal const string JniTypeName = "net/dot/jni/test/CallNonvirtualBase";
 
 		readonly static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (CallNonvirtualBase));
 

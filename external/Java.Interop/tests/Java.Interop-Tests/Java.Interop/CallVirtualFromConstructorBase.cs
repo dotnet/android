@@ -8,7 +8,7 @@ namespace Java.InteropTests {
 	[JniTypeSignature (CallVirtualFromConstructorBase.JniTypeName)]
 	public class CallVirtualFromConstructorBase : JavaObject {
 
-		internal    const   string          JniTypeName = "com/xamarin/interop/CallVirtualFromConstructorBase";
+		internal    const   string          JniTypeName = "net/dot/jni/test/CallVirtualFromConstructorBase";
 		readonly    static  JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (CallVirtualFromConstructorBase));
 
 		public override JniPeerMembers JniPeerMembers {

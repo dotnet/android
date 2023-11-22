@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class SelfRegistration implements GCUserPeerable {
 
@@ -12,7 +12,7 @@ public class SelfRegistration implements GCUserPeerable {
 
 	public SelfRegistration () {
 		if (SelfRegistration.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""

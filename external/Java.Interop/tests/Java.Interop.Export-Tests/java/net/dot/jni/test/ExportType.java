@@ -1,8 +1,8 @@
-package com.xamarin.interop.export;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class ExportType
 		implements GCUserPeerable
@@ -10,7 +10,7 @@ public class ExportType
 
 	static  final   String  assemblyQualifiedName   = "Java.InteropTests.ExportTest, Java.Interop.Export-Tests";
 	static {
-		com.xamarin.java_interop.ManagedPeer.registerNativeMembers (
+		net.dot.jni.ManagedPeer.registerNativeMembers (
 				ExportType.class,
 				assemblyQualifiedName,
 				"");

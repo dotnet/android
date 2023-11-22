@@ -284,7 +284,7 @@ java_interop_gc_bridge_new (JavaVM *jvm)
 		bridge.WeakReference_class      = static_cast<jclass>(lref_to_gref (env, WeakReference_class));
 	}
 
-	jclass      GCUserPeerable_class    = env->FindClass ("com/xamarin/java_interop/GCUserPeerable");
+	jclass      GCUserPeerable_class    = env->FindClass ("net/dot/jni/GCUserPeerable");
 	if (GCUserPeerable_class) {
 		bridge.GCUserPeerable_add       = env->GetMethodID (GCUserPeerable_class, "jiAddManagedReference",      "(Ljava/lang/Object;)V");
 		bridge.GCUserPeerable_clear     = env->GetMethodID (GCUserPeerable_class, "jiClearManagedReferences",   "()V");

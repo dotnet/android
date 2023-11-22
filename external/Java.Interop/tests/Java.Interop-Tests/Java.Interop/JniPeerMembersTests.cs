@@ -120,12 +120,30 @@ namespace Java.InteropTests
 		//  JNI DETECTED ERROR IN APPLICATION: can't call static int com.xamarin.interop.DesugarAndroidInterface$_CC.getClassName() with class java.lang.Class<com.xamarin.interop.AndroidInterface>
 		//      in call to CallStaticObjectMethodA
 		//
+		// This *also* aborts on JDK-17 + macOS + arm64:
+		//  FATAL ERROR in native method: Wrong object class or methodID passed to JNI call
+		//  Native frames: (J=compiled Java code, j=interpreted, Vv=VM code, C=native code)
+		//  V  [libjvm.dylib+0x4f718c]  jniCheck::validate_call(JavaThread*, _jclass*, _jmethodID*, _jobject*)+0x98
+		//  V  [libjvm.dylib+0x506474]  checked_jni_CallStaticObjectMethodA+0x150
+		//  C  [libjava-interop.dylib+0x5b18]  java_interop_jnienv_call_static_object_method_a+0x48
+		//  C  0x000000010798a8d8
+		//  C  0x000000010798a540
+		//  C  0x000000010798fa94
+		//  C  [libcoreclr.dylib+0x2db774]  CallDescrWorkerInternal+0x84
+		//  C  [libcoreclr.dylib+0x150db4]  CallDescrWorkerWithHandler(CallDescrData*, int)+0x74
+		//  C  [libcoreclr.dylib+0x1f92d0]  RuntimeMethodHandle::InvokeMethod(Object*, void**, SignatureNative*, bool)+0x79c
+		//  C  0x0000000104020ce4
+		//  …
+		//
 		// *Fascinating* the differences that can appear between JVM implementations
 		[Test]
 		public unsafe void DoesTheJmethodNeedToMatchDeclaringType ()
 		{
-			var iface   = new JniType ("com/xamarin/interop/AndroidInterface");
-			var desugar = new JniType ("com/xamarin/interop/DesugarAndroidInterface$_CC");
+			if (Environment.GetEnvironmentVariable ("CPUTYPE") is string cpu && cpu == "arm64") {
+				Assert.Ignore ("nope!");
+			}
+			var iface   = new JniType ("net/dot/jni/test/AndroidInterface");
+			var desugar = new JniType ("net/dot/jni/test/DesugarAndroidInterface$_CC");
 			var m       = desugar.GetStaticMethod ("getClassName", "()Ljava/lang/String;");
 
 			var r = JniEnvironment.StaticMethods.CallStaticObjectMethod (iface.PeerReference, m, null);
@@ -212,7 +230,7 @@ namespace Java.InteropTests
 
 	[JniTypeSignature (JniTypeName)]
 	class RenameClassBase : JavaObject {
-		internal    const       string          JniTypeName    = "com/xamarin/interop/RenameClassBase1";
+		internal    const       string          JniTypeName    = "net/dot/jni/test/RenameClassBase1";
 		static      readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (RenameClassBase));
 
 		public      override    JniPeerMembers  JniPeerMembers  => _members;
@@ -230,7 +248,7 @@ namespace Java.InteropTests
 
 	[JniTypeSignature (JniTypeName)]
 	class RenameClassDerived : RenameClassBase {
-		internal    new     const       string          JniTypeName    = "com/xamarin/interop/RenameClassDerived";
+		internal    new     const       string          JniTypeName    = "net/dot/jni/test/RenameClassDerived";
 		public RenameClassDerived ()
 		{
 		}
@@ -244,7 +262,7 @@ namespace Java.InteropTests
 #if NET
 	[JniTypeSignature (JniTypeName)]
 	interface IAndroidInterface : IJavaPeerable {
-		internal            const       string          JniTypeName    = "com/xamarin/interop/AndroidInterface";
+		internal            const       string          JniTypeName    = "net/dot/jni/test/AndroidInterface";
 
 		private static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
 

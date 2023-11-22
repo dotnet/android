@@ -1,4 +1,4 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 // When Android Desugaring is enabled -- the default when targeting API-25 and earlier --
 // certain Java constructs result in Java bytecode rewriting.

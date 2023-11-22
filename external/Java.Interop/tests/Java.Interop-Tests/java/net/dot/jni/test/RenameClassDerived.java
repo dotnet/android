@@ -1,8 +1,8 @@
-package com.xamarin.interop;
+package net.dot.jni.test;
 
 import java.util.ArrayList;
 
-import com.xamarin.java_interop.GCUserPeerable;
+import net.dot.jni.GCUserPeerable;
 
 public class RenameClassDerived
 	extends RenameClassBase2        // Note: does NOT match C# binding!  This is "post Bytecode rewriting"
@@ -15,7 +15,7 @@ public class RenameClassDerived
 	public RenameClassDerived () {
 		System.out.println("RenameClassDerived.<init>()");
 		if (RenameClassDerived.class == getClass ()) {
-			com.xamarin.java_interop.ManagedPeer.construct (
+			net.dot.jni.ManagedPeer.construct (
 					this,
 					assemblyQualifiedName,
 					""
