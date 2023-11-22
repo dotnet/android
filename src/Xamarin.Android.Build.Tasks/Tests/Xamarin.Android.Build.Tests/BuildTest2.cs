@@ -1338,49 +1338,65 @@ namespace App1
 						File.Exists (appPdbBinSrc),
 						$"{AppPdbName} must be copied to bin directory");
 
-					var fileNames = new List<string> {
-						"Mono.Android.pdb",
-						AppPdbName,
-						LibraryPdbName,
-						AppDllName,
-						LibraryDllName,
+					var fileNames = new List<(string path, bool existsInBin)> {
+						("Mono.Android.pdb", false),
+						(AppPdbName,         true),
+						(LibraryPdbName,     true),
+						(AppDllName,         true),
+						(LibraryDllName,     true),
 					};
 
 					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
 					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
 					foreach (string abi in b.GetBuildAbis ()) {
-						foreach (string fileName in fileNames) {
-							EnsureFilesAreTheSame (intermediate, outputPath, fileName, abi, helper, fileName.EndsWith (".dll", StringComparison.Ordinal));
+						foreach ((string fileName, bool existsInBin) in fileNames) {
+							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));
 						}
 					}
 				}
 			}
 
-			void EnsureFilesAreTheSame (string intermediatePath, string binPath, string fileName, string abi, ArchiveAssemblyHelper helper, bool uncompressIfNecessary)
+			void EnsureFilesAreTheSame (string intermediatePath, string? binPath, string fileName, string abi, ArchiveAssemblyHelper helper, bool uncompressIfNecessary)
 			{
-				string assetsPath = Path.Combine (intermediatePath, "android", "assets", abi, fileName);
-				Assert.IsTrue (File.Exists (assetsPath), $"{fileName} must be copied to Intermediate directory for ABI {abi}");
+				string assetsFilePath = Path.Combine (intermediatePath, "android", "assets", abi, fileName);
+				Assert.IsTrue (File.Exists (assetsFilePath), $"'{fileName}' must be copied to Intermediate directory for ABI {abi}");
 
-				string apkPath = MonoAndroidHelper.MakeZipArchivePath ("assemblies", abi, fileName);
-				Stream? apkFileStream = helper.ReadEntry (apkPath, MonoAndroidHelper.AbiToTargetArch (abi), uncompressIfNecessary);
-				Assert.NotNull (apkFileStream, $"'{apkPath}' not found in the APK");
+				using var assetsFileStream = File.OpenRead (assetsFilePath);
+				string apkEntryPath = MonoAndroidHelper.MakeZipArchivePath ("assemblies", abi, fileName);
+				using Stream? apkEntryStream = helper.ReadEntry (apkEntryPath, MonoAndroidHelper.AbiToTargetArch (abi), uncompressIfNecessary);
 
-				using var assetsFileStream = File.OpenRead (assetsPath);
-				FileAssert.AreEqual (apkFileStream, assetsFileStream, $"{0} and {1} should not differ", apkPath, assetsPath);
+				if (apkEntryStream != null) { // FastDev won't put assemblies in the APK
+					FileAssert.AreEqual (apkEntryStream, assetsFileStream, $"'{apkEntryPath}' and '{assetsFilePath}' should not differ");
+				}
 
-				// TODO: compare `bin` copies with those in `assets` and the apk. Right now:
-				// we mustn't compare against the pdb copy in `bin/` since we don't know which ABI was copied there, and the DLLs (and thus their debug data)
-				// may differ between ABIs/RIDs
+				if (String.IsNullOrEmpty (binPath)) {
+					return;
+				}
 
-				// assetsFileStream.Seek (0, SeekOrigin.Begin);
-				// apkFileStream.Seek (0, SeekOrigin.Begin);
+				// This is a bit fragile. We don't know which RID the `bin/` files were copied from, so we'll do our best to compare
+				// oranges to oranges by looking at file sizes before attempting the compare.  This is a very weak predicate, because
+				// the files may differ in e.g. the MVID and still have the same size.  The real fix for this is to have per-rid `bin/`
+				// subdirectories.
+				string binFilePath = Path.Combine (binPath, fileName);
+				Assert.IsTrue (File.Exists (binFilePath), $"'{fileName}' must be copied to the Output directory");
 
-				// string outputBinPath = Path.Combine (binPath, abi, fileName);
-				// using var outputBinStream = File.OpenRead (outputBinPath);
-				// FileAssert.AreEqual (assetsFileStream, outputBinStream, $"{0} and {1} should not differ", assetsPath, outputBinPath);
+				var assetsInfo = new FileInfo (assetsFilePath);
+				var binInfo = new FileInfo (binFilePath);
 
-				// outputBinStream.Seek (0, SeekOrigin.Begin);
-				// FileAssert.AreEqual (apkFileStream, outputBinStream,  $"{0} and {1} should not differ", apkPath, outputBinPath);
+				if (assetsInfo.Length != binInfo.Length) {
+					Assert.Warn ($"Ignoring comparison of '{binFilePath}' with '{assetsFilePath}' because their sizes differ");
+					return;
+				}
+
+				using var binFileStream = File.OpenRead (binFilePath);
+				assetsFileStream.Seek (0, SeekOrigin.Begin);
+				FileAssert.AreEqual (assetsFileStream, binFileStream, $"'{assetsFilePath}' and '{binFilePath}' should not differ");
+
+				if (apkEntryStream != null) {
+					binFileStream.Seek (0, SeekOrigin.Begin);
+					apkEntryStream.Seek (0, SeekOrigin.Begin);
+					FileAssert.AreEqual (apkEntryStream, binFileStream,  $"'{apkEntryPath}' and '{binFilePath}' should not differ");
+				}
 			}
 		}
 

@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
 
+		public bool DesignTimeBuild { get; set; }
+
 		public bool AndroidIncludeDebugSymbols { get; set; }
 
 		public bool PublishTrimmed { get; set; }
@@ -115,7 +117,11 @@ namespace Xamarin.Android.Tasks
 				SetAssemblyAbiMetadata (assembly, symbol);
 				SetDestinationSubDirectory (assembly, symbol);
 				assembly.SetMetadata ("FrameworkAssembly", IsFromAKnownRuntimePack (assembly).ToString ());
-				assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+
+				if (!DesignTimeBuild) {
+					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
+					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+				}
 				output.Add (assembly);
 			}
 		}

@@ -423,33 +423,42 @@ namespace UnnamedProject {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
 				var assemblyFile = "UnnamedProject.dll";
-				var assemblyPath = (!isRelease || setLinkModeNone) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
-				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
-					Assert.IsTrue (assembly != null);
-
-					var td = assembly.MainModule.GetType ("UnnamedProject.MyClass");
-					Assert.IsTrue (td != null);
-
-					var mr = td.GetMethods ().Where (m => m.Name == "MyMethod").FirstOrDefault ();
-					Assert.IsTrue (mr != null);
-
-					var md = mr.Resolve ();
-					Assert.IsTrue (md != null);
-
-					bool hasKeepAliveCall = false;
-					foreach (var i in md.Body.Instructions) {
-						if (i.OpCode.Code != Mono.Cecil.Cil.Code.Call)
-							continue;
-
-						if (!i.Operand.ToString ().Contains ("System.GC::KeepAlive"))
-							continue;
-
-						hasKeepAliveCall = true;
-						break;
+				if (!isRelease || setLinkModeNone) {
+					foreach (string abi in b.GetBuildAbis ()) {
+						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)));
 					}
-
-					Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
+				} else {
+					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile));
 				}
+			}
+
+			void CheckAssembly (string assemblyPath)
+			{
+				using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+				Assert.IsTrue (assembly != null);
+
+				var td = assembly.MainModule.GetType ("UnnamedProject.MyClass");
+				Assert.IsTrue (td != null);
+
+				var mr = td.GetMethods ().Where (m => m.Name == "MyMethod").FirstOrDefault ();
+				Assert.IsTrue (mr != null);
+
+				var md = mr.Resolve ();
+				Assert.IsTrue (md != null);
+
+				bool hasKeepAliveCall = false;
+				foreach (var i in md.Body.Instructions) {
+					if (i.OpCode.Code != Mono.Cecil.Cil.Code.Call)
+						continue;
+
+					if (!i.Operand.ToString ().Contains ("System.GC::KeepAlive"))
+						continue;
+
+					hasKeepAliveCall = true;
+					break;
+				}
+
+				Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
 			}
 		}
 

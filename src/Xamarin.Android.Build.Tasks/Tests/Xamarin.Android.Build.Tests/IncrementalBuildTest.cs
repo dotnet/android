@@ -430,14 +430,18 @@ namespace Lib2
 
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var filesToTouch = new [] {
+				var filesToTouch = new List<string> {
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
-					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
+
+				foreach (string abi in b.GetBuildAbis ()) {
+					filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
+				}
+
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);

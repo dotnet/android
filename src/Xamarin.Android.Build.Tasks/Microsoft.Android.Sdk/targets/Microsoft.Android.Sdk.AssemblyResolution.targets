@@ -124,6 +124,7 @@ _ResolveAssemblies MSBuild target.
     <!-- All assemblies must be per-RID, thus no `->Distinct()` on `InputAssemblies` or `ResolvedSymbols` items -->
     <ProcessAssemblies
         RuntimeIdentifiers="@(_RIDs)"
+        DesignTimeBuild="$(DesignTimeBuild)"
         InputAssemblies="@(_ResolvedAssemblyFiles)"
         InputJavaLibraries="@(_ResolvedJavaLibraries->Distinct())"
         ResolvedSymbols="@(_ResolvedSymbolFiles)"
@@ -180,6 +181,7 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_PrepareAssemblies"
       DependsOnTargets="$(_PrepareAssembliesDependsOnTargets)">
     <ItemGroup Condition=" '$(PublishTrimmed)' != 'true' ">
+      <!-- TODO: this must be done in LinkAssembliesNoShrink -->
       <_ResolvedAssemblies          Include="@(ResolvedAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"          Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedUserAssemblies      Include="@(ResolvedUserAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')"      Condition=" '%(DestinationSubPath)' != '' " />
       <_ResolvedFrameworkAssemblies Include="@(ResolvedFrameworkAssemblies->'$(MonoAndroidIntermediateAssemblyDir)%(DestinationSubPath)')" Condition=" '%(DestinationSubPath)' != '' " />
