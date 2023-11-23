@@ -102,6 +102,8 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
+				Run (useMarshalMethods);
+
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
 				using (XAAssemblyResolver res = MakeResolver (useMarshalMethods)) {
@@ -139,6 +141,112 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return res;
+		}
+
+		void Run (bool useMarshalMethods)
+		{
+			// We will process each architecture completely separately as both type maps and marshal methods are strictly per-architecture and
+			// the assemblies should be processed strictly per architecture.  Generation of JCWs, and the manifest are ABI-agnostic.
+			// We will generate them only for the first architecture, whichever it is.
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch = GetPerArchAssemblies (ResolvedAssemblies);
+
+			Dictionary<string, ITaskItem>? firstArchAssemblies = null;
+			AndroidTargetArch firstArch = AndroidTargetArch.None;
+			foreach (var kvp in allAssembliesPerArch) {
+				if (firstArchAssemblies == null) {
+					firstArchAssemblies = kvp.Value;
+					firstArch = kvp.Key;
+					continue;
+				}
+
+				EnsureDictionariesHaveTheSameEntries (firstArchAssemblies, kvp.Value, kvp.Key);
+			}
+
+			// Should "never" happen...
+			if (firstArch == AndroidTargetArch.None) {
+				throw new InvalidOperationException ("Internal error: no per-architecture assemblies found?");
+			}
+
+			// ...just as this should "never" happen...
+			if (allAssembliesPerArch.Count != SupportedAbis.Length) {
+				throw new InvalidOperationException ($"Internal error: number of architectures ({allAssembliesPerArch.Count}) must equal the number of target ABIs ({SupportedAbis.Length})");
+			}
+
+			// ...or this...
+			foreach (string abi in SupportedAbis) {
+				AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+				if (!allAssembliesPerArch.ContainsKey (arch)) {
+					throw new InvalidOperationException ($"Internal error: no assemblies for architecture '{arch}', which corresponds to target abi '{abi}'");
+				}
+			}
+
+			// ...as well as this
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> userAssembliesPerArch = GetPerArchAssemblies (ResolvedUserAssemblies);
+			foreach (var kvp in userAssembliesPerArch) {
+				if (!allAssembliesPerArch.TryGetValue (kvp.Key, out Dictionary<string, ITaskItem> allAssemblies)) {
+					throw new InvalidOperationException ($"Internal error: found user assemblies for architecture '{kvp.Key}' which isn't found in ResolvedAssemblies");
+				}
+
+				foreach (var asmKvp in kvp.Value) {
+					if (!allAssemblies.ContainsKey (asmKvp.Key)) {
+						throw new InvalidOperationException ($"Internal error: user assembly '{asmKvp.Value}' not found in ResolvedAssemblies");
+					}
+				}
+			}
+
+			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
+			var cache = new TypeDefinitionCache ();
+			(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (cache, firstArchAssemblies, userAssembliesPerArch[firstArch], useMarshalMethods);
+
+			void EnsureDictionariesHaveTheSameEntries (Dictionary<string, ITaskItem> template, Dictionary<string, ITaskItem> dict, AndroidTargetArch arch)
+			{
+				if (dict.Count != template.Count) {
+					throw new InvalidOperationException ($"Internal error: architecture '{arch}' should have {template.Count} assemblies, however it has {dict.Count}");
+				}
+
+				foreach (var kvp in template) {
+					if (!dict.ContainsKey (kvp.Key)) {
+						throw new InvalidOperationException ($"Internal error: architecture '{arch}' does not have assembly '{kvp.Key}'");
+					}
+				}
+			}
+
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (ITaskItem[] input)
+			{
+				var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
+				foreach (ITaskItem assembly in input) {
+					AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+					if (!assembliesPerArch.TryGetValue (arch, out Dictionary<string, ITaskItem> assemblies)) {
+						assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+						assembliesPerArch.Add (arch, assemblies);
+					}
+					assemblies.Add (Path.GetFileName (assembly.ItemSpec), assembly);
+				}
+
+				return assembliesPerArch;
+			}
+		}
+
+		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
+		{
+			XAAssemblyResolver res = MakeResolver (useMarshalMethods);
+			var scanner = new XAJavaTypeScanner (Log, cache) {
+				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
+			};
+			List<JavaType> allJavaTypes = scanner.GetJavaTypes (assemblies.Values, res);
+			var javaTypesForJCW = new List<JavaType> ();
+
+			foreach (JavaType jt in allJavaTypes) {
+				// When marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
+				// build and stored in a jar file.
+				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
+					continue;
+				}
+				javaTypesForJCW.Add (jt);
+			}
+
+			return (allJavaTypes, javaTypesForJCW);
 		}
 
 		void Run (XAAssemblyResolver res, bool useMarshalMethods)
@@ -218,7 +326,7 @@ namespace Xamarin.Android.Tasks
 			var javaTypes = new List<JavaType> ();
 
 			foreach (JavaType jt in allJavaTypes) {
-				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
+				// When marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
 				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
