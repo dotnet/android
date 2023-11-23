@@ -99,10 +99,12 @@ projects.
   <Target Name="_GetJavaPlatformJar">
     <GetJavaPlatformJar
         AndroidSdkPlatform="$(_AndroidApiLevel)"
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"
         BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+        TargetFramework="$(TargetFramework)"
     >
       <Output TaskParameter="JavaPlatformJarPath" PropertyName="JavaPlatformJarPath" />
       <Output TaskParameter="TargetSdkVersion"    PropertyName="_AndroidTargetSdkVersion" />
