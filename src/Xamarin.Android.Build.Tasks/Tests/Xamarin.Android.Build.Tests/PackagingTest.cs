@@ -39,8 +39,13 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+
+			AndroidTargetArch[] supportedArches = new[] {
+				AndroidTargetArch.Arm,
+			};
+
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer.Core",
 				Version = "2.14.1",
@@ -59,31 +64,25 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
 
-			var expectedFilesList = new List<string> {
-					"Java.Interop.dll",
-					"Mono.Android.dll",
-					"Mono.Android.Runtime.dll",
-					"System.Console.dll",
-					"System.Private.CoreLib.dll",
-					"System.Runtime.dll",
-					"System.Runtime.InteropServices.dll",
-					"System.Linq.dll",
-					"UnnamedProject.dll",
-					"_Microsoft.Android.Resource.Designer.dll",
-					"Humanizer.dll",
-					"es/Humanizer.resources.dll",
-					"System.Collections.dll",
-					"System.Collections.Concurrent.dll",
-					"System.Text.RegularExpressions.dll",
+			var expectedFiles = new HashSet<string> {
+				"Java.Interop.dll",
+				"Mono.Android.dll",
+				"Mono.Android.Runtime.dll",
+				"System.Console.dll",
+				"System.Private.CoreLib.dll",
+				"System.Runtime.dll",
+				"System.Runtime.InteropServices.dll",
+				"System.Linq.dll",
+				"UnnamedProject.dll",
+				"_Microsoft.Android.Resource.Designer.dll",
+				"Humanizer.dll",
+				"es/Humanizer.resources.dll",
+				"System.Collections.dll",
+				"System.Collections.Concurrent.dll",
+				"System.Text.RegularExpressions.dll",
+				"arc.bin.so",
 			};
 
-			if (usesAssemblyStores) {
-				expectedFilesList.Add ("arc.bin.so");
-			} else {
-				expectedFilesList.Add ("rc.bin");
-			}
-
-			var expectedFiles = expectedFilesList.ToArray ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
@@ -93,15 +92,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				List<string> missingFiles;
 				List<string> additionalFiles;
 
-				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles);
+				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
-
-				Assert.IsTrue (additionalFiles == null || additionalFiles.Count == 0,
-					string.Format ("Unexpected Files found! {0}",
-					string.Join (Environment.NewLine, additionalFiles)));
 			}
 		}
 

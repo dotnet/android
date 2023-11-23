@@ -63,6 +63,13 @@ partial class MonoAndroidHelper
 		{ RuntimeIdentifier.X64,   AndroidAbi.X64 },
 	};
 
+	static readonly Dictionary<string, AndroidTargetArch> RidToArchMap = new Dictionary<string, AndroidTargetArch> (StringComparer.OrdinalIgnoreCase) {
+		{ RuntimeIdentifier.Arm32, AndroidTargetArch.Arm },
+		{ RuntimeIdentifier.Arm64, AndroidTargetArch.Arm64 },
+		{ RuntimeIdentifier.X86,   AndroidTargetArch.X86 },
+		{ RuntimeIdentifier.X64,   AndroidTargetArch.X86_64 },
+	};
+
 	static readonly Dictionary<AndroidTargetArch, string> ArchToRidMap = new Dictionary<AndroidTargetArch, string> {
 		{ AndroidTargetArch.Arm,    RuntimeIdentifier.Arm32 },
 		{ AndroidTargetArch.Arm64,  RuntimeIdentifier.Arm64 },
@@ -102,6 +109,15 @@ partial class MonoAndroidHelper
 		};
 
 		return abi;
+	}
+
+	public static AndroidTargetArch RidToArch (string rid)
+	{
+		if (!RidToArchMap.TryGetValue (rid, out AndroidTargetArch arch)) {
+			throw new NotSupportedException ($"Internal error: unsupported Runtime Identifier '{rid}'");
+		};
+
+		return arch;
 	}
 
 	public static string ArchToRid (AndroidTargetArch arch)

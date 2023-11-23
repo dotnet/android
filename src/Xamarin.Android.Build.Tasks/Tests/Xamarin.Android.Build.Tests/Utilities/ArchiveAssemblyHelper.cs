@@ -201,6 +201,11 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		AssemblyStoreExplorer? SelectExplorer (IList<AssemblyStoreExplorer>? explorers, string rid)
+		{
+			return SelectExplorer (explorers, MonoAndroidHelper.RidToArch (rid));
+		}
+
 		AssemblyStoreExplorer? SelectExplorer (IList<AssemblyStoreExplorer>? explorers, AndroidTargetArch arch)
 		{
 			if (explorers == null || explorers.Count == 0) {
@@ -348,36 +353,92 @@ namespace Xamarin.Android.Build.Tests
 			return ArchiveContains (ListArchiveContents (assembliesRootDir, forceRefresh), entryPath, arch);
 		}
 
-		public void Contains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch = AndroidTargetArch.None)
+		public void Contains (ICollection<string> fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, IEnumerable<AndroidTargetArch>? targetArches = null)
 		{
 			if (fileNames == null) {
 				throw new ArgumentNullException (nameof (fileNames));
 			}
 
-			if (fileNames.Length == 0) {
+			if (fileNames.Count == 0) {
 				throw new ArgumentException ("must not be empty", nameof (fileNames));
 			}
 
 			if (useAssemblyStores) {
-				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, arch);
+				StoreContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, targetArches);
 			} else {
-				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, arch);
+				ArchiveContains (fileNames, out existingFiles, out missingFiles, out additionalFiles, targetArches);
 			}
 		}
 
-		void ArchiveContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
+		List<AndroidTargetArch> GetSupportedArches (IEnumerable<AndroidTargetArch>? runtimeIdentifiers)
 		{
-			// TODO: make it work with ABIs when arch == None
-			using (var zip = ZipHelper.OpenZip (archivePath)) {
-				existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
-				missingFiles = fileNames.Where (x => !zip.ContainsEntry (assembliesRootDir + x)).ToList ();
-				additionalFiles = existingFiles.Where (x => !fileNames.Contains (x.Replace (assembliesRootDir, string.Empty))).ToList ();
+			var rids = new List<AndroidTargetArch> ();
+			if (runtimeIdentifiers != null) {
+				rids.AddRange (runtimeIdentifiers);
+			}
+
+			if (rids.Count == 0) {
+				rids.AddRange (MonoAndroidHelper.SupportedTargetArchitectures);
+			}
+
+			return rids;
+		}
+
+		void ListFiles (List<string> existingFiles, List<string> missingFiles, List<string> additionalFiles)
+		{
+			Console.WriteLine ("Archive contents:");
+			ListFiles ("existing files", existingFiles);
+			ListFiles ("missing files", missingFiles);
+			ListFiles ("additional files", additionalFiles);
+
+			void ListFiles (string label, List<string> list)
+			{
+				Console.WriteLine ($"  {label}:");
+				if (list.Count == 0) {
+					Console.WriteLine ("    none");
+					return;
+				}
+
+				foreach (string file in list) {
+					Console.WriteLine ($"    {file}");
+				}
 			}
 		}
 
-		void StoreContains (string[] fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, AndroidTargetArch arch)
+		(string prefixAssemblies, string prefixLib) GetArchivePrefixes (string abi) => ($"{MonoAndroidHelper.MakeZipArchivePath (assembliesRootDir, abi)}/", $"lib/{abi}/");
+
+		void ArchiveContains (ICollection<string> fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, IEnumerable<AndroidTargetArch>? targetArches = null)
 		{
-			// TODO: make it work with ABIs when arch == None
+			using var zip = ZipHelper.OpenZip (archivePath);
+			existingFiles = zip.Where (a => a.FullName.StartsWith (assembliesRootDir, StringComparison.InvariantCultureIgnoreCase)).Select (a => a.FullName).ToList ();
+			existingFiles.AddRange (zip.Where (a => a.FullName.StartsWith ("lib/", StringComparison.OrdinalIgnoreCase)).Select (a => a.FullName));
+
+			List<AndroidTargetArch> arches = GetSupportedArches (targetArches);
+
+			missingFiles = new List<string> ();
+			additionalFiles = new List<string> ();
+			foreach (AndroidTargetArch arch in arches) {
+				string abi = MonoAndroidHelper.ArchToAbi (arch);
+				missingFiles.AddRange (GetMissingFilesForAbi (abi));
+				additionalFiles.AddRange (GetAdditionalFilesForAbi (abi, existingFiles));
+			}
+			ListFiles (existingFiles, missingFiles, additionalFiles);
+
+			IEnumerable<string> GetMissingFilesForAbi (string abi)
+			{
+				(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (abi);
+				return fileNames.Where (x => !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, x)) && !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, x)));
+			}
+
+			IEnumerable<string> GetAdditionalFilesForAbi (string abi, List<string> existingFiles)
+			{
+				(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (abi);
+				return existingFiles.Where (x => !fileNames.Contains (x.Replace (prefixAssemblies, string.Empty)) && !fileNames.Contains (x.Replace (prefixLib, String.Empty)));
+			}
+		}
+
+		void StoreContains (ICollection<string> fileNames, out List<string> existingFiles, out List<string> missingFiles, out List<string> additionalFiles, IEnumerable<AndroidTargetArch>? targetArches = null)
+		{
 			var assemblyNames = fileNames.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var configFiles = fileNames.Where (x => x.EndsWith (".config", StringComparison.OrdinalIgnoreCase)).ToList ();
 			var debugFiles = fileNames.Where (x => x.EndsWith (".pdb", StringComparison.OrdinalIgnoreCase)).ToList ();
@@ -387,50 +448,61 @@ namespace Xamarin.Android.Build.Tests
 			missingFiles = new List<string> ();
 			additionalFiles = new List<string> ();
 
-			if (otherFiles.Count > 0) {
-				using (var zip = ZipHelper.OpenZip (archivePath)) {
+			using ZipArchive? zip = ZipHelper.OpenZip (archivePath);
+
+			List<AndroidTargetArch> arches = GetSupportedArches (targetArches);
+			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
+
+			foreach (AndroidTargetArch arch in arches) {
+				AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
+				if (explorer == null) {
+					continue;
+				}
+
+				if (otherFiles.Count > 0) {
+					(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (MonoAndroidHelper.ArchToAbi (arch));
+
 					foreach (string file in otherFiles) {
-						string fullPath = assembliesRootDir + file;
+						string fullPath = prefixAssemblies + file;
+						if (zip.ContainsEntry (fullPath)) {
+							existingFiles.Add (file);
+						}
+
+						fullPath = prefixLib + file;
 						if (zip.ContainsEntry (fullPath)) {
 							existingFiles.Add (file);
 						}
 					}
 				}
-			}
 
-			(IList<AssemblyStoreExplorer>? explorers, string? errorMessage) = AssemblyStoreExplorer.Open (archivePath);
-			AssemblyStoreExplorer? explorer = SelectExplorer (explorers, arch);
-			if (explorer == null) {
-				return;
-			}
-
-			foreach (var f in explorer.AssembliesByName) {
-				Console.WriteLine ($"DEBUG!\tKey:{f.Key}");
-			}
-
-			if (explorer.AssembliesByName.Count != 0) {
-				existingFiles.AddRange (explorer.AssembliesByName.Keys);
-
-				// We need to fake config and debug files since they have no named entries in the storeReader
-				foreach (string file in configFiles) {
-					AssemblyStoreItem asm = GetStoreAssembly (file);
-					if (asm == null) {
-						continue;
-					}
-
-					if (asm.ConfigOffset > 0) {
-						existingFiles.Add (file);
-					}
+				foreach (var f in explorer.AssembliesByName) {
+					Console.WriteLine ($"DEBUG!\tKey:{f.Key}");
 				}
 
-				foreach (string file in debugFiles) {
-					AssemblyStoreItem asm = GetStoreAssembly (file);
-					if (asm == null) {
-						continue;
+				if (explorer.AssembliesByName.Count != 0) {
+					existingFiles.AddRange (explorer.AssembliesByName.Keys);
+
+					// We need to fake config and debug files since they have no named entries in the storeReader
+					foreach (string file in configFiles) {
+						AssemblyStoreItem asm = GetStoreAssembly (explorer, file);
+						if (asm == null) {
+							continue;
+						}
+
+						if (asm.ConfigOffset > 0) {
+							existingFiles.Add (file);
+						}
 					}
 
-					if (asm.DebugOffset > 0) {
-						existingFiles.Add (file);
+					foreach (string file in debugFiles) {
+						AssemblyStoreItem asm = GetStoreAssembly (explorer, file);
+						if (asm == null) {
+							continue;
+						}
+
+						if (asm.DebugOffset > 0) {
+							existingFiles.Add (file);
+						}
 					}
 				}
 			}
@@ -443,8 +515,9 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			additionalFiles = existingFiles.Where (x => !fileNames.Contains (x)).ToList ();
+			ListFiles (existingFiles, missingFiles, additionalFiles);
 
-			AssemblyStoreItem GetStoreAssembly (string file)
+			AssemblyStoreItem GetStoreAssembly (AssemblyStoreExplorer explorer, string file)
 			{
 				string assemblyName = Path.GetFileNameWithoutExtension (file);
 				if (!explorer.AssembliesByName.TryGetValue (assemblyName, out AssemblyStoreItem asm) || asm == null) {
