@@ -9,6 +9,8 @@ namespace Xamarin.Android.Tasks
 
 		public MarshalMethodsState (IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
 		{
+			MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified ethods in MarshalMethodsState ctor", marshalMethods);
+
 			MarshalMethods = marshalMethods ?? throw new ArgumentNullException (nameof (marshalMethods));
 		}
 	}

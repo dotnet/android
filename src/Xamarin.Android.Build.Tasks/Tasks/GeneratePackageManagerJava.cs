@@ -389,6 +389,7 @@ namespace Xamarin.Android.Tasks
 			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
 
 			if (enableMarshalMethods) {
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods in GeneratePackageManagerJava (from registered state)", marshalMethodsState.MarshalMethods!);
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
 					assemblyCount,
 					uniqueAssemblyNames,

@@ -256,6 +256,8 @@ namespace Xamarin.Android.Tasks
 		/// </summary>
 		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
 		{
+			MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods in MarshalMethodsNativeAssemblyGenerator ctor", marshalMethods);
+
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			this.marshalMethods = marshalMethods;
@@ -305,6 +307,7 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> entryList in marshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;
 				foreach (MarshalMethodEntry entry in entryList) {
+					logger.LogDebugMessage ($"MM: processing {entry.DeclaringType.FullName} {entry.NativeCallback.FullName}");
 					ProcessAndAddMethod (allMethods, entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
 				}
 			}
@@ -654,6 +657,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
+			logger.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
 			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 

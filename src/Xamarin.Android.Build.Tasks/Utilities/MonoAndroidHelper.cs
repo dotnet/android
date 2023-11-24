@@ -583,5 +583,66 @@ namespace Xamarin.Android.Tasks
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
 		}
+
+		public static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, bool validate)
+		{
+			var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
+			foreach (ITaskItem assembly in input) {
+				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (!assembliesPerArch.TryGetValue (arch, out Dictionary<string, ITaskItem> assemblies)) {
+					assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+					assembliesPerArch.Add (arch, assemblies);
+				}
+				assemblies.Add (Path.GetFileName (assembly.ItemSpec), assembly);
+			}
+
+			if (!validate) {
+				return assembliesPerArch;
+			}
+
+			Dictionary<string, ITaskItem>? firstArchAssemblies = null;
+			AndroidTargetArch firstArch = AndroidTargetArch.None;
+			foreach (var kvp in assembliesPerArch) {
+				if (firstArchAssemblies == null) {
+					firstArchAssemblies = kvp.Value;
+					firstArch = kvp.Key;
+					continue;
+				}
+
+				EnsureDictionariesHaveTheSameEntries (firstArchAssemblies, kvp.Value, kvp.Key);
+			}
+
+			// Should "never" happen...
+			if (firstArch == AndroidTargetArch.None) {
+				throw new InvalidOperationException ("Internal error: no per-architecture assemblies found?");
+			}
+
+			return assembliesPerArch;
+
+			void EnsureDictionariesHaveTheSameEntries (Dictionary<string, ITaskItem> template, Dictionary<string, ITaskItem> dict, AndroidTargetArch arch)
+			{
+				if (dict.Count != template.Count) {
+					throw new InvalidOperationException ($"Internal error: architecture '{arch}' should have {template.Count} assemblies, however it has {dict.Count}");
+				}
+
+				foreach (var kvp in template) {
+					if (!dict.ContainsKey (kvp.Key)) {
+						throw new InvalidOperationException ($"Internal error: architecture '{arch}' does not have assembly '{kvp.Key}'");
+					}
+				}
+			}
+		}
+
+		internal static void DumpMarshalMethodsToConsole (string heading, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
+		{
+			Console.WriteLine ();
+			Console.WriteLine ($"{heading}:");
+			foreach (var kvp in marshalMethods) {
+				Console.WriteLine ($"  {kvp.Key}");
+				foreach (var method in kvp.Value) {
+					Console.WriteLine ($"    {method.DeclaringType.FullName} {method.NativeCallback.FullName}");
+				}
+			}
+		}
 	}
 }

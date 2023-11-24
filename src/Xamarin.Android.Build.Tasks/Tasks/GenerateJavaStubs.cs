@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
-				Run (useMarshalMethods);
+				// Run (useMarshalMethods);
 
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
@@ -145,29 +145,15 @@ namespace Xamarin.Android.Tasks
 
 		void Run (bool useMarshalMethods)
 		{
+			PackageNamingPolicy pnp;
+			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
+
 			// We will process each architecture completely separately as both type maps and marshal methods are strictly per-architecture and
 			// the assemblies should be processed strictly per architecture.  Generation of JCWs, and the manifest are ABI-agnostic.
 			// We will generate them only for the first architecture, whichever it is.
-			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch = GetPerArchAssemblies (ResolvedAssemblies);
-
-			Dictionary<string, ITaskItem>? firstArchAssemblies = null;
-			AndroidTargetArch firstArch = AndroidTargetArch.None;
-			foreach (var kvp in allAssembliesPerArch) {
-				if (firstArchAssemblies == null) {
-					firstArchAssemblies = kvp.Value;
-					firstArch = kvp.Key;
-					continue;
-				}
-
-				EnsureDictionariesHaveTheSameEntries (firstArchAssemblies, kvp.Value, kvp.Key);
-			}
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch = MonoAndroidHelper.GetPerArchAssemblies (ResolvedAssemblies, validate: true);
 
 			// Should "never" happen...
-			if (firstArch == AndroidTargetArch.None) {
-				throw new InvalidOperationException ("Internal error: no per-architecture assemblies found?");
-			}
-
-			// ...just as this should "never" happen...
 			if (allAssembliesPerArch.Count != SupportedAbis.Length) {
 				throw new InvalidOperationException ($"Internal error: number of architectures ({allAssembliesPerArch.Count}) must equal the number of target ABIs ({SupportedAbis.Length})");
 			}
@@ -181,7 +167,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// ...as well as this
-			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> userAssembliesPerArch = GetPerArchAssemblies (ResolvedUserAssemblies);
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> userAssembliesPerArch = MonoAndroidHelper.GetPerArchAssemblies (ResolvedUserAssemblies, validate: true);
 			foreach (var kvp in userAssembliesPerArch) {
 				if (!allAssembliesPerArch.TryGetValue (kvp.Key, out Dictionary<string, ITaskItem> allAssemblies)) {
 					throw new InvalidOperationException ($"Internal error: found user assemblies for architecture '{kvp.Key}' which isn't found in ResolvedAssemblies");
@@ -195,41 +181,34 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
-			var cache = new TypeDefinitionCache ();
-			(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (cache, firstArchAssemblies, userAssembliesPerArch[firstArch], useMarshalMethods);
+			MarshalMethodsClassifier? classifier = null;
+			AndroidTargetArch firstArch = AndroidTargetArch.None;
+			bool archAgnosticDone = false;
 
-			void EnsureDictionariesHaveTheSameEntries (Dictionary<string, ITaskItem> template, Dictionary<string, ITaskItem> dict, AndroidTargetArch arch)
-			{
-				if (dict.Count != template.Count) {
-					throw new InvalidOperationException ($"Internal error: architecture '{arch}' should have {template.Count} assemblies, however it has {dict.Count}");
-				}
+			foreach (var kvp in allAssembliesPerArch) {
+				AndroidTargetArch arch = kvp.Key;
+				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
 
-				foreach (var kvp in template) {
-					if (!dict.ContainsKey (kvp.Key)) {
-						throw new InvalidOperationException ($"Internal error: architecture '{arch}' does not have assembly '{kvp.Key}'");
+				if (!archAgnosticDone) {
+					// TODO: resolver must be modified to search ONLY the arch-specific dirs. The directories need to come from @(ResolvedAssemblies), because we
+					// mustn't use FrameworkDirectories when linking is enabled.  @(ResolvedAssemblies) will contain **all** the relevant assembly paths, linked
+					// or not, so that's where we should look for references.  This **has to** be done on per-arch basis.
+					XAAssemblyResolver res = MakeResolver (useMarshalMethods);
+					var cache = new TypeDefinitionCache ();
+					(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (res, cache, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods);
+
+					if (!GenerateJavaSourcesAndMaybeClassifyMarshalMethods (res, javaTypesForJCW, cache, useMarshalMethods, out classifier)) {
+						return;
 					}
+					firstArch = arch;
+					archAgnosticDone = true;
 				}
-			}
-
-			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (ITaskItem[] input)
-			{
-				var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
-				foreach (ITaskItem assembly in input) {
-					AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
-					if (!assembliesPerArch.TryGetValue (arch, out Dictionary<string, ITaskItem> assemblies)) {
-						assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
-						assembliesPerArch.Add (arch, assemblies);
-					}
-					assemblies.Add (Path.GetFileName (assembly.ItemSpec), assembly);
-				}
-
-				return assembliesPerArch;
+				RewriteMarshalMethods (classifier, firstArch, allAssembliesPerArch);
 			}
 		}
 
-		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
+		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
 		{
-			XAAssemblyResolver res = MakeResolver (useMarshalMethods);
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
@@ -247,6 +226,37 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return (allJavaTypes, javaTypesForJCW);
+		}
+
+		void RewriteMarshalMethods (MarshalMethodsClassifier? classifier, AndroidTargetArch classifiedArch, Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch)
+		{
+			if (classifier == null) {
+				return;
+			}
+
+			var mirrorHelper = new MarshalMethodsMirrorHelper (classifier, classifiedArch, allAssembliesPerArch, Log);
+			IDictionary<AndroidTargetArch, ArchitectureMarshalMethods> perArchMarshalMethods = mirrorHelper.Reflect ();
+
+			// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
+			// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
+			// We don't care about those generated by us, since they won't contain the `XA_BROKEN_EXCEPTION_TRANSITIONS` variable we look for.
+			var environmentParser = new EnvironmentFilesParser ();
+
+			//Dictionary<AssemblyDefinition, string> assemblyPaths = AddMethodsFromAbiSpecificAssemblies (classifier, res, abiSpecificAssembliesByPath);
+
+			// var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, assemblyPaths, Log);
+			// rewriter.Rewrite (res, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
+		}
+
+		bool GenerateJavaSourcesAndMaybeClassifyMarshalMethods (XAAssemblyResolver res, List<JavaType> javaTypesForJCW, TypeDefinitionCache cache, bool useMarshalMethods, out MarshalMethodsClassifier? classifier)
+		{
+			if (useMarshalMethods) {
+				classifier = new MarshalMethodsClassifier (cache, res, Log);
+			} else {
+				classifier = null;
+			}
+
+			return CreateJavaSources (javaTypesForJCW, cache, classifier, useMarshalMethods);
 		}
 
 		void Run (XAAssemblyResolver res, bool useMarshalMethods)
@@ -322,17 +332,37 @@ namespace Xamarin.Android.Tasks
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
-			var javaTypes = new List<JavaType> ();
 
+			Console.WriteLine ("Will scan for Java types in the following assemblies:");
+			foreach (var asm in allTypemapAssemblies.Values) {
+				Console.WriteLine ($"  {asm}");
+			}
+			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
+			Console.WriteLine ();
+			Console.WriteLine ("All Java types:");
+			foreach (JavaType jt in allJavaTypes) {
+				Console.WriteLine ($"  {jt.Type.FullName}");
+			}
+
+			var javaTypes = new List<JavaType> ();
+			Console.WriteLine ();
+			Console.WriteLine ($"Checking for types to reject (useMarshalMethods == {useMarshalMethods})");
 			foreach (JavaType jt in allJavaTypes) {
 				// When marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
 				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
+					Console.WriteLine ($"  rejecting: {jt.Type.FullName} ({jt.Type.Module.Assembly} => {jt.Type.Module.Assembly.Name.Name}");
+					Console.WriteLine ($"    if statement: {!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)} || {JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)}");
 					continue;
 				}
 				javaTypes.Add (jt);
+			}
+
+			Console.WriteLine ();
+			Console.WriteLine ("Post-processed Java types:");
+			foreach (JavaType jt in javaTypes) {
+				Console.WriteLine ($"  {jt.Type.FullName}");
 			}
 
 			MarshalMethodsClassifier classifier = null;
@@ -346,6 +376,8 @@ namespace Xamarin.Android.Tasks
 				return;
 
 			if (useMarshalMethods) {
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods:", classifier.MarshalMethods);
+
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 				// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
 				// We don't care about those generated by us, since they won't contain the `XA_BROKEN_EXCEPTION_TRANSITIONS` variable we look for.
@@ -353,8 +385,12 @@ namespace Xamarin.Android.Tasks
 
 				Dictionary<AssemblyDefinition, string> assemblyPaths = AddMethodsFromAbiSpecificAssemblies (classifier, res, abiSpecificAssembliesByPath);
 
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after AddMethodsFromAbiSpecificAssemblies:",  classifier.MarshalMethods);
+
 				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, assemblyPaths, Log);
 				rewriter.Rewrite (res, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
+
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after rewriter (from classifier.MarshalMethods)", classifier.MarshalMethods);
 			}
 
 			// Step 3 - Generate type maps
@@ -639,7 +675,11 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (useMarshalMethods) {
-				BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (MarshalMethodsRegisterTaskKey), new MarshalMethodsState (classifier.MarshalMethods), RegisteredTaskObjectLifetime.Build);
+				var state = new MarshalMethodsState (classifier.MarshalMethods);
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after rewriter (CreateJavaSources/state)", state.MarshalMethods);
+				BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (MarshalMethodsRegisterTaskKey), state, RegisteredTaskObjectLifetime.Build);
+				var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
+				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after state registered and retrieved (CreateJavaSources/state)", state.MarshalMethods);
 			}
 
 			return ok;
