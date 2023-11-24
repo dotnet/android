@@ -13,7 +13,9 @@ namespace Java.IO
     public partial class BufferedInputStream : Java.IO.FilterInputStream
     {
         protected BufferedInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public BufferedInputStream(Java.IO.InputStream? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;I)V")]
         public BufferedInputStream(Java.IO.InputStream? @in, int size) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         protected Java.Interop.JavaSByteArray? Buf { get { throw null; } set { } }
         protected int Count { get { throw null; } set { } }
@@ -28,7 +30,9 @@ namespace Java.IO
     public partial class BufferedOutputStream : Java.IO.FilterOutputStream
     {
         protected BufferedOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public BufferedOutputStream(Java.IO.OutputStream? @out) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;I)V")]
         public BufferedOutputStream(Java.IO.OutputStream? @out, int size) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         protected Java.Interop.JavaSByteArray? Buf { get { throw null; } set { } }
         protected int Count { get { throw null; } set { } }
@@ -40,7 +44,9 @@ namespace Java.IO
     public partial class BufferedReader : Java.IO.Reader
     {
         protected BufferedReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;)V")]
         public BufferedReader(Java.IO.Reader? @in) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;I)V")]
         public BufferedReader(Java.IO.Reader? @in, int sz) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -56,7 +62,9 @@ namespace Java.IO
     public partial class BufferedWriter : Java.IO.Writer
     {
         protected BufferedWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Writer;)V")]
         public BufferedWriter(Java.IO.Writer? @out) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Writer;I)V")]
         public BufferedWriter(Java.IO.Writer? @out, int sz) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -73,7 +81,9 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ByteArrayInputStream", GenerateJavaPeer=false)]
     public partial class ByteArrayInputStream : Java.IO.InputStream
     {
+        [Java.Interop.JniConstructorSignatureAttribute("([B)V")]
         public ByteArrayInputStream(Java.Interop.JavaSByteArray? buf) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BII)V")]
         public ByteArrayInputStream(Java.Interop.JavaSByteArray? buf, int offset, int length) { }
         protected ByteArrayInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         protected Java.Interop.JavaSByteArray? Buf { get { throw null; } set { } }
@@ -89,8 +99,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ByteArrayOutputStream", GenerateJavaPeer=false)]
     public partial class ByteArrayOutputStream : Java.IO.OutputStream
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ByteArrayOutputStream() { }
         protected ByteArrayOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public ByteArrayOutputStream(int size) { }
         protected Java.Interop.JavaSByteArray? Buf { get { throw null; } set { } }
         protected int Count { get { throw null; } set { } }
@@ -118,7 +130,9 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/CharArrayReader", GenerateJavaPeer=false)]
     public partial class CharArrayReader : Java.IO.Reader
     {
+        [Java.Interop.JniConstructorSignatureAttribute("([C)V")]
         public CharArrayReader(Java.Interop.JavaCharArray? buf) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([CII)V")]
         public CharArrayReader(Java.Interop.JavaCharArray? buf, int offset, int length) { }
         protected CharArrayReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         protected Java.Interop.JavaCharArray? Buf { get { throw null; } set { } }
@@ -136,8 +150,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/CharArrayWriter", GenerateJavaPeer=false)]
     public partial class CharArrayWriter : Java.IO.Writer
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public CharArrayWriter() { }
         protected CharArrayWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public CharArrayWriter(int initialSize) { }
         protected Java.Interop.JavaCharArray? Buf { get { throw null; } set { } }
         protected int Count { get { throw null; } set { } }
@@ -162,8 +178,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/CharConversionException", GenerateJavaPeer=false)]
     public partial class CharConversionException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public CharConversionException() { }
         protected CharConversionException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public CharConversionException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -199,6 +217,7 @@ namespace Java.IO
     public partial class DataInputStream : Java.IO.FilterInputStream, Java.Interop.IJavaPeerable, Java.IO.IDataInput, System.IDisposable
     {
         protected DataInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public DataInputStream(Java.IO.InputStream? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -245,6 +264,7 @@ namespace Java.IO
     public partial class DataOutputStream : Java.IO.FilterOutputStream, Java.Interop.IJavaPeerable, Java.IO.IDataOutput, System.IDisposable
     {
         protected DataOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public DataOutputStream(Java.IO.OutputStream? @out) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -278,8 +298,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/EOFException", GenerateJavaPeer=false)]
     public partial class EOFException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public EOFException() { }
         protected EOFException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public EOFException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -289,8 +311,11 @@ namespace Java.IO
     public partial class File : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.IComparable, System.IDisposable
     {
         protected File(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Ljava/lang/String;)V")]
         public File(Java.IO.File? parent, string? child) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public File(string? pathname) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;)V")]
         public File(string? parent, string? child) { }
         public virtual Java.IO.File? AbsoluteFile { get { throw null; } }
         public virtual string? AbsolutePath { get { throw null; } }
@@ -377,6 +402,7 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/FileDescriptor", GenerateJavaPeer=false)]
     public sealed partial class FileDescriptor : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public FileDescriptor() { }
         public static Java.IO.FileDescriptor? Err { get { throw null; } }
         public static Java.IO.FileDescriptor? In { get { throw null; } }
@@ -393,8 +419,11 @@ namespace Java.IO
     public partial class FileInputStream : Java.IO.InputStream
     {
         protected FileInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public FileInputStream(Java.IO.File? file) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/FileDescriptor;)V")]
         public FileInputStream(Java.IO.FileDescriptor? fdObj) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FileInputStream(string? name) { }
         public Java.IO.FileDescriptor? FD { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -406,8 +435,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/FileNotFoundException", GenerateJavaPeer=false)]
     public partial class FileNotFoundException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public FileNotFoundException() { }
         protected FileNotFoundException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FileNotFoundException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -417,10 +448,15 @@ namespace Java.IO
     public partial class FileOutputStream : Java.IO.OutputStream
     {
         protected FileOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public FileOutputStream(Java.IO.File? file) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Z)V")]
         public FileOutputStream(Java.IO.File? file, bool append) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/FileDescriptor;)V")]
         public FileOutputStream(Java.IO.FileDescriptor? fdObj) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FileOutputStream(string? name) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Z)V")]
         public FileOutputStream(string? name, bool append) { }
         public Java.IO.FileDescriptor? FD { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -433,8 +469,11 @@ namespace Java.IO
     public partial class FileReader : Java.IO.InputStreamReader
     {
         protected FileReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public FileReader(Java.IO.File? file) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/FileDescriptor;)V")]
         public FileReader(Java.IO.FileDescriptor? fd) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FileReader(string? fileName) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -444,10 +483,15 @@ namespace Java.IO
     public partial class FileWriter : Java.IO.OutputStreamWriter
     {
         protected FileWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public FileWriter(Java.IO.File? file) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Z)V")]
         public FileWriter(Java.IO.File? file, bool append) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/FileDescriptor;)V")]
         public FileWriter(Java.IO.FileDescriptor? fd) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FileWriter(string? fileName) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Z)V")]
         public FileWriter(string? fileName, bool append) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -457,6 +501,7 @@ namespace Java.IO
     public partial class FilterInputStream : Java.IO.InputStream
     {
         protected FilterInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         protected FilterInputStream(Java.IO.InputStream? @in) { }
         protected Java.IO.InputStream? In { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -469,6 +514,7 @@ namespace Java.IO
     public partial class FilterOutputStream : Java.IO.OutputStream
     {
         protected FilterOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public FilterOutputStream(Java.IO.OutputStream? @out) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -481,6 +527,7 @@ namespace Java.IO
     public abstract partial class FilterReader : Java.IO.Reader
     {
         protected FilterReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;)V")]
         protected FilterReader(Java.IO.Reader? @in) { }
         protected Java.IO.Reader? In { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -495,6 +542,7 @@ namespace Java.IO
     public abstract partial class FilterWriter : Java.IO.Writer
     {
         protected FilterWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Writer;)V")]
         protected FilterWriter(Java.IO.Writer? @out) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -608,6 +656,7 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/InputStream", GenerateJavaPeer=false)]
     public abstract partial class InputStream : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InputStream() { }
         protected InputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -645,7 +694,9 @@ namespace Java.IO
     public partial class InputStreamReader : Java.IO.Reader
     {
         protected InputStreamReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public InputStreamReader(Java.IO.InputStream? @in) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;Ljava/lang/String;)V")]
         public InputStreamReader(Java.IO.InputStream? @in, string? charsetName) { }
         public virtual string? Encoding { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -659,8 +710,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/InterruptedIOException", GenerateJavaPeer=false)]
     public partial class InterruptedIOException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InterruptedIOException() { }
         protected InterruptedIOException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InterruptedIOException(string? s) { }
         public int BytesTransferred { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -671,7 +724,9 @@ namespace Java.IO
     public partial class InvalidClassException : Java.IO.ObjectStreamException
     {
         protected InvalidClassException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InvalidClassException(string? reason) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;)V")]
         public InvalidClassException(string? cname, string? reason) { }
         public string? Classname { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -682,6 +737,7 @@ namespace Java.IO
     public partial class InvalidObjectException : Java.IO.ObjectStreamException
     {
         protected InvalidObjectException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InvalidObjectException(string? reason) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -817,6 +873,7 @@ namespace Java.IO
     public partial class IOError : Java.Lang.Error
     {
         protected IOError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public IOError(Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -825,10 +882,14 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/IOException", GenerateJavaPeer=false)]
     public partial class IOException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IOException() { }
         protected IOException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public IOException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IOException(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public IOException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -843,6 +904,7 @@ namespace Java.IO
     public partial class LineNumberInputStream : Java.IO.FilterInputStream
     {
         protected LineNumberInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public LineNumberInputStream(Java.IO.InputStream? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -853,7 +915,9 @@ namespace Java.IO
     public partial class LineNumberReader : Java.IO.BufferedReader
     {
         protected LineNumberReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;)V")]
         public LineNumberReader(Java.IO.Reader? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;I)V")]
         public LineNumberReader(Java.IO.Reader? @in, int sz) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -863,8 +927,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/NotActiveException", GenerateJavaPeer=false)]
     public partial class NotActiveException : Java.IO.ObjectStreamException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NotActiveException() { }
         protected NotActiveException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NotActiveException(string? reason) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -873,8 +939,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/NotSerializableException", GenerateJavaPeer=false)]
     public partial class NotSerializableException : Java.IO.ObjectStreamException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NotSerializableException() { }
         protected NotSerializableException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NotSerializableException(string? classname) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -883,8 +951,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputStream", GenerateJavaPeer=false)]
     public partial class ObjectInputStream : Java.IO.InputStream, Java.Interop.IJavaPeerable, Java.IO.IDataInput, Java.IO.IObjectInput, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected ObjectInputStream() { }
         protected ObjectInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public ObjectInputStream(Java.IO.InputStream? @in) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -950,6 +1020,7 @@ namespace Java.IO
         [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectInputStream$GetField", GenerateJavaPeer=false)]
         public abstract partial class GetField : Java.Lang.Object
         {
+            [Java.Interop.JniConstructorSignatureAttribute("()V")]
             public GetField() { }
             protected GetField(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
             [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1001,8 +1072,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutputStream", GenerateJavaPeer=false)]
     public partial class ObjectOutputStream : Java.IO.OutputStream, Java.Interop.IJavaPeerable, Java.IO.IDataOutput, Java.IO.IObjectOutput, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected ObjectOutputStream() { }
         protected ObjectOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public ObjectOutputStream(Java.IO.OutputStream? @out) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1092,6 +1165,7 @@ namespace Java.IO
         [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectOutputStream$PutField", GenerateJavaPeer=false)]
         public abstract partial class PutField : Java.Lang.Object
         {
+            [Java.Interop.JniConstructorSignatureAttribute("()V")]
             public PutField() { }
             protected PutField(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
             [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1134,8 +1208,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/ObjectStreamException", GenerateJavaPeer=false)]
     public abstract partial class ObjectStreamException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected ObjectStreamException() { }
         protected ObjectStreamException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         protected ObjectStreamException(string? message) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1145,7 +1221,9 @@ namespace Java.IO
     public partial class ObjectStreamField : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.Lang.IComparable, System.IDisposable
     {
         protected ObjectStreamField(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Class;)V")]
         public ObjectStreamField(string? name, Java.Lang.Class? type) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Class;Z)V")]
         public ObjectStreamField(string? name, Java.Lang.Class? type, bool unshared) { }
         public virtual bool IsPrimitive { get { throw null; } }
         public virtual bool IsUnshared { get { throw null; } }
@@ -1176,6 +1254,7 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/OutputStream", GenerateJavaPeer=false)]
     public abstract partial class OutputStream : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.IO.IFlushable, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public OutputStream() { }
         protected OutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1197,7 +1276,9 @@ namespace Java.IO
     public partial class OutputStreamWriter : Java.IO.Writer
     {
         protected OutputStreamWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public OutputStreamWriter(Java.IO.OutputStream? @out) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;Ljava/lang/String;)V")]
         public OutputStreamWriter(Java.IO.OutputStream? @out, string? charsetName) { }
         public virtual string? Encoding { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1214,10 +1295,14 @@ namespace Java.IO
     public partial class PipedInputStream : Java.IO.InputStream
     {
         protected const int PipeSize = 1024;
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public PipedInputStream() { }
         protected PipedInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedOutputStream;)V")]
         public PipedInputStream(Java.IO.PipedOutputStream? src) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedOutputStream;I)V")]
         public PipedInputStream(Java.IO.PipedOutputStream? src, int pipeSize) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public PipedInputStream(int pipeSize) { }
         protected Java.Interop.JavaSByteArray? Buffer { get { throw null; } set { } }
         protected int In { get { throw null; } set { } }
@@ -1235,8 +1320,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/PipedOutputStream", GenerateJavaPeer=false)]
     public partial class PipedOutputStream : Java.IO.OutputStream
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public PipedOutputStream() { }
         protected PipedOutputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedInputStream;)V")]
         public PipedOutputStream(Java.IO.PipedInputStream? snk) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1249,10 +1336,14 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/PipedReader", GenerateJavaPeer=false)]
     public partial class PipedReader : Java.IO.Reader
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public PipedReader() { }
         protected PipedReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedWriter;)V")]
         public PipedReader(Java.IO.PipedWriter? src) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedWriter;I)V")]
         public PipedReader(Java.IO.PipedWriter? src, int pipeSize) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public PipedReader(int pipeSize) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1267,8 +1358,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/PipedWriter", GenerateJavaPeer=false)]
     public partial class PipedWriter : Java.IO.Writer
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public PipedWriter() { }
         protected PipedWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/PipedReader;)V")]
         public PipedWriter(Java.IO.PipedReader? snk) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1286,12 +1379,19 @@ namespace Java.IO
     public partial class PrintStream : Java.IO.FilterOutputStream, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.Lang.IAppendable, Java.Lang.IAutoCloseable, System.IDisposable
     {
         protected PrintStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public PrintStream(Java.IO.File? file) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Ljava/lang/String;)V")]
         public PrintStream(Java.IO.File? file, string? csn) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public PrintStream(Java.IO.OutputStream? @out) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;Z)V")]
         public PrintStream(Java.IO.OutputStream? @out, bool autoFlush) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;ZLjava/lang/String;)V")]
         public PrintStream(Java.IO.OutputStream? @out, bool autoFlush, string? encoding) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public PrintStream(string? fileName) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;)V")]
         public PrintStream(string? fileName, string? csn) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1360,13 +1460,21 @@ namespace Java.IO
     public partial class PrintWriter : Java.IO.Writer
     {
         protected PrintWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;)V")]
         public PrintWriter(Java.IO.File? file) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Ljava/lang/String;)V")]
         public PrintWriter(Java.IO.File? file, string? csn) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;)V")]
         public PrintWriter(Java.IO.OutputStream? @out) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/OutputStream;Z)V")]
         public PrintWriter(Java.IO.OutputStream? @out, bool autoFlush) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Writer;)V")]
         public PrintWriter(Java.IO.Writer? @out) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Writer;Z)V")]
         public PrintWriter(Java.IO.Writer? @out, bool autoFlush) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public PrintWriter(string? fileName) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;)V")]
         public PrintWriter(string? fileName, string? csn) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1431,7 +1539,9 @@ namespace Java.IO
     public partial class PushbackInputStream : Java.IO.FilterInputStream
     {
         protected PushbackInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         public PushbackInputStream(Java.IO.InputStream? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;I)V")]
         public PushbackInputStream(Java.IO.InputStream? @in, int size) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         protected Java.Interop.JavaSByteArray? Buf { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1449,7 +1559,9 @@ namespace Java.IO
     public partial class PushbackReader : Java.IO.FilterReader
     {
         protected PushbackReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;)V")]
         public PushbackReader(Java.IO.Reader? @in) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;I)V")]
         public PushbackReader(Java.IO.Reader? @in, int size) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1465,7 +1577,9 @@ namespace Java.IO
     public partial class RandomAccessFile : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.IO.IDataInput, Java.IO.IDataOutput, Java.Lang.IAutoCloseable, System.IDisposable
     {
         protected RandomAccessFile(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/File;Ljava/lang/String;)V")]
         public RandomAccessFile(Java.IO.File? file, string? mode) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;)V")]
         public RandomAccessFile(string? name, string? mode) { }
         public Java.IO.FileDescriptor? FD { get { throw null; } }
         public virtual long FilePointer { get { throw null; } }
@@ -1548,8 +1662,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/Reader", GenerateJavaPeer=false)]
     public abstract partial class Reader : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected Reader() { }
         protected Reader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;)V")]
         protected Reader(Java.Lang.Object? @lock) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1580,6 +1696,7 @@ namespace Java.IO
     public partial class SequenceInputStream : Java.IO.InputStream
     {
         protected SequenceInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;Ljava/io/InputStream;)V")]
         public SequenceInputStream(Java.IO.InputStream? s1, Java.IO.InputStream? s2) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1590,8 +1707,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/StreamCorruptedException", GenerateJavaPeer=false)]
     public partial class StreamCorruptedException : Java.IO.ObjectStreamException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StreamCorruptedException() { }
         protected StreamCorruptedException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StreamCorruptedException(string? reason) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1605,8 +1724,10 @@ namespace Java.IO
         public const int TtNumber = -2;
         public const int TtWord = -3;
         protected StreamTokenizer(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/InputStream;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public StreamTokenizer(Java.IO.InputStream? @is) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/Reader;)V")]
         public StreamTokenizer(Java.IO.Reader? r) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1648,6 +1769,7 @@ namespace Java.IO
     public partial class StringBufferInputStream : Java.IO.InputStream
     {
         protected StringBufferInputStream(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringBufferInputStream(string? s) { }
         protected string? Buffer { get { throw null; } set { } }
         protected int Count { get { throw null; } set { } }
@@ -1662,6 +1784,7 @@ namespace Java.IO
     public partial class StringReader : Java.IO.Reader
     {
         protected StringReader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringReader(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1674,8 +1797,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/StringWriter", GenerateJavaPeer=false)]
     public partial class StringWriter : Java.IO.Writer
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StringWriter() { }
         protected StringWriter(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public StringWriter(int initialSize) { }
         public virtual Java.Lang.StringBuffer? Buffer { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1692,6 +1817,7 @@ namespace Java.IO
     public partial class SyncFailedException : Java.IO.IOException
     {
         protected SyncFailedException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public SyncFailedException(string? desc) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1701,7 +1827,9 @@ namespace Java.IO
     public partial class UncheckedIOException : Java.Lang.RuntimeException
     {
         protected UncheckedIOException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/io/IOException;)V")]
         public UncheckedIOException(Java.IO.IOException? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/io/IOException;)V")]
         public UncheckedIOException(string? message, Java.IO.IOException? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1710,8 +1838,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/UnsupportedEncodingException", GenerateJavaPeer=false)]
     public partial class UnsupportedEncodingException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UnsupportedEncodingException() { }
         protected UnsupportedEncodingException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UnsupportedEncodingException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1720,8 +1850,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/UTFDataFormatException", GenerateJavaPeer=false)]
     public partial class UTFDataFormatException : Java.IO.IOException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UTFDataFormatException() { }
         protected UTFDataFormatException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UTFDataFormatException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1731,6 +1863,7 @@ namespace Java.IO
     public partial class WriteAbortedException : Java.IO.ObjectStreamException
     {
         protected WriteAbortedException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Exception;)V")]
         public WriteAbortedException(string? s, Java.Lang.Exception? ex) { }
         public Java.Lang.Exception? Detail { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -1740,8 +1873,10 @@ namespace Java.IO
     [Java.Interop.JniTypeSignatureAttribute("java/io/Writer", GenerateJavaPeer=false)]
     public abstract partial class Writer : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ICloseable, Java.IO.IFlushable, Java.Lang.IAppendable, Java.Lang.IAutoCloseable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected Writer() { }
         protected Writer(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;)V")]
         protected Writer(Java.Lang.Object? @lock) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1778,8 +1913,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/AbstractMethodError", GenerateJavaPeer=false)]
     public partial class AbstractMethodError : Java.Lang.IncompatibleClassChangeError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public AbstractMethodError() { }
         protected AbstractMethodError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public AbstractMethodError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1788,8 +1925,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ArithmeticException", GenerateJavaPeer=false)]
     public partial class ArithmeticException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ArithmeticException() { }
         protected ArithmeticException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ArithmeticException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1798,9 +1937,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ArrayIndexOutOfBoundsException", GenerateJavaPeer=false)]
     public partial class ArrayIndexOutOfBoundsException : Java.Lang.IndexOutOfBoundsException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ArrayIndexOutOfBoundsException() { }
         protected ArrayIndexOutOfBoundsException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public ArrayIndexOutOfBoundsException(int index) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ArrayIndexOutOfBoundsException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1809,8 +1951,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ArrayStoreException", GenerateJavaPeer=false)]
     public partial class ArrayStoreException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ArrayStoreException() { }
         protected ArrayStoreException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ArrayStoreException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1819,15 +1963,24 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/AssertionError", GenerateJavaPeer=false)]
     public partial class AssertionError : Java.Lang.Error
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public AssertionError() { }
         protected AssertionError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;)V")]
         public AssertionError(Java.Lang.Object? detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Z)V")]
         public AssertionError(bool detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(C)V")]
         public AssertionError(char detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(D)V")]
         public AssertionError(double detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public AssertionError(int detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(J)V")]
         public AssertionError(long detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(F)V")]
         public AssertionError(float detailMessage) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public AssertionError(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1836,8 +1989,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Boolean", GenerateJavaPeer=false)]
     public sealed partial class Boolean : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.IComparable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("(Z)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Boolean(bool value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Boolean(string? s) { }
         public static Java.Lang.Boolean? False { get { throw null; } }
@@ -1875,10 +2030,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/BootstrapMethodError", GenerateJavaPeer=false)]
     public partial class BootstrapMethodError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public BootstrapMethodError() { }
         protected BootstrapMethodError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public BootstrapMethodError(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public BootstrapMethodError(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public BootstrapMethodError(string? s, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -1891,8 +2050,10 @@ namespace Java.Lang
         public const sbyte MaxValue = (sbyte)127;
         public const sbyte MinValue = (sbyte)-128;
         public const int Size = 8;
+        [Java.Interop.JniConstructorSignatureAttribute("(B)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Byte(sbyte value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Byte(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -2007,6 +2168,7 @@ namespace Java.Lang
         public const sbyte TitlecaseLetter = (sbyte)3;
         public const sbyte Unassigned = (sbyte)0;
         public const sbyte UppercaseLetter = (sbyte)1;
+        [Java.Interop.JniConstructorSignatureAttribute("(C)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Character(char value) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -2195,6 +2357,7 @@ namespace Java.Lang
         public partial class Subset : Java.Lang.Object
         {
             protected Subset(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+            [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
             protected Subset(string? name) { }
             [System.ComponentModel.EditorBrowsableAttribute(1)]
             [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -2786,8 +2949,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassCastException", GenerateJavaPeer=false)]
     public partial class ClassCastException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ClassCastException() { }
         protected ClassCastException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ClassCastException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -2796,8 +2961,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassCircularityError", GenerateJavaPeer=false)]
     public partial class ClassCircularityError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ClassCircularityError() { }
         protected ClassCircularityError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ClassCircularityError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -2806,8 +2973,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassFormatError", GenerateJavaPeer=false)]
     public partial class ClassFormatError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ClassFormatError() { }
         protected ClassFormatError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ClassFormatError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -2816,9 +2985,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassLoader", GenerateJavaPeer=false)]
     public abstract partial class ClassLoader : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected ClassLoader() { }
         protected ClassLoader(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ClassLoader;)V")]
         protected ClassLoader(Java.Lang.ClassLoader? parent) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/ClassLoader;)V")]
         protected ClassLoader(string? name, Java.Lang.ClassLoader? parent) { }
         public bool IsRegisteredAsParallelCapable { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -2881,9 +3053,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassNotFoundException", GenerateJavaPeer=false)]
     public partial class ClassNotFoundException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ClassNotFoundException() { }
         protected ClassNotFoundException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ClassNotFoundException(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public ClassNotFoundException(string? s, Java.Lang.Throwable? ex) { }
         public virtual Java.Lang.Throwable? Exception { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -2894,6 +3069,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ClassValue", GenerateJavaPeer=false)]
     public abstract partial class ClassValue : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected ClassValue() { }
         protected ClassValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -2908,8 +3084,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/CloneNotSupportedException", GenerateJavaPeer=false)]
     public partial class CloneNotSupportedException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public CloneNotSupportedException() { }
         protected CloneNotSupportedException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public CloneNotSupportedException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -2947,8 +3125,10 @@ namespace Java.Lang
         public const double NegativeInfinity = -1.0 / 0.0;
         public const double PositiveInfinity = 1.0 / 0.0;
         public const int Size = 64;
+        [Java.Interop.JniConstructorSignatureAttribute("(D)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Double(double value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Double(string? s) { }
         public bool IsInfinite { get { throw null; } }
@@ -3006,6 +3186,7 @@ namespace Java.Lang
     public abstract partial class Enum : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.IComparable, System.IDisposable
     {
         protected Enum(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;I)V")]
         protected Enum(string? name, int ordinal) { }
         public Java.Lang.Class? DeclaringClass { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3034,6 +3215,7 @@ namespace Java.Lang
     public partial class EnumConstantNotPresentException : Java.Lang.RuntimeException
     {
         protected EnumConstantNotPresentException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Class;Ljava/lang/String;)V")]
         public EnumConstantNotPresentException(Java.Lang.Class? enumType, string? constantName) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3046,11 +3228,16 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Error", GenerateJavaPeer=false)]
     public partial class Error : Java.Lang.Throwable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Error() { }
         protected Error(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public Error(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public Error(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public Error(string? message, Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V")]
         protected Error(string? message, Java.Lang.Throwable? cause, bool enableSuppression, bool writableStackTrace) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3059,11 +3246,16 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Exception", GenerateJavaPeer=false)]
     public partial class Exception : Java.Lang.Throwable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Exception() { }
         protected Exception(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public Exception(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public Exception(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public Exception(string? message, Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V")]
         protected Exception(string? message, Java.Lang.Throwable? cause, bool enableSuppression, bool writableStackTrace) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3072,9 +3264,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ExceptionInInitializerError", GenerateJavaPeer=false)]
     public partial class ExceptionInInitializerError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ExceptionInInitializerError() { }
         protected ExceptionInInitializerError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public ExceptionInInitializerError(Java.Lang.Throwable? thrown) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ExceptionInInitializerError(string? s) { }
         public virtual Java.Lang.Throwable? Exception { get { throw null; } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3094,10 +3289,13 @@ namespace Java.Lang
         public const float NegativeInfinity = -1.0f / 0.0f;
         public const float PositiveInfinity = 1.0f / 0.0f;
         public const int Size = 32;
+        [Java.Interop.JniConstructorSignatureAttribute("(D)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Float(double value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(F)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Float(float value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Float(string? s) { }
         public bool IsInfinite { get { throw null; } }
@@ -3217,8 +3415,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalAccessError", GenerateJavaPeer=false)]
     public partial class IllegalAccessError : Java.Lang.IncompatibleClassChangeError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalAccessError() { }
         protected IllegalAccessError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalAccessError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3227,8 +3427,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalAccessException", GenerateJavaPeer=false)]
     public partial class IllegalAccessException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalAccessException() { }
         protected IllegalAccessException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalAccessException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3237,10 +3439,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalArgumentException", GenerateJavaPeer=false)]
     public partial class IllegalArgumentException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalArgumentException() { }
         protected IllegalArgumentException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public IllegalArgumentException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalArgumentException(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public IllegalArgumentException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3249,10 +3455,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalCallerException", GenerateJavaPeer=false)]
     public partial class IllegalCallerException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalCallerException() { }
         protected IllegalCallerException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public IllegalCallerException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalCallerException(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public IllegalCallerException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3261,8 +3471,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalMonitorStateException", GenerateJavaPeer=false)]
     public partial class IllegalMonitorStateException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalMonitorStateException() { }
         protected IllegalMonitorStateException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalMonitorStateException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3271,10 +3483,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalStateException", GenerateJavaPeer=false)]
     public partial class IllegalStateException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalStateException() { }
         protected IllegalStateException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public IllegalStateException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalStateException(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public IllegalStateException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3283,8 +3499,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IllegalThreadStateException", GenerateJavaPeer=false)]
     public partial class IllegalThreadStateException : Java.Lang.IllegalArgumentException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IllegalThreadStateException() { }
         protected IllegalThreadStateException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IllegalThreadStateException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3293,8 +3511,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IncompatibleClassChangeError", GenerateJavaPeer=false)]
     public partial class IncompatibleClassChangeError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IncompatibleClassChangeError() { }
         protected IncompatibleClassChangeError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IncompatibleClassChangeError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3303,9 +3523,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/IndexOutOfBoundsException", GenerateJavaPeer=false)]
     public partial class IndexOutOfBoundsException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public IndexOutOfBoundsException() { }
         protected IndexOutOfBoundsException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public IndexOutOfBoundsException(int index) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public IndexOutOfBoundsException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3315,6 +3538,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/InheritableThreadLocal", GenerateJavaPeer=false)]
     public partial class InheritableThreadLocal : Java.Lang.ThreadLocal
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InheritableThreadLocal() { }
         protected InheritableThreadLocal(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3326,8 +3550,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/InstantiationError", GenerateJavaPeer=false)]
     public partial class InstantiationError : Java.Lang.IncompatibleClassChangeError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InstantiationError() { }
         protected InstantiationError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InstantiationError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3336,8 +3562,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/InstantiationException", GenerateJavaPeer=false)]
     public partial class InstantiationException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InstantiationException() { }
         protected InstantiationException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InstantiationException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3350,8 +3578,10 @@ namespace Java.Lang
         public const int MaxValue = 2147483647;
         public const int MinValue = -2147483648;
         public const int Size = 32;
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Integer(int value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Integer(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3453,10 +3683,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/InternalError", GenerateJavaPeer=false)]
     public partial class InternalError : Java.Lang.VirtualMachineError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InternalError() { }
         protected InternalError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public InternalError(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InternalError(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public InternalError(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3465,8 +3699,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/InterruptedException", GenerateJavaPeer=false)]
     public partial class InterruptedException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InterruptedException() { }
         protected InterruptedException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InterruptedException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3495,10 +3731,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/LayerInstantiationException", GenerateJavaPeer=false)]
     public partial class LayerInstantiationException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public LayerInstantiationException() { }
         protected LayerInstantiationException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public LayerInstantiationException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public LayerInstantiationException(string? msg) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public LayerInstantiationException(string? msg, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3507,9 +3747,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/LinkageError", GenerateJavaPeer=false)]
     public partial class LinkageError : Java.Lang.Error
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public LinkageError() { }
         protected LinkageError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public LinkageError(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public LinkageError(string? s, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3522,8 +3765,10 @@ namespace Java.Lang
         public const long MaxValue = (long)9223372036854775807;
         public const long MinValue = (long)-9223372036854775808;
         public const int Size = 64;
+        [Java.Interop.JniConstructorSignatureAttribute("(J)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Long(long value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Long(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3843,6 +4088,8 @@ namespace Java.Lang
         public static Java.Lang.ModuleLayer? Boot() { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("configuration", "()Ljava/lang/module/Configuration;")]
         public Java.Lang.Modules.Configuration? Configuration() { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("defineModules", "(Ljava/lang/module/Configuration;Ljava/util/function/Function;)Ljava/lang/ModuleLayer;")]
+        public Java.Lang.ModuleLayer? DefineModules(Java.Lang.Modules.Configuration? cf, Java.Util.Function.IFunction? clf) { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("defineModulesWithManyLoaders", "(Ljava/lang/module/Configuration;Ljava/lang/ClassLoader;)Ljava/lang/ModuleLayer;")]
         public Java.Lang.ModuleLayer? DefineModulesWithManyLoaders(Java.Lang.Modules.Configuration? cf, Java.Lang.ClassLoader? parentLoader) { throw null; }
         [Java.Interop.JniMethodSignatureAttribute("defineModulesWithOneLoader", "(Ljava/lang/module/Configuration;Ljava/lang/ClassLoader;)Ljava/lang/ModuleLayer;")]
@@ -3871,8 +4118,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NegativeArraySizeException", GenerateJavaPeer=false)]
     public partial class NegativeArraySizeException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NegativeArraySizeException() { }
         protected NegativeArraySizeException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NegativeArraySizeException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3881,8 +4130,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NoClassDefFoundError", GenerateJavaPeer=false)]
     public partial class NoClassDefFoundError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NoClassDefFoundError() { }
         protected NoClassDefFoundError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NoClassDefFoundError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3891,8 +4142,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NoSuchFieldError", GenerateJavaPeer=false)]
     public partial class NoSuchFieldError : Java.Lang.IncompatibleClassChangeError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NoSuchFieldError() { }
         protected NoSuchFieldError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NoSuchFieldError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3901,8 +4154,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NoSuchFieldException", GenerateJavaPeer=false)]
     public partial class NoSuchFieldException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NoSuchFieldException() { }
         protected NoSuchFieldException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NoSuchFieldException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3911,8 +4166,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NoSuchMethodError", GenerateJavaPeer=false)]
     public partial class NoSuchMethodError : Java.Lang.IncompatibleClassChangeError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NoSuchMethodError() { }
         protected NoSuchMethodError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NoSuchMethodError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3921,8 +4178,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NoSuchMethodException", GenerateJavaPeer=false)]
     public partial class NoSuchMethodException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NoSuchMethodException() { }
         protected NoSuchMethodException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NoSuchMethodException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3931,8 +4190,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NullPointerException", GenerateJavaPeer=false)]
     public partial class NullPointerException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NullPointerException() { }
         protected NullPointerException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NullPointerException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3941,6 +4202,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Number", GenerateJavaPeer=false)]
     public abstract partial class Number : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Number() { }
         protected Number(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -3958,8 +4220,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/NumberFormatException", GenerateJavaPeer=false)]
     public partial class NumberFormatException : Java.Lang.IllegalArgumentException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public NumberFormatException() { }
         protected NumberFormatException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public NumberFormatException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -3968,6 +4232,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Object", GenerateJavaPeer=false)]
     public partial class Object : Java.Interop.JavaObject
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Object() { }
         public Object(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         public Java.Lang.Class? Class { get { throw null; } }
@@ -3996,8 +4261,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/OutOfMemoryError", GenerateJavaPeer=false)]
     public partial class OutOfMemoryError : Java.Lang.VirtualMachineError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public OutOfMemoryError() { }
         protected OutOfMemoryError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public OutOfMemoryError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4047,6 +4314,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Process", GenerateJavaPeer=false)]
     public abstract partial class Process : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Process() { }
         protected Process(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         public abstract Java.IO.InputStream? ErrorStream { [Java.Interop.JniMethodSignatureAttribute("getErrorStream", "()Ljava/io/InputStream;")] get; }
@@ -4069,6 +4337,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ProcessBuilder", GenerateJavaPeer=false)]
     public sealed partial class ProcessBuilder : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("([Ljava/lang/String;)V")]
         public ProcessBuilder(params string[]? command) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4146,10 +4415,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ReflectiveOperationException", GenerateJavaPeer=false)]
     public partial class ReflectiveOperationException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ReflectiveOperationException() { }
         protected ReflectiveOperationException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public ReflectiveOperationException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ReflectiveOperationException(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public ReflectiveOperationException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4246,11 +4519,16 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/RuntimeException", GenerateJavaPeer=false)]
     public partial class RuntimeException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public RuntimeException() { }
         protected RuntimeException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public RuntimeException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public RuntimeException(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public RuntimeException(string? message, Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V")]
         protected RuntimeException(string? message, Java.Lang.Throwable? cause, bool enableSuppression, bool writableStackTrace) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4259,10 +4537,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/SecurityException", GenerateJavaPeer=false)]
     public partial class SecurityException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public SecurityException() { }
         protected SecurityException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public SecurityException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public SecurityException(string? s) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public SecurityException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4271,6 +4553,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/SecurityManager", GenerateJavaPeer=false)]
     public partial class SecurityManager : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public SecurityManager() { }
         protected SecurityManager(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -4334,8 +4617,10 @@ namespace Java.Lang
         public const short MaxValue = (short)32767;
         public const short MinValue = (short)-32768;
         public const int Size = 16;
+        [Java.Interop.JniConstructorSignatureAttribute("(S)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Short(short value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         [System.ObsoleteAttribute("deprecated")]
         public Short(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -4383,8 +4668,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/StackOverflowError", GenerateJavaPeer=false)]
     public partial class StackOverflowError : Java.Lang.VirtualMachineError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StackOverflowError() { }
         protected StackOverflowError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StackOverflowError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4393,7 +4680,9 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/StackTraceElement", GenerateJavaPeer=false)]
     public sealed partial class StackTraceElement : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V")]
         public StackTraceElement(string? declaringClass, string? methodName, string? fileName, int lineNumber) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;I)V")]
         public StackTraceElement(string? classLoaderName, string? moduleName, string? moduleVersion, string? declaringClass, string? methodName, string? fileName, int lineNumber) { }
         public string? ClassLoaderName { get { throw null; } }
         public string? ClassName { get { throw null; } }
@@ -4416,6 +4705,8 @@ namespace Java.Lang
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
         public override Java.Interop.JniPeerMembers JniPeerMembers { get { throw null; } }
+        [Java.Interop.JniMethodSignatureAttribute("forEach", "(Ljava/util/function/Consumer;)V")]
+        public void ForEach(Java.Util.Function.IConsumer? action) { }
         [Java.Interop.JniMethodSignatureAttribute("getInstance", "(Ljava/lang/StackWalker$Option;)Ljava/lang/StackWalker;")]
         public static Java.Lang.StackWalker? GetInstance(Java.Lang.StackWalker.Option? option) { throw null; }
         [Java.Interop.JniTypeSignatureAttribute("java/lang/StackWalker$StackFrame", GenerateJavaPeer=false)]
@@ -4610,20 +4901,33 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/String", GenerateJavaPeer=false)]
     public sealed partial class String : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.ICharSequence, Java.Lang.IComparable, System.Collections.Generic.IEnumerable<char>, System.Collections.IEnumerable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public String() { }
+        [Java.Interop.JniConstructorSignatureAttribute("([C)V")]
         public String(Java.Interop.JavaCharArray? value) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([CII)V")]
         public String(Java.Interop.JavaCharArray? value, int offset, int count) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([III)V")]
         public String(Java.Interop.JavaInt32Array? codePoints, int offset, int count) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([B)V")]
         public String(Java.Interop.JavaSByteArray? bytes) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BI)V")]
         [System.ObsoleteAttribute("deprecated")]
         public String(Java.Interop.JavaSByteArray? ascii, int hibyte) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BII)V")]
         public String(Java.Interop.JavaSByteArray? bytes, int offset, int length) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BIII)V")]
         [System.ObsoleteAttribute("deprecated")]
         public String(Java.Interop.JavaSByteArray? ascii, int hibyte, int offset, int count) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BIILjava/lang/String;)V")]
         public String(Java.Interop.JavaSByteArray? bytes, int offset, int length, string? charsetName) { }
+        [Java.Interop.JniConstructorSignatureAttribute("([BLjava/lang/String;)V")]
         public String(Java.Interop.JavaSByteArray? bytes, string? charsetName) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/StringBuffer;)V")]
         public String(Java.Lang.StringBuffer? buffer) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/StringBuilder;)V")]
         public String(Java.Lang.StringBuilder? builder) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public String(string? original) { }
         public bool IsBlank { get { throw null; } }
         public bool IsEmpty { get { throw null; } }
@@ -4767,9 +5071,13 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/StringBuffer", GenerateJavaPeer=false)]
     public sealed partial class StringBuffer : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.ICharSequence, Java.Lang.IComparable, System.Collections.Generic.IEnumerable<char>, System.Collections.IEnumerable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StringBuffer() { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/CharSequence;)V")]
         public StringBuffer(Java.Lang.ICharSequence? seq) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public StringBuffer(int capacity) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringBuffer(string? str) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -4886,9 +5194,13 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/StringBuilder", GenerateJavaPeer=false)]
     public sealed partial class StringBuilder : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, Java.Lang.ICharSequence, Java.Lang.IComparable, System.Collections.Generic.IEnumerable<char>, System.Collections.IEnumerable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StringBuilder() { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/CharSequence;)V")]
         public StringBuilder(Java.Lang.ICharSequence? seq) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public StringBuilder(int capacity) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringBuilder(string? str) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5005,9 +5317,12 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/StringIndexOutOfBoundsException", GenerateJavaPeer=false)]
     public partial class StringIndexOutOfBoundsException : Java.Lang.IndexOutOfBoundsException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public StringIndexOutOfBoundsException() { }
         protected StringIndexOutOfBoundsException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(I)V")]
         public StringIndexOutOfBoundsException(int index) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringIndexOutOfBoundsException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5067,6 +5382,7 @@ namespace Java.Lang
         [Java.Interop.JniTypeSignatureAttribute("java/lang/System$LoggerFinder", GenerateJavaPeer=false)]
         public abstract partial class LoggerFinder : Java.Lang.Object
         {
+            [Java.Interop.JniConstructorSignatureAttribute("()V")]
             protected LoggerFinder() { }
             protected LoggerFinder(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
             [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -5082,15 +5398,24 @@ namespace Java.Lang
         public const int MaxPriority = 10;
         public const int MinPriority = 1;
         public const int NormPriority = 5;
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Thread() { }
         protected Thread(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Runnable;)V")]
         public Thread(Java.Lang.IRunnable? target) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Runnable;Ljava/lang/String;)V")]
         public Thread(Java.Lang.IRunnable? target, string? name) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;)V")]
         public Thread(Java.Lang.ThreadGroup? group, Java.Lang.IRunnable? target) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;)V")]
         public Thread(Java.Lang.ThreadGroup? group, Java.Lang.IRunnable? target, string? name) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;J)V")]
         public Thread(Java.Lang.ThreadGroup? group, Java.Lang.IRunnable? target, string? name, long stackSize) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/Runnable;Ljava/lang/String;JZ)V")]
         public Thread(Java.Lang.ThreadGroup? group, Java.Lang.IRunnable? target, string? name, long stackSize, bool inheritThreadLocals) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V")]
         public Thread(Java.Lang.ThreadGroup? group, string? name) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public Thread(string? name) { }
         public virtual Java.Lang.ClassLoader? ContextClassLoader { get { throw null; } set { } }
         public bool Daemon { get { throw null; } set { } }
@@ -5183,6 +5508,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ThreadDeath", GenerateJavaPeer=false)]
     public partial class ThreadDeath : Java.Lang.Error
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ThreadDeath() { }
         protected ThreadDeath(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -5193,7 +5519,9 @@ namespace Java.Lang
     public partial class ThreadGroup : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.Lang.Thread.IUncaughtExceptionHandler, System.IDisposable
     {
         protected ThreadGroup(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/ThreadGroup;Ljava/lang/String;)V")]
         public ThreadGroup(Java.Lang.ThreadGroup? parent, string? name) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ThreadGroup(string? name) { }
         public bool Daemon { get { throw null; } set { } }
         public virtual bool IsDestroyed { get { throw null; } }
@@ -5244,6 +5572,7 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ThreadLocal", GenerateJavaPeer=false)]
     public partial class ThreadLocal : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ThreadLocal() { }
         protected ThreadLocal(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -5257,15 +5586,23 @@ namespace Java.Lang
         public virtual void Remove() { }
         [Java.Interop.JniMethodSignatureAttribute("set", "(Ljava/lang/Object;)V")]
         public virtual void Set(Java.Lang.Object? value) { }
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "S"})]
+        [Java.Interop.JniMethodSignatureAttribute("withInitial", "(Ljava/util/function/Supplier;)Ljava/lang/ThreadLocal;")]
+        public static Java.Lang.ThreadLocal? WithInitial(Java.Util.Function.ISupplier? supplier) { throw null; }
     }
     [Java.Interop.JniTypeSignatureAttribute("java/lang/Throwable", GenerateJavaPeer=false)]
     public partial class Throwable : Java.Interop.JavaException, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Throwable() { }
         public Throwable(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public Throwable(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public Throwable(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public Throwable(string? message, Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V")]
         protected Throwable(string? message, Java.Lang.Throwable? cause, bool enableSuppression, bool writableStackTrace) { }
         public virtual Java.Lang.Throwable? Cause { get { throw null; } }
         public virtual string? LocalizedMessage { get { throw null; } }
@@ -5295,6 +5632,7 @@ namespace Java.Lang
     public partial class TypeNotPresentException : Java.Lang.RuntimeException
     {
         protected TypeNotPresentException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public TypeNotPresentException(string? typeName, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5305,8 +5643,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/UnknownError", GenerateJavaPeer=false)]
     public partial class UnknownError : Java.Lang.VirtualMachineError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UnknownError() { }
         protected UnknownError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UnknownError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5315,8 +5655,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/UnsatisfiedLinkError", GenerateJavaPeer=false)]
     public partial class UnsatisfiedLinkError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UnsatisfiedLinkError() { }
         protected UnsatisfiedLinkError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UnsatisfiedLinkError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5325,8 +5667,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/UnsupportedClassVersionError", GenerateJavaPeer=false)]
     public partial class UnsupportedClassVersionError : Java.Lang.ClassFormatError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UnsupportedClassVersionError() { }
         protected UnsupportedClassVersionError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UnsupportedClassVersionError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5335,10 +5679,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/UnsupportedOperationException", GenerateJavaPeer=false)]
     public partial class UnsupportedOperationException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public UnsupportedOperationException() { }
         protected UnsupportedOperationException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public UnsupportedOperationException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public UnsupportedOperationException(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public UnsupportedOperationException(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5347,8 +5695,10 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/VerifyError", GenerateJavaPeer=false)]
     public partial class VerifyError : Java.Lang.LinkageError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public VerifyError() { }
         protected VerifyError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public VerifyError(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5357,10 +5707,14 @@ namespace Java.Lang
     [Java.Interop.JniTypeSignatureAttribute("java/lang/VirtualMachineError", GenerateJavaPeer=false)]
     public abstract partial class VirtualMachineError : Java.Lang.Error
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public VirtualMachineError() { }
         protected VirtualMachineError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public VirtualMachineError(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public VirtualMachineError(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public VirtualMachineError(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5382,8 +5736,11 @@ namespace Java.Lang.Annotation
     public partial class AnnotationFormatError : Java.Lang.Error
     {
         protected AnnotationFormatError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public AnnotationFormatError(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public AnnotationFormatError(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public AnnotationFormatError(string? message, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5393,6 +5750,7 @@ namespace Java.Lang.Annotation
     public partial class AnnotationTypeMismatchException : Java.Lang.RuntimeException
     {
         protected AnnotationTypeMismatchException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/reflect/Method;Ljava/lang/String;)V")]
         public AnnotationTypeMismatchException(Java.Lang.Reflect.Method? element, string? foundType) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5453,6 +5811,7 @@ namespace Java.Lang.Annotation
     public partial class IncompleteAnnotationException : Java.Lang.RuntimeException
     {
         protected IncompleteAnnotationException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Class;Ljava/lang/String;)V")]
         public IncompleteAnnotationException(Java.Lang.Class? annotationType, string? elementName) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5512,6 +5871,7 @@ namespace Java.Lang.Invoke
     [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/ConstantBootstraps", GenerateJavaPeer=false)]
     public sealed partial class ConstantBootstraps : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ConstantBootstraps() { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5540,7 +5900,9 @@ namespace Java.Lang.Invoke
     public partial class ConstantCallSite : Java.Lang.Invoke.CallSite
     {
         protected ConstantCallSite(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodHandle;)V")]
         public ConstantCallSite(Java.Lang.Invoke.MethodHandle? target) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodType;Ljava/lang/invoke/MethodHandle;)V")]
         protected ConstantCallSite(Java.Lang.Invoke.MethodType? targetType, Java.Lang.Invoke.MethodHandle? createTargetHook) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5552,11 +5914,16 @@ namespace Java.Lang.Invoke
     [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/LambdaConversionException", GenerateJavaPeer=false)]
     public partial class LambdaConversionException : Java.Lang.Exception
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public LambdaConversionException() { }
         protected LambdaConversionException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public LambdaConversionException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public LambdaConversionException(string? message) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public LambdaConversionException(string? message, Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;ZZ)V")]
         public LambdaConversionException(string? message, Java.Lang.Throwable? cause, bool enableSuppression, bool writableStackTrace) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5833,7 +6200,9 @@ namespace Java.Lang.Invoke
     public partial class MutableCallSite : Java.Lang.Invoke.CallSite
     {
         protected MutableCallSite(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodHandle;)V")]
         public MutableCallSite(Java.Lang.Invoke.MethodHandle? target) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodType;)V")]
         public MutableCallSite(Java.Lang.Invoke.MethodType? type) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5847,6 +6216,7 @@ namespace Java.Lang.Invoke
     [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/SerializedLambda", GenerateJavaPeer=false)]
     public sealed partial class SerializedLambda : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Class;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;[Ljava/lang/Object;)V")]
         public SerializedLambda(Java.Lang.Class? capturingClass, string? functionalInterfaceClass, string? functionalInterfaceMethodName, string? functionalInterfaceMethodSignature, int implMethodKind, string? implClass, string? implMethodName, string? implMethodSignature, string? instantiatedMethodType, Java.Interop.JavaObjectArray<Java.Lang.Object>? capturedArgs) { }
         public int CapturedArgCount { get { throw null; } }
         public string? CapturingClass { get { throw null; } }
@@ -5868,7 +6238,9 @@ namespace Java.Lang.Invoke
     public partial class StringConcatException : Java.Lang.Exception
     {
         protected StringConcatException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public StringConcatException(string? msg) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public StringConcatException(string? msg, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -5889,6 +6261,7 @@ namespace Java.Lang.Invoke
     [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/SwitchPoint", GenerateJavaPeer=false)]
     public partial class SwitchPoint : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public SwitchPoint() { }
         protected SwitchPoint(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         public virtual bool HasBeenInvalidated { get { throw null; } }
@@ -6039,7 +6412,9 @@ namespace Java.Lang.Invoke
     public partial class VolatileCallSite : Java.Lang.Invoke.CallSite
     {
         protected VolatileCallSite(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodHandle;)V")]
         public VolatileCallSite(Java.Lang.Invoke.MethodHandle? target) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/invoke/MethodType;)V")]
         public VolatileCallSite(Java.Lang.Invoke.MethodType? type) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6051,8 +6426,10 @@ namespace Java.Lang.Invoke
     [Java.Interop.JniTypeSignatureAttribute("java/lang/invoke/WrongMethodTypeException", GenerateJavaPeer=false)]
     public partial class WrongMethodTypeException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public WrongMethodTypeException() { }
         protected WrongMethodTypeException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public WrongMethodTypeException(string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6074,10 +6451,14 @@ namespace Java.Lang.Modules
     [Java.Interop.JniTypeSignatureAttribute("java/lang/module/FindException", GenerateJavaPeer=false)]
     public partial class FindException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public FindException() { }
         protected FindException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public FindException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public FindException(string? msg) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public FindException(string? msg, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6086,8 +6467,10 @@ namespace Java.Lang.Modules
     [Java.Interop.JniTypeSignatureAttribute("java/lang/module/InvalidModuleDescriptorException", GenerateJavaPeer=false)]
     public partial class InvalidModuleDescriptorException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InvalidModuleDescriptorException() { }
         protected InvalidModuleDescriptorException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InvalidModuleDescriptorException(string? msg) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6290,10 +6673,14 @@ namespace Java.Lang.Modules
     [Java.Interop.JniTypeSignatureAttribute("java/lang/module/ResolutionException", GenerateJavaPeer=false)]
     public partial class ResolutionException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ResolutionException() { }
         protected ResolutionException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public ResolutionException(Java.Lang.Throwable? cause) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public ResolutionException(string? msg) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;Ljava/lang/Throwable;)V")]
         public ResolutionException(string? msg, Java.Lang.Throwable? cause) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6339,6 +6726,7 @@ namespace Java.Lang.Ref
     public partial class PhantomReference : Java.Lang.Ref.Reference
     {
         protected PhantomReference(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V")]
         public PhantomReference(Java.Lang.Object? referent, Java.Lang.Ref.ReferenceQueue? q) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6366,6 +6754,7 @@ namespace Java.Lang.Ref
     [Java.Interop.JniTypeSignatureAttribute("java/lang/ref/ReferenceQueue", GenerateJavaPeer=false)]
     public partial class ReferenceQueue : Java.Lang.Object
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public ReferenceQueue() { }
         protected ReferenceQueue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -6383,7 +6772,9 @@ namespace Java.Lang.Ref
     public partial class SoftReference : Java.Lang.Ref.Reference
     {
         protected SoftReference(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;)V")]
         public SoftReference(Java.Lang.Object? referent) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V")]
         public SoftReference(Java.Lang.Object? referent, Java.Lang.Ref.ReferenceQueue? q) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6394,7 +6785,9 @@ namespace Java.Lang.Ref
     public partial class WeakReference : Java.Lang.Ref.Reference
     {
         protected WeakReference(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;)V")]
         public WeakReference(Java.Lang.Object? referent) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Object;Ljava/lang/ref/ReferenceQueue;)V")]
         public WeakReference(Java.Lang.Object? referent, Java.Lang.Ref.ReferenceQueue? q) : base (default(Java.Interop.JniObjectReference), default(Java.Interop.JniObjectReferenceOptions)) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6406,6 +6799,7 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/AccessibleObject", GenerateJavaPeer=false)]
     public partial class AccessibleObject : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.Lang.Reflect.IAnnotatedElement, System.IDisposable
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected AccessibleObject() { }
         protected AccessibleObject(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         public virtual bool Accessible { [System.ObsoleteAttribute("deprecated")] get { throw null; } set { } }
@@ -6610,8 +7004,10 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/GenericSignatureFormatError", GenerateJavaPeer=false)]
     public partial class GenericSignatureFormatError : Java.Lang.ClassFormatError
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public GenericSignatureFormatError() { }
         protected GenericSignatureFormatError(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public GenericSignatureFormatError(string? message) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6704,8 +7100,10 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/InaccessibleObjectException", GenerateJavaPeer=false)]
     public partial class InaccessibleObjectException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public InaccessibleObjectException() { }
         protected InaccessibleObjectException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public InaccessibleObjectException(string? msg) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6714,9 +7112,12 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/InvocationTargetException", GenerateJavaPeer=false)]
     public partial class InvocationTargetException : Java.Lang.ReflectiveOperationException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         protected InvocationTargetException() { }
         protected InvocationTargetException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public InvocationTargetException(Java.Lang.Throwable? target) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;Ljava/lang/String;)V")]
         public InvocationTargetException(Java.Lang.Throwable? target, string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6758,8 +7159,10 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/MalformedParameterizedTypeException", GenerateJavaPeer=false)]
     public partial class MalformedParameterizedTypeException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public MalformedParameterizedTypeException() { }
         protected MalformedParameterizedTypeException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public MalformedParameterizedTypeException(string? message) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6768,8 +7171,10 @@ namespace Java.Lang.Reflect
     [Java.Interop.JniTypeSignatureAttribute("java/lang/reflect/MalformedParametersException", GenerateJavaPeer=false)]
     public partial class MalformedParametersException : Java.Lang.RuntimeException
     {
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public MalformedParametersException() { }
         protected MalformedParametersException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/String;)V")]
         public MalformedParametersException(string? reason) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6819,6 +7224,7 @@ namespace Java.Lang.Reflect
         public const int Synchronized = 32;
         public const int Transient = 128;
         public const int Volatile = 64;
+        [Java.Interop.JniConstructorSignatureAttribute("()V")]
         public Modifier() { }
         protected Modifier(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -6901,6 +7307,7 @@ namespace Java.Lang.Reflect
     public partial class Proxy : Java.Lang.Object, Java.Interop.IJavaPeerable, Java.IO.ISerializable, System.IDisposable
     {
         protected Proxy(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/reflect/InvocationHandler;)V")]
         protected Proxy(Java.Lang.Reflect.IInvocationHandler? h) { }
         protected Java.Lang.Reflect.IInvocationHandler? H { get { throw null; } set { } }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
@@ -6920,7 +7327,9 @@ namespace Java.Lang.Reflect
     public partial class UndeclaredThrowableException : Java.Lang.RuntimeException
     {
         protected UndeclaredThrowableException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;)V")]
         public UndeclaredThrowableException(Java.Lang.Throwable? undeclaredThrowable) { }
+        [Java.Interop.JniConstructorSignatureAttribute("(Ljava/lang/Throwable;Ljava/lang/String;)V")]
         public UndeclaredThrowableException(Java.Lang.Throwable? undeclaredThrowable, string? s) { }
         [System.ComponentModel.EditorBrowsableAttribute(1)]
         [System.Diagnostics.DebuggerBrowsableAttribute(0)]
@@ -6941,5 +7350,355 @@ namespace Java.Nio.Channels
     public enum Operations
     {
         None = 0,
+    }
+}
+namespace Java.Util.Function
+{
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiConsumer", GenerateJavaPeer=false)]
+    public partial interface IBiConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;Ljava/lang/Object;)V")]
+        void Accept(Java.Lang.Object? p0, Java.Lang.Object? p1);
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/BiConsumer;)Ljava/util/function/BiConsumer;")]
+        Java.Util.Function.IBiConsumer? AndThen(Java.Util.Function.IBiConsumer? after) { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U", "R"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiFunction", GenerateJavaPeer=false)]
+    public partial interface IBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/Function;)Ljava/util/function/BiFunction;")]
+        Java.Util.Function.IBiFunction? AndThen(Java.Util.Function.IFunction? after) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("apply", "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;")]
+        Java.Lang.Object? Apply(Java.Lang.Object? p0, Java.Lang.Object? p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BinaryOperator", GenerateJavaPeer=false)]
+    public partial interface IBinaryOperator : Java.Interop.IJavaPeerable, Java.Util.Function.IBiFunction, System.IDisposable
+    {
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BiPredicate", GenerateJavaPeer=false)]
+    public partial interface IBiPredicate : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("and", "(Ljava/util/function/BiPredicate;)Ljava/util/function/BiPredicate;")]
+        Java.Util.Function.IBiPredicate? And(Java.Util.Function.IBiPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("negate", "()Ljava/util/function/BiPredicate;")]
+        Java.Util.Function.IBiPredicate? Negate() { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("or", "(Ljava/util/function/BiPredicate;)Ljava/util/function/BiPredicate;")]
+        Java.Util.Function.IBiPredicate? Or(Java.Util.Function.IBiPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("test", "(Ljava/lang/Object;Ljava/lang/Object;)Z")]
+        bool Test(Java.Lang.Object? p0, Java.Lang.Object? p1);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/BooleanSupplier", GenerateJavaPeer=false)]
+    public partial interface IBooleanSupplier : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        bool AsBoolean { [Java.Interop.JniMethodSignatureAttribute("getAsBoolean", "()Z")] get; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Consumer", GenerateJavaPeer=false)]
+    public partial interface IConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;)V")]
+        void Accept(Java.Lang.Object? p0);
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/Consumer;)Ljava/util/function/Consumer;")]
+        Java.Util.Function.IConsumer? AndThen(Java.Util.Function.IConsumer? after) { throw null; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleBinaryOperator", GenerateJavaPeer=false)]
+    public partial interface IDoubleBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(DD)D")]
+        double ApplyAsDouble(double p0, double p1);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleConsumer", GenerateJavaPeer=false)]
+    public partial interface IDoubleConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(D)V")]
+        void Accept(double p0);
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/DoubleConsumer;)Ljava/util/function/DoubleConsumer;")]
+        Java.Util.Function.IDoubleConsumer? AndThen(Java.Util.Function.IDoubleConsumer? after) { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleFunction", GenerateJavaPeer=false)]
+    public partial interface IDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("apply", "(D)Ljava/lang/Object;")]
+        Java.Lang.Object? Apply(double p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoublePredicate", GenerateJavaPeer=false)]
+    public partial interface IDoublePredicate : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("and", "(Ljava/util/function/DoublePredicate;)Ljava/util/function/DoublePredicate;")]
+        Java.Util.Function.IDoublePredicate? And(Java.Util.Function.IDoublePredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("negate", "()Ljava/util/function/DoublePredicate;")]
+        Java.Util.Function.IDoublePredicate? Negate() { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("or", "(Ljava/util/function/DoublePredicate;)Ljava/util/function/DoublePredicate;")]
+        Java.Util.Function.IDoublePredicate? Or(Java.Util.Function.IDoublePredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("test", "(D)Z")]
+        bool Test(double p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleSupplier", GenerateJavaPeer=false)]
+    public partial interface IDoubleSupplier : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        double AsDouble { [Java.Interop.JniMethodSignatureAttribute("getAsDouble", "()D")] get; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToIntFunction", GenerateJavaPeer=false)]
+    public partial interface IDoubleToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(D)I")]
+        int ApplyAsInt(double p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleToLongFunction", GenerateJavaPeer=false)]
+    public partial interface IDoubleToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(D)J")]
+        long ApplyAsLong(double p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/DoubleUnaryOperator", GenerateJavaPeer=false)]
+    public partial interface IDoubleUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/DoubleUnaryOperator;)Ljava/util/function/DoubleUnaryOperator;")]
+        Java.Util.Function.IDoubleUnaryOperator? AndThen(Java.Util.Function.IDoubleUnaryOperator? after) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(D)D")]
+        double ApplyAsDouble(double p0);
+        [Java.Interop.JniMethodSignatureAttribute("compose", "(Ljava/util/function/DoubleUnaryOperator;)Ljava/util/function/DoubleUnaryOperator;")]
+        Java.Util.Function.IDoubleUnaryOperator? Compose(Java.Util.Function.IDoubleUnaryOperator? before) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/DoubleUnaryOperator;")]
+        Java.Util.Function.IDoubleUnaryOperator? Identity() { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "R"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Function", GenerateJavaPeer=false)]
+    public partial interface IFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/Function;)Ljava/util/function/Function;")]
+        Java.Util.Function.IFunction? AndThen(Java.Util.Function.IFunction? after) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("apply", "(Ljava/lang/Object;)Ljava/lang/Object;")]
+        Java.Lang.Object? Apply(Java.Lang.Object? p0);
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "V"})]
+        [Java.Interop.JniMethodSignatureAttribute("compose", "(Ljava/util/function/Function;)Ljava/util/function/Function;")]
+        Java.Util.Function.IFunction? Compose(Java.Util.Function.IFunction? before) { throw null; }
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+        [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/Function;")]
+        Java.Util.Function.IFunction? Identity() { throw null; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntBinaryOperator", GenerateJavaPeer=false)]
+    public partial interface IIntBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(II)I")]
+        int ApplyAsInt(int p0, int p1);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntConsumer", GenerateJavaPeer=false)]
+    public partial interface IIntConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(I)V")]
+        void Accept(int p0);
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/IntConsumer;)Ljava/util/function/IntConsumer;")]
+        Java.Util.Function.IIntConsumer? AndThen(Java.Util.Function.IIntConsumer? after) { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntFunction", GenerateJavaPeer=false)]
+    public partial interface IIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("apply", "(I)Ljava/lang/Object;")]
+        Java.Lang.Object? Apply(int p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntPredicate", GenerateJavaPeer=false)]
+    public partial interface IIntPredicate : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("and", "(Ljava/util/function/IntPredicate;)Ljava/util/function/IntPredicate;")]
+        Java.Util.Function.IIntPredicate? And(Java.Util.Function.IIntPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("negate", "()Ljava/util/function/IntPredicate;")]
+        Java.Util.Function.IIntPredicate? Negate() { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("or", "(Ljava/util/function/IntPredicate;)Ljava/util/function/IntPredicate;")]
+        Java.Util.Function.IIntPredicate? Or(Java.Util.Function.IIntPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("test", "(I)Z")]
+        bool Test(int p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntSupplier", GenerateJavaPeer=false)]
+    public partial interface IIntSupplier : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        int AsInt { [Java.Interop.JniMethodSignatureAttribute("getAsInt", "()I")] get; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToDoubleFunction", GenerateJavaPeer=false)]
+    public partial interface IIntToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(I)D")]
+        double ApplyAsDouble(int p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntToLongFunction", GenerateJavaPeer=false)]
+    public partial interface IIntToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(I)J")]
+        long ApplyAsLong(int p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/IntUnaryOperator", GenerateJavaPeer=false)]
+    public partial interface IIntUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/IntUnaryOperator;)Ljava/util/function/IntUnaryOperator;")]
+        Java.Util.Function.IIntUnaryOperator? AndThen(Java.Util.Function.IIntUnaryOperator? after) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(I)I")]
+        int ApplyAsInt(int p0);
+        [Java.Interop.JniMethodSignatureAttribute("compose", "(Ljava/util/function/IntUnaryOperator;)Ljava/util/function/IntUnaryOperator;")]
+        Java.Util.Function.IIntUnaryOperator? Compose(Java.Util.Function.IIntUnaryOperator? before) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/IntUnaryOperator;")]
+        Java.Util.Function.IIntUnaryOperator? Identity() { throw null; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongBinaryOperator", GenerateJavaPeer=false)]
+    public partial interface ILongBinaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(JJ)J")]
+        long ApplyAsLong(long p0, long p1);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongConsumer", GenerateJavaPeer=false)]
+    public partial interface ILongConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(J)V")]
+        void Accept(long p0);
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/LongConsumer;)Ljava/util/function/LongConsumer;")]
+        Java.Util.Function.ILongConsumer? AndThen(Java.Util.Function.ILongConsumer? after) { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "R"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongFunction", GenerateJavaPeer=false)]
+    public partial interface ILongFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("apply", "(J)Ljava/lang/Object;")]
+        Java.Lang.Object? Apply(long p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongPredicate", GenerateJavaPeer=false)]
+    public partial interface ILongPredicate : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("and", "(Ljava/util/function/LongPredicate;)Ljava/util/function/LongPredicate;")]
+        Java.Util.Function.ILongPredicate? And(Java.Util.Function.ILongPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("negate", "()Ljava/util/function/LongPredicate;")]
+        Java.Util.Function.ILongPredicate? Negate() { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("or", "(Ljava/util/function/LongPredicate;)Ljava/util/function/LongPredicate;")]
+        Java.Util.Function.ILongPredicate? Or(Java.Util.Function.ILongPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("test", "(J)Z")]
+        bool Test(long p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongSupplier", GenerateJavaPeer=false)]
+    public partial interface ILongSupplier : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        long AsLong { [Java.Interop.JniMethodSignatureAttribute("getAsLong", "()J")] get; }
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToDoubleFunction", GenerateJavaPeer=false)]
+    public partial interface ILongToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(J)D")]
+        double ApplyAsDouble(long p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongToIntFunction", GenerateJavaPeer=false)]
+    public partial interface ILongToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(J)I")]
+        int ApplyAsInt(long p0);
+    }
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/LongUnaryOperator", GenerateJavaPeer=false)]
+    public partial interface ILongUnaryOperator : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("andThen", "(Ljava/util/function/LongUnaryOperator;)Ljava/util/function/LongUnaryOperator;")]
+        Java.Util.Function.ILongUnaryOperator? AndThen(Java.Util.Function.ILongUnaryOperator? after) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(J)J")]
+        long ApplyAsLong(long p0);
+        [Java.Interop.JniMethodSignatureAttribute("compose", "(Ljava/util/function/LongUnaryOperator;)Ljava/util/function/LongUnaryOperator;")]
+        Java.Util.Function.ILongUnaryOperator? Compose(Java.Util.Function.ILongUnaryOperator? before) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("identity", "()Ljava/util/function/LongUnaryOperator;")]
+        Java.Util.Function.ILongUnaryOperator? Identity() { throw null; }
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjDoubleConsumer", GenerateJavaPeer=false)]
+    public partial interface IObjDoubleConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;D)V")]
+        void Accept(Java.Lang.Object? p0, double p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjIntConsumer", GenerateJavaPeer=false)]
+    public partial interface IObjIntConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;I)V")]
+        void Accept(Java.Lang.Object? p0, int p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ObjLongConsumer", GenerateJavaPeer=false)]
+    public partial interface IObjLongConsumer : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("accept", "(Ljava/lang/Object;J)V")]
+        void Accept(Java.Lang.Object? p0, long p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Predicate", GenerateJavaPeer=false)]
+    public partial interface IPredicate : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("and", "(Ljava/util/function/Predicate;)Ljava/util/function/Predicate;")]
+        Java.Util.Function.IPredicate? And(Java.Util.Function.IPredicate? other) { throw null; }
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+        [Java.Interop.JniMethodSignatureAttribute("isEqual", "(Ljava/lang/Object;)Ljava/util/function/Predicate;")]
+        Java.Util.Function.IPredicate? IsEqual(Java.Lang.Object? targetRef) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("negate", "()Ljava/util/function/Predicate;")]
+        Java.Util.Function.IPredicate? Negate() { throw null; }
+        [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+        [Java.Interop.JniMethodSignatureAttribute("not", "(Ljava/util/function/Predicate;)Ljava/util/function/Predicate;")]
+        Java.Util.Function.IPredicate? Not(Java.Util.Function.IPredicate? target) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("or", "(Ljava/util/function/Predicate;)Ljava/util/function/Predicate;")]
+        Java.Util.Function.IPredicate? Or(Java.Util.Function.IPredicate? other) { throw null; }
+        [Java.Interop.JniMethodSignatureAttribute("test", "(Ljava/lang/Object;)Z")]
+        bool Test(Java.Lang.Object? p0);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/Supplier", GenerateJavaPeer=false)]
+    public partial interface ISupplier : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("get", "()Ljava/lang/Object;")]
+        Java.Lang.Object? Get();
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleBiFunction", GenerateJavaPeer=false)]
+    public partial interface IToDoubleBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(Ljava/lang/Object;Ljava/lang/Object;)D")]
+        double ApplyAsDouble(Java.Lang.Object? p0, Java.Lang.Object? p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToDoubleFunction", GenerateJavaPeer=false)]
+    public partial interface IToDoubleFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsDouble", "(Ljava/lang/Object;)D")]
+        double ApplyAsDouble(Java.Lang.Object? p0);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntBiFunction", GenerateJavaPeer=false)]
+    public partial interface IToIntBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(Ljava/lang/Object;Ljava/lang/Object;)I")]
+        int ApplyAsInt(Java.Lang.Object? p0, Java.Lang.Object? p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToIntFunction", GenerateJavaPeer=false)]
+    public partial interface IToIntFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsInt", "(Ljava/lang/Object;)I")]
+        int ApplyAsInt(Java.Lang.Object? p0);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T", "U"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongBiFunction", GenerateJavaPeer=false)]
+    public partial interface IToLongBiFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(Ljava/lang/Object;Ljava/lang/Object;)J")]
+        long ApplyAsLong(Java.Lang.Object? p0, Java.Lang.Object? p1);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/ToLongFunction", GenerateJavaPeer=false)]
+    public partial interface IToLongFunction : Java.Interop.IJavaPeerable, System.IDisposable
+    {
+        [Java.Interop.JniMethodSignatureAttribute("applyAsLong", "(Ljava/lang/Object;)J")]
+        long ApplyAsLong(Java.Lang.Object? p0);
+    }
+    [Java.Interop.JavaTypeParametersAttribute(new string[]{ "T"})]
+    [Java.Interop.JniTypeSignatureAttribute("java/util/function/UnaryOperator", GenerateJavaPeer=false)]
+    public partial interface IUnaryOperator : Java.Interop.IJavaPeerable, Java.Util.Function.IFunction, System.IDisposable
+    {
     }
 }
