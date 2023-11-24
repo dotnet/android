@@ -64,6 +64,6 @@
     <ProjectReference Include="..\CommonSampleLibrary\CommonSampleLibrary.NET.csproj" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ReferenceAndroidX)' == 'True' ">
-    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.4.1.1" />
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.6.1.5" />
   </ItemGroup>
 </Project>
