@@ -118,6 +118,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $(JAVA_HOME_11_X64)
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -125,9 +126,6 @@ stages:
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
-
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
-      displayName: set Java8SdkDirectory
 
     - template: yaml-templates/start-stop-emulator.yaml
       parameters:
@@ -197,6 +195,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -250,6 +249,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
