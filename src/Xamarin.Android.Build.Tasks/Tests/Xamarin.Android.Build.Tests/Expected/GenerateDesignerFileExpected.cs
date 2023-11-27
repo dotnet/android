@@ -361,9 +361,9 @@ namespace Foo.Foo
 		public partial class Styleable
 		{
 			
-			// aapt resource value: { 0x10100D2,0x7F040000,0x7F040000,0x7F040001 }
+			// aapt resource value: { 0x0,0x7F040000,0x7F040000,0x7F040001 }
 			public static int[] CustomFonts = new int[] {
-					16842962,
+					0,
 					2130968576,
 					2130968576,
 					2130968577};
@@ -377,10 +377,10 @@ namespace Foo.Foo
 			// aapt resource value: 3
 			public const int CustomFonts_customFont1 = 3;
 			
-			// aapt resource value: { 0x10100B2,0x10101F8,0x7F040002,0x7F040003 }
+			// aapt resource value: { 0x0,0x0,0x7F040002,0x7F040003 }
 			public static int[] MultiSelectListPreference = new int[] {
-					16842930,
-					16843256,
+					0,
+					0,
 					2130968578,
 					2130968579};
 			
