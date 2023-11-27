@@ -878,7 +878,7 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
     <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
-    <value>You can install the missing API level by running `dotnet build -t:InstallAndroidDependencies -f {0} -p:AndroidSdkDirectory={1}`, or change the Xamarin.Android project to target an API version that is installed.</value>
+    <value>You can install the missing API level by running `dotnet build -t:InstallAndroidDependencies -f {0} -p:AndroidSdkDirectory={1}`, or change the project to target an API version that is installed.</value>
     <comment>This string is the instrucitons to install the component
 {0} - The TargetFramework the app is targeting.
 {1} - The current AndroidSdkDirectory path.</comment>
