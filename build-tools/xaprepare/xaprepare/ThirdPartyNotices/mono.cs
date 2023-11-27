@@ -10,9 +10,7 @@ namespace Xamarin.Android.Prepare
 		protected override bool ShouldInclude (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps;
 
 		public override List<ThirdPartyNotice> Notices => new List <ThirdPartyNotice> {
-			new mono_mono_mono_TPN (),
 			new mono_mono_cecil_TPN (),
-			new mono_mono_ikdasm_TPN (),
 			new mono_mono_linker_TPN (),
 		};
 	}
@@ -25,55 +23,28 @@ namespace Xamarin.Android.Prepare
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/cecil";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => Utilities.GetUrlContent (
-			new Uri ("https://raw.githubusercontent.com/dotnet/cecil/acd8ad7bca1aa560576ef07875282e285cf20d53/LICENSE.txt"))
-			.GetAwaiter ().GetResult ();
-	}
+		public override string LicenseText => @"Copyright (c) 2008 - 2015 Jb Evain
+Copyright (c) 2008 - 2011 Novell, Inc.
 
-	class mono_mono_mono_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/");
-		static readonly string licenseFile = String.Empty;
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the
+""Software""), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
 
-		public override string LicenseFile => licenseFile;
-		public override string Name        => "mono/mono";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => Utilities.GetUrlContent (
-			new Uri ("https://raw.githubusercontent.com/mono/mono/12dd9040252e5b9c63b8df9ef53777eb01232405/LICENSE"))
-			.GetAwaiter ().GetResult ();
-	}
+The above copyright notice and this permission notice shall be
+included in all copies or substantial portions of the Software.
 
-	class mono_mono_ikdasm_TPN : ThirdPartyNotice
-	{
-		static readonly Uri    url         = new Uri ("https://github.com/mono/ikdasm");
-
-		public override string LicenseFile => String.Empty;
-		public override string Name        => "mono/ikdasm";
-		public override Uri    SourceUrl   => url;
-		public override string LicenseText => @"
-Copyright (C) 2012 Jeroen Frijters
-
-This software is provided 'as-is', without any express or implied
-warranty.  In no event will the authors be held liable for any damages
-arising from the use of this software.
-
-Permission is granted to anyone to use this software for any purpose,
-including commercial applications, and to alter it and redistribute it
-freely, subject to the following restrictions:
-
-1. The origin of this software must not be misrepresented; you must not
-   claim that you wrote the original software. If you use this software
-   in a product, an acknowledgment in the product documentation would be
-   appreciated but is not required.
-2. Altered source versions must be plainly marked as such, and must not be
-   misrepresented as being the original software.
-3. This notice may not be removed or altered from any source distribution.
-
-Jeroen Frijters
-jeroen@frijters.net
+THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ";
-
-		public override bool Include (bool includeExternalDeps, bool includeBuildDeps) => includeExternalDeps && includeBuildDeps;
 	}
 
 	class mono_mono_linker_TPN : ThirdPartyNotice
@@ -84,8 +55,28 @@ jeroen@frijters.net
 		public override string LicenseFile => licenseFile;
 		public override string Name        => "mono/linker";
 		public override Uri    SourceUrl   => url;
-		public override string LicenseText => Utilities.GetUrlContent (
-			new Uri ("https://raw.githubusercontent.com/dotnet/linker/6b3a3050c70577bd1b3fd7611eef56679e22a4f1/LICENSE.txt"))
-			.GetAwaiter ().GetResult ();
+		public override string LicenseText => @"The MIT License (MIT)
+Copyright (c) .NET Foundation and Contributors
+
+All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the ""Software""), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED ""AS IS"", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+";
 	}
 }

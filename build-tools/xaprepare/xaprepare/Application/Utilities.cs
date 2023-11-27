@@ -417,27 +417,6 @@ namespace Xamarin.Android.Prepare
 			return (false, 0, HttpStatusCode.InternalServerError);
 		}
 
-		public static async Task<string> GetUrlContent (Uri url)
-		{
-			TimeSpan delay = ExceptionRetryInitialDelay;
-			Exception? e = null;
-			for (int i = 0; i < ExceptionRetries; i++) {
-				try {
-					using (HttpClient httpClient = CreateHttpClient ()) {
-						httpClient.Timeout = WebRequestTimeout;
-						return await httpClient.GetStringAsync (url).ConfigureAwait (true);
-					}
-				} catch (Exception ex) {
-					if (i < ExceptionRetries - 1) {
-						WaitAWhile ($"GetUrlContent {url}", i, ref ex, ref delay);
-					} else {
-						e = ex;
-					}
-				}
-			}
-			throw new Exception ($"Unable to get content from URL: {url}\n{e}");
-		}
-
 		public static async Task<bool> Download (Uri url, string targetFile, DownloadStatus status)
 		{
 			if (url == null)
