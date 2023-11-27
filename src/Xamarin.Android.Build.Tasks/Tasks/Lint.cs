@@ -204,7 +204,6 @@ namespace Xamarin.Android.Tasks
 
 			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
 			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
-
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (fromCmdlineTools || lintToolVersion >= issue.Value) {
 					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
@@ -385,13 +384,6 @@ namespace Xamarin.Android.Tasks
 								return v;
 							}
 						}
-					}
-				}
-				// try to parse the cmdline-tools folder name to get the version
-				var toolsDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (tool), ".."));
-				if (Directory.Exists (toolsDir)) {
-					if (Version.TryParse (Path.GetFileName (toolsDir), out Version v)) {
-						return v;
 					}
 				}
 				Log.LogCodedWarning ("XA0108", Properties.Resources.XA0108, tool);
