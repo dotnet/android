@@ -95,7 +95,7 @@ the Android SDK packages specified in the `@(AndroidDependency)` item group.
 dotnet build -t:InstallAndroidDependencies -f net8.0-android -p:AndroidSdkDirectory=<path to sdk>
 ```
 
-The `-f net8.0-android` is required as this target is an .net Android specific target. If you omit this argument
+The `-f net8.0-android` is required as this target is a .NET Android specific target. If you omit this argument
 you will get the following error
 
 `error MSB4057: The target "InstallAndroidDependencies" does not exist in the project`
