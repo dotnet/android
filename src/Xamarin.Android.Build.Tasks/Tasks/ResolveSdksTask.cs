@@ -31,7 +31,6 @@ using Microsoft.Build.Utilities;
 using System;
 using System.IO;
 using System.Linq;
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -70,9 +69,6 @@ namespace Xamarin.Android.Tasks
 		public string JavaSdkPath { get; set; }
 
 		[Output]
-		public string JavaSdkVersion { get; set; }
-
-		[Output]
 		public string MonoAndroidToolsPath { get; set; }
 
 		[Output]
@@ -98,9 +94,7 @@ namespace Xamarin.Android.Tasks
 			var minVersion      = Version.Parse (MinimumSupportedJavaVersion);
 			var maxVersion      = Version.Parse (LatestSupportedJavaVersion);
 
-			JdkInfo jdkInfo     = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion);
-			JavaSdkPath         = jdkInfo?.HomePath;
-			JavaSdkVersion      = jdkInfo?.Version?.ToString ();
+			JavaSdkPath         = MonoAndroidHelper.GetJdkInfo (this.CreateTaskLogger (), JavaSdkPath, minVersion, maxVersion)?.HomePath;
 
 			MonoAndroidHelper.RefreshSupportedVersions (ReferenceAssemblyPaths);
 
@@ -140,7 +134,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugMessage ($"  {nameof (AndroidSdkPath)}: {AndroidSdkPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidNdkPath)}: {AndroidNdkPath}");
 			Log.LogDebugMessage ($"  {nameof (JavaSdkPath)}: {JavaSdkPath}");
-			Log.LogDebugMessage ($"  {nameof (JavaSdkVersion)}: {JavaSdkVersion}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidBinPath)}: {MonoAndroidBinPath}");
 			Log.LogDebugMessage ($"  {nameof (MonoAndroidToolsPath)}: {MonoAndroidToolsPath}");
 			Log.LogDebugMessage ($"  {nameof (AndroidBinUtilsPath)}: {AndroidBinUtilsPath}");

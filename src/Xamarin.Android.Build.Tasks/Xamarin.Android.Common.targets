@@ -877,7 +877,6 @@ because xbuild doesn't support framework reference assemblies.
 		ToolPath="$(LintToolPath)"
 		ToolExe="$(LintToolExe)"
 		JavaSdkPath="$(_JavaSdkDirectory)"
-		JavaSdkVersion="$(_JavaSdkVersion)"
 	/>
 </Target>
 

@@ -60,9 +60,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string JavaSdkPath { get; set; }
 
-		[Required]
-		public string JavaSdkVersion { get; set; }
-
 		/// <summary>
 		/// Location of an xml config files used to
 		/// determine whether issues are enabled or disabled
@@ -208,14 +205,6 @@ namespace Xamarin.Android.Tasks
 			Version lintToolVersion = GetLintVersion (GenerateFullPathToTool ());
 			Log.LogDebugMessage ("  LintVersion: {0}", lintToolVersion);
 
-			var unknownJdkVersion = new Version (0, 1);
-			Version? jdkVersion = unknownJdkVersion;
-			Version.TryParse (JavaSdkVersion, out jdkVersion);
-			if (lintToolVersion >= new Version (11, 0) && (jdkVersion > unknownJdkVersion && jdkVersion?.Major < 17)) {
-				Log.LogCodedError ("XALINTTODO", $"Lint version {lintToolVersion} is not compatible with JDK {JavaSdkPath}. Please set $(JavaSdkDirectory) to a path containing JDK 17 or later.");
-				return false;
-			}
-
 			foreach (var issue in DisabledIssuesByVersion) {
 				if (fromCmdlineTools || lintToolVersion >= issue.Value) {
 					if (string.IsNullOrEmpty (DisabledIssues) || !DisabledIssues.Contains (issue.Key))
@@ -229,6 +218,7 @@ namespace Xamarin.Android.Tasks
 					EnabledIssues = CleanIssues (issue.Key, lintToolVersion, EnabledIssues, nameof (EnabledIssues) );
 				}
 			}
+
 			EnvironmentVariables = new [] { "JAVA_HOME=" + JavaSdkPath };
 
 			base.RunTask ();

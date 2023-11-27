@@ -1429,10 +1429,6 @@ namespace UnnamedProject
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
-			Console.WriteLine (AndroidSdkResolver.GetJavaSdkVersionString ());
-			//if (TestEnvironment.IsUsingJdk8)
-			//	Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
-
 			string disabledIssues = "StaticFieldLeak,ObsoleteSdkInt,AllowBackup,ExportedReceiver,RedundantLabel";
 
 			var proj = new XamarinAndroidApplicationProject () {
@@ -1487,9 +1483,6 @@ namespace UnnamedProject
 		[Test]
 		public void CheckLintConfigMerging ()
 		{
-			//if (TestEnvironment.IsUsingJdk8)
-			//	Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
-
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidLintConfig ("lint1.xml") {
@@ -1623,9 +1616,6 @@ public class ToolbarEx {
 		[Test]
 		public void CheckLintResourceFileReferencesAreFixed ()
 		{
-			//if (TestEnvironment.IsUsingJdk8)
-			//	Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/5698");
-
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
 					KnownPackages.AndroidSupportV4_27_0_2_1,
