@@ -2135,18 +2135,11 @@ because xbuild doesn't support framework reference assemblies.
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
-<<<<<<< HEAD
     IncludeFiles="@(AndroidPackagingOptionsInclude)"
-=======
-<<<<<<< HEAD
->>>>>>> 3d45abff5 ([Xamarin.Andorid.Build.Tasks] First Pass on Dynamic Asset Features)
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)">
-=======
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     IncludeRuntime="$(_AndroidIncludeRuntime)">
->>>>>>> 10b353371 ([Xamarin.Andorid.Build.Tasks] First Pass on Dynamic Asset Features)
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
