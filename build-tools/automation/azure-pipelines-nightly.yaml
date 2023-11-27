@@ -195,6 +195,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -248,6 +249,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
