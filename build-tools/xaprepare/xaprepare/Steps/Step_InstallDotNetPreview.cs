@@ -54,7 +54,7 @@ namespace Xamarin.Android.Prepare
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests");
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var dotnets = new [] { "net6", "net7", "current" };
+			var dotnets = new [] { "net7", "net8", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand), $"microsoft.net.workload.mono.toolchain.{dotnet}");
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
