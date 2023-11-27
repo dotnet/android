@@ -233,14 +233,61 @@ excluded from the final package. The default values are as follows
 	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*')" />
 </ItemGroup>
 ```
+
 Items can use file blob characters for wildcards such as `*` and `?`.
 However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
 This is so MSBuild does not try to interpret them as actual file wildcards.
 
+For example 
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsExclude Include="%2A.foo_%2A" />
+  <AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.foo')" />
+</ItemGroup>
+```
+
 NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
-appropriate RegEx expressions.
+appropriate file globs.
+
+If the default file glob is too restrictive you can remove it by adding the 
+following to your csproj
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsExclude Remove="$([MSBuild]::Escape('*.kotlin_*')" />
+</ItemGroup>
+```
 
 Added in Xamarin.Android 13.1 and .NET 7.
+
+## AndroidPackagingOptionsInclude
+
+A set of file glob compatible items which will allow for items to be
+included from the final package. The default values are as follows
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.kotlin_builtins')" />
+</ItemGroup>
+```
+
+Items can use file blob characters for wildcards such as `*` and `?`.
+However these Items MUST use URL encoding or '$([MSBuild]::Escape(''))'.
+This is so MSBuild does not try to interpret them as actual file wildcards.
+For example 
+
+```
+<ItemGroup>
+	<AndroidPackagingOptionsInclude Include="%2A.foo_%2A" />
+  <AndroidPackagingOptionsInclude Include="$([MSBuild]::Escape('*.foo')" />
+</ItemGroup>
+```
+
+NOTE: `*`, `?` and `.` will be replaced in the `BuildApk` task with the
+appropriate file globs.
+
+Added in .NET 9.
 
 ## AndroidResource
 

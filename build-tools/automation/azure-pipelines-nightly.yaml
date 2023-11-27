@@ -20,6 +20,10 @@ resources:
     type: github
     name: xamarin/monodroid
     endpoint: xamarin
+  - repository: maui
+    type: github
+    name: dotnet/maui
+    endpoint: xamarin
 
 # Global variables
 variables:
