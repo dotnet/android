@@ -91,6 +91,17 @@ MSBuild /t:Install ProjectName.csproj /p:AdbTarget=-e
 Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then installs
 the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
+```dotnetcli
+dotnet build -t:InstallAndroidDependencies -f net8.0-android -p:AndroidSdkDirectory=<path to sdk>
+```
+
+The `-f net8.0-android` is required as this target is an .net Android specific target. If you omit this argument
+you will get the following error
+
+`error MSB4057: The target "InstallAndroidDependencies" does not exist in the project`
+
+The `AndroidSdkDirectory` is required as we need to know where to install the required components.
+
 The [`$(AndroidManifestType)`](~/android/deploy-test/building-apps/build-properties.md#androidmanifesttype)
 MSBuild property controls which
 [Visual Studio SDK Manager repository](~/android/get-started/installation/android-sdk.md?tabs=windows#repository-selection)
