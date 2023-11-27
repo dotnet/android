@@ -156,6 +156,7 @@ stages:
       emulatorMSBuildArgs: -p:TestAvdExtraBootArgs=-writable-system
       jobName: SystemApplicationTests
       jobTimeout: 120
+      jdkTestFolder: $HOME/android-toolchain/jdk-17
       testSteps:
       - template: run-nunit-tests.yaml
         parameters:
@@ -187,6 +188,10 @@ stages:
       clean: all
     steps:
     - template: agent-cleanser/v1.yml@yaml-templates
+
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
+      displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
 
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
@@ -241,6 +246,10 @@ stages:
       clean: all
     steps:
     - template: agent-cleanser/v1.yml@yaml-templates
+
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
+      displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
 
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
