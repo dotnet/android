@@ -1,10 +1,10 @@
 <replacements>
   <replace-type
-      from="com/xamarin/interop/RenameClassBase1"
-      to="com/xamarin/interop/RenameClassBase2" />
+      from="net/dot/jni/test/RenameClassBase1"
+      to="net/dot/jni/test/RenameClassBase2" />
   <replace-type
-      from="com/xamarin/interop/AndroidInterface"
-      to="com/xamarin/interop/DesugarAndroidInterface$_CC" />
+      from="net/dot/jni/test/AndroidInterface"
+      to="net/dot/jni/test/DesugarAndroidInterface$_CC" />
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToToString"
@@ -14,7 +14,7 @@
   <replace-method
       source-type="java/lang/Object"
       source-method-name="remappedToStaticHashCode"
-      target-type="com/xamarin/interop/ObjectHelper"
+      target-type="net/dot/jni/test/ObjectHelper"
       target-method-name="getHashCodeHelper" target-method-instance-to-static="true" />
   <replace-method
       source-type="java/lang/Runtime"
@@ -22,9 +22,9 @@
       target-type="java/lang/Runtime"
       target-method-name="getRuntime" target-method-instance-to-static="false" />
   <replace-method
-      source-type="com/xamarin/interop/RenameClassBase2"
+      source-type="net/dot/jni/test/RenameClassBase2"
       source-method-name="hashCode"
       source-method-signature="()"
-      target-type="com/xamarin/interop/RenameClassBase2"
+      target-type="net/dot/jni/test/RenameClassBase2"
       target-method-name="myNewHashCode" target-method-instance-to-static="false" />
 </replacements>
