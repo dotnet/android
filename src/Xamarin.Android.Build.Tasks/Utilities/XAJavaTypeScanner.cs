@@ -47,6 +47,28 @@ class XAJavaTypeScanner
 		this.cache = cache;
 	}
 
+	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolverNew resolver)
+	{
+		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
+		foreach (ITaskItem asmItem in inputAssemblies) {
+			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
+			AssemblyDefinition asmdef = resolver.Load (asmItem.ItemSpec);
+
+			foreach (ModuleDefinition md in asmdef.Modules) {
+				foreach (TypeDefinition td in md.Types) {
+					AddJavaType (td, types, arch);
+				}
+			}
+		}
+
+		var ret = new List<JavaType> ();
+		foreach (var kvp in types) {
+			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.PerAbi));
+		}
+
+		return ret;
+	}
+
 	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
 		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);

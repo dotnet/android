@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -18,6 +19,12 @@ sealed class ArchitectureMarshalMethods
 		MarshalMethods = marshalMethods;
 		Assemblies = assemblies;
 	}
+
+	public ArchitectureMarshalMethods ()
+	{
+		MarshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.OrdinalIgnoreCase);
+		Assemblies = new List<AssemblyDefinition> ();
+	}
 }
 
 /// <summary>
@@ -33,10 +40,10 @@ sealed class ArchitectureMarshalMethods
 /// </summary>
 class MarshalMethodsMirrorHelper
 {
-	MarshalMethodsClassifier classifier;
-	AndroidTargetArch templateArch;
-	Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch;
-	TaskLoggingHelper log;
+	readonly MarshalMethodsClassifier classifier;
+	readonly AndroidTargetArch templateArch;
+	readonly Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch;
+	readonly TaskLoggingHelper log;
 
 	public MarshalMethodsMirrorHelper (MarshalMethodsClassifier classifier, AndroidTargetArch templateArch, Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch, TaskLoggingHelper log)
 	{
@@ -67,18 +74,59 @@ class MarshalMethodsMirrorHelper
 
 	ArchitectureMarshalMethods Reflect (AndroidTargetArch arch, IDictionary<string, ITaskItem> archAssemblies)
 	{
-		var marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
-		var assemblyDefinitions = new List<AssemblyDefinition> ();
+		var ret = new ArchitectureMarshalMethods ();
+		var cache = new Dictionary<string, AssemblyDefinition> (StringComparer.OrdinalIgnoreCase);
 
-		Console.WriteLine ();
-		Console.WriteLine ($"Reflecting marshal methods for architecture {arch}");
+		log.LogDebugMessage ($"Reflecting marshal methods for architecture {arch}");
 		foreach (var kvp in classifier.MarshalMethods) {
-			Console.WriteLine ($"Marshal methods in: {kvp.Key}:");
-			foreach (MarshalMethodEntry mme in kvp.Value) {
-				Console.WriteLine ($"  {mme.DeclaringType.FullName}.{mme.NativeCallback}");
+			foreach (MarshalMethodEntry templateMethod in kvp.Value) {
+				ReflectMethod (arch, templateMethod, archAssemblies, ret, cache);
 			}
 		}
 
-		return new ArchitectureMarshalMethods (marshalMethods, assemblyDefinitions);
+		return ret;
+	}
+
+	void ReflectMethod (AndroidTargetArch arch, MarshalMethodEntry templateMethod, IDictionary<string, ITaskItem> archAssemblies, ArchitectureMarshalMethods archMarshalMethods, Dictionary<string, AssemblyDefinition> cache)
+	{
+		string? assemblyName = templateMethod.NativeCallback.DeclaringType.Module?.Assembly?.Name?.Name;
+		if (String.IsNullOrEmpty (assemblyName)) {
+			throw new InvalidOperationException ($"Unable to obtain assembly name for method {templateMethod}");
+		}
+
+		if (!cache.TryGetValue (assemblyName, out AssemblyDefinition assembly)) {
+			assembly = LoadAssembly (arch, assemblyName, archAssemblies, cache);
+			cache.Add (assemblyName, assembly);
+		}
+
+		throw new NotImplementedException ();
+	}
+
+	AssemblyDefinition LoadAssembly (AndroidTargetArch arch, string assemblyName, IDictionary<string, ITaskItem> archAssemblies, Dictionary<string, AssemblyDefinition> cache)
+	{
+		if (!archAssemblies.TryGetValue (assemblyName, out ITaskItem assemblyItem)) {
+			throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' not found for architecture '{arch}'");
+		}
+
+		throw new NotImplementedException ();
+	}
+
+	void ReflectType (AndroidTargetArch arch, string fullTypeName, IList<MarshalMethodEntry> templateMethods, IDictionary<string, ITaskItem> archAssemblies, ArchitectureMarshalMethods archMarshalMethods)
+	{
+		log.LogDebugMessage ($"  Marshal methods in: {fullTypeName}:");
+		string[] parts = fullTypeName.Split (',');
+		if (parts.Length != 2) {
+			throw new InvalidOperationException ($"Internal error: invalid full type name '{fullTypeName}'");
+		}
+
+		string typeName = parts[0].Trim ();
+		string assemblyName = parts[1].Trim ();
+		if (!archAssemblies.TryGetValue (assemblyName, out ITaskItem assemblyItem)) {
+			throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' not found for architecture '{arch}'");
+		}
+
+		foreach (MarshalMethodEntry mme in templateMethods) {
+			log.LogDebugMessage ($"    {mme.DeclaringType.FullName}.{mme.NativeCallback}");
+		}
 	}
 }

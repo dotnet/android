@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 		{
 			try {
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
-				// Run (useMarshalMethods);
+				Run (useMarshalMethods);
 
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
@@ -138,6 +138,32 @@ namespace Xamarin.Android.Tasks
 				if (Directory.Exists (dir.ItemSpec)) {
 					res.FrameworkSearchDirectories.Add (dir.ItemSpec);
 				}
+			}
+
+			return res;
+		}
+
+		XAAssemblyResolverNew MakeResolver (bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies)
+		{
+			var readerParams = new ReaderParameters();
+			if (useMarshalMethods) {
+				readerParams.ReadWrite = true;
+				readerParams.InMemory = true;
+			}
+
+			var res = new XAAssemblyResolverNew (targetArch, Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
+			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+
+			Log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
+			foreach (var kvp in assemblies) {
+				string assemblyDir = Path.GetDirectoryName (kvp.Value.ItemSpec);
+				if (uniqueDirs.Contains (assemblyDir)) {
+					continue;
+				}
+
+				uniqueDirs.Add (assemblyDir);
+				res.SearchDirectories.Add (assemblyDir);
+				Log.LogDebugMessage ($"  {assemblyDir}");
 			}
 
 			return res;
@@ -189,11 +215,8 @@ namespace Xamarin.Android.Tasks
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
 
+				XAAssemblyResolverNew res = MakeResolver (useMarshalMethods, arch, archAssemblies);
 				if (!archAgnosticDone) {
-					// TODO: resolver must be modified to search ONLY the arch-specific dirs. The directories need to come from @(ResolvedAssemblies), because we
-					// mustn't use FrameworkDirectories when linking is enabled.  @(ResolvedAssemblies) will contain **all** the relevant assembly paths, linked
-					// or not, so that's where we should look for references.  This **has to** be done on per-arch basis.
-					XAAssemblyResolver res = MakeResolver (useMarshalMethods);
 					var cache = new TypeDefinitionCache ();
 					(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (res, cache, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods);
 
@@ -203,11 +226,12 @@ namespace Xamarin.Android.Tasks
 					firstArch = arch;
 					archAgnosticDone = true;
 				}
+
 				RewriteMarshalMethods (classifier, firstArch, allAssembliesPerArch);
 			}
 		}
 
-		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
+		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolverNew res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
 		{
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
@@ -248,7 +272,7 @@ namespace Xamarin.Android.Tasks
 			// rewriter.Rewrite (res, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
 		}
 
-		bool GenerateJavaSourcesAndMaybeClassifyMarshalMethods (XAAssemblyResolver res, List<JavaType> javaTypesForJCW, TypeDefinitionCache cache, bool useMarshalMethods, out MarshalMethodsClassifier? classifier)
+		bool GenerateJavaSourcesAndMaybeClassifyMarshalMethods (XAAssemblyResolverNew res, List<JavaType> javaTypesForJCW, TypeDefinitionCache cache, bool useMarshalMethods, out MarshalMethodsClassifier? classifier)
 		{
 			if (useMarshalMethods) {
 				classifier = new MarshalMethodsClassifier (cache, res, Log);

@@ -224,7 +224,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		TypeDefinitionCache tdCache;
-		XAAssemblyResolver resolver;
+		IAssemblyResolver resolver;
 		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
@@ -237,7 +237,7 @@ namespace Xamarin.Android.Tasks
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
 
-		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, XAAssemblyResolver res, TaskLoggingHelper log)
+		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
