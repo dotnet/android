@@ -24,15 +24,6 @@ namespace Xamarin.Android.Prepare
 			foreach (ExternalGitDependency egd in externalDependencies) {
 				Log.StatusLine ($"  {context.Characters.Bullet} {egd.Name}");
 
-				if (egd.Owner == "mono" && egd.Name == "mono") {
-					var genFilesStep = new Step_GenerateFiles (false, true);
-					var monogitPropsFile = genFilesStep.Get_MonoGitHash_props (context);
-					Log.Status ("Generating ");
-					Log.Status (Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, monogitPropsFile.OutputPath), ConsoleColor.White);
-					monogitPropsFile.Generate (context);
-					continue;
-				}
-
 				string destDir = Path.Combine (Configurables.Paths.ExternalGitDepsDestDir, egd.Name);
 				if (!Directory.Exists (destDir)) {
 					var egdUrl = await GetGitHubURL (egd, git);

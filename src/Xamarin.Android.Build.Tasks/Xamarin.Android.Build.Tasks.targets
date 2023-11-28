@@ -181,7 +181,7 @@
     <ReplaceFileContents
         SourceFile="Xamarin.Android.BuildInfo.txt.in"
         DestinationFile="Xamarin.Android.BuildInfo.txt"
-        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+        Replacements="@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Common.props.in"

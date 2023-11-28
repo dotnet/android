@@ -59,18 +59,6 @@ ifneq ($(PREPARE_AUTOPROVISION),0)
 _PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
 endif
 
-ifeq ($(OS_NAME),Darwin)
-ifeq ($(HOMEBREW_PREFIX),)
-HOMEBREW_PREFIX ?= $(shell brew --prefix)
-endif
-else
-HOMEBREW_PREFIX := $prefix
-endif
-
-ifeq ($(wildcard Configuration.OperatingSystem.props),)
-PREPARE_MSBUILD_FLAGS += "/p:HostHomebrewPrefix=$(HOMEBREW_PREFIX)"
-endif
-
 ifneq ($(PREPARE_SCENARIO),)
 _PREPARE_ARGS += -s:"$(PREPARE_SCENARIO)"
 endif

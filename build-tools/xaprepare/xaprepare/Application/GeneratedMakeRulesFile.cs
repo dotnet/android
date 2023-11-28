@@ -41,7 +41,6 @@ namespace Xamarin.Android.Prepare
 			WriteVariable ("export OS_ARCH", context.OS.Architecture);
 			WriteVariable ("export OS_ARCH_TRANSLATED", context.OS.ProcessIsTranslated ? "true" : "false");
 			WriteVariable ("PRODUCT_VERSION", context.ProductVersion);
-			WriteVariable ("MONO_SOURCE_FULL_PATH", Configurables.Paths.MonoSourceFullPath);
 
 			// These must remain dynamic since the developer may change branches without re-running `prepare`
 			string getGitBranchScript = Utilities.GetRelativePath (BuildPaths.XamarinAndroidSourceRoot, Path.Combine (Configurables.Paths.BuildToolsScriptsDir, "get-git-branch.sh"));
@@ -84,9 +83,6 @@ namespace Xamarin.Android.Prepare
 					stableApiLevels.Add (api);
 			}
 
-			var enabledJitAbis = AbiNames.AllJitAbis.Where (a => context.IsTargetJitAbiEnabled (a));
-			var enabledAotAbis = AbiNames.AllAotAbis.Where (a => context.IsTargetAotAbiEnabled (a));
-
 			WriteVariable ("ALL_API_LEVELS",    ToValue (allApiLevels));
 			WriteVariable ("ALL_PLATFORM_IDS",  ToValue (allPlatformIDs));
 			WriteVariable ("ALL_FRAMEWORKS",    ToValue (allFrameworks));
@@ -94,8 +90,6 @@ namespace Xamarin.Android.Prepare
 			WriteVariable ("STABLE_API_LEVELS", ToValue (stableApiLevels));
 			WriteVariable ("FRAMEWORKS",        ToValue (frameworks));
 			WriteVariable ("STABLE_FRAMEWORKS", ToValue (stableFrameworks));
-			WriteVariable ("ALL_JIT_ABIS",      ToValue (enabledJitAbis.ToList()));
-			WriteVariable ("ALL_AOT_ABIS",      ToValue (enabledAotAbis.ToList ()));
 			WriteVariable ("ANDROID_TOOLCHAIN_DIR", context.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory));
 			if (context.MonoOptions != null && context.MonoOptions.Count > 0) {
 				WriteVariable ("MONO_OPTIONS", ToValue (context.MonoOptions));
