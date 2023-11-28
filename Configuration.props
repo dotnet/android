@@ -138,7 +138,7 @@
     <XABuildToolsVersion>34</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">34.0.0</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>34.0.1</XAPlatformToolsVersion>
+    <XAPlatformToolsVersion>34.0.5</XAPlatformToolsVersion>
     <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.15.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
@@ -179,8 +179,8 @@
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">7.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">8512546_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">11.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">10406996_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
