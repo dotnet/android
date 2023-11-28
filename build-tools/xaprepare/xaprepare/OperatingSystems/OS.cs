@@ -84,12 +84,6 @@ namespace Xamarin.Android.Prepare
 		/// </summary>
 		public string Architecture   { get; protected set; } = String.Empty;
 
-		/// <summary>
-		///   Prefix where Homebrew is installed (relevant only on macOS, but present in all operating system for
-		///   compatibility reasons)
-		/// </summary>
-		public string HomebrewPrefix { get; set; } = String.Empty;
-
 		public virtual bool ProcessIsTranslated => false;
 
 		/// <summary>
