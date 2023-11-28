@@ -92,7 +92,7 @@ Calls the [`GetAndroidDependencies`](#getandroiddependencies) target, then insta
 the Android SDK packages specified in the `@(AndroidDependency)` item group.
 
 ```dotnetcli
-dotnet build -t:InstallAndroidDependencies -f net8.0-android -p:AndroidSdkDirectory=<path to sdk>
+dotnet build -t:InstallAndroidDependencies -f net8.0-android -p:AndroidSdkDirectory=<path to sdk> -p:JavaSdkDirectory=<path to java sdk>
 ```
 
 The `-f net8.0-android` is required as this target is a .NET Android specific target. If you omit this argument
@@ -100,7 +100,8 @@ you will get the following error
 
 `error MSB4057: The target "InstallAndroidDependencies" does not exist in the project`
 
-The `AndroidSdkDirectory` is required as we need to know where to install the required components.
+The `AndroidSdkDirectory` and `JavaSdkDirectory` are required as we need to know where to install the required components. These directories can be empty or existing. Sdk components
+will be installed on top on an existing sdk installation.
 
 The [`$(AndroidManifestType)`](~/android/deploy-test/building-apps/build-properties.md#androidmanifesttype)
 MSBuild property controls which
