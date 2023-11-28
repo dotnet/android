@@ -13,10 +13,6 @@
   <Import Project="../../../Configuration.props" />
 
   <ItemGroup>
-    <Compile Remove="Steps\Step_PrepareBundle.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)/BuildInfo.Generated.cs" />
     <Compile Include="$(IntermediateOutputPath)/Properties.Defaults.cs" />
     <Compile Include="../../../src-ThirdParty/crc32.net/SafeProxy.cs" />

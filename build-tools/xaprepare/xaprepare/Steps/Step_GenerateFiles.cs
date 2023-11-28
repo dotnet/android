@@ -55,7 +55,6 @@ namespace Xamarin.Android.Prepare
 				if (onlyRequired) {
 					return new List<GeneratedFile> {
 						Get_SourceLink_Json (context),
-						Get_MonoGitHash_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
 					};
@@ -67,7 +66,6 @@ namespace Xamarin.Android.Prepare
 						Get_Cmake_XA_Build_Configuration (context),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
-						Get_MonoGitHash_props (context),
 						Get_Omnisharp_Json (context),
 					};
 				}
@@ -77,7 +75,6 @@ namespace Xamarin.Android.Prepare
 				return null;
 
 			var steps = new List <GeneratedFile> {
-				new GeneratedProfileAssembliesProjitemsFile (Configurables.Paths.ProfileAssembliesProjitemsPath),
 				new GeneratedMonoAndroidProjitemsFile (),
 			};
 
@@ -133,7 +130,6 @@ namespace Xamarin.Android.Prepare
 				{ "@OS_RELEASE@",           context.OS.Release ?? String.Empty },
 				{ "@HOST_CPUS@",            context.OS.CPUCount.ToString () },
 				{ "@ARCHITECTURE_BITS@",    context.OS.Is64Bit ? "64" : "32" },
-				{ "@HOST_HOMEBREW_PREFIX@", context.OS.HomebrewPrefix ?? String.Empty },
 				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
@@ -198,21 +194,6 @@ namespace Xamarin.Android.Prepare
 			return new GeneratedPlaceholdersFile (
 				replacements,
 				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
-				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
-			);
-		}
-
-		public GeneratedFile Get_MonoGitHash_props (Context context)
-		{
-			const string OutputFileName = "MonoGitHash.props";
-
-			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ "@MONO_COMMIT_HASH@", context.BuildInfo.MonoHash }
-			};
-
-			return new GeneratedPlaceholdersFile (
-				replacements,
-				Path.Combine (Configurables.Paths.BootstrapResourcesDir, $"{OutputFileName}.in"),
 				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
 			);
 		}

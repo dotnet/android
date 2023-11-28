@@ -72,12 +72,6 @@ After all the issues are fixed, please re-run the bootstrapper.
 			return ret != 0;
 		}
 
-		protected override void PopulateEnvironmentVariables ()
-		{
-			base.PopulateEnvironmentVariables ();
-			EnvironmentVariables ["MACOSX_DEPLOYMENT_TARGET"] = Configurables.Defaults.MacOSDeploymentTarget;
-		}
-
 		protected override bool InitOS ()
 		{
 			if (!base.InitOS ())
@@ -91,7 +85,6 @@ After all the issues are fixed, please re-run the bootstrapper.
 
 			Context.MonoOptions.Add ("--arch=64");
 			Context.Instance.Tools.BrewPath = brewPath;
-			HomebrewPrefix = Utilities.GetStringFromStdout (brewPath, "--prefix");
 
 			(bool success, string bv) = Utilities.GetProgramVersion (brewPath);
 			if (!success || !Version.TryParse (bv, out Version? brewVersion) || brewVersion == null) {
@@ -100,14 +93,6 @@ After all the issues are fixed, please re-run the bootstrapper.
 			}
 
 			HomebrewVersion = brewVersion;
-
-			// This is a hack since we have a chicken-and-egg problem. On mac, Configuration.props uses the
-			// `HostHomebrewPrefix` property which is defined in `Configuration.OperatingSystem.props` but we're here to
-			// *generate* the latter file, so when the bootstrapper is built `HostHomebrewPrefix` is empty and we can't
-			// access mingw utilities. So, we need to cheat here.
-			string? mxePath = Context.Instance.Properties.GetValue (KnownProperties.AndroidMxeFullPath);
-			if (String.IsNullOrEmpty (mxePath))
-				Context.Instance.Properties.Set (KnownProperties.AndroidMxeFullPath, HomebrewPrefix);
 
 			return true;
 		}

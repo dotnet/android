@@ -47,12 +47,5 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "UpsideDownCake",         apiLevel: 34, platformID: "34",  include: "v14.0",   framework: "v14.0"),
 		};
 
-		public static readonly Dictionary<string, uint> NdkMinimumAPIMap = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, NdkMinimumAPILegacy32 },
-			{ AbiNames.TargetJit.AndroidArmV8a, NdkMinimumAPI },
-			{ AbiNames.TargetJit.AndroidX86,    NdkMinimumAPILegacy32 },
-			{ AbiNames.TargetJit.AndroidX86_64, NdkMinimumAPI },
-		};
-
 	}
 }

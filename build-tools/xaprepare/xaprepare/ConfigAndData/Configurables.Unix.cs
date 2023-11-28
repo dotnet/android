@@ -13,11 +13,6 @@ namespace Xamarin.Android.Prepare
 			public const string DefaultCompiler = "cc";
 		}
 
-		partial class Paths
-		{
-			static string ArchiveOSType                 => Context.Instance.OS.Type;
-		}
-
 		partial class Urls
 		{
 			public static readonly Uri DotNetInstallScript = new Uri ("https://dot.net/v1/dotnet-install.sh");

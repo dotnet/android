@@ -156,42 +156,10 @@ namespace Xamarin.Android.Prepare
 			public const string HashAlgorithm = "SHA1";
 
 			public static readonly Dictionary<string, string> AndroidToolchainPrefixes = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ AbiNames.TargetJit.AndroidArmV7a, "arm-linux-androideabi" },
-				{ AbiNames.TargetJit.AndroidArmV8a, "aarch64-linux-android" },
-				{ AbiNames.TargetJit.AndroidX86,    "i686-linux-android" },
-				{ AbiNames.TargetJit.AndroidX86_64, "x86_64-linux-android" },
-			};
-
-			const string CrossArmV7aName = "cross-arm";
-			const string CrossArmV8aName = "cross-arm64";
-			const string CrossX86Name    = "cross-x86";
-			const string CrossX86_64Name = "cross-x86_64";
-
-			public static readonly Dictionary<string, string> CrossRuntimeNames = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ AbiNames.CrossAot.ArmV7a,    CrossArmV7aName },
-				{ AbiNames.CrossAot.ArmV8a,    CrossArmV8aName },
-				{ AbiNames.CrossAot.X86,       CrossX86Name },
-				{ AbiNames.CrossAot.X86_64,    CrossX86_64Name },
-				{ AbiNames.CrossAot.WinArmV7a, CrossArmV7aName },
-				{ AbiNames.CrossAot.WinArmV8a, CrossArmV8aName },
-				{ AbiNames.CrossAot.WinX86,    CrossX86Name },
-				{ AbiNames.CrossAot.WinX86_64, CrossX86_64Name },
-			};
-
-			const string ArmV7aPrefix = "armv7-linux-android-";
-			const string ArmV8aPrefix = "aarch64-v8a-linux-android-";
-			const string X86Prefix    = "i686-linux-android-";
-			const string X86_64Prefix = "x86_64-linux-android-";
-
-			public static readonly Dictionary<string, string> CrossRuntimeExePrefixes = new Dictionary<string, string> (StringComparer.Ordinal) {
-				{ AbiNames.CrossAot.ArmV7a,    ArmV7aPrefix},
-				{ AbiNames.CrossAot.ArmV8a,    ArmV8aPrefix },
-				{ AbiNames.CrossAot.X86,       X86Prefix },
-				{ AbiNames.CrossAot.X86_64,    X86_64Prefix },
-				{ AbiNames.CrossAot.WinArmV7a, ArmV7aPrefix },
-				{ AbiNames.CrossAot.WinArmV8a, ArmV8aPrefix },
-				{ AbiNames.CrossAot.WinX86,    X86Prefix },
-				{ AbiNames.CrossAot.WinX86_64, X86_64Prefix },
+				{ "armeabi-v7a",    "arm-linux-androideabi" },
+				{ "arm64-v8a",      "aarch64-linux-android" },
+				{ "x86",            "i686-linux-android" },
+				{ "x86_64",         "x86_64-linux-android" },
 			};
 
 			/// <summary>
@@ -238,58 +206,16 @@ namespace Xamarin.Android.Prepare
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");
 			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
-			public static readonly string MxeSourceDir                     = Path.Combine (ExternalDir, "mxe");
-			public static readonly string MonoSDKSRelativeOutputDir        = Path.Combine ("sdks", "out");
-			public static readonly string MonoSDKRelativeIncludeSourceDir  = Path.Combine ("include", "mono-2.0", "mono");
-			public static readonly string RuntimeInstallRelativeLibDir     = "lib";
-			public static readonly string PackageImageDependenciesTemplate = Path.Combine (BuildToolsScriptsDir, "prepare-image-dependencies.sh.in");
-			public static readonly string PackageImageDependenciesOutput   = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "prepare-image-dependencies.sh");
 
 			// Dynamic locations used throughout the code
 			public static string ExternalJavaInteropDir              => GetCachedPath (ref externalJavaInteropDir, ()              => ctx.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath));
-			public static string MonoSDKSOutputDir                   => GetCachedPath (ref monoSDKsOutputDir, ()                   => Path.Combine (MonoSourceFullPath, MonoSDKSRelativeOutputDir));
-			public static string MonoProfileDir                      => GetCachedPath (ref monoProfileDir, ()                      => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid"));
-			public static string MonoProfileToolsDir                 => GetCachedPath (ref monoProfileToolsDir, ()                 => Path.Combine (MonoSDKSOutputDir, "android-bcl", "monodroid_tools"));
-			public static string MonoSDKIncludeDestinationDir        => GetCachedPath (ref monoSDKSIncludeDestDir, ()              => Path.Combine (OutputIncludeDir, "mono-2.0", "mono"));
-
-			public static string BCLFacadeAssembliesSourceDir        => GetCachedPath (ref bclFacadeAssembliesSourceDir, ()        => Path.Combine (BCLAssembliesSourceDir, "Facades"));
-			public static string BCLHostAssembliesSourceDir          => BCLAssembliesSourceDir;
-			public static string BCLHostFacadeAssembliesSourceDir    => BCLFacadeAssembliesSourceDir;
-
-			public static string BCLWindowsOutputDir                 => GetCachedPath (ref bclWindowsOutputDir, ()                 => Path.Combine (BuildBinDir, "windows-bcl"));
-			public static string BCLWindowsAssembliesSourceDir       => GetCachedPath (ref bclWindowsAssembliesSourceDir, ()       => Path.Combine (BCLWindowsOutputDir, "android-bcl", "monodroid"));
-			public static string BCLWindowsFacadeAssembliesSourceDir => GetCachedPath (ref bclWindowsFacadeAssembliesSourceDir, () => Path.Combine (BCLWindowsAssembliesSourceDir, "Facades"));
-
-			public static string BCLAssembliesSourceDir              => MonoProfileDir;
-
-			public static string BCLTestsSourceDir                   => GetCachedPath (ref bclTestsSourceDir, ()                   => Path.Combine (MonoProfileDir, "tests"));
-
-			public static string BCLTestsDestDir                     => GetCachedPath (ref bclTestsDestDir, ()                     => Path.Combine (XAInstallPrefix, "..", "..", "bcl-tests"));
-			public static string BCLTestsArchivePath                 => GetCachedPath (ref bclTestsArchivePath, ()                 => Path.Combine (BCLTestsDestDir, BCLTestsArchiveName));
-
 			public static string TestBinDir                          => GetCachedPath (ref testBinDir, ()                          => Path.Combine (Configurables.Paths.BinDirRoot, $"Test{ctx.Configuration}"));
 			public static string BinDir                              => GetCachedPath (ref binDir, ()                              => Path.Combine (Configurables.Paths.BinDirRoot, ctx.Configuration));
 			public static string BuildBinDir                         => GetCachedPath (ref buildBinDir, ()                         => Path.Combine (Configurables.Paths.BinDirRoot, $"Build{ctx.Configuration}"));
-			public static string ProfileAssembliesProjitemsPath      => GetCachedPath (ref profileAssembliesProjitemsPath, ()      => Path.Combine (BuildBinDir, "ProfileAssemblies.projitems"));
 			public static string ConfigurationPropsGeneratedPath     => GetCachedPath (ref configurationPropsGeneratedPath, ()     => Path.Combine (BuildBinDir, "Configuration.Generated.props"));
-
-			// Mono Runtimes
 			public static string MonoAndroidFrameworksSubDir         = Path.Combine ("xbuild-frameworks", "MonoAndroid");
 			public static string MonoAndroidFrameworksRootDir        => GetCachedPath (ref monoAndroidFrameworksRootDir, ()        => Path.Combine (XAInstallPrefix, MonoAndroidFrameworksSubDir));
-			public static string InstallBCLFrameworkDir              => GetCachedPath (ref installBCLFrameworkDir, ()              => Path.Combine (MonoAndroidFrameworksRootDir, "v1.0"));
-			public static string InstallBCLFrameworkFacadesDir       => GetCachedPath (ref installBCLFrameworkFacadesDir, ()       => Path.Combine (InstallBCLFrameworkDir, "Facades"));
-			public static string InstallBCLFrameworkRedistListDir    => GetCachedPath (ref installBCLFrameworkRedistListDir, ()    => Path.Combine (InstallBCLFrameworkDir, "RedistList"));
-
-			public static string InstallBCLDesignerDir               => GetCachedPath (ref installBCLDesignerDir, ()               => Path.Combine (XAInstallPrefix, "xbuild", "Xamarin", "Android"));
-			public static string InstallHostBCLDir                   => GetCachedPath (ref installHostBCLDir, ()                   => Path.Combine (InstallBCLDesignerDir, ctx.OS.Type, "bcl"));
-			public static string InstallHostBCLFacadesDir            => GetCachedPath (ref installHostBCLFacadesDir, ()            => Path.Combine (InstallBCLDesignerDir, ctx.OS.Type, "bcl", "Facades"));
-			public static string InstallWindowsBCLDir                => GetCachedPath (ref installWindowsBCLDir, ()                => Path.Combine (InstallBCLDesignerDir, "bcl"));
-			public static string InstallWindowsBCLFacadesDir         => GetCachedPath (ref installWindowsBCLFacadesDir, ()         => Path.Combine (InstallBCLDesignerDir, "bcl", "Facades"));
-
 			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
-			public static string OutputIncludeDir                    => GetCachedPath (ref outputIncludeDir, ()                    => Path.Combine (BinDirRoot, ctx.Configuration, "include"));
-			public static string MonoRuntimesEnabledAbisCachePath    => GetCachedPath (ref monoRuntimesEnabledAbisCachePath, ()    => Path.Combine (BuildBinDir, "mono-runtimes-abi.cache"));
-			public static string FrameworkListInstallPath            => GetCachedPath (ref frameworkListInstallPath, ()            => Path.Combine (InstallBCLFrameworkRedistListDir, "FrameworkList.xml"));
 
 			// AdoptOpenJDK
 			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
@@ -298,17 +224,6 @@ namespace Xamarin.Android.Prepare
 
 			public static string OpenJDK17InstallDir                 => GetCachedPath (ref openJDK17InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-17"));
 			public static string OpenJDK17CacheDir                   => GetCachedPath (ref openJDK17CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
-			// bundle
-			public static string BCLTestsArchiveName                 = "bcl-tests.zip";
-
-			// Mono Archive
-			public static string MonoArchiveMonoHash                 => ctx.BuildInfo.FullMonoHash;
-			public static string MonoArchiveBaseFileName             => $"android-{Defaults.MonoSdksConfiguration}-{ArchiveOSType}-{MonoArchiveMonoHash}";
-			public static string MonoArchiveWindowsBaseFileName      => $"android-release-Windows-{MonoArchiveMonoHash}";
-			public static string MonoArchiveFileName                 => $"{MonoArchiveBaseFileName}.7z";
-			public static string MonoArchiveWindowsFileName          => $"{MonoArchiveWindowsBaseFileName}.7z";
-			public static string MonoArchiveLocalPath                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveFileName);
-			public static string MonoArchiveWindowsLocalPath         => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory), MonoArchiveWindowsFileName);
 
 			// .NET 6
 			public static string NetcoreAppRuntimeAndroidARM         => GetCachedPath (ref netcoreAppRuntimeAndroidARM, () => GetNetcoreAppRuntimePath (ctx, "arm"));
@@ -349,13 +264,6 @@ namespace Xamarin.Android.Prepare
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
 			public static string XAPackagesDir                  = DetermineNugetPackagesDir (ctx);
-			public static string MonoSourceFullPath             => ctx.Properties.GetRequiredValue (KnownProperties.MonoSourceFullPath);
-			public static string MonoSdksTpnPath                => GetCachedPath (ref monoSdksTpnPath, ()         => Path.Combine (MonoSDKSOutputDir, "android-tpn"));
-			public static string MonoSdksTpnExternalPath        => GetCachedPath (ref monoSdksTpnExternalPath, () => Path.Combine (MonoSdksTpnPath, "external"));
-			public static string MonoLlvmTpnPath                => GetCachedPath (ref monoLlvmTpnPath, () => {
-				var path = Path.Combine (MonoSdksTpnExternalPath, "llvm-project", "llvm");
-				return Directory.Exists (path) ? path : Path.Combine (MonoSdksTpnExternalPath, "llvm");
-			});
 
 			static string GetNetcoreAppRuntimePath (Context ctx, string androidTarget)
 			{
@@ -400,38 +308,12 @@ namespace Xamarin.Android.Prepare
 			static string? testBinDir;
 			static string? buildBinDir;
 			static string? binDir;
-			static string? monoSDKsOutputDir;
 			static string? androidToolchainRootDirectory;
 			static string? androidToolchainBinDirectory;
 			static string? androidToolchainSysrootLibDirectory;
-			static string? monoProfileDir;
-			static string? monoProfileToolsDir;
-			static string? bclTestsDestDir;
-			static string? bclTestsArchivePath;
-			static string? bclFacadeAssembliesSourceDir;
-			static string? bclWindowsOutputDir;
-			static string? bclWindowsAssembliesSourceDir;
-			static string? bclWindowsFacadeAssembliesSourceDir;
-			static string? installBCLFrameworkDir;
-			static string? installBCLFrameworkFacadesDir;
-			static string? installBCLFrameworkRedistListDir;
 			static string? installMSBuildDir;
-			static string? outputIncludeDir;
-			static string? monoRuntimesEnabledAbisCachePath;
-			static string? frameworkListInstallPath;
-			static string? profileAssembliesProjitemsPath;
-			static string? bclTestsSourceDir;
-			static string? installHostBCLDir;
-			static string? installHostBCLFacadesDir;
-			static string? installWindowsBCLDir;
-			static string? installWindowsBCLFacadesDir;
-			static string? installBCLDesignerDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
-			static string? monoSdksTpnPath;
-			static string? monoSdksTpnExternalPath;
-			static string? monoSDKSIncludeDestDir;
-			static string? monoLlvmTpnPath;
 			static string? openJDK8InstallDir,  openJDK17InstallDir;
 			static string? openJDK8CacheDir,    openJDK17CacheDir;
 			static string? oldOpenJDKInstallDir;
