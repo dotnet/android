@@ -10,7 +10,6 @@
         <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
         <JavaPath Condition=" '$(JavaPath)' == '' ">@java@</JavaPath>
-        <HostHomebrewPrefix Condition=" '$(HostHomebrewPrefix)' == '' ">@HOST_HOMEBREW_PREFIX@</HostHomebrewPrefix>
         <NdkLlvmTag Condition=" '$(NdkLlvmTag)' == '' ">@NDK_LLVM_TAG@</NdkLlvmTag>
     </PropertyGroup>
 </Project>
