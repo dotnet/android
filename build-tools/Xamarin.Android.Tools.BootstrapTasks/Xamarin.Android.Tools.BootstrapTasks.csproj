@@ -6,6 +6,7 @@
     <TargetFramework>$(TargetFrameworkNETStandard)</TargetFramework>
     <LibZipSharpBundleAllNativeLibraries>true</LibZipSharpBundleAllNativeLibraries>
     <OutputPath>$(BootstrapOutputDirectory)</OutputPath>
+    <_IncludeMicrosoftBuildPackage>true</_IncludeMicrosoftBuildPackage>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
