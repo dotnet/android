@@ -867,7 +867,7 @@ Remove the '{0}' reference from your project and add the '{1}' NuGet package ins
 {0} - The missing tool name</comment>
   </data>
   <data name="XA5207" xml:space="preserve">
-    <value>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. {2} ({1} missing.)</value>
+    <value>Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. {2} ({1} missing.) See https://aka.ms/xa5207 for more details.</value>
     <comment>The following are literal names and should not be translated: android.jar
 {0} - The API level name
 {1} - The expected path of the android.jar file
