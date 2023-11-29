@@ -11,7 +11,6 @@ namespace Xamarin.Android.Prepare
 	{
 		static readonly HashSet<string> DevelopmentDependencies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
 			"7-Zip.CommandLine",
-			"icsharpcode/NRefactory",
 			"Kajabity.Tools.Java",
 			"Mono.Linq.Expressions",
 			"mono/debugger-libs",
