@@ -14,14 +14,6 @@
     path = external/lz4
     url = https://github.com/lz4/lz4.git
     branch = release
-[submodule "external/mman-win32"]
-    path = external/mman-win32
-    url = https://github.com/alitrack/mman-win32.git
-    branch = master
-[submodule "external/nrefactory"]
-    path = external/nrefactory
-    url = https://github.com/xamarin/NRefactory.git
-    branch = master
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/Tessil/robin-map.git

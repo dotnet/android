@@ -31,7 +31,7 @@ namespace Xamarin.Android.Build.Tests
 				WebContent = "https://github.com/aosp-mirror/platform_build/raw/master/target/product/security/platform.x509.pem"
 			});
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<manifest ", "<manifest android:sharedUserId=\"android.uid.system\" ");
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 
 
 			proj.SetDefaultTargetDevice ();

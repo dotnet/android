@@ -173,7 +173,7 @@ $@"button.ViewTreeObserver.GlobalLayout += Button_ViewTreeObserver_GlobalLayout;
 				ProjectName = testName,
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetDefaultTargetDevice ();
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
@@ -536,7 +536,7 @@ using System.Runtime.Serialization.Json;
 				ProjectName = "App1",
 				IsRelease = true,
 			};
-			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.OtherBuildItems.Add (new BuildItem ("None", "NuGet.config") {
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
 <configuration>
@@ -684,7 +684,7 @@ namespace Styleable.Library {
 		public void CheckXamarinFormsAppDeploysAndAButtonWorks ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			var builder = CreateApkBuilder ();
 
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");

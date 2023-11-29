@@ -38,37 +38,12 @@ stages:
     - template: clean.yaml
 
     - script: |
-        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_11_X64%
-      displayName: set JI_JAVA_HOME
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
+      displayName: set JI_JAVA_HOME to $(JAVA_HOME_17_X64)
 
     - template: use-dot-net.yaml
       parameters:
         remove_dotnet: true
-
-    # Downgrade the XA .vsix installed into the instance of VS that we are building with so that we don't restore/build against a test version.
-    # The VS installer will attempt to resume any failed or partial installation before trying to downgrade Xamarin.Android.
-    # VSIXInstaller.exe will exit non-zero when the downgrade attempt is a no-op, so we will allow this step to fail silently.
-    - powershell: |
-        $vsWhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        & "$vsWhere" -all -prerelease -latest | Out-Default
-        $isLatestVSLaunchable = & "$vsWhere" -all -prerelease -latest -property isLaunchable
-        if ($isLatestVSLaunchable -eq 0) {
-            $vsPath = & "$vsWhere" -all -prerelease -latest -property installationPath
-            Write-Host "Attempting to repair VS instance:" $vsPath
-            $vsInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-            & "$vsInstaller" resume --installPath $vsPath --quiet --norestart | Out-Default
-            Write-Host "vs_installer.exe resume attempt complete"
-        }
-        $vsixInstaller = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\resources\app\ServiceHub\Services\Microsoft.VisualStudio.Setup.Service\VSIXInstaller.exe"
-        $ts = Get-Date -Format FileDateTimeUniversal
-        $log = "xavsixdowngrade-$ts.log"
-        $process = Start-Process -NoNewWindow -FilePath $vsixInstaller -ArgumentList "/downgrade:Xamarin.Android.Sdk /admin /quiet /logFile:$log" -Wait -PassThru -RedirectStandardError "err.txt"
-        Get-Content "err.txt" | Write-Host
-        Get-Content "${env:TEMP}\$log" | Write-Host
-        Write-Host "VSInstaller.exe exited with code:" $process.ExitCode
-        Remove-Item "${env:TEMP}\$log"
-      displayName: downgrade XA to stable
-      ignoreLASTEXITCODE: true
 
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
