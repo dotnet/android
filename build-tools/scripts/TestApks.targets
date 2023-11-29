@@ -19,10 +19,10 @@
   <PropertyGroup>
     <!-- APK tests might run on 32-bit emulators -->
     <RuntimeIdentifiers>android-arm64;android-x86;android-x64;</RuntimeIdentifiers>
-    <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
+    <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">33</TestAvdApiLevel>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' and '$(HostOS)' == 'Darwin' and  '$(HostOSArchitecture)' == 'Arm64' ">arm64-v8a</TestAvdAbi>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
-    <TestAvdType Condition=" '$(TestAvdType)' == '' ">default</TestAvdType>
+    <TestAvdType Condition=" '$(TestAvdType)' == '' ">google_atd</TestAvdType>
     <TestAvdForceCreation Condition=" '$(TestAvdForceCreation)' == '' ">true</TestAvdForceCreation>
     <TestAvdShowWindow Condition=" '$(TestAvdShowWindow)' == '' and '$(RunningOnCI)' == 'true' ">false</TestAvdShowWindow>
     <TestAvdExtraBootArgs Condition=" '$(TestAvdShowWindow)' == 'false' ">-no-window -no-boot-anim $(TestAvdExtraBootArgs)</TestAvdExtraBootArgs>
