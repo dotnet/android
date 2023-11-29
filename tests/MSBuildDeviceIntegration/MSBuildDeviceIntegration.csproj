@@ -50,7 +50,6 @@
     <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging.Soft\Mono.Debugging.Soft.csproj" />
     <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugger.Soft\Mono.Debugger.Soft.csproj" />
     <ProjectReference Include="..\..\external\debugger-libs\Mono.Debugging\Mono.Debugging.csproj" />
-    <ProjectReference Include="..\..\external\nrefactory\ICSharpCode.NRefactory\ICSharpCode.NRefactory.csproj" />
   </ItemGroup>
 
 </Project>

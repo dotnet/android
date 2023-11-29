@@ -14,10 +14,6 @@
     path = external/lz4
     url = https://github.com/lz4/lz4.git
     branch = release
-[submodule "external/nrefactory"]
-    path = external/nrefactory
-    url = https://github.com/xamarin/NRefactory.git
-    branch = master
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/Tessil/robin-map.git
