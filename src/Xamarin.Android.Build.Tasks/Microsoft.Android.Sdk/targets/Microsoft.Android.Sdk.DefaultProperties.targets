@@ -71,11 +71,6 @@
     <UseCurrentRuntimeIdentifier>false</UseCurrentRuntimeIdentifier>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and ('$(AndroidLinkMode)' == 'SdkOnly' or '$(AndroidLinkMode)' == 'Full') ">true</PublishTrimmed>
     <PublishTrimmed Condition=" '$(PublishTrimmed)' == '' and '$(Configuration)' == 'Release' and '$(AndroidLinkMode)' != 'None' ">true</PublishTrimmed>
-    <!--
-      This prevents an early error message during 'dotnet publish'.
-      We handle $(SelfContained) in a custom way where it is forced to be true.
-    -->
-    <PublishSelfContained Condition=" '$(PublishSelfContained)' == '' ">false</PublishSelfContained>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
