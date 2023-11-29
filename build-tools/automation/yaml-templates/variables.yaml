@@ -26,7 +26,7 @@ variables:
 - name: DotNetSdkVersion
   value: 8.0
 - name: DotNetSdkQuality
-  value: preview
+  value: GA
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
