@@ -57,10 +57,12 @@ namespace Xamarin.Android.Prepare
 			var dotnets = new [] { "net6", "net7", "net8", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand), $"microsoft.net.workload.mono.toolchain.{dotnet}");
+				Utilities.DeleteDirectory (destination, recursive: true);
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
 				destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand), $"microsoft.net.workload.emscripten.{dotnet}");
+				Utilities.DeleteDirectory (destination, recursive: true);
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
