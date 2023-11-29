@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 
+using Java.Interop.Tools.Cecil;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -11,19 +12,37 @@ namespace Xamarin.Android.Tasks;
 
 sealed class ArchitectureMarshalMethods
 {
-	public readonly IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods;
+	public readonly IDictionary<string, IList<MarshalMethodEntry>> Methods;
 	public readonly ICollection<AssemblyDefinition> Assemblies;
 
 	public ArchitectureMarshalMethods (IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, ICollection<AssemblyDefinition> assemblies)
 	{
-		MarshalMethods = marshalMethods;
+		Methods = marshalMethods;
 		Assemblies = assemblies;
 	}
 
 	public ArchitectureMarshalMethods ()
 	{
-		MarshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.OrdinalIgnoreCase);
-		Assemblies = new List<AssemblyDefinition> ();
+		Methods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.OrdinalIgnoreCase);
+		Assemblies = new HashSet<AssemblyDefinition> ();
+	}
+}
+
+sealed class MarshalMethodsMirrorHelperState
+{
+	public readonly AndroidTargetArch TemplateArch;
+	public readonly Dictionary<string, ITaskItem> TemplateArchAssemblies;
+	public readonly MarshalMethodsClassifier Classifier;
+
+	public AndroidTargetArch CurrentArch                        { get; set; } = AndroidTargetArch.None;
+	public XAAssemblyResolverNew? CurrentArchResolver           { get; set; }
+	public Dictionary<string, ITaskItem>? CurrentArchAssemblies { get; set; }
+
+	public MarshalMethodsMirrorHelperState (AndroidTargetArch classifiedArch, Dictionary<string, ITaskItem> classifiedArchAssemblies, MarshalMethodsClassifier classifier)
+	{
+		TemplateArch = classifiedArch;
+		TemplateArchAssemblies = classifiedArchAssemblies;
+		Classifier = classifier;
 	}
 }
 
@@ -40,75 +59,229 @@ sealed class ArchitectureMarshalMethods
 /// </summary>
 class MarshalMethodsMirrorHelper
 {
-	readonly MarshalMethodsClassifier classifier;
-	readonly AndroidTargetArch templateArch;
-	readonly Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch;
+	readonly MarshalMethodsMirrorHelperState state;
 	readonly TaskLoggingHelper log;
 
-	public MarshalMethodsMirrorHelper (MarshalMethodsClassifier classifier, AndroidTargetArch templateArch, Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch, TaskLoggingHelper log)
+	public MarshalMethodsMirrorHelper (MarshalMethodsMirrorHelperState state, TaskLoggingHelper log)
 	{
-		this.classifier = classifier;
-		this.templateArch = templateArch;
-		this.allAssembliesPerArch = allAssembliesPerArch;
+		this.state = state;
 		this.log = log;
 	}
 
-	public IDictionary<AndroidTargetArch, ArchitectureMarshalMethods> Reflect ()
+	public ArchitectureMarshalMethods Reflect ()
 	{
-		var ret = new Dictionary<AndroidTargetArch, ArchitectureMarshalMethods> ();
+		if (state.CurrentArch == state.TemplateArch) {
+			log.LogDebugMessage ($"Not reflecting marshal methods for architecture '{state.CurrentArch}' since it's the template architecture");
+			return new ArchitectureMarshalMethods (state.Classifier.MarshalMethods, state.Classifier.Assemblies);
+		}
 
-		foreach (var kvp in allAssembliesPerArch) {
-			AndroidTargetArch arch = kvp.Key;
-			IDictionary<string, ITaskItem> assemblies = kvp.Value;
+		var ret = new ArchitectureMarshalMethods ();
+		var assemblyCache = new Dictionary<string, AssemblyDefinition> (StringComparer.OrdinalIgnoreCase);
+		var typeCache = new TypeDefinitionCache ();
 
-			if (arch == templateArch) {
-				ret.Add (arch, new ArchitectureMarshalMethods (classifier.MarshalMethods, classifier.Assemblies));
+		log.LogDebugMessage ($"Reflecting marshal methods for architecture {state.CurrentArch}");
+		foreach (var kvp in state.Classifier.MarshalMethods) {
+			foreach (MarshalMethodEntry templateMethod in kvp.Value) {
+				ReflectMethod (templateMethod, ret, assemblyCache, typeCache);
+			}
+		}
+
+		if (ret.Assemblies.Count != state.TemplateArchAssemblies.Count) {
+			throw new InvalidOperationException ($"Internal error: expected to found {state.TemplateArchAssemblies.Count} assemblies for architecture '{state.CurrentArch}', but found {ret.Assemblies.Count} instead");
+		}
+
+		foreach (AssemblyDefinition templateAssembly in state.Classifier.Assemblies) {
+			bool found = false;
+
+			foreach (AssemblyDefinition assembly in ret.Assemblies) {
+				if (String.Compare (templateAssembly.FullName, assembly.FullName, StringComparison.Ordinal) != 0) {
+					continue;
+				}
+				found = true;
+				break;
+			}
+
+			if (!found) {
+				throw new InvalidOperationException ($"Internal error: assembly '{templateAssembly.FullName}' not found in assembly set for architecture '{state.CurrentArch}'");
+			}
+		}
+
+		return ret;
+	}
+
+	void ReflectMethod (MarshalMethodEntry templateMethod, ArchitectureMarshalMethods archMethods, Dictionary<string, AssemblyDefinition> assemblyCache, TypeDefinitionCache typeCache)
+	{
+		TypeDefinition matchingType = GetMatchingType (templateMethod.NativeCallback, archMethods, assemblyCache, typeCache);
+		MethodDefinition nativeCallback = FindMatchingMethod (templateMethod.NativeCallback, matchingType, "native callback");
+
+		MarshalMethodEntry? archMethod = null;
+		if (templateMethod.IsSpecial) {
+			// All we need is the native callback in this case
+			archMethod = new MarshalMethodEntry (
+				matchingType,
+				nativeCallback,
+				templateMethod.JniTypeName,
+				templateMethod.JniMethodName,
+				templateMethod.JniMethodSignature
+			);
+
+			AddMethod (archMethod);
+			return;
+		}
+
+		// This marshal method must have **all** the associated methods present
+		matchingType = GetMatchingType (templateMethod.Connector, archMethods, assemblyCache, typeCache);
+		MethodDefinition connector = FindMatchingMethod (templateMethod.Connector, matchingType, "connector");
+
+		matchingType = GetMatchingType (templateMethod.RegisteredMethod, archMethods, assemblyCache, typeCache);
+		MethodDefinition registered = FindMatchingMethod (templateMethod.RegisteredMethod, matchingType, "registered");
+
+		matchingType = GetMatchingType (templateMethod.ImplementedMethod, archMethods, assemblyCache, typeCache);
+		MethodDefinition implemented = FindMatchingMethod (templateMethod.ImplementedMethod, matchingType, "implemented");
+
+		TypeDefinition? fieldMatchingType = GetMatchingType (templateMethod.CallbackField, archMethods, assemblyCache, typeCache);
+		FieldDefinition? callbackField = null;
+		if (fieldMatchingType != null) {// callback field is optional
+			callbackField = FindMatchingField (templateMethod.CallbackField, fieldMatchingType, "callback");
+		}
+
+		archMethod = new MarshalMethodEntry (
+			matchingType,
+			nativeCallback,
+			connector,
+			registered,
+			implemented,
+			callbackField,
+			templateMethod.JniTypeName,
+			templateMethod.JniMethodName,
+			templateMethod.JniMethodSignature,
+			templateMethod.NeedsBlittableWorkaround
+		);
+		AddMethod (archMethod);
+
+		void AddMethod (MarshalMethodEntry method)
+		{
+			string methodKey = method.GetStoreMethodKey (typeCache);
+			if (!archMethods.Methods.TryGetValue (methodKey, out IList<MarshalMethodEntry> methodList)) {
+				methodList = new List<MarshalMethodEntry> ();
+				archMethods.Methods.Add (methodKey, methodList);
+			}
+
+			methodList.Add (method);
+		}
+	}
+
+	TypeDefinition GetMatchingType (MethodDefinition? templateMethod, ArchitectureMarshalMethods archMethods, Dictionary<string, AssemblyDefinition> assemblyCache, TypeDefinitionCache typeCache)
+	{
+		if (templateMethod == null) {
+			throw new ArgumentNullException (nameof (templateMethod));
+		}
+
+		return GetMatchingType (templateMethod.DeclaringType, archMethods, assemblyCache, typeCache);
+	}
+
+	TypeDefinition? GetMatchingType (FieldDefinition? templateField, ArchitectureMarshalMethods archMethods, Dictionary<string, AssemblyDefinition> assemblyCache, TypeDefinitionCache typeCache)
+	{
+		if (templateField == null) {
+			return null;
+		}
+
+		return GetMatchingType (templateField.DeclaringType, archMethods, assemblyCache, typeCache);
+	}
+
+	TypeDefinition GetMatchingType (TypeDefinition templateDeclaringType, ArchitectureMarshalMethods archMethods, Dictionary<string, AssemblyDefinition> assemblyCache, TypeDefinitionCache typeCache)
+	{
+		string? assemblyName = templateDeclaringType.Module?.Assembly?.Name?.Name;
+		if (String.IsNullOrEmpty (assemblyName)) {
+			throw new InvalidOperationException ($"Unable to obtain assembly name");
+		}
+		assemblyName = $"{assemblyName}.dll";
+
+		if (!assemblyCache.TryGetValue (assemblyName, out AssemblyDefinition assembly)) {
+			assembly = LoadAssembly (assemblyName, assemblyCache);
+			assemblyCache.Add (assemblyName, assembly);
+		}
+
+		if (!archMethods.Assemblies.Contains (assembly)) {
+			archMethods.Assemblies.Add (assembly);
+		}
+
+		string templateTypeName = templateDeclaringType.FullName;
+		log.LogDebugMessage ($"  looking for type '{templateTypeName}' ('{templateDeclaringType.Name}')");
+
+		TypeDefinition? matchingType = typeCache.Resolve (templateDeclaringType);
+		if (matchingType == null) {
+			throw new InvalidOperationException ($"Unable to find type '{templateTypeName}'");
+		}
+
+		if (matchingType == null) {
+			throw new InvalidOperationException ($"Unable to locate type '{templateDeclaringType.FullName}' in assembly '{assembly.FullName}'");
+		}
+		log.LogDebugMessage ("     type found");
+
+		return matchingType;
+	}
+
+	MethodDefinition FindMatchingMethod (MethodDefinition? templateMethod, TypeDefinition type, string methodDescription)
+	{
+		if (templateMethod == null) {
+			throw new ArgumentNullException (nameof (templateMethod));
+		}
+
+		string templateMethodName = templateMethod.FullName;
+		log.LogDebugMessage ($"  looking for method '{templateMethodName}'");
+		foreach (MethodDefinition method in type.Methods) {
+			if (String.Compare (method.FullName, templateMethodName, StringComparison.Ordinal) != 0) {
 				continue;
 			}
 
-			ret.Add (arch, Reflect (arch, assemblies));
+			log.LogDebugMessage ("    found");
+			return method;
 		}
 
-		return ret;
+		throw new InvalidOperationException ($"Unable to locate {methodDescription} method '{templateMethod.FullName}' in '{type.FullName}'");
 	}
 
-	ArchitectureMarshalMethods Reflect (AndroidTargetArch arch, IDictionary<string, ITaskItem> archAssemblies)
+	FieldDefinition? FindMatchingField (FieldDefinition? templateField, TypeDefinition type, string fieldDescription)
 	{
-		var ret = new ArchitectureMarshalMethods ();
-		var cache = new Dictionary<string, AssemblyDefinition> (StringComparer.OrdinalIgnoreCase);
+		if (templateField == null) {
+			return null;
+		}
 
-		log.LogDebugMessage ($"Reflecting marshal methods for architecture {arch}");
-		foreach (var kvp in classifier.MarshalMethods) {
-			foreach (MarshalMethodEntry templateMethod in kvp.Value) {
-				ReflectMethod (arch, templateMethod, archAssemblies, ret, cache);
+		string templateFieldName = templateField.FullName;
+		log.LogDebugMessage ($"  looking for field '{templateFieldName}'");
+		foreach (FieldDefinition field in type.Fields) {
+			if (String.Compare (field.FullName, templateFieldName, StringComparison.Ordinal) != 0) {
+				continue;
 			}
+
+			log.LogDebugMessage ("    found");
+			return field;
 		}
 
-		return ret;
+		return null;
 	}
 
-	void ReflectMethod (AndroidTargetArch arch, MarshalMethodEntry templateMethod, IDictionary<string, ITaskItem> archAssemblies, ArchitectureMarshalMethods archMarshalMethods, Dictionary<string, AssemblyDefinition> cache)
+	AssemblyDefinition LoadAssembly (string assemblyName, Dictionary<string, AssemblyDefinition> cache)
 	{
-		string? assemblyName = templateMethod.NativeCallback.DeclaringType.Module?.Assembly?.Name?.Name;
-		if (String.IsNullOrEmpty (assemblyName)) {
-			throw new InvalidOperationException ($"Unable to obtain assembly name for method {templateMethod}");
+		if (state.CurrentArchResolver == null) {
+			throw new InvalidOperationException ($"Internal error: resolver for architecture '{state.CurrentArch}' not set");
 		}
 
-		if (!cache.TryGetValue (assemblyName, out AssemblyDefinition assembly)) {
-			assembly = LoadAssembly (arch, assemblyName, archAssemblies, cache);
-			cache.Add (assemblyName, assembly);
+		if (state.CurrentArchResolver.TargetArch != state.CurrentArch) {
+			throw new InvalidOperationException ($"Internal error: resolver should target architecture '{state.CurrentArch}', but it targets '{state.CurrentArchResolver.TargetArch}' instead");
 		}
 
-		throw new NotImplementedException ();
-	}
-
-	AssemblyDefinition LoadAssembly (AndroidTargetArch arch, string assemblyName, IDictionary<string, ITaskItem> archAssemblies, Dictionary<string, AssemblyDefinition> cache)
-	{
-		if (!archAssemblies.TryGetValue (assemblyName, out ITaskItem assemblyItem)) {
-			throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' not found for architecture '{arch}'");
+		if (!state.CurrentArchAssemblies.TryGetValue (assemblyName, out ITaskItem assemblyItem)) {
+			throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' not found for architecture '{state.CurrentArch}'");
 		}
 
-		throw new NotImplementedException ();
+		AssemblyDefinition? assembly = state.CurrentArchResolver.Resolve (assemblyName);
+		if (assembly == null) {
+			throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' cannot be resolved for architecture '{state.CurrentArch}'");
+		}
+
+		return assembly;
 	}
 
 	void ReflectType (AndroidTargetArch arch, string fullTypeName, IList<MarshalMethodEntry> templateMethods, IDictionary<string, ITaskItem> archAssemblies, ArchitectureMarshalMethods archMarshalMethods)

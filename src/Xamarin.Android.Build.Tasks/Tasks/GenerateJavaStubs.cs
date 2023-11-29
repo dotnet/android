@@ -208,26 +208,35 @@ namespace Xamarin.Android.Tasks
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
 			MarshalMethodsClassifier? classifier = null;
-			AndroidTargetArch firstArch = AndroidTargetArch.None;
-			bool archAgnosticDone = false;
+			MarshalMethodsMirrorHelperState? mirrorHelperState = null;
+			bool abiAgnosticCode = false;
 
 			foreach (var kvp in allAssembliesPerArch) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
 
 				XAAssemblyResolverNew res = MakeResolver (useMarshalMethods, arch, archAssemblies);
-				if (!archAgnosticDone) {
+				if (!abiAgnosticCode) {
 					var cache = new TypeDefinitionCache ();
 					(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (res, cache, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods);
 
 					if (!GenerateJavaSourcesAndMaybeClassifyMarshalMethods (res, javaTypesForJCW, cache, useMarshalMethods, out classifier)) {
 						return;
 					}
-					firstArch = arch;
-					archAgnosticDone = true;
+					abiAgnosticCode = true;
+
+					if (useMarshalMethods) {
+						mirrorHelperState = new MarshalMethodsMirrorHelperState (arch, archAssemblies, classifier);
+					}
 				}
 
-				RewriteMarshalMethods (classifier, firstArch, allAssembliesPerArch);
+				if (mirrorHelperState != null) {
+					mirrorHelperState.CurrentArch = arch;
+					mirrorHelperState.CurrentArchResolver = res;
+					mirrorHelperState.CurrentArchAssemblies = archAssemblies;
+				}
+
+				RewriteMarshalMethods (mirrorHelperState);
 			}
 		}
 
@@ -252,14 +261,14 @@ namespace Xamarin.Android.Tasks
 			return (allJavaTypes, javaTypesForJCW);
 		}
 
-		void RewriteMarshalMethods (MarshalMethodsClassifier? classifier, AndroidTargetArch classifiedArch, Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> allAssembliesPerArch)
+		void RewriteMarshalMethods (MarshalMethodsMirrorHelperState? mirrorHelperState)
 		{
-			if (classifier == null) {
+			if (mirrorHelperState == null) {
 				return;
 			}
 
-			var mirrorHelper = new MarshalMethodsMirrorHelper (classifier, classifiedArch, allAssembliesPerArch, Log);
-			IDictionary<AndroidTargetArch, ArchitectureMarshalMethods> perArchMarshalMethods = mirrorHelper.Reflect ();
+			var mirrorHelper = new MarshalMethodsMirrorHelper (mirrorHelperState, Log);
+			ArchitectureMarshalMethods perArchMarshalMethods = mirrorHelper.Reflect ();
 
 			// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
 			// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
@@ -888,7 +897,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				Log.LogDebugMessage ($"Found match for '{typeNativeCallbackMethod.FullName}' in {type.Module.FileName}");
-				string methodKey = classifier.GetStoreMethodKey (methodEntry);
+				string methodKey = methodEntry.GetStoreMethodKey (classifier.TypeDefinitionCache);
 				classifier.MarshalMethods[methodKey].Add (new MarshalMethodEntry (methodEntry, typeNativeCallbackMethod));
 			}
 		}

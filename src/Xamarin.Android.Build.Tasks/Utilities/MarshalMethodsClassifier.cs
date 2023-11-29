@@ -80,6 +80,13 @@ namespace Xamarin.Android.Tasks
 
 			return s;
 		}
+
+		public string GetStoreMethodKey (TypeDefinitionCache tdCache)
+		{
+			MethodDefinition registeredMethod = RegisteredMethod;
+			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
+			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
+		}
 	}
 
 	class MarshalMethodsClassifier : JavaCallableMethodClassifier
@@ -236,6 +243,7 @@ namespace Xamarin.Android.Tasks
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
+		public TypeDefinitionCache TypeDefinitionCache => tdCache;
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
 		{
@@ -688,16 +696,9 @@ namespace Xamarin.Android.Tasks
 			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
 		}
 
-		public string GetStoreMethodKey (MarshalMethodEntry methodEntry)
-		{
-			MethodDefinition registeredMethod = methodEntry.RegisteredMethod;
-			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
-			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
-		}
-
 		void StoreMethod (MarshalMethodEntry entry)
 		{
-			string key = GetStoreMethodKey (entry);
+			string key = entry.GetStoreMethodKey (tdCache);
 
 			// Several classes can override the same method, we need to generate the marshal method only once, at the same time
 			// keeping track of overloads

@@ -17,13 +17,14 @@ class XAAssemblyResolverNew : IAssemblyResolver
 	TaskLoggingHelper log;
 	bool loadDebugSymbols;
 	ReaderParameters readerParameters;
-	AndroidTargetArch targetArch;
+	readonly AndroidTargetArch targetArch;
 
 	/// <summary>
 	/// **MUST** point to directories which contain assemblies for single ABI **only**.
 	/// One special case is when linking isn't enabled, in which instance directories
 	/// containing ABI-agnostic assemblies can we used as well.
 	public ICollection<string> SearchDirectories { get; } = new List<string> ();
+	public AndroidTargetArch TargetArch => targetArch;
 
 	public XAAssemblyResolverNew (AndroidTargetArch targetArch, TaskLoggingHelper log, bool loadDebugSymbols, ReaderParameters? loadReaderParameters = null)
 	{
@@ -68,7 +69,11 @@ class XAAssemblyResolverNew : IAssemblyResolver
 			return name;
 		}
 
-		var file = Path.Combine (directory, $"{name}.dll");
+		if (!name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			name = "${name}.dll";
+		}
+
+		var file = Path.Combine (directory, name);
 		if (File.Exists (file)) {
 			return file;
 		}
