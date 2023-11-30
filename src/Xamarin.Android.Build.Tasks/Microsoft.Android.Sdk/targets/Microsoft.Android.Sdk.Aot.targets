@@ -135,12 +135,12 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         TrimIndividualMethods="true"
         Assemblies="@(_MonoAOTCompiledAssemblies)"
         DisableParallelStripping="$(_DisableParallelAot)">
-      <Output TaskParameter="TrimmedAssemblies" ItemName="_ILStripTrimmedAssemblies" />
+      <Output TaskParameter="UpdatedAssemblies" ItemName="_ILStripUpdatedAssemblies" />
     </ILStrip>
     <Move
         Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
-        SourceFiles="@(_ILStripTrimmedAssemblies->'%(TrimmedAssemblyFileName)')"
-        DestinationFiles="@(_ILStripTrimmedAssemblies)"
+        SourceFiles="@(_ILStripUpdatedAssemblies->'%(TrimmedAssemblyFileName)')"
+        DestinationFiles="@(_ILStripUpdatedAssemblies)"
     />
     <WriteLinesToFile
         File="$(_AndroidStampDirectory)_AndroidAot.stamp"
