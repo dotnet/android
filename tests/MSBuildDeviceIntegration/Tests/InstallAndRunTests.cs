@@ -1110,6 +1110,8 @@ namespace UnnamedProject
 		[Test]
 		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
 		{
+			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+
 			proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				PackageReferences = {
