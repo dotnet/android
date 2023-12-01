@@ -217,6 +217,7 @@ function(xa_common_prepare)
     LINKER:-z,relro
     LINKER:-z,noexecstack
     LINKER:--no-undefined
+    LINKER:-z,nodlopen
     PARENT_SCOPE
     )
 
