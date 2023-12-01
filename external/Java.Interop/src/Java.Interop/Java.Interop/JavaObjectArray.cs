@@ -11,6 +11,7 @@ namespace Java.Interop
 	{
 		internal    static  readonly    ValueMarshaler   Instance           = new ValueMarshaler ();
 
+		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
 		public JavaObjectArray (ref JniObjectReference handle, JniObjectReferenceOptions options)
 			: base (ref handle, options)
 		{
@@ -29,6 +30,7 @@ namespace Java.Interop
 			}
 		}
 
+		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
 		public unsafe JavaObjectArray (int length)
 			: this (ref *InvalidJniObjectReference, JniObjectReferenceOptions.None)
 		{
@@ -36,6 +38,7 @@ namespace Java.Interop
 			Construct (ref peer, JniObjectReferenceOptions.CopyAndDispose);
 		}
 
+		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
 		public JavaObjectArray (IList<T> value)
 			: this (CheckLength (value))
 		{
@@ -43,6 +46,7 @@ namespace Java.Interop
 				SetElementAt (i, value [i]);
 		}
 
+		[SuppressMessage ("ApiDesign", "RS0022:Constructor make noninheritable base class inheritable", Justification = "Existing public API")]
 		public JavaObjectArray (IEnumerable<T> value)
 			: this (ToList (value))
 		{

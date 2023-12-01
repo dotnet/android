@@ -1,6 +1,7 @@
 // Generated file; DO NOT EDIT!
 //
 // To make changes, edit monodroid/tools/jnienv-gen-interop and rerun
+#nullable enable
 
 #if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS
 #define FEATURE_JNIENVIRONMENT_JI_PINVOKES
@@ -659,7 +660,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectArray (__info.EnvironmentPointer, length, elementClass.SafeHandle, initialElement.SafeHandle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -675,7 +676,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetObjectArrayElement (__info.EnvironmentPointer, array.SafeHandle, index);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -691,7 +692,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetObjectArrayElement (__info.EnvironmentPointer, array.SafeHandle, index, value.SafeHandle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -921,7 +922,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -935,7 +936,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -949,7 +950,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -963,7 +964,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -977,7 +978,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -991,7 +992,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1005,7 +1006,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1019,7 +1020,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1033,7 +1034,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1047,7 +1048,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1061,7 +1062,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1075,7 +1076,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1089,7 +1090,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1103,7 +1104,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1117,7 +1118,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1131,7 +1132,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array.SafeHandle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1233,12 +1234,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetFieldID (__info.EnvironmentPointer, type.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -1519,12 +1520,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetMethodID (__info.EnvironmentPointer, type.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -1541,7 +1542,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1562,7 +1563,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1583,7 +1584,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1603,7 +1604,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1623,7 +1624,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1643,7 +1644,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1663,7 +1664,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1683,7 +1684,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1703,7 +1704,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1723,7 +1724,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1743,7 +1744,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1763,7 +1764,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1783,7 +1784,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1803,7 +1804,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1823,7 +1824,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1843,7 +1844,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1863,7 +1864,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1883,7 +1884,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1903,7 +1904,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethod (__info.EnvironmentPointer, instance.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1922,7 +1923,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1943,7 +1944,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1966,7 +1967,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -1989,7 +1990,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2011,7 +2012,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2033,7 +2034,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2055,7 +2056,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2077,7 +2078,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2099,7 +2100,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2121,7 +2122,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2143,7 +2144,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2165,7 +2166,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2187,7 +2188,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2209,7 +2210,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2231,7 +2232,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2253,7 +2254,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2275,7 +2276,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2297,7 +2298,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2319,7 +2320,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2341,7 +2342,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethod (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2362,7 +2363,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.SafeHandle, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2379,7 +2380,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewDirectByteBuffer (__info.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2441,7 +2442,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.AllocObject (__info.EnvironmentPointer, type.SafeHandle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2462,7 +2463,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObject (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2483,7 +2484,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2588,7 +2589,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2609,7 +2610,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, type.SafeHandle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2632,12 +2633,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticFieldID (__info.EnvironmentPointer, type.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -2918,12 +2919,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticMethodID (__info.EnvironmentPointer, type.SafeHandle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -2940,7 +2941,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2961,7 +2962,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -2982,7 +2983,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3002,7 +3003,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3022,7 +3023,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3042,7 +3043,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3062,7 +3063,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3082,7 +3083,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3102,7 +3103,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3122,7 +3123,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3142,7 +3143,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3162,7 +3163,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3182,7 +3183,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3202,7 +3203,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3222,7 +3223,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3242,7 +3243,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3262,7 +3263,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3282,7 +3283,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3302,7 +3303,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethod (__info.EnvironmentPointer, type.SafeHandle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3321,7 +3322,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.SafeHandle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3335,7 +3336,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3387,7 +3388,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.DefineClass (__info.EnvironmentPointer, name, loader.SafeHandle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3403,7 +3404,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.FindClass (__info.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3472,7 +3473,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.RegisterNatives (__info.EnvironmentPointer, type.SafeHandle, methods, numMethods);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -3511,7 +3512,7 @@ namespace
 		}
 
 
-		JniFunc_JNIEnvPtr_int _GetVersion;
+		JniFunc_JNIEnvPtr_int? _GetVersion;
 		public JniFunc_JNIEnvPtr_int GetVersion {
 			get {
 				if (_GetVersion == null)
@@ -3520,7 +3521,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_JniReferenceSafeHandle_IntPtr_int_JniLocalReference _DefineClass;
+		JniFunc_JNIEnvPtr_string_JniReferenceSafeHandle_IntPtr_int_JniLocalReference? _DefineClass;
 		public JniFunc_JNIEnvPtr_string_JniReferenceSafeHandle_IntPtr_int_JniLocalReference DefineClass {
 			get {
 				if (_DefineClass == null)
@@ -3529,7 +3530,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_JniLocalReference _FindClass;
+		JniFunc_JNIEnvPtr_string_JniLocalReference? _FindClass;
 		public JniFunc_JNIEnvPtr_string_JniLocalReference FindClass {
 			get {
 				if (_FindClass == null)
@@ -3538,7 +3539,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _FromReflectedMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr? _FromReflectedMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr FromReflectedMethod {
 			get {
 				if (_FromReflectedMethod == null)
@@ -3547,7 +3548,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _FromReflectedField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr? _FromReflectedField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr FromReflectedField {
 			get {
 				if (_FromReflectedField == null)
@@ -3556,7 +3557,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference _ToReflectedMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference? _ToReflectedMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference ToReflectedMethod {
 			get {
 				if (_ToReflectedMethod == null)
@@ -3565,7 +3566,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference _GetSuperclass;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference? _GetSuperclass;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference GetSuperclass {
 			get {
 				if (_GetSuperclass == null)
@@ -3574,7 +3575,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte _IsAssignableFrom;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte? _IsAssignableFrom;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte IsAssignableFrom {
 			get {
 				if (_IsAssignableFrom == null)
@@ -3583,7 +3584,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference _ToReflectedField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference? _ToReflectedField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte_JniLocalReference ToReflectedField {
 			get {
 				if (_ToReflectedField == null)
@@ -3592,7 +3593,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _Throw;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _Throw;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int Throw {
 			get {
 				if (_Throw == null)
@@ -3601,7 +3602,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_int _ThrowNew;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_int? _ThrowNew;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_int ThrowNew {
 			get {
 				if (_ThrowNew == null)
@@ -3610,7 +3611,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniLocalReference _ExceptionOccurred;
+		JniFunc_JNIEnvPtr_JniLocalReference? _ExceptionOccurred;
 		public JniFunc_JNIEnvPtr_JniLocalReference ExceptionOccurred {
 			get {
 				if (_ExceptionOccurred == null)
@@ -3619,7 +3620,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionDescribe;
+		JniAction_JNIEnvPtr? _ExceptionDescribe;
 		public JniAction_JNIEnvPtr ExceptionDescribe {
 			get {
 				if (_ExceptionDescribe == null)
@@ -3628,7 +3629,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionClear;
+		JniAction_JNIEnvPtr? _ExceptionClear;
 		public JniAction_JNIEnvPtr ExceptionClear {
 			get {
 				if (_ExceptionClear == null)
@@ -3637,7 +3638,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_string _FatalError;
+		JniAction_JNIEnvPtr_string? _FatalError;
 		public JniAction_JNIEnvPtr_string FatalError {
 			get {
 				if (_FatalError == null)
@@ -3646,7 +3647,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _PushLocalFrame;
+		JniFunc_JNIEnvPtr_int_int? _PushLocalFrame;
 		public JniFunc_JNIEnvPtr_int_int PushLocalFrame {
 			get {
 				if (_PushLocalFrame == null)
@@ -3655,7 +3656,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference _PopLocalFrame;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference? _PopLocalFrame;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference PopLocalFrame {
 			get {
 				if (_PopLocalFrame == null)
@@ -3664,7 +3665,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference _NewGlobalRef;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference? _NewGlobalRef;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniGlobalReference NewGlobalRef {
 			get {
 				if (_NewGlobalRef == null)
@@ -3673,7 +3674,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteGlobalRef {
 			get {
 				if (_DeleteGlobalRef == null)
@@ -3682,7 +3683,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteLocalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteLocalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteLocalRef {
 			get {
 				if (_DeleteLocalRef == null)
@@ -3691,7 +3692,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte _IsSameObject;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte? _IsSameObject;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte IsSameObject {
 			get {
 				if (_IsSameObject == null)
@@ -3700,7 +3701,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference _NewLocalRef;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference? _NewLocalRef;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference NewLocalRef {
 			get {
 				if (_NewLocalRef == null)
@@ -3709,7 +3710,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _EnsureLocalCapacity;
+		JniFunc_JNIEnvPtr_int_int? _EnsureLocalCapacity;
 		public JniFunc_JNIEnvPtr_int_int EnsureLocalCapacity {
 			get {
 				if (_EnsureLocalCapacity == null)
@@ -3718,7 +3719,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference _AllocObject;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference? _AllocObject;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference AllocObject {
 			get {
 				if (_AllocObject == null)
@@ -3727,7 +3728,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference _NewObject;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference? _NewObject;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference NewObject {
 			get {
 				if (_NewObject == null)
@@ -3736,7 +3737,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _NewObjectA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference? _NewObjectA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference NewObjectA {
 			get {
 				if (_NewObjectA == null)
@@ -3745,7 +3746,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference _GetObjectClass;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference? _GetObjectClass;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniLocalReference GetObjectClass {
 			get {
 				if (_GetObjectClass == null)
@@ -3754,7 +3755,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte _IsInstanceOf;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte? _IsInstanceOf;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_byte IsInstanceOf {
 			get {
 				if (_IsInstanceOf == null)
@@ -3763,7 +3764,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr _GetMethodID;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr? _GetMethodID;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr GetMethodID {
 			get {
 				if (_GetMethodID == null)
@@ -3772,7 +3773,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference _CallObjectMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference? _CallObjectMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference CallObjectMethod {
 			get {
 				if (_CallObjectMethod == null)
@@ -3781,7 +3782,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallObjectMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference? _CallObjectMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
@@ -3790,7 +3791,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _CallBooleanMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _CallBooleanMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte CallBooleanMethod {
 			get {
 				if (_CallBooleanMethod == null)
@@ -3799,7 +3800,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte? _CallBooleanMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
@@ -3808,7 +3809,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _CallByteMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _CallByteMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte CallByteMethod {
 			get {
 				if (_CallByteMethod == null)
@@ -3817,7 +3818,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte? _CallByteMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
@@ -3826,7 +3827,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _CallCharMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _CallCharMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char CallCharMethod {
 			get {
 				if (_CallCharMethod == null)
@@ -3835,7 +3836,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char? _CallCharMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
@@ -3844,7 +3845,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _CallShortMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _CallShortMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short CallShortMethod {
 			get {
 				if (_CallShortMethod == null)
@@ -3853,7 +3854,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short? _CallShortMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
@@ -3862,7 +3863,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _CallIntMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _CallIntMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int CallIntMethod {
 			get {
 				if (_CallIntMethod == null)
@@ -3871,7 +3872,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int? _CallIntMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
@@ -3880,7 +3881,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _CallLongMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _CallLongMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long CallLongMethod {
 			get {
 				if (_CallLongMethod == null)
@@ -3889,7 +3890,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long? _CallLongMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
@@ -3898,7 +3899,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _CallFloatMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _CallFloatMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float CallFloatMethod {
 			get {
 				if (_CallFloatMethod == null)
@@ -3907,7 +3908,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float? _CallFloatMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
@@ -3916,7 +3917,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _CallDoubleMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _CallDoubleMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double CallDoubleMethod {
 			get {
 				if (_CallDoubleMethod == null)
@@ -3925,7 +3926,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double? _CallDoubleMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
@@ -3934,7 +3935,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _CallVoidMethod;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr? _CallVoidMethod;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr CallVoidMethod {
 			get {
 				if (_CallVoidMethod == null)
@@ -3943,7 +3944,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr? _CallVoidMethodA;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
@@ -3952,7 +3953,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference _CallNonvirtualObjectMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference? _CallNonvirtualObjectMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniLocalReference CallNonvirtualObjectMethod {
 			get {
 				if (_CallNonvirtualObjectMethod == null)
@@ -3961,7 +3962,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallNonvirtualObjectMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference? _CallNonvirtualObjectMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
@@ -3970,7 +3971,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_byte _CallNonvirtualBooleanMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_byte? _CallNonvirtualBooleanMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_byte CallNonvirtualBooleanMethod {
 			get {
 				if (_CallNonvirtualBooleanMethod == null)
@@ -3979,7 +3980,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte? _CallNonvirtualBooleanMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
@@ -3988,7 +3989,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte _CallNonvirtualByteMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte? _CallNonvirtualByteMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_sbyte CallNonvirtualByteMethod {
 			get {
 				if (_CallNonvirtualByteMethod == null)
@@ -3997,7 +3998,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte? _CallNonvirtualByteMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
@@ -4006,7 +4007,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char _CallNonvirtualCharMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char? _CallNonvirtualCharMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_char CallNonvirtualCharMethod {
 			get {
 				if (_CallNonvirtualCharMethod == null)
@@ -4015,7 +4016,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char? _CallNonvirtualCharMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
@@ -4024,7 +4025,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short _CallNonvirtualShortMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short? _CallNonvirtualShortMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_short CallNonvirtualShortMethod {
 			get {
 				if (_CallNonvirtualShortMethod == null)
@@ -4033,7 +4034,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short? _CallNonvirtualShortMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
@@ -4042,7 +4043,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int _CallNonvirtualIntMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int? _CallNonvirtualIntMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_int CallNonvirtualIntMethod {
 			get {
 				if (_CallNonvirtualIntMethod == null)
@@ -4051,7 +4052,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int? _CallNonvirtualIntMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
@@ -4060,7 +4061,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long _CallNonvirtualLongMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long? _CallNonvirtualLongMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_long CallNonvirtualLongMethod {
 			get {
 				if (_CallNonvirtualLongMethod == null)
@@ -4069,7 +4070,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long? _CallNonvirtualLongMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
@@ -4078,7 +4079,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float _CallNonvirtualFloatMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float? _CallNonvirtualFloatMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_float CallNonvirtualFloatMethod {
 			get {
 				if (_CallNonvirtualFloatMethod == null)
@@ -4087,7 +4088,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float? _CallNonvirtualFloatMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
@@ -4096,7 +4097,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double _CallNonvirtualDoubleMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double? _CallNonvirtualDoubleMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_double CallNonvirtualDoubleMethod {
 			get {
 				if (_CallNonvirtualDoubleMethod == null)
@@ -4105,7 +4106,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double? _CallNonvirtualDoubleMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
@@ -4114,7 +4115,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr _CallNonvirtualVoidMethod;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr? _CallNonvirtualVoidMethod;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr CallNonvirtualVoidMethod {
 			get {
 				if (_CallNonvirtualVoidMethod == null)
@@ -4123,7 +4124,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr? _CallNonvirtualVoidMethodA;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
@@ -4132,7 +4133,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr _GetFieldID;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr? _GetFieldID;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr GetFieldID {
 			get {
 				if (_GetFieldID == null)
@@ -4141,7 +4142,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference _GetObjectField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference? _GetObjectField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference GetObjectField {
 			get {
 				if (_GetObjectField == null)
@@ -4150,7 +4151,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _GetBooleanField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _GetBooleanField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte GetBooleanField {
 			get {
 				if (_GetBooleanField == null)
@@ -4159,7 +4160,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _GetByteField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _GetByteField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte GetByteField {
 			get {
 				if (_GetByteField == null)
@@ -4168,7 +4169,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _GetCharField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _GetCharField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char GetCharField {
 			get {
 				if (_GetCharField == null)
@@ -4177,7 +4178,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _GetShortField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _GetShortField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short GetShortField {
 			get {
 				if (_GetShortField == null)
@@ -4186,7 +4187,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _GetIntField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _GetIntField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int GetIntField {
 			get {
 				if (_GetIntField == null)
@@ -4195,7 +4196,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _GetLongField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _GetLongField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long GetLongField {
 			get {
 				if (_GetLongField == null)
@@ -4204,7 +4205,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _GetFloatField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _GetFloatField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float GetFloatField {
 			get {
 				if (_GetFloatField == null)
@@ -4213,7 +4214,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _GetDoubleField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _GetDoubleField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double GetDoubleField {
 			get {
 				if (_GetDoubleField == null)
@@ -4222,7 +4223,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle _SetObjectField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle? _SetObjectField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle SetObjectField {
 			get {
 				if (_SetObjectField == null)
@@ -4231,7 +4232,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _SetBooleanField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _SetBooleanField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte SetBooleanField {
 			get {
 				if (_SetBooleanField == null)
@@ -4240,7 +4241,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _SetByteField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _SetByteField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte SetByteField {
 			get {
 				if (_SetByteField == null)
@@ -4249,7 +4250,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _SetCharField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _SetCharField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char SetCharField {
 			get {
 				if (_SetCharField == null)
@@ -4258,7 +4259,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _SetShortField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _SetShortField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short SetShortField {
 			get {
 				if (_SetShortField == null)
@@ -4267,7 +4268,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _SetIntField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _SetIntField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int SetIntField {
 			get {
 				if (_SetIntField == null)
@@ -4276,7 +4277,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _SetLongField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _SetLongField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long SetLongField {
 			get {
 				if (_SetLongField == null)
@@ -4285,7 +4286,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _SetFloatField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _SetFloatField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float SetFloatField {
 			get {
 				if (_SetFloatField == null)
@@ -4294,7 +4295,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _SetDoubleField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _SetDoubleField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double SetDoubleField {
 			get {
 				if (_SetDoubleField == null)
@@ -4303,7 +4304,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr _GetStaticMethodID;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr? _GetStaticMethodID;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr GetStaticMethodID {
 			get {
 				if (_GetStaticMethodID == null)
@@ -4312,7 +4313,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference _CallStaticObjectMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference? _CallStaticObjectMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference CallStaticObjectMethod {
 			get {
 				if (_CallStaticObjectMethod == null)
@@ -4321,7 +4322,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference _CallStaticObjectMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference? _CallStaticObjectMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_JniLocalReference CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
@@ -4330,7 +4331,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _CallStaticBooleanMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _CallStaticBooleanMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte CallStaticBooleanMethod {
 			get {
 				if (_CallStaticBooleanMethod == null)
@@ -4339,7 +4340,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte? _CallStaticBooleanMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
@@ -4348,7 +4349,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _CallStaticByteMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _CallStaticByteMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte CallStaticByteMethod {
 			get {
 				if (_CallStaticByteMethod == null)
@@ -4357,7 +4358,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte? _CallStaticByteMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
@@ -4366,7 +4367,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _CallStaticCharMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _CallStaticCharMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char CallStaticCharMethod {
 			get {
 				if (_CallStaticCharMethod == null)
@@ -4375,7 +4376,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char? _CallStaticCharMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
@@ -4384,7 +4385,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _CallStaticShortMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _CallStaticShortMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short CallStaticShortMethod {
 			get {
 				if (_CallStaticShortMethod == null)
@@ -4393,7 +4394,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short? _CallStaticShortMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
@@ -4402,7 +4403,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _CallStaticIntMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _CallStaticIntMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int CallStaticIntMethod {
 			get {
 				if (_CallStaticIntMethod == null)
@@ -4411,7 +4412,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int? _CallStaticIntMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
@@ -4420,7 +4421,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _CallStaticLongMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _CallStaticLongMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long CallStaticLongMethod {
 			get {
 				if (_CallStaticLongMethod == null)
@@ -4429,7 +4430,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long? _CallStaticLongMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
@@ -4438,7 +4439,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _CallStaticFloatMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _CallStaticFloatMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float CallStaticFloatMethod {
 			get {
 				if (_CallStaticFloatMethod == null)
@@ -4447,7 +4448,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float? _CallStaticFloatMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
@@ -4456,7 +4457,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _CallStaticDoubleMethod;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _CallStaticDoubleMethod;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double CallStaticDoubleMethod {
 			get {
 				if (_CallStaticDoubleMethod == null)
@@ -4465,7 +4466,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double? _CallStaticDoubleMethodA;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
@@ -4474,7 +4475,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _CallStaticVoidMethod;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr? _CallStaticVoidMethod;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr CallStaticVoidMethod {
 			get {
 				if (_CallStaticVoidMethod == null)
@@ -4483,7 +4484,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr? _CallStaticVoidMethodA;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
@@ -4492,7 +4493,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr _GetStaticFieldID;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr? _GetStaticFieldID;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_string_string_IntPtr GetStaticFieldID {
 			get {
 				if (_GetStaticFieldID == null)
@@ -4501,7 +4502,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference _GetStaticObjectField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference? _GetStaticObjectField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniLocalReference GetStaticObjectField {
 			get {
 				if (_GetStaticObjectField == null)
@@ -4510,7 +4511,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _GetStaticBooleanField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _GetStaticBooleanField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte GetStaticBooleanField {
 			get {
 				if (_GetStaticBooleanField == null)
@@ -4519,7 +4520,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _GetStaticByteField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _GetStaticByteField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte GetStaticByteField {
 			get {
 				if (_GetStaticByteField == null)
@@ -4528,7 +4529,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _GetStaticCharField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _GetStaticCharField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char GetStaticCharField {
 			get {
 				if (_GetStaticCharField == null)
@@ -4537,7 +4538,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _GetStaticShortField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _GetStaticShortField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short GetStaticShortField {
 			get {
 				if (_GetStaticShortField == null)
@@ -4546,7 +4547,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _GetStaticIntField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _GetStaticIntField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int GetStaticIntField {
 			get {
 				if (_GetStaticIntField == null)
@@ -4555,7 +4556,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _GetStaticLongField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _GetStaticLongField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long GetStaticLongField {
 			get {
 				if (_GetStaticLongField == null)
@@ -4564,7 +4565,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _GetStaticFloatField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _GetStaticFloatField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float GetStaticFloatField {
 			get {
 				if (_GetStaticFloatField == null)
@@ -4573,7 +4574,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _GetStaticDoubleField;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _GetStaticDoubleField;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double GetStaticDoubleField {
 			get {
 				if (_GetStaticDoubleField == null)
@@ -4582,7 +4583,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle _SetStaticObjectField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle? _SetStaticObjectField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_JniReferenceSafeHandle SetStaticObjectField {
 			get {
 				if (_SetStaticObjectField == null)
@@ -4591,7 +4592,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte _SetStaticBooleanField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte? _SetStaticBooleanField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_byte SetStaticBooleanField {
 			get {
 				if (_SetStaticBooleanField == null)
@@ -4600,7 +4601,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte _SetStaticByteField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte? _SetStaticByteField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_sbyte SetStaticByteField {
 			get {
 				if (_SetStaticByteField == null)
@@ -4609,7 +4610,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char _SetStaticCharField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char? _SetStaticCharField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_char SetStaticCharField {
 			get {
 				if (_SetStaticCharField == null)
@@ -4618,7 +4619,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short _SetStaticShortField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short? _SetStaticShortField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_short SetStaticShortField {
 			get {
 				if (_SetStaticShortField == null)
@@ -4627,7 +4628,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _SetStaticIntField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _SetStaticIntField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int SetStaticIntField {
 			get {
 				if (_SetStaticIntField == null)
@@ -4636,7 +4637,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long _SetStaticLongField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long? _SetStaticLongField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_long SetStaticLongField {
 			get {
 				if (_SetStaticLongField == null)
@@ -4645,7 +4646,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float _SetStaticFloatField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float? _SetStaticFloatField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_float SetStaticFloatField {
 			get {
 				if (_SetStaticFloatField == null)
@@ -4654,7 +4655,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double _SetStaticDoubleField;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double? _SetStaticDoubleField;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_double SetStaticDoubleField {
 			get {
 				if (_SetStaticDoubleField == null)
@@ -4663,7 +4664,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference _NewString;
+		JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference? _NewString;
 		public JniFunc_JNIEnvPtr_charPtr_int_JniLocalReference NewString {
 			get {
 				if (_NewString == null)
@@ -4672,7 +4673,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _GetStringLength;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _GetStringLength;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int GetStringLength {
 			get {
 				if (_GetStringLength == null)
@@ -4681,7 +4682,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr _GetStringChars;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr? _GetStringChars;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
@@ -4690,7 +4691,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr _ReleaseStringChars;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr? _ReleaseStringChars;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
@@ -4699,7 +4700,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_JniLocalReference _NewStringUTF;
+		JniFunc_JNIEnvPtr_string_JniLocalReference? _NewStringUTF;
 		public JniFunc_JNIEnvPtr_string_JniLocalReference NewStringUTF {
 			get {
 				if (_NewStringUTF == null)
@@ -4708,7 +4709,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _GetStringUTFLength;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _GetStringUTFLength;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int GetStringUTFLength {
 			get {
 				if (_GetStringUTFLength == null)
@@ -4717,7 +4718,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string _GetStringUTFChars;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string? _GetStringUTFChars;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
@@ -4726,7 +4727,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_string _ReleaseStringUTFChars;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_string? _ReleaseStringUTFChars;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_string ReleaseStringUTFChars {
 			get {
 				if (_ReleaseStringUTFChars == null)
@@ -4735,7 +4736,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _GetArrayLength;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _GetArrayLength;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int GetArrayLength {
 			get {
 				if (_GetArrayLength == null)
@@ -4744,7 +4745,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniReferenceSafeHandle_JniReferenceSafeHandle_JniLocalReference _NewObjectArray;
+		JniFunc_JNIEnvPtr_int_JniReferenceSafeHandle_JniReferenceSafeHandle_JniLocalReference? _NewObjectArray;
 		public JniFunc_JNIEnvPtr_int_JniReferenceSafeHandle_JniReferenceSafeHandle_JniLocalReference NewObjectArray {
 			get {
 				if (_NewObjectArray == null)
@@ -4753,7 +4754,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int_JniLocalReference _GetObjectArrayElement;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int_JniLocalReference? _GetObjectArrayElement;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int_JniLocalReference GetObjectArrayElement {
 			get {
 				if (_GetObjectArrayElement == null)
@@ -4762,7 +4763,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_JniReferenceSafeHandle _SetObjectArrayElement;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_JniReferenceSafeHandle? _SetObjectArrayElement;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_JniReferenceSafeHandle SetObjectArrayElement {
 			get {
 				if (_SetObjectArrayElement == null)
@@ -4771,7 +4772,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewBooleanArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewBooleanArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewBooleanArray {
 			get {
 				if (_NewBooleanArray == null)
@@ -4780,7 +4781,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewByteArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewByteArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewByteArray {
 			get {
 				if (_NewByteArray == null)
@@ -4789,7 +4790,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewCharArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewCharArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewCharArray {
 			get {
 				if (_NewCharArray == null)
@@ -4798,7 +4799,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewShortArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewShortArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewShortArray {
 			get {
 				if (_NewShortArray == null)
@@ -4807,7 +4808,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewIntArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewIntArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewIntArray {
 			get {
 				if (_NewIntArray == null)
@@ -4816,7 +4817,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewLongArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewLongArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewLongArray {
 			get {
 				if (_NewLongArray == null)
@@ -4825,7 +4826,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewFloatArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewFloatArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewFloatArray {
 			get {
 				if (_NewFloatArray == null)
@@ -4834,7 +4835,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_JniLocalReference _NewDoubleArray;
+		JniFunc_JNIEnvPtr_int_JniLocalReference? _NewDoubleArray;
 		public JniFunc_JNIEnvPtr_int_JniLocalReference NewDoubleArray {
 			get {
 				if (_NewDoubleArray == null)
@@ -4843,7 +4844,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr _GetBooleanArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr? _GetBooleanArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
@@ -4852,7 +4853,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr _GetByteArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr? _GetByteArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
@@ -4861,7 +4862,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr _GetCharArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr? _GetCharArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
@@ -4870,7 +4871,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr _GetShortArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr? _GetShortArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
@@ -4879,7 +4880,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr _GetIntArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr? _GetIntArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
@@ -4888,7 +4889,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr _GetLongArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr? _GetLongArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
@@ -4897,7 +4898,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr _GetFloatArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr? _GetFloatArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
@@ -4906,7 +4907,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr _GetDoubleArrayElements;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr? _GetDoubleArrayElements;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
@@ -4915,7 +4916,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int _ReleaseBooleanArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int? _ReleaseBooleanArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
@@ -4924,7 +4925,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int _ReleaseByteArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int? _ReleaseByteArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
@@ -4933,7 +4934,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int _ReleaseCharArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int? _ReleaseCharArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
@@ -4942,7 +4943,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int _ReleaseShortArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int? _ReleaseShortArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
@@ -4951,7 +4952,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int _ReleaseIntArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int? _ReleaseIntArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
@@ -4960,7 +4961,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int _ReleaseLongArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int? _ReleaseLongArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
@@ -4969,7 +4970,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int _ReleaseFloatArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int? _ReleaseFloatArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
@@ -4978,7 +4979,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int _ReleaseDoubleArrayElements;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int? _ReleaseDoubleArrayElements;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
@@ -4987,7 +4988,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr _GetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr? _GetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
@@ -4996,7 +4997,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr _GetByteArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr? _GetByteArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
@@ -5005,7 +5006,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _GetCharArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr? _GetCharArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
@@ -5014,7 +5015,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr _GetShortArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr? _GetShortArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
@@ -5023,7 +5024,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr _GetIntArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr? _GetIntArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
@@ -5032,7 +5033,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr _GetLongArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr? _GetLongArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
@@ -5041,7 +5042,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr _GetFloatArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr? _GetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
@@ -5050,7 +5051,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr _GetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr? _GetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
@@ -5059,7 +5060,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr _SetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr? _SetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
@@ -5068,7 +5069,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr _SetByteArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr? _SetByteArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
@@ -5077,7 +5078,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _SetCharArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr? _SetCharArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
@@ -5086,7 +5087,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr _SetShortArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr? _SetShortArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
@@ -5095,7 +5096,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr _SetIntArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr? _SetIntArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
@@ -5104,7 +5105,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr _SetLongArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr? _SetLongArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
@@ -5113,7 +5114,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr _SetFloatArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr? _SetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
@@ -5122,7 +5123,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr _SetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr? _SetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
@@ -5131,7 +5132,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniNativeMethodRegistrationArray_int_int _RegisterNatives;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniNativeMethodRegistrationArray_int_int? _RegisterNatives;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniNativeMethodRegistrationArray_int_int RegisterNatives {
 			get {
 				if (_RegisterNatives == null)
@@ -5140,7 +5141,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _UnregisterNatives;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _UnregisterNatives;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int UnregisterNatives {
 			get {
 				if (_UnregisterNatives == null)
@@ -5149,7 +5150,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _MonitorEnter;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _MonitorEnter;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int MonitorEnter {
 			get {
 				if (_MonitorEnter == null)
@@ -5158,7 +5159,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int _MonitorExit;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int? _MonitorExit;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_int MonitorExit {
 			get {
 				if (_MonitorExit == null)
@@ -5167,7 +5168,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_outIntPtr_int _GetJavaVM;
+		JniFunc_JNIEnvPtr_outIntPtr_int? _GetJavaVM;
 		public JniFunc_JNIEnvPtr_outIntPtr_int GetJavaVM {
 			get {
 				if (_GetJavaVM == null)
@@ -5176,7 +5177,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr _GetStringRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr? _GetStringRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
@@ -5185,7 +5186,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr _GetStringUTFRegion;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr? _GetStringUTFRegion;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_int_int_IntPtr GetStringUTFRegion {
 			get {
 				if (_GetStringUTFRegion == null)
@@ -5194,7 +5195,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr? _GetPrimitiveArrayCritical;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
@@ -5203,7 +5204,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int _ReleasePrimitiveArrayCritical;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int? _ReleasePrimitiveArrayCritical;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_IntPtr_int ReleasePrimitiveArrayCritical {
 			get {
 				if (_ReleasePrimitiveArrayCritical == null)
@@ -5212,7 +5213,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string _GetStringCritical;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string? _GetStringCritical;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
@@ -5221,7 +5222,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_JniReferenceSafeHandle_string _ReleaseStringCritical;
+		JniAction_JNIEnvPtr_JniReferenceSafeHandle_string? _ReleaseStringCritical;
 		public JniAction_JNIEnvPtr_JniReferenceSafeHandle_string ReleaseStringCritical {
 			get {
 				if (_ReleaseStringCritical == null)
@@ -5230,7 +5231,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniWeakGlobalReference _NewWeakGlobalRef;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniWeakGlobalReference? _NewWeakGlobalRef;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniWeakGlobalReference NewWeakGlobalRef {
 			get {
 				if (_NewWeakGlobalRef == null)
@@ -5239,7 +5240,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteWeakGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteWeakGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteWeakGlobalRef {
 			get {
 				if (_DeleteWeakGlobalRef == null)
@@ -5248,7 +5249,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_byte _ExceptionCheck;
+		JniFunc_JNIEnvPtr_byte? _ExceptionCheck;
 		public JniFunc_JNIEnvPtr_byte ExceptionCheck {
 			get {
 				if (_ExceptionCheck == null)
@@ -5257,7 +5258,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_long_JniLocalReference _NewDirectByteBuffer;
+		JniFunc_JNIEnvPtr_IntPtr_long_JniLocalReference? _NewDirectByteBuffer;
 		public JniFunc_JNIEnvPtr_IntPtr_long_JniLocalReference NewDirectByteBuffer {
 			get {
 				if (_NewDirectByteBuffer == null)
@@ -5266,7 +5267,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr _GetDirectBufferAddress;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr? _GetDirectBufferAddress;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_IntPtr GetDirectBufferAddress {
 			get {
 				if (_GetDirectBufferAddress == null)
@@ -5275,7 +5276,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_long _GetDirectBufferCapacity;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_long? _GetDirectBufferCapacity;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_long GetDirectBufferCapacity {
 			get {
 				if (_GetDirectBufferCapacity == null)
@@ -5284,7 +5285,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniObjectReferenceType _GetObjectRefType;
+		JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniObjectReferenceType? _GetObjectRefType;
 		public JniFunc_JNIEnvPtr_JniReferenceSafeHandle_JniObjectReferenceType GetObjectRefType {
 			get {
 				if (_GetObjectRefType == null)
@@ -5432,7 +5433,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectArray (__info.EnvironmentPointer, length, elementClass.Handle, initialElement.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5448,7 +5449,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetObjectArrayElement (__info.EnvironmentPointer, array.Handle, index);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5464,7 +5465,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetObjectArrayElement (__info.EnvironmentPointer, array.Handle, index, value.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5694,7 +5695,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5708,7 +5709,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5722,7 +5723,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5736,7 +5737,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5750,7 +5751,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5764,7 +5765,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5778,7 +5779,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5792,7 +5793,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5806,7 +5807,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5820,7 +5821,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5834,7 +5835,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5848,7 +5849,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5862,7 +5863,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5876,7 +5877,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5890,7 +5891,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -5904,7 +5905,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6006,12 +6007,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetFieldID (__info.EnvironmentPointer, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -6292,12 +6293,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetMethodID (__info.EnvironmentPointer, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -6314,7 +6315,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6335,7 +6336,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6356,7 +6357,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6376,7 +6377,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6396,7 +6397,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6416,7 +6417,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6436,7 +6437,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6456,7 +6457,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6476,7 +6477,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6496,7 +6497,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6516,7 +6517,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6536,7 +6537,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6556,7 +6557,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6576,7 +6577,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6596,7 +6597,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6616,7 +6617,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6636,7 +6637,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6656,7 +6657,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6676,7 +6677,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethod (__info.EnvironmentPointer, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6695,7 +6696,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6716,7 +6717,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6739,7 +6740,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6762,7 +6763,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6784,7 +6785,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6806,7 +6807,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6828,7 +6829,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6850,7 +6851,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6872,7 +6873,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6894,7 +6895,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6916,7 +6917,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6938,7 +6939,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6960,7 +6961,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -6982,7 +6983,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7004,7 +7005,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7026,7 +7027,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7048,7 +7049,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7070,7 +7071,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7092,7 +7093,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7114,7 +7115,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethod (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7135,7 +7136,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7152,7 +7153,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewDirectByteBuffer (__info.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7214,7 +7215,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.AllocObject (__info.EnvironmentPointer, type.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7235,7 +7236,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObject (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7256,7 +7257,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7361,7 +7362,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7382,7 +7383,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7405,12 +7406,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticFieldID (__info.EnvironmentPointer, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -7691,12 +7692,12 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticMethodID (__info.EnvironmentPointer, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -7713,7 +7714,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7734,7 +7735,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7755,7 +7756,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7775,7 +7776,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7795,7 +7796,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7815,7 +7816,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7835,7 +7836,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7855,7 +7856,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7875,7 +7876,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7895,7 +7896,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7915,7 +7916,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7935,7 +7936,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7955,7 +7956,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7975,7 +7976,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -7995,7 +7996,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8015,7 +8016,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8035,7 +8036,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8055,7 +8056,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8075,7 +8076,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethod (__info.EnvironmentPointer, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8094,7 +8095,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8108,7 +8109,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8160,7 +8161,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.DefineClass (__info.EnvironmentPointer, name, loader.Handle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8176,7 +8177,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.FindClass (__info.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8245,7 +8246,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.RegisterNatives (__info.EnvironmentPointer, type.Handle, methods, numMethods);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -8284,7 +8285,7 @@ namespace
 		}
 
 
-		JniFunc_JNIEnvPtr_int _GetVersion;
+		JniFunc_JNIEnvPtr_int? _GetVersion;
 		public JniFunc_JNIEnvPtr_int GetVersion {
 			get {
 				if (_GetVersion == null)
@@ -8293,7 +8294,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject _DefineClass;
+		JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject? _DefineClass;
 		public JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject DefineClass {
 			get {
 				if (_DefineClass == null)
@@ -8302,7 +8303,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject _FindClass;
+		JniFunc_JNIEnvPtr_string_jobject? _FindClass;
 		public JniFunc_JNIEnvPtr_string_jobject FindClass {
 			get {
 				if (_FindClass == null)
@@ -8311,7 +8312,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _FromReflectedMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _FromReflectedMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr FromReflectedMethod {
 			get {
 				if (_FromReflectedMethod == null)
@@ -8320,7 +8321,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _FromReflectedField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _FromReflectedField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr FromReflectedField {
 			get {
 				if (_FromReflectedField == null)
@@ -8329,7 +8330,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject _ToReflectedMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject? _ToReflectedMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject ToReflectedMethod {
 			get {
 				if (_ToReflectedMethod == null)
@@ -8338,7 +8339,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _GetSuperclass;
+		JniFunc_JNIEnvPtr_jobject_jobject? _GetSuperclass;
 		public JniFunc_JNIEnvPtr_jobject_jobject GetSuperclass {
 			get {
 				if (_GetSuperclass == null)
@@ -8347,7 +8348,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsAssignableFrom;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsAssignableFrom;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsAssignableFrom {
 			get {
 				if (_IsAssignableFrom == null)
@@ -8356,7 +8357,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject _ToReflectedField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject? _ToReflectedField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject ToReflectedField {
 			get {
 				if (_ToReflectedField == null)
@@ -8365,7 +8366,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _Throw;
+		JniFunc_JNIEnvPtr_jobject_int? _Throw;
 		public JniFunc_JNIEnvPtr_jobject_int Throw {
 			get {
 				if (_Throw == null)
@@ -8374,7 +8375,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_int _ThrowNew;
+		JniFunc_JNIEnvPtr_jobject_string_int? _ThrowNew;
 		public JniFunc_JNIEnvPtr_jobject_string_int ThrowNew {
 			get {
 				if (_ThrowNew == null)
@@ -8383,7 +8384,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject _ExceptionOccurred;
+		JniFunc_JNIEnvPtr_jobject? _ExceptionOccurred;
 		public JniFunc_JNIEnvPtr_jobject ExceptionOccurred {
 			get {
 				if (_ExceptionOccurred == null)
@@ -8392,7 +8393,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionDescribe;
+		JniAction_JNIEnvPtr? _ExceptionDescribe;
 		public JniAction_JNIEnvPtr ExceptionDescribe {
 			get {
 				if (_ExceptionDescribe == null)
@@ -8401,7 +8402,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionClear;
+		JniAction_JNIEnvPtr? _ExceptionClear;
 		public JniAction_JNIEnvPtr ExceptionClear {
 			get {
 				if (_ExceptionClear == null)
@@ -8410,7 +8411,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_string _FatalError;
+		JniAction_JNIEnvPtr_string? _FatalError;
 		public JniAction_JNIEnvPtr_string FatalError {
 			get {
 				if (_FatalError == null)
@@ -8419,7 +8420,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _PushLocalFrame;
+		JniFunc_JNIEnvPtr_int_int? _PushLocalFrame;
 		public JniFunc_JNIEnvPtr_int_int PushLocalFrame {
 			get {
 				if (_PushLocalFrame == null)
@@ -8428,7 +8429,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _PopLocalFrame;
+		JniFunc_JNIEnvPtr_jobject_jobject? _PopLocalFrame;
 		public JniFunc_JNIEnvPtr_jobject_jobject PopLocalFrame {
 			get {
 				if (_PopLocalFrame == null)
@@ -8437,7 +8438,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewGlobalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewGlobalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewGlobalRef {
 			get {
 				if (_NewGlobalRef == null)
@@ -8446,7 +8447,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteGlobalRef {
 			get {
 				if (_DeleteGlobalRef == null)
@@ -8455,7 +8456,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteLocalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteLocalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteLocalRef {
 			get {
 				if (_DeleteLocalRef == null)
@@ -8464,7 +8465,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsSameObject;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsSameObject;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsSameObject {
 			get {
 				if (_IsSameObject == null)
@@ -8473,7 +8474,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewLocalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewLocalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewLocalRef {
 			get {
 				if (_NewLocalRef == null)
@@ -8482,7 +8483,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _EnsureLocalCapacity;
+		JniFunc_JNIEnvPtr_int_int? _EnsureLocalCapacity;
 		public JniFunc_JNIEnvPtr_int_int EnsureLocalCapacity {
 			get {
 				if (_EnsureLocalCapacity == null)
@@ -8491,7 +8492,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _AllocObject;
+		JniFunc_JNIEnvPtr_jobject_jobject? _AllocObject;
 		public JniFunc_JNIEnvPtr_jobject_jobject AllocObject {
 			get {
 				if (_AllocObject == null)
@@ -8500,7 +8501,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _NewObject;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _NewObject;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject NewObject {
 			get {
 				if (_NewObject == null)
@@ -8509,7 +8510,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _NewObjectA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _NewObjectA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
@@ -8518,7 +8519,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _GetObjectClass;
+		JniFunc_JNIEnvPtr_jobject_jobject? _GetObjectClass;
 		public JniFunc_JNIEnvPtr_jobject_jobject GetObjectClass {
 			get {
 				if (_GetObjectClass == null)
@@ -8527,7 +8528,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsInstanceOf;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsInstanceOf;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsInstanceOf {
 			get {
 				if (_IsInstanceOf == null)
@@ -8536,7 +8537,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetMethodID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetMethodID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetMethodID {
 			get {
 				if (_GetMethodID == null)
@@ -8545,7 +8546,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _CallObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _CallObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject CallObjectMethod {
 			get {
 				if (_CallObjectMethod == null)
@@ -8554,7 +8555,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
@@ -8563,7 +8564,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _CallBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _CallBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte CallBooleanMethod {
 			get {
 				if (_CallBooleanMethod == null)
@@ -8572,7 +8573,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte? _CallBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
@@ -8581,7 +8582,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _CallByteMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _CallByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte CallByteMethod {
 			get {
 				if (_CallByteMethod == null)
@@ -8590,7 +8591,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
@@ -8599,7 +8600,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _CallCharMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _CallCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char CallCharMethod {
 			get {
 				if (_CallCharMethod == null)
@@ -8608,7 +8609,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char? _CallCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
@@ -8617,7 +8618,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _CallShortMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _CallShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short CallShortMethod {
 			get {
 				if (_CallShortMethod == null)
@@ -8626,7 +8627,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short? _CallShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
@@ -8635,7 +8636,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _CallIntMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _CallIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int CallIntMethod {
 			get {
 				if (_CallIntMethod == null)
@@ -8644,7 +8645,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int? _CallIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
@@ -8653,7 +8654,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _CallLongMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _CallLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long CallLongMethod {
 			get {
 				if (_CallLongMethod == null)
@@ -8662,7 +8663,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long? _CallLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
@@ -8671,7 +8672,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _CallFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _CallFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float CallFloatMethod {
 			get {
 				if (_CallFloatMethod == null)
@@ -8680,7 +8681,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float? _CallFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
@@ -8689,7 +8690,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _CallDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _CallDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double CallDoubleMethod {
 			get {
 				if (_CallDoubleMethod == null)
@@ -8698,7 +8699,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double? _CallDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
@@ -8707,7 +8708,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _CallVoidMethod;
+		JniAction_JNIEnvPtr_jobject_IntPtr? _CallVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_IntPtr CallVoidMethod {
 			get {
 				if (_CallVoidMethod == null)
@@ -8716,7 +8717,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr? _CallVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
@@ -8725,7 +8726,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject _CallNonvirtualObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject? _CallNonvirtualObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject CallNonvirtualObjectMethod {
 			get {
 				if (_CallNonvirtualObjectMethod == null)
@@ -8734,7 +8735,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject _CallNonvirtualObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallNonvirtualObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
@@ -8743,7 +8744,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte _CallNonvirtualBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte? _CallNonvirtualBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte CallNonvirtualBooleanMethod {
 			get {
 				if (_CallNonvirtualBooleanMethod == null)
@@ -8752,7 +8753,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte? _CallNonvirtualBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
@@ -8761,7 +8762,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte _CallNonvirtualByteMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte? _CallNonvirtualByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte CallNonvirtualByteMethod {
 			get {
 				if (_CallNonvirtualByteMethod == null)
@@ -8770,7 +8771,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallNonvirtualByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
@@ -8779,7 +8780,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char _CallNonvirtualCharMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char? _CallNonvirtualCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char CallNonvirtualCharMethod {
 			get {
 				if (_CallNonvirtualCharMethod == null)
@@ -8788,7 +8789,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char? _CallNonvirtualCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
@@ -8797,7 +8798,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short _CallNonvirtualShortMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short? _CallNonvirtualShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short CallNonvirtualShortMethod {
 			get {
 				if (_CallNonvirtualShortMethod == null)
@@ -8806,7 +8807,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short? _CallNonvirtualShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
@@ -8815,7 +8816,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int _CallNonvirtualIntMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int? _CallNonvirtualIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int CallNonvirtualIntMethod {
 			get {
 				if (_CallNonvirtualIntMethod == null)
@@ -8824,7 +8825,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int? _CallNonvirtualIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
@@ -8833,7 +8834,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long _CallNonvirtualLongMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long? _CallNonvirtualLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long CallNonvirtualLongMethod {
 			get {
 				if (_CallNonvirtualLongMethod == null)
@@ -8842,7 +8843,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long? _CallNonvirtualLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
@@ -8851,7 +8852,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float _CallNonvirtualFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float? _CallNonvirtualFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float CallNonvirtualFloatMethod {
 			get {
 				if (_CallNonvirtualFloatMethod == null)
@@ -8860,7 +8861,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float? _CallNonvirtualFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
@@ -8869,7 +8870,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double _CallNonvirtualDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double? _CallNonvirtualDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double CallNonvirtualDoubleMethod {
 			get {
 				if (_CallNonvirtualDoubleMethod == null)
@@ -8878,7 +8879,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double? _CallNonvirtualDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
@@ -8887,7 +8888,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr _CallNonvirtualVoidMethod;
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr? _CallNonvirtualVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr CallNonvirtualVoidMethod {
 			get {
 				if (_CallNonvirtualVoidMethod == null)
@@ -8896,7 +8897,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr? _CallNonvirtualVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
@@ -8905,7 +8906,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetFieldID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetFieldID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetFieldID {
 			get {
 				if (_GetFieldID == null)
@@ -8914,7 +8915,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _GetObjectField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _GetObjectField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject GetObjectField {
 			get {
 				if (_GetObjectField == null)
@@ -8923,7 +8924,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _GetBooleanField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _GetBooleanField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte GetBooleanField {
 			get {
 				if (_GetBooleanField == null)
@@ -8932,7 +8933,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _GetByteField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _GetByteField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte GetByteField {
 			get {
 				if (_GetByteField == null)
@@ -8941,7 +8942,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _GetCharField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _GetCharField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char GetCharField {
 			get {
 				if (_GetCharField == null)
@@ -8950,7 +8951,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _GetShortField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _GetShortField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short GetShortField {
 			get {
 				if (_GetShortField == null)
@@ -8959,7 +8960,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _GetIntField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _GetIntField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int GetIntField {
 			get {
 				if (_GetIntField == null)
@@ -8968,7 +8969,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _GetLongField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _GetLongField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long GetLongField {
 			get {
 				if (_GetLongField == null)
@@ -8977,7 +8978,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _GetFloatField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _GetFloatField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float GetFloatField {
 			get {
 				if (_GetFloatField == null)
@@ -8986,7 +8987,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _GetDoubleField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _GetDoubleField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double GetDoubleField {
 			get {
 				if (_GetDoubleField == null)
@@ -8995,7 +8996,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_jobject _SetObjectField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_jobject? _SetObjectField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_jobject SetObjectField {
 			get {
 				if (_SetObjectField == null)
@@ -9004,7 +9005,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_byte _SetBooleanField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_byte? _SetBooleanField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_byte SetBooleanField {
 			get {
 				if (_SetBooleanField == null)
@@ -9013,7 +9014,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte _SetByteField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte? _SetByteField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_sbyte SetByteField {
 			get {
 				if (_SetByteField == null)
@@ -9022,7 +9023,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_char _SetCharField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_char? _SetCharField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_char SetCharField {
 			get {
 				if (_SetCharField == null)
@@ -9031,7 +9032,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_short _SetShortField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_short? _SetShortField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_short SetShortField {
 			get {
 				if (_SetShortField == null)
@@ -9040,7 +9041,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _SetIntField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _SetIntField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int SetIntField {
 			get {
 				if (_SetIntField == null)
@@ -9049,7 +9050,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_long _SetLongField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_long? _SetLongField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_long SetLongField {
 			get {
 				if (_SetLongField == null)
@@ -9058,7 +9059,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_float _SetFloatField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_float? _SetFloatField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_float SetFloatField {
 			get {
 				if (_SetFloatField == null)
@@ -9067,7 +9068,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_double _SetDoubleField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_double? _SetDoubleField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_double SetDoubleField {
 			get {
 				if (_SetDoubleField == null)
@@ -9076,7 +9077,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetStaticMethodID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetStaticMethodID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetStaticMethodID {
 			get {
 				if (_GetStaticMethodID == null)
@@ -9085,7 +9086,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _CallStaticObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _CallStaticObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject CallStaticObjectMethod {
 			get {
 				if (_CallStaticObjectMethod == null)
@@ -9094,7 +9095,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallStaticObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallStaticObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
@@ -9103,7 +9104,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _CallStaticBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _CallStaticBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte CallStaticBooleanMethod {
 			get {
 				if (_CallStaticBooleanMethod == null)
@@ -9112,7 +9113,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte? _CallStaticBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
@@ -9121,7 +9122,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _CallStaticByteMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _CallStaticByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte CallStaticByteMethod {
 			get {
 				if (_CallStaticByteMethod == null)
@@ -9130,7 +9131,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallStaticByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
@@ -9139,7 +9140,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _CallStaticCharMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _CallStaticCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char CallStaticCharMethod {
 			get {
 				if (_CallStaticCharMethod == null)
@@ -9148,7 +9149,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char? _CallStaticCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
@@ -9157,7 +9158,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _CallStaticShortMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _CallStaticShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short CallStaticShortMethod {
 			get {
 				if (_CallStaticShortMethod == null)
@@ -9166,7 +9167,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short? _CallStaticShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
@@ -9175,7 +9176,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _CallStaticIntMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _CallStaticIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int CallStaticIntMethod {
 			get {
 				if (_CallStaticIntMethod == null)
@@ -9184,7 +9185,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int? _CallStaticIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
@@ -9193,7 +9194,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _CallStaticLongMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _CallStaticLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long CallStaticLongMethod {
 			get {
 				if (_CallStaticLongMethod == null)
@@ -9202,7 +9203,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long? _CallStaticLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
@@ -9211,7 +9212,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _CallStaticFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _CallStaticFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float CallStaticFloatMethod {
 			get {
 				if (_CallStaticFloatMethod == null)
@@ -9220,7 +9221,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float? _CallStaticFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
@@ -9229,7 +9230,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _CallStaticDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _CallStaticDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double CallStaticDoubleMethod {
 			get {
 				if (_CallStaticDoubleMethod == null)
@@ -9238,7 +9239,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double? _CallStaticDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
@@ -9247,7 +9248,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _CallStaticVoidMethod;
+		JniAction_JNIEnvPtr_jobject_IntPtr? _CallStaticVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_IntPtr CallStaticVoidMethod {
 			get {
 				if (_CallStaticVoidMethod == null)
@@ -9256,7 +9257,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr? _CallStaticVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
@@ -9265,7 +9266,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetStaticFieldID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetStaticFieldID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetStaticFieldID {
 			get {
 				if (_GetStaticFieldID == null)
@@ -9274,7 +9275,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _GetStaticObjectField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _GetStaticObjectField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject GetStaticObjectField {
 			get {
 				if (_GetStaticObjectField == null)
@@ -9283,7 +9284,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _GetStaticBooleanField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _GetStaticBooleanField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte GetStaticBooleanField {
 			get {
 				if (_GetStaticBooleanField == null)
@@ -9292,7 +9293,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _GetStaticByteField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _GetStaticByteField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte GetStaticByteField {
 			get {
 				if (_GetStaticByteField == null)
@@ -9301,7 +9302,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _GetStaticCharField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _GetStaticCharField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char GetStaticCharField {
 			get {
 				if (_GetStaticCharField == null)
@@ -9310,7 +9311,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _GetStaticShortField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _GetStaticShortField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short GetStaticShortField {
 			get {
 				if (_GetStaticShortField == null)
@@ -9319,7 +9320,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _GetStaticIntField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _GetStaticIntField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int GetStaticIntField {
 			get {
 				if (_GetStaticIntField == null)
@@ -9328,7 +9329,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _GetStaticLongField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _GetStaticLongField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long GetStaticLongField {
 			get {
 				if (_GetStaticLongField == null)
@@ -9337,7 +9338,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _GetStaticFloatField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _GetStaticFloatField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float GetStaticFloatField {
 			get {
 				if (_GetStaticFloatField == null)
@@ -9346,7 +9347,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _GetStaticDoubleField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _GetStaticDoubleField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double GetStaticDoubleField {
 			get {
 				if (_GetStaticDoubleField == null)
@@ -9355,7 +9356,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_jobject _SetStaticObjectField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_jobject? _SetStaticObjectField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_jobject SetStaticObjectField {
 			get {
 				if (_SetStaticObjectField == null)
@@ -9364,7 +9365,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_byte _SetStaticBooleanField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_byte? _SetStaticBooleanField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_byte SetStaticBooleanField {
 			get {
 				if (_SetStaticBooleanField == null)
@@ -9373,7 +9374,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte _SetStaticByteField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte? _SetStaticByteField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_sbyte SetStaticByteField {
 			get {
 				if (_SetStaticByteField == null)
@@ -9382,7 +9383,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_char _SetStaticCharField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_char? _SetStaticCharField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_char SetStaticCharField {
 			get {
 				if (_SetStaticCharField == null)
@@ -9391,7 +9392,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_short _SetStaticShortField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_short? _SetStaticShortField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_short SetStaticShortField {
 			get {
 				if (_SetStaticShortField == null)
@@ -9400,7 +9401,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _SetStaticIntField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _SetStaticIntField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int SetStaticIntField {
 			get {
 				if (_SetStaticIntField == null)
@@ -9409,7 +9410,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_long _SetStaticLongField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_long? _SetStaticLongField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_long SetStaticLongField {
 			get {
 				if (_SetStaticLongField == null)
@@ -9418,7 +9419,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_float _SetStaticFloatField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_float? _SetStaticFloatField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_float SetStaticFloatField {
 			get {
 				if (_SetStaticFloatField == null)
@@ -9427,7 +9428,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_double _SetStaticDoubleField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_double? _SetStaticDoubleField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_double SetStaticDoubleField {
 			get {
 				if (_SetStaticDoubleField == null)
@@ -9436,7 +9437,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_charPtr_int_jobject _NewString;
+		JniFunc_JNIEnvPtr_charPtr_int_jobject? _NewString;
 		public JniFunc_JNIEnvPtr_charPtr_int_jobject NewString {
 			get {
 				if (_NewString == null)
@@ -9445,7 +9446,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetStringLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetStringLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetStringLength {
 			get {
 				if (_GetStringLength == null)
@@ -9454,7 +9455,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetStringChars;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr? _GetStringChars;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
@@ -9463,7 +9464,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_charPtr _ReleaseStringChars;
+		JniAction_JNIEnvPtr_jobject_charPtr? _ReleaseStringChars;
 		public JniAction_JNIEnvPtr_jobject_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
@@ -9472,7 +9473,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject _NewStringUTF;
+		JniFunc_JNIEnvPtr_string_jobject? _NewStringUTF;
 		public JniFunc_JNIEnvPtr_string_jobject NewStringUTF {
 			get {
 				if (_NewStringUTF == null)
@@ -9481,7 +9482,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetStringUTFLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetStringUTFLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetStringUTFLength {
 			get {
 				if (_GetStringUTFLength == null)
@@ -9490,7 +9491,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringUTFChars;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string? _GetStringUTFChars;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
@@ -9499,7 +9500,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_string _ReleaseStringUTFChars;
+		JniAction_JNIEnvPtr_jobject_string? _ReleaseStringUTFChars;
 		public JniAction_JNIEnvPtr_jobject_string ReleaseStringUTFChars {
 			get {
 				if (_ReleaseStringUTFChars == null)
@@ -9508,7 +9509,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetArrayLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetArrayLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetArrayLength {
 			get {
 				if (_GetArrayLength == null)
@@ -9517,7 +9518,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject_jobject_jobject _NewObjectArray;
+		JniFunc_JNIEnvPtr_int_jobject_jobject_jobject? _NewObjectArray;
 		public JniFunc_JNIEnvPtr_int_jobject_jobject_jobject NewObjectArray {
 			get {
 				if (_NewObjectArray == null)
@@ -9526,7 +9527,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int_jobject _GetObjectArrayElement;
+		JniFunc_JNIEnvPtr_jobject_int_jobject? _GetObjectArrayElement;
 		public JniFunc_JNIEnvPtr_jobject_int_jobject GetObjectArrayElement {
 			get {
 				if (_GetObjectArrayElement == null)
@@ -9535,7 +9536,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_jobject _SetObjectArrayElement;
+		JniAction_JNIEnvPtr_jobject_int_jobject? _SetObjectArrayElement;
 		public JniAction_JNIEnvPtr_jobject_int_jobject SetObjectArrayElement {
 			get {
 				if (_SetObjectArrayElement == null)
@@ -9544,7 +9545,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewBooleanArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewBooleanArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewBooleanArray {
 			get {
 				if (_NewBooleanArray == null)
@@ -9553,7 +9554,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewByteArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewByteArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewByteArray {
 			get {
 				if (_NewByteArray == null)
@@ -9562,7 +9563,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewCharArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewCharArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewCharArray {
 			get {
 				if (_NewCharArray == null)
@@ -9571,7 +9572,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewShortArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewShortArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewShortArray {
 			get {
 				if (_NewShortArray == null)
@@ -9580,7 +9581,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewIntArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewIntArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewIntArray {
 			get {
 				if (_NewIntArray == null)
@@ -9589,7 +9590,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewLongArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewLongArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewLongArray {
 			get {
 				if (_NewLongArray == null)
@@ -9598,7 +9599,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewFloatArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewFloatArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewFloatArray {
 			get {
 				if (_NewFloatArray == null)
@@ -9607,7 +9608,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewDoubleArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewDoubleArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewDoubleArray {
 			get {
 				if (_NewDoubleArray == null)
@@ -9616,7 +9617,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr _GetBooleanArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr? _GetBooleanArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
@@ -9625,7 +9626,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr _GetByteArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr? _GetByteArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
@@ -9634,7 +9635,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetCharArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr? _GetCharArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
@@ -9643,7 +9644,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr _GetShortArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr? _GetShortArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
@@ -9652,7 +9653,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr _GetIntArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr? _GetIntArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
@@ -9661,7 +9662,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr _GetLongArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr? _GetLongArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
@@ -9670,7 +9671,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr _GetFloatArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr? _GetFloatArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
@@ -9679,7 +9680,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr _GetDoubleArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr? _GetDoubleArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
@@ -9688,7 +9689,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_boolPtr_int _ReleaseBooleanArrayElements;
+		JniAction_JNIEnvPtr_jobject_boolPtr_int? _ReleaseBooleanArrayElements;
 		public JniAction_JNIEnvPtr_jobject_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
@@ -9697,7 +9698,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_sbytePtr_int _ReleaseByteArrayElements;
+		JniAction_JNIEnvPtr_jobject_sbytePtr_int? _ReleaseByteArrayElements;
 		public JniAction_JNIEnvPtr_jobject_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
@@ -9706,7 +9707,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_charPtr_int _ReleaseCharArrayElements;
+		JniAction_JNIEnvPtr_jobject_charPtr_int? _ReleaseCharArrayElements;
 		public JniAction_JNIEnvPtr_jobject_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
@@ -9715,7 +9716,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_shortPtr_int _ReleaseShortArrayElements;
+		JniAction_JNIEnvPtr_jobject_shortPtr_int? _ReleaseShortArrayElements;
 		public JniAction_JNIEnvPtr_jobject_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
@@ -9724,7 +9725,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_intPtr_int _ReleaseIntArrayElements;
+		JniAction_JNIEnvPtr_jobject_intPtr_int? _ReleaseIntArrayElements;
 		public JniAction_JNIEnvPtr_jobject_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
@@ -9733,7 +9734,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_longPtr_int _ReleaseLongArrayElements;
+		JniAction_JNIEnvPtr_jobject_longPtr_int? _ReleaseLongArrayElements;
 		public JniAction_JNIEnvPtr_jobject_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
@@ -9742,7 +9743,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_floatPtr_int _ReleaseFloatArrayElements;
+		JniAction_JNIEnvPtr_jobject_floatPtr_int? _ReleaseFloatArrayElements;
 		public JniAction_JNIEnvPtr_jobject_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
@@ -9751,7 +9752,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_doublePtr_int _ReleaseDoubleArrayElements;
+		JniAction_JNIEnvPtr_jobject_doublePtr_int? _ReleaseDoubleArrayElements;
 		public JniAction_JNIEnvPtr_jobject_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
@@ -9760,7 +9761,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _GetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr? _GetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
@@ -9769,7 +9770,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _GetByteArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr? _GetByteArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
@@ -9778,7 +9779,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetCharArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _GetCharArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
@@ -9787,7 +9788,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _GetShortArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr? _GetShortArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
@@ -9796,7 +9797,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_intPtr _GetIntArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr? _GetIntArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
@@ -9805,7 +9806,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_longPtr _GetLongArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr? _GetLongArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
@@ -9814,7 +9815,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _GetFloatArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr? _GetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
@@ -9823,7 +9824,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _GetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr? _GetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
@@ -9832,7 +9833,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _SetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr? _SetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
@@ -9841,7 +9842,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _SetByteArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr? _SetByteArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
@@ -9850,7 +9851,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _SetCharArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _SetCharArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
@@ -9859,7 +9860,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _SetShortArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr? _SetShortArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
@@ -9868,7 +9869,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_intPtr _SetIntArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr? _SetIntArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
@@ -9877,7 +9878,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_longPtr _SetLongArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr? _SetLongArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
@@ -9886,7 +9887,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _SetFloatArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr? _SetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
@@ -9895,7 +9896,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _SetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr? _SetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
@@ -9904,7 +9905,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int _RegisterNatives;
+		JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int? _RegisterNatives;
 		public JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int RegisterNatives {
 			get {
 				if (_RegisterNatives == null)
@@ -9913,7 +9914,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _UnregisterNatives;
+		JniFunc_JNIEnvPtr_jobject_int? _UnregisterNatives;
 		public JniFunc_JNIEnvPtr_jobject_int UnregisterNatives {
 			get {
 				if (_UnregisterNatives == null)
@@ -9922,7 +9923,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _MonitorEnter;
+		JniFunc_JNIEnvPtr_jobject_int? _MonitorEnter;
 		public JniFunc_JNIEnvPtr_jobject_int MonitorEnter {
 			get {
 				if (_MonitorEnter == null)
@@ -9931,7 +9932,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _MonitorExit;
+		JniFunc_JNIEnvPtr_jobject_int? _MonitorExit;
 		public JniFunc_JNIEnvPtr_jobject_int MonitorExit {
 			get {
 				if (_MonitorExit == null)
@@ -9940,7 +9941,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_outIntPtr_int _GetJavaVM;
+		JniFunc_JNIEnvPtr_outIntPtr_int? _GetJavaVM;
 		public JniFunc_JNIEnvPtr_outIntPtr_int GetJavaVM {
 			get {
 				if (_GetJavaVM == null)
@@ -9949,7 +9950,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetStringRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _GetStringRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
@@ -9958,7 +9959,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetStringUTFRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_IntPtr? _GetStringUTFRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetStringUTFRegion {
 			get {
 				if (_GetStringUTFRegion == null)
@@ -9967,7 +9968,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr? _GetPrimitiveArrayCritical;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
@@ -9976,7 +9977,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleasePrimitiveArrayCritical;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _ReleasePrimitiveArrayCritical;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleasePrimitiveArrayCritical {
 			get {
 				if (_ReleasePrimitiveArrayCritical == null)
@@ -9985,7 +9986,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringCritical;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string? _GetStringCritical;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
@@ -9994,7 +9995,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_string _ReleaseStringCritical;
+		JniAction_JNIEnvPtr_jobject_string? _ReleaseStringCritical;
 		public JniAction_JNIEnvPtr_jobject_string ReleaseStringCritical {
 			get {
 				if (_ReleaseStringCritical == null)
@@ -10003,7 +10004,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewWeakGlobalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewWeakGlobalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewWeakGlobalRef {
 			get {
 				if (_NewWeakGlobalRef == null)
@@ -10012,7 +10013,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteWeakGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteWeakGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteWeakGlobalRef {
 			get {
 				if (_DeleteWeakGlobalRef == null)
@@ -10021,7 +10022,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_byte _ExceptionCheck;
+		JniFunc_JNIEnvPtr_byte? _ExceptionCheck;
 		public JniFunc_JNIEnvPtr_byte ExceptionCheck {
 			get {
 				if (_ExceptionCheck == null)
@@ -10030,7 +10031,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_long_jobject _NewDirectByteBuffer;
+		JniFunc_JNIEnvPtr_IntPtr_long_jobject? _NewDirectByteBuffer;
 		public JniFunc_JNIEnvPtr_IntPtr_long_jobject NewDirectByteBuffer {
 			get {
 				if (_NewDirectByteBuffer == null)
@@ -10039,7 +10040,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _GetDirectBufferAddress;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _GetDirectBufferAddress;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr GetDirectBufferAddress {
 			get {
 				if (_GetDirectBufferAddress == null)
@@ -10048,7 +10049,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_long _GetDirectBufferCapacity;
+		JniFunc_JNIEnvPtr_jobject_long? _GetDirectBufferCapacity;
 		public JniFunc_JNIEnvPtr_jobject_long GetDirectBufferCapacity {
 			get {
 				if (_GetDirectBufferCapacity == null)
@@ -10057,7 +10058,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType _GetObjectRefType;
+		JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType? _GetObjectRefType;
 		public JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType GetObjectRefType {
 			get {
 				if (_GetObjectRefType == null)
@@ -10667,7 +10668,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_new_object_array (JniEnvironment.EnvironmentPointer, out thrown, length, elementClass.Handle, initialElement.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10683,7 +10684,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_get_object_array_element (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, index);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10699,7 +10700,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_object_array_element (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, index, value.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10905,7 +10906,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_boolean_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10919,7 +10920,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_byte_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10933,7 +10934,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_char_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10947,7 +10948,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_short_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10961,7 +10962,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_int_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10975,7 +10976,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_long_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -10989,7 +10990,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_float_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11003,7 +11004,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_get_double_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11017,7 +11018,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_boolean_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11031,7 +11032,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_byte_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11045,7 +11046,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_char_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11059,7 +11060,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_short_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11073,7 +11074,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_int_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11087,7 +11088,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_long_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11101,7 +11102,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_float_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11115,7 +11116,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_set_double_array_region (JniEnvironment.EnvironmentPointer, out thrown, array.Handle, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11208,12 +11209,12 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_get_field_id (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -11476,12 +11477,12 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_get_method_id (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -11498,7 +11499,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_object_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11519,7 +11520,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11540,7 +11541,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_boolean_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11560,7 +11561,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11580,7 +11581,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_byte_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11600,7 +11601,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11620,7 +11621,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_char_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11640,7 +11641,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11660,7 +11661,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_short_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11680,7 +11681,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11700,7 +11701,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_int_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11720,7 +11721,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11740,7 +11741,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_long_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11760,7 +11761,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11780,7 +11781,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_float_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11800,7 +11801,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11820,7 +11821,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_double_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11840,7 +11841,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11860,7 +11861,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_void_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11879,7 +11880,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11900,7 +11901,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_object_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11923,7 +11924,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11946,7 +11947,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_boolean_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11968,7 +11969,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -11990,7 +11991,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_byte_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12012,7 +12013,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12034,7 +12035,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_char_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12056,7 +12057,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12078,7 +12079,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_short_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12100,7 +12101,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12122,7 +12123,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_int_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12144,7 +12145,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12166,7 +12167,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_long_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12188,7 +12189,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12210,7 +12211,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_float_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12232,7 +12233,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12254,7 +12255,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_double_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12276,7 +12277,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_nonvirtual_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12298,7 +12299,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_nonvirtual_void_method (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12319,7 +12320,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_nonvirtual_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12336,7 +12337,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_new_direct_byte_buffer (JniEnvironment.EnvironmentPointer, out thrown, address, capacity);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12394,7 +12395,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_alloc_object (JniEnvironment.EnvironmentPointer, out thrown, type.Handle);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12415,7 +12416,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_new_object (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12436,7 +12437,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_new_object_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12530,7 +12531,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_to_reflected_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12551,7 +12552,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_to_reflected_field (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12574,12 +12575,12 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_get_static_field_id (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -12842,12 +12843,12 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_get_static_method_id (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -12864,7 +12865,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_object_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12885,7 +12886,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_object_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12906,7 +12907,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_boolean_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12926,7 +12927,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_boolean_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12946,7 +12947,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_byte_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12966,7 +12967,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_byte_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -12986,7 +12987,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_char_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13006,7 +13007,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_char_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13026,7 +13027,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_short_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13046,7 +13047,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_short_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13066,7 +13067,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_int_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13086,7 +13087,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_int_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13106,7 +13107,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_long_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13126,7 +13127,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_long_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13146,7 +13147,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_float_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13166,7 +13167,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_float_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13186,7 +13187,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_double_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13206,7 +13207,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_call_static_double_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13226,7 +13227,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_static_void_method (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13245,7 +13246,7 @@ namespace
 			IntPtr thrown;
 			NativeMethods.java_interop_jnienv_call_static_void_method_a (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, method.ID, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13259,7 +13260,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_new_string (JniEnvironment.EnvironmentPointer, out thrown, unicodeChars, length);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13308,7 +13309,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_define_class (JniEnvironment.EnvironmentPointer, out thrown, name, loader.Handle, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13324,7 +13325,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_find_class (JniEnvironment.EnvironmentPointer, out thrown, classname);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13388,7 +13389,7 @@ namespace
 			IntPtr thrown;
 			var tmp = NativeMethods.java_interop_jnienv_register_natives (JniEnvironment.EnvironmentPointer, out thrown, type.Handle, methods, numMethods);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13554,7 +13555,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectArray (__info.EnvironmentPointer, length, elementClass, initialElement);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13570,7 +13571,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetObjectArrayElement (__info.EnvironmentPointer, array, index);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13586,7 +13587,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetObjectArrayElement (__info.EnvironmentPointer, array, index, value);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13816,7 +13817,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetBooleanArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13830,7 +13831,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetByteArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13844,7 +13845,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetCharArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13858,7 +13859,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetShortArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13872,7 +13873,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetIntArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13886,7 +13887,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetLongArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13900,7 +13901,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetFloatArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13914,7 +13915,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.GetDoubleArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13928,7 +13929,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetBooleanArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13942,7 +13943,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetByteArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13956,7 +13957,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetCharArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13970,7 +13971,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetShortArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13984,7 +13985,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetIntArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -13998,7 +13999,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetLongArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14012,7 +14013,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetFloatArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14026,7 +14027,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.SetDoubleArrayRegion (__info.EnvironmentPointer, array, start, length, buffer);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14128,7 +14129,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetFieldID (__info.EnvironmentPointer, type, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14358,7 +14359,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetMethodID (__info.EnvironmentPointer, type, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14375,7 +14376,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14393,7 +14394,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallObjectMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14411,7 +14412,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14428,7 +14429,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallBooleanMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14445,7 +14446,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14462,7 +14463,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallByteMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14479,7 +14480,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14496,7 +14497,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallCharMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14513,7 +14514,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14530,7 +14531,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallShortMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14547,7 +14548,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14564,7 +14565,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallIntMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14581,7 +14582,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14598,7 +14599,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallLongMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14615,7 +14616,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14632,7 +14633,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallFloatMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14649,7 +14650,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14666,7 +14667,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallDoubleMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14683,7 +14684,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethod (__info.EnvironmentPointer, instance, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14699,7 +14700,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallVoidMethodA (__info.EnvironmentPointer, instance, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14717,7 +14718,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14737,7 +14738,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualObjectMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14757,7 +14758,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14776,7 +14777,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualBooleanMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14795,7 +14796,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14814,7 +14815,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualByteMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14833,7 +14834,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14852,7 +14853,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualCharMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14871,7 +14872,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14890,7 +14891,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualShortMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14909,7 +14910,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14928,7 +14929,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualIntMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14947,7 +14948,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14966,7 +14967,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualLongMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -14985,7 +14986,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15004,7 +15005,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualFloatMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15023,7 +15024,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15042,7 +15043,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallNonvirtualDoubleMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15061,7 +15062,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethod (__info.EnvironmentPointer, instance, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15079,7 +15080,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallNonvirtualVoidMethodA (__info.EnvironmentPointer, instance, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15096,7 +15097,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewDirectByteBuffer (__info.EnvironmentPointer, address, capacity);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15158,7 +15159,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.AllocObject (__info.EnvironmentPointer, type);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15176,7 +15177,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObject (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15194,7 +15195,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewObjectA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15296,7 +15297,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedMethod (__info.EnvironmentPointer, type, method, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15314,7 +15315,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.ToReflectedField (__info.EnvironmentPointer, type, field, (isStatic ? (byte) 1 : (byte) 0));
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15337,7 +15338,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticFieldID (__info.EnvironmentPointer, type, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15567,7 +15568,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.GetStaticMethodID (__info.EnvironmentPointer, type, name, signature);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15584,7 +15585,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15602,7 +15603,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticObjectMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15620,7 +15621,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15637,7 +15638,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticBooleanMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15654,7 +15655,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15671,7 +15672,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticByteMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15688,7 +15689,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15705,7 +15706,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticCharMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15722,7 +15723,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15739,7 +15740,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticShortMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15756,7 +15757,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15773,7 +15774,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticIntMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15790,7 +15791,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15807,7 +15808,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticLongMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15824,7 +15825,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15841,7 +15842,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticFloatMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15858,7 +15859,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15875,7 +15876,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.CallStaticDoubleMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15892,7 +15893,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethod (__info.EnvironmentPointer, type, method);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15908,7 +15909,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			__info.Invoker.CallStaticVoidMethodA (__info.EnvironmentPointer, type, method, (IntPtr) args);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15922,7 +15923,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.NewString (__info.EnvironmentPointer, unicodeChars, length);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15974,7 +15975,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.DefineClass (__info.EnvironmentPointer, name, loader, buffer, bufferLength);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -15990,7 +15991,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.FindClass (__info.EnvironmentPointer, classname);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -16059,7 +16060,7 @@ namespace
 			var __info = JniEnvironment.CurrentInfo;
 			var tmp = __info.Invoker.RegisterNatives (__info.EnvironmentPointer, type, methods, numMethods);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable ();
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable ();
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -16098,7 +16099,7 @@ namespace
 		}
 
 
-		JniFunc_JNIEnvPtr_int _GetVersion;
+		JniFunc_JNIEnvPtr_int? _GetVersion;
 		public JniFunc_JNIEnvPtr_int GetVersion {
 			get {
 				if (_GetVersion == null)
@@ -16107,7 +16108,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject _DefineClass;
+		JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject? _DefineClass;
 		public JniFunc_JNIEnvPtr_string_jobject_IntPtr_int_jobject DefineClass {
 			get {
 				if (_DefineClass == null)
@@ -16116,7 +16117,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject _FindClass;
+		JniFunc_JNIEnvPtr_string_jobject? _FindClass;
 		public JniFunc_JNIEnvPtr_string_jobject FindClass {
 			get {
 				if (_FindClass == null)
@@ -16125,7 +16126,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _FromReflectedMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _FromReflectedMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr FromReflectedMethod {
 			get {
 				if (_FromReflectedMethod == null)
@@ -16134,7 +16135,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _FromReflectedField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _FromReflectedField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr FromReflectedField {
 			get {
 				if (_FromReflectedField == null)
@@ -16143,7 +16144,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject _ToReflectedMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject? _ToReflectedMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject ToReflectedMethod {
 			get {
 				if (_ToReflectedMethod == null)
@@ -16152,7 +16153,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _GetSuperclass;
+		JniFunc_JNIEnvPtr_jobject_jobject? _GetSuperclass;
 		public JniFunc_JNIEnvPtr_jobject_jobject GetSuperclass {
 			get {
 				if (_GetSuperclass == null)
@@ -16161,7 +16162,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsAssignableFrom;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsAssignableFrom;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsAssignableFrom {
 			get {
 				if (_IsAssignableFrom == null)
@@ -16170,7 +16171,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject _ToReflectedField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject? _ToReflectedField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte_jobject ToReflectedField {
 			get {
 				if (_ToReflectedField == null)
@@ -16179,7 +16180,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _Throw;
+		JniFunc_JNIEnvPtr_jobject_int? _Throw;
 		public JniFunc_JNIEnvPtr_jobject_int Throw {
 			get {
 				if (_Throw == null)
@@ -16188,7 +16189,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_int _ThrowNew;
+		JniFunc_JNIEnvPtr_jobject_string_int? _ThrowNew;
 		public JniFunc_JNIEnvPtr_jobject_string_int ThrowNew {
 			get {
 				if (_ThrowNew == null)
@@ -16197,7 +16198,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject _ExceptionOccurred;
+		JniFunc_JNIEnvPtr_jobject? _ExceptionOccurred;
 		public JniFunc_JNIEnvPtr_jobject ExceptionOccurred {
 			get {
 				if (_ExceptionOccurred == null)
@@ -16206,7 +16207,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionDescribe;
+		JniAction_JNIEnvPtr? _ExceptionDescribe;
 		public JniAction_JNIEnvPtr ExceptionDescribe {
 			get {
 				if (_ExceptionDescribe == null)
@@ -16215,7 +16216,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr _ExceptionClear;
+		JniAction_JNIEnvPtr? _ExceptionClear;
 		public JniAction_JNIEnvPtr ExceptionClear {
 			get {
 				if (_ExceptionClear == null)
@@ -16224,7 +16225,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_string _FatalError;
+		JniAction_JNIEnvPtr_string? _FatalError;
 		public JniAction_JNIEnvPtr_string FatalError {
 			get {
 				if (_FatalError == null)
@@ -16233,7 +16234,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _PushLocalFrame;
+		JniFunc_JNIEnvPtr_int_int? _PushLocalFrame;
 		public JniFunc_JNIEnvPtr_int_int PushLocalFrame {
 			get {
 				if (_PushLocalFrame == null)
@@ -16242,7 +16243,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _PopLocalFrame;
+		JniFunc_JNIEnvPtr_jobject_jobject? _PopLocalFrame;
 		public JniFunc_JNIEnvPtr_jobject_jobject PopLocalFrame {
 			get {
 				if (_PopLocalFrame == null)
@@ -16251,7 +16252,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewGlobalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewGlobalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewGlobalRef {
 			get {
 				if (_NewGlobalRef == null)
@@ -16260,7 +16261,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteGlobalRef {
 			get {
 				if (_DeleteGlobalRef == null)
@@ -16269,7 +16270,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteLocalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteLocalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteLocalRef {
 			get {
 				if (_DeleteLocalRef == null)
@@ -16278,7 +16279,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsSameObject;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsSameObject;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsSameObject {
 			get {
 				if (_IsSameObject == null)
@@ -16287,7 +16288,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewLocalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewLocalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewLocalRef {
 			get {
 				if (_NewLocalRef == null)
@@ -16296,7 +16297,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_int _EnsureLocalCapacity;
+		JniFunc_JNIEnvPtr_int_int? _EnsureLocalCapacity;
 		public JniFunc_JNIEnvPtr_int_int EnsureLocalCapacity {
 			get {
 				if (_EnsureLocalCapacity == null)
@@ -16305,7 +16306,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _AllocObject;
+		JniFunc_JNIEnvPtr_jobject_jobject? _AllocObject;
 		public JniFunc_JNIEnvPtr_jobject_jobject AllocObject {
 			get {
 				if (_AllocObject == null)
@@ -16314,7 +16315,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _NewObject;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _NewObject;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject NewObject {
 			get {
 				if (_NewObject == null)
@@ -16323,7 +16324,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _NewObjectA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _NewObjectA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject NewObjectA {
 			get {
 				if (_NewObjectA == null)
@@ -16332,7 +16333,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _GetObjectClass;
+		JniFunc_JNIEnvPtr_jobject_jobject? _GetObjectClass;
 		public JniFunc_JNIEnvPtr_jobject_jobject GetObjectClass {
 			get {
 				if (_GetObjectClass == null)
@@ -16341,7 +16342,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_byte _IsInstanceOf;
+		JniFunc_JNIEnvPtr_jobject_jobject_byte? _IsInstanceOf;
 		public JniFunc_JNIEnvPtr_jobject_jobject_byte IsInstanceOf {
 			get {
 				if (_IsInstanceOf == null)
@@ -16350,7 +16351,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetMethodID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetMethodID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetMethodID {
 			get {
 				if (_GetMethodID == null)
@@ -16359,7 +16360,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _CallObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _CallObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject CallObjectMethod {
 			get {
 				if (_CallObjectMethod == null)
@@ -16368,7 +16369,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallObjectMethodA {
 			get {
 				if (_CallObjectMethodA == null)
@@ -16377,7 +16378,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _CallBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _CallBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte CallBooleanMethod {
 			get {
 				if (_CallBooleanMethod == null)
@@ -16386,7 +16387,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte? _CallBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallBooleanMethodA {
 			get {
 				if (_CallBooleanMethodA == null)
@@ -16395,7 +16396,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _CallByteMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _CallByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte CallByteMethod {
 			get {
 				if (_CallByteMethod == null)
@@ -16404,7 +16405,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallByteMethodA {
 			get {
 				if (_CallByteMethodA == null)
@@ -16413,7 +16414,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _CallCharMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _CallCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char CallCharMethod {
 			get {
 				if (_CallCharMethod == null)
@@ -16422,7 +16423,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char? _CallCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallCharMethodA {
 			get {
 				if (_CallCharMethodA == null)
@@ -16431,7 +16432,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _CallShortMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _CallShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short CallShortMethod {
 			get {
 				if (_CallShortMethod == null)
@@ -16440,7 +16441,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short? _CallShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallShortMethodA {
 			get {
 				if (_CallShortMethodA == null)
@@ -16449,7 +16450,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _CallIntMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _CallIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int CallIntMethod {
 			get {
 				if (_CallIntMethod == null)
@@ -16458,7 +16459,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int? _CallIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallIntMethodA {
 			get {
 				if (_CallIntMethodA == null)
@@ -16467,7 +16468,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _CallLongMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _CallLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long CallLongMethod {
 			get {
 				if (_CallLongMethod == null)
@@ -16476,7 +16477,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long? _CallLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallLongMethodA {
 			get {
 				if (_CallLongMethodA == null)
@@ -16485,7 +16486,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _CallFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _CallFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float CallFloatMethod {
 			get {
 				if (_CallFloatMethod == null)
@@ -16494,7 +16495,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float? _CallFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallFloatMethodA {
 			get {
 				if (_CallFloatMethodA == null)
@@ -16503,7 +16504,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _CallDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _CallDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double CallDoubleMethod {
 			get {
 				if (_CallDoubleMethod == null)
@@ -16512,7 +16513,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double? _CallDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallDoubleMethodA {
 			get {
 				if (_CallDoubleMethodA == null)
@@ -16521,7 +16522,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _CallVoidMethod;
+		JniAction_JNIEnvPtr_jobject_IntPtr? _CallVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_IntPtr CallVoidMethod {
 			get {
 				if (_CallVoidMethod == null)
@@ -16530,7 +16531,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr? _CallVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallVoidMethodA {
 			get {
 				if (_CallVoidMethodA == null)
@@ -16539,7 +16540,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject _CallNonvirtualObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject? _CallNonvirtualObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_jobject CallNonvirtualObjectMethod {
 			get {
 				if (_CallNonvirtualObjectMethod == null)
@@ -16548,7 +16549,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject _CallNonvirtualObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallNonvirtualObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_jobject CallNonvirtualObjectMethodA {
 			get {
 				if (_CallNonvirtualObjectMethodA == null)
@@ -16557,7 +16558,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte _CallNonvirtualBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte? _CallNonvirtualBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_byte CallNonvirtualBooleanMethod {
 			get {
 				if (_CallNonvirtualBooleanMethod == null)
@@ -16566,7 +16567,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte _CallNonvirtualBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte? _CallNonvirtualBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_byte CallNonvirtualBooleanMethodA {
 			get {
 				if (_CallNonvirtualBooleanMethodA == null)
@@ -16575,7 +16576,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte _CallNonvirtualByteMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte? _CallNonvirtualByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_sbyte CallNonvirtualByteMethod {
 			get {
 				if (_CallNonvirtualByteMethod == null)
@@ -16584,7 +16585,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallNonvirtualByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallNonvirtualByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_sbyte CallNonvirtualByteMethodA {
 			get {
 				if (_CallNonvirtualByteMethodA == null)
@@ -16593,7 +16594,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char _CallNonvirtualCharMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char? _CallNonvirtualCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_char CallNonvirtualCharMethod {
 			get {
 				if (_CallNonvirtualCharMethod == null)
@@ -16602,7 +16603,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char _CallNonvirtualCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char? _CallNonvirtualCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_char CallNonvirtualCharMethodA {
 			get {
 				if (_CallNonvirtualCharMethodA == null)
@@ -16611,7 +16612,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short _CallNonvirtualShortMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short? _CallNonvirtualShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_short CallNonvirtualShortMethod {
 			get {
 				if (_CallNonvirtualShortMethod == null)
@@ -16620,7 +16621,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short _CallNonvirtualShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short? _CallNonvirtualShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_short CallNonvirtualShortMethodA {
 			get {
 				if (_CallNonvirtualShortMethodA == null)
@@ -16629,7 +16630,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int _CallNonvirtualIntMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int? _CallNonvirtualIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_int CallNonvirtualIntMethod {
 			get {
 				if (_CallNonvirtualIntMethod == null)
@@ -16638,7 +16639,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int _CallNonvirtualIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int? _CallNonvirtualIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_int CallNonvirtualIntMethodA {
 			get {
 				if (_CallNonvirtualIntMethodA == null)
@@ -16647,7 +16648,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long _CallNonvirtualLongMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long? _CallNonvirtualLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_long CallNonvirtualLongMethod {
 			get {
 				if (_CallNonvirtualLongMethod == null)
@@ -16656,7 +16657,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long _CallNonvirtualLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long? _CallNonvirtualLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_long CallNonvirtualLongMethodA {
 			get {
 				if (_CallNonvirtualLongMethodA == null)
@@ -16665,7 +16666,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float _CallNonvirtualFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float? _CallNonvirtualFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_float CallNonvirtualFloatMethod {
 			get {
 				if (_CallNonvirtualFloatMethod == null)
@@ -16674,7 +16675,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float _CallNonvirtualFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float? _CallNonvirtualFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_float CallNonvirtualFloatMethodA {
 			get {
 				if (_CallNonvirtualFloatMethodA == null)
@@ -16683,7 +16684,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double _CallNonvirtualDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double? _CallNonvirtualDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_double CallNonvirtualDoubleMethod {
 			get {
 				if (_CallNonvirtualDoubleMethod == null)
@@ -16692,7 +16693,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double _CallNonvirtualDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double? _CallNonvirtualDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr_double CallNonvirtualDoubleMethodA {
 			get {
 				if (_CallNonvirtualDoubleMethodA == null)
@@ -16701,7 +16702,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr _CallNonvirtualVoidMethod;
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr? _CallNonvirtualVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr CallNonvirtualVoidMethod {
 			get {
 				if (_CallNonvirtualVoidMethod == null)
@@ -16710,7 +16711,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr _CallNonvirtualVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr? _CallNonvirtualVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_jobject_IntPtr_JniArgumentValuePtr CallNonvirtualVoidMethodA {
 			get {
 				if (_CallNonvirtualVoidMethodA == null)
@@ -16719,7 +16720,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetFieldID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetFieldID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetFieldID {
 			get {
 				if (_GetFieldID == null)
@@ -16728,7 +16729,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _GetObjectField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _GetObjectField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject GetObjectField {
 			get {
 				if (_GetObjectField == null)
@@ -16737,7 +16738,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _GetBooleanField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _GetBooleanField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte GetBooleanField {
 			get {
 				if (_GetBooleanField == null)
@@ -16746,7 +16747,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _GetByteField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _GetByteField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte GetByteField {
 			get {
 				if (_GetByteField == null)
@@ -16755,7 +16756,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _GetCharField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _GetCharField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char GetCharField {
 			get {
 				if (_GetCharField == null)
@@ -16764,7 +16765,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _GetShortField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _GetShortField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short GetShortField {
 			get {
 				if (_GetShortField == null)
@@ -16773,7 +16774,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _GetIntField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _GetIntField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int GetIntField {
 			get {
 				if (_GetIntField == null)
@@ -16782,7 +16783,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _GetLongField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _GetLongField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long GetLongField {
 			get {
 				if (_GetLongField == null)
@@ -16791,7 +16792,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _GetFloatField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _GetFloatField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float GetFloatField {
 			get {
 				if (_GetFloatField == null)
@@ -16800,7 +16801,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _GetDoubleField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _GetDoubleField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double GetDoubleField {
 			get {
 				if (_GetDoubleField == null)
@@ -16809,7 +16810,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_jobject _SetObjectField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_jobject? _SetObjectField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_jobject SetObjectField {
 			get {
 				if (_SetObjectField == null)
@@ -16818,7 +16819,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_byte _SetBooleanField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_byte? _SetBooleanField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_byte SetBooleanField {
 			get {
 				if (_SetBooleanField == null)
@@ -16827,7 +16828,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte _SetByteField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte? _SetByteField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_sbyte SetByteField {
 			get {
 				if (_SetByteField == null)
@@ -16836,7 +16837,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_char _SetCharField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_char? _SetCharField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_char SetCharField {
 			get {
 				if (_SetCharField == null)
@@ -16845,7 +16846,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_short _SetShortField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_short? _SetShortField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_short SetShortField {
 			get {
 				if (_SetShortField == null)
@@ -16854,7 +16855,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _SetIntField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _SetIntField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int SetIntField {
 			get {
 				if (_SetIntField == null)
@@ -16863,7 +16864,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_long _SetLongField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_long? _SetLongField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_long SetLongField {
 			get {
 				if (_SetLongField == null)
@@ -16872,7 +16873,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_float _SetFloatField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_float? _SetFloatField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_float SetFloatField {
 			get {
 				if (_SetFloatField == null)
@@ -16881,7 +16882,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_double _SetDoubleField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_double? _SetDoubleField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_double SetDoubleField {
 			get {
 				if (_SetDoubleField == null)
@@ -16890,7 +16891,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetStaticMethodID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetStaticMethodID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetStaticMethodID {
 			get {
 				if (_GetStaticMethodID == null)
@@ -16899,7 +16900,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _CallStaticObjectMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _CallStaticObjectMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject CallStaticObjectMethod {
 			get {
 				if (_CallStaticObjectMethod == null)
@@ -16908,7 +16909,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject _CallStaticObjectMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject? _CallStaticObjectMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_jobject CallStaticObjectMethodA {
 			get {
 				if (_CallStaticObjectMethodA == null)
@@ -16917,7 +16918,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _CallStaticBooleanMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _CallStaticBooleanMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte CallStaticBooleanMethod {
 			get {
 				if (_CallStaticBooleanMethod == null)
@@ -16926,7 +16927,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte _CallStaticBooleanMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte? _CallStaticBooleanMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_byte CallStaticBooleanMethodA {
 			get {
 				if (_CallStaticBooleanMethodA == null)
@@ -16935,7 +16936,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _CallStaticByteMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _CallStaticByteMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte CallStaticByteMethod {
 			get {
 				if (_CallStaticByteMethod == null)
@@ -16944,7 +16945,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte _CallStaticByteMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte? _CallStaticByteMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_sbyte CallStaticByteMethodA {
 			get {
 				if (_CallStaticByteMethodA == null)
@@ -16953,7 +16954,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _CallStaticCharMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _CallStaticCharMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char CallStaticCharMethod {
 			get {
 				if (_CallStaticCharMethod == null)
@@ -16962,7 +16963,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char _CallStaticCharMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char? _CallStaticCharMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_char CallStaticCharMethodA {
 			get {
 				if (_CallStaticCharMethodA == null)
@@ -16971,7 +16972,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _CallStaticShortMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _CallStaticShortMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short CallStaticShortMethod {
 			get {
 				if (_CallStaticShortMethod == null)
@@ -16980,7 +16981,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short _CallStaticShortMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short? _CallStaticShortMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_short CallStaticShortMethodA {
 			get {
 				if (_CallStaticShortMethodA == null)
@@ -16989,7 +16990,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _CallStaticIntMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _CallStaticIntMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int CallStaticIntMethod {
 			get {
 				if (_CallStaticIntMethod == null)
@@ -16998,7 +16999,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int _CallStaticIntMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int? _CallStaticIntMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_int CallStaticIntMethodA {
 			get {
 				if (_CallStaticIntMethodA == null)
@@ -17007,7 +17008,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _CallStaticLongMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _CallStaticLongMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long CallStaticLongMethod {
 			get {
 				if (_CallStaticLongMethod == null)
@@ -17016,7 +17017,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long _CallStaticLongMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long? _CallStaticLongMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_long CallStaticLongMethodA {
 			get {
 				if (_CallStaticLongMethodA == null)
@@ -17025,7 +17026,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _CallStaticFloatMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _CallStaticFloatMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float CallStaticFloatMethod {
 			get {
 				if (_CallStaticFloatMethod == null)
@@ -17034,7 +17035,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float _CallStaticFloatMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float? _CallStaticFloatMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_float CallStaticFloatMethodA {
 			get {
 				if (_CallStaticFloatMethodA == null)
@@ -17043,7 +17044,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _CallStaticDoubleMethod;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _CallStaticDoubleMethod;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double CallStaticDoubleMethod {
 			get {
 				if (_CallStaticDoubleMethod == null)
@@ -17052,7 +17053,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double _CallStaticDoubleMethodA;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double? _CallStaticDoubleMethodA;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr_double CallStaticDoubleMethodA {
 			get {
 				if (_CallStaticDoubleMethodA == null)
@@ -17061,7 +17062,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr _CallStaticVoidMethod;
+		JniAction_JNIEnvPtr_jobject_IntPtr? _CallStaticVoidMethod;
 		public JniAction_JNIEnvPtr_jobject_IntPtr CallStaticVoidMethod {
 			get {
 				if (_CallStaticVoidMethod == null)
@@ -17070,7 +17071,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr _CallStaticVoidMethodA;
+		JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr? _CallStaticVoidMethodA;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_JniArgumentValuePtr CallStaticVoidMethodA {
 			get {
 				if (_CallStaticVoidMethodA == null)
@@ -17079,7 +17080,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr _GetStaticFieldID;
+		JniFunc_JNIEnvPtr_jobject_string_string_IntPtr? _GetStaticFieldID;
 		public JniFunc_JNIEnvPtr_jobject_string_string_IntPtr GetStaticFieldID {
 			get {
 				if (_GetStaticFieldID == null)
@@ -17088,7 +17089,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject _GetStaticObjectField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_jobject? _GetStaticObjectField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_jobject GetStaticObjectField {
 			get {
 				if (_GetStaticObjectField == null)
@@ -17097,7 +17098,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_byte _GetStaticBooleanField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_byte? _GetStaticBooleanField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_byte GetStaticBooleanField {
 			get {
 				if (_GetStaticBooleanField == null)
@@ -17106,7 +17107,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte _GetStaticByteField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte? _GetStaticByteField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_sbyte GetStaticByteField {
 			get {
 				if (_GetStaticByteField == null)
@@ -17115,7 +17116,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_char _GetStaticCharField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_char? _GetStaticCharField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_char GetStaticCharField {
 			get {
 				if (_GetStaticCharField == null)
@@ -17124,7 +17125,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_short _GetStaticShortField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_short? _GetStaticShortField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_short GetStaticShortField {
 			get {
 				if (_GetStaticShortField == null)
@@ -17133,7 +17134,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_int _GetStaticIntField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_int? _GetStaticIntField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_int GetStaticIntField {
 			get {
 				if (_GetStaticIntField == null)
@@ -17142,7 +17143,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_long _GetStaticLongField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_long? _GetStaticLongField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_long GetStaticLongField {
 			get {
 				if (_GetStaticLongField == null)
@@ -17151,7 +17152,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_float _GetStaticFloatField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_float? _GetStaticFloatField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_float GetStaticFloatField {
 			get {
 				if (_GetStaticFloatField == null)
@@ -17160,7 +17161,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr_double _GetStaticDoubleField;
+		JniFunc_JNIEnvPtr_jobject_IntPtr_double? _GetStaticDoubleField;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr_double GetStaticDoubleField {
 			get {
 				if (_GetStaticDoubleField == null)
@@ -17169,7 +17170,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_jobject _SetStaticObjectField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_jobject? _SetStaticObjectField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_jobject SetStaticObjectField {
 			get {
 				if (_SetStaticObjectField == null)
@@ -17178,7 +17179,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_byte _SetStaticBooleanField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_byte? _SetStaticBooleanField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_byte SetStaticBooleanField {
 			get {
 				if (_SetStaticBooleanField == null)
@@ -17187,7 +17188,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte _SetStaticByteField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_sbyte? _SetStaticByteField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_sbyte SetStaticByteField {
 			get {
 				if (_SetStaticByteField == null)
@@ -17196,7 +17197,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_char _SetStaticCharField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_char? _SetStaticCharField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_char SetStaticCharField {
 			get {
 				if (_SetStaticCharField == null)
@@ -17205,7 +17206,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_short _SetStaticShortField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_short? _SetStaticShortField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_short SetStaticShortField {
 			get {
 				if (_SetStaticShortField == null)
@@ -17214,7 +17215,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _SetStaticIntField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _SetStaticIntField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int SetStaticIntField {
 			get {
 				if (_SetStaticIntField == null)
@@ -17223,7 +17224,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_long _SetStaticLongField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_long? _SetStaticLongField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_long SetStaticLongField {
 			get {
 				if (_SetStaticLongField == null)
@@ -17232,7 +17233,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_float _SetStaticFloatField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_float? _SetStaticFloatField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_float SetStaticFloatField {
 			get {
 				if (_SetStaticFloatField == null)
@@ -17241,7 +17242,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_double _SetStaticDoubleField;
+		JniAction_JNIEnvPtr_jobject_IntPtr_double? _SetStaticDoubleField;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_double SetStaticDoubleField {
 			get {
 				if (_SetStaticDoubleField == null)
@@ -17250,7 +17251,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_charPtr_int_jobject _NewString;
+		JniFunc_JNIEnvPtr_charPtr_int_jobject? _NewString;
 		public JniFunc_JNIEnvPtr_charPtr_int_jobject NewString {
 			get {
 				if (_NewString == null)
@@ -17259,7 +17260,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetStringLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetStringLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetStringLength {
 			get {
 				if (_GetStringLength == null)
@@ -17268,7 +17269,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetStringChars;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr? _GetStringChars;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetStringChars {
 			get {
 				if (_GetStringChars == null)
@@ -17277,7 +17278,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_charPtr _ReleaseStringChars;
+		JniAction_JNIEnvPtr_jobject_charPtr? _ReleaseStringChars;
 		public JniAction_JNIEnvPtr_jobject_charPtr ReleaseStringChars {
 			get {
 				if (_ReleaseStringChars == null)
@@ -17286,7 +17287,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_string_jobject _NewStringUTF;
+		JniFunc_JNIEnvPtr_string_jobject? _NewStringUTF;
 		public JniFunc_JNIEnvPtr_string_jobject NewStringUTF {
 			get {
 				if (_NewStringUTF == null)
@@ -17295,7 +17296,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetStringUTFLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetStringUTFLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetStringUTFLength {
 			get {
 				if (_GetStringUTFLength == null)
@@ -17304,7 +17305,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringUTFChars;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string? _GetStringUTFChars;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringUTFChars {
 			get {
 				if (_GetStringUTFChars == null)
@@ -17313,7 +17314,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_string _ReleaseStringUTFChars;
+		JniAction_JNIEnvPtr_jobject_string? _ReleaseStringUTFChars;
 		public JniAction_JNIEnvPtr_jobject_string ReleaseStringUTFChars {
 			get {
 				if (_ReleaseStringUTFChars == null)
@@ -17322,7 +17323,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _GetArrayLength;
+		JniFunc_JNIEnvPtr_jobject_int? _GetArrayLength;
 		public JniFunc_JNIEnvPtr_jobject_int GetArrayLength {
 			get {
 				if (_GetArrayLength == null)
@@ -17331,7 +17332,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject_jobject_jobject _NewObjectArray;
+		JniFunc_JNIEnvPtr_int_jobject_jobject_jobject? _NewObjectArray;
 		public JniFunc_JNIEnvPtr_int_jobject_jobject_jobject NewObjectArray {
 			get {
 				if (_NewObjectArray == null)
@@ -17340,7 +17341,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int_jobject _GetObjectArrayElement;
+		JniFunc_JNIEnvPtr_jobject_int_jobject? _GetObjectArrayElement;
 		public JniFunc_JNIEnvPtr_jobject_int_jobject GetObjectArrayElement {
 			get {
 				if (_GetObjectArrayElement == null)
@@ -17349,7 +17350,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_jobject _SetObjectArrayElement;
+		JniAction_JNIEnvPtr_jobject_int_jobject? _SetObjectArrayElement;
 		public JniAction_JNIEnvPtr_jobject_int_jobject SetObjectArrayElement {
 			get {
 				if (_SetObjectArrayElement == null)
@@ -17358,7 +17359,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewBooleanArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewBooleanArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewBooleanArray {
 			get {
 				if (_NewBooleanArray == null)
@@ -17367,7 +17368,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewByteArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewByteArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewByteArray {
 			get {
 				if (_NewByteArray == null)
@@ -17376,7 +17377,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewCharArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewCharArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewCharArray {
 			get {
 				if (_NewCharArray == null)
@@ -17385,7 +17386,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewShortArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewShortArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewShortArray {
 			get {
 				if (_NewShortArray == null)
@@ -17394,7 +17395,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewIntArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewIntArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewIntArray {
 			get {
 				if (_NewIntArray == null)
@@ -17403,7 +17404,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewLongArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewLongArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewLongArray {
 			get {
 				if (_NewLongArray == null)
@@ -17412,7 +17413,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewFloatArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewFloatArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewFloatArray {
 			get {
 				if (_NewFloatArray == null)
@@ -17421,7 +17422,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_int_jobject _NewDoubleArray;
+		JniFunc_JNIEnvPtr_int_jobject? _NewDoubleArray;
 		public JniFunc_JNIEnvPtr_int_jobject NewDoubleArray {
 			get {
 				if (_NewDoubleArray == null)
@@ -17430,7 +17431,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr _GetBooleanArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr? _GetBooleanArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_boolPtr GetBooleanArrayElements {
 			get {
 				if (_GetBooleanArrayElements == null)
@@ -17439,7 +17440,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr _GetByteArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr? _GetByteArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_sbytePtr GetByteArrayElements {
 			get {
 				if (_GetByteArrayElements == null)
@@ -17448,7 +17449,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr _GetCharArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr? _GetCharArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_charPtr GetCharArrayElements {
 			get {
 				if (_GetCharArrayElements == null)
@@ -17457,7 +17458,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr _GetShortArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr? _GetShortArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_shortPtr GetShortArrayElements {
 			get {
 				if (_GetShortArrayElements == null)
@@ -17466,7 +17467,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr _GetIntArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr? _GetIntArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_intPtr GetIntArrayElements {
 			get {
 				if (_GetIntArrayElements == null)
@@ -17475,7 +17476,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr _GetLongArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr? _GetLongArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_longPtr GetLongArrayElements {
 			get {
 				if (_GetLongArrayElements == null)
@@ -17484,7 +17485,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr _GetFloatArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr? _GetFloatArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_floatPtr GetFloatArrayElements {
 			get {
 				if (_GetFloatArrayElements == null)
@@ -17493,7 +17494,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr _GetDoubleArrayElements;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr? _GetDoubleArrayElements;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_doublePtr GetDoubleArrayElements {
 			get {
 				if (_GetDoubleArrayElements == null)
@@ -17502,7 +17503,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_boolPtr_int _ReleaseBooleanArrayElements;
+		JniAction_JNIEnvPtr_jobject_boolPtr_int? _ReleaseBooleanArrayElements;
 		public JniAction_JNIEnvPtr_jobject_boolPtr_int ReleaseBooleanArrayElements {
 			get {
 				if (_ReleaseBooleanArrayElements == null)
@@ -17511,7 +17512,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_sbytePtr_int _ReleaseByteArrayElements;
+		JniAction_JNIEnvPtr_jobject_sbytePtr_int? _ReleaseByteArrayElements;
 		public JniAction_JNIEnvPtr_jobject_sbytePtr_int ReleaseByteArrayElements {
 			get {
 				if (_ReleaseByteArrayElements == null)
@@ -17520,7 +17521,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_charPtr_int _ReleaseCharArrayElements;
+		JniAction_JNIEnvPtr_jobject_charPtr_int? _ReleaseCharArrayElements;
 		public JniAction_JNIEnvPtr_jobject_charPtr_int ReleaseCharArrayElements {
 			get {
 				if (_ReleaseCharArrayElements == null)
@@ -17529,7 +17530,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_shortPtr_int _ReleaseShortArrayElements;
+		JniAction_JNIEnvPtr_jobject_shortPtr_int? _ReleaseShortArrayElements;
 		public JniAction_JNIEnvPtr_jobject_shortPtr_int ReleaseShortArrayElements {
 			get {
 				if (_ReleaseShortArrayElements == null)
@@ -17538,7 +17539,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_intPtr_int _ReleaseIntArrayElements;
+		JniAction_JNIEnvPtr_jobject_intPtr_int? _ReleaseIntArrayElements;
 		public JniAction_JNIEnvPtr_jobject_intPtr_int ReleaseIntArrayElements {
 			get {
 				if (_ReleaseIntArrayElements == null)
@@ -17547,7 +17548,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_longPtr_int _ReleaseLongArrayElements;
+		JniAction_JNIEnvPtr_jobject_longPtr_int? _ReleaseLongArrayElements;
 		public JniAction_JNIEnvPtr_jobject_longPtr_int ReleaseLongArrayElements {
 			get {
 				if (_ReleaseLongArrayElements == null)
@@ -17556,7 +17557,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_floatPtr_int _ReleaseFloatArrayElements;
+		JniAction_JNIEnvPtr_jobject_floatPtr_int? _ReleaseFloatArrayElements;
 		public JniAction_JNIEnvPtr_jobject_floatPtr_int ReleaseFloatArrayElements {
 			get {
 				if (_ReleaseFloatArrayElements == null)
@@ -17565,7 +17566,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_doublePtr_int _ReleaseDoubleArrayElements;
+		JniAction_JNIEnvPtr_jobject_doublePtr_int? _ReleaseDoubleArrayElements;
 		public JniAction_JNIEnvPtr_jobject_doublePtr_int ReleaseDoubleArrayElements {
 			get {
 				if (_ReleaseDoubleArrayElements == null)
@@ -17574,7 +17575,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _GetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr? _GetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr GetBooleanArrayRegion {
 			get {
 				if (_GetBooleanArrayRegion == null)
@@ -17583,7 +17584,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _GetByteArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr? _GetByteArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr GetByteArrayRegion {
 			get {
 				if (_GetByteArrayRegion == null)
@@ -17592,7 +17593,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetCharArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _GetCharArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetCharArrayRegion {
 			get {
 				if (_GetCharArrayRegion == null)
@@ -17601,7 +17602,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _GetShortArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr? _GetShortArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr GetShortArrayRegion {
 			get {
 				if (_GetShortArrayRegion == null)
@@ -17610,7 +17611,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_intPtr _GetIntArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr? _GetIntArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_intPtr GetIntArrayRegion {
 			get {
 				if (_GetIntArrayRegion == null)
@@ -17619,7 +17620,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_longPtr _GetLongArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr? _GetLongArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_longPtr GetLongArrayRegion {
 			get {
 				if (_GetLongArrayRegion == null)
@@ -17628,7 +17629,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _GetFloatArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr? _GetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr GetFloatArrayRegion {
 			get {
 				if (_GetFloatArrayRegion == null)
@@ -17637,7 +17638,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _GetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr? _GetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr GetDoubleArrayRegion {
 			get {
 				if (_GetDoubleArrayRegion == null)
@@ -17646,7 +17647,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_boolPtr _SetBooleanArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_boolPtr? _SetBooleanArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_boolPtr SetBooleanArrayRegion {
 			get {
 				if (_SetBooleanArrayRegion == null)
@@ -17655,7 +17656,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr _SetByteArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_sbytePtr? _SetByteArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_sbytePtr SetByteArrayRegion {
 			get {
 				if (_SetByteArrayRegion == null)
@@ -17664,7 +17665,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _SetCharArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _SetCharArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr SetCharArrayRegion {
 			get {
 				if (_SetCharArrayRegion == null)
@@ -17673,7 +17674,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_shortPtr _SetShortArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_shortPtr? _SetShortArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_shortPtr SetShortArrayRegion {
 			get {
 				if (_SetShortArrayRegion == null)
@@ -17682,7 +17683,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_intPtr _SetIntArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_intPtr? _SetIntArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_intPtr SetIntArrayRegion {
 			get {
 				if (_SetIntArrayRegion == null)
@@ -17691,7 +17692,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_longPtr _SetLongArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_longPtr? _SetLongArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_longPtr SetLongArrayRegion {
 			get {
 				if (_SetLongArrayRegion == null)
@@ -17700,7 +17701,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_floatPtr _SetFloatArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_floatPtr? _SetFloatArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_floatPtr SetFloatArrayRegion {
 			get {
 				if (_SetFloatArrayRegion == null)
@@ -17709,7 +17710,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_doublePtr _SetDoubleArrayRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_doublePtr? _SetDoubleArrayRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_doublePtr SetDoubleArrayRegion {
 			get {
 				if (_SetDoubleArrayRegion == null)
@@ -17718,7 +17719,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int _RegisterNatives;
+		JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int? _RegisterNatives;
 		public JniFunc_JNIEnvPtr_jobject_JniNativeMethodRegistrationArray_int_int RegisterNatives {
 			get {
 				if (_RegisterNatives == null)
@@ -17727,7 +17728,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _UnregisterNatives;
+		JniFunc_JNIEnvPtr_jobject_int? _UnregisterNatives;
 		public JniFunc_JNIEnvPtr_jobject_int UnregisterNatives {
 			get {
 				if (_UnregisterNatives == null)
@@ -17736,7 +17737,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _MonitorEnter;
+		JniFunc_JNIEnvPtr_jobject_int? _MonitorEnter;
 		public JniFunc_JNIEnvPtr_jobject_int MonitorEnter {
 			get {
 				if (_MonitorEnter == null)
@@ -17745,7 +17746,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_int _MonitorExit;
+		JniFunc_JNIEnvPtr_jobject_int? _MonitorExit;
 		public JniFunc_JNIEnvPtr_jobject_int MonitorExit {
 			get {
 				if (_MonitorExit == null)
@@ -17754,7 +17755,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_outIntPtr_int _GetJavaVM;
+		JniFunc_JNIEnvPtr_outIntPtr_int? _GetJavaVM;
 		public JniFunc_JNIEnvPtr_outIntPtr_int GetJavaVM {
 			get {
 				if (_GetJavaVM == null)
@@ -17763,7 +17764,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_charPtr _GetStringRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_charPtr? _GetStringRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_charPtr GetStringRegion {
 			get {
 				if (_GetStringRegion == null)
@@ -17772,7 +17773,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_int_int_IntPtr _GetStringUTFRegion;
+		JniAction_JNIEnvPtr_jobject_int_int_IntPtr? _GetStringUTFRegion;
 		public JniAction_JNIEnvPtr_jobject_int_int_IntPtr GetStringUTFRegion {
 			get {
 				if (_GetStringUTFRegion == null)
@@ -17781,7 +17782,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr _GetPrimitiveArrayCritical;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr? _GetPrimitiveArrayCritical;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_IntPtr GetPrimitiveArrayCritical {
 			get {
 				if (_GetPrimitiveArrayCritical == null)
@@ -17790,7 +17791,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_IntPtr_int _ReleasePrimitiveArrayCritical;
+		JniAction_JNIEnvPtr_jobject_IntPtr_int? _ReleasePrimitiveArrayCritical;
 		public JniAction_JNIEnvPtr_jobject_IntPtr_int ReleasePrimitiveArrayCritical {
 			get {
 				if (_ReleasePrimitiveArrayCritical == null)
@@ -17799,7 +17800,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_boolPtr_string _GetStringCritical;
+		JniFunc_JNIEnvPtr_jobject_boolPtr_string? _GetStringCritical;
 		public JniFunc_JNIEnvPtr_jobject_boolPtr_string GetStringCritical {
 			get {
 				if (_GetStringCritical == null)
@@ -17808,7 +17809,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_jobject_string _ReleaseStringCritical;
+		JniAction_JNIEnvPtr_jobject_string? _ReleaseStringCritical;
 		public JniAction_JNIEnvPtr_jobject_string ReleaseStringCritical {
 			get {
 				if (_ReleaseStringCritical == null)
@@ -17817,7 +17818,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_jobject _NewWeakGlobalRef;
+		JniFunc_JNIEnvPtr_jobject_jobject? _NewWeakGlobalRef;
 		public JniFunc_JNIEnvPtr_jobject_jobject NewWeakGlobalRef {
 			get {
 				if (_NewWeakGlobalRef == null)
@@ -17826,7 +17827,7 @@ namespace
 			}
 		}
 
-		JniAction_JNIEnvPtr_IntPtr _DeleteWeakGlobalRef;
+		JniAction_JNIEnvPtr_IntPtr? _DeleteWeakGlobalRef;
 		public JniAction_JNIEnvPtr_IntPtr DeleteWeakGlobalRef {
 			get {
 				if (_DeleteWeakGlobalRef == null)
@@ -17835,7 +17836,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_byte _ExceptionCheck;
+		JniFunc_JNIEnvPtr_byte? _ExceptionCheck;
 		public JniFunc_JNIEnvPtr_byte ExceptionCheck {
 			get {
 				if (_ExceptionCheck == null)
@@ -17844,7 +17845,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_IntPtr_long_jobject _NewDirectByteBuffer;
+		JniFunc_JNIEnvPtr_IntPtr_long_jobject? _NewDirectByteBuffer;
 		public JniFunc_JNIEnvPtr_IntPtr_long_jobject NewDirectByteBuffer {
 			get {
 				if (_NewDirectByteBuffer == null)
@@ -17853,7 +17854,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_IntPtr _GetDirectBufferAddress;
+		JniFunc_JNIEnvPtr_jobject_IntPtr? _GetDirectBufferAddress;
 		public JniFunc_JNIEnvPtr_jobject_IntPtr GetDirectBufferAddress {
 			get {
 				if (_GetDirectBufferAddress == null)
@@ -17862,7 +17863,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_long _GetDirectBufferCapacity;
+		JniFunc_JNIEnvPtr_jobject_long? _GetDirectBufferCapacity;
 		public JniFunc_JNIEnvPtr_jobject_long GetDirectBufferCapacity {
 			get {
 				if (_GetDirectBufferCapacity == null)
@@ -17871,7 +17872,7 @@ namespace
 			}
 		}
 
-		JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType _GetObjectRefType;
+		JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType? _GetObjectRefType;
 		public JniFunc_JNIEnvPtr_jobject_JniObjectReferenceType GetObjectRefType {
 			get {
 				if (_GetObjectRefType == null)
@@ -19046,7 +19047,7 @@ namespace
 			var tmp = JniNativeMethods.NewObjectArray (__env, length, elementClass.Handle, initialElement.Handle);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19063,7 +19064,7 @@ namespace
 			var tmp = JniNativeMethods.GetObjectArrayElement (__env, array.Handle, index);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19080,7 +19081,7 @@ namespace
 			JniNativeMethods.SetObjectArrayElement (__env, array.Handle, index, value.Handle);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19311,7 +19312,7 @@ namespace
 			JniNativeMethods.GetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19326,7 +19327,7 @@ namespace
 			JniNativeMethods.GetByteArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19341,7 +19342,7 @@ namespace
 			JniNativeMethods.GetCharArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19356,7 +19357,7 @@ namespace
 			JniNativeMethods.GetShortArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19371,7 +19372,7 @@ namespace
 			JniNativeMethods.GetIntArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19386,7 +19387,7 @@ namespace
 			JniNativeMethods.GetLongArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19401,7 +19402,7 @@ namespace
 			JniNativeMethods.GetFloatArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19416,7 +19417,7 @@ namespace
 			JniNativeMethods.GetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19431,7 +19432,7 @@ namespace
 			JniNativeMethods.SetBooleanArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19446,7 +19447,7 @@ namespace
 			JniNativeMethods.SetByteArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19461,7 +19462,7 @@ namespace
 			JniNativeMethods.SetCharArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19476,7 +19477,7 @@ namespace
 			JniNativeMethods.SetShortArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19491,7 +19492,7 @@ namespace
 			JniNativeMethods.SetIntArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19506,7 +19507,7 @@ namespace
 			JniNativeMethods.SetLongArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19521,7 +19522,7 @@ namespace
 			JniNativeMethods.SetFloatArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19536,7 +19537,7 @@ namespace
 			JniNativeMethods.SetDoubleArrayRegion (__env, array.Handle, start, length, buffer);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19650,12 +19651,12 @@ namespace
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -19942,12 +19943,12 @@ namespace
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: false);
 		}
 
@@ -19965,7 +19966,7 @@ namespace
 			var tmp = JniNativeMethods.CallObjectMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -19987,7 +19988,7 @@ namespace
 			var tmp = JniNativeMethods.CallObjectMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20009,7 +20010,7 @@ namespace
 			var tmp = JniNativeMethods.CallBooleanMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20030,7 +20031,7 @@ namespace
 			var tmp = JniNativeMethods.CallBooleanMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20051,7 +20052,7 @@ namespace
 			var tmp = JniNativeMethods.CallByteMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20072,7 +20073,7 @@ namespace
 			var tmp = JniNativeMethods.CallByteMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20093,7 +20094,7 @@ namespace
 			var tmp = JniNativeMethods.CallCharMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20114,7 +20115,7 @@ namespace
 			var tmp = JniNativeMethods.CallCharMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20135,7 +20136,7 @@ namespace
 			var tmp = JniNativeMethods.CallShortMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20156,7 +20157,7 @@ namespace
 			var tmp = JniNativeMethods.CallShortMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20177,7 +20178,7 @@ namespace
 			var tmp = JniNativeMethods.CallIntMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20198,7 +20199,7 @@ namespace
 			var tmp = JniNativeMethods.CallIntMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20219,7 +20220,7 @@ namespace
 			var tmp = JniNativeMethods.CallLongMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20240,7 +20241,7 @@ namespace
 			var tmp = JniNativeMethods.CallLongMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20261,7 +20262,7 @@ namespace
 			var tmp = JniNativeMethods.CallFloatMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20282,7 +20283,7 @@ namespace
 			var tmp = JniNativeMethods.CallFloatMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20303,7 +20304,7 @@ namespace
 			var tmp = JniNativeMethods.CallDoubleMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20324,7 +20325,7 @@ namespace
 			var tmp = JniNativeMethods.CallDoubleMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20345,7 +20346,7 @@ namespace
 			JniNativeMethods.CallVoidMethod (__env, instance.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20365,7 +20366,7 @@ namespace
 			JniNativeMethods.CallVoidMethodA (__env, instance.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20387,7 +20388,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualObjectMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20411,7 +20412,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualObjectMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20435,7 +20436,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualBooleanMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20458,7 +20459,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualBooleanMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20481,7 +20482,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualByteMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20504,7 +20505,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualByteMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20527,7 +20528,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualCharMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20550,7 +20551,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualCharMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20573,7 +20574,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualShortMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20596,7 +20597,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualShortMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20619,7 +20620,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualIntMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20642,7 +20643,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualIntMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20665,7 +20666,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualLongMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20688,7 +20689,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualLongMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20711,7 +20712,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualFloatMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20734,7 +20735,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualFloatMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20757,7 +20758,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualDoubleMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20780,7 +20781,7 @@ namespace
 			var tmp = JniNativeMethods.CallNonvirtualDoubleMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20803,7 +20804,7 @@ namespace
 			JniNativeMethods.CallNonvirtualVoidMethod (__env, instance.Handle, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20825,7 +20826,7 @@ namespace
 			JniNativeMethods.CallNonvirtualVoidMethodA (__env, instance.Handle, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20843,7 +20844,7 @@ namespace
 			var tmp = JniNativeMethods.NewDirectByteBuffer (__env, address, capacity);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20906,7 +20907,7 @@ namespace
 			var tmp = JniNativeMethods.AllocObject (__env, type.Handle);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20928,7 +20929,7 @@ namespace
 			var tmp = JniNativeMethods.NewObject (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -20950,7 +20951,7 @@ namespace
 			var tmp = JniNativeMethods.NewObjectA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21059,7 +21060,7 @@ namespace
 			var tmp = JniNativeMethods.ToReflectedMethod (__env, type.Handle, method.ID, (isStatic ? (byte) 1 : (byte) 0));
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21081,7 +21082,7 @@ namespace
 			var tmp = JniNativeMethods.ToReflectedField (__env, type.Handle, field.ID, (isStatic ? (byte) 1 : (byte) 0));
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21110,12 +21111,12 @@ namespace
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticFieldID` should have thrown!");
 			return new JniFieldInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -21402,12 +21403,12 @@ namespace
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_signature_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
 			if (tmp == IntPtr.Zero)
-				return null;
+				throw new InvalidOperationException ("Should not be reached; `GetStaticMethodID` should have thrown!");
 			return new JniMethodInfo (name, signature, tmp, isStatic: true);
 		}
 
@@ -21425,7 +21426,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticObjectMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21447,7 +21448,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticObjectMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21469,7 +21470,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticBooleanMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21490,7 +21491,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticBooleanMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21511,7 +21512,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticByteMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21532,7 +21533,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticByteMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21553,7 +21554,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticCharMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21574,7 +21575,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticCharMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21595,7 +21596,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticShortMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21616,7 +21617,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticShortMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21637,7 +21638,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticIntMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21658,7 +21659,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticIntMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21679,7 +21680,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticLongMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21700,7 +21701,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticLongMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21721,7 +21722,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticFloatMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21742,7 +21743,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticFloatMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21763,7 +21764,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticDoubleMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21784,7 +21785,7 @@ namespace
 			var tmp = JniNativeMethods.CallStaticDoubleMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21805,7 +21806,7 @@ namespace
 			JniNativeMethods.CallStaticVoidMethod (__env, type.Handle, method.ID);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21825,7 +21826,7 @@ namespace
 			JniNativeMethods.CallStaticVoidMethodA (__env, type.Handle, method.ID, (IntPtr) args);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21840,7 +21841,7 @@ namespace
 			var tmp = JniNativeMethods.NewString (__env, unicodeChars, length);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21896,7 +21897,7 @@ namespace
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_name_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21916,7 +21917,7 @@ namespace
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 			Marshal.ZeroFreeCoTaskMemUTF8 (_classname_ptr);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 
@@ -21986,7 +21987,7 @@ namespace
 			var tmp = JniNativeMethods.RegisterNatives (__env, type.Handle, methods, numMethods);
 			IntPtr thrown = JniNativeMethods.ExceptionOccurred (__env);
 
-			Exception __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
+			Exception? __e = JniEnvironment.GetExceptionForLastThrowable (thrown);
 			if (__e != null)
 				ExceptionDispatchInfo.Capture (__e).Throw ();
 

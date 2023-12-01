@@ -1,0 +1,924 @@
+#nullable enable
+abstract Java.Interop.JavaArray<T>.Clear() -> void
+abstract Java.Interop.JavaArray<T>.CopyTo(T[]! array, int arrayIndex) -> void
+abstract Java.Interop.JavaArray<T>.IndexOf(T item) -> int
+abstract Java.Interop.JavaArray<T>.this[int index].get -> T
+abstract Java.Interop.JavaArray<T>.this[int index].set -> void
+abstract Java.Interop.JavaPrimitiveArray<T>.CopyFrom(T[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+abstract Java.Interop.JavaPrimitiveArray<T>.CopyTo(int sourceIndex, T[]! destinationArray, int destinationIndex, int length) -> void
+abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateConstructActivationPeerExpression(System.Reflection.ConstructorInfo! constructor) -> System.Linq.Expressions.Expression<System.Func<System.Reflection.ConstructorInfo!, Java.Interop.JniObjectReference, object?[]?, object!>!>!
+abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateMarshalToManagedExpression(System.Reflection.MethodInfo! method) -> System.Linq.Expressions.LambdaExpression!
+abstract Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetExportedMemberRegistrations(System.Type! declaringType) -> System.Collections.Generic.IEnumerable<Java.Interop.JniNativeMethodRegistration>!
+abstract Java.Interop.JniRuntime.JniObjectReferenceManager.GlobalReferenceCount.get -> int
+abstract Java.Interop.JniRuntime.JniObjectReferenceManager.WeakGlobalReferenceCount.get -> int
+abstract Java.Interop.JniRuntime.JniValueManager.ActivatePeer(Java.Interop.IJavaPeerable? self, Java.Interop.JniObjectReference reference, System.Reflection.ConstructorInfo! cinfo, object?[]? argumentValues) -> void
+abstract Java.Interop.JniRuntime.JniValueManager.AddPeer(Java.Interop.IJavaPeerable! value) -> void
+abstract Java.Interop.JniRuntime.JniValueManager.CollectPeers() -> void
+abstract Java.Interop.JniRuntime.JniValueManager.FinalizePeer(Java.Interop.IJavaPeerable! value) -> void
+abstract Java.Interop.JniRuntime.JniValueManager.GetSurfacedPeers() -> System.Collections.Generic.List<Java.Interop.JniSurfacedPeerInfo!>!
+abstract Java.Interop.JniRuntime.JniValueManager.PeekPeer(Java.Interop.JniObjectReference reference) -> Java.Interop.IJavaPeerable?
+abstract Java.Interop.JniRuntime.JniValueManager.RemovePeer(Java.Interop.IJavaPeerable! value) -> void
+abstract Java.Interop.JniRuntime.JniValueManager.WaitForGCBridgeProcessing() -> void
+abstract Java.Interop.JniValueMarshaler.CreateObjectReferenceArgumentState(object? value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState
+abstract Java.Interop.JniValueMarshaler.CreateValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
+abstract Java.Interop.JniValueMarshaler.DestroyArgumentState(object? value, ref Java.Interop.JniValueMarshalerState state, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> void
+abstract Java.Interop.JniValueMarshaler<T>.CreateGenericObjectReferenceArgumentState(T value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState
+abstract Java.Interop.JniValueMarshaler<T>.CreateGenericValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> T
+abstract Java.Interop.JniValueMarshaler<T>.DestroyGenericArgumentState(T value, ref Java.Interop.JniValueMarshalerState state, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> void
+Java.Interop.Expressions.JniValueMarshalerContext
+Java.Interop.Expressions.JniValueMarshalerContext.CleanupStatements.get -> System.Collections.ObjectModel.Collection<System.Linq.Expressions.Expression!>!
+Java.Interop.Expressions.JniValueMarshalerContext.CreationStatements.get -> System.Collections.ObjectModel.Collection<System.Linq.Expressions.Expression!>!
+Java.Interop.Expressions.JniValueMarshalerContext.JniValueMarshalerContext(System.Linq.Expressions.Expression! runtime) -> void
+Java.Interop.Expressions.JniValueMarshalerContext.JniValueMarshalerContext(System.Linq.Expressions.Expression! runtime, System.Linq.Expressions.Expression? vm) -> void
+Java.Interop.Expressions.JniValueMarshalerContext.LocalVariables.get -> System.Collections.ObjectModel.KeyedCollection<string!, System.Linq.Expressions.ParameterExpression!>!
+Java.Interop.Expressions.JniValueMarshalerContext.Runtime.get -> System.Linq.Expressions.Expression!
+Java.Interop.Expressions.JniValueMarshalerContext.ValueManager.get -> System.Linq.Expressions.Expression?
+Java.Interop.IJavaPeerable
+Java.Interop.IJavaPeerable.Disposed() -> void
+Java.Interop.IJavaPeerable.DisposeUnlessReferenced() -> void
+Java.Interop.IJavaPeerable.Finalized() -> void
+Java.Interop.IJavaPeerable.JniIdentityHashCode.get -> int
+Java.Interop.IJavaPeerable.JniManagedPeerState.get -> Java.Interop.JniManagedPeerStates
+Java.Interop.IJavaPeerable.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+Java.Interop.IJavaPeerable.PeerReference.get -> Java.Interop.JniObjectReference
+Java.Interop.IJavaPeerable.SetJniIdentityHashCode(int value) -> void
+Java.Interop.IJavaPeerable.SetJniManagedPeerState(Java.Interop.JniManagedPeerStates value) -> void
+Java.Interop.IJavaPeerable.SetPeerReference(Java.Interop.JniObjectReference reference) -> void
+Java.Interop.IJavaPeerable.UnregisterFromRuntime() -> void
+Java.Interop.JavaArray<T>
+Java.Interop.JavaArray<T>.IsReadOnly.get -> bool
+Java.Interop.JavaArray<T>.Length.get -> int
+Java.Interop.JavaArray<T>.ToArray() -> T[]!
+Java.Interop.JavaBooleanArray
+Java.Interop.JavaBooleanArray.GetElements() -> Java.Interop.JniBooleanArrayElements!
+Java.Interop.JavaBooleanArray.JavaBooleanArray(int length) -> void
+Java.Interop.JavaBooleanArray.JavaBooleanArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaBooleanArray.JavaBooleanArray(System.Collections.Generic.IEnumerable<bool>! value) -> void
+Java.Interop.JavaBooleanArray.JavaBooleanArray(System.Collections.Generic.IList<bool>! value) -> void
+Java.Interop.JavaCharArray
+Java.Interop.JavaCharArray.GetElements() -> Java.Interop.JniCharArrayElements!
+Java.Interop.JavaCharArray.JavaCharArray(int length) -> void
+Java.Interop.JavaCharArray.JavaCharArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaCharArray.JavaCharArray(System.Collections.Generic.IEnumerable<char>! value) -> void
+Java.Interop.JavaCharArray.JavaCharArray(System.Collections.Generic.IList<char>! value) -> void
+Java.Interop.JavaDoubleArray
+Java.Interop.JavaDoubleArray.GetElements() -> Java.Interop.JniDoubleArrayElements!
+Java.Interop.JavaDoubleArray.JavaDoubleArray(int length) -> void
+Java.Interop.JavaDoubleArray.JavaDoubleArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaDoubleArray.JavaDoubleArray(System.Collections.Generic.IEnumerable<double>! value) -> void
+Java.Interop.JavaDoubleArray.JavaDoubleArray(System.Collections.Generic.IList<double>! value) -> void
+Java.Interop.JavaException
+Java.Interop.JavaException.Construct(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaException.Dispose() -> void
+Java.Interop.JavaException.DisposeUnlessReferenced() -> void
+Java.Interop.JavaException.JavaException() -> void
+Java.Interop.JavaException.JavaException(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer) -> void
+Java.Interop.JavaException.JavaException(string! message) -> void
+Java.Interop.JavaException.JavaException(string! message, System.Exception! innerException) -> void
+Java.Interop.JavaException.JavaStackTrace.get -> string?
+Java.Interop.JavaException.JniIdentityHashCode.get -> int
+Java.Interop.JavaException.JniManagedPeerState.get -> Java.Interop.JniManagedPeerStates
+Java.Interop.JavaException.PeerReference.get -> Java.Interop.JniObjectReference
+Java.Interop.JavaException.SetPeerReference(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaException.UnregisterFromRuntime() -> void
+Java.Interop.JavaException.~JavaException() -> void
+Java.Interop.JavaInt16Array
+Java.Interop.JavaInt16Array.GetElements() -> Java.Interop.JniInt16ArrayElements!
+Java.Interop.JavaInt16Array.JavaInt16Array(int length) -> void
+Java.Interop.JavaInt16Array.JavaInt16Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaInt16Array.JavaInt16Array(System.Collections.Generic.IEnumerable<short>! value) -> void
+Java.Interop.JavaInt16Array.JavaInt16Array(System.Collections.Generic.IList<short>! value) -> void
+Java.Interop.JavaInt32Array
+Java.Interop.JavaInt32Array.GetElements() -> Java.Interop.JniInt32ArrayElements!
+Java.Interop.JavaInt32Array.JavaInt32Array(int length) -> void
+Java.Interop.JavaInt32Array.JavaInt32Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaInt32Array.JavaInt32Array(System.Collections.Generic.IEnumerable<int>! value) -> void
+Java.Interop.JavaInt32Array.JavaInt32Array(System.Collections.Generic.IList<int>! value) -> void
+Java.Interop.JavaInt64Array
+Java.Interop.JavaInt64Array.GetElements() -> Java.Interop.JniInt64ArrayElements!
+Java.Interop.JavaInt64Array.JavaInt64Array(int length) -> void
+Java.Interop.JavaInt64Array.JavaInt64Array(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaInt64Array.JavaInt64Array(System.Collections.Generic.IEnumerable<long>! value) -> void
+Java.Interop.JavaInt64Array.JavaInt64Array(System.Collections.Generic.IList<long>! value) -> void
+Java.Interop.JavaObject
+Java.Interop.JavaObject.Construct(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaObject.Dispose() -> void
+Java.Interop.JavaObject.JavaObject() -> void
+Java.Interop.JavaObject.JavaObject(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaObject.JniIdentityHashCode.get -> int
+Java.Interop.JavaObject.JniManagedPeerState.get -> Java.Interop.JniManagedPeerStates
+Java.Interop.JavaObject.PeerReference.get -> Java.Interop.JniObjectReference
+Java.Interop.JavaObject.SetPeerReference(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaObject.UnregisterFromRuntime() -> void
+Java.Interop.JavaObject.~JavaObject() -> void
+Java.Interop.JavaObjectArray<T>
+Java.Interop.JavaObjectArray<T>.JavaObjectArray(int length) -> void
+Java.Interop.JavaObjectArray<T>.JavaObjectArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaObjectArray<T>.JavaObjectArray(System.Collections.Generic.IEnumerable<T>! value) -> void
+Java.Interop.JavaObjectArray<T>.JavaObjectArray(System.Collections.Generic.IList<T>! value) -> void
+Java.Interop.JavaPeerableExtensions
+Java.Interop.JavaPrimitiveArray<T>
+Java.Interop.JavaPrimitiveArray<T>.GetElements() -> Java.Interop.JniArrayElements!
+Java.Interop.JavaSByteArray
+Java.Interop.JavaSByteArray.GetElements() -> Java.Interop.JniSByteArrayElements!
+Java.Interop.JavaSByteArray.JavaSByteArray(int length) -> void
+Java.Interop.JavaSByteArray.JavaSByteArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaSByteArray.JavaSByteArray(System.Collections.Generic.IEnumerable<sbyte>! value) -> void
+Java.Interop.JavaSByteArray.JavaSByteArray(System.Collections.Generic.IList<sbyte>! value) -> void
+Java.Interop.JavaSingleArray
+Java.Interop.JavaSingleArray.GetElements() -> Java.Interop.JniSingleArrayElements!
+Java.Interop.JavaSingleArray.JavaSingleArray(int length) -> void
+Java.Interop.JavaSingleArray.JavaSingleArray(ref Java.Interop.JniObjectReference handle, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JavaSingleArray.JavaSingleArray(System.Collections.Generic.IEnumerable<float>! value) -> void
+Java.Interop.JavaSingleArray.JavaSingleArray(System.Collections.Generic.IList<float>! value) -> void
+Java.Interop.JavaTypeParametersAttribute
+Java.Interop.JavaTypeParametersAttribute.JavaTypeParametersAttribute(string![]! typeParameters) -> void
+Java.Interop.JavaTypeParametersAttribute.TypeParameters.get -> string![]!
+Java.Interop.JniAddNativeMethodRegistrationAttribute
+Java.Interop.JniAddNativeMethodRegistrationAttribute.JniAddNativeMethodRegistrationAttribute() -> void
+Java.Interop.JniArgumentValue
+Java.Interop.JniArgumentValue.Equals(Java.Interop.JniArgumentValue other) -> bool
+Java.Interop.JniArgumentValue.JniArgumentValue() -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(bool value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(byte value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(char value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(double value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(float value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(int value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(Java.Interop.IJavaPeerable? value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(Java.Interop.JniObjectReference value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(long value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(nint value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(sbyte value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(short value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(uint value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(ulong value) -> void
+Java.Interop.JniArgumentValue.JniArgumentValue(ushort value) -> void
+Java.Interop.JniArrayElements
+Java.Interop.JniArrayElements.CopyToJava() -> void
+Java.Interop.JniArrayElements.Dispose() -> void
+Java.Interop.JniArrayElements.Elements.get -> nint
+Java.Interop.JniArrayElements.Release(Java.Interop.JniReleaseArrayElementsMode releaseMode) -> void
+Java.Interop.JniArrayElements.Size.get -> int
+Java.Interop.JniBooleanArrayElements
+Java.Interop.JniBooleanArrayElements.Elements.get -> bool*
+Java.Interop.JniBooleanArrayElements.this[int index].get -> bool
+Java.Interop.JniCharArrayElements
+Java.Interop.JniCharArrayElements.Elements.get -> char*
+Java.Interop.JniCharArrayElements.this[int index].get -> char
+Java.Interop.JniConstructorSignatureAttribute
+Java.Interop.JniConstructorSignatureAttribute.JniConstructorSignatureAttribute(string! memberSignature) -> void
+Java.Interop.JniDoubleArrayElements
+Java.Interop.JniDoubleArrayElements.Elements.get -> double*
+Java.Interop.JniDoubleArrayElements.this[int index].get -> double
+Java.Interop.JniEnvironment
+Java.Interop.JniEnvironment.Arrays
+Java.Interop.JniEnvironment.Exceptions
+Java.Interop.JniEnvironment.InstanceFields
+Java.Interop.JniEnvironment.InstanceMethods
+Java.Interop.JniEnvironment.IO
+Java.Interop.JniEnvironment.Monitors
+Java.Interop.JniEnvironment.Object
+Java.Interop.JniEnvironment.References
+Java.Interop.JniEnvironment.StaticFields
+Java.Interop.JniEnvironment.StaticMethods
+Java.Interop.JniEnvironment.Strings
+Java.Interop.JniEnvironment.Types
+Java.Interop.JniFieldInfo
+Java.Interop.JniFieldInfo.ID.get -> nint
+Java.Interop.JniFieldInfo.IsStatic.get -> bool
+Java.Interop.JniFieldInfo.JniFieldInfo(nint fieldID, bool isStatic) -> void
+Java.Interop.JniFieldInfo.JniFieldInfo(string! name, string! signature, nint fieldID, bool isStatic) -> void
+Java.Interop.JniFieldInfo.Name.get -> string!
+Java.Interop.JniFieldInfo.Signature.get -> string!
+Java.Interop.JniInt16ArrayElements
+Java.Interop.JniInt16ArrayElements.Elements.get -> short*
+Java.Interop.JniInt16ArrayElements.this[int index].get -> short
+Java.Interop.JniInt32ArrayElements
+Java.Interop.JniInt32ArrayElements.Elements.get -> int*
+Java.Interop.JniInt32ArrayElements.this[int index].get -> int
+Java.Interop.JniInt64ArrayElements
+Java.Interop.JniInt64ArrayElements.Elements.get -> long*
+Java.Interop.JniInt64ArrayElements.this[int index].get -> long
+Java.Interop.JniManagedPeerStates
+Java.Interop.JniManagedPeerStates.Activatable = 1 -> Java.Interop.JniManagedPeerStates
+Java.Interop.JniManagedPeerStates.None = 0 -> Java.Interop.JniManagedPeerStates
+Java.Interop.JniManagedPeerStates.Replaceable = 2 -> Java.Interop.JniManagedPeerStates
+Java.Interop.JniMarshal
+Java.Interop.JniMemberSignature
+Java.Interop.JniMemberSignature.Equals(Java.Interop.JniMemberSignature other) -> bool
+Java.Interop.JniMemberSignature.JniMemberSignature() -> void
+Java.Interop.JniMemberSignature.JniMemberSignature(string! memberName, string! memberSignature) -> void
+Java.Interop.JniMemberSignature.MemberName.get -> string!
+Java.Interop.JniMemberSignature.MemberSignature.get -> string!
+Java.Interop.JniMemberSignatureAttribute
+Java.Interop.JniMemberSignatureAttribute.MemberName.get -> string!
+Java.Interop.JniMemberSignatureAttribute.MemberSignature.get -> string!
+Java.Interop.JniMethodInfo
+Java.Interop.JniMethodInfo.ID.get -> nint
+Java.Interop.JniMethodInfo.IsStatic.get -> bool
+Java.Interop.JniMethodInfo.JniMethodInfo(nint methodID, bool isStatic) -> void
+Java.Interop.JniMethodInfo.JniMethodInfo(string! name, string! signature, nint methodID, bool isStatic) -> void
+Java.Interop.JniMethodInfo.Name.get -> string!
+Java.Interop.JniMethodInfo.Signature.get -> string!
+Java.Interop.JniMethodSignatureAttribute
+Java.Interop.JniMethodSignatureAttribute.JniMethodSignatureAttribute(string! memberName, string! memberSignature) -> void
+Java.Interop.JniNativeMethodRegistration
+Java.Interop.JniNativeMethodRegistration.JniNativeMethodRegistration() -> void
+Java.Interop.JniNativeMethodRegistration.JniNativeMethodRegistration(string! name, string! signature, System.Delegate! marshaler) -> void
+Java.Interop.JniNativeMethodRegistration.Marshaler -> System.Delegate!
+Java.Interop.JniNativeMethodRegistration.Name -> string!
+Java.Interop.JniNativeMethodRegistration.Signature -> string!
+Java.Interop.JniNativeMethodRegistrationArguments
+Java.Interop.JniNativeMethodRegistrationArguments.AddRegistrations(System.Collections.Generic.IEnumerable<Java.Interop.JniNativeMethodRegistration>! registrations) -> void
+Java.Interop.JniNativeMethodRegistrationArguments.JniNativeMethodRegistrationArguments() -> void
+Java.Interop.JniNativeMethodRegistrationArguments.JniNativeMethodRegistrationArguments(System.Collections.Generic.ICollection<Java.Interop.JniNativeMethodRegistration>! registrations, string? methods) -> void
+Java.Interop.JniNativeMethodRegistrationArguments.Methods.get -> string?
+Java.Interop.JniNativeMethodRegistrationArguments.Registrations.get -> System.Collections.Generic.ICollection<Java.Interop.JniNativeMethodRegistration>!
+Java.Interop.JniObjectReference
+Java.Interop.JniObjectReference.Equals(Java.Interop.JniObjectReference other) -> bool
+Java.Interop.JniObjectReference.Handle.get -> nint
+Java.Interop.JniObjectReference.IsValid.get -> bool
+Java.Interop.JniObjectReference.JniObjectReference() -> void
+Java.Interop.JniObjectReference.JniObjectReference(nint handle, Java.Interop.JniObjectReferenceType type = Java.Interop.JniObjectReferenceType.Invalid) -> void
+Java.Interop.JniObjectReference.NewGlobalRef() -> Java.Interop.JniObjectReference
+Java.Interop.JniObjectReference.NewLocalRef() -> Java.Interop.JniObjectReference
+Java.Interop.JniObjectReference.NewWeakGlobalRef() -> Java.Interop.JniObjectReference
+Java.Interop.JniObjectReference.Type.get -> Java.Interop.JniObjectReferenceType
+Java.Interop.JniObjectReferenceOptions
+Java.Interop.JniObjectReferenceOptions.Copy = 1 -> Java.Interop.JniObjectReferenceOptions
+Java.Interop.JniObjectReferenceOptions.CopyAndDispose = 3 -> Java.Interop.JniObjectReferenceOptions
+Java.Interop.JniObjectReferenceOptions.CopyAndDoNotRegister = 5 -> Java.Interop.JniObjectReferenceOptions
+Java.Interop.JniObjectReferenceOptions.None = 0 -> Java.Interop.JniObjectReferenceOptions
+Java.Interop.JniObjectReferenceType
+Java.Interop.JniObjectReferenceType.Global = 2 -> Java.Interop.JniObjectReferenceType
+Java.Interop.JniObjectReferenceType.Invalid = 0 -> Java.Interop.JniObjectReferenceType
+Java.Interop.JniObjectReferenceType.Local = 1 -> Java.Interop.JniObjectReferenceType
+Java.Interop.JniObjectReferenceType.WeakGlobal = 3 -> Java.Interop.JniObjectReferenceType
+Java.Interop.JniPeerMembers
+Java.Interop.JniPeerMembers.InstanceFields.get -> Java.Interop.JniPeerMembers.JniInstanceFields!
+Java.Interop.JniPeerMembers.InstanceMethods.get -> Java.Interop.JniPeerMembers.JniInstanceMethods!
+Java.Interop.JniPeerMembers.JniInstanceFields
+Java.Interop.JniPeerMembers.JniInstanceFields.GetBooleanValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> bool
+Java.Interop.JniPeerMembers.JniInstanceFields.GetCharValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> char
+Java.Interop.JniPeerMembers.JniInstanceFields.GetDoubleValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> double
+Java.Interop.JniPeerMembers.JniInstanceFields.GetFieldInfo(string! encodedMember) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt16Value(string! encodedMember, Java.Interop.IJavaPeerable! self) -> short
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt32Value(string! encodedMember, Java.Interop.IJavaPeerable! self) -> int
+Java.Interop.JniPeerMembers.JniInstanceFields.GetInt64Value(string! encodedMember, Java.Interop.IJavaPeerable! self) -> long
+Java.Interop.JniPeerMembers.JniInstanceFields.GetObjectValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceFields.GetSByteValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceFields.GetSingleValue(string! encodedMember, Java.Interop.IJavaPeerable! self) -> float
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, bool value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, char value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, double value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, float value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, int value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniObjectReference value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, long value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, sbyte value) -> void
+Java.Interop.JniPeerMembers.JniInstanceFields.SetValue(string! encodedMember, Java.Interop.IJavaPeerable! self, short value) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods
+Java.Interop.JniPeerMembers.JniInstanceMethods.FinishCreateInstance(string! constructorSignature, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.GetConstructor(string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniPeerMembers.JniInstanceMethods.GetMethodInfo(string! encodedMember) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeAbstractVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeNonvirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualBooleanMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualCharMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualDoubleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt16Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt32Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualInt64Method(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualObjectMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSByteMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualSingleMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniInstanceMethods.InvokeVirtualVoidMethod(string! encodedMember, Java.Interop.IJavaPeerable! self, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.JniInstanceMethods.StartCreateInstance(string! constructorSignature, System.Type! declaringType, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType) -> void
+Java.Interop.JniPeerMembers.JniPeerMembers(string! jniPeerTypeName, System.Type! managedPeerType, bool isInterface) -> void
+Java.Interop.JniPeerMembers.JniPeerType.get -> Java.Interop.JniType!
+Java.Interop.JniPeerMembers.JniPeerTypeName.get -> string!
+Java.Interop.JniPeerMembers.JniStaticFields
+Java.Interop.JniPeerMembers.JniStaticFields.GetBooleanValue(string! encodedMember) -> bool
+Java.Interop.JniPeerMembers.JniStaticFields.GetCharValue(string! encodedMember) -> char
+Java.Interop.JniPeerMembers.JniStaticFields.GetDoubleValue(string! encodedMember) -> double
+Java.Interop.JniPeerMembers.JniStaticFields.GetFieldInfo(string! encodedMember) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt16Value(string! encodedMember) -> short
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt32Value(string! encodedMember) -> int
+Java.Interop.JniPeerMembers.JniStaticFields.GetInt64Value(string! encodedMember) -> long
+Java.Interop.JniPeerMembers.JniStaticFields.GetObjectValue(string! encodedMember) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniStaticFields.GetSByteValue(string! encodedMember) -> sbyte
+Java.Interop.JniPeerMembers.JniStaticFields.GetSingleValue(string! encodedMember) -> float
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, bool value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, char value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, double value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, float value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, int value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, Java.Interop.JniObjectReference value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, long value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, sbyte value) -> void
+Java.Interop.JniPeerMembers.JniStaticFields.SetValue(string! encodedMember, short value) -> void
+Java.Interop.JniPeerMembers.JniStaticMethods
+Java.Interop.JniPeerMembers.JniStaticMethods.GetMethodInfo(string! encodedMember) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeBooleanMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> bool
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeCharMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> char
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeDoubleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> double
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt16Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> short
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt32Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> int
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeInt64Method(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> long
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeObjectMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSByteMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> sbyte
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeSingleMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> float
+Java.Interop.JniPeerMembers.JniStaticMethods.InvokeVoidMethod(string! encodedMember, Java.Interop.JniArgumentValue* parameters) -> void
+Java.Interop.JniPeerMembers.ManagedPeerType.get -> System.Type!
+Java.Interop.JniPeerMembers.StaticFields.get -> Java.Interop.JniPeerMembers.JniStaticFields!
+Java.Interop.JniPeerMembers.StaticMethods.get -> Java.Interop.JniPeerMembers.JniStaticMethods!
+Java.Interop.JniReleaseArrayElementsMode
+Java.Interop.JniReleaseArrayElementsMode.Abort = 2 -> Java.Interop.JniReleaseArrayElementsMode
+Java.Interop.JniReleaseArrayElementsMode.Commit = 1 -> Java.Interop.JniReleaseArrayElementsMode
+Java.Interop.JniReleaseArrayElementsMode.Default = 0 -> Java.Interop.JniReleaseArrayElementsMode
+Java.Interop.JniRuntime
+Java.Interop.JniRuntime.AttachCurrentThread(string? name = null, Java.Interop.JniObjectReference group = default(Java.Interop.JniObjectReference)) -> void
+Java.Interop.JniRuntime.CreationOptions
+Java.Interop.JniRuntime.CreationOptions.ClassLoader.get -> Java.Interop.JniObjectReference
+Java.Interop.JniRuntime.CreationOptions.ClassLoader.set -> void
+Java.Interop.JniRuntime.CreationOptions.ClassLoader_LoadClass_id.get -> nint
+Java.Interop.JniRuntime.CreationOptions.ClassLoader_LoadClass_id.set -> void
+Java.Interop.JniRuntime.CreationOptions.CreationOptions() -> void
+Java.Interop.JniRuntime.CreationOptions.DestroyRuntimeOnDispose.get -> bool
+Java.Interop.JniRuntime.CreationOptions.DestroyRuntimeOnDispose.set -> void
+Java.Interop.JniRuntime.CreationOptions.EnvironmentPointer.get -> nint
+Java.Interop.JniRuntime.CreationOptions.EnvironmentPointer.set -> void
+Java.Interop.JniRuntime.CreationOptions.InvocationPointer.get -> nint
+Java.Interop.JniRuntime.CreationOptions.InvocationPointer.set -> void
+Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.get -> bool
+Java.Interop.JniRuntime.CreationOptions.JniAddNativeMethodRegistrationAttributePresent.set -> void
+Java.Interop.JniRuntime.CreationOptions.JniVersion.get -> Java.Interop.JniVersion
+Java.Interop.JniRuntime.CreationOptions.JniVersion.set -> void
+Java.Interop.JniRuntime.CreationOptions.JvmLibraryPath.get -> string?
+Java.Interop.JniRuntime.CreationOptions.JvmLibraryPath.set -> void
+Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.get -> Java.Interop.JniRuntime.JniMarshalMemberBuilder?
+Java.Interop.JniRuntime.CreationOptions.MarshalMemberBuilder.set -> void
+Java.Interop.JniRuntime.CreationOptions.NewObjectRequired.get -> bool
+Java.Interop.JniRuntime.CreationOptions.NewObjectRequired.set -> void
+Java.Interop.JniRuntime.CreationOptions.ObjectReferenceManager.get -> Java.Interop.JniRuntime.JniObjectReferenceManager?
+Java.Interop.JniRuntime.CreationOptions.ObjectReferenceManager.set -> void
+Java.Interop.JniRuntime.CreationOptions.TrackIDs.get -> bool
+Java.Interop.JniRuntime.CreationOptions.TrackIDs.set -> void
+Java.Interop.JniRuntime.CreationOptions.TypeManager.get -> Java.Interop.JniRuntime.JniTypeManager?
+Java.Interop.JniRuntime.CreationOptions.TypeManager.set -> void
+Java.Interop.JniRuntime.CreationOptions.UseMarshalMemberBuilder.get -> bool
+Java.Interop.JniRuntime.CreationOptions.UseMarshalMemberBuilder.set -> void
+Java.Interop.JniRuntime.CreationOptions.ValueManager.get -> Java.Interop.JniRuntime.JniValueManager?
+Java.Interop.JniRuntime.CreationOptions.ValueManager.set -> void
+Java.Interop.JniRuntime.DestroyRuntime() -> void
+Java.Interop.JniRuntime.Dispose() -> void
+Java.Interop.JniRuntime.GlobalReferenceCount.get -> int
+Java.Interop.JniRuntime.InvocationPointer.get -> nint
+Java.Interop.JniRuntime.JniMarshalMemberBuilder
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateConstructActivationPeerFunc(System.Reflection.ConstructorInfo! constructor) -> System.Func<System.Reflection.ConstructorInfo!, Java.Interop.JniObjectReference, object?[]?, object!>!
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.CreateMarshalToManagedDelegate(System.Delegate! value) -> System.Delegate!
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.Dispose() -> void
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetJniMethodSignature(System.Reflection.MethodBase! member) -> string!
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.GetParameterMarshaler(System.Reflection.ParameterInfo! parameter) -> Java.Interop.JniValueMarshaler!
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.IsDirectMethod(System.Reflection.ParameterInfo![]! methodParameters) -> bool
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.JniMarshalMemberBuilder() -> void
+Java.Interop.JniRuntime.JniMarshalMemberBuilder.Runtime.get -> Java.Interop.JniRuntime!
+Java.Interop.JniRuntime.JniObjectReferenceManager
+Java.Interop.JniRuntime.JniObjectReferenceManager.Dispose() -> void
+Java.Interop.JniRuntime.JniObjectReferenceManager.JniObjectReferenceManager() -> void
+Java.Interop.JniRuntime.JniObjectReferenceManager.Runtime.get -> Java.Interop.JniRuntime!
+Java.Interop.JniRuntime.JniRuntime(Java.Interop.JniRuntime.CreationOptions! options) -> void
+Java.Interop.JniRuntime.JniTypeManager
+Java.Interop.JniRuntime.JniTypeManager.Dispose() -> void
+Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfo(string! jniSimpleReference, string! jniMethodName, string! jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
+Java.Interop.JniRuntime.JniTypeManager.GetReplacementType(string! jniSimpleReference) -> string?
+Java.Interop.JniRuntime.JniTypeManager.GetStaticMethodFallbackTypes(string! jniSimpleReference) -> System.Collections.Generic.IReadOnlyList<string!>?
+Java.Interop.JniRuntime.JniTypeManager.GetType(Java.Interop.JniTypeSignature typeSignature) -> System.Type?
+Java.Interop.JniRuntime.JniTypeManager.GetTypeSignature(System.Type! type) -> Java.Interop.JniTypeSignature
+Java.Interop.JniRuntime.JniTypeManager.GetTypeSignatures(System.Type! type) -> System.Collections.Generic.IEnumerable<Java.Interop.JniTypeSignature>!
+Java.Interop.JniRuntime.JniTypeManager.JniTypeManager() -> void
+Java.Interop.JniRuntime.JniTypeManager.Runtime.get -> Java.Interop.JniRuntime!
+Java.Interop.JniRuntime.JniTypeManager.TryRegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, string? methods) -> bool
+Java.Interop.JniRuntime.JniTypeManager.TryRegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, System.ReadOnlySpan<char> methods) -> bool
+Java.Interop.JniRuntime.JniValueManager
+Java.Interop.JniRuntime.JniValueManager.ConstructPeer(Java.Interop.IJavaPeerable! peer, ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+Java.Interop.JniRuntime.JniValueManager.CreateValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
+Java.Interop.JniRuntime.JniValueManager.CreateValue<T>(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> T
+Java.Interop.JniRuntime.JniValueManager.Dispose() -> void
+Java.Interop.JniRuntime.JniValueManager.GetJniIdentityHashCode(Java.Interop.JniObjectReference reference) -> int
+Java.Interop.JniRuntime.JniValueManager.GetValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
+Java.Interop.JniRuntime.JniValueManager.GetValue<T>(nint handle) -> T
+Java.Interop.JniRuntime.JniValueManager.GetValue<T>(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> T
+Java.Interop.JniRuntime.JniValueManager.GetValueMarshaler(System.Type! type) -> Java.Interop.JniValueMarshaler!
+Java.Interop.JniRuntime.JniValueManager.GetValueMarshaler<T>() -> Java.Interop.JniValueMarshaler<T>!
+Java.Interop.JniRuntime.JniValueManager.JniValueManager() -> void
+Java.Interop.JniRuntime.JniValueManager.PeekValue(Java.Interop.JniObjectReference reference) -> object?
+Java.Interop.JniRuntime.JniValueManager.Runtime.get -> Java.Interop.JniRuntime!
+Java.Interop.JniRuntime.JniVersion.get -> Java.Interop.JniVersion
+Java.Interop.JniRuntime.MarshalMemberBuilder.get -> Java.Interop.JniRuntime.JniMarshalMemberBuilder!
+Java.Interop.JniRuntime.ObjectReferenceManager.get -> Java.Interop.JniRuntime.JniObjectReferenceManager!
+Java.Interop.JniRuntime.ReplacementMethodInfo
+Java.Interop.JniRuntime.ReplacementMethodInfo.Equals(Java.Interop.JniRuntime.ReplacementMethodInfo other) -> bool
+Java.Interop.JniRuntime.ReplacementMethodInfo.ReplacementMethodInfo() -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniMethodName.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniMethodName.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniMethodSignature.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniMethodSignature.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniType.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.SourceJniType.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodInstanceToStatic.get -> bool
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodInstanceToStatic.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodName.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodName.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodParameterCount.get -> int?
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodParameterCount.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignature.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniMethodSignature.set -> void
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniType.get -> string?
+Java.Interop.JniRuntime.ReplacementMethodInfo.TargetJniType.set -> void
+Java.Interop.JniRuntime.TypeManager.get -> Java.Interop.JniRuntime.JniTypeManager!
+Java.Interop.JniRuntime.ValueManager.get -> Java.Interop.JniRuntime.JniValueManager!
+Java.Interop.JniRuntime.WeakGlobalReferenceCount.get -> int
+Java.Interop.JniRuntime.~JniRuntime() -> void
+Java.Interop.JniSByteArrayElements
+Java.Interop.JniSByteArrayElements.Elements.get -> sbyte*
+Java.Interop.JniSByteArrayElements.this[int index].get -> sbyte
+Java.Interop.JniSingleArrayElements
+Java.Interop.JniSingleArrayElements.Elements.get -> float*
+Java.Interop.JniSingleArrayElements.this[int index].get -> float
+Java.Interop.JniSurfacedPeerInfo
+Java.Interop.JniSurfacedPeerInfo.JniIdentityHashCode.get -> int
+Java.Interop.JniSurfacedPeerInfo.JniSurfacedPeerInfo(int jniIdentityHashCode, System.WeakReference<Java.Interop.IJavaPeerable!>! surfacedPeer) -> void
+Java.Interop.JniSurfacedPeerInfo.SurfacedPeer.get -> System.WeakReference<Java.Interop.IJavaPeerable!>!
+Java.Interop.JniTransition
+Java.Interop.JniTransition.Dispose() -> void
+Java.Interop.JniTransition.JniTransition() -> void
+Java.Interop.JniTransition.JniTransition(nint environmentPointer) -> void
+Java.Interop.JniTransition.SetPendingException(System.Exception! exception) -> void
+Java.Interop.JniType
+Java.Interop.JniType.AllocObject() -> Java.Interop.JniObjectReference
+Java.Interop.JniType.Dispose() -> void
+Java.Interop.JniType.GetCachedConstructor(ref Java.Interop.JniMethodInfo? cachedMethod, string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetCachedInstanceField(ref Java.Interop.JniFieldInfo? cachedField, string! name, string! signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetCachedInstanceMethod(ref Java.Interop.JniMethodInfo? cachedMethod, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetCachedStaticField(ref Java.Interop.JniFieldInfo? cachedField, string! name, string! signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetCachedStaticMethod(ref Java.Interop.JniMethodInfo? cachedMethod, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetConstructor(string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetInstanceField(string! name, string! signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetInstanceMethod(string! name, string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetStaticField(string! name, string! signature) -> Java.Interop.JniFieldInfo!
+Java.Interop.JniType.GetStaticMethod(string! name, string! signature) -> Java.Interop.JniMethodInfo!
+Java.Interop.JniType.GetSuperclass() -> Java.Interop.JniType?
+Java.Interop.JniType.IsAssignableFrom(Java.Interop.JniType! c) -> bool
+Java.Interop.JniType.IsInstanceOfType(Java.Interop.JniObjectReference value) -> bool
+Java.Interop.JniType.JniType(ref Java.Interop.JniObjectReference peerReference, Java.Interop.JniObjectReferenceOptions transfer) -> void
+Java.Interop.JniType.JniType(string! classname) -> void
+Java.Interop.JniType.Name.get -> string!
+Java.Interop.JniType.NewObject(Java.Interop.JniMethodInfo! constructor, Java.Interop.JniArgumentValue* parameters) -> Java.Interop.JniObjectReference
+Java.Interop.JniType.PeerReference.get -> Java.Interop.JniObjectReference
+Java.Interop.JniType.RegisterNativeMethods(params Java.Interop.JniNativeMethodRegistration[]! methods) -> void
+Java.Interop.JniType.RegisterWithRuntime() -> void
+Java.Interop.JniType.UnregisterNativeMethods() -> void
+Java.Interop.JniTypeSignature
+Java.Interop.JniTypeSignature.AddArrayRank(int rank) -> Java.Interop.JniTypeSignature
+Java.Interop.JniTypeSignature.ArrayRank.get -> int
+Java.Interop.JniTypeSignature.Equals(Java.Interop.JniTypeSignature other) -> bool
+Java.Interop.JniTypeSignature.GetPrimitivePeerTypeSignature() -> Java.Interop.JniTypeSignature
+Java.Interop.JniTypeSignature.IsValid.get -> bool
+Java.Interop.JniTypeSignature.JniTypeSignature() -> void
+Java.Interop.JniTypeSignature.JniTypeSignature(string? simpleReference, int arrayRank = 0, bool keyword = false) -> void
+Java.Interop.JniTypeSignature.Name.get -> string!
+Java.Interop.JniTypeSignature.QualifiedReference.get -> string!
+Java.Interop.JniTypeSignature.SimpleReference.get -> string?
+Java.Interop.JniTypeSignatureAttribute
+Java.Interop.JniTypeSignatureAttribute.ArrayRank.get -> int
+Java.Interop.JniTypeSignatureAttribute.ArrayRank.set -> void
+Java.Interop.JniTypeSignatureAttribute.GenerateJavaPeer.get -> bool
+Java.Interop.JniTypeSignatureAttribute.GenerateJavaPeer.set -> void
+Java.Interop.JniTypeSignatureAttribute.IsKeyword.get -> bool
+Java.Interop.JniTypeSignatureAttribute.IsKeyword.set -> void
+Java.Interop.JniTypeSignatureAttribute.JniTypeSignatureAttribute(string! simpleReference) -> void
+Java.Interop.JniTypeSignatureAttribute.SimpleReference.get -> string!
+Java.Interop.JniValueMarshaler
+Java.Interop.JniValueMarshaler.JniValueMarshaler() -> void
+Java.Interop.JniValueMarshaler.ReturnObjectReferenceToJni(Java.Interop.Expressions.JniValueMarshalerContext! context, string? namePrefix, System.Linq.Expressions.Expression! sourceValue) -> System.Linq.Expressions.Expression!
+Java.Interop.JniValueMarshaler<T>
+Java.Interop.JniValueMarshaler<T>.JniValueMarshaler() -> void
+Java.Interop.JniValueMarshalerAttribute
+Java.Interop.JniValueMarshalerAttribute.JniValueMarshalerAttribute(System.Type! marshalerType) -> void
+Java.Interop.JniValueMarshalerAttribute.MarshalerType.get -> System.Type!
+Java.Interop.JniValueMarshalerState
+Java.Interop.JniValueMarshalerState.Equals(Java.Interop.JniValueMarshalerState other) -> bool
+Java.Interop.JniValueMarshalerState.Extra.get -> object?
+Java.Interop.JniValueMarshalerState.JniArgumentValue.get -> Java.Interop.JniArgumentValue
+Java.Interop.JniValueMarshalerState.JniValueMarshalerState() -> void
+Java.Interop.JniValueMarshalerState.JniValueMarshalerState(Java.Interop.IJavaPeerable? peerableValue, object? extra = null) -> void
+Java.Interop.JniValueMarshalerState.JniValueMarshalerState(Java.Interop.JniArgumentValue jniArgumentValue, object? extra = null) -> void
+Java.Interop.JniValueMarshalerState.JniValueMarshalerState(Java.Interop.JniObjectReference referenceValue, object? extra = null) -> void
+Java.Interop.JniValueMarshalerState.PeerableValue.get -> Java.Interop.IJavaPeerable?
+Java.Interop.JniValueMarshalerState.ReferenceValue.get -> Java.Interop.JniObjectReference
+Java.Interop.JniVersion
+Java.Interop.JniVersion.v1_2 = 65538 -> Java.Interop.JniVersion
+Java.Interop.JniVersion.v1_4 = 65540 -> Java.Interop.JniVersion
+Java.Interop.JniVersion.v1_6 = 65542 -> Java.Interop.JniVersion
+override Java.Interop.JavaBooleanArray.Clear() -> void
+override Java.Interop.JavaBooleanArray.CopyFrom(bool[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaBooleanArray.CopyTo(int sourceIndex, bool[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaBooleanArray.IndexOf(bool item) -> int
+override Java.Interop.JavaCharArray.Clear() -> void
+override Java.Interop.JavaCharArray.CopyFrom(char[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaCharArray.CopyTo(int sourceIndex, char[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaCharArray.IndexOf(char item) -> int
+override Java.Interop.JavaDoubleArray.Clear() -> void
+override Java.Interop.JavaDoubleArray.CopyFrom(double[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaDoubleArray.CopyTo(int sourceIndex, double[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaDoubleArray.IndexOf(double item) -> int
+override Java.Interop.JavaException.Equals(object? obj) -> bool
+override Java.Interop.JavaException.GetHashCode() -> int
+override Java.Interop.JavaException.StackTrace.get -> string!
+override Java.Interop.JavaInt16Array.Clear() -> void
+override Java.Interop.JavaInt16Array.CopyFrom(short[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt16Array.CopyTo(int sourceIndex, short[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt16Array.IndexOf(short item) -> int
+override Java.Interop.JavaInt32Array.Clear() -> void
+override Java.Interop.JavaInt32Array.CopyFrom(int[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt32Array.CopyTo(int sourceIndex, int[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt32Array.IndexOf(int item) -> int
+override Java.Interop.JavaInt64Array.Clear() -> void
+override Java.Interop.JavaInt64Array.CopyFrom(long[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt64Array.CopyTo(int sourceIndex, long[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaInt64Array.IndexOf(long item) -> int
+override Java.Interop.JavaObject.Equals(object? obj) -> bool
+override Java.Interop.JavaObject.GetHashCode() -> int
+override Java.Interop.JavaObject.ToString() -> string?
+override Java.Interop.JavaObjectArray<T>.Clear() -> void
+override Java.Interop.JavaObjectArray<T>.CopyTo(T[]! array, int arrayIndex) -> void
+override Java.Interop.JavaObjectArray<T>.DisposeUnlessReferenced() -> void
+override Java.Interop.JavaObjectArray<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+override Java.Interop.JavaObjectArray<T>.IndexOf(T item) -> int
+override Java.Interop.JavaObjectArray<T>.this[int index].get -> T
+override Java.Interop.JavaObjectArray<T>.this[int index].set -> void
+override Java.Interop.JavaPrimitiveArray<T>.CopyTo(T[]! array, int arrayIndex) -> void
+override Java.Interop.JavaPrimitiveArray<T>.DisposeUnlessReferenced() -> void
+override Java.Interop.JavaPrimitiveArray<T>.this[int index].get -> T
+override Java.Interop.JavaPrimitiveArray<T>.this[int index].set -> void
+override Java.Interop.JavaSByteArray.Clear() -> void
+override Java.Interop.JavaSByteArray.CopyFrom(sbyte[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaSByteArray.CopyTo(int sourceIndex, sbyte[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaSByteArray.IndexOf(sbyte item) -> int
+override Java.Interop.JavaSingleArray.Clear() -> void
+override Java.Interop.JavaSingleArray.CopyFrom(float[]! sourceArray, int sourceIndex, int destinationIndex, int length) -> void
+override Java.Interop.JavaSingleArray.CopyTo(int sourceIndex, float[]! destinationArray, int destinationIndex, int length) -> void
+override Java.Interop.JavaSingleArray.IndexOf(float item) -> int
+override Java.Interop.JniArgumentValue.Equals(object? obj) -> bool
+override Java.Interop.JniArgumentValue.GetHashCode() -> int
+override Java.Interop.JniArgumentValue.ToString() -> string!
+override Java.Interop.JniFieldInfo.ToString() -> string!
+override Java.Interop.JniMemberSignature.Equals(object? obj) -> bool
+override Java.Interop.JniMemberSignature.GetHashCode() -> int
+override Java.Interop.JniMemberSignature.ToString() -> string!
+override Java.Interop.JniMethodInfo.ToString() -> string!
+override Java.Interop.JniObjectReference.Equals(object? obj) -> bool
+override Java.Interop.JniObjectReference.GetHashCode() -> int
+override Java.Interop.JniObjectReference.ToString() -> string!
+override Java.Interop.JniRuntime.ReplacementMethodInfo.Equals(object? obj) -> bool
+override Java.Interop.JniRuntime.ReplacementMethodInfo.GetHashCode() -> int
+override Java.Interop.JniRuntime.ReplacementMethodInfo.ToString() -> string!
+override Java.Interop.JniRuntime.ToString() -> string!
+override Java.Interop.JniType.ToString() -> string!
+override Java.Interop.JniTypeSignature.Equals(object? obj) -> bool
+override Java.Interop.JniTypeSignature.GetHashCode() -> int
+override Java.Interop.JniTypeSignature.ToString() -> string!
+override Java.Interop.JniValueMarshaler<T>.CreateArgumentState(object? value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState
+override Java.Interop.JniValueMarshaler<T>.CreateObjectReferenceArgumentState(object? value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState
+override Java.Interop.JniValueMarshaler<T>.CreateValue(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options, System.Type? targetType = null) -> object?
+override Java.Interop.JniValueMarshaler<T>.DestroyArgumentState(object? value, ref Java.Interop.JniValueMarshalerState state, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> void
+override Java.Interop.JniValueMarshalerState.Equals(object? obj) -> bool
+override Java.Interop.JniValueMarshalerState.GetHashCode() -> int
+override Java.Interop.JniValueMarshalerState.ToString() -> string!
+static Java.Interop.JavaBooleanArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaCharArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaDoubleArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaInt16Array.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaInt32Array.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaInt64Array.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaPeerableExtensions.GetJniTypeName(this Java.Interop.IJavaPeerable! self) -> string?
+static Java.Interop.JavaSByteArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JavaSingleArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
+static Java.Interop.JniArgumentValue.operator !=(Java.Interop.JniArgumentValue lhs, Java.Interop.JniArgumentValue rhs) -> bool
+static Java.Interop.JniArgumentValue.operator ==(Java.Interop.JniArgumentValue lhs, Java.Interop.JniArgumentValue rhs) -> bool
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalBooleanArray(System.Collections.Generic.IEnumerable<bool>? value) -> Java.Interop.JavaBooleanArray?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalCharArray(System.Collections.Generic.IEnumerable<char>? value) -> Java.Interop.JavaCharArray?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalDoubleArray(System.Collections.Generic.IEnumerable<double>? value) -> Java.Interop.JavaDoubleArray?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalInt16Array(System.Collections.Generic.IEnumerable<short>? value) -> Java.Interop.JavaInt16Array?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalInt32Array(System.Collections.Generic.IEnumerable<int>? value) -> Java.Interop.JavaInt32Array?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalInt64Array(System.Collections.Generic.IEnumerable<long>? value) -> Java.Interop.JavaInt64Array?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalObjectArray<T>(System.Collections.Generic.IEnumerable<T>? value) -> Java.Interop.JavaObjectArray<T>?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalSByteArray(System.Collections.Generic.IEnumerable<sbyte>? value) -> Java.Interop.JavaSByteArray?
+static Java.Interop.JniEnvironment.Arrays.CreateMarshalSingleArray(System.Collections.Generic.IEnumerable<float>? value) -> Java.Interop.JavaSingleArray?
+static Java.Interop.JniEnvironment.Arrays.GetArrayLength(Java.Interop.JniObjectReference array) -> int
+static Java.Interop.JniEnvironment.Arrays.GetBooleanArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> bool*
+static Java.Interop.JniEnvironment.Arrays.GetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetByteArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> sbyte*
+static Java.Interop.JniEnvironment.Arrays.GetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetCharArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> char*
+static Java.Interop.JniEnvironment.Arrays.GetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetDoubleArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> double*
+static Java.Interop.JniEnvironment.Arrays.GetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetFloatArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> float*
+static Java.Interop.JniEnvironment.Arrays.GetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetIntArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> int*
+static Java.Interop.JniEnvironment.Arrays.GetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetLongArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> long*
+static Java.Interop.JniEnvironment.Arrays.GetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.GetObjectArrayElement(Java.Interop.JniObjectReference array, int index) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.GetPrimitiveArrayCritical(Java.Interop.JniObjectReference array, bool* isCopy) -> nint
+static Java.Interop.JniEnvironment.Arrays.GetShortArrayElements(Java.Interop.JniObjectReference array, bool* isCopy) -> short*
+static Java.Interop.JniEnvironment.Arrays.GetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.NewBooleanArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewByteArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewCharArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewDoubleArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewFloatArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewIntArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewLongArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewObjectArray(int length, Java.Interop.JniObjectReference elementClass, Java.Interop.JniObjectReference initialElement) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.NewShortArray(int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Arrays.ReleaseBooleanArrayElements(Java.Interop.JniObjectReference array, bool* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseByteArrayElements(Java.Interop.JniObjectReference array, sbyte* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseCharArrayElements(Java.Interop.JniObjectReference array, char* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseDoubleArrayElements(Java.Interop.JniObjectReference array, double* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseFloatArrayElements(Java.Interop.JniObjectReference array, float* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseIntArrayElements(Java.Interop.JniObjectReference array, int* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseLongArrayElements(Java.Interop.JniObjectReference array, long* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleasePrimitiveArrayCritical(Java.Interop.JniObjectReference array, nint carray, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.ReleaseShortArrayElements(Java.Interop.JniObjectReference array, short* elements, Java.Interop.JniReleaseArrayElementsMode mode) -> void
+static Java.Interop.JniEnvironment.Arrays.SetBooleanArrayRegion(Java.Interop.JniObjectReference array, int start, int length, bool* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetByteArrayRegion(Java.Interop.JniObjectReference array, int start, int length, sbyte* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetCharArrayRegion(Java.Interop.JniObjectReference array, int start, int length, char* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetDoubleArrayRegion(Java.Interop.JniObjectReference array, int start, int length, double* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetFloatArrayRegion(Java.Interop.JniObjectReference array, int start, int length, float* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetIntArrayRegion(Java.Interop.JniObjectReference array, int start, int length, int* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetLongArrayRegion(Java.Interop.JniObjectReference array, int start, int length, long* buffer) -> void
+static Java.Interop.JniEnvironment.Arrays.SetObjectArrayElement(Java.Interop.JniObjectReference array, int index, Java.Interop.JniObjectReference value) -> void
+static Java.Interop.JniEnvironment.Arrays.SetShortArrayRegion(Java.Interop.JniObjectReference array, int start, int length, short* buffer) -> void
+static Java.Interop.JniEnvironment.EnvironmentPointer.get -> nint
+static Java.Interop.JniEnvironment.Exceptions.ExceptionCheck() -> bool
+static Java.Interop.JniEnvironment.Exceptions.ExceptionClear() -> void
+static Java.Interop.JniEnvironment.Exceptions.ExceptionDescribe() -> void
+static Java.Interop.JniEnvironment.Exceptions.ExceptionOccurred() -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Exceptions.FatalError(string! message) -> void
+static Java.Interop.JniEnvironment.Exceptions.Throw(Java.Interop.JniObjectReference toThrow) -> void
+static Java.Interop.JniEnvironment.Exceptions.Throw(System.Exception! e) -> void
+static Java.Interop.JniEnvironment.Exceptions.ThrowNew(Java.Interop.JniObjectReference klass, string! message) -> void
+static Java.Interop.JniEnvironment.InstanceFields.GetBooleanField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> bool
+static Java.Interop.JniEnvironment.InstanceFields.GetByteField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> sbyte
+static Java.Interop.JniEnvironment.InstanceFields.GetCharField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> char
+static Java.Interop.JniEnvironment.InstanceFields.GetDoubleField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> double
+static Java.Interop.JniEnvironment.InstanceFields.GetFieldID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniFieldInfo!
+static Java.Interop.JniEnvironment.InstanceFields.GetFloatField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> float
+static Java.Interop.JniEnvironment.InstanceFields.GetIntField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> int
+static Java.Interop.JniEnvironment.InstanceFields.GetLongField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> long
+static Java.Interop.JniEnvironment.InstanceFields.GetObjectField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.InstanceFields.GetShortField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field) -> short
+static Java.Interop.JniEnvironment.InstanceFields.SetBooleanField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, bool value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetByteField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, sbyte value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetCharField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, char value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetDoubleField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, double value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetFloatField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, float value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetIntField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, int value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetLongField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, long value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetObjectField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
+static Java.Interop.JniEnvironment.InstanceFields.SetShortField(Java.Interop.JniObjectReference instance, Java.Interop.JniFieldInfo! field, short value) -> void
+static Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> bool
+static Java.Interop.JniEnvironment.InstanceMethods.CallBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> sbyte
+static Java.Interop.JniEnvironment.InstanceMethods.CallByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> char
+static Java.Interop.JniEnvironment.InstanceMethods.CallCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> double
+static Java.Interop.JniEnvironment.InstanceMethods.CallDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> float
+static Java.Interop.JniEnvironment.InstanceMethods.CallFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> int
+static Java.Interop.JniEnvironment.InstanceMethods.CallIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> long
+static Java.Interop.JniEnvironment.InstanceMethods.CallLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualBooleanMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualByteMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualCharMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualDoubleMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualFloatMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualIntMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualLongMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
+static Java.Interop.JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.InstanceMethods.CallObjectMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> short
+static Java.Interop.JniEnvironment.InstanceMethods.CallShortMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method) -> void
+static Java.Interop.JniEnvironment.InstanceMethods.CallVoidMethod(Java.Interop.JniObjectReference instance, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static Java.Interop.JniEnvironment.InstanceMethods.GetMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+static Java.Interop.JniEnvironment.IO.GetDirectBufferAddress(Java.Interop.JniObjectReference buffer) -> nint
+static Java.Interop.JniEnvironment.IO.GetDirectBufferCapacity(Java.Interop.JniObjectReference buffer) -> long
+static Java.Interop.JniEnvironment.IO.NewDirectByteBuffer(nint address, long capacity) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.JniVersion.get -> Java.Interop.JniVersion
+static Java.Interop.JniEnvironment.LocalReferenceCount.get -> int
+static Java.Interop.JniEnvironment.Monitors.MonitorEnter(Java.Interop.JniObjectReference instance) -> void
+static Java.Interop.JniEnvironment.Monitors.MonitorExit(Java.Interop.JniObjectReference instance) -> void
+static Java.Interop.JniEnvironment.Object.AllocObject(Java.Interop.JniObjectReference type) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Object.NewObject(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Object.ToString(Java.Interop.JniObjectReference value) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.References.CreatedReference(Java.Interop.JniObjectReference value) -> void
+static Java.Interop.JniEnvironment.References.EnsureLocalCapacity(int capacity) -> void
+static Java.Interop.JniEnvironment.References.GetIdentityHashCode(Java.Interop.JniObjectReference value) -> int
+static Java.Interop.JniEnvironment.References.GetJavaVM(out nint invocationPointer) -> void
+static Java.Interop.JniEnvironment.References.NewReturnToJniRef(Java.Interop.IJavaPeerable! value) -> nint
+static Java.Interop.JniEnvironment.References.NewReturnToJniRef(Java.Interop.JniObjectReference value) -> nint
+static Java.Interop.JniEnvironment.References.PopLocalFrame(Java.Interop.JniObjectReference result) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.References.PushLocalFrame(int capacity) -> void
+static Java.Interop.JniEnvironment.Runtime.get -> Java.Interop.JniRuntime!
+static Java.Interop.JniEnvironment.StaticFields.GetStaticBooleanField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> bool
+static Java.Interop.JniEnvironment.StaticFields.GetStaticByteField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> sbyte
+static Java.Interop.JniEnvironment.StaticFields.GetStaticCharField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> char
+static Java.Interop.JniEnvironment.StaticFields.GetStaticDoubleField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> double
+static Java.Interop.JniEnvironment.StaticFields.GetStaticFieldID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniFieldInfo!
+static Java.Interop.JniEnvironment.StaticFields.GetStaticFloatField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> float
+static Java.Interop.JniEnvironment.StaticFields.GetStaticIntField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> int
+static Java.Interop.JniEnvironment.StaticFields.GetStaticLongField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> long
+static Java.Interop.JniEnvironment.StaticFields.GetStaticObjectField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.StaticFields.GetStaticShortField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field) -> short
+static Java.Interop.JniEnvironment.StaticFields.SetStaticBooleanField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, bool value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticByteField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, sbyte value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticCharField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, char value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticDoubleField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, double value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticFloatField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, float value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticIntField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, int value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticLongField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, long value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticObjectField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, Java.Interop.JniObjectReference value) -> void
+static Java.Interop.JniEnvironment.StaticFields.SetStaticShortField(Java.Interop.JniObjectReference type, Java.Interop.JniFieldInfo! field, short value) -> void
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> bool
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticBooleanMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> bool
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> sbyte
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticByteMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> sbyte
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> char
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticCharMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> char
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> double
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticDoubleMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> double
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> float
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticFloatMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> float
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> int
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticIntMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> int
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> long
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticLongMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> long
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticObjectMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> short
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticShortMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> short
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method) -> void
+static Java.Interop.JniEnvironment.StaticMethods.CallStaticVoidMethod(Java.Interop.JniObjectReference type, Java.Interop.JniMethodInfo! method, Java.Interop.JniArgumentValue* args) -> void
+static Java.Interop.JniEnvironment.StaticMethods.GetStaticMethodID(Java.Interop.JniObjectReference type, string! name, string! signature) -> Java.Interop.JniMethodInfo!
+static Java.Interop.JniEnvironment.Strings.GetStringChars(Java.Interop.JniObjectReference stringInstance, bool* isCopy) -> char*
+static Java.Interop.JniEnvironment.Strings.GetStringLength(Java.Interop.JniObjectReference stringInstance) -> int
+static Java.Interop.JniEnvironment.Strings.NewString(char* unicodeChars, int length) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Strings.NewString(string? value) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Strings.ReleaseStringChars(Java.Interop.JniObjectReference stringInstance, char* chars) -> void
+static Java.Interop.JniEnvironment.Strings.ToString(Java.Interop.JniObjectReference value) -> string?
+static Java.Interop.JniEnvironment.Strings.ToString(nint reference) -> string?
+static Java.Interop.JniEnvironment.Strings.ToString(ref Java.Interop.JniObjectReference value, Java.Interop.JniObjectReferenceOptions transfer) -> string?
+static Java.Interop.JniEnvironment.Types.DefineClass(string! name, Java.Interop.JniObjectReference loader, nint buffer, int bufferLength) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Types.FindClass(string! classname) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromClass(Java.Interop.JniObjectReference type) -> string?
+static Java.Interop.JniEnvironment.Types.GetJniTypeNameFromInstance(Java.Interop.JniObjectReference instance) -> string?
+static Java.Interop.JniEnvironment.Types.GetObjectClass(Java.Interop.JniObjectReference instance) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Types.GetSuperclass(Java.Interop.JniObjectReference type) -> Java.Interop.JniObjectReference
+static Java.Interop.JniEnvironment.Types.GetTypeFromInstance(Java.Interop.JniObjectReference instance) -> Java.Interop.JniType?
+static Java.Interop.JniEnvironment.Types.IsAssignableFrom(Java.Interop.JniObjectReference class1, Java.Interop.JniObjectReference class2) -> bool
+static Java.Interop.JniEnvironment.Types.IsInstanceOf(Java.Interop.JniObjectReference instance, Java.Interop.JniObjectReference type) -> bool
+static Java.Interop.JniEnvironment.Types.IsSameObject(Java.Interop.JniObjectReference object1, Java.Interop.JniObjectReference object2) -> bool
+static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods) -> void
+static Java.Interop.JniEnvironment.Types.RegisterNatives(Java.Interop.JniObjectReference type, Java.Interop.JniNativeMethodRegistration[]! methods, int numMethods) -> void
+static Java.Interop.JniEnvironment.Types.TryFindClass(string! classname, out Java.Interop.JniObjectReference instance) -> bool
+static Java.Interop.JniEnvironment.Types.UnregisterNatives(Java.Interop.JniObjectReference type) -> void
+static Java.Interop.JniEnvironment.WithinNewObjectScope.get -> bool
+static Java.Interop.JniMarshal.RecursiveEquals(object? objA, object? objB) -> bool
+static Java.Interop.JniMemberSignature.GetParameterCountFromMethodSignature(string! jniMethodSignature) -> int
+static Java.Interop.JniMemberSignature.operator !=(Java.Interop.JniMemberSignature a, Java.Interop.JniMemberSignature b) -> bool
+static Java.Interop.JniMemberSignature.operator ==(Java.Interop.JniMemberSignature a, Java.Interop.JniMemberSignature b) -> bool
+static Java.Interop.JniObjectReference.Dispose(ref Java.Interop.JniObjectReference reference) -> void
+static Java.Interop.JniObjectReference.Dispose(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> void
+static Java.Interop.JniObjectReference.operator !=(Java.Interop.JniObjectReference lhs, Java.Interop.JniObjectReference rhs) -> bool
+static Java.Interop.JniObjectReference.operator ==(Java.Interop.JniObjectReference lhs, Java.Interop.JniObjectReference rhs) -> bool
+static Java.Interop.JniPeerMembers.Dispose(Java.Interop.JniPeerMembers! members) -> void
+static Java.Interop.JniRuntime.CurrentRuntime.get -> Java.Interop.JniRuntime!
+static Java.Interop.JniRuntime.GetAvailableInvocationPointers() -> System.Collections.Generic.IEnumerable<nint>!
+static Java.Interop.JniRuntime.GetRegisteredRuntime(nint invocationPointer) -> Java.Interop.JniRuntime?
+static Java.Interop.JniRuntime.GetRegisteredRuntimes() -> System.Collections.Generic.IEnumerable<Java.Interop.JniRuntime!>!
+static Java.Interop.JniRuntime.ReplacementMethodInfo.operator !=(Java.Interop.JniRuntime.ReplacementMethodInfo a, Java.Interop.JniRuntime.ReplacementMethodInfo b) -> bool
+static Java.Interop.JniRuntime.ReplacementMethodInfo.operator ==(Java.Interop.JniRuntime.ReplacementMethodInfo a, Java.Interop.JniRuntime.ReplacementMethodInfo b) -> bool
+static Java.Interop.JniRuntime.SetCurrent(Java.Interop.JniRuntime! newCurrent) -> void
+static Java.Interop.JniType.DefineClass(string! name, Java.Interop.JniObjectReference loader, byte[]! classFileData) -> Java.Interop.JniType?
+static Java.Interop.JniType.GetCachedJniType(ref Java.Interop.JniType? cachedType, string! classname) -> Java.Interop.JniType!
+static Java.Interop.JniType.TryParse(string! name, out Java.Interop.JniType? type) -> bool
+static Java.Interop.JniTypeSignature.operator !=(Java.Interop.JniTypeSignature lhs, Java.Interop.JniTypeSignature rhs) -> bool
+static Java.Interop.JniTypeSignature.operator ==(Java.Interop.JniTypeSignature lhs, Java.Interop.JniTypeSignature rhs) -> bool
+static Java.Interop.JniTypeSignature.Parse(string! signature) -> Java.Interop.JniTypeSignature
+static Java.Interop.JniTypeSignature.TryParse(string! signature, out Java.Interop.JniTypeSignature result) -> bool
+static Java.Interop.JniValueMarshaler.DisposeObjectReference(System.Linq.Expressions.Expression! sourceValue) -> System.Linq.Expressions.Expression!
+static Java.Interop.JniValueMarshalerState.operator !=(Java.Interop.JniValueMarshalerState a, Java.Interop.JniValueMarshalerState b) -> bool
+static Java.Interop.JniValueMarshalerState.operator ==(Java.Interop.JniValueMarshalerState a, Java.Interop.JniValueMarshalerState b) -> bool
+static readonly Java.Interop.JavaException.InvalidJniObjectReference -> Java.Interop.JniObjectReference*
+static readonly Java.Interop.JavaObject.InvalidJniObjectReference -> Java.Interop.JniObjectReference*
+static readonly Java.Interop.JniMemberSignature.Empty -> Java.Interop.JniMemberSignature
+static readonly Java.Interop.JniTypeSignature.Empty -> Java.Interop.JniTypeSignature
+virtual Java.Interop.JavaArray<T>.Contains(T item) -> bool
+virtual Java.Interop.JavaArray<T>.GetEnumerator() -> System.Collections.Generic.IEnumerator<T>!
+virtual Java.Interop.JavaException.Dispose(bool disposing) -> void
+virtual Java.Interop.JavaException.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+virtual Java.Interop.JavaObject.Dispose(bool disposing) -> void
+virtual Java.Interop.JavaObject.DisposeUnlessReferenced() -> void
+virtual Java.Interop.JavaObject.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+virtual Java.Interop.JniPeerMembers.Dispose(bool disposing) -> void
+virtual Java.Interop.JniPeerMembers.GetPeerMembers(Java.Interop.IJavaPeerable! value) -> Java.Interop.JniPeerMembers!
+virtual Java.Interop.JniPeerMembers.UsesVirtualDispatch(Java.Interop.IJavaPeerable! value, System.Type? declaringType) -> bool
+virtual Java.Interop.JniRuntime.Dispose(bool disposing) -> void
+virtual Java.Interop.JniRuntime.ExceptionShouldTransitionToJni(System.Exception! e) -> bool
+virtual Java.Interop.JniRuntime.FailFast(string? message) -> void
+virtual Java.Interop.JniRuntime.GetCurrentManagedThreadName() -> string?
+virtual Java.Interop.JniRuntime.GetCurrentManagedThreadStackTrace(int skipFrames = 0, bool fNeedFileInfo = false) -> string?
+virtual Java.Interop.JniRuntime.GetExceptionForThrowable(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions options) -> System.Exception?
+virtual Java.Interop.JniRuntime.JniMarshalMemberBuilder.Dispose(bool disposing) -> void
+virtual Java.Interop.JniRuntime.JniMarshalMemberBuilder.OnSetRuntime(Java.Interop.JniRuntime! runtime) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.CreatedLocalReference(Java.Interop.JniObjectReference reference, ref int localReferenceCount) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.CreateGlobalReference(Java.Interop.JniObjectReference reference) -> Java.Interop.JniObjectReference
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.CreateLocalReference(Java.Interop.JniObjectReference reference, ref int localReferenceCount) -> Java.Interop.JniObjectReference
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.CreateWeakGlobalReference(Java.Interop.JniObjectReference reference) -> Java.Interop.JniObjectReference
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.DeleteGlobalReference(ref Java.Interop.JniObjectReference reference) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.DeleteLocalReference(ref Java.Interop.JniObjectReference reference, ref int localReferenceCount) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.DeleteWeakGlobalReference(ref Java.Interop.JniObjectReference reference) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.Dispose(bool disposing) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.LogGlobalReferenceMessages.get -> bool
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.LogLocalReferenceMessages.get -> bool
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.OnSetRuntime(Java.Interop.JniRuntime! runtime) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.ReleaseLocalReference(ref Java.Interop.JniObjectReference reference, ref int localReferenceCount) -> nint
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.WriteGlobalReferenceLine(string! format, params object?[]! args) -> void
+virtual Java.Interop.JniRuntime.JniObjectReferenceManager.WriteLocalReferenceLine(string! format, params object![]! args) -> void
+virtual Java.Interop.JniRuntime.JniTypeManager.Dispose(bool disposing) -> void
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementMethodInfoCore(string! jniSimpleReference, string! jniMethodName, string! jniMethodSignature) -> Java.Interop.JniRuntime.ReplacementMethodInfo?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetReplacementTypeCore(string! jniSimpleReference) -> string?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetSimpleReference(System.Type! type) -> string?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetSimpleReferences(System.Type! type) -> System.Collections.Generic.IEnumerable<string!>!
+virtual Java.Interop.JniRuntime.JniTypeManager.GetStaticMethodFallbackTypesCore(string! jniSimple) -> System.Collections.Generic.IReadOnlyList<string!>?
+virtual Java.Interop.JniRuntime.JniTypeManager.GetTypes(Java.Interop.JniTypeSignature typeSignature) -> System.Collections.Generic.IEnumerable<System.Type!>!
+virtual Java.Interop.JniRuntime.JniTypeManager.GetTypesForSimpleReference(string! jniSimpleReference) -> System.Collections.Generic.IEnumerable<System.Type!>!
+virtual Java.Interop.JniRuntime.JniTypeManager.OnSetRuntime(Java.Interop.JniRuntime! runtime) -> void
+virtual Java.Interop.JniRuntime.JniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, string? methods) -> void
+virtual Java.Interop.JniRuntime.JniTypeManager.RegisterNativeMembers(Java.Interop.JniType! nativeClass, System.Type! type, System.ReadOnlySpan<char> methods) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.CreatePeer(ref Java.Interop.JniObjectReference reference, Java.Interop.JniObjectReferenceOptions transfer, System.Type? targetType) -> Java.Interop.IJavaPeerable?
+virtual Java.Interop.JniRuntime.JniValueManager.Dispose(bool disposing) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.DisposePeer(Java.Interop.IJavaPeerable! value) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.DisposePeerUnlessReferenced(Java.Interop.IJavaPeerable! value) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.GetValueMarshalerCore(System.Type! type) -> Java.Interop.JniValueMarshaler!
+virtual Java.Interop.JniRuntime.JniValueManager.OnSetRuntime(Java.Interop.JniRuntime! runtime) -> void
+virtual Java.Interop.JniRuntime.JniValueManager.TryUnboxPeerObject(Java.Interop.IJavaPeerable! value, out object? result) -> bool
+virtual Java.Interop.JniRuntime.RaisePendingException(System.Exception! pendingException) -> void
+virtual Java.Interop.JniValueMarshaler.CreateArgumentState(object? value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState
+virtual Java.Interop.JniValueMarshaler.CreateParameterFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize) -> System.Linq.Expressions.Expression!
+virtual Java.Interop.JniValueMarshaler.CreateParameterToManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None, System.Type? targetType = null) -> System.Linq.Expressions.Expression!
+virtual Java.Interop.JniValueMarshaler.CreateReturnValueFromManagedExpression(Java.Interop.Expressions.JniValueMarshalerContext! context, System.Linq.Expressions.ParameterExpression! sourceValue) -> System.Linq.Expressions.Expression!
+virtual Java.Interop.JniValueMarshaler.IsJniValueType.get -> bool
+virtual Java.Interop.JniValueMarshaler.MarshalType.get -> System.Type!
+virtual Java.Interop.JniValueMarshaler<T>.CreateGenericArgumentState(T value, System.Reflection.ParameterAttributes synchronize = System.Reflection.ParameterAttributes.None) -> Java.Interop.JniValueMarshalerState

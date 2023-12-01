@@ -86,6 +86,7 @@ namespace Xamarin.Java.Interop
 			o.WriteLine ("// Generated file; DO NOT EDIT!");
 			o.WriteLine ("//");
 			o.WriteLine ("// To make changes, edit monodroid/tools/jnienv-gen-interop and rerun");
+			o.WriteLine ("#nullable enable");
 			o.WriteLine ();
 			o.WriteLine ("#if !FEATURE_JNIENVIRONMENT_SAFEHANDLES && !FEATURE_JNIENVIRONMENT_JI_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_PINVOKES && !FEATURE_JNIENVIRONMENT_XA_INTPTRS && !FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS");
 			o.WriteLine ("#define FEATURE_JNIENVIRONMENT_JI_PINVOKES");
@@ -255,7 +256,7 @@ namespace Xamarin.Java.Interop
 				if (e.Prebind)
 					o.WriteLine ("\t\tpublic readonly {0} {1};\n", d, e.Name);
 				else {
-					o.WriteLine ("\t\t{0} _{1};", d, e.Name);
+					o.WriteLine ("\t\t{0}? _{1};", d, e.Name);
 					o.WriteLine ("\t\tpublic {0} {1} {{", d, e.Name);
 					o.WriteLine ("\t\t\tget {");
 					o.WriteLine ("\t\t\t\tif (_{0} == null)\n\t\t\t\t\t{1}", e.Name, Initialize (e, "_", d));
@@ -551,7 +552,7 @@ namespace Xamarin.Java.Interop
 				return;
 
 			o.WriteLine ();
-			o.WriteLine ("\t\t\tException __e = JniEnvironment.GetExceptionForLastThrowable ({0});",
+			o.WriteLine ("\t\t\tException? __e = JniEnvironment.GetExceptionForLastThrowable ({0});",
 					(style == HandleStyle.JIIntPtrPinvokeWithErrors || style == HandleStyle.JIFunctionPtrWithErrors)
 					? "thrown"
 					: "");
@@ -1127,7 +1128,7 @@ namespace Xamarin.Java.Interop
 			case HandleStyle.JIFunctionPtrWithErrors:
 				return new[] {
 					string.Format ("if ({0} == IntPtr.Zero)", variable),
-					string.Format ("\treturn null;"),
+					string.Format ($"\tthrow new InvalidOperationException (\"Should not be reached; `{entry.Name}` should have thrown!\");"),
 					string.Format ("return new {0} ({1}, {2}, {3}, isStatic: {4});", type, entry.Parameters [1].Name, entry.Parameters [2].Name, variable, IsStatic ? "true" : "false"),
 				};
 			case HandleStyle.XAIntPtr:

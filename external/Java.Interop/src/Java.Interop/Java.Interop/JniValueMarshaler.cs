@@ -49,6 +49,7 @@ namespace Java.Interop {
 		public  IJavaPeerable?          PeerableValue       {get; private set;}
 		public  object?                 Extra               {get; private set;}
 
+		[SuppressMessage ("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters", Justification = "Existing public API")]
 		public JniValueMarshalerState (JniArgumentValue jniArgumentValue, object? extra = null)
 		{
 			JniArgumentValue    = jniArgumentValue;
@@ -57,6 +58,7 @@ namespace Java.Interop {
 			Extra               = extra;
 		}
 
+		[SuppressMessage ("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters", Justification = "Existing public API")]
 		public JniValueMarshalerState (JniObjectReference referenceValue, object? extra = null)
 		{
 			JniArgumentValue    = new JniArgumentValue (referenceValue);
@@ -65,6 +67,7 @@ namespace Java.Interop {
 			Extra               = extra;
 		}
 
+		[SuppressMessage ("ApiDesign", "RS0026:Do not add multiple public overloads with optional parameters", Justification = "Existing public API")]
 		public JniValueMarshalerState (IJavaPeerable? peerableValue, object? extra = null)
 		{
 			PeerableValue       = peerableValue;

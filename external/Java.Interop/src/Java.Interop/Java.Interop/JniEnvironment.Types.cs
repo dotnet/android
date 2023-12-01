@@ -262,7 +262,7 @@ namespace Java.Interop
 				}
 #endif  // DEBUG && NETCOREAPP
 
-				int r   = _RegisterNatives (type, methods, numMethods);
+				int r   = _RegisterNatives (type, methods ?? Array.Empty<JniNativeMethodRegistration>(), numMethods);
 
 				if (r != 0) {
 					throw new InvalidOperationException (
