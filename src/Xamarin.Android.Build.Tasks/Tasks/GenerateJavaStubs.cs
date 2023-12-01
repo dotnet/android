@@ -207,11 +207,12 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
+			var javaStubStates = new Dictionary<AndroidTargetArch, JavaStubsState> ();
 			bool generateJavaCode = true;
 			foreach (var kvp in allAssembliesPerArch) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
-				(bool success, JavaStubsState? stubsState) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods, generateJavaCode);
+				(bool success, JavaStubsState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods, generateJavaCode);
 
 				if (!success) {
 					return;
@@ -221,8 +222,11 @@ namespace Xamarin.Android.Tasks
 					generateJavaCode = false;
 				}
 
+				javaStubStates.Add (arch, state);
 //				RewriteMarshalMethods (mirrorHelperState);
 			}
+
+			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, javaStubStates);
 		}
 
 		(bool success, JavaStubsState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
@@ -245,7 +249,7 @@ namespace Xamarin.Android.Tasks
 				return (false, null);
 			}
 
-			return (true, new JavaStubsState (allJavaTypes, jcwGenerator.Classifier));
+			return (true, new JavaStubsState (arch, allJavaTypes, jcwGenerator.Classifier));
 		}
 
 		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolverNew res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)

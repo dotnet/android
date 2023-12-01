@@ -210,4 +210,92 @@ class JCWGenerator
 
 		return builder.ToString ();
 	}
+
+	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, Dictionary<AndroidTargetArch, JavaStubsState> javaStubStates)
+	{
+		if (javaStubStates.Count <= 1) {
+			return;
+		}
+
+		// An expensive process, but we must be sure that all the architectures have the same data
+		JavaStubsState? templateStub = null;
+		foreach (var kvp in javaStubStates) {
+			JavaStubsState state = kvp.Value;
+
+			if (templateStub == null) {
+				templateStub = state;
+				continue;
+			}
+
+			EnsureIdenticalCollections (logger, templateStub, state);
+		}
+	}
+
+	static void EnsureIdenticalCollections (TaskLoggingHelper logger, JavaStubsState templateState, JavaStubsState state)
+	{
+		if (templateState.Classifier == null) {
+			if (state.Classifier != null) {
+				throw new InvalidOperationException ($"Internal error: architecture '{templateState.TargetArch}' DOES NOT have a marshal methods classifier, unlike architecture '{state.TargetArch}'");
+			}
+		} else {
+			if (state.Classifier == null) {
+				throw new InvalidOperationException ($"Internal error: architecture '{templateState.TargetArch}' DOES have a marshal methods classifier, unlike architecture '{state.TargetArch}'");
+			}
+
+			EnsureClassifiersMatch (templateState, state);
+		}
+
+		List<JavaType> templateTypes = templateState.AllJavaTypes;
+		List<JavaType> types = state.AllJavaTypes;
+
+		if (types.Count != templateTypes.Count) {
+			throw new InvalidOperationException ($"Internal error: architecture '{state.TargetArch}' has a different number of types ({types.Count}) than the template architecture '{templateState.TargetArch}' ({templateTypes.Count})");
+		}
+
+		var matchedTemplateTypes = new HashSet<TypeDefinition> ();
+		var mismatchedTypes = new List<TypeDefinition> ();
+
+		foreach (JavaType type in types) {
+			TypeDefinition? matchedType = null;
+
+			foreach (JavaType templateType in templateTypes) {
+				if (matchedTemplateTypes.Contains (templateType.Type) || !CheckWhetherTypesMatch (templateType.Type, type.Type)) {
+					continue;
+				}
+
+				matchedTemplateTypes.Add (templateType.Type);
+				matchedType = templateType.Type;
+				break;
+			}
+
+			if (matchedType == null) {
+				mismatchedTypes.Add (type.Type);
+			}
+		}
+
+		if (mismatchedTypes.Count > 0) {
+			logger.LogError ($"Architecture '{state.TargetArch}' has Java types which have no counterparts in template architecture '{templateState.TargetArch}':");
+			foreach (TypeDefinition td in mismatchedTypes) {
+				logger.LogError ($"  {td.FullName}");
+			}
+		}
+	}
+
+	static void EnsureClassifiersMatch (JavaStubsState templateState, JavaStubsState state)
+	{
+		MarshalMethodsClassifier templateClassifier = templateState.Classifier;
+		MarshalMethodsClassifier classifier = state.Classifier;
+
+		if (templateClassifier.MarshalMethods.Count != classifier.MarshalMethods.Count) {
+			throw new InvalidOperationException (
+				$"Internal error: classifier for template architecture '{templateState.TargetArch}' contains {templateClassifier.MarshalMethods.Count} marshal methods, but the one for architecture '{state.TargetArch}' has {classifier.MarshalMethods.Count}"
+			);
+		}
+	}
+
+	static bool CheckWhetherTypesMatch (TypeDefinition templateType, TypeDefinition type)
+	{
+		// TODO: should we compare individual methods, fields, properties?
+		return String.Compare (templateType.FullName, type.FullName, StringComparison.Ordinal) == 0;
+	}
 }
