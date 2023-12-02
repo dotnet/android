@@ -192,7 +192,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (rank == 0)
 				return jniType;
 
-			if (jniType.Length > 1)
+			if (jniType.Length > 1 && jniType [0] != '[')
 				jniType = "L" + jniType + ";";
 			return new string ('[', rank) + jniType;
 		}
@@ -358,7 +358,9 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (pJniName == null) {
 				return null;
 			}
-			return rank == 0 && pJniName.Length > 1 ? "L" + pJniName + ";" : ToJniName (pJniName, rank);
+			return (rank == 0 && pJniName.Length > 1 && pJniName[0] != '[')
+				? "L" + pJniName + ";"
+				: ToJniName (pJniName, rank);
 		}
 
 		static ExportParameterKind GetExportKind (System.Reflection.ICustomAttributeProvider p)
@@ -556,7 +558,15 @@ namespace Java.Interop.Tools.TypeNameMappings
 			var carg    = attr.ConstructorArguments.FirstOrDefault ();
 			if (carg.Type == null || carg.Type.FullName != "System.String")
 				return null;
-			return (string) carg.Value;
+			var jniType     = (string) carg.Value;
+			var isKeyProp   = attr.Properties.FirstOrDefault (p => p.Name == "IsKeyword");
+			var isKeyword   = isKeyProp.Name != null && ((bool) isKeyProp.Argument.Value) == true;
+			var arrRankProp = attr.Properties.FirstOrDefault (p => p.Name == "ArrayRank");
+			var arrayRank   = arrRankProp.Name != null && arrRankProp.Argument.Value is int rank ? rank : 0;
+			jniType = arrayRank == 0
+				? jniType
+				: new string ('[', arrayRank) + (isKeyword ? jniType : "L" + jniType + ";");
+			return jniType;
 		}
 
 		static string? ToJniNameFromAttributesForAndroid (TypeDefinition type, IMetadataResolver resolver)

@@ -464,8 +464,10 @@ class CecilCompilerExpressionVisitor : ExpressionVisitor
 		base.VisitNew (node);
 		if (node.Constructor == null && node.Type.IsValueType) {
 			il.Emit (OpCodes.Initobj,   assemblyDef.MainModule.ImportReference (node.Type));
-		} else {
+		} else if (node.Type.IsValueType) {
 			il.Emit (OpCodes.Call,      assemblyDef.MainModule.ImportReference (node.Constructor));
+		} else {
+			il.Emit (OpCodes.Newobj,    assemblyDef.MainModule.ImportReference (node.Constructor));
 		}
 		return node;
 	}

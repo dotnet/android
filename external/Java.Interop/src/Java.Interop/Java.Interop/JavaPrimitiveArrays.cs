@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -12,50 +12,44 @@ using System.Linq.Expressions;
 namespace Java.Interop {
 
 	partial class JniRuntime {
-		static JniTypeSignature __BooleanTypeArraySignature;
-		static JniTypeSignature __SByteTypeArraySignature;
-		static JniTypeSignature __CharTypeArraySignature;
-		static JniTypeSignature __Int16TypeArraySignature;
-		static JniTypeSignature __Int32TypeArraySignature;
-		static JniTypeSignature __Int64TypeArraySignature;
-		static JniTypeSignature __SingleTypeArraySignature;
-		static JniTypeSignature __DoubleTypeArraySignature;
 
-		static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
-		{
-			if (type == typeof (JavaArray<Boolean>) || type == typeof (JavaPrimitiveArray<Boolean>)) {
-				signature = GetCachedTypeSignature (ref __BooleanTypeArraySignature, "Z", arrayRank: 1, keyword: true);
-				return true;
+		partial class JniTypeManager {
+
+			readonly struct JniPrimitiveArrayInfo {
+				public  readonly    JniTypeSignature    JniTypeSignature;
+				public  readonly    Type                PrimitiveType;
+				public  readonly    Type[]              ArrayTypes;
+
+				public JniPrimitiveArrayInfo (string jniSimpleReference, Type primitiveType, params Type[] arrayTypes)
+				{
+					JniTypeSignature    = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
+					PrimitiveType       = primitiveType;
+					ArrayTypes          = arrayTypes;
+				}
 			}
-			if (type == typeof (JavaArray<SByte>) || type == typeof (JavaPrimitiveArray<SByte>)) {
-				signature = GetCachedTypeSignature (ref __SByteTypeArraySignature, "B", arrayRank: 1, keyword: true);
-				return true;
+
+			static readonly JniPrimitiveArrayInfo[] JniPrimitiveArrayTypes = new JniPrimitiveArrayInfo[]{
+				new ("Z", typeof (Boolean), typeof (Boolean[]), typeof (JavaArray<Boolean>), typeof (JavaPrimitiveArray<Boolean>), typeof (JavaBooleanArray)),
+				new ("B", typeof (SByte), typeof (SByte[]), typeof (JavaArray<SByte>), typeof (JavaPrimitiveArray<SByte>), typeof (JavaSByteArray)),
+				new ("C", typeof (Char), typeof (Char[]), typeof (JavaArray<Char>), typeof (JavaPrimitiveArray<Char>), typeof (JavaCharArray)),
+				new ("S", typeof (Int16), typeof (Int16[]), typeof (JavaArray<Int16>), typeof (JavaPrimitiveArray<Int16>), typeof (JavaInt16Array)),
+				new ("I", typeof (Int32), typeof (Int32[]), typeof (JavaArray<Int32>), typeof (JavaPrimitiveArray<Int32>), typeof (JavaInt32Array)),
+				new ("J", typeof (Int64), typeof (Int64[]), typeof (JavaArray<Int64>), typeof (JavaPrimitiveArray<Int64>), typeof (JavaInt64Array)),
+				new ("F", typeof (Single), typeof (Single[]), typeof (JavaArray<Single>), typeof (JavaPrimitiveArray<Single>), typeof (JavaSingleArray)),
+				new ("D", typeof (Double), typeof (Double[]), typeof (JavaArray<Double>), typeof (JavaPrimitiveArray<Double>), typeof (JavaDoubleArray)),
+			};
+
+			static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
+			{
+				foreach (var e in JniPrimitiveArrayTypes) {
+					if (Array.IndexOf (e.ArrayTypes, type) < 0)
+						continue;
+					signature   = e.JniTypeSignature;
+					return true;
+				}
+				signature   = default;
+				return false;
 			}
-			if (type == typeof (JavaArray<Char>) || type == typeof (JavaPrimitiveArray<Char>)) {
-				signature = GetCachedTypeSignature (ref __CharTypeArraySignature, "C", arrayRank: 1, keyword: true);
-				return true;
-			}
-			if (type == typeof (JavaArray<Int16>) || type == typeof (JavaPrimitiveArray<Int16>)) {
-				signature = GetCachedTypeSignature (ref __Int16TypeArraySignature, "S", arrayRank: 1, keyword: true);
-				return true;
-			}
-			if (type == typeof (JavaArray<Int32>) || type == typeof (JavaPrimitiveArray<Int32>)) {
-				signature = GetCachedTypeSignature (ref __Int32TypeArraySignature, "I", arrayRank: 1, keyword: true);
-				return true;
-			}
-			if (type == typeof (JavaArray<Int64>) || type == typeof (JavaPrimitiveArray<Int64>)) {
-				signature = GetCachedTypeSignature (ref __Int64TypeArraySignature, "J", arrayRank: 1, keyword: true);
-				return true;
-			}
-			if (type == typeof (JavaArray<Single>) || type == typeof (JavaPrimitiveArray<Single>)) {
-				signature = GetCachedTypeSignature (ref __SingleTypeArraySignature, "F", arrayRank: 1, keyword: true);
-				return true;
-			}
-			if (type == typeof (JavaArray<Double>) || type == typeof (JavaPrimitiveArray<Double>)) {
-				signature = GetCachedTypeSignature (ref __DoubleTypeArraySignature, "D", arrayRank: 1, keyword: true);
-				return true;
-			}
-			return false;
 		}
 
 		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniPrimitiveArrayMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniPrimitiveArrayMarshalers);

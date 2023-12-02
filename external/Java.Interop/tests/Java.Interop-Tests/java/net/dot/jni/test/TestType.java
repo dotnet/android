@@ -6,11 +6,9 @@ import net.dot.jni.GCUserPeerable;
 
 public class TestType implements GCUserPeerable {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.TestType, Java.Interop-Tests";
 	static {
 		net.dot.jni.ManagedPeer.registerNativeMembers (
 				TestType.class,
-				assemblyQualifiedName,
 				"");
 	}
 
@@ -20,8 +18,7 @@ public class TestType implements GCUserPeerable {
 		if (TestType.class == getClass ()) {
 			net.dot.jni.ManagedPeer.construct (
 					this,
-					assemblyQualifiedName,
-					""
+					"()V"
 			);
 		}
 	}
@@ -31,8 +28,7 @@ public class TestType implements GCUserPeerable {
 		if (TestType.class == getClass ()) {
 			net.dot.jni.ManagedPeer.construct (
 					this,
-					assemblyQualifiedName,
-					assemblyQualifiedName + ":System.Int32",
+					"(Lnet/dot/jni/test/TestType;I)V",
 					a, b
 			);
 		}

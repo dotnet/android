@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Java.Interop;
 
@@ -115,31 +117,59 @@ namespace Java.InteropTests
 			Assert.AreEqual (null,              GetType ("Lcom/example/does/not/exist;"));
 			Assert.AreEqual (null,              GetType ("[Lcom/example/does/not/exist;"));
 
-			Assert.AreEqual (typeof (JavaPrimitiveArray<bool>),     GetType ("[Z"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<char>),     GetType ("[C"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<sbyte>),    GetType ("[B"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<short>),    GetType ("[S"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<int>),      GetType ("[I"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<long>),     GetType ("[J"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<float>),    GetType ("[F"));
-			Assert.AreEqual (typeof (JavaPrimitiveArray<double>),   GetType ("[D"));
-			Assert.AreEqual (typeof (JavaObjectArray<string>),      GetType ("[Ljava/lang/String;"));
+			AssertPrimitiveArrayTypesFromSignature<bool>   (manager, "[Z", typeof (JavaBooleanArray));
+			AssertPrimitiveArrayTypesFromSignature<char>   (manager, "[C", typeof (JavaCharArray));
+			AssertPrimitiveArrayTypesFromSignature<sbyte>  (manager, "[B", typeof (JavaSByteArray));
+			AssertPrimitiveArrayTypesFromSignature<short>  (manager, "[S", typeof (JavaInt16Array));
+			AssertPrimitiveArrayTypesFromSignature<int>    (manager, "[I", typeof (JavaInt32Array));
+			AssertPrimitiveArrayTypesFromSignature<long>   (manager, "[J", typeof (JavaInt64Array));
+			AssertPrimitiveArrayTypesFromSignature<float>  (manager, "[F", typeof (JavaSingleArray));
+			AssertPrimitiveArrayTypesFromSignature<double> (manager, "[D", typeof (JavaDoubleArray));
+			AssertArrayTypesFromSignature<string>          (manager, "[Ljava/lang/String;", typeof (JavaObjectArray<string>));
 
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<bool>>),    GetType ("[[Z"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<char>>),    GetType ("[[C"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>),   GetType ("[[B"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<short>>),   GetType ("[[S"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<int>>),     GetType ("[[I"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<long>>),    GetType ("[[J"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<float>>),   GetType ("[[F"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaPrimitiveArray<double>>),  GetType ("[[D"));
-			Assert.AreEqual (typeof (JavaObjectArray<JavaObjectArray<string>>),     GetType ("[[Ljava/lang/String;"));
+			AssertArrayTypesFromSignature<bool[]>   (manager, "[[Z", typeof (JavaObjectArray<JavaPrimitiveArray<bool>>));
+			AssertArrayTypesFromSignature<char[]>   (manager, "[[C", typeof (JavaObjectArray<JavaPrimitiveArray<char>>));
+			AssertArrayTypesFromSignature<sbyte[]>  (manager, "[[B", typeof (JavaObjectArray<JavaPrimitiveArray<sbyte>>));
+			AssertArrayTypesFromSignature<short[]>  (manager, "[[S", typeof (JavaObjectArray<JavaPrimitiveArray<short>>));
+			AssertArrayTypesFromSignature<int[]>    (manager, "[[I", typeof (JavaObjectArray<JavaPrimitiveArray<int>>));
+			AssertArrayTypesFromSignature<long[]>   (manager, "[[J", typeof (JavaObjectArray<JavaPrimitiveArray<long>>));
+			AssertArrayTypesFromSignature<float[]>  (manager, "[[F", typeof (JavaObjectArray<JavaPrimitiveArray<float>>));
+			AssertArrayTypesFromSignature<double[]> (manager, "[[D", typeof (JavaObjectArray<JavaPrimitiveArray<double>>));
+			AssertArrayTypesFromSignature<string[]> (manager, "[[Ljava/lang/String;", typeof (JavaObjectArray<JavaObjectArray<string>>));
 
 			// Yes, these look weird...
 			// Assume: class II {}
 			Assert.AreEqual (null, GetType ("II"));
 			// Assume: package Ljava.lang; class String {}
 			Assert.AreEqual (null, GetType ("Ljava/lang/String"));
+		}
+
+		static void AssertPrimitiveArrayTypesFromSignature<T> (JniRuntime.JniTypeManager manager, string signature, params Type[] expectedTypes)
+		{
+			var sig             = JniTypeSignature.Parse (signature);
+			var types           = manager.GetTypes (sig).ToList ();
+			var messageFormat   = $"Types for signature `{signature}` should contain `{{0}}`, instead contains: {string.Join (", ", types)}";
+			var arrayTypes      = new[]{
+				typeof (JavaArray<T>),
+				typeof (JavaPrimitiveArray<T>),
+				typeof (T[]),
+			}.Concat (expectedTypes);
+			foreach (var t in arrayTypes) {
+				Assert.IsTrue (types.Contains (t), string.Format (messageFormat, t));
+			}
+		}
+
+		static void AssertArrayTypesFromSignature<T> (JniRuntime.JniTypeManager manager, string signature, params Type[] expectedTypes)
+		{
+			var sig             = JniTypeSignature.Parse (signature);
+			var types           = manager.GetTypes (sig).ToList ();
+			var messageFormat   = $"Types for signature `{signature}` should contain `{{0}}`, instead contains: {string.Join (", ", types)}";
+			var arrayTypes      = new[]{
+				typeof (T[]),
+			}.Concat (expectedTypes);
+			foreach (var t in arrayTypes) {
+				Assert.IsTrue (types.Contains (t), string.Format (messageFormat, t));
+			}
 		}
 
 		[Test]

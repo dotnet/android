@@ -641,7 +641,7 @@ public class JavaInteropExample
 		__md_methods = 
 			""n_Example:()V:__export__\n"" +
 			"""";
-		net.dot.jni.ManagedPeer.registerNativeMembers (JavaInteropExample.class, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", __md_methods);
+		net.dot.jni.ManagedPeer.registerNativeMembers (JavaInteropExample.class, __md_methods);
 	}
 
 
@@ -649,7 +649,7 @@ public class JavaInteropExample
 	{
 		super ();
 		if (getClass () == JavaInteropExample.class) {
-			net.dot.jni.ManagedPeer.construct (this, ""Xamarin.Android.ToolsTests.JavaInteropExample, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib:System.Int32, System.Private.CoreLib"", new java.lang.Object[] { p0, p1 });
+			net.dot.jni.ManagedPeer.construct (this, ""(II)V"", new java.lang.Object[] { p0, p1 });
 		}
 	}
 

@@ -8,11 +8,9 @@ public class CallVirtualFromConstructorDerived
 		extends CallVirtualFromConstructorBase
 		implements GCUserPeerable
 {
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.CallVirtualFromConstructorDerived, Java.Interop-Tests";
 	static {
 		net.dot.jni.ManagedPeer.registerNativeMembers (
 				CallVirtualFromConstructorDerived.class,
-				assemblyQualifiedName,
 				"");
 	}
 
@@ -23,8 +21,7 @@ public class CallVirtualFromConstructorDerived
 		if (CallVirtualFromConstructorDerived.class == getClass ()) {
 			net.dot.jni.ManagedPeer.construct (
 					this,
-					assemblyQualifiedName,
-					"System.Int32",
+					"(I)V",
 					value
 			);
 		}

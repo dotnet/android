@@ -29,27 +29,43 @@ namespace Java.Interop {
 	};
 #>
 	partial class JniRuntime {
+
+		partial class JniTypeManager {
+
+			readonly struct JniPrimitiveArrayInfo {
+				public  readonly    JniTypeSignature    JniTypeSignature;
+				public  readonly    Type                PrimitiveType;
+				public  readonly    Type[]              ArrayTypes;
+
+				public JniPrimitiveArrayInfo (string jniSimpleReference, Type primitiveType, params Type[] arrayTypes)
+				{
+					JniTypeSignature    = new JniTypeSignature (jniSimpleReference, arrayRank: 1, keyword: true);
+					PrimitiveType       = primitiveType;
+					ArrayTypes          = arrayTypes;
+				}
+			}
+
+			static readonly JniPrimitiveArrayInfo[] JniPrimitiveArrayTypes = new JniPrimitiveArrayInfo[]{
 <#
 	foreach (var type in arrayTypeInfo) { 
 #>
-		static JniTypeSignature __<#= type.ManagedType #>TypeArraySignature;
+				new ("<#= type.JniType #>", typeof (<#= type.ManagedType #>), typeof (<#= type.ManagedType #>[]), typeof (JavaArray<<#= type.ManagedType #>>), typeof (JavaPrimitiveArray<<#= type.ManagedType #>>), typeof (Java<#= type.ManagedType #>Array)),
 <#
 	}
 #>
+			};
 
-		static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
-		{
-<#
-	foreach (var info in arrayTypeInfo) {
-#>
-			if (type == typeof (JavaArray<<#= info.ManagedType #>>) || type == typeof (JavaPrimitiveArray<<#= info.ManagedType #>>)) {
-				signature = GetCachedTypeSignature (ref __<#= info.ManagedType #>TypeArraySignature, "<#= info.JniType #>", arrayRank: 1, keyword: true);
-				return true;
+			static bool GetBuiltInTypeArraySignature (Type type, ref JniTypeSignature signature)
+			{
+				foreach (var e in JniPrimitiveArrayTypes) {
+					if (Array.IndexOf (e.ArrayTypes, type) < 0)
+						continue;
+					signature   = e.JniTypeSignature;
+					return true;
+				}
+				signature   = default;
+				return false;
 			}
-<#
-	}
-#>
-			return false;
 		}
 
 		static readonly Lazy<KeyValuePair<Type, JniValueMarshaler>[]> JniPrimitiveArrayMarshalers = new Lazy<KeyValuePair<Type, JniValueMarshaler>[]> (InitJniPrimitiveArrayMarshalers);

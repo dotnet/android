@@ -19,7 +19,7 @@ class JavaCallableExampleTest : JavaVMFixture
 	[Test]
 	public void ManagedCtorInvokesJavaDefaultCtor ()
 	{
-		using var o = new JavaCallableExample (42);
+		using var o = new JavaCallableExample (new[]{1,2}, new JavaInt32Array (new[]{3,4}));
 	}
 
 	static JniType CreateUseJavaCallableExampleType () =>

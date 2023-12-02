@@ -34,6 +34,22 @@ namespace Java.Interop
 			this.memberSignature    = memberSignature;
 		}
 
+		internal static IEnumerable<JniTypeSignature> GetParameterTypesFromMethodSignature (string jniMethodSignature)
+		{
+			if (jniMethodSignature.Length < "()V".Length || jniMethodSignature [0] != '(' ) {
+				throw new ArgumentException (
+						$"Member signature `{jniMethodSignature}` is not a method signature.  Method signatures must start with `(`.",
+						nameof (jniMethodSignature));
+			}
+			int index = 1;
+			while (index < jniMethodSignature.Length &&
+					jniMethodSignature [index] != ')') {
+				var (start, length) = ExtractType (jniMethodSignature, ref index);
+				var jniType         = jniMethodSignature.Substring (start, length);
+				yield return JniTypeSignature.Parse (jniType);
+			}
+		}
+
 		public static int GetParameterCountFromMethodSignature (string jniMethodSignature)
 		{
 			if (jniMethodSignature.Length < "()V".Length || jniMethodSignature [0] != '(' ) {

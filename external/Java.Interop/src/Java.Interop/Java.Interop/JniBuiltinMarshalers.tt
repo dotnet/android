@@ -101,6 +101,9 @@ namespace Java.Interop {
 		{
 				return new Dictionary<string, Type> (StringComparer.Ordinal) {
 					{"java/lang/String", typeof (string)},
+					{"net/dot/jni/internal/JavaProxyObject",    typeof (JavaProxyObject)},
+					{"net/dot/jni/internal/JavaProxyThrowable", typeof (JavaProxyThrowable)},
+					{"net/dot/jni/ManagedPeer",                 typeof (ManagedPeer)},
 					{"V", typeof (void)},
 <#
 	foreach (var type in types) {
@@ -119,6 +122,7 @@ namespace Java.Interop {
 		{
 			return new []{
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
 <#
 	foreach (var type in types) {
 #>

@@ -8,11 +8,9 @@ public class ExportType
 		implements GCUserPeerable
 {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.ExportTest, Java.Interop.Export-Tests";
 	static {
 		net.dot.jni.ManagedPeer.registerNativeMembers (
 				ExportType.class,
-				assemblyQualifiedName,
 				"");
 	}
 

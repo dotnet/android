@@ -6,11 +6,9 @@ import net.dot.jni.GCUserPeerable;
 
 public class GetThis implements GCUserPeerable {
 
-	static  final   String  assemblyQualifiedName   = "Java.InteropTests.GetThis, Java.Interop-Tests";
 	static {
 		net.dot.jni.ManagedPeer.registerNativeMembers (
 				GetThis.class,
-				assemblyQualifiedName,
 				"");
 	}
 
@@ -20,8 +18,7 @@ public class GetThis implements GCUserPeerable {
 		if (GetThis.class == getClass ()) {
 			net.dot.jni.ManagedPeer.construct (
 					this,
-					assemblyQualifiedName,
-					""
+					"()V"
 			);
 		}
 	}

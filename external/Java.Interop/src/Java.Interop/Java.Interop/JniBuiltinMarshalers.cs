@@ -130,6 +130,9 @@ namespace Java.Interop {
 		{
 				return new Dictionary<string, Type> (StringComparer.Ordinal) {
 					{"java/lang/String", typeof (string)},
+					{"net/dot/jni/internal/JavaProxyObject",    typeof (JavaProxyObject)},
+					{"net/dot/jni/internal/JavaProxyThrowable", typeof (JavaProxyThrowable)},
+					{"net/dot/jni/ManagedPeer",                 typeof (ManagedPeer)},
 					{"V", typeof (void)},
 					{"Z", typeof (Boolean)},
 					{"java/lang/Boolean", typeof (Boolean?)},
@@ -156,6 +159,7 @@ namespace Java.Interop {
 		{
 			return new []{
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (string), JniStringValueMarshaler.Instance),
+				new KeyValuePair<Type, JniValueMarshaler>(typeof (JavaProxyObject), ProxyValueMarshaler.Instance),
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean),   JniBooleanValueMarshaler.Instance),
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (Boolean?),  JniNullableBooleanValueMarshaler.Instance),
 				new KeyValuePair<Type, JniValueMarshaler>(typeof (SByte),   JniSByteValueMarshaler.Instance),

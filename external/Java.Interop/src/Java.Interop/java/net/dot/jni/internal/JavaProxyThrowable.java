@@ -8,11 +8,9 @@ import net.dot.jni.GCUserPeerable;
 		extends java.lang.Error
 		implements GCUserPeerable
 {
-	static  final   String  assemblyQualifiedName   = "Java.Interop.JavaProxyThrowable, Java.Interop";
 	static {
 		net.dot.jni.ManagedPeer.registerNativeMembers (
 				JavaProxyThrowable.class,
-				assemblyQualifiedName,
 				"");
 	}
 

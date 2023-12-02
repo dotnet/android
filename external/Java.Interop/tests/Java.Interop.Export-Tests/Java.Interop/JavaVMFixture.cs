@@ -12,7 +12,11 @@ namespace Java.InteropTests {
 		static JavaVMFixture ()
 		{
 			var c = new TestJVM (
-				jars:           new[]{ "export-test.jar" }
+				jars:           new[]{ "export-test.jar" },
+				typeMappings:   new() {
+					[ExportTest.JniTypeName]            = typeof (ExportTest),
+					[JavaCallableExample.TypeSignature] = typeof (JavaCallableExample),
+				}
 			);
 			JniRuntime.SetCurrent (c);
 		}

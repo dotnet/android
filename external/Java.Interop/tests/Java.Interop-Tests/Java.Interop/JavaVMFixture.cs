@@ -37,6 +37,9 @@ namespace Java.InteropTests {
 			[GenericHolder<int>.JniTypeName]    = typeof (GenericHolder<>),
 			[RenameClassBase.JniTypeName]       = typeof (RenameClassBase),
 			[RenameClassDerived.JniTypeName]    = typeof (RenameClassDerived),
+			[CallVirtualFromConstructorBase.JniTypeName]    = typeof (CallVirtualFromConstructorBase),
+			[CallVirtualFromConstructorDerived.JniTypeName] = typeof (CallVirtualFromConstructorDerived),
+			[GetThis.JniTypeName]                           = typeof (GetThis),
 		};
 
 		public JavaVMFixtureTypeManager ()

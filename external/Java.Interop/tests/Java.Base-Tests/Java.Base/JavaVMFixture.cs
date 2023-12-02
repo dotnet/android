@@ -17,6 +17,7 @@ namespace Java.BaseTests {
 			var c = new TestJVM (
 					jars:           new[]{ "java.base-tests.jar" },
 					typeMappings:   new Dictionary<string, Type> () {
+						["example/MyIntConsumer"]   = typeof (MyIntConsumer),
 						["example/MyRunnable"]      = typeof (MyRunnable),
 						[JavaInvoker.JniTypeName]   = typeof (JavaInvoker),
 					}
