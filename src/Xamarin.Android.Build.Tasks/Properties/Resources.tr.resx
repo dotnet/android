@@ -997,7 +997,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.</value>
+    <value>Bu '{0}' MSBuild özelliği kullanım dışı bırakıldı ve .NET’ten kaldırılacak {1}. Daha fazla ayrıntı için bkz. https://aka.ms/net-android-deprecations için ayrıntılara bakın.</value>
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
