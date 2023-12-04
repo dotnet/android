@@ -415,10 +415,10 @@ $@"<Project>
 				ExtraNuGetConfigSources = new List<string> ();
 			}
 
-			if (TargetFramework?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1
-				|| TargetFrameworks?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
+			if (TargetFramework?.IndexOf ("net8.0", StringComparison.OrdinalIgnoreCase) != -1
+				|| TargetFrameworks?.IndexOf ("net8.0", StringComparison.OrdinalIgnoreCase) != -1) {
 				ExtraNuGetConfigSources.Add ("https://api.nuget.org/v3/index.json");
-				ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json");
+				ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json");
 			}
 
 			int sourceIndex = 0;

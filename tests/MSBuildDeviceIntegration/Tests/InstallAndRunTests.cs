@@ -502,7 +502,7 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android")] string dotnetTargetFramework)
+		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android", "net9.0-android")] string dotnetTargetFramework)
 		{
 			// Build a NuGet Package
 			var nuget = new XamarinAndroidLibraryProject () {
@@ -919,7 +919,7 @@ namespace UnnamedProject
 		public void DotNetInstallAndRunPreviousSdk ([Values (false, true)] bool isRelease)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject () {
-				TargetFramework = "net7.0-android",
+				TargetFramework = "net8.0-android",
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
 			};
@@ -1056,7 +1056,7 @@ namespace UnnamedProject
 		[Test]
 		public void FixLegacyResourceDesignerStep ([Values (true, false)] bool isRelease)
 		{
-			string previousTargetFramework = "net7.0-android";
+			string previousTargetFramework = "net8.0-android";
 
 			var library1 = new XamarinAndroidLibraryProject {
 				IsRelease = isRelease,
@@ -1110,6 +1110,8 @@ namespace UnnamedProject
 		[Test]
 		public void MicrosoftIntune ([Values (false, true)] bool isRelease)
 		{
+			Assert.Ignore ("https://github.com/xamarin/xamarin-android/issues/8548");
+
 			proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				PackageReferences = {
