@@ -997,7 +997,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.</value>
+    <value>已取代 '{0}' MSBuild 屬性，並將在 .NET {1} 中移除。如需更多詳細資料，請參閲 https://aka.ms/net-android-deprecations。</value>
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>

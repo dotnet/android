@@ -997,7 +997,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.</value>
+    <value>Die MSBuild-Eigenschaft "{0}" ist veraltet und wird in .NET {1} entfernt. Weitere Informationen finden Sie unter https://aka.ms/net-android-deprecations.</value>
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
