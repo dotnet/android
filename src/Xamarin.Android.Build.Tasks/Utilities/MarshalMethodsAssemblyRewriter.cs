@@ -7,6 +7,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -25,6 +26,10 @@ namespace Xamarin.Android.Tasks
 		ICollection<AssemblyDefinition> uniqueAssemblies;
 		IDictionary<AssemblyDefinition, string> assemblyPaths;
 		TaskLoggingHelper log;
+
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier)
+		{
+		}
 
 		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblyPaths, TaskLoggingHelper log)
 		{
