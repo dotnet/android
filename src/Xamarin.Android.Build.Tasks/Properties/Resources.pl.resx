@@ -997,7 +997,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.</value>
+    <value>Właściwość MSBuild „{0}” jest przestarzała i zostanie usunięta na platformie .NET {1}. Aby uzyskać więcej informacji, zobacz https://aka.ms/net-android-deprecations.</value>
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
