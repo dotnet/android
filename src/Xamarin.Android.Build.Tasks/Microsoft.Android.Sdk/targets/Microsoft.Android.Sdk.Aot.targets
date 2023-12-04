@@ -134,13 +134,14 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
         TrimIndividualMethods="true"
         Assemblies="@(_MonoAOTCompiledAssemblies)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
         DisableParallelStripping="$(_DisableParallelAot)">
-      <Output TaskParameter="TrimmedAssemblies" ItemName="_ILStripTrimmedAssemblies" />
+      <Output TaskParameter="UpdatedAssemblies" ItemName="_ILStripUpdatedAssemblies" />
     </ILStrip>
-    <Move
-        Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
-        SourceFiles="@(_ILStripTrimmedAssemblies->'%(TrimmedAssemblyFileName)')"
-        DestinationFiles="@(_ILStripTrimmedAssemblies)"
+    <Copy
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_ILStripUpdatedAssemblies.ILStripped)' == 'true' and '%(_ILStripUpdatedAssemblies.UntrimmedAssemblyFilePath)' != '' "
+        SourceFiles="@(_ILStripUpdatedAssemblies)"
+        DestinationFiles="@(_ILStripUpdatedAssemblies->'%(UntrimmedAssemblyFilePath)')"
     />
     <WriteLinesToFile
         File="$(_AndroidStampDirectory)_AndroidAot.stamp"

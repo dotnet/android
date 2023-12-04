@@ -82,6 +82,7 @@ properties that determine build ordering.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _CheckNonIdealBindingConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CategorizeAndroidLibraries;

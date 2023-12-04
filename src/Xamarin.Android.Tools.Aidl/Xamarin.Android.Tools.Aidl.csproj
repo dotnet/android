@@ -9,9 +9,7 @@
     <NoWarn>$(NoWarn);CA1305</NoWarn>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="Irony" />
     <PackageReference Include="System.CodeDom" />
   </ItemGroup>

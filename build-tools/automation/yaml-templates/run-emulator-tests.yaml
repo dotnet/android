@@ -4,6 +4,7 @@ parameters:
   emulatorMSBuildArgs: ''
   jobName: CheckTimeZoneInfoIsCorrectNode1
   jobTimeout: 360
+  jdkTestFolder: $(JAVA_HOME_17_X64)
   testSteps: []
 
 jobs:
@@ -20,12 +21,17 @@ jobs:
     steps:
     - template: agent-cleanser/v1.yml@yaml-templates
 
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]${{ parameters.jdkTestFolder }}"
+      displayName: set JAVA_HOME to ${{ parameters.jdkTestFolder }}
+
     - template: setup-test-environment.yaml
       parameters:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - task: DownloadPipelineArtifact@2
       inputs:

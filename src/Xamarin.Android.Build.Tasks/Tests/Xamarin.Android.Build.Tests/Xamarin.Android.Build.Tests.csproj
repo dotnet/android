@@ -16,9 +16,7 @@
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <Reference Include="Xamarin.Android.Build.Debugging.Tasks" Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll')">
       <HintPath>$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Debugging.Tasks.dll</HintPath>
     </Reference>

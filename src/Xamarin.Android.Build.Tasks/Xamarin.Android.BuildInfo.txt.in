@@ -6,7 +6,6 @@
 #
 # Lines starting with # are comments
 #
-Mono: @MONO_COMMIT@
 Java.Interop: @JAVA_INTEROP_COMMIT@
 SQLite: @SQLITE_COMMIT@
 Xamarin.Android Tools: @XAMARIN_ANDROID_TOOLS_COMMIT@

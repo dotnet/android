@@ -25,7 +25,7 @@ namespace Xamarin.ProjectTools
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
 
-			TargetFramework = "net8.0-android";
+			TargetFramework = "net9.0-android";
 			EnableDefaultItems = false;
 			AppendTargetFrameworkToOutputPath = false;
 

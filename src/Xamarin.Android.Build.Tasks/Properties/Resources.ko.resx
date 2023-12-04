@@ -949,4 +949,57 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>'&lt;{0}&gt;' 항목 '{1}'에 필수 메타데이터 '{2}'이(가) 없습니다.</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>Maven 아티팩트 사양 '{0}'이(가) 잘못되었습니다. 올바른 형식은 'group_id:artifact_id'입니다.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'을(를) 다운로드할 수 없습니다.
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'에 대한 POM 파일 다운로드할 수 없습니다.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'에 대한 부모 POM 파일을 다운로드할 수 없습니다.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>알 수 없는 Maven 리포지토리: '{0}'.</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>'{0}' MSBuild 속성은 더 이상 사용되지 않으며 .NET {1}에서 제거됩니다. 자세한 내용은 https://aka.ms/net-android-deprecations을 참조하세요.</value>
+    <comment>The following are literal names and should not be translated: MSBuild, .NET.
+{0} - The deprecated MSBuild property name
+{1} - The numeric version of .NET</comment>
+  </data>
 </root>

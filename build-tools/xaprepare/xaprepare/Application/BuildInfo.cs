@@ -22,9 +22,6 @@ namespace Xamarin.Android.Prepare
 		public string NDKMinimumApiAvailable { get; private set; } = String.Empty;
 
 		public string VersionHash            { get; private set; } = String.Empty;
-		public string MonoHash               { get; private set; } = String.Empty;
-		public string FullMonoHash           { get; private set; } = String.Empty;
-
 		public string XACommitHash           { get; private set; } = String.Empty;
 		public string XABranch               { get; private set; } = String.Empty;
 
@@ -36,8 +33,6 @@ namespace Xamarin.Android.Prepare
 			Log.StatusLine ();
 			Log.StatusLine ("Determining basic build information", ConsoleColor.DarkGreen);
 			await DetermineLastVersionChangeCommit (context);
-			Log.StatusLine ();
-			DetermineMonoHash (context);
 			Log.StatusLine ();
 			DetermineXACommitInfo (context);
 		}
@@ -111,31 +106,6 @@ namespace Xamarin.Android.Prepare
 			Log.DebugLine ($"Detected minimum NDK API level: {minimumApi}");
 			NDKMinimumApiAvailable = minimumApi.ToString ();
 			return true;
-		}
-
-		void DetermineMonoHash (Context context)
-		{
-			GitRunner git = CreateGitRunner (context);
-
-			Log.StatusLine ($"  {context.Characters.Bullet} Mono commit hash", ConsoleColor.Gray);
-			List<ExternalGitDependency> externalDependencies = ExternalGitDependency.GetDependencies (context, Configurables.Paths.ExternalGitDepsFilePath, quiet: true);
-			ExternalGitDependency? mono = externalDependencies.Where (
-				eg => eg != null &&
-				      String.Compare ("mono", eg.Owner, StringComparison.Ordinal) == 0 &&
-				      String.Compare ("mono", eg.Name, StringComparison.Ordinal) == 0).FirstOrDefault ();
-
-			FullMonoHash = (mono?.Commit ?? String.Empty).Trim ();
-			MonoHash = EnsureHash ("Mono", Utilities.ShortenGitHash (FullMonoHash));
-
-			string EnsureHash (string name, string hash)
-			{
-				if (String.IsNullOrEmpty (hash))
-					throw new InvalidOperationException ($"Unable to determine {name} commit hash");
-				Log.StatusLine ("    Commit: ", hash, tailColor: ConsoleColor.Cyan);
-				Log.StatusLine ();
-
-				return hash;
-			}
 		}
 
 		async Task DetermineLastVersionChangeCommit (Context context)

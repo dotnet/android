@@ -949,4 +949,57 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>''&lt;{0}&gt;'' item ''{1}'' não tem os metadados necessários ''{2}''</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>A especificação do artefato Maven ''{0}'' é inválida. O formato correto é ''group_id:artifact_id''.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>Não é possível baixar o artefato Maven ''{0}:{1}''.
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>Não é possível baixar o arquivo POM para o artefato Maven ''{0}:{1}''.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Não é possível baixar o arquivo POM pai para o artefato Maven ''{0}:{1}''.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>Repositório Maven desconhecido: ''{0}''.</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>A propriedade '{0}' MSBuild foi preterida e será removida no .NET {1}. Consulte https://aka.ms/net-android-deprecations para obter mais detalhes.</value>
+    <comment>The following are literal names and should not be translated: MSBuild, .NET.
+{0} - The deprecated MSBuild property name
+{1} - The numeric version of .NET</comment>
+  </data>
 </root>

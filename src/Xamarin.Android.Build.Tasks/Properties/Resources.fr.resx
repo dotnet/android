@@ -949,4 +949,57 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>L’élément '&lt;{0}&gt;' '{1}' ne contient pas les métadonnées requises '{2}'</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>La spécification d’artefact Maven '{0}' n’est pas valide. Le format correct est « group_id :artifact_id ».</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>Impossible de télécharger l’artefact Maven '{0}:{1}'.
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>Impossible de télécharger fichier POM pour l’artefact Maven '{0}:{1}'.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Impossible de télécharger le fichier POM parent pour l’artefact Maven '{0}:{1}'.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>Référentiel Maven inconnu : '{0}'.</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>La propriété MSBuild « {0} » est déconseillée et sera supprimée dans .NET {1}. Pour plus d’informations, consultez https://aka.ms/net-android-deprecations.</value>
+    <comment>The following are literal names and should not be translated: MSBuild, .NET.
+{0} - The deprecated MSBuild property name
+{1} - The numeric version of .NET</comment>
+  </data>
 </root>

@@ -56,6 +56,11 @@
       <Link>Xamarin.Android.Bindings.JarToXml.targets</Link>
     </None>
     <None
+        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Maven.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Bindings.Maven.targets</Link>
+    </None>
+    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets</Link>
@@ -182,7 +187,7 @@
     <ReplaceFileContents
         SourceFile="Xamarin.Android.BuildInfo.txt.in"
         DestinationFile="Xamarin.Android.BuildInfo.txt"
-        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+        Replacements="@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Common.props.in"
@@ -302,8 +307,14 @@
     <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
     <_ExtraPackageSource Include="$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Xamarin.Build.AsyncTask.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.Mdb.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
+    <_ExtraPackageSource Include="$(PkgMavenNet)\lib\netstandard2.0\MavenNet.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\MavenNet.pdb" />
 
     <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />
