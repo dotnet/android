@@ -997,7 +997,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - User supplied Maven repository type</comment>
   </data>
   <data name="XA1037" xml:space="preserve">
-    <value>The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.</value>
+    <value>La proprietà MSBuild '{0}' è deprecata e verrà rimossa in .NET {1}. Per altri dettagli, vedi https://aka.ms/net-android-deprecations.</value>
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
