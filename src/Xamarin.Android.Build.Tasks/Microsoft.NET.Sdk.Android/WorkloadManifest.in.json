@@ -13,7 +13,7 @@
         "Microsoft.Android.Runtime.34.android-x64",
         "Microsoft.Android.Templates"
       ],
-      "platforms": [ "win-x64", "win-arm64", "linux-x64", "osx-x64", "osx-arm64" ],
+      "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
       "extends" : [ 
         "microsoft-net-runtime-android-net7",
         "microsoft-net-runtime-android-aot-net7",
@@ -32,7 +32,8 @@
         "win-x86": "Microsoft.Android.Sdk.Windows",
         "win-x64": "Microsoft.Android.Sdk.Windows",
         "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux"
+        "linux-x64": "Microsoft.Android.Sdk.Linux",
+        "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
     "Microsoft.Android.Sdk.net7": {
@@ -44,7 +45,8 @@
         "win-x86": "Microsoft.Android.Sdk.Windows",
         "win-x64": "Microsoft.Android.Sdk.Windows",
         "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux"
+        "linux-x64": "Microsoft.Android.Sdk.Linux",
+        "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
     "Microsoft.Android.Ref.34": {
