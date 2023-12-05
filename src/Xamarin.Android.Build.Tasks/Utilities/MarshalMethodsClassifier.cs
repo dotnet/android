@@ -9,6 +9,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -238,12 +239,24 @@ namespace Xamarin.Android.Tasks
 		HashSet<TypeDefinition> typesWithDynamicallyRegisteredMethods;
 		ulong rejectedMethodCount = 0;
 		ulong wrappedMethodCount = 0;
+		readonly AndroidTargetArch targetArch;
 
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
 		public TypeDefinitionCache TypeDefinitionCache => tdCache;
+
+		public MarshalMethodsClassifier (AndroidTargetArch targetArch, TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
+		{
+			this.targetArch = targetArch;
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
+			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
+			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
+			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
+			assemblies = new HashSet<AssemblyDefinition> ();
+			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
+		}
 
 		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, TaskLoggingHelper log)
 		{
@@ -410,6 +423,24 @@ namespace Xamarin.Android.Tasks
 			AddTypeManagerSpecialCaseMethods ();
 		}
 
+		string GetAssemblyPathInfo (FieldDefinition? field)   => GetAssemblyPathInfo (field?.DeclaringType);
+		string GetAssemblyPathInfo (MethodDefinition? method) => GetAssemblyPathInfo (method?.DeclaringType);
+		string GetAssemblyPathInfo (TypeDefinition? type)     => GetAssemblyPathInfo (type?.Module?.Assembly);
+
+		string GetAssemblyPathInfo (AssemblyDefinition? asmdef)
+		{
+			if (asmdef == null) {
+				return "[assembly definition missing]";
+			}
+
+			string? path = asmdef.MainModule.FileName;
+			if (String.IsNullOrEmpty (path)) {
+				path = "unknown";
+			}
+
+			return $"[Arch: {targetArch}; Assembly: {path}]";
+		}
+
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			if (registerAttribute.ConstructorArguments.Count != 3) {
@@ -423,7 +454,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically");
+			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically {GetAssemblyPathInfo (registeredMethod)}");
 			rejectedMethodCount++;
 			return true;
 		}
@@ -437,7 +468,7 @@ namespace Xamarin.Android.Tasks
 			if (connectorName.Length < HandlerNameStart.Length + HandlerNameEnd.Length + 1 ||
 			    !connectorName.StartsWith (HandlerNameStart, StringComparison.Ordinal) ||
 			    !connectorName.EndsWith (HandlerNameEnd, StringComparison.Ordinal)) {
-				log.LogWarning ($"\tConnector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
+				log.LogWarning ($"Connector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
 				return false;
 			}
 
@@ -452,19 +483,19 @@ namespace Xamarin.Android.Tasks
 
 			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
 			if (connectorMethod == null) {
-				log.LogWarning ($"\tConnector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}'");
+				log.LogWarning ($"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			if (String.Compare ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-				log.LogWarning ($"\tConnector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}'");
+				log.LogWarning ($"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			var ncbs = new NativeCallbackSignature (registeredMethod, log);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
-				log.LogWarning ($"\tUnable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}')");
+				log.LogWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
@@ -477,7 +508,7 @@ namespace Xamarin.Android.Tasks
 			FieldDefinition delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
 			if (delegateField != null) {
 				if (String.Compare ("System.Delegate", delegateField.FieldType.FullName, StringComparison.Ordinal) != 0) {
-					log.LogWarning ($"\tdelegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}'");
+					log.LogWarning ($"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
 					return false;
 				}
 			}

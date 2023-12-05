@@ -22,33 +22,38 @@ namespace Xamarin.Android.Tasks
 			public MethodReference WaitForBridgeProcessingMethod;
 		}
 
-		IDictionary<string, IList<MarshalMethodEntry>> methods;
-		ICollection<AssemblyDefinition> uniqueAssemblies;
-		IDictionary<AssemblyDefinition, string> assemblyPaths;
-		TaskLoggingHelper log;
+		// IDictionary<string, IList<MarshalMethodEntry>> methods;
+		// ICollection<AssemblyDefinition> uniqueAssemblies;
+		// IDictionary<AssemblyDefinition, string> assemblyPaths;
+		readonly TaskLoggingHelper log;
+		readonly MarshalMethodsClassifier classifier;
+		readonly XAAssemblyResolverNew resolver;
+		readonly AndroidTargetArch targetArch;
 
-		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier)
+		public MarshalMethodsAssemblyRewriter (TaskLoggingHelper log, AndroidTargetArch targetArch, MarshalMethodsClassifier classifier, XAAssemblyResolverNew resolver)
 		{
-		}
-
-		public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblyPaths, TaskLoggingHelper log)
-		{
-			this.assemblyPaths = assemblyPaths;
-			this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
-			this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
+			this.targetArch = targetArch;
+			this.classifier = classifier ?? throw new ArgumentNullException (nameof (classifier));;
+			this.resolver = resolver ?? throw new ArgumentNullException (nameof (resolver));;
 		}
+
+		// public MarshalMethodsAssemblyRewriter (IDictionary<string, IList<MarshalMethodEntry>> methods, ICollection<AssemblyDefinition> uniqueAssemblies, IDictionary<AssemblyDefinition, string> assemblyPaths, TaskLoggingHelper log)
+		// {
+		// 	this.assemblyPaths = assemblyPaths;
+		// 	this.methods = methods ?? throw new ArgumentNullException (nameof (methods));
+		// 	this.uniqueAssemblies = uniqueAssemblies ?? throw new ArgumentNullException (nameof (uniqueAssemblies));
+		// 	this.log = log ?? throw new ArgumentNullException (nameof (log));
+		// }
 
 		// TODO: do away with broken exception transitions, there's no point in supporting them
-		public void Rewrite (XAAssemblyResolver resolver, bool brokenExceptionTransitions)
+		public void Rewrite (bool brokenExceptionTransitions)
 		{
-			if (resolver == null) {
-				throw new ArgumentNullException (nameof (resolver));
-			}
+			Console.WriteLine ("[new] Rewriting assemblies");
 
 			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
 			if (monoAndroidRuntime == null) {
-				throw new InvalidOperationException ($"Internal error: unable to load the Mono.Android.Runtime assembly");
+				throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android.Runtime assembly");
 			}
 
 			TypeDefinition runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true)!;
@@ -64,8 +69,11 @@ namespace Xamarin.Android.Tasks
 			TypeDefinition systemException = FindType (corlib, "System.Exception", required: true);
 
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
+
 			var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
-			foreach (AssemblyDefinition asm in uniqueAssemblies) {
+			Console.WriteLine ("  populating assembly imports dict");
+			foreach (AssemblyDefinition asm in classifier.Assemblies) {
+				Console.WriteLine ($"    assembly path: {asm.MainModule.FileName}");
 				var imports = new AssemblyImports {
 					MonoUnhandledExceptionMethod  = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
 					SystemException               = asm.MainModule.ImportReference (systemException),
@@ -77,10 +85,10 @@ namespace Xamarin.Android.Tasks
 				assemblyImports.Add (asm, imports);
 			}
 
-			log.LogDebugMessage ("Rewriting assemblies for marshal methods support");
+			log.LogDebugMessage ($"[{targetArch}] Rewriting assemblies for marshal methods support");
 
 			var processedMethods = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
-			foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
+			foreach (IList<MarshalMethodEntry> methodList in classifier.MarshalMethods.Values) {
 				foreach (MarshalMethodEntry method in methodList) {
 					string fullNativeCallbackName = method.NativeCallback.FullName;
 					if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
@@ -91,19 +99,19 @@ namespace Xamarin.Android.Tasks
 					method.NativeCallbackWrapper = GenerateWrapper (method, assemblyImports, brokenExceptionTransitions);
 					if (method.Connector != null) {
 						if (method.Connector.IsStatic && method.Connector.IsPrivate) {
-							log.LogDebugMessage ($"Removing connector method {method.Connector.FullName}");
+							log.LogDebugMessage ($"[{targetArch}] Removing connector method {method.Connector.FullName}");
 							method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
 						} else {
-							log.LogWarning ($"NOT removing connector method {method.Connector.FullName} because it's either not static or not private");
+							log.LogWarning ($"[{targetArch}] NOT removing connector method {method.Connector.FullName} because it's either not static or not private");
 						}
 					}
 
 					if (method.CallbackField != null) {
 						if (method.CallbackField.IsStatic && method.CallbackField.IsPrivate) {
-							log.LogDebugMessage ($"Removing callback delegate backing field {method.CallbackField.FullName}");
+							log.LogDebugMessage ($"[{targetArch}] Removing callback delegate backing field {method.CallbackField.FullName}");
 							method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
 						} else {
-							log.LogWarning ($"NOT removing callback field {method.CallbackField.FullName} because it's either not static or not private");
+							log.LogWarning ($"[{targetArch}] NOT removing callback field {method.CallbackField.FullName} because it's either not static or not private");
 						}
 					}
 
@@ -111,8 +119,12 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			foreach (AssemblyDefinition asm in uniqueAssemblies) {
-				string path = GetAssemblyPath (asm);
+			foreach (AssemblyDefinition asm in classifier.Assemblies) {
+				string? path = asm.MainModule.FileName;
+				if (String.IsNullOrEmpty (path)) {
+					throw new InvalidOperationException ($"[{targetArch}] Internal error: assembly '{asm}' does not specify path to its file");
+				}
+
 				string pathPdb = Path.ChangeExtension (path, ".pdb");
 				bool havePdb = File.Exists (pathPdb);
 
@@ -123,7 +135,7 @@ namespace Xamarin.Android.Tasks
 				string directory = Path.Combine (Path.GetDirectoryName (path), "new");
 				Directory.CreateDirectory (directory);
 				string output = Path.Combine (directory, Path.GetFileName (path));
-				log.LogDebugMessage ($"Writing new version of '{path}' assembly: {output}");
+				log.LogDebugMessage ($"[{targetArch}] Writing new version of '{path}' assembly: {output}");
 
 				// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
 				// since Cecil doesn't update the MVID in the already loaded types
@@ -144,7 +156,7 @@ namespace Xamarin.Android.Tasks
 
 			void CopyFile (string source, string target)
 			{
-				log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
+				log.LogDebugMessage ($"[{targetArch}] Copying rewritten assembly: {source} -> {target}");
 
 				string targetBackup = $"{target}.bak";
 				if (File.Exists (target)) {
@@ -159,8 +171,8 @@ namespace Xamarin.Android.Tasks
 						File.Delete (targetBackup);
 					} catch (Exception ex) {
 						// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
-						log.LogDebugMessage ($"While trying to delete '{targetBackup}', exception was thrown: {ex}");
-						log.LogDebugMessage ($"Failed to delete backup file '{targetBackup}', ignoring.");
+						log.LogDebugMessage ($"[{targetArch}] While trying to delete '{targetBackup}', exception was thrown: {ex}");
+						log.LogDebugMessage ($"[{targetArch}] Failed to delete backup file '{targetBackup}', ignoring.");
 					}
 				}
 			}
@@ -172,14 +184,156 @@ namespace Xamarin.Android.Tasks
 				}
 
 				try {
-					log.LogDebugMessage ($"Deleting: {path}");
+					log.LogDebugMessage ($"[{targetArch}] Deleting: {path}");
 					File.Delete (path);
 				} catch (Exception ex) {
-					log.LogWarning ($"Unable to delete source file '{path}'");
-					log.LogDebugMessage (ex.ToString ());
+					log.LogWarning ($"[{targetArch}] Unable to delete source file '{path}'");
+					log.LogDebugMessage ($"[{targetArch}] {ex.ToString ()}");
 				}
 			}
 		}
+
+		// TODO: do away with broken exception transitions, there's no point in supporting them
+		// public void Rewrite (XAAssemblyResolver resolver, bool brokenExceptionTransitions)
+		// {
+		// 	if (resolver == null) {
+		// 		throw new ArgumentNullException (nameof (resolver));
+		// 	}
+
+		// 	AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
+		// 	if (monoAndroidRuntime == null) {
+		// 		throw new InvalidOperationException ($"Internal error: unable to load the Mono.Android.Runtime assembly");
+		// 	}
+
+		// 	TypeDefinition runtime = FindType (monoAndroidRuntime, "Android.Runtime.AndroidRuntimeInternal", required: true)!;
+		// 	MethodDefinition waitForBridgeProcessingMethod = FindMethod (runtime, "WaitForBridgeProcessing", required: true)!;
+
+		// 	TypeDefinition androidEnvironment = FindType (monoAndroidRuntime, "Android.Runtime.AndroidEnvironmentInternal", required: true)!;
+		// 	MethodDefinition unhandledExceptionMethod = FindMethod (androidEnvironment, "UnhandledException", required: true)!;
+
+		// 	TypeDefinition runtimeNativeMethods = FindType (monoAndroidRuntime, "Android.Runtime.RuntimeNativeMethods", required: true);
+		// 	MethodDefinition monoUnhandledExceptionMethod = FindMethod (runtimeNativeMethods, "monodroid_debugger_unhandled_exception", required: true);
+
+		// 	AssemblyDefinition corlib = resolver.Resolve ("System.Private.CoreLib");
+		// 	TypeDefinition systemException = FindType (corlib, "System.Exception", required: true);
+
+		// 	MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
+		// 	var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
+		// 	foreach (AssemblyDefinition asm in uniqueAssemblies) {
+		// 		var imports = new AssemblyImports {
+		// 			MonoUnhandledExceptionMethod  = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
+		// 			SystemException               = asm.MainModule.ImportReference (systemException),
+		// 			UnhandledExceptionMethod      = asm.MainModule.ImportReference (unhandledExceptionMethod),
+		// 			UnmanagedCallersOnlyAttribute = CreateImportedUnmanagedCallersOnlyAttribute (asm, unmanagedCallersOnlyAttributeCtor),
+		// 			WaitForBridgeProcessingMethod = asm.MainModule.ImportReference (waitForBridgeProcessingMethod),
+		// 		};
+
+		// 		assemblyImports.Add (asm, imports);
+		// 	}
+
+		// 	log.LogDebugMessage ("Rewriting assemblies for marshal methods support");
+
+		// 	var processedMethods = new Dictionary<string, MethodDefinition> (StringComparer.Ordinal);
+		// 	foreach (IList<MarshalMethodEntry> methodList in methods.Values) {
+		// 		foreach (MarshalMethodEntry method in methodList) {
+		// 			string fullNativeCallbackName = method.NativeCallback.FullName;
+		// 			if (processedMethods.TryGetValue (fullNativeCallbackName, out MethodDefinition nativeCallbackWrapper)) {
+		// 				method.NativeCallbackWrapper = nativeCallbackWrapper;
+		// 				continue;
+		// 			}
+
+		// 			method.NativeCallbackWrapper = GenerateWrapper (method, assemblyImports, brokenExceptionTransitions);
+		// 			if (method.Connector != null) {
+		// 				if (method.Connector.IsStatic && method.Connector.IsPrivate) {
+		// 					log.LogDebugMessage ($"Removing connector method {method.Connector.FullName}");
+		// 					method.Connector.DeclaringType?.Methods?.Remove (method.Connector);
+		// 				} else {
+		// 					log.LogWarning ($"NOT removing connector method {method.Connector.FullName} because it's either not static or not private");
+		// 				}
+		// 			}
+
+		// 			if (method.CallbackField != null) {
+		// 				if (method.CallbackField.IsStatic && method.CallbackField.IsPrivate) {
+		// 					log.LogDebugMessage ($"Removing callback delegate backing field {method.CallbackField.FullName}");
+		// 					method.CallbackField.DeclaringType?.Fields?.Remove (method.CallbackField);
+		// 				} else {
+		// 					log.LogWarning ($"NOT removing callback field {method.CallbackField.FullName} because it's either not static or not private");
+		// 				}
+		// 			}
+
+		// 			processedMethods.Add (fullNativeCallbackName, method.NativeCallback);
+		// 		}
+		// 	}
+
+		// 	foreach (AssemblyDefinition asm in uniqueAssemblies) {
+		// 		string path = GetAssemblyPath (asm);
+		// 		string pathPdb = Path.ChangeExtension (path, ".pdb");
+		// 		bool havePdb = File.Exists (pathPdb);
+
+		// 		var writerParams = new WriterParameters {
+		// 			WriteSymbols = havePdb,
+		// 		};
+
+		// 		string directory = Path.Combine (Path.GetDirectoryName (path), "new");
+		// 		Directory.CreateDirectory (directory);
+		// 		string output = Path.Combine (directory, Path.GetFileName (path));
+		// 		log.LogDebugMessage ($"Writing new version of '{path}' assembly: {output}");
+
+		// 		// TODO: this should be used eventually, but it requires that all the types are reloaded from the assemblies before typemaps are generated
+		// 		// since Cecil doesn't update the MVID in the already loaded types
+		// 		//asm.MainModule.Mvid = Guid.NewGuid ();
+		// 		asm.Write (output, writerParams);
+
+		// 		CopyFile (output, path);
+		// 		RemoveFile (output);
+
+		// 		if (havePdb) {
+		// 			string outputPdb = Path.ChangeExtension (output, ".pdb");
+		// 			if (File.Exists (outputPdb)) {
+		// 				CopyFile (outputPdb, pathPdb);
+		// 			}
+		// 			RemoveFile (outputPdb);
+		// 		}
+		// 	}
+
+		// 	void CopyFile (string source, string target)
+		// 	{
+		// 		log.LogDebugMessage ($"Copying rewritten assembly: {source} -> {target}");
+
+		// 		string targetBackup = $"{target}.bak";
+		// 		if (File.Exists (target)) {
+		// 			// Try to avoid sharing violations by first renaming the target
+		// 			File.Move (target, targetBackup);
+		// 		}
+
+		// 		File.Copy (source, target, true);
+
+		// 		if (File.Exists (targetBackup)) {
+		// 			try {
+		// 				File.Delete (targetBackup);
+		// 			} catch (Exception ex) {
+		// 				// On Windows the deletion may fail, depending on lock state of the original `target` file before the move.
+		// 				log.LogDebugMessage ($"While trying to delete '{targetBackup}', exception was thrown: {ex}");
+		// 				log.LogDebugMessage ($"Failed to delete backup file '{targetBackup}', ignoring.");
+		// 			}
+		// 		}
+		// 	}
+
+		// 	void RemoveFile (string? path)
+		// 	{
+		// 		if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+		// 			return;
+		// 		}
+
+		// 		try {
+		// 			log.LogDebugMessage ($"Deleting: {path}");
+		// 			File.Delete (path);
+		// 		} catch (Exception ex) {
+		// 			log.LogWarning ($"Unable to delete source file '{path}'");
+		// 			log.LogDebugMessage (ex.ToString ());
+		// 		}
+		// 	}
+		// }
 
 		MethodDefinition GenerateWrapper (MarshalMethodEntry method, Dictionary<AssemblyDefinition, AssemblyImports> assemblyImports, bool brokenExceptionTransitions)
 		{
@@ -328,7 +482,7 @@ namespace Xamarin.Android.Tasks
 			{
 				if (String.Compare ("System.Boolean", sourceType.FullName, StringComparison.Ordinal) == 0) {
 					if (String.Compare ("System.Byte", targetType.FullName, StringComparison.Ordinal) != 0) {
-						throw new InvalidOperationException ($"Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
+						throw new InvalidOperationException ($"[{targetArch}] Unexpected conversion from '{sourceType.FullName}' to '{targetType.FullName}'");
 					}
 
 					return true;
@@ -339,7 +493,7 @@ namespace Xamarin.Android.Tasks
 
 			void ThrowUnsupportedType (TypeReference type)
 			{
-				throw new InvalidOperationException ($"Unsupported non-blittable type '{type.FullName}'");
+				throw new InvalidOperationException ($"[{targetArch}] Unsupported non-blittable type '{type.FullName}'");
 			}
 		}
 
@@ -389,7 +543,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			throw new InvalidOperationException ($"Unsupported type: '{type.FullName}'");
+			throw new InvalidOperationException ($"[{targetArch}] Unsupported type: '{type.FullName}'");
 		}
 
 
@@ -441,31 +595,31 @@ namespace Xamarin.Android.Tasks
 				return ReturnValid (typeof(byte));
 			}
 
-			throw new NotSupportedException ($"Cannot map unsupported blittable type '{type.FullName}'");
+			throw new NotSupportedException ($"[{targetArch}] Cannot map unsupported blittable type '{type.FullName}'");
 
 			TypeReference ReturnValid (Type typeToLookUp)
 			{
 				TypeReference? mappedType = type.Module.Assembly.MainModule.ImportReference (typeToLookUp);
 				if (mappedType == null) {
-					throw new InvalidOperationException ($"Unable to obtain reference to type '{typeToLookUp.FullName}'");
+					throw new InvalidOperationException ($"[{targetArch}] Unable to obtain reference to type '{typeToLookUp.FullName}'");
 				}
 
 				return mappedType;
 			}
 		}
 
-		string GetAssemblyPath (AssemblyDefinition asm)
-		{
-			string filePath = asm.MainModule.FileName;
-			if (!String.IsNullOrEmpty (filePath)) {
-				return filePath;
-			}
+		// string GetAssemblyPath (AssemblyDefinition asm)
+		// {
+		// 	string filePath = asm.MainModule.FileName;
+		// 	if (!String.IsNullOrEmpty (filePath)) {
+		// 		return filePath;
+		// 	}
 
-			// No checking on purpose - the assembly **must** be there if its MainModule.FileName property returns a null or empty string
-			return assemblyPaths[asm];
-		}
+		// 	// No checking on purpose - the assembly **must** be there if its MainModule.FileName property returns a null or empty string
+		// 	return assemblyPaths[asm];
+		// }
 
-		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (XAAssemblyResolver resolver)
+		MethodDefinition GetUnmanagedCallersOnlyAttributeConstructor (IAssemblyResolver resolver)
 		{
 			AssemblyDefinition asm = resolver.Resolve ("System.Runtime.InteropServices");
 			TypeDefinition unmanagedCallersOnlyAttribute = null;
@@ -485,7 +639,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (unmanagedCallersOnlyAttribute == null) {
-				throw new InvalidOperationException ("Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type");
+				throw new InvalidOperationException ("[{targetArch}] Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type");
 			}
 
 			foreach (MethodDefinition md in unmanagedCallersOnlyAttribute.Methods) {
@@ -496,7 +650,7 @@ namespace Xamarin.Android.Tasks
 				return md;
 			}
 
-			throw new InvalidOperationException ("Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type constructor");
+			throw new InvalidOperationException ("[{targetArch}] Unable to find the System.Runtime.InteropServices.UnmanagedCallersOnlyAttribute type constructor");
 		}
 
 		CustomAttribute CreateImportedUnmanagedCallersOnlyAttribute (AssemblyDefinition targetAssembly, MethodDefinition unmanagedCallersOnlyAtributeCtor)
@@ -506,17 +660,17 @@ namespace Xamarin.Android.Tasks
 
 		MethodDefinition? FindMethod (TypeDefinition type, string methodName, bool required)
 		{
-			log.LogDebugMessage ($"Looking for method '{methodName}' in type {type}");
+			log.LogDebugMessage ($"[{targetArch}] Looking for method '{methodName}' in type {type}");
 			foreach (MethodDefinition method in type.Methods) {
-				log.LogDebugMessage ($"  method: {method.Name}");
+				log.LogDebugMessage ($"[{targetArch}]   method: {method.Name}");
 				if (String.Compare (methodName, method.Name, StringComparison.Ordinal) == 0) {
-					log.LogDebugMessage ("    match!");
+					log.LogDebugMessage ($"[{targetArch}]     match!");
 					return method;
 				}
 			}
 
 			if (required) {
-				throw new InvalidOperationException ($"Internal error: required method '{methodName}' in type {type} not found");
+				throw new InvalidOperationException ($"[{targetArch}] Internal error: required method '{methodName}' in type {type} not found");
 			}
 
 			return null;
@@ -524,20 +678,30 @@ namespace Xamarin.Android.Tasks
 
 		TypeDefinition? FindType (AssemblyDefinition asm, string typeName, bool required)
 		{
-			log.LogDebugMessage ($"Looking for type '{typeName}' in assembly '{asm}'");
+			log.LogDebugMessage ($"[{targetArch}] Looking for type '{typeName}' in assembly '{asm}' ({GetAssemblyPathInfo (asm)})");
 			foreach (TypeDefinition t in asm.MainModule.Types) {
-				log.LogDebugMessage ($"   checking {t.FullName}");
+				log.LogDebugMessage ($"[{targetArch}]    checking {t.FullName}");
 				if (String.Compare (typeName, t.FullName, StringComparison.Ordinal) == 0) {
-					log.LogDebugMessage ($"    match!");
+					log.LogDebugMessage ($"[{targetArch}]     match!");
 					return t;
 				}
 			}
 
 			if (required) {
-				throw new InvalidOperationException ($"Internal error: required type '{typeName}' in assembly {asm} not found");
+				throw new InvalidOperationException ($"[{targetArch}] Internal error: required type '{typeName}' in assembly {asm} not found");
 			}
 
 			return null;
+		}
+
+		static string GetAssemblyPathInfo (AssemblyDefinition asm)
+		{
+			string? path = asm.MainModule.FileName;
+			if (String.IsNullOrEmpty (path)) {
+				return "no assembly path";
+			}
+
+			return path;
 		}
 	}
 }

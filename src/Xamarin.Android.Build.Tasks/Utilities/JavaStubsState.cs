@@ -26,9 +26,12 @@ class JavaStubsState
 	/// </summary>
 	public List<JavaType> AllJavaTypes          { get; }
 
-	public JavaStubsState (AndroidTargetArch arch, List<JavaType> allJavaTypes, MarshalMethodsClassifier? classifier)
+	public XAAssemblyResolverNew Resolver       { get; }
+
+	public JavaStubsState (AndroidTargetArch arch, XAAssemblyResolverNew resolver, List<JavaType> allJavaTypes, MarshalMethodsClassifier? classifier)
 	{
 		TargetArch = arch;
+		Resolver = resolver;
 		AllJavaTypes = allJavaTypes;
 		Classifier = classifier;
 	}

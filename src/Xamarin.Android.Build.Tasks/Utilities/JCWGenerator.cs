@@ -61,7 +61,7 @@ class JCWGenerator
 			return true;
 		}
 
-		Classifier = new MarshalMethodsClassifier (context.TypeDefinitionCache, context.Resolver, log);
+		Classifier = MakeClassifier ();
 		return ProcessTypes (
 			generateCode: false,
 			androidSdkPlatform,
@@ -74,7 +74,7 @@ class JCWGenerator
 	public bool GenerateAndClassify (string androidSdkPlatform, string outputPath, string applicationJavaClass)
 	{
 		if (context.UseMarshalMethods) {
-			Classifier = new MarshalMethodsClassifier (context.TypeDefinitionCache, context.Resolver, log);
+			Classifier = MakeClassifier ();
 		}
 
 		return ProcessTypes (
@@ -85,6 +85,8 @@ class JCWGenerator
 			applicationJavaClass
 		);
 	}
+
+	MarshalMethodsClassifier MakeClassifier () => new MarshalMethodsClassifier (context.Arch, context.TypeDefinitionCache, context.Resolver, log);
 
 	bool ProcessTypes (bool generateCode, string androidSdkPlatform, MarshalMethodsClassifier? classifier, string? outputPath, string? applicationJavaClass)
 	{
