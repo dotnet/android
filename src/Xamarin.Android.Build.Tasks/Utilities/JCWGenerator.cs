@@ -213,16 +213,16 @@ class JCWGenerator
 		return builder.ToString ();
 	}
 
-	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, Dictionary<AndroidTargetArch, JavaStubsState> javaStubStates)
+	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, Dictionary<AndroidTargetArch, NativeCodeGenState> javaStubStates)
 	{
 		if (javaStubStates.Count <= 1) {
 			return;
 		}
 
 		// An expensive process, but we must be sure that all the architectures have the same data
-		JavaStubsState? templateState = null;
+		NativeCodeGenState? templateState = null;
 		foreach (var kvp in javaStubStates) {
-			JavaStubsState state = kvp.Value;
+			NativeCodeGenState state = kvp.Value;
 
 			if (templateState == null) {
 				templateState = state;
@@ -234,7 +234,7 @@ class JCWGenerator
 		}
 	}
 
-	static void EnsureIdenticalCollections (TaskLoggingHelper logger, JavaStubsState templateState, JavaStubsState state)
+	static void EnsureIdenticalCollections (TaskLoggingHelper logger, NativeCodeGenState templateState, NativeCodeGenState state)
 	{
 		logger.LogDebugMessage ($"Ensuring Java type collection in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 
@@ -280,7 +280,7 @@ class JCWGenerator
 		return String.Compare (templateType.FullName, type.FullName, StringComparison.Ordinal) == 0;
 	}
 
-	static void EnsureClassifiersMatch (TaskLoggingHelper logger, JavaStubsState templateState, JavaStubsState state)
+	static void EnsureClassifiersMatch (TaskLoggingHelper logger, NativeCodeGenState templateState, NativeCodeGenState state)
 	{
 		logger.LogDebugMessage ($"Ensuring marshal method classifier in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 

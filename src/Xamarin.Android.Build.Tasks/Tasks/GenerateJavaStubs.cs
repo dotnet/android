@@ -207,12 +207,12 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
-			var javaStubStates = new Dictionary<AndroidTargetArch, JavaStubsState> ();
+			var nativeCodeGenStates = new Dictionary<AndroidTargetArch, NativeCodeGenState> ();
 			bool generateJavaCode = true;
 			foreach (var kvp in allAssembliesPerArch) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
-				(bool success, JavaStubsState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods, generateJavaCode);
+				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods, generateJavaCode);
 
 				if (!success) {
 					return;
@@ -222,9 +222,9 @@ namespace Xamarin.Android.Tasks
 					generateJavaCode = false;
 				}
 
-				javaStubStates.Add (arch, state);
+				nativeCodeGenStates.Add (arch, state);
 			}
-			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, javaStubStates);
+			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
 			if (useMarshalMethods) {
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
@@ -233,8 +233,8 @@ namespace Xamarin.Android.Tasks
 				var environmentParser = new EnvironmentFilesParser ();
 				bool brokenExceptionTransitionsEnabled = environmentParser.AreBrokenExceptionTransitionsEnabled (Environments);
 
-				foreach (var kvp in javaStubStates) {
-					JavaStubsState state = kvp.Value;
+				foreach (var kvp in nativeCodeGenStates) {
+					NativeCodeGenState state = kvp.Value;
 					RewriteMarshalMethods (state, brokenExceptionTransitionsEnabled);
 					state.Classifier.AddSpecialCaseMethods ();
 
@@ -250,13 +250,25 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// TODO: typemaps
+			bool typemapsAreAbiAgnostic = Debug && !GenerateNativeAssembly;
+			bool first = true;
+			foreach (var kvp in nativeCodeGenStates) {
+				if (!first && typemapsAreAbiAgnostic) {
+					Log.LogDebugMessage ("Typemaps: it's a debug build and type maps are ABI-agnostic, not processing more ABIs");
+					break;
+				}
+
+				NativeCodeGenState state = kvp.Value;
+				first = false;
+				WriteTypeMappings (state);
+			}
+
 			// TODO: ACW maps
 			// TODO: manifest
 			// TODO: additional java sources
 		}
 
-		(bool success, JavaStubsState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
+		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
 		{
 			XAAssemblyResolverNew resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
@@ -276,7 +288,7 @@ namespace Xamarin.Android.Tasks
 				return (false, null);
 			}
 
-			return (true, new JavaStubsState (arch, resolver, allJavaTypes, jcwGenerator.Classifier));
+			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, jcwGenerator.Classifier));
 		}
 
 		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolverNew res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
@@ -300,7 +312,7 @@ namespace Xamarin.Android.Tasks
 			return (allJavaTypes, javaTypesForJCW);
 		}
 
-		void RewriteMarshalMethods (JavaStubsState state, bool brokenExceptionTransitionsEnabled)
+		void RewriteMarshalMethods (NativeCodeGenState state, bool brokenExceptionTransitionsEnabled)
 		{
 			if (state.Classifier == null) {
 				return;
@@ -771,14 +783,24 @@ namespace Xamarin.Android.Tasks
 			Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
+		void WriteTypeMappings (NativeCodeGenState state)
 		{
-			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
+			Log.LogDebugMessage ($"Generating type maps for architecture '{state.TargetArch}'");
+			var tmg = new TypeMapGenerator (Log, state);
+			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
+		}
+
+		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
+		{
+			// var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
+			// if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
+			// 	throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
+			// }
+			// GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
+			// BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
 		}
 
 		/// <summary>

@@ -145,25 +145,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi)
-		{
-			switch (abi.Trim ()) {
-				case "armeabi-v7a":
-					return AndroidTargetArch.Arm;
-
-				case "arm64-v8a":
-					return AndroidTargetArch.Arm64;
-
-				case "x86":
-					return AndroidTargetArch.X86;
-
-				case "x86_64":
-					return AndroidTargetArch.X86_64;
-
-				default:
-					throw new InvalidOperationException ($"Unknown ABI {abi}");
-			}
-		}
+		static internal AndroidTargetArch GetAndroidTargetArchForAbi (string abi) => MonoAndroidHelper.AbiToTargetArch (abi);
 
 		static readonly string[] defaultLogLevel = {"MONO_LOG_LEVEL", "info"};
 		static readonly string[] defaultMonoDebug = {"MONO_DEBUG", "gen-compact-seq-points"};
