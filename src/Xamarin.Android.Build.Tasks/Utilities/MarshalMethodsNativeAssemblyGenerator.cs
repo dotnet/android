@@ -8,6 +8,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
 using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
@@ -239,12 +240,15 @@ namespace Xamarin.Android.Tasks
 		LlvmIrCallMarker defaultCallMarker;
 
 		readonly bool generateEmptyCode;
+		readonly AndroidTargetArch targetArch;
+		readonly NativeCodeGenState? codeGenState;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+		public MarshalMethodsNativeAssemblyGenerator (AndroidTargetArch targetArch, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
 		{
+			this.targetArch = targetArch;
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
@@ -254,17 +258,17 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper logger, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState)
 		{
-			MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods in MarshalMethodsNativeAssemblyGenerator ctor", marshalMethods);
-
+			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
-			this.marshalMethods = marshalMethods;
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
+			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
+
+			throw new NotImplementedException ("WIP for per-RID assemblies");
 		}
 
 		void Init ()

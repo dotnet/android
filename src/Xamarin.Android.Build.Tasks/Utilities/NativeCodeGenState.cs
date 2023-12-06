@@ -11,6 +11,8 @@ namespace Xamarin.Android.Tasks;
 /// </summary>
 class NativeCodeGenState
 {
+	public static NativeCodeGenState? Template                 { get; set; }
+
 	/// <summary>
 	/// Target architecture for which this instance was created.
 	/// </summary>

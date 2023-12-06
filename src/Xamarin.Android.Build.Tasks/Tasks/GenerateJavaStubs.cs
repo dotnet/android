@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 
 	public class GenerateJavaStubs : AndroidTask
 	{
-		public const string MarshalMethodsRegisterTaskKey = ".:!MarshalMethods!:.";
+		public const string NativeCodeGenStateRegisterTaskKey = ".:!MarshalMethods!:.";
 
 		public override string TaskPrefix => "GJS";
 
@@ -196,11 +196,8 @@ namespace Xamarin.Android.Tasks
 					return;
 				}
 
-				if (templateCodeGenState == null) {
-					templateCodeGenState = state;
-				}
-
 				if (generateJavaCode) {
+					templateCodeGenState = state;
 					generateJavaCode = false;
 				}
 
@@ -211,6 +208,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Internal error: no native code generator state defined");
 			}
 
+			NativeCodeGenState.Template = templateCodeGenState;
 			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
 			if (useMarshalMethods) {
@@ -257,6 +255,12 @@ namespace Xamarin.Android.Tasks
 
 			IList<string> additionalProviders = MergeManifest (templateCodeGenState, userAssembliesPerArch[templateCodeGenState.TargetArch]);
 			GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
+
+			if (!useMarshalMethods) {
+				return;
+			}
+
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
 		}
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
@@ -299,14 +303,6 @@ namespace Xamarin.Android.Tasks
 				real_app_dir,
 				template => template.Replace ("// REGISTER_APPLICATION_AND_INSTRUMENTATION_CLASSES_HERE", regCallsWriter.ToString ())
 			);
-
-			// if (useMarshalMethods) {
-			// 	var state = new MarshalMethodsState (classifier.MarshalMethods);
-			// 	MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after rewriter (CreateJavaSources/state)", state.MarshalMethods);
-			// 	BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (MarshalMethodsRegisterTaskKey), state, RegisteredTaskObjectLifetime.Build);
-			// 	var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
-			// 	MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods after state registered and retrieved (CreateJavaSources/state)", state.MarshalMethods);
-			// }
 		}
 
 		IList<string> MergeManifest (NativeCodeGenState codeGenState, Dictionary<string, ITaskItem> userAssemblies)
@@ -355,7 +351,6 @@ namespace Xamarin.Android.Tasks
 			XAAssemblyResolverNew resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
 			(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
-
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext);
 			bool success;

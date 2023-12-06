@@ -367,21 +367,14 @@ namespace Xamarin.Android.Tasks
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
-			var marshalMethodsState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<MarshalMethodsState> (ProjectSpecificTaskObjectKey (GenerateJavaStubs.MarshalMethodsRegisterTaskKey), RegisteredTaskObjectLifetime.Build);
-			MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
+			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
+				ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
+				RegisteredTaskObjectLifetime.Build
+			);
 
-			if (enableMarshalMethods) {
-				MonoAndroidHelper.DumpMarshalMethodsToConsole ("Classified methods in GeneratePackageManagerJava (from registered state)", marshalMethodsState.MarshalMethods!);
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
-					assemblyCount,
-					uniqueAssemblyNames,
-					marshalMethodsState?.MarshalMethods,
-					Log
-				);
-			} else {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
+			if (enableMarshalMethods && nativeCodeGenStates == null) {
+				throw new InvalidOperationException ("Internal error: native code generation states not registered");
 			}
-			LLVMIR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();
@@ -391,27 +384,51 @@ namespace Xamarin.Android.Tasks
 				string marshalMethodsLlFilePath = $"{marshalMethodsBaseAsmFilePath}.ll";
 				AndroidTargetArch targetArch = GetAndroidTargetArchForAbi (abi);
 
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					try {
-						appConfigAsmGen.Generate (appConfigModule, targetArch, sw, environmentLlFilePath);
-					} catch {
-						throw;
-					} finally {
-						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, environmentLlFilePath);
-					}
+				using var appConfigWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
+				try {
+					appConfigAsmGen.Generate (appConfigModule, targetArch, appConfigWriter, environmentLlFilePath);
+				} catch {
+					throw;
+				} finally {
+					appConfigWriter.Flush ();
+					Files.CopyIfStreamChanged (appConfigWriter.BaseStream, environmentLlFilePath);
 				}
 
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					try {
-						marshalMethodsAsmGen.Generate (marshalMethodsModule, targetArch, sw, marshalMethodsLlFilePath);
-					} catch {
-						throw;
-					} finally {
-						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, marshalMethodsLlFilePath);
-					}
+				MarshalMethodsNativeAssemblyGenerator marshalMethodsAsmGen;
+				if (enableMarshalMethods) {
+					marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
+						Log,
+						assemblyCount,
+						uniqueAssemblyNames,
+						EnsureCodeGenState (targetArch)
+					);
+				} else {
+					marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
+						targetArch,
+						assemblyCount,
+						uniqueAssemblyNames
+					);
 				}
+
+				LLVMIR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGen.Construct ();
+				using var marshalMethodsWriter = MemoryStreamPool.Shared.CreateStreamWriter ();
+				try {
+					marshalMethodsAsmGen.Generate (marshalMethodsModule, targetArch, marshalMethodsWriter, marshalMethodsLlFilePath);
+				} catch {
+					throw;
+				} finally {
+					marshalMethodsWriter.Flush ();
+					Files.CopyIfStreamChanged (marshalMethodsWriter.BaseStream, marshalMethodsLlFilePath);
+				}
+			}
+
+			NativeCodeGenState EnsureCodeGenState (AndroidTargetArch targetArch)
+			{
+				if (nativeCodeGenStates == null || !nativeCodeGenStates.TryGetValue (targetArch, out NativeCodeGenState? state)) {
+					throw new InvalidOperationException ($"Internal error: missing native code generation state for architecture '{targetArch}'");
+				}
+
+				return state;
 			}
 
 			void AddEnvironmentVariable (string name, string value)
