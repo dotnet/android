@@ -12,11 +12,11 @@
     branch = main
 [submodule "external/lz4"]
     path = external/lz4
-    url = https://github.com/lz4/lz4.git
+    url = https://github.com/xamarin/lz4
     branch = release
 [submodule "external/robin-map"]
     path = external/robin-map
-    url = https://github.com/Tessil/robin-map.git
+    url = https://github.com/xamarin/robin-map
     branch = master
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
