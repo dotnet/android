@@ -27,16 +27,18 @@ class NativeCodeGenState
 	/// </summary>
 	public List<JavaType> AllJavaTypes                         { get; }
 
+	public List<JavaType> JavaTypesForJCW                      { get; }
 	public XAAssemblyResolverNew Resolver                      { get; }
 	public TypeDefinitionCache TypeCache                       { get; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
-	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolverNew resolver, List<JavaType> allJavaTypes, MarshalMethodsClassifier? classifier)
+	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolverNew resolver, List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW, MarshalMethodsClassifier? classifier)
 	{
 		TargetArch = arch;
 		TypeCache = tdCache;
 		Resolver = resolver;
 		AllJavaTypes = allJavaTypes;
+		JavaTypesForJCW = javaTypesForJCW;
 		Classifier = classifier;
 	}
 }

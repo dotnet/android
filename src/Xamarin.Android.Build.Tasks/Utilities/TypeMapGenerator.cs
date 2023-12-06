@@ -449,6 +449,8 @@ namespace Xamarin.Android.Tasks
 
 		void WriteNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string outputFile)
 		{
+			// TODO: each .ll file should have a comment which lists paths to all the DLLs that were used to generate
+			// the native code
 			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 				try {
 					composer.Generate (typeMapModule, state.TargetArch, sw, outputFile);
