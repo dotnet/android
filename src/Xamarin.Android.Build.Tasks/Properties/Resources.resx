@@ -1006,4 +1006,11 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
   </data>
+  <data name="XA1038" xml:space="preserve">
+    <value>$(TargetPlatformVersion) {0} is not a valid target for '{1}' projects. Please update your $(TargetPlatformVersion) to a supported version (e.g. {2}).</value>
+    <comment>The following are literal names and should not be translated: $(TargetPlatformVersion).
+{0} - the invalid $(TargetPlatformVersion) such as 33
+{1} - the $(TargetFramework) such as net8.0-android
+{2} - the valid $(TargetPlatformVersion) such as 34</comment>
+  </data>
 </root>

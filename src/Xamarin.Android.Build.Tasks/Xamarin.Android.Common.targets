@@ -545,6 +545,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' "
   />
+  <AndroidError Code="XA1038"
+      ResourceName="XA1038"
+      Condition=" '$(_AndroidErrorOnTargetPlatformVersion)' != '' "
+      FormatArguments="$(_AndroidErrorOnTargetPlatformVersion);net$(TargetFrameworkVersion.TrimStart('vV'));$(_AndroidLatestStableApiLevel)"
+  />
 </Target>
 
 <!--

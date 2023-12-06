@@ -807,6 +807,28 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void InvalidTargetPlatformVersion ([Values ("android33", "android35.0")] string platformVersion)
+		{
+			const string targetFramework = "net9.0";
+			var project = new XamarinAndroidApplicationProject {
+				TargetFramework = $"{targetFramework}-{platformVersion}",
+			};
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "build should fail");
+
+			Assert.IsTrue (int.TryParse (platformVersion.Replace ("android", "").Replace (".0", ""), out var apiLevel), "failed to parse API level!");
+
+			int maxApiLevel = AndroidSdkResolver.GetMaxInstalledPlatform ();
+			if (apiLevel > maxApiLevel) {
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error NETSDK1140:"), "NETSDK1140 should have been raised.");
+			} else {
+				var message = $"error XA1038: $(TargetPlatformVersion) {apiLevel} is not a valid target for '{targetFramework}' projects.";
+				Assert.IsTrue (builder.LastBuildOutput.ContainsText (message), "XA1038 should have been raised.");
+			}
+		}
+
+		[Test]
 		public void XA4212 ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
