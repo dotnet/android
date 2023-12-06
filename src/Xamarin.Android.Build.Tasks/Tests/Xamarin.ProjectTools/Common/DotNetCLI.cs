@@ -154,10 +154,10 @@ namespace Xamarin.ProjectTools
 				arguments.Add ($"/t:{target}");
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
-				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");
+				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath.TrimEnd('\\')}\"");
 			}
 			if (Directory.Exists (JavaSdkPath)) {
-				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath}\"");
+				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath.TrimEnd ('\\')}\"");
 			}
 			if (parameters != null) {
 				foreach (var parameter in parameters) {

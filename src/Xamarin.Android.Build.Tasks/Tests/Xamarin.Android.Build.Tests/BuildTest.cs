@@ -778,7 +778,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void IfAndroidJarDoesNotExistThrowXA5207 ()
+		public void IfAndroidJarDoesNotExistThrowXA5207 ([Values(true, false)] bool buildingInsideVisualStudio)
 		{
 			var path = Path.Combine ("temp", TestName);
 			var AndroidSdkDirectory = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "24.0.1", new ApiInfo [] { new ApiInfo { Id = "30" } });
@@ -788,6 +788,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), false, false)) {
 				builder.ThrowOnBuildFailure = false;
+				builder.BuildingInsideVisualStudio = buildingInsideVisualStudio;
 				Assert.IsTrue (builder.DesignTimeBuild (proj), "DesignTime build should succeed.");
 				Assert.IsFalse (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should not have been raised.");
 				builder.Target = "AndroidPrepareForBuild";
@@ -797,6 +798,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				}), "Build should have failed");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error XA5207:"), "XA5207 should have been raised.");
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Could not find android.jar for API level {proj.TargetSdkVersion}"), "XA5207 should have had a good error message.");
+				if (buildingInsideVisualStudio)
+					Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Either install it in the Android SDK Manager"), "XA5207 should have an error message for Visual Studio.");
+				else 
+				    Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"You can install the missing API level by running"), "XA5207 should have an error message for the command line.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
 		}
