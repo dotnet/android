@@ -12,61 +12,31 @@ using Mono.Cecil;
 
 namespace MonoDroid.Tuner {
 
-	public class PreserveApplications :
-#if ILLINK
-		BaseMarkHandler
-#else   // !ILLINK
-		BaseSubStep
-#endif  // !ILLINK
+	public class PreserveApplications : BaseMarkHandler
 	{
-
-#if ILLINK
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly));
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else   // !ILLINK
-		public override SubStepTargets Targets {
-			get { return SubStepTargets.Type
-				| SubStepTargets.Assembly;
-			}
-		}
-#endif  // !ILLINK
 
-		public
-#if !ILLINK
-		override
-#endif  // !ILLINK
-		bool IsActiveFor (AssemblyDefinition assembly)
+		public bool IsActiveFor (AssemblyDefinition assembly)
 		{
 			return Annotations.GetAction (assembly) == AssemblyAction.Link;
 		}
 
-		public 
-#if !ILLINK
-		override
-#endif  // !ILLINK
-		void ProcessAssembly (AssemblyDefinition assembly)
+		public void ProcessAssembly (AssemblyDefinition assembly)
 		{
-#if ILLINK
 			if (!IsActiveFor (assembly))
 				return;
-#endif  // ILLINK
 			ProcessAttributeProvider (assembly);
 		}
 
-		public
-#if !ILLINK
-		override
-#endif  // !ILLINK
-		void ProcessType (TypeDefinition type)
+		public void ProcessType (TypeDefinition type)
 		{
-#if ILLINK
 			if (!IsActiveFor (type.Module.Assembly))
 				return;
-#endif  // ILLINK
 			if (!type.Inherits ("Android.App.Application"))
 				return;
 

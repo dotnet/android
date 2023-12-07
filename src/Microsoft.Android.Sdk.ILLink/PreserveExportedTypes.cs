@@ -7,10 +7,7 @@ using Mono.Linker;
 using Mono.Linker.Steps;
 
 using Mono.Cecil;
-
-#if ILLINK
 using Microsoft.Android.Sdk.ILLink;
-#endif
 
 namespace Mono.Tuner {
 

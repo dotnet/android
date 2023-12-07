@@ -192,24 +192,6 @@
     <EmbeddedResource Include="Resources\MonoRuntimeProvider.Bundled.20.java">
       <LogicalName>MonoRuntimeProvider.Bundled.20.java</LogicalName>
     </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\Java.Interop.xml">
-      <LogicalName>Java.Interop.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\mscorlib.xml">
-      <LogicalName>mscorlib.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\System.Data.Services.Client.xml">
-      <LogicalName>System.Data.Services.Client.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\System.ServiceModel.xml">
-      <LogicalName>System.ServiceModel.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\OpenTK.xml">
-      <LogicalName>OpenTK.xml</LogicalName>
-    </EmbeddedResource>
-    <EmbeddedResource Include="Linker\PreserveLists\Mono.Android.xml">
-      <LogicalName>Mono.Android.xml</LogicalName>
-    </EmbeddedResource>
     <EmbeddedResource Include="Resources\proguard_xamarin.cfg">
       <LogicalName>proguard_xamarin.cfg</LogicalName>
     </EmbeddedResource>
