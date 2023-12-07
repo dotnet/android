@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 using Java.Interop.Tools.Cecil;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -11,6 +13,14 @@ namespace Xamarin.Android.Tasks;
 
 class XAJavaTypeScanner
 {
+	// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
+	// be scanned for Java types.
+	static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+		"Java.Interop.dll",
+		"Mono.Android.dll",
+		"Mono.Android.Runtime.dll",
+	};
+
 	public bool ErrorOnCustomJavaObject { get; set; }
 
 	readonly TaskLoggingHelper log;
@@ -28,6 +38,12 @@ class XAJavaTypeScanner
 	{
 		var types = new List<TypeDefinition> ();
 		foreach (ITaskItem asmItem in inputAssemblies) {
+			if (!ShouldScan (asmItem)) {
+				log.LogDebugMessage ($"[{targetArch}] Skipping Java type scanning in assembly '{asmItem.ItemSpec}'");
+				continue;
+			}
+			log.LogDebugMessage ($"[{targetArch}] Scanning assembly '{asmItem.ItemSpec}' for Java types");
+
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
 			if (arch != targetArch) {
 				throw new InvalidOperationException ($"Internal error: assembly '{asmItem.ItemSpec}' should be in the '{targetArch}' architecture, but is in '{arch}' instead.");
@@ -37,7 +53,7 @@ class XAJavaTypeScanner
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
-					AddJavaType (td, types, arch);
+					AddJavaType (td, types);
 				}
 			}
 		}
@@ -45,7 +61,27 @@ class XAJavaTypeScanner
 		return types;
 	}
 
-	void AddJavaType (TypeDefinition type, List<TypeDefinition> types, AndroidTargetArch arch)
+	bool ShouldScan (ITaskItem assembly)
+	{
+		string name = Path.GetFileName (assembly.ItemSpec);
+		if (SpecialAssemblies.Contains (name)) {
+			return true;
+		}
+
+		string? hasMonoAndroidReferenceMetadata = assembly.GetMetadata ("HasMonoAndroidReference");
+		if (String.IsNullOrEmpty (hasMonoAndroidReferenceMetadata)) {
+			return true; // Just in case - the metadata missing might be a false negative
+		}
+
+		if (Boolean.TryParse (hasMonoAndroidReferenceMetadata, out bool hasMonoAndroidReference)) {
+			return hasMonoAndroidReference;
+		}
+
+		// A catch-all, it's better to do more work than to miss something important.
+		return true;
+	}
+
+	void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
 		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
 			// For subclasses of e.g. Android.App.Activity.
@@ -66,7 +102,7 @@ class XAJavaTypeScanner
 		}
 
 		foreach (TypeDefinition nested in type.NestedTypes) {
-			AddJavaType (nested, types, arch);
+			AddJavaType (nested, types);
 		}
 	}
 }

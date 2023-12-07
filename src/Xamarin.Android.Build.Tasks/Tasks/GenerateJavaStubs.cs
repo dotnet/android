@@ -337,10 +337,6 @@ namespace Xamarin.Android.Tasks
 
 		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
 		{
-			Console.WriteLine ("GenerateJavaSourcesAndMaybeClassifyMarshalMethods");
-			PrintAssemblies ($"[{arch}] Assemblies", assemblies);
-			PrintAssemblies ($"[{arch}] User assemblies", userAssemblies);
-
 			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
 			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
@@ -359,15 +355,6 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, jcwGenerator.Classifier));
-
-			void PrintAssemblies (string label, Dictionary<string, ITaskItem> dict)
-			{
-				Console.WriteLine ($"  {label}");
-				foreach (var kvp in dict) {
-					Console.WriteLine ($"    [{kvp.Key}] {kvp.Value.ItemSpec}");
-				}
-				Console.WriteLine ();
-			}
 		}
 
 		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)

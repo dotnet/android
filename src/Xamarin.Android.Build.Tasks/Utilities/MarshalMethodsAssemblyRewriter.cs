@@ -37,8 +37,6 @@ namespace Xamarin.Android.Tasks
 		// TODO: do away with broken exception transitions, there's no point in supporting them
 		public void Rewrite (bool brokenExceptionTransitions)
 		{
-			Console.WriteLine ("[new] Rewriting assemblies");
-
 			AssemblyDefinition? monoAndroidRuntime = resolver.Resolve ("Mono.Android.Runtime");
 			if (monoAndroidRuntime == null) {
 				throw new InvalidOperationException ($"[{targetArch}] Internal error: unable to load the Mono.Android.Runtime assembly");
@@ -59,9 +57,7 @@ namespace Xamarin.Android.Tasks
 			MethodDefinition unmanagedCallersOnlyAttributeCtor = GetUnmanagedCallersOnlyAttributeConstructor (resolver);
 
 			var assemblyImports = new Dictionary<AssemblyDefinition, AssemblyImports> ();
-			Console.WriteLine ("  populating assembly imports dict");
 			foreach (AssemblyDefinition asm in classifier.Assemblies) {
-				Console.WriteLine ($"    assembly path: {asm.MainModule.FileName}");
 				var imports = new AssemblyImports {
 					MonoUnhandledExceptionMethod  = asm.MainModule.ImportReference (monoUnhandledExceptionMethod),
 					SystemException               = asm.MainModule.ImportReference (systemException),
