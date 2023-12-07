@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Framework;
@@ -10,48 +9,30 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-class JavaType
-{
-	public readonly TypeDefinition Type;
-	public readonly IDictionary<AndroidTargetArch, TypeDefinition>? PerAbiTypes;
-
-	public JavaType (TypeDefinition type, IDictionary<AndroidTargetArch, TypeDefinition> perAbiTypes)
-	{
-		Type = type;
-		PerAbiTypes = new ReadOnlyDictionary<AndroidTargetArch, TypeDefinition> (perAbiTypes);
-	}
-}
-
 class XAJavaTypeScanner
 {
-	sealed class TypeData
-	{
-		public readonly TypeDefinition FirstType;
-		public readonly Dictionary<AndroidTargetArch, TypeDefinition> PerAbi;
-
-		public TypeData (TypeDefinition firstType)
-		{
-			FirstType = firstType;
-			PerAbi = new Dictionary<AndroidTargetArch, TypeDefinition> ();
-		}
-	}
-
 	public bool ErrorOnCustomJavaObject { get; set; }
 
-	TaskLoggingHelper log;
-	TypeDefinitionCache cache;
+	readonly TaskLoggingHelper log;
+	readonly TypeDefinitionCache cache;
+	readonly AndroidTargetArch targetArch;
 
-	public XAJavaTypeScanner (TaskLoggingHelper log, TypeDefinitionCache cache)
+	public XAJavaTypeScanner (AndroidTargetArch targetArch, TaskLoggingHelper log, TypeDefinitionCache cache)
 	{
+		this.targetArch = targetArch;
 		this.log = log;
 		this.cache = cache;
 	}
 
-	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolverNew resolver)
+	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
-		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
+		var types = new List<TypeDefinition> ();
 		foreach (ITaskItem asmItem in inputAssemblies) {
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
+			if (arch != targetArch) {
+				throw new InvalidOperationException ($"Internal error: assembly '{asmItem.ItemSpec}' should be in the '{targetArch}' architecture, but is in '{arch}' instead.");
+			}
+
 			AssemblyDefinition asmdef = resolver.Load (asmItem.ItemSpec);
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
@@ -61,59 +42,14 @@ class XAJavaTypeScanner
 			}
 		}
 
-		var ret = new List<JavaType> ();
-		foreach (var kvp in types) {
-			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.PerAbi));
-		}
-
-		return ret;
+		return types;
 	}
 
-	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
-	{
-		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
-		foreach (ITaskItem asmItem in inputAssemblies) {
-			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
-			AssemblyDefinition asmdef = resolver.Load (arch, asmItem.ItemSpec);
-
-			foreach (ModuleDefinition md in asmdef.Modules) {
-				foreach (TypeDefinition td in md.Types) {
-					AddJavaType (td, types, arch);
-				}
-			}
-		}
-
-		var ret = new List<JavaType> ();
-		foreach (var kvp in types) {
-			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.PerAbi));
-		}
-
-		return ret;
-	}
-
-	void AddJavaType (TypeDefinition type, Dictionary<string, TypeData> types, AndroidTargetArch arch)
+	void AddJavaType (TypeDefinition type, List<TypeDefinition> types, AndroidTargetArch arch)
 	{
 		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
 			// For subclasses of e.g. Android.App.Activity.
-			string typeName = type.GetPartialAssemblyQualifiedName (cache);
-			if (!types.TryGetValue (typeName, out TypeData typeData)) {
-				typeData = new TypeData (type);
-				types.Add (typeName, typeData);
-			}
-
-			if (typeData.PerAbi.ContainsKey (AndroidTargetArch.None)) {
-				if (arch == AndroidTargetArch.None) {
-					throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}");
-				}
-
-				throw new InvalidOperationException ($"Previously added type '{type.FullName}' was in ABI-agnostic assembly, new one comes from ABI {arch} assembly");
-			}
-
-			if (typeData.PerAbi.ContainsKey (arch)) {
-				throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}, for ABI {arch}");
-			}
-
-			typeData.PerAbi.Add (arch, type);
+			types.Add (type);
 		} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 			string message = $"XA4212: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.";
 

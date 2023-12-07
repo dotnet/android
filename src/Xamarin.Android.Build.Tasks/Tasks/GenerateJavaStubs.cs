@@ -2,14 +2,9 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.IO.MemoryMappedFiles;
 using System.Linq;
-using System.Reflection;
-using System.Text;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Mono.Cecil;
 
 
@@ -119,15 +114,15 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		XAAssemblyResolverNew MakeResolver (bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies)
+		XAAssemblyResolver MakeResolver (bool useMarshalMethods, AndroidTargetArch targetArch, Dictionary<string, ITaskItem> assemblies)
 		{
-			var readerParams = new ReaderParameters();
+			var readerParams = new ReaderParameters ();
 			if (useMarshalMethods) {
 				readerParams.ReadWrite = true;
 				readerParams.InMemory = true;
 			}
 
-			var res = new XAAssemblyResolverNew (targetArch, Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
+			var res = new XAAssemblyResolver (targetArch, Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
 			var uniqueDirs = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 			Log.LogDebugMessage ($"Adding search directories to new architecture {targetArch} resolver:");
@@ -207,9 +202,10 @@ namespace Xamarin.Android.Tasks
 			if (templateCodeGenState == null) {
 				throw new InvalidOperationException ($"Internal error: no native code generator state defined");
 			}
+			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
 
 			NativeCodeGenState.Template = templateCodeGenState;
-			JCWGenerator.EnsureAllArchitecturesAreIdentical (Log, nativeCodeGenStates);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
 
 			if (useMarshalMethods) {
 				// We need to parse the environment files supplied by the user to see if they want to use broken exception transitions. This information is needed
@@ -255,12 +251,6 @@ namespace Xamarin.Android.Tasks
 
 			IList<string> additionalProviders = MergeManifest (templateCodeGenState, userAssembliesPerArch[templateCodeGenState.TargetArch]);
 			GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
-
-			if (!useMarshalMethods) {
-				return;
-			}
-
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (NativeCodeGenStateRegisterTaskKey), nativeCodeGenStates, RegisteredTaskObjectLifetime.Build);
 		}
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
@@ -278,8 +268,7 @@ namespace Xamarin.Android.Tasks
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
-			foreach (JavaType jt in codeGenState.JavaTypesForJCW) {
-				TypeDefinition type = jt.Type;
+			foreach (TypeDefinition type in codeGenState.JavaTypesForJCW) {
 				if (JavaNativeTypeManager.IsApplication (type, codeGenState.TypeCache) || JavaNativeTypeManager.IsInstrumentation (type, codeGenState.TypeCache)) {
 					if (codeGenState.Classifier != null && !codeGenState.Classifier.FoundDynamicallyRegisteredMethods (type)) {
 						continue;
@@ -348,9 +337,13 @@ namespace Xamarin.Android.Tasks
 
 		(bool success, NativeCodeGenState? stubsState) GenerateJavaSourcesAndMaybeClassifyMarshalMethods (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods, bool generateJavaCode)
 		{
-			XAAssemblyResolverNew resolver = MakeResolver (useMarshalMethods, arch, assemblies);
+			Console.WriteLine ("GenerateJavaSourcesAndMaybeClassifyMarshalMethods");
+			PrintAssemblies ($"[{arch}] Assemblies", assemblies);
+			PrintAssemblies ($"[{arch}] User assemblies", userAssemblies);
+
+			XAAssemblyResolver resolver = MakeResolver (useMarshalMethods, arch, assemblies);
 			var tdCache = new TypeDefinitionCache ();
-			(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
+			(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) = ScanForJavaTypes (resolver, tdCache, assemblies, userAssemblies, useMarshalMethods);
 			var jcwContext = new JCWGeneratorContext (arch, resolver, assemblies.Values, javaTypesForJCW, tdCache, useMarshalMethods);
 			var jcwGenerator = new JCWGenerator (Log, jcwContext);
 			bool success;
@@ -366,24 +359,33 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return (true, new NativeCodeGenState (arch, tdCache, resolver, allJavaTypes, javaTypesForJCW, jcwGenerator.Classifier));
+
+			void PrintAssemblies (string label, Dictionary<string, ITaskItem> dict)
+			{
+				Console.WriteLine ($"  {label}");
+				foreach (var kvp in dict) {
+					Console.WriteLine ($"    [{kvp.Key}] {kvp.Value.ItemSpec}");
+				}
+				Console.WriteLine ();
+			}
 		}
 
-		(List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolverNew res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
+		(List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW) ScanForJavaTypes (XAAssemblyResolver res, TypeDefinitionCache cache, Dictionary<string, ITaskItem> assemblies, Dictionary<string, ITaskItem> userAssemblies, bool useMarshalMethods)
 		{
-			var scanner = new XAJavaTypeScanner (Log, cache) {
+			var scanner = new XAJavaTypeScanner (res.TargetArch, Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-			List<JavaType> allJavaTypes = scanner.GetJavaTypes (assemblies.Values, res);
-			var javaTypesForJCW = new List<JavaType> ();
+			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (assemblies.Values, res);
+			var javaTypesForJCW = new List<TypeDefinition> ();
 
-			foreach (JavaType jt in allJavaTypes) {
+			foreach (TypeDefinition type in allJavaTypes) {
 				// When marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
-				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
+				if ((!useMarshalMethods && !userAssemblies.ContainsKey (type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (type, cache)) {
 					continue;
 				}
-				javaTypesForJCW.Add (jt);
+				javaTypesForJCW.Add (type);
 			}
 
 			return (allJavaTypes, javaTypesForJCW);

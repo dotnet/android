@@ -226,10 +226,9 @@ namespace Xamarin.Android.Tasks
 			{ 'L', typeof(_jobjectArray) },
 		};
 
-		ICollection<string> uniqueAssemblyNames;
-		int numberOfAssembliesInApk;
-		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
-		TaskLoggingHelper logger;
+		readonly ICollection<string> uniqueAssemblyNames;
+		readonly int numberOfAssembliesInApk;
+		readonly TaskLoggingHelper logger;
 
 		StructureInfo marshalMethodsManagedClassStructureInfo;
 		StructureInfo marshalMethodNameStructureInfo;
@@ -237,8 +236,7 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
-		LlvmIrCallMarker defaultCallMarker;
-
+		readonly LlvmIrCallMarker defaultCallMarker;
 		readonly bool generateEmptyCode;
 		readonly AndroidTargetArch targetArch;
 		readonly NativeCodeGenState? codeGenState;
@@ -267,18 +265,17 @@ namespace Xamarin.Android.Tasks
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
-
-			throw new NotImplementedException ("WIP for per-RID assemblies");
 		}
 
 		void Init ()
 		{
-			if (generateEmptyCode || marshalMethods == null || marshalMethods.Count == 0) {
+			if (generateEmptyCode || codeGenState.Classifier == null || codeGenState.Classifier.MarshalMethods.Count == 0) {
 				return;
 			}
 
 			var seenClasses = new Dictionary<string, int> (StringComparer.Ordinal);
 			var allMethods = new List<MarshalMethodInfo> ();
+			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = codeGenState.Classifier.MarshalMethods;
 
 			// It's possible that several otherwise different methods (from different classes, but with the same
 			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
@@ -856,12 +853,11 @@ namespace Xamarin.Android.Tasks
 				new NosyncFunctionAttribute (),
 				new NounwindFunctionAttribute (),
 				new WillreturnFunctionAttribute (),
-				// TODO: LLVM 16+ feature, enable when we switch to this version
-				// new MemoryFunctionAttribute {
-				// 	Default = MemoryAttributeAccessKind.Write,
-				// 	Argmem = MemoryAttributeAccessKind.None,
-				// 	InaccessibleMem = MemoryAttributeAccessKind.None,
-				// },
+				new MemoryFunctionAttribute {
+					Default = MemoryAttributeAccessKind.Write,
+					Argmem = MemoryAttributeAccessKind.None,
+					InaccessibleMem = MemoryAttributeAccessKind.None,
+				},
 				new UwtableFunctionAttribute (),
 				new MinLegalVectorWidthFunctionAttribute (0),
 				new NoTrappingMathFunctionAttribute (true),

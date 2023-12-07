@@ -20,7 +20,7 @@ class ACWMapGenerator
 
 	public bool Generate (NativeCodeGenState codeGenState, string acwMapFile)
 	{
-		List<JavaType> javaTypes = codeGenState.JavaTypesForJCW;
+		List<TypeDefinition> javaTypes = codeGenState.JavaTypesForJCW;
 		TypeDefinitionCache cache = codeGenState.TypeCache;
 
 		// We need to save a map of .NET type -> ACW type for resource file fixups
@@ -33,8 +33,7 @@ class ACWMapGenerator
 		bool success = true;
 
 		using var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ();
-		foreach (JavaType jt in javaTypes) {
-			TypeDefinition type = jt.Type;
+		foreach (TypeDefinition type in javaTypes) {
 			string managedKey = type.FullName.Replace ('/', '.');
 			string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 

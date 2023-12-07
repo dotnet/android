@@ -180,8 +180,7 @@ namespace Xamarin.Android.Tasks
 			int maxModuleNameWidth = 0;
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (JavaType jt in state.AllJavaTypes) {
-				TypeDefinition td = jt.Type;
+			foreach (TypeDefinition td in state.AllJavaTypes) {
 				UpdateApplicationConfig (td);
 				string moduleName = td.Module.Assembly.Name.Name;
 				ModuleDebugData module;
@@ -245,8 +244,7 @@ namespace Xamarin.Android.Tasks
 			var managedToJava = new List<TypeMapDebugEntry> ();
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (JavaType jt in state.AllJavaTypes) {
-				TypeDefinition td = jt.Type;
+			foreach (TypeDefinition td in state.AllJavaTypes) {
 				UpdateApplicationConfig (td);
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, state.TypeCache);
@@ -407,8 +405,8 @@ namespace Xamarin.Android.Tasks
 		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, string outputDirectory)
 		{
 			var genState = new ReleaseGenerationState ();
-			foreach (JavaType jt in state.AllJavaTypes) {
-				ProcessReleaseType (genState, jt.Type);
+			foreach (TypeDefinition td in state.AllJavaTypes) {
+				ProcessReleaseType (genState, td);
 			}
 
 			ModuleReleaseData[] modules = genState.TempModules.Values.ToArray ();

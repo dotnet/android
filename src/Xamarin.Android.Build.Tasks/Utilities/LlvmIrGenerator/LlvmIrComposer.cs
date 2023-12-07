@@ -1,7 +1,5 @@
 using System;
 using System.IO;
-using System.IO.Hashing;
-using System.Text;
 
 using Xamarin.Android.Tools;
 

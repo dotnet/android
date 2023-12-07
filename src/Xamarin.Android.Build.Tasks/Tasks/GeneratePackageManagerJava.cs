@@ -337,8 +337,16 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
+			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
+				ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
+				RegisteredTaskObjectLifetime.Build
+			);
+
+			if (nativeCodeGenStates == null) {
+				throw new InvalidOperationException ("Internal error: native code generation states not registered");
+			}
+
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			var appConfState = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ApplicationConfigTaskState> (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), RegisteredTaskObjectLifetime.Build);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
@@ -351,7 +359,7 @@ namespace Xamarin.Android.Tasks
 				PackageNamingPolicy = pnp,
 				BoundExceptionType = boundExceptionType,
 				InstantRunEnabled = InstantRunEnabled,
-				JniAddNativeMethodRegistrationAttributePresent = appConfState != null ? appConfState.JniAddNativeMethodRegistrationAttributePresent : false,
+				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.Template != null ? NativeCodeGenState.Template.JniAddNativeMethodRegistrationAttributePresent : false,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				NumberOfAssembliesInApk = assemblyCount,
 				BundledAssemblyNameWidth = assemblyNameWidth,
@@ -366,15 +374,6 @@ namespace Xamarin.Android.Tasks
 				MarshalMethodsEnabled = EnableMarshalMethods,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
-
-			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
-				ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
-				RegisteredTaskObjectLifetime.Build
-			);
-
-			if (enableMarshalMethods && nativeCodeGenStates == null) {
-				throw new InvalidOperationException ("Internal error: native code generation states not registered");
-			}
 
 			foreach (string abi in SupportedAbis) {
 				string targetAbi = abi.ToLowerInvariant ();

@@ -21,11 +21,11 @@ class JCWGeneratorContext
 	public bool UseMarshalMethods                    { get; }
 	public AndroidTargetArch Arch                    { get; }
 	public TypeDefinitionCache TypeDefinitionCache   { get; }
-	public XAAssemblyResolverNew Resolver            { get; }
-	public IList<JavaType> JavaTypes                 { get; }
+	public XAAssemblyResolver Resolver               { get; }
+	public IList<TypeDefinition> JavaTypes           { get; }
 	public ICollection<ITaskItem> ResolvedAssemblies { get; }
 
-	public JCWGeneratorContext (AndroidTargetArch arch, XAAssemblyResolverNew res, ICollection<ITaskItem> resolvedAssemblies, List<JavaType> javaTypesForJCW, TypeDefinitionCache tdCache, bool useMarshalMethods)
+	public JCWGeneratorContext (AndroidTargetArch arch, XAAssemblyResolver res, ICollection<ITaskItem> resolvedAssemblies, List<TypeDefinition> javaTypesForJCW, TypeDefinitionCache tdCache, bool useMarshalMethods)
 	{
 		Arch = arch;
 		Resolver = res;
@@ -98,8 +98,7 @@ class JCWGenerator
 		bool hasExportReference = context.ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 		bool ok = true;
 
-		foreach (JavaType jt in context.JavaTypes) {
-			TypeDefinition type = jt.Type; // JCW generator doesn't care about ABI-specific types or token ids
+		foreach (TypeDefinition type in context.JavaTypes) {
 			if (type.IsInterface) {
 				// Interfaces are in typemap but they shouldn't have JCW generated for them
 				continue;
@@ -238,8 +237,8 @@ class JCWGenerator
 	{
 		logger.LogDebugMessage ($"Ensuring Java type collection in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 
-		List<JavaType> templateTypes = templateState.AllJavaTypes;
-		List<JavaType> types = state.AllJavaTypes;
+		List<TypeDefinition> templateTypes = templateState.AllJavaTypes;
+		List<TypeDefinition> types = state.AllJavaTypes;
 
 		if (types.Count != templateTypes.Count) {
 			throw new InvalidOperationException ($"Internal error: architecture '{state.TargetArch}' has a different number of types ({types.Count}) than the template architecture '{templateState.TargetArch}' ({templateTypes.Count})");
@@ -248,21 +247,21 @@ class JCWGenerator
 		var matchedTemplateTypes = new HashSet<TypeDefinition> ();
 		var mismatchedTypes = new List<TypeDefinition> ();
 
-		foreach (JavaType type in types) {
+		foreach (TypeDefinition type in types) {
 			TypeDefinition? matchedType = null;
 
-			foreach (JavaType templateType in templateTypes) {
-				if (matchedTemplateTypes.Contains (templateType.Type) || !CheckWhetherTypesMatch (templateType.Type, type.Type)) {
+			foreach (TypeDefinition templateType in templateTypes) {
+				if (matchedTemplateTypes.Contains (templateType) || !CheckWhetherTypesMatch (templateType, type)) {
 					continue;
 				}
 
-				matchedTemplateTypes.Add (templateType.Type);
-				matchedType = templateType.Type;
+				matchedTemplateTypes.Add (templateType);
+				matchedType = templateType;
 				break;
 			}
 
 			if (matchedType == null) {
-				mismatchedTypes.Add (type.Type);
+				mismatchedTypes.Add (type);
 			}
 		}
 

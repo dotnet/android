@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 
 using Java.Interop.Tools.Cecil;
+using Mono.Cecil;
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
@@ -27,14 +28,14 @@ class NativeCodeGenState
 	/// <summary>
 	/// All the Java types discovered in the target architecture's assemblies.
 	/// </summary>
-	public List<JavaType> AllJavaTypes                         { get; }
+	public List<TypeDefinition> AllJavaTypes                   { get; }
 
-	public List<JavaType> JavaTypesForJCW                      { get; }
-	public XAAssemblyResolverNew Resolver                      { get; }
+	public List<TypeDefinition> JavaTypesForJCW                { get; }
+	public XAAssemblyResolver Resolver                         { get; }
 	public TypeDefinitionCache TypeCache                       { get; }
 	public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 
-	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolverNew resolver, List<JavaType> allJavaTypes, List<JavaType> javaTypesForJCW, MarshalMethodsClassifier? classifier)
+	public NativeCodeGenState (AndroidTargetArch arch, TypeDefinitionCache tdCache, XAAssemblyResolver resolver, List<TypeDefinition> allJavaTypes, List<TypeDefinition> javaTypesForJCW, MarshalMethodsClassifier? classifier)
 	{
 		TargetArch = arch;
 		TypeCache = tdCache;
