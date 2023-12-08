@@ -42,11 +42,15 @@ namespace Xamarin.Android.Build.Tests
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
 			var abis = new [] { "armeabi-v7a", "x86" };
+			AndroidTargetArch[] supportedArches = new [] {
+				AndroidTargetArch.Arm,
+				AndroidTargetArch.X86,
+			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.AndroidEnableMarshalMethods, marshalMethodsEnabled.ToString ());
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
@@ -57,7 +61,11 @@ namespace Xamarin.Android.Build.Tests
 				);
 
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
+					objPath,
+					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
+					true
+				);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");

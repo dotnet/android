@@ -594,7 +594,13 @@ namespace Xamarin.Android.Tasks
 					assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 					assembliesPerArch.Add (arch, assemblies);
 				}
-				assemblies.Add (Path.GetFileName (assembly.ItemSpec), assembly);
+
+				string name = Path.GetFileName (assembly.ItemSpec);
+				string? culture = assembly.GetMetadata ("Culture");
+				if (!String.IsNullOrEmpty (culture)) {
+					name = $"{culture}/{name}";
+				}
+				assemblies.Add (name, assembly);
 			}
 
 			if (!validate) {
