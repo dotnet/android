@@ -29,8 +29,8 @@ namespace xamarin::android::internal
 		static constexpr char ANDROID_ENVIRONMENT_CLASS_NAME[] = "AndroidEnvironment";
 		static constexpr char ANDROID_RUNTIME_INTERNAL_CLASS_NAME[] = "AndroidRuntimeInternal";
 
-		static constexpr char DLL_EXTENSION[] = ".dll";
-
+		static constexpr char DLL_EXTENSION[] = ".dll.so";
+		static constexpr char PDB_EXTENSION[] = ".pdb.so";
 #if defined (NET)
 		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "arc.bin.so";
 #endif // def NET

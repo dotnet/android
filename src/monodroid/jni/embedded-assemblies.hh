@@ -96,7 +96,7 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 		static constexpr char  zip_path_separator[] = "/";
-		static constexpr auto  assemblies_prefix   = concat_const ("assemblies", zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr auto  assemblies_prefix   = concat_const ("lib", zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 
 		// We have two records for each assembly, for names with and without the extension
 		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
@@ -297,8 +297,6 @@ namespace xamarin::android::internal {
 		{
 			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
 		}
-
-		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;

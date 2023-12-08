@@ -27,16 +27,6 @@ using read_count_type = size_t;
 #endif
 
 force_inline bool
-EmbeddedAssemblies::is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept
-{
-	return utils.ends_with (name, ".pdb")
-#if !defined (NET)
-		|| utils.ends_with (name, ".mdb")
-#endif
-		;
-}
-
-force_inline bool
 EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
@@ -120,7 +110,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 		constexpr bool entry_is_overridden = false;
 #endif
 
-		if (register_debug_symbols && !entry_is_overridden && is_debug_file (entry_name)) {
+		if (register_debug_symbols && !entry_is_overridden && utils.ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
 			if (bundled_debug_data == nullptr) {
 				bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
 				bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);

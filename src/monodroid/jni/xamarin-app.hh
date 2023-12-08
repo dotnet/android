@@ -333,7 +333,7 @@ struct MarshalMethodsManagedClass
 // Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
 // `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
 // obtain number of entries in the `assembly_image_cache_hashes` and `assembly_image_cache_indices` entries
-constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
+constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 3;
 
 // These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
 // Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.

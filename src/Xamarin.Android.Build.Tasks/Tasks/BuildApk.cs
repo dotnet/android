@@ -23,7 +23,7 @@ namespace Xamarin.Android.Tasks
 {
 	public class BuildApk : AndroidTask
 	{
-		const string ArchiveAssembliesPath = "assemblies";
+		const string ArchiveAssembliesPath = "lib";
 		const string ArchiveLibPath = "lib";
 
 		public override string TaskPrefix => "BLD";
@@ -465,7 +465,7 @@ namespace Xamarin.Android.Tasks
 					if (UseAssemblyStore) {
 						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly);
 					} else {
-						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec), compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec) + ".so", compressionMethod: UncompressedMethod);
 					}
 
 					// Try to add config if exists
@@ -475,7 +475,7 @@ namespace Xamarin.Android.Tasks
 							storeAssemblyInfo.ConfigFile = new FileInfo (config);
 						}
 					} else {
-						AddAssemblyConfigEntry (apk, assemblyPath, config);
+						AddAssemblyConfigEntry (apk, assemblyPath, config + ".so");
 					}
 
 					// Try to add symbols if Debug
@@ -491,7 +491,7 @@ namespace Xamarin.Android.Tasks
 							if (UseAssemblyStore) {
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
-								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols), compressionMethod: UncompressedMethod);
+								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols) + ".so", compressionMethod: UncompressedMethod);
 							}
 						}
 					}
@@ -604,11 +604,11 @@ namespace Xamarin.Android.Tasks
 		string GetInArchiveAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
 		{
 			var parts = new List<string> ();
-			bool haveRootPath = !String.IsNullOrEmpty (RootPath);
+			// bool haveRootPath = !String.IsNullOrEmpty (RootPath);
 
-			if (haveRootPath) {
-				parts.Add (ArchiveAssembliesPath);
-			}
+			// if (haveRootPath) {
+			// 	parts.Add (ArchiveAssembliesPath);
+			// }
 
 			// There's no need anymore to treat satellite assemblies specially here. The PrepareSatelliteAssemblies task takes care of
 			// properly setting `DestinationSubDirectory`, so we can just use it here.
@@ -618,7 +618,7 @@ namespace Xamarin.Android.Tasks
 			}
 			parts.Add (subDirectory.Replace ('\\', '/'));
 
-			return MonoAndroidHelper.MakeZipArchivePath (haveRootPath ? RootPath : ArchiveAssembliesPath, parts) + "/";
+			return MonoAndroidHelper.MakeZipArchivePath (/*haveRootPath ? RootPath : */ArchiveAssembliesPath, parts) + "/";
 		}
 
 		sealed class LibInfo

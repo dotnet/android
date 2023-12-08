@@ -109,7 +109,7 @@ namespace Xamarin.Android.Tasks
 				var klass = EnsureType<MarshalMethodsManagedClass> (data);
 
 				if (String.Compare ("token", fieldName, StringComparison.Ordinal) == 0) {
-					return $" token 0x{klass.token:x}; class name: {klass.ClassName}";
+					return $" class name: {klass.ClassName}";
 				}
 
 				return String.Empty;
@@ -119,7 +119,7 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodsManagedClassDataProvider))]
 		sealed class MarshalMethodsManagedClass
 		{
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint       token;
 
 			[NativePointer (IsNull = true)]
@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks
 				var methodName = EnsureType<MarshalMethodName> (data);
 
 				if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
-					return $" id 0x{methodName.id:x}; name: {methodName.name}";
+					return $" name: {methodName.name}";
 				}
 
 				return String.Empty;
@@ -152,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public ulong Id64;
 
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong  id;
 			public string name;
 		}
@@ -985,10 +985,14 @@ namespace Xamarin.Android.Tasks
 
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
-				string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
+				string dirName = Path.GetDirectoryName (name) ?? String.Empty;
+				string clippedName = Path.Combine (dirName, Path.GetFileNameWithoutExtension (name));
+				string soName = Path.Combine (dirName, $"{Path.GetFileName (name)}.so");
 				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);
+				ulong hashSo32 = MonoAndroidHelper.GetXxHash (soName, is64Bit: false);
 				ulong hashClipped32 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: false);
 				ulong hashFull64 = MonoAndroidHelper.GetXxHash (name, is64Bit: true);
+				ulong hashSo64 = MonoAndroidHelper.GetXxHash (soName, is64Bit: true);
 				ulong hashClipped64 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: true);
 
 				//
@@ -996,8 +1000,10 @@ namespace Xamarin.Android.Tasks
 				// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
 				//
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashFull32, typeof(uint)), (name, index));
+				acs.Hashes32.Add ((uint)Convert.ChangeType (hashSo32, typeof(uint)), (soName, index));
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashClipped32, typeof(uint)), (clippedName, index));
 				acs.Hashes64.Add (hashFull64, (name, index));
+				acs.Hashes64.Add (hashSo64, (soName, index));
 				acs.Hashes64.Add (hashClipped64, (clippedName, index));
 
 				index++;
@@ -1025,6 +1031,7 @@ namespace Xamarin.Android.Tasks
 				BeforeWriteCallbackCallerState = acs,
 				GetArrayItemCommentCallback = GetAssemblyImageCacheItemComment,
 				GetArrayItemCommentCallbackCallerState = acs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			module.Add (assembly_image_cache_hashes);
 
@@ -1070,7 +1077,7 @@ namespace Xamarin.Android.Tasks
 				i = acs.Hashes32[v32].index;
 			}
 
-			return $" {index}: {name} => 0x{value:x} => {i}";
+			return $" {index}: {name} => {i}";
 		}
 
 		void UpdateAssemblyImageCacheIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)

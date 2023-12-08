@@ -120,8 +120,8 @@ namespace xamarin::android::internal {
 #if defined (USE_CACHE)
 			ssize_t index = find_index (hash);
 			if (index < 0) {
-				log_warn (LOG_ASSEMBLY, "Failed to look up image index for hash 0x%zx", hash);
-				return image;
+				log_fatal (LOG_ASSEMBLY, "Failed to look up image index for hash 0x%zx", hash);
+				Helpers::abort_application ();
 			}
 
 			// We don't need to worry about locking here.  Even if we're overwriting an entry just set by another
