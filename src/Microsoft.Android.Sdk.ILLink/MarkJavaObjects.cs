@@ -9,32 +9,17 @@ using Xamarin.Android.Tasks;
 
 namespace MonoDroid.Tuner {
 
-	public class MarkJavaObjects :
-#if ILLINK
-		BaseMarkHandler
-#else   // !ILLINK
-		BaseSubStep
-#endif  // !ILLINK
+	public class MarkJavaObjects : BaseMarkHandler
 	{
 		Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> module_types = new Dictionary<ModuleDefinition, Dictionary<string, TypeDefinition>> ();
 
-#if ILLINK
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
 		}
-#else   // !ILLINK
-		public override SubStepTargets Targets {
-			get { return SubStepTargets.Type; }
-		}
-#endif  // !ILLINK
 
-		public
-#if !ILLINK
-		override
-#endif  // !ILLINK
-		void ProcessType (TypeDefinition type)
+		public void ProcessType (TypeDefinition type)
 		{
 			// If this isn't a JLO or IJavaObject implementer,
 			// then we don't need to MarkJavaObjects
@@ -60,9 +45,7 @@ namespace MonoDroid.Tuner {
 			PreserveIntPtrConstructor (type);
 			PreserveAttributeSetConstructor (type);
 			PreserveInvoker (type);
-#if ILLINK
 			PreserveInterfaces (type);
-#endif // ILLINK
 		}
 
 		void PreserveAttributeSetConstructor (TypeDefinition type)
@@ -199,12 +182,9 @@ namespace MonoDroid.Tuner {
 			PreserveConstructors (type, invoker);
 			PreserveIntPtrConstructor (invoker);
 			PreserveInterfaceMethods (type, invoker);
-#if ILLINK
 			PreserveInterfaces (invoker);
-#endif // ILLINK
 		}
 
-#if ILLINK
 		void PreserveInterfaces (TypeDefinition type)
 		{
 			if (!type.HasInterfaces)
@@ -255,7 +235,6 @@ namespace MonoDroid.Tuner {
 
 			return true;
 		}
-#endif // ILLINK
 
 		TypeDefinition GetInvokerType (TypeDefinition type)
 		{
