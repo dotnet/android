@@ -595,7 +595,7 @@ namespace Xamarin.Android.Tasks
 					assembliesPerArch.Add (arch, assemblies);
 				}
 
-				string name = Path.GetFileName (assembly.ItemSpec);
+				string name = Path.GetFileNameWithoutExtension (assembly.ItemSpec);
 				string? culture = assembly.GetMetadata ("Culture");
 				if (!String.IsNullOrEmpty (culture)) {
 					name = $"{culture}/{name}";
