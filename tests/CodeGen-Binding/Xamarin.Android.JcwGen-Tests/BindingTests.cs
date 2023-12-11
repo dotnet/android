@@ -1,4 +1,5 @@
 using System;
+using System.Reflection;
 using System.Collections.Generic;
 
 using NUnit.Framework;
@@ -21,6 +22,8 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 #if TODO_7794
+		// This test requires that https://github.com/xamarin/xamarin-android/issues/7794
+		// be completed first, as it depends on Xamarin.Android.LibraryProjectZip-LibBinding projects.
 		[Test]
 		public void TestResourceId ()
 		{
@@ -180,9 +183,6 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 		}
 
-#if TODO_7794
-		// This test requires that https://github.com/xamarin/xamarin-android/issues/7794
-		// be completed first, as it depends on Xamarin.Android.FixJavaAbstractMethod* projects.
 		[Test]
 		public void JavaAbstractMethodTest ()
 		{
@@ -202,12 +202,10 @@ namespace Xamarin.Android.JcwGenTests {
 					throw e;
 			}
 
-			var mi = ic.GetType ().GetMethod ("MethodWithCursor");
-
-			if (mi != null && mi.GetMethodBody ().LocalVariables.Count == 0)
+			var mi = ic.GetType ().GetMethod ("global::Test.Bindings.ICursor.MethodWithCursor", BindingFlags.Instance | BindingFlags.NonPublic);
+			if (mi?.GetMethodBody ()?.LocalVariables?.Count is not int x || x == 0)
 				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
 		}
-#endif // TODO_7794
 
 		// Context https://bugzilla.xamarin.com/show_bug.cgi?id=36036
 		[Test]
