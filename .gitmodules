@@ -41,4 +41,4 @@
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
-    branch = d17-5
+    branch = dev/jonp/jonp-net8-sync
