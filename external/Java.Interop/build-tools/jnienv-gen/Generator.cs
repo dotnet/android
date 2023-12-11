@@ -40,7 +40,7 @@ namespace Xamarin.Java.Interop
 
 			try {
 				using (TextWriter w = new StringWriter ()) {
-					w.NewLine = "\n";
+					w.NewLine = Environment.NewLine;
 					GenerateFile (w);
 					string content = w.ToString ();
 					if (jnienv_g_cs == "-")
@@ -50,7 +50,7 @@ namespace Xamarin.Java.Interop
 				}
 				using (TextWriter sw = new StringWriter ()) {
 				using (TextWriter hw = new StringWriter ()) {
-					sw.NewLine = "\n";
+					sw.NewLine = Environment.NewLine;
 					GenerateNativeLibSource (sw, hw, jnienv_g_h);
 					string sourceContent = sw.ToString ();
 					string headerContent = hw.ToString ();
@@ -254,13 +254,13 @@ namespace Xamarin.Java.Interop
 					continue;
 				o.WriteLine ();
 				if (e.Prebind)
-					o.WriteLine ("\t\tpublic readonly {0} {1};\n", d, e.Name);
+					o.WriteLine ("\t\tpublic readonly {0} {1};{2}", d, e.Name, Environment.NewLine);
 				else {
 					o.WriteLine ("\t\t{0}? _{1};", d, e.Name);
 					o.WriteLine ("\t\tpublic {0} {1} {{", d, e.Name);
 					o.WriteLine ("\t\t\tget {");
-					o.WriteLine ("\t\t\t\tif (_{0} == null)\n\t\t\t\t\t{1}", e.Name, Initialize (e, "_", d));
-					o.WriteLine ("\t\t\t\treturn _{0};\n\t\t\t}}", e.Name);
+					o.WriteLine ("\t\t\t\tif (_{0} == null){2}\t\t\t\t\t{1}", e.Name, Initialize (e, "_", d), Environment.NewLine);
+					o.WriteLine ("\t\t\t\treturn _{0};{1}\t\t\t}}", e.Name, Environment.NewLine);
 					o.WriteLine ("\t\t}");
 				}
 			}
