@@ -45,11 +45,11 @@ namespace Xamarin.Android.Build.Tests
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
 			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
-				assembliesRootDir = "base/root/assemblies";
+				assembliesRootDir = "base/lib/assemblies";
 			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
-				assembliesRootDir = "assemblies/";
+				assembliesRootDir = "lib/";
 			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
-				assembliesRootDir = "root/assemblies/";
+				assembliesRootDir = "lib/";
 			} else {
 				assembliesRootDir = String.Empty;
 			}
@@ -253,20 +253,17 @@ namespace Xamarin.Android.Build.Tests
 
 		/// <summary>
 		/// Takes "old style" `assemblies/assembly.dll` path and returns (if possible) a set of paths that reflect the new
-		/// location of `assemblies/{ARCH}/assembly.dll`. A list is returned because, if `arch` is `None`, we'll return all
+		/// location of `lib/{ARCH}/assembly.dll.so`. A list is returned because, if `arch` is `None`, we'll return all
 		/// the possible architectural paths.
 		/// An exception is thrown if we cannot transform the path for some reason. It should **not** be handled.
 		/// </summary>
 		static List<string>? TransformArchiveAssemblyPath (string path, AndroidTargetArch arch)
 		{
-			const string AssembliesPath = "assemblies";
-			const string AssembliesPathTerminated = AssembliesPath + "/";
-
 			if (String.IsNullOrEmpty (path)) {
 				throw new ArgumentException (nameof (path), "must not be null or empty");
 			}
 
-			if (!path.StartsWith (AssembliesPathTerminated, StringComparison.Ordinal)) {
+			if (!path.StartsWith ("assemblies/", StringComparison.Ordinal)) {
 				return new List<string> { path };
 			}
 
@@ -278,52 +275,70 @@ namespace Xamarin.Android.Build.Tests
 			// We accept:
 			//   assemblies/assembly.dll
 			//   assemblies/{CULTURE}/assembly.dll
-			//   assemblies/{ARCH}/assembly.dll
-			//   assemblies/{ARCH}/{CULTURE}/assembly.dll
+			//   assemblies/{ABI}/assembly.dll
+			//   assemblies/{ABI}/{CULTURE}/assembly.dll
 			if (parts.Length > 4) {
 				throw new InvalidOperationException ($"Path '{path}' must not consist of more than 4 segments separated by `/`");
 			}
 
-			var ret = new List<string> ();
-			if (parts.Length == 4) {
-				// It's a full satellite assembly path that includes the ABI, no need to change anything
-				ret.Add (path);
-				return ret;
+			string? fileName = null;
+			string? culture = null;
+			string? abi = null;
+
+			switch (parts.Length) {
+				// Full satellite assembly path, with abi
+				case 4:
+					abi = parts[1];
+					culture = parts[2];
+					fileName = parts[3];
+					break;
+
+				// Assembly path with abi or culture
+				case 3:
+					// If the middle part isn't a valid abi, we treat it as a culture name
+					if (MonoAndroidHelper.IsValidAbi (parts[1])) {
+						abi = parts[1];
+					} else {
+						culture = parts[1];
+					}
+					fileName = parts[2];
+					break;
+
+				// Assembly path without abi or culture
+				case 2:
+					fileName = parts[1];
+					break;
 			}
 
-			if (parts.Length == 3) {
-				// We need to check whether the middle part is a culture or an ABI
-				if (MonoAndroidHelper.IsValidAbi (parts[1])) {
-					// Nothing more to do
-					ret.Add (path);
-					return ret;
+			var abis = new List<string> ();
+			if (!String.IsNullOrEmpty (abi)) {
+				abis.Add (abi);
+			} else if (arch == AndroidTargetArch.None) {
+				foreach (AndroidTargetArch targetArch in MonoAndroidHelper.SupportedTargetArchitectures) {
+					abis.Add (MonoAndroidHelper.ArchToAbi (targetArch));
 				}
+			} else {
+				abis.Add (MonoAndroidHelper.ArchToAbi (arch));
 			}
 
-			// We need to add the ABI(s)
+			if (!String.IsNullOrEmpty (culture)) {
+				// Android doesn't allow us to put satellite assemblies in lib/{CULTURE}/assembly.dll.so, we must instead
+				// mangle the name.
+				fileName = $"_{culture}_{fileName}";
+			}
+
+			var ret = new List<string> ();
 			var newParts = new List<string> {
 				String.Empty, // ABI placeholder
+				$"{fileName}.so",
 			};
 
-			for (int i = 1; i < parts.Length; i++) {
-				newParts.Add (parts[i]);
-			}
-
-			if (arch != AndroidTargetArch.None) {
-				ret.Add (MakeAbiArchivePath (arch));
-			} else {
-				foreach (AndroidTargetArch targetArch in MonoAndroidHelper.SupportedTargetArchitectures) {
-					ret.Add (MakeAbiArchivePath (targetArch));
-				}
+			foreach (string a in abis) {
+				newParts[0] = a;
+				ret.Add (MonoAndroidHelper.MakeZipArchivePath ("lib", newParts));
 			}
 
 			return ret;
-
-			string MakeAbiArchivePath (AndroidTargetArch targetArch)
-			{
-				newParts[0] = MonoAndroidHelper.ArchToAbi (targetArch);
-				return MonoAndroidHelper.MakeZipArchivePath (AssembliesPath, newParts);
-			}
 		}
 
 		static bool ArchiveContains (List<string> archiveContents, string entryPath, AndroidTargetArch arch)
@@ -348,6 +363,10 @@ namespace Xamarin.Android.Build.Tests
 			return false;
 		}
 
+		/// <summary>
+		/// Checks whether <paramref name="entryPath"/> exists in the archive or assembly store.  The path should use the
+		/// "old style" `assemblies/{ABI}/assembly.dll` format.
+		/// </summary>
 		public bool Exists (string entryPath, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
 			return ArchiveContains (ListArchiveContents (assembliesRootDir, forceRefresh), entryPath, arch);

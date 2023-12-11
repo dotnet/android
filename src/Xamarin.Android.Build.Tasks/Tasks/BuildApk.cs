@@ -604,21 +604,40 @@ namespace Xamarin.Android.Tasks
 		string GetInArchiveAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
 		{
 			var parts = new List<string> ();
-			// bool haveRootPath = !String.IsNullOrEmpty (RootPath);
 
-			// if (haveRootPath) {
-			// 	parts.Add (ArchiveAssembliesPath);
-			// }
-
-			// There's no need anymore to treat satellite assemblies specially here. The PrepareSatelliteAssemblies task takes care of
-			// properly setting `DestinationSubDirectory`, so we can just use it here.
-			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
+			// The PrepareSatelliteAssemblies task takes care of properly setting `DestinationSubDirectory`, so we can just use it here.
+			string? subDirectory = assembly.GetMetadata ("DestinationSubDirectory")?.Replace ('\\', '/');
 			if (string.IsNullOrEmpty (subDirectory)) {
 				throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
 			}
-			parts.Add (subDirectory.Replace ('\\', '/'));
 
-			return MonoAndroidHelper.MakeZipArchivePath (/*haveRootPath ? RootPath : */ArchiveAssembliesPath, parts) + "/";
+			bool needTrailingSlash = true;
+			if (UseAssemblyStore) {
+				parts.Add (subDirectory);
+			} else {
+				// For discrete assembly entries we need to treat satellite assemblies specially.
+				// If we encounter one of them, we will return the culture as part of the path transformed
+				// so that it forms a `_culture_` assembly file name prefix, not a `culture/` subdirectory.
+				// This is necessary because Android doesn't allow subdirectories in `lib/{ABI}/`
+
+				string[] subdirParts = subDirectory.TrimEnd ('/').Split ('/');
+				if (subdirParts.Length == 1) {
+					// Not a satellite assembly
+					parts.Add (subDirectory);
+				} else if (subdirParts.Length == 2) {
+					parts.Add ($"{subdirParts[0]}/_{subdirParts[1]}_");
+					needTrailingSlash = false;
+				} else {
+					throw new InvalidOperationException ($"Internal error: '{assembly}' `DestinationSubDirectory` metadata has too many components ({parts.Count} instead of 1 or 2)");
+				}
+			}
+
+			string ret =  MonoAndroidHelper.MakeZipArchivePath (ArchiveAssembliesPath, parts);
+			if (needTrailingSlash) {
+				return  ret + "/";
+			}
+
+			return ret;
 		}
 
 		sealed class LibInfo

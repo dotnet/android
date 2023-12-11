@@ -9,6 +9,7 @@ using Mono.Linker;
 using Mono.Tuner;
 using MonoDroid.Tuner;
 using NUnit.Framework;
+using Xamarin.Android.Tasks;
 using Xamarin.ProjectTools;
 using SR = System.Reflection;
 
@@ -228,26 +229,29 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("AndroidLinkResources", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", useAssemblyStore.ToString ());
 			string assemblyName = proj.ProjectName;
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
-				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				FileAssert.Exists (apk);
-				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
-				Assert.IsTrue (helper.Exists ($"assemblies/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
-				using (var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll")) {
-					stream.Position = 0;
-					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {
-						var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
-						var intType = typeof(int);
-						foreach (var nestedType in type.NestedTypes) {
-							int count = 0;
-							foreach (var field in nestedType.Fields) {
-								if (field.FieldType.FullName == intType.FullName)
-									count++;
-							}
-							Assert.AreEqual (0, count, "All Nested Resource Type int fields should be removed.");
-						}
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+			FileAssert.Exists (apk);
+			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
+			foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+				string abi = MonoAndroidHelper.RidToAbi (rid);
+				Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
+
+				using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
+				stream.Position = 0;
+
+				using var assembly = AssemblyDefinition.ReadAssembly (stream);
+				var type = assembly.MainModule.GetType ($"{assemblyName}.Resource");
+				var intType = typeof(int);
+				foreach (var nestedType in type.NestedTypes) {
+					int count = 0;
+					foreach (var field in nestedType.Fields) {
+						if (field.FieldType.FullName == intType.FullName)
+						count++;
 					}
+					Assert.AreEqual (0, count, "All Nested Resource Type int fields should be removed.");
 				}
 			}
 		}
@@ -288,7 +292,10 @@ $@"<linker>
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
-				Assert.IsTrue (helper.Exists ($"assemblies/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
+				}
 				using (var stream = helper.ReadEntry ($"assemblies/{assembly_name}.dll")) {
 					stream.Position = 0;
 					using (var assembly = AssemblyDefinition.ReadAssembly (stream)) {

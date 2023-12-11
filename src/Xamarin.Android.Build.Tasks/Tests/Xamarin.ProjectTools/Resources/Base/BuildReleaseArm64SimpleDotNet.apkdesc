@@ -4,47 +4,23 @@
     "AndroidManifest.xml": {
       "Size": 3036
     },
-    "assemblies/arm64-v8a/_Microsoft.Android.Resource.Designer.dll": {
-      "Size": 1027
-    },
-    "assemblies/arm64-v8a/Java.Interop.dll": {
-      "Size": 61441
-    },
-    "assemblies/arm64-v8a/Mono.Android.dll": {
-      "Size": 90528
-    },
-    "assemblies/arm64-v8a/Mono.Android.Runtime.dll": {
-      "Size": 5520
-    },
-    "assemblies/arm64-v8a/System.Console.dll": {
-      "Size": 6540
-    },
-    "assemblies/arm64-v8a/System.Linq.dll": {
-      "Size": 7160
-    },
-    "assemblies/arm64-v8a/System.Private.CoreLib.dll": {
-      "Size": 552250
-    },
-    "assemblies/arm64-v8a/System.Runtime.dll": {
-      "Size": 2618
-    },
-    "assemblies/arm64-v8a/System.Runtime.InteropServices.dll": {
-      "Size": 4019
-    },
-    "assemblies/arm64-v8a/UnnamedProject.dll": {
-      "Size": 2933
-    },
     "classes.dex": {
-      "Size": 377312
+      "Size": 377904
+    },
+    "lib/arm64-v8a/_Microsoft.Android.Resource.Designer.dll.so": {
+      "Size": 1027
     },
     "lib/arm64-v8a/arc.bin.so": {
       "Size": 1512
+    },
+    "lib/arm64-v8a/Java.Interop.dll.so": {
+      "Size": 61441
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 87080
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 340088
+      "Size": 340136
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3183424
@@ -59,16 +35,40 @@
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 11888
+      "Size": 12016
+    },
+    "lib/arm64-v8a/Mono.Android.dll.so": {
+      "Size": 90523
+    },
+    "lib/arm64-v8a/Mono.Android.Runtime.dll.so": {
+      "Size": 5514
+    },
+    "lib/arm64-v8a/System.Console.dll.so": {
+      "Size": 6540
+    },
+    "lib/arm64-v8a/System.Linq.dll.so": {
+      "Size": 7160
+    },
+    "lib/arm64-v8a/System.Private.CoreLib.dll.so": {
+      "Size": 552250
+    },
+    "lib/arm64-v8a/System.Runtime.dll.so": {
+      "Size": 2618
+    },
+    "lib/arm64-v8a/System.Runtime.InteropServices.dll.so": {
+      "Size": 4019
+    },
+    "lib/arm64-v8a/UnnamedProject.dll.so": {
+      "Size": 2931
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3144
+      "Size": 3104
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3017
+      "Size": 2977
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -95,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2779573
+  "PackageSize": 2656653
 }

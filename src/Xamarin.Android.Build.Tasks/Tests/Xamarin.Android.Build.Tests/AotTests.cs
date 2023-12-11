@@ -205,7 +205,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
+					Assert.IsTrue (helper.Exists ("assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
@@ -250,7 +250,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
+					Assert.IsTrue (helper.Exists ("assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
