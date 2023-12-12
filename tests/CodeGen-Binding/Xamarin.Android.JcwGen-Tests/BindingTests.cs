@@ -203,7 +203,8 @@ namespace Xamarin.Android.JcwGenTests {
 			}
 
 			var mi = ic.GetType ().GetMethod ("global::Test.Bindings.ICursor.MethodWithCursor", BindingFlags.Instance | BindingFlags.NonPublic);
-			if (mi?.GetMethodBody ()?.LocalVariables?.Count is not int x || x == 0)
+			Assert.IsNotNull (mi, "ICursor.MethodWithCursor not found");
+			if (mi.GetMethodBody ()?.LocalVariables?.Count is not int x || x == 0)
 				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
 		}
 
