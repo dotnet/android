@@ -1,62 +1,11 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{B7476528-C166-40BF-931F-EAEB02247879}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <RootNamespace>Library</RootNamespace>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <AndroidResgenClass>Resource</AndroidResgenClass>
-    <AndroidResgenFile>Resources\Resource.designer.cs</AndroidResgenFile>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AssemblyName>Xamarin.Android.FixJavaAbstractMethod-Library</AssemblyName>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
-  <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
   <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="MyClrCursor.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Resources\AboutResources.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <AndroidResource Include="Resources\values\Strings.xml" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.CSharp.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.csproj">
-      <Project>{91105023-9421-4E56-A87B-64BC62525D55}</Project>
-      <Name>Xamarin.Android.FixJavaAbstractMethod-APIv1Binding</Name>
-    </ProjectReference>
+    <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding\Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.csproj" />
   </ItemGroup>
 </Project>

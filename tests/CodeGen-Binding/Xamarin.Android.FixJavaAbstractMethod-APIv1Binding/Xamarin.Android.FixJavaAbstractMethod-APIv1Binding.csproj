@@ -1,68 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectTypeGuids>{10368E6C-D01B-4462-8E8B-01FC667A7035};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
-    <ProjectGuid>{91105023-9421-4E56-A87B-64BC62525D55}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
     <RootNamespace>APIv1Binding</RootNamespace>
-    <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
-    <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
-    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
     <AssemblyName>Xamarin.Android.FixJavaAbstractMethod-Binding</AssemblyName>
-    <ProductVersion>8.0.30703</ProductVersion>
-    <SchemaVersion>2.0</SchemaVersion>
-    <AndroidClassParser>class-parse</AndroidClassParser>
   </PropertyGroup>
   <Import Project="..\..\..\Configuration.props" />
-  <PropertyGroup>
-    <TargetFrameworkVersion>$(AndroidFrameworkVersion)</TargetFrameworkVersion>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <DebugSymbols>true</DebugSymbols>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <AndroidLinkMode>None</AndroidLinkMode>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <ConsolePause>false</ConsolePause>
-  </PropertyGroup>
-  <ItemGroup>
-    <Reference Include="System" />
-    <Reference Include="System.Xml" />
-    <Reference Include="System.Core" />
-    <Reference Include="Mono.Android" />
-  </ItemGroup>
-  <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Additions\AboutAdditions.txt" />
-    <None Include="Jars\AboutJars.txt" />
-  </ItemGroup>
-  <ItemGroup>
-    <TransformFile Include="Transforms\EnumFields.xml" />
-    <TransformFile Include="Transforms\EnumMethods.xml" />
-    <TransformFile Include="Transforms\Metadata.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <InputJar Include="Jars\Cursor.jar" />
-  </ItemGroup>
   <ItemGroup>
     <TestJarEntry Include="java\test\bindings\Cursor.java">
       <OutputFile>Jars/Cursor.jar</OutputFile>
     </TestJarEntry>
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\Android\Xamarin.Android.Bindings.targets" />
   <Import Project="..\..\..\build-tools\scripts\Jar.targets" />
   <Import Project="Xamarin.Android.FixJavaAbstractMethod-APIv1Binding.targets" />
   <PropertyGroup>
