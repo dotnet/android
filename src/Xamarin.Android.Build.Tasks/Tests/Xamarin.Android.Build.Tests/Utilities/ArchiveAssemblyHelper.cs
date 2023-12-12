@@ -189,13 +189,27 @@ namespace Xamarin.Android.Build.Tests
 					string abi = MonoAndroidHelper.ArchToAbi (asm.TargetArch);
 					prefix = $"{prefix}{abi}/";
 
-					entries.Add ($"{prefix}{asm.Name}");
+					int cultureIndex = asm.Name.IndexOf ('/');
+					string? culture = null;
+					string name;
+
+					if (cultureIndex > 0) {
+						culture = asm.Name.Substring (0, cultureIndex);
+						name = asm.Name.Substring (cultureIndex + 1);
+					} else {
+						name = asm.Name;
+					}
+
+					// Mangle name in in the same fashion the discrete assembly entries are named, makes other
+					// code in this class simpler.
+					string mangledName = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (name, culture);
+					entries.Add ($"{prefix}{mangledName}");
 					if (asm.DebugOffset > 0) {
-						entries.Add ($"{prefix}{Path.GetFileNameWithoutExtension (asm.Name)}.pdb");
+						entries.Add ($"{prefix}{Path.ChangeExtension (mangledName, "pdb")}");
 					}
 
 					if (asm.ConfigOffset > 0) {
-						entries.Add ($"{prefix}{asm.Name}.config");
+						entries.Add ($"{prefix}{Path.ChangeExtension (mangledName, "config")}");
 					}
 				}
 			}
@@ -233,7 +247,7 @@ namespace Xamarin.Android.Build.Tests
 		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
-			var dlls = contents.Where (x => x.EndsWith (".dll", StringComparison.OrdinalIgnoreCase));
+			var dlls = contents.Where (x => x.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase));
 
 			if (!countAbiAssembliesOnce) {
 				return dlls.Count ();
@@ -310,6 +324,7 @@ namespace Xamarin.Android.Build.Tests
 					break;
 			}
 
+			char fileTypeMarker = '#';
 			var abis = new List<string> ();
 			if (!String.IsNullOrEmpty (abi)) {
 				abis.Add (abi);
@@ -324,13 +339,14 @@ namespace Xamarin.Android.Build.Tests
 			if (!String.IsNullOrEmpty (culture)) {
 				// Android doesn't allow us to put satellite assemblies in lib/{CULTURE}/assembly.dll.so, we must instead
 				// mangle the name.
-				fileName = $"_{culture}_{fileName}";
+				fileName = $"{culture}%{fileName}";
+				fileTypeMarker = '%';
 			}
 
 			var ret = new List<string> ();
 			var newParts = new List<string> {
 				String.Empty, // ABI placeholder
-				$"{fileName}.so",
+				$"{fileTypeMarker}{fileName}.so",
 			};
 
 			foreach (string a in abis) {
@@ -352,8 +368,9 @@ namespace Xamarin.Android.Build.Tests
 				return false;
 			}
 
-			foreach (string existingEntry in archiveContents) {
-				foreach (string wantedEntry in potentialEntries) {
+			foreach (string wantedEntry in potentialEntries) {
+				Console.WriteLine ($"Wanted entry: {wantedEntry}");
+				foreach (string existingEntry in archiveContents) {
 					if (String.Compare (existingEntry, wantedEntry, StringComparison.Ordinal) == 0) {
 						return true;
 					}

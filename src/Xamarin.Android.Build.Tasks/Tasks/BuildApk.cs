@@ -461,11 +461,11 @@ namespace Xamarin.Android.Tasks
 					sourcePath = CompressAssembly (assembly);
 
 					// Add assembly
-					var assemblyPath = GetInArchiveAssemblyPath (assembly, frameworkAssembly: false);
+					(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
 					if (UseAssemblyStore) {
-						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assemblyPath, assembly);
+						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assembly);
 					} else {
-						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath + Path.GetFileName (assembly.ItemSpec) + ".so", compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath, compressionMethod: UncompressedMethod);
 					}
 
 					// Try to add config if exists
@@ -475,7 +475,7 @@ namespace Xamarin.Android.Tasks
 							storeAssemblyInfo.ConfigFile = new FileInfo (config);
 						}
 					} else {
-						AddAssemblyConfigEntry (apk, assemblyPath, config + ".so");
+						AddAssemblyConfigEntry (apk, assemblyDirectory, config);
 					}
 
 					// Try to add symbols if Debug
@@ -491,7 +491,12 @@ namespace Xamarin.Android.Tasks
 							if (UseAssemblyStore) {
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
-								AddFileToArchiveIfNewer (apk, symbolsPath, assemblyPath + Path.GetFileName (symbols) + ".so", compressionMethod: UncompressedMethod);
+								AddFileToArchiveIfNewer (
+									apk,
+									symbolsPath,
+									MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyDirectory + Path.GetFileName (symbols)),
+									compressionMethod: UncompressedMethod
+								);
 							}
 						}
 					}
@@ -576,11 +581,12 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblyConfigEntry (ZipArchiveEx apk, string assemblyPath, string configFile)
 		{
-			string inArchivePath = assemblyPath + Path.GetFileName (configFile);
+			string inArchivePath = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyPath + Path.GetFileName (configFile));
 			existingEntries.Remove (inArchivePath);
 
-			if (!File.Exists (configFile))
+			if (!File.Exists (configFile)) {
 				return;
+			}
 
 			CompressionMethod compressionMethod = UncompressedMethod;
 			if (apk.SkipExistingFile (configFile, inArchivePath, compressionMethod)) {
@@ -601,7 +607,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Returns the in-archive path for an assembly
 		/// </summary>
-		string GetInArchiveAssemblyPath (ITaskItem assembly, bool frameworkAssembly)
+		(string assemblyFilePath, string assemblyDirectoryPath) GetInArchiveAssemblyPath (ITaskItem assembly)
 		{
 			var parts = new List<string> ();
 
@@ -611,33 +617,38 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Internal error: assembly '{assembly}' lacks the required `DestinationSubDirectory` metadata");
 			}
 
-			bool needTrailingSlash = true;
+			string assemblyName = Path.GetFileName (assembly.ItemSpec);
 			if (UseAssemblyStore) {
 				parts.Add (subDirectory);
+				parts.Add (assemblyName);
 			} else {
-				// For discrete assembly entries we need to treat satellite assemblies specially.
+				// For discrete assembly entries we need to treat assemblies specially.
+				// All of the assemblies have their names mangled so that the possibility to clash with "real" shared
+				// library names is minimized. All of the assembly entries will start with a special character:
+				//
+				//   # - for regular assemblies (e.g. `#Mono.Android.dll.so`)
+				//   % - for satellite assemblies (e.g. `%es%Mono.Android.dll.so`)
+				//
+				// Second of all, we need to treat satellite assemblies with even more care.
 				// If we encounter one of them, we will return the culture as part of the path transformed
-				// so that it forms a `_culture_` assembly file name prefix, not a `culture/` subdirectory.
+				// so that it forms a `%culture%` assembly file name prefix, not a `culture/` subdirectory.
 				// This is necessary because Android doesn't allow subdirectories in `lib/{ABI}/`
 
 				string[] subdirParts = subDirectory.TrimEnd ('/').Split ('/');
 				if (subdirParts.Length == 1) {
 					// Not a satellite assembly
 					parts.Add (subDirectory);
+					parts.Add (MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyName));
 				} else if (subdirParts.Length == 2) {
-					parts.Add ($"{subdirParts[0]}/_{subdirParts[1]}_");
-					needTrailingSlash = false;
+					parts.Add (subdirParts[0]);
+					parts.Add (MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyName, subdirParts[1]));
 				} else {
 					throw new InvalidOperationException ($"Internal error: '{assembly}' `DestinationSubDirectory` metadata has too many components ({parts.Count} instead of 1 or 2)");
 				}
 			}
 
-			string ret =  MonoAndroidHelper.MakeZipArchivePath (ArchiveAssembliesPath, parts);
-			if (needTrailingSlash) {
-				return  ret + "/";
-			}
-
-			return ret;
+			string assemblyFilePath = MonoAndroidHelper.MakeZipArchivePath (ArchiveAssembliesPath, parts);
+			return (assemblyFilePath, Path.GetDirectoryName (assemblyFilePath) + "/");
 		}
 
 		sealed class LibInfo

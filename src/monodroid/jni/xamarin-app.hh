@@ -121,7 +121,7 @@ struct CompressedAssemblies
 	CompressedAssemblyDescriptor *descriptors;
 };
 
-struct XamarinAndroidBundledAssembly final
+struct XamarinAndroidBundledAssembly
 {
 	int32_t  apk_fd;
 	uint32_t data_offset;

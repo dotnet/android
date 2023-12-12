@@ -185,6 +185,22 @@ partial class MonoAndroidHelper
 		return String.Join ("/", parts);
 	}
 
+	/// <summary>
+	/// Mangles APK/AAB entry name for assembly and their associated pdb and config entries in the
+	/// way expected by our native runtime.  Must **NOT** be used to mangle names when assembly stores
+	/// are used.  Must **NOT** be used for entries other than assemblies and their associated files.
+	/// </summary>
+	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
+	{
+		const string ext = ".so";
+
+		if (!String.IsNullOrEmpty (culture)) {
+			return $"%{culture}%{name}{ext}";
+		}
+
+		return $"#{name}{ext}";
+	}
+
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 
 	public static ulong GetXxHash (string str, bool is64Bit) => GetXxHash (Utf8StringToBytes (str), is64Bit);

@@ -128,11 +128,9 @@ partial class AssemblyStoreGenerator
 			}
 
 			ulong name_with_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameBytes, is64Bit);
-
-			string name_no_ext = Path.GetFileNameWithoutExtension (info.AssemblyName);
-			ulong name_no_ext_hash = MonoAndroidHelper.GetXxHash (name_no_ext, is64Bit);
+			ulong name_no_ext_hash = MonoAndroidHelper.GetXxHash (info.AssemblyNameNoExtBytes, is64Bit);
 			index.Add (new AssemblyStoreIndexEntry (info.AssemblyName, name_with_ext_hash, desc.mapping_index));
-			index.Add (new AssemblyStoreIndexEntry (name_no_ext, name_no_ext_hash, desc.mapping_index));
+			index.Add (new AssemblyStoreIndexEntry (info.AssemblyNameNoExt, name_no_ext_hash, desc.mapping_index));
 
 			CopyData (info.SourceFile, fs, storePath);
 			CopyData (info.SymbolsFile, fs, storePath);
