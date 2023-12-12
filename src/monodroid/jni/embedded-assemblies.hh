@@ -103,9 +103,10 @@ namespace xamarin::android::internal {
 		static constexpr uint32_t number_of_assembly_store_files = 1;
 		static constexpr char dso_suffix[] = ".so";
 		static constexpr char apk_lib_dir_name[] = "lib";
+		static constexpr char regular_assembly_marker = '#';
+		static constexpr char satellite_assembly_marker = '%';
 		static constexpr auto apk_lib_prefix = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 		static constexpr auto assembly_store_file_name = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "assemblies.", SharedConstants::android_lib_abi, ".blob.so");
-
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";

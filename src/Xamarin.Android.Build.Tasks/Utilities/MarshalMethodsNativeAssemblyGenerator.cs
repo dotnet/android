@@ -985,14 +985,24 @@ namespace Xamarin.Android.Tasks
 
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
-				string dirName = Path.GetDirectoryName (name) ?? String.Empty;
-				string clippedName = Path.Combine (dirName, Path.GetFileNameWithoutExtension (name));
-				string soName = Path.Combine (dirName, $"{Path.GetFileName (name)}.so");
+				string cultureName = Path.GetDirectoryName (name) ?? String.Empty;
+				string clippedName = Path.Combine (cultureName, Path.GetFileNameWithoutExtension (name));
+				string inArchiveName;
+
+				if (cultureName.Length == 0) {
+					// Regular assemblies get the '#' prefix
+					inArchiveName = $"#{name}.so";
+				} else {
+					// Satellite assemblies get the '%{CULTURE}%' prefix
+					inArchiveName = $"%{cultureName}%{Path.GetFileName (name)}.so";
+				}
+
 				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);
-				ulong hashSo32 = MonoAndroidHelper.GetXxHash (soName, is64Bit: false);
+				ulong hashInArchive32 = MonoAndroidHelper.GetXxHash (inArchiveName, is64Bit: false);
 				ulong hashClipped32 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: false);
+
 				ulong hashFull64 = MonoAndroidHelper.GetXxHash (name, is64Bit: true);
-				ulong hashSo64 = MonoAndroidHelper.GetXxHash (soName, is64Bit: true);
+				ulong hashInArchive64 = MonoAndroidHelper.GetXxHash (inArchiveName, is64Bit: true);
 				ulong hashClipped64 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: true);
 
 				//
@@ -1000,10 +1010,11 @@ namespace Xamarin.Android.Tasks
 				// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
 				//
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashFull32, typeof(uint)), (name, index));
-				acs.Hashes32.Add ((uint)Convert.ChangeType (hashSo32, typeof(uint)), (soName, index));
+				acs.Hashes32.Add ((uint)Convert.ChangeType (hashInArchive32, typeof(uint)), (inArchiveName, index));
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashClipped32, typeof(uint)), (clippedName, index));
+
 				acs.Hashes64.Add (hashFull64, (name, index));
-				acs.Hashes64.Add (hashSo64, (soName, index));
+				acs.Hashes64.Add (hashInArchive64, (inArchiveName, index));
 				acs.Hashes64.Add (hashClipped64, (clippedName, index));
 
 				index++;

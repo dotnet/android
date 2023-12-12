@@ -33,9 +33,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	bool result = zip_read_entry_info (buf, entry_name, state);
 
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "%s entry: %s", state.apk_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
-#endif
+	log_debug (LOG_ASSEMBLY, "%s entry: %s", state.apk_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
 	if (!result || entry_name.empty ()) {
 		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", entry_index, state.apk_name);
 		Helpers::abort_application ();
@@ -45,9 +43,8 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		log_fatal (LOG_ASSEMBLY, "Failed to adjust data start offset for entry %u in APK file %s", entry_index, state.apk_name);
 		Helpers::abort_application ();
 	}
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
-#endif
+
+	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
 	if (state.compression_method != 0) {
 		return false;
 	}
@@ -85,9 +82,17 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 force_inline void
 EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
+	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
 	uint32_t max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
+
+	auto unmangle_name = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx) {
+		size_t new_size = name.length () - 4; // Includes the first ("marker") character and the .so extension
+		memmove (name.get () + start_idx, name.get() + start_idx + 1, new_size);
+		name.set_length (new_size);
+		log_debug (LOG_ASSEMBLY, "Unmangled name to '%s'", name.get ());
+	};
 
 	// clang-tidy claims we have a leak in the loop:
 	//
@@ -102,6 +107,22 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 		if (!interesting_entry) {
 			continue;
 		}
+
+		if (entry_name[state.prefix_len] == '#') {
+			unmangle_name (entry_name, state.prefix_len);
+		} else if (entry_name[state.prefix_len] == '%') {
+			// Make sure assembly name is {CULTURE}/assembly.dll
+			unmangle_name (entry_name, state.prefix_len);
+			for (size_t idx = state.prefix_len; idx < entry_name.length (); idx++) {
+				if (entry_name[idx] == '%') {
+					entry_name[idx] = '/';
+					break;
+				}
+			}
+		} else {
+			continue; // Can't be an assembly, the name's not mangled
+		}
+		log_debug (LOG_ASSEMBLY, "  interesting entry. Name modified to '%s'", entry_name.get ());
 
 #if defined (DEBUG)
 		const char *last_slash = utils.find_last (entry_name, '/');
@@ -121,25 +142,14 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if !defined(NET)
-		if (utils.ends_with (entry_name, ".config")) {
-			char *assembly_name = strdup (basename (entry_name.get ()));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
+		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
 			continue;
 		}
-#endif // ndef NET
-
-		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
-			continue;
 
 #if defined (DEBUG)
-		if (entry_is_overridden)
+		if (entry_is_overridden) {
 			continue;
+		}
 #endif
 
 		if (XA_UNLIKELY (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || bundled_assemblies_slow_path)) {
