@@ -54,7 +54,8 @@
         WorkingDirectory="$(MSBuildThisFileDirectory)java\JavaLib"
     />
     <MakeDir Directories="$(OutputPath)" />
-    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library.aar" DestinationFiles="$(OutputPath)JavaLib.aar" />
+    <Copy SourceFiles="java\JavaLib\library\build\outputs\aar\library-debug.aar" DestinationFiles="$(OutputPath)JavaLib.aar" />
+    <Touch Files="$(OutputPath)JavaLib.aar" />
   </Target>
   <Target Name="CleanLocal">
     <RemoveDir Directories="java\JavaLib\bin;java\JavaLib\gen;java\JavaLib\library\build;bin;obj;libs;simple2\libs" />
