@@ -75,7 +75,7 @@
       This prevents an early error message during 'dotnet publish'.
       We handle $(SelfContained) in a custom way where it is forced to be true.
     -->
-    <PublishSelfContained Condition=" '$(PublishSelfContained)' == '' ">false</PublishSelfContained>
+    <PublishSelfContained Condition=" '$(PublishSelfContained)' == '' and $([MSBuild]::VersionLessThan($(NETCoreSdkVersion), '9.0')) ">false</PublishSelfContained>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
