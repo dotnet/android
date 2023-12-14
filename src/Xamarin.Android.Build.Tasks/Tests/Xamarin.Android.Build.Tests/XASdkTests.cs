@@ -199,11 +199,6 @@ public class JavaSourceTest {
 			var platform = (string)data[1];
 			var apiLevel = (int)data[2];
 
-			//FIXME: will revisit this in a future PR
-			if (dotnetVersion == "net8.0") {
-				Assert.Ignore ("error NETSDK1185: The Runtime Pack for FrameworkReference 'Microsoft.Android.Runtime.34.android-arm' was not available. This may be because DisableTransitiveFrameworkReferenceDownloads was set to true.");
-			}
-
 			if (string.IsNullOrEmpty (platform))
 				Assert.Ignore ($"Test for API level {apiLevel} was skipped as it matched the default or latest stable API level.");
 
