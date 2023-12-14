@@ -1,10 +1,6 @@
 parameters:
   configuration: $(XA.Build.Configuration)
-  provisionClassic: true
-  provisionExtraArgs: -vv -f
-  provisionatorChannel: latest
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  updateVS: false
   jdkTestFolder: $(JAVA_HOME_11_X64)
   remove_dotnet: false
 
@@ -14,17 +10,6 @@ steps:
   submodules: recursive
   ${{ if ne(parameters.xaSourcePath, variables['System.DefaultWorkingDirectory']) }}:
     path: s/xamarin-android
-
-- ${{ if eq(parameters.updateVS, true) }}:
-  - template: update-vs.yaml
-    parameters: 
-      xasourcePath: ${{ parameters.xaSourcePath }}
-
-- ${{ if eq(parameters.provisionClassic, true) }}:
-  - template: run-installer.yaml
-    parameters:
-      provisionExtraArgs: ${{ parameters.provisionExtraArgs }}
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - script: |
     echo "##vso[task.setvariable variable=JI_JAVA_HOME]${{ parameters.jdkTestFolder }}"

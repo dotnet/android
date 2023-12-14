@@ -11,7 +11,6 @@ parameters:
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
   nugetArtifactName: $(NuGetArtifactName)
-  provisionatorChannel: latest
   repositoryAlias: self
   signClassicPkgContent: false
   stageName: mac_build
@@ -50,7 +49,6 @@ stages:
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
 

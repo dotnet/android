@@ -37,15 +37,24 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - checkout: monodroid
-      clean: true
-      submodules: recursive
-      path: s/xamarin-android/external/monodroid
-      persistCredentials: true
+    # Always checkout a second resource to ensure we are using multi-repo checkout behavior
+    #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+    - checkout: maui
 
-    - script: rm -rf external/monodroid/external/xamarin-android
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: delete external xamarin-android submodule
+    - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+      - checkout: monodroid
+        clean: true
+        submodules: recursive
+        path: s/xamarin-android/external/monodroid
+        persistCredentials: true
+
+      - script: rm -rf external/monodroid/external/xamarin-android
+        workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+        displayName: delete external xamarin-android submodule
+
+      - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+        workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
+        displayName: make prepare-external-git-dependencies
 
     - template: setup-ubuntu.yaml
 
@@ -53,10 +62,6 @@ stages:
       displayName: authenticate with azure artifacts
       inputs:
         forceReinstallCredentialProvider: true
-
-    - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: make prepare-external-git-dependencies
 
     - script: make jenkins PREPARE_CI=1 PREPARE_AUTOPROVISION=1 CONFIGURATION=$(XA.Build.Configuration)
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android

@@ -63,13 +63,6 @@ stages:
         security -v set-keychain-settings -lut 7200
       displayName: swap default keychain
 
-    - task: provisionator@2
-      displayName: Install Xcode
-      inputs:
-        github_token: $(GitHub.Token)
-        provisioning_script: $(Build.SourcesDirectory)/build-tools/provisioning/xcode.csx
-        provisioning_extra_args: '-v -v -v -v'
-
     - bash: |
         keychains=`security list-keychains`
         if [[ "$keychains" =~ "\"/Users/${USER}/Library/Keychains/builder.keychain-db\"" ]]; then

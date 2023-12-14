@@ -1704,6 +1704,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void XA0119AAB ()
 		{
+			AssertCommercialBuild ();
+
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.SetProperty ("_XASupportsFastDev", "True");
 			proj.SetProperty ("AndroidPackageFormat", "aab");
@@ -1732,6 +1734,8 @@ AAAAAAAAAAAAPQAAAE1FVEEtSU5GL01BTklGRVNULk1GUEsBAhQAFAAICAgAJZFnS7uHtAn+AQAA
 		[Test]
 		public void FastDeploymentDoesNotAddContentProvider ()
 		{
+			AssertCommercialBuild ();
+
 			var proj = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};

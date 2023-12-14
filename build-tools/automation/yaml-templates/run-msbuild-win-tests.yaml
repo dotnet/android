@@ -9,7 +9,6 @@ parameters:
   target_framework: 'net472'
   dotnet_targetframework: $(DotNetStableTargetFramework)
   run_extra_tests: false
-  provisionatorChannel: latest
 
 jobs:
   - job: ${{ parameters.job_name }}
@@ -28,8 +27,6 @@ jobs:
 
     - template: setup-test-environment.yaml
       parameters:
-        provisionClassic: ${{ ne(parameters.target_framework, parameters.dotnet_targetframework) }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         remove_dotnet: true
 
     - task: DownloadPipelineArtifact@1

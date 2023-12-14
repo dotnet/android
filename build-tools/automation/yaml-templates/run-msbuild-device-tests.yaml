@@ -7,7 +7,6 @@ parameters:
   nunit_categories: ''
   target_framework: 'net472'
   dotnet_targetframework: $(DotNetStableTargetFramework)
-  provisionatorChannel: latest
   jobCondition: succeeded()
 
 jobs:
@@ -22,9 +21,6 @@ jobs:
       clean: all
     steps:
     - template: setup-test-environment.yaml
-      parameters:
-        provisionClassic: ${{ ne(parameters.target_framework, parameters.dotnet_targetframework) }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: run-xaprepare.yaml
       parameters:

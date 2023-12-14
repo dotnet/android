@@ -35,11 +35,13 @@ resources:
     name: xamarin/UITools
     ref: refs/heads/main
     endpoint: xamarin
+  - repository: maui
+    type: github
+    name: dotnet/maui
+    ref: refs/heads/net8.0
+    endpoint: xamarin
 
 parameters:
-- name: provisionatorChannel
-  type: string
-  default: latest           # Support for launching a build against a Provisionator PR (e.g., pr/[github-account-name]/[pr-number]) as a means to test in-progress Provisionator changes
 - name: signClassicPkgContent
   type: boolean
   default: true             # Queue time variable that can be used to skip classic pkg signing
@@ -89,7 +91,6 @@ variables:
 stages:
 - template: yaml-templates/build-macos.yaml
   parameters:
-    provisionatorChannel: ${{ parameters.provisionatorChannel }}
     signClassicPkgContent: ${{ parameters.signClassicPkgContent }}
 
 - template: yaml-templates/build-windows.yaml
@@ -117,7 +118,6 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         configuration: $(ApkTestConfiguration)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
@@ -314,9 +314,6 @@ stages:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
@@ -460,7 +457,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Smoke Tests MSBuild - Win-0)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -469,7 +465,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: '| (TestCategory = SmokeTests $(DotNetNUnitCategories))'
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Check - "Xamarin.Android (macOS > Tests > MSBuild+Emulator)"
   - job: mac_msbuilddevice_tests
@@ -481,9 +476,6 @@ stages:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionClassic: false
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
@@ -543,8 +535,6 @@ stages:
     - template: yaml-templates/setup-ubuntu.yaml
 
     - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -579,7 +569,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -588,7 +577,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -597,7 +585,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -606,7 +593,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -615,7 +601,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-mac-tests.yaml
     parameters:
@@ -624,7 +609,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   # Xamarin.Android (Test MSBuild One .NET - Windows)
   - template: yaml-templates\run-msbuild-win-tests.yaml
@@ -635,7 +619,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -645,7 +628,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates\run-msbuild-win-tests.yaml
     parameters:
@@ -655,7 +637,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories) & TestCategory != SmokeTests
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - stage: msbuilddevice_tests
   displayName: MSBuild Emulator Tests
@@ -670,7 +651,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -679,7 +659,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -688,7 +667,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
   - template: yaml-templates/run-msbuild-device-tests.yaml
     parameters:
@@ -697,7 +675,6 @@ stages:
       job_suffix: One .NET
       nunit_categories: $(DotNetNUnitCategories)
       target_framework: $(DotNetStableTargetFramework)
-      provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
 - stage: wear_tests
   displayName: WearOS Tests
@@ -824,14 +801,11 @@ stages:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)/UITools/src/bot-provisioning/dependencies.csx
         provisioning_extra_args: -remove Xamarin.Android -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
-      env:
-        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         jdkTestFolder: $(JAVA_HOME_8_X64)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: designer/android-designer-build-mac.yaml@yaml-templates
       parameters:
@@ -905,14 +879,11 @@ stages:
         github_token: $(GitHub.Token)
         provisioning_script: $(System.DefaultWorkingDirectory)\UITools\src\bot-provisioning\dependencies.csx
         provisioning_extra_args: -vv DEVDIV_PKGS_NUGET_TOKEN=$(DevDiv.NuGet.Token) SECTOOLS_PKGS_NUGET_TOKEN=$(SecTools.NuGet.Token)
-      env:
-        PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates\setup-test-environment.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)\xamarin-android
         jdkTestFolder: $(JAVA_HOME_8_X64)
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - task: VSBuild@1
       displayName: Restore Xamarin.AndroidDesigner
@@ -955,8 +926,6 @@ stages:
       clean: all
     steps:
     - template: yaml-templates/setup-test-environment.yaml
-      parameters:
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
 
     - template: yaml-templates/run-xaprepare.yaml
       parameters:
