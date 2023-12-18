@@ -96,7 +96,7 @@ endif
 
 all-tests::
 	$(call MSBUILD_BINLOG,build-xabuild) /restore tools/xabuild/xabuild.csproj /p:Configuration=$(CONFIGURATION) $(_MSBUILD_ARGS)
-	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln
+	MSBUILD="$(MSBUILD)" $(call MSBUILD_BINLOG,all-tests,tools/scripts/xabuild) /restore $(MSBUILD_FLAGS) Xamarin.Android-Tests.sln /p:AndroidSdkBuildToolsVersion=30.0.3
 
 pack-dotnet::
 	$(call DOTNET_BINLOG,pack-dotnet) $(MSBUILD_FLAGS) -m:1 $(SOLUTION) -t:PackDotNet
