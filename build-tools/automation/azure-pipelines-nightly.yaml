@@ -48,6 +48,8 @@ stages:
       - group: xamops-azdev-secrets
       - name: Codeql.Enabled
         value: true
+      - name: ApiScan.Enabled
+        value: true
     steps:
     - checkout: self
       submodules: recursive
@@ -55,6 +57,35 @@ stages:
     - template: yaml-templates/commercial-build.yaml
       parameters:
         makeMSBuildArgs: /p:EnableNativeAnalyzers=true
+
+    ### Copy .dll and .pdb files for APIScan
+    - task: CopyFiles@2
+      displayName: Collect Files for APIScan
+      inputs:
+        Contents: |
+          $(System.DefaultWorkingDirectory)/xamarin-android/bin/Release/dotnet/packs/Microsoft.Android*/**/?(*.dll|*.pdb)
+        TargetFolder: $(Build.StagingDirectory)/apiscan
+        OverWrite: true
+        flattenFolders: true
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+    - script: find $(Build.StagingDirectory)/apiscan
+      displayName: List Files for APIScan
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+
+    ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
+    - task: APIScan@2
+      displayName: Run APIScan
+      inputs:
+        softwareFolder: $(Build.StagingDirectory)/apiscan
+        symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)/apiscan'
+        softwareName: $(ApiScanName)
+        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+        isLargeApp: true
+        toolVersion: Latest
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
+      env:
+        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
 
     - template: yaml-templates/upload-results.yaml
       parameters:
