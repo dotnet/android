@@ -37,8 +37,8 @@ stages:
   - job: mac_build_create_installers
     displayName: macOS > Create Installers
     pool:
-      name: Azure Pipelines
-      vmImage: internal-macos12
+      name: VSEng-Xamarin-RedmondMac-Android-Untrusted
+      demands: macOS.Name -equals Monterey
     timeoutInMinutes: 420
     workspace:
       clean: all
@@ -47,8 +47,6 @@ stages:
       - group: Xamarin Signing
       - group: xamops-azdev-secrets
       - name: Codeql.Enabled
-        value: true
-      - name: ApiScan.Enabled
         value: true
     steps:
     - checkout: self
