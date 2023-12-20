@@ -54,16 +54,11 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - template: yaml-templates/commercial-build.yaml
-      parameters:
-        makeMSBuildArgs: /p:EnableNativeAnalyzers=true
-
     ### Copy .dll and .pdb files for APIScan
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
-        Contents: |
-          $(System.DefaultWorkingDirectory)/xamarin-android/bin/Release/dotnet/packs/Microsoft.Android*/**/?(*.dll|*.pdb)
+        Contents: $(System.DefaultWorkingDirectory)/xamarin-android/build-*/**/?(*.props|*.targets)
         TargetFolder: $(Build.StagingDirectory)/apiscan
         OverWrite: true
         flattenFolders: true
@@ -72,6 +67,10 @@ stages:
     - script: find $(Build.StagingDirectory)/apiscan
       displayName: List Files for APIScan
       condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
+
+    - template: yaml-templates/commercial-build.yaml
+      parameters:
+        makeMSBuildArgs: /p:EnableNativeAnalyzers=true
 
     ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
     - task: APIScan@2
