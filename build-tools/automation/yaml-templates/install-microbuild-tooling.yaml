@@ -11,7 +11,7 @@ steps:
 
 - task: UsePythonVersion@0
   inputs:
-    versionSpec: 3.x
+    versionSpec: 3.11
 
 # ESRP signing requires minimum azure client version 2.8.0
 - template: azure-tools/az-client-update.yml@yaml-templates
