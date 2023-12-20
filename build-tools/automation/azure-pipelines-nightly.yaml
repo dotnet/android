@@ -58,34 +58,6 @@ stages:
       parameters:
         makeMSBuildArgs: /p:EnableNativeAnalyzers=true
 
-    ### Copy .dll and .pdb files for APIScan
-    - task: CopyFiles@2
-      displayName: Collect Files for APIScan
-      inputs:
-        Contents: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Release/lib/packs/Microsoft.Android*/**/?(*.dll|*.pdb)
-        TargetFolder: $(Build.StagingDirectory)/apiscan
-        OverWrite: true
-        flattenFolders: true
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
-
-    - script: find $(Build.StagingDirectory)/apiscan
-      displayName: List Files for APIScan
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
-
-    ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
-    - task: APIScan@2
-      displayName: Run APIScan
-      inputs:
-        softwareFolder: $(Build.StagingDirectory)/apiscan
-        symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)/apiscan'
-        softwareName: $(ApiScanName)
-        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
-        isLargeApp: true
-        toolVersion: Latest
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
-      env:
-        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
-
     - template: yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
@@ -310,3 +282,55 @@ stages:
         artifactName: Test Results - Localization With Emulator - macOS-$(System.JobPositionInPhase)
 
     - template: yaml-templates/fail-on-issue.yaml
+
+
+- stage: compliance_scan
+  displayName: Compliance
+  dependsOn: mac_build
+  jobs:
+  - job: api_scan
+    displayName: API Scan
+    pool:
+      name: Azure Pipelines
+      vmImage: windows-2022
+    timeoutInMinutes: 180
+    workspace:
+      clean: all
+    variables:
+    - name: ApiScan.Enabled
+      value: true
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        installApkDiff: false
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
+
+    ### Copy .dll and .pdb files for APIScan
+    - task: CopyFiles@2
+      displayName: Collect Files for APIScan
+      inputs:
+        Contents: $(System.DefaultWorkingDirectory)\xamarin-android\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.pdb)
+        TargetFolder: $(Build.StagingDirectory)\apiscan
+        OverWrite: true
+        flattenFolders: true
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
+
+    - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
+      displayName: List Files for APIScan
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
+
+    ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
+    - task: APIScan@2
+      displayName: Run APIScan
+      inputs:
+        softwareFolder: $(Build.StagingDirectory)\apiscan
+        symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
+        softwareName: $(ApiScanName)
+        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+        isLargeApp: true
+        toolVersion: Latest
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
+      env:
+        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
