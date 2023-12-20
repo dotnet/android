@@ -309,7 +309,7 @@ stages:
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
-        Contents: $(System.DefaultWorkingDirectory)\xamarin-android\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.pdb)
+        Contents: $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.pdb)
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
