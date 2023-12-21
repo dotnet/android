@@ -291,7 +291,7 @@ stages:
     pool:
       name: Azure Pipelines
       vmImage: windows-2022
-    timeoutInMinutes: 180
+    timeoutInMinutes: 480
     workspace:
       clean: all
     variables:
