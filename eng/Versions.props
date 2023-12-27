@@ -1,15 +1,15 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>9.0.100-alpha.1.23618.2</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-alpha.1.23615.12</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-alpha.1.23615.12</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>9.0.100-alpha.1.23625.1</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-alpha.1.23621.6</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-alpha.1.23621.6</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>9.0.0-alpha.1.23613.1</MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>9.0.0-alpha.1.23617.2</MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.4-alpha.23612.4</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.4-alpha.23617.1</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
   </PropertyGroup>
   <PropertyGroup>
