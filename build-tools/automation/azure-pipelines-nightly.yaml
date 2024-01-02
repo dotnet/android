@@ -332,3 +332,25 @@ stages:
       condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/nightly-apiscan'))
       env:
         AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+
+    - task: SdtReport@2
+      displayName: Guardian Export - Security Report
+      inputs:
+        GdnExportAllTools: false
+        GdnExportGdnToolApiScan: true
+        GdnExportOutputSuppressionFile: source.gdnsuppress
+
+    - task: PublishSecurityAnalysisLogs@3
+      displayName: Publish Guardian Artifacts
+      inputs:
+        ArtifactName: APIScan Logs
+        ArtifactType: Container
+        AllTools: false
+        APIScan: true
+        ToolLogsNotFoundAction: Warning
+
+    - task: PostAnalysis@2
+      displayName: Fail Build on Guardian Issues
+      inputs:
+        GdnBreakAllTools: false
+        GdnBreakGdnToolApiScan: true
