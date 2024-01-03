@@ -62,6 +62,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.XABuildToolsPackagePrefix,           StripQuotes ("@XABuildToolsPackagePrefix@"));
 			properties.Add (KnownProperties.XABinRelativeInstallPrefix,          StripQuotes (@"@XABinRelativeInstallPrefix@"));
 			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));
+			properties.Add (KnownProperties.XAPackagesDir,                       StripQuotes (@"@XAPackagesDir@"));
 			properties.Add (KnownProperties.XAPlatformToolsVersion,              StripQuotes ("@XAPlatformToolsVersion@"));
 			properties.Add (KnownProperties.XAPlatformToolsPackagePrefix,        StripQuotes ("@XAPlatformToolsPackagePrefix@"));
 		}
