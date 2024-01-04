@@ -11,10 +11,43 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
+		public void BuildApplicationWithDynamicAssetFeature ([Values (true, false)] bool isRelease) {
+			var path = Path.Combine ("temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+					},
+					new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
+						TextContent = () => "Asset3",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=assetpack1",
+					},
+				}
+			};
+			app.SetProperty ("AndroidPackageFormat", "aab");
+			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				Assert.IsTrue (appBuilder.Build (app), $"{app.ProjectName} should succeed");
+				// Check the final aab has the required feature files in it.
+				var aab = Path.Combine (Root, appBuilder.ProjectDirectory,
+					app.OutputPath, $"{app.PackageName}.aab");
+				using (var zip = ZipHelper.OpenZip (aab)) {
+					Assert.IsTrue (zip.ContainsEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
+					Assert.IsFalse (zip.ContainsEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
+					Assert.IsTrue (zip.ContainsEntry ("assetpack1/assets/asset3.txt"), "aab should contain assetpack1/assets/asset3.txt");
+					Assert.IsTrue (zip.ContainsEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
+					Assert.IsFalse (zip.ContainsEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
+				}
+			}
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
 		public void BuildDynamicAssetFeature ([Values (true, false)] bool isRelease) {
 
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Dynamic Features not supported on Legacy Projects.");
 			var path = Path.Combine ("temp", TestName);
 			var feature1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Feature1",
@@ -57,8 +90,6 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		public void BuildDynamicActivityFeature ([Values (true, false)] bool isRelease) {
 
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Dynamic Features not supported on Legacy Projects.");
 			var path = Path.Combine ("temp", TestName);
 			var assetFeature = new XamarinAndroidLibraryProject () {
 				ProjectName = "AssetFeature",

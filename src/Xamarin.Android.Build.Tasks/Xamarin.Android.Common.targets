@@ -362,6 +362,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- Assets build properties -->
 <PropertyGroup>
 	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
+  <MonoAndroidAssetPacksDirIntermediate>$(IntermediateOutputPath)assetpacks\</MonoAndroidAssetPacksDirIntermediate>
 	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
 </PropertyGroup>
 
