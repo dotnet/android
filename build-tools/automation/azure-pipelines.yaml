@@ -410,7 +410,7 @@ stages:
         $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
         [xml] $xml = Get-Content $project
         $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
-        $node.Value = '$(DotNetTargetFramework)-android'
+        $node.InnerText = '$(DotNetTargetFramework)-android'
         $xml.Save($project)
       displayName: set TargetFrameworks to Android-only
 
