@@ -33,7 +33,7 @@ resources:
   - repository: maui
     type: github
     name: dotnet/maui
-    ref: refs/heads/net8.0
+    ref: refs/heads/net9.0
     endpoint: xamarin
 
 parameters:
