@@ -406,7 +406,7 @@ stages:
         displayName: Create MAUI template
         continueOnError: false
 
-    - powershell: >-
+    - powershell: |
         $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
         [xml] $xml = Get-Content $project
         $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
