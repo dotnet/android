@@ -263,7 +263,7 @@ namespace Xamarin.Android.Prepare
 
 			// not really configurables, merely convenience aliases for more frequently used paths that come from properties
 			public static string XAInstallPrefix                => ctx.Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
-			public static string XAPackagesDir                  = DetermineNugetPackagesDir (ctx);
+			public static string XAPackagesDir                  => ctx.Properties.GetRequiredValue (KnownProperties.XAPackagesDir);
 
 			static string GetNetcoreAppRuntimePath (Context ctx, string androidTarget)
 			{
@@ -273,17 +273,6 @@ namespace Xamarin.Android.Prepare
 					ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion),
 					"runtimes",
 					$"android-{androidTarget}"
-				);
-			}
-
-			static string DetermineNugetPackagesDir (Context ctx)
-			{
-				return Path.GetFullPath (
-					Path.Combine (
-						ctx.Properties.GetRequiredValue (KnownProperties.PkgXamarin_LibZipSharp),
-						"..",
-						".."
-					)
 				);
 			}
 
