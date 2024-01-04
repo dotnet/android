@@ -406,6 +406,13 @@ stages:
         displayName: Create MAUI template
         continueOnError: false
 
+    - powershell: >-
+        [xml] $xml = Get-Content $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
+        $node = $xml.SelectSingleNode("/Project/PropertyGroup/TargetFrameworks")
+        $node.Value = $(DotNetTargetFramework)-android
+        $xml.Save($(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj)
+      displayName: set TargetFrameworks to Android-only
+
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
