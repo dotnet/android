@@ -33,7 +33,7 @@ resources:
   - repository: maui
     type: github
     name: dotnet/maui
-    ref: refs/heads/net8.0
+    ref: refs/heads/net9.0
     endpoint: xamarin
 
 parameters:
@@ -405,6 +405,14 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
         displayName: Create MAUI template
         continueOnError: false
+
+    - powershell: |
+        $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
+        [xml] $xml = Get-Content $project
+        $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
+        $node.InnerText = '$(DotNetTargetFramework)-android'
+        $xml.Save($project)
+      displayName: set TargetFrameworks to Android-only
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
