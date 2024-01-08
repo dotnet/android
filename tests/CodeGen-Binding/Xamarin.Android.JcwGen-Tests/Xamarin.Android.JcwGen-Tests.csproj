@@ -34,6 +34,7 @@
     <ProjectReference Include="..\..\..\src\Xamarin.Android.NUnitLite\Xamarin.Android.NUnitLite.NET.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding\Xamarin.Android.FixJavaAbstractMethod-APIv2Binding.csproj" />
     <ProjectReference Include="..\Xamarin.Android.FixJavaAbstractMethod-Library\Xamarin.Android.FixJavaAbstractMethod-Library.csproj" />
+    <ProjectReference Include="..\Xamarin.Android.LibraryProjectZip-LibBinding\Xamarin.Android.LibraryProjectZip-LibBinding.csproj" />
   </ItemGroup>
 
   <ItemGroup>

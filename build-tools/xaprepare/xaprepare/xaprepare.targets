@@ -96,6 +96,7 @@
       <Replacement Include="@XAPlatformToolsVersion@=$(XAPlatformToolsVersion)" />
       <Replacement Include="@XAInstallPrefix@=$(XAInstallPrefix)" />
       <Replacement Include="@XABinRelativeInstallPrefix@=$(_XABinRelativeInstallPrefix)" />
+      <Replacement Include="@XAPackagesDir@=$(XAPackagesDir)" />
       <Replacement Include="@XAPlatformToolsPackagePrefix@=$(XAPlatformToolsPackagePrefix)" />
     </ItemGroup>
 
