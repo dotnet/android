@@ -317,11 +317,11 @@ stages:
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
       displayName: List Files for APIScan
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
     - task: APIScan@2
@@ -333,7 +333,7 @@ stages:
         softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
         isLargeApp: true
         toolVersion: Latest
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
       env:
         AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
 
@@ -343,7 +343,7 @@ stages:
         GdnExportAllTools: false
         GdnExportGdnToolApiScan: true
         GdnExportOutputSuppressionFile: source.gdnsuppress
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - task: PublishSecurityAnalysisLogs@3
       displayName: Publish Guardian Artifacts
@@ -353,11 +353,11 @@ stages:
         AllTools: false
         APIScan: true
         ToolLogsNotFoundAction: Warning
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - task: PostAnalysis@2
       displayName: Fail Build on Guardian Issues
       inputs:
         GdnBreakAllTools: false
         GdnBreakGdnToolApiScan: true
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], ${{ parameters.ApiScanSourceBranch }}))
+      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
