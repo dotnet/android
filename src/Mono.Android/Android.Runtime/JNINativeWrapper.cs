@@ -73,10 +73,10 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnvInit.PropagateExceptions;
-			if (filter && AndroidRuntimeInternal.mono_unhandled_exception_method != null) {
+			if (filter && AndroidRuntimeInternal.mono_unhandled_exception.Method != null) {
 				ig.BeginExceptFilterBlock ();
 
-				ig.Emit (OpCodes.Call, AndroidRuntimeInternal.mono_unhandled_exception_method);
+				ig.Emit (OpCodes.Call, AndroidRuntimeInternal.mono_unhandled_exception.Method);
 				ig.Emit (OpCodes.Ldc_I4_1);
 				ig.BeginCatchBlock (null!);
 			} else {
