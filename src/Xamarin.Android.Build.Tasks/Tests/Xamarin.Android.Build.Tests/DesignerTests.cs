@@ -31,16 +31,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
-			var proj = new XamarinAndroidApplicationProject () {
-				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-				},
+			var proj = new XamarinFormsAndroidApplicationProject () {
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 				Imports = {
 				new Import ("foo.targets") {
@@ -152,7 +143,7 @@ namespace UnnamedProject
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
 				var doc = XDocument.Load (resourcepathscache);
-				Assert.AreEqual (37, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
+				Assert.AreEqual (54, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
 			}
 		}
 
@@ -212,17 +203,7 @@ namespace UnnamedProject
 		public void GetExtraLibraryLocationsForDesigner ()
 		{
 			var target = "GetExtraLibraryLocationsForDesigner";
-			var proj = new XamarinAndroidApplicationProject () {
-				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-				},
-			};
+			var proj = new XamarinFormsAndroidApplicationProject ();
 			string jar = "gson-2.7.jar";
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", jar) {
 				WebContent = $"https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/{jar}"
@@ -231,7 +212,7 @@ namespace UnnamedProject
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
-			int libraryProjectImportsJars = 14;
+			const int libraryProjectImportsJars = 55;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");

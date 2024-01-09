@@ -350,6 +350,9 @@ namespace Xamarin.Android.Build.Tests
 						BinaryContent = () => new byte[10],
 						MetadataValues = "Link=libs\\x86\\libtest.so",
 					},
+					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
+						BinaryContent = () => new byte[10],
+					},
 				},
 			};
 			var dll2 = new XamarinAndroidLibraryProject () {
@@ -379,12 +382,9 @@ namespace Xamarin.Android.Build.Tests
 					new AndroidItem.AndroidNativeLibrary ("armeabi-v7a\\libRSSupport.so") {
 						BinaryContent = () => new byte[10],
 					},
-				},
-				PackageReferences = {
-					KnownPackages.Xamarin_Android_Support_v8_RenderScript_28_0_0_3,
 				}
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86");
+			proj.SetRuntimeIdentifiers (["armeabi-v7a", "x86"]);
 			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				Assert.IsTrue (b1.Build (dll2), "Build should have succeeded.");

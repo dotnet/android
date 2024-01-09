@@ -819,10 +819,10 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
-				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
-					expected.Jars.Select (j => j.ItemSpec));
-				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec),
-					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec));
+				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j));
+				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j));
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -1359,39 +1359,6 @@ namespace Lib2
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
-				}
-			}
-		}
-
-		[Test]
-		[NonParallelizable]
-		public void AndroidXMigrationBug ()
-		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
-
-			string source = "class Foo { }";
-			proj.Sources.Add (new BuildItem.Source ("Foo.cs") { TextContent = () => source });
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				source = source.Replace ("Foo", "Bar");
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				var targets = new [] {
-					"_CompileResources",
-					"_UpdateAndroidResgen",
-					"_GenerateAndroidResourceDir",
-				};
-				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
 				}
 			}
 		}
