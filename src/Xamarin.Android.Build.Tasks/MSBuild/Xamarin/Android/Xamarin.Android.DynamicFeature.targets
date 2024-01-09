@@ -4,6 +4,9 @@
 <!-- Andorid Feature Build System-->
 <PropertyGroup>
   <_BuildDynamicFeaturesInParallel>False</_BuildDynamicFeaturesInParallel>
+  <DynamicFeatureResDirIntermediate>$(IntermediateOutputPath)assetpacks\g</DynamicFeatureResDirIntermediate>
+  <DynamicFeatureResDirIntermediateStampFile>$(DynamicFeatureResDirIntermediate)\assetpacks.stamp</DynamicFeatureResDirIntermediateStampFile>
+  <_DynamicFeatureResourceFile>$(DynamicFeatureResDirIntermediate)\res\values\ms_asset_pack_strings.xml</_DynamicFeatureResourceFile>
 </PropertyGroup>
 <Target Name="_CheckIsDynamicFeature"
       Returns="@(_DynamicFeaetureProjectMetadata)" Condition=" '$(FeatureSplitName)' != '' Or '$(FeatureType)' != '' ">
@@ -71,6 +74,27 @@
       Condition="'@(_AndroidDynamicFeatureProjects.Count())' != '0' "
       DependsOnTargets="_CollectDynamicFeatures">
     <MSBuild Projects="@(_AndroidDynamicFeatureProjects)" BuildInParallel="$(_BuildDynamicFeaturesInParallel)" Targets="Clean" RebaseOutputs="true" Properties="Configuration=$(Configuration)" />
+</Target>
+
+<Target Name="_CreateAssetPackTitleResources"
+    Condition=" '$(AndroidPackageFormat)' == 'aab' And '$(AndroidApplication)' == 'true' ">
+  <!--
+    Create the values.xml entires for the asset packs.
+    This needs to be done BEFORE we call aapt2 compile and aapt2 link so that the values are
+    in the main package.
+  -->
+  <MakeDir Directories="$(DynamicFeatureResDirIntermediate)\res\values" />
+  <CreateAssetPackTitleResources
+    Assets="@(_AndroidDynamicFeature)"
+    OutputFile="$(_DynamicFeatureResourceFile)"
+  />
+  <Touch Files="$(DynamicFeatureResDirIntermediateStampFile)" AlwaysCreate="True" />
+  <ItemGroup>
+    <LibraryResourceDirectories Include="$(DynamicFeatureResDirIntermediate)\res">
+      <StampFile>$(DynamicFeatureResDirIntermediateStampFile)</StampFile>
+    </LibraryResourceDirectories>
+    <FileWrites Include="$(_DynamicFeatureResourceFile)" />
+  </ItemGroup>
 </Target>
 <!-- Feature Specific Targets. -->
 

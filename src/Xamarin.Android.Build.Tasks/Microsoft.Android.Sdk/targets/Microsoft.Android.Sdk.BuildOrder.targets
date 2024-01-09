@@ -59,6 +59,7 @@ properties that determine build ordering.
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
       _CreateBaseApk;
+      _BuildAssetPacks;
       _BuildDynamicFeatures;
       _LinkAssemblies;
       _GenerateJavaStubs;
@@ -128,9 +129,14 @@ properties that determine build ordering.
       $(DesignTimeResolveAssemblyReferencesDependsOn);
       _BuildResourceDesigner;
     </DesignTimeResolveAssemblyReferencesDependsOn>
+    <_PrepareAssetPackDependsOnTargets>
+      _CalculateAssetPacks;
+      $(_PrepareAssetPackDependsOnTargets);
+    </_PrepareAssetPackDependsOnTargets>
     <_UpdateAndroidResourcesDependsOn>
       $(CoreResolveReferencesDependsOn);
       _CreatePropertiesCache;
+      $(_PrepareAssetPackDependsOnTargets);
       _CheckForDeletedResourceFile;
       _ComputeAndroidResourcePaths;
       _UpdateAndroidResgen;

@@ -11,7 +11,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[Category ("SmokeTests")]
-		public void BuildApplicationWithDynamicAssetFeature ([Values (true, false)] bool isRelease) {
+		public void BuildApplicationWithAssetPack ([Values (true, false)] bool isRelease) {
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -21,10 +21,25 @@ namespace Xamarin.Android.Build.Tests
 						TextContent = () => "Asset1",
 						Encoding = Encoding.ASCII,
 					},
+					new AndroidItem.AndroidAsset ("Assets\\asset2.txt") {
+						TextContent = () => "Asset2",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=assetpack1;DeliveryType=InstallTime",
+					},
 					new AndroidItem.AndroidAsset ("Assets\\asset3.txt") {
 						TextContent = () => "Asset3",
 						Encoding = Encoding.ASCII,
 						MetadataValues="AssetPack=assetpack1",
+					},
+					new AndroidItem.AndroidAsset ("Assets\\asset4.txt") {
+						TextContent = () => "Asset4",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=assetpack2;DeliveryType=OnDemand",
+					},
+					new AndroidItem.AndroidAsset ("Assets\\asset5.txt") {
+						TextContent = () => "Asset5",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=assetpack3;DeliveryType=FastFollow",
 					},
 				}
 			};
@@ -36,8 +51,13 @@ namespace Xamarin.Android.Build.Tests
 					app.OutputPath, $"{app.PackageName}.aab");
 				using (var zip = ZipHelper.OpenZip (aab)) {
 					Assert.IsTrue (zip.ContainsEntry ("base/assets/asset1.txt"), "aab should contain base/assets/asset1.txt");
+					Assert.IsFalse (zip.ContainsEntry ("base/assets/asset2.txt"), "aab should not contain base/assets/asset2.txt");
 					Assert.IsFalse (zip.ContainsEntry ("base/assets/asset3.txt"), "aab should not contain base/assets/asset3.txt");
+					Assert.IsFalse (zip.ContainsEntry ("base/assets/asset4.txt"), "aab should not contain base/assets/asset4.txt");
+					Assert.IsTrue (zip.ContainsEntry ("assetpack1/assets/asset2.txt"), "aab should contain assetpack1/assets/asset2.txt");
 					Assert.IsTrue (zip.ContainsEntry ("assetpack1/assets/asset3.txt"), "aab should contain assetpack1/assets/asset3.txt");
+					Assert.IsTrue (zip.ContainsEntry ("assetpack2/assets/asset4.txt"), "aab should contain assetpack2/assets/asset4.txt");
+					Assert.IsTrue (zip.ContainsEntry ("assetpack3/assets/asset5.txt"), "aab should contain assetpack3/assets/asset5.txt");
 					Assert.IsTrue (zip.ContainsEntry ("assetpack1/assets.pb"), "aab should contain assetpack1/assets.pb");
 					Assert.IsFalse (zip.ContainsEntry ("assetpack1/resources.pb"), "aab should not contain assetpack1/resources.pb");
 				}

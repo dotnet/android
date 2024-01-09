@@ -126,6 +126,9 @@ namespace Xamarin.Android.Tasks
 				case "OnDemand":
 					distribution = new XElement (distNS + "on-demand");
 					break;
+				case "FastFollow":
+					distribution = new XElement (distNS + "fast-follow");
+					break;
 				case "InstallTime":
 				default:
 					distribution = new XElement (distNS + "install-time");

@@ -133,6 +133,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Buffers.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.IO.Hashing.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Assets.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Application.targets" />

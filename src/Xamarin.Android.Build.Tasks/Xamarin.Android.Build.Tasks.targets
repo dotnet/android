@@ -93,6 +93,10 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Resource.Designer.targets</Link>
     </None>
+    <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Assets.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Assets.targets</Link>
+    </None>
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Aapt2.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Aapt2.targets</Link>

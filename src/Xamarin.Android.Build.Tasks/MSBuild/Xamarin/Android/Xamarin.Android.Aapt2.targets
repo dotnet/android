@@ -19,6 +19,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Compile" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Link" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+<UsingTask TaskName="Xamarin.Android.Tasks.Aapt2LinkAssetPack" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.Aapt2Convert" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 <UsingTask TaskName="Xamarin.Android.Tasks.CreateDynamicFeatureManifest" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
@@ -302,7 +303,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
-<Target Name="_ConvertFeaturePackage">
+<Target Name="_ConvertFeaturePackage" Condition=" '$(FeatureType)' != 'AssetPack' ">
   <Aapt2Convert
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
@@ -323,55 +324,19 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Inputs="$(AndroidManifest);@(AndroidAsset);$(_AppPackagedResources)"
     Outputs="$(_FeaturePackage)"
   >
-  <PropertyGroup>
-    <_AndroidIntermediateAapt2OutputDirectory>$(IntermediateOutputPath)aapt2output</_AndroidIntermediateAapt2OutputDirectory>
-  </PropertyGroup>
-  <MakeDir Directories="$(_AndroidIntermediateDexOutputDirectory);$(_AndroidIntermediateAapt2OutputDirectory)" />
-  <Aapt2Link
-      AndroidManifestFile="$(AndroidManifest)"
-      CompiledResourceFlatFiles="@(_CompiledFlatFiles)"
+  <Aapt2LinkAssetPack
       DaemonMaxInstanceCount="$(Aapt2DaemonMaxInstanceCount)"
       DaemonKeepInDomain="$(_Aapt2DaemonKeepInDomain)"
-      ResourceDirectories="$(MonoAndroidResDirIntermediate)"
-      AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
-      ImportsDirectory="$(_LibraryProjectImportsDirectoryName)"
-      OutputImportDirectory="$(_AndroidLibrayProjectIntermediatePath)"
-      OutputFile="$(_AndroidIntermediateAapt2OutputDirectory)"
-      OutputToDirectory="True"
-      YieldDuringToolExecution="$(YieldDuringToolExecution)"
+      OutputArchive="$(_FeaturePackage)"
+      AssetDirectory="$(MonoAndroidAssetsDirIntermediate)"
+      Manifest="$(AndroidManifest)"
       PackageName="$(FeaturePackageName)"
-      PackageId="$(FeaturePackageId)"
-      JavaPlatformJarPath="$(JavaPlatformJarPath)"
-      AdditionalApksToLink="@(_AdditionalApksToLink)"
-      VersionCodePattern="$(AndroidVersionCodePattern)"
-      VersionCodeProperties="$(AndroidVersionCodeProperties)"
-      SupportedAbis="@(_BuildTargetAbis)"
-      CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
-      AssetsDirectory="$(MonoAndroidAssetsDirIntermediate)"
-      AdditionalAndroidAssetPaths="@(LibraryAssetDirectories)"
-      AndroidSdkPlatform="$(_AndroidApiLevel)"
-      JavaDesignerOutputDirectory="$(AaptTemporaryDirectory)"
-      ManifestFiles="$(AndroidManifest)"
-      ProtobufFormat="False"
-      ExtraArgs="$(AndroidAapt2LinkExtraArgs)"
       ToolPath="$(Aapt2ToolPath)"
       ToolExe="$(Aapt2ToolExe)"
-      UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
-  />
-  <!-- We don't need this file for asset packs. In fact bundle-tool will error if it is present. -->
-  <Delete
-      Files="$(_AndroidIntermediateAapt2OutputDirectory)\resources.arsc"
-      Condition=" '$(FeatureType)' == 'AssetPack' And Exists ('$(_AndroidIntermediateAapt2OutputDirectory)\resources.arsc') "
-  />
-
-  <ZipDirectory
-      SourceDirectory="$(_AndroidIntermediateAapt2OutputDirectory)"
-      DestinationFile="$(_PackagedResources)"
-      Overwrite="true"
-  />
+  />  
   <ItemGroup>
-    <FileWrites Include="$(_PackagedResources)" />
-    <FileWrites Include="$(_AndroidIntermediateAapt2OutputDirectory)\**\*.*" />
+    <FileWrites Include="$(_FeaturePackage)" />
   </ItemGroup>
 </Target>
+
 </Project>
