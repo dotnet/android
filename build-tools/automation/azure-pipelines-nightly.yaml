@@ -317,6 +317,7 @@ stages:
 
     - powershell: |
         Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(Build.StagingDirectory)\binutils-pdb"
+        Get-ChildItem -Path "$(Build.StagingDirectory)\binutils-pdb" -Recurse
       displayName: Extract binutils pdbs
 
     ### Copy .dll, .exe, .pdb files for APIScan
@@ -325,7 +326,7 @@ stages:
       inputs:
         Contents: |
           $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-          $(Build.StagingDirectory)\binutils-pdb\**\*.pdb
+          $(Build.StagingDirectory)\binutils-pdb\*.pdb
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
