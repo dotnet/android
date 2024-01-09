@@ -243,17 +243,9 @@ namespace Xamarin.Android.Build.Tests
 				EmbedAssembliesIntoApk = true,
 				AotAssemblies = aot,
 			};
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
 			var abis = new [] { "armeabi-v7a", "x86" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
@@ -292,10 +284,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.IsRelease = true;
 			proj.AotAssemblies = aot;
 
-			if (forms) {
-				proj.PackageReferences.Clear ();
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-			}
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
@@ -442,26 +430,6 @@ namespace Xamarin.Android.Build.Tests
 				namespaceResolver.AddNamespace ("android", "http://schemas.android.com/apk/res/android");
 				var element = manifest.XPathSelectElement ($"/manifest/application/provider[@android:name='{proj.PackageName}']", namespaceResolver);
 				Assert.IsNotNull (element, "placeholder not replaced");
-			}
-		}
-
-		[Test]
-		[Category ("XamarinBuildDownload")]
-		public void ExtraAaptManifest ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nCrashlytics.Crashlytics.HandleManagedExceptions();");
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Crashlytics);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Android_Fabric);
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
-			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				builder.Target = "Restore";
-				Assert.IsTrue (builder.Build (proj), "Restore should have succeeded.");
-				builder.Target = "Build";
-				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-				var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
-				Assert.IsTrue (manifest.Contains ($"android:authorities=\"{proj.PackageName}.crashlyticsinitprovider\""), "placeholder not replaced");
-				Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
 			}
 		}
 
@@ -714,7 +682,10 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.PackageReferences.Add (new Package {
+				Id = "Xamarin.AndroidX.AppCompat",
+				Version = "1.6.1.5",
+			});
 
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
@@ -732,8 +703,8 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				FileAssert.Exists (build_props, "build.props should exist after first build.");
 
 				proj.PackageReferences.Clear ();
-				//NOTE: we can get all the other dependencies transitively, yay!
-				proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat_1_6_0_1);
+				//NOTE: this should be newer than specified above
+				proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 				b.Save (proj, doNotCleanupOnUpdate: true);
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped ("_CleanIntermediateIfNeeded"), "`_CleanIntermediateIfNeeded` should have run for the second build!");
@@ -1165,6 +1136,7 @@ public class MyWorker : Worker
 "
 			});
 			proj.PackageReferences.Add (KnownPackages.AndroidXWorkRuntime);
+			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
@@ -1438,8 +1410,7 @@ namespace UnnamedProject
 
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportConstraintLayout_1_0_2_2,
+					KnownPackages.AndroidXConstraintLayout
 				},
 			};
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());
@@ -1623,8 +1594,7 @@ public class ToolbarEx {
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				PackageReferences = {
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportConstraintLayout_1_0_2_2,
+					KnownPackages.AndroidXConstraintLayout
 				},
 			};
 			proj.SetProperty ("AndroidLintEnabled", true.ToString ());

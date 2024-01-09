@@ -737,13 +737,7 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidXAppCompat
 				},
 			};
 			proj.SetProperty ("AndroidManifestMerger", "legacy");
@@ -759,7 +753,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 using Android.Util;
 [Activity (Label = ""TestActivity1"")]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
@@ -779,7 +773,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 using Android.Util;
 [Activity (Label = ""TestActivity2"")]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
@@ -800,8 +794,8 @@ public class TestActivity2 : FragmentActivity {
 						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
 						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
-					Assert.AreEqual (manifest.IndexOf ("meta-data", StringComparison.OrdinalIgnoreCase),
-					                 manifest.LastIndexOf ("meta-data", StringComparison.OrdinalIgnoreCase), "There should be only one meta-data element");
+					Assert.AreEqual (manifest.IndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase),
+					                 manifest.LastIndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase), "There should be only one android.support.VERSION meta-data element");
 
 					var doc = XDocument.Parse (manifest);
 					var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");

@@ -142,9 +142,8 @@ namespace Xamarin.Android.Build.Tests
 				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": Android.Support.V7.App.AppCompatActivity");
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
@@ -166,7 +165,7 @@ namespace Xamarin.Android.Build.Tests
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
 			new object[] { Array.Empty<Package> (), null },
-			new object[] { new Package [] { KnownPackages.AndroidSupportV4_27_0_2_1, KnownPackages.SupportV7AppCompat_27_0_2_1}, "Android.Support.V7.App.AppCompatActivity" },
+			new object[] { new Package [] { KnownPackages.AndroidXAppCompat }, "AndroidX.AppCompat.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414
 
