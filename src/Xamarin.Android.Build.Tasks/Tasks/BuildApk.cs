@@ -494,7 +494,7 @@ namespace Xamarin.Android.Tasks
 								AddFileToArchiveIfNewer (
 									apk,
 									symbolsPath,
-									MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyDirectory + Path.GetFileName (symbols)),
+									assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols)),
 									compressionMethod: UncompressedMethod
 								);
 							}
