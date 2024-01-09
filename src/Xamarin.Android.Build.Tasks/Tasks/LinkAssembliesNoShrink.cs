@@ -42,19 +42,24 @@ namespace Xamarin.Android.Tasks
 
 		public bool Deterministic { get; set; }
 
+		/// <summary>
+		/// Defaults to false, enables Mono.Cecil to load symbols
+		/// </summary>
+		public bool ReadSymbols { get; set; }
+
 		public override bool RunTask ()
 		{
 			if (SourceFiles.Length != DestinationFiles.Length)
 				throw new ArgumentException ("source and destination count mismatch");
 
 			var readerParameters = new ReaderParameters {
-				ReadSymbols = true,
+				ReadSymbols = ReadSymbols,
 			};
 			var writerParameters = new WriterParameters {
 				DeterministicMvid = Deterministic,
 			};
 
-			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParameters)) {
+			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters)) {
 				// Add SearchDirectories with ResolvedAssemblies
 				foreach (var assembly in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
