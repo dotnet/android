@@ -326,7 +326,7 @@ stages:
       inputs:
         Contents: |
           $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-          $(Build.StagingDirectory)\binutils-pdb\*.pdb
+          $(Build.StagingDirectory)\**\*.pdb
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
