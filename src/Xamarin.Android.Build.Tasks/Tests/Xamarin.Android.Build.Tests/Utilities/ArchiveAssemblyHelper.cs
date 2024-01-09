@@ -45,7 +45,7 @@ namespace Xamarin.Android.Build.Tests
 
 			string extension = Path.GetExtension (archivePath) ?? String.Empty;
 			if (String.Compare (".aab", extension, StringComparison.OrdinalIgnoreCase) == 0) {
-				assembliesRootDir = "base/lib/assemblies";
+				assembliesRootDir = "base/lib/";
 			} else if (String.Compare (".apk", extension, StringComparison.OrdinalIgnoreCase) == 0) {
 				assembliesRootDir = "lib/";
 			} else if (String.Compare (".zip", extension, StringComparison.OrdinalIgnoreCase) == 0) {
@@ -456,13 +456,43 @@ namespace Xamarin.Android.Build.Tests
 			IEnumerable<string> GetMissingFilesForAbi (string abi)
 			{
 				(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (abi);
-				return fileNames.Where (x => !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, x)) && !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, x)));
+				return fileNames.Where (x => {
+					string? culture = null;
+					string fileName = x;
+					int slashIndex = x.IndexOf ('/');
+					if (slashIndex > 0) {
+						culture = x.Substring (0, slashIndex);
+						fileName = x.Substring (slashIndex + 1);
+					}
+
+					return !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, x)) &&
+					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, x)) &&
+					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixAssemblies, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture))) &&
+					       !zip.ContainsEntry (MonoAndroidHelper.MakeZipArchivePath (prefixLib, MonoAndroidHelper.MakeDiscreteAssembliesEntryName (fileName, culture)));
+				});
 			}
 
 			IEnumerable<string> GetAdditionalFilesForAbi (string abi, List<string> existingFiles)
 			{
 				(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (abi);
 				return existingFiles.Where (x => !fileNames.Contains (x.Replace (prefixAssemblies, string.Empty)) && !fileNames.Contains (x.Replace (prefixLib, String.Empty)));
+			}
+
+			string GetUnmangledFileName (string fullName)
+			{
+				string fileName = Path.GetFileName (fullName);
+				switch(fileName[0]) {
+					case '#':
+						// Drop the '#' prefix and the .so extension
+						return Path.GetFileNameWithoutExtension (fileName.Substring (1));
+
+					case '%':
+						// Drop the '%' prefix, replace the following '%s' with `/` to get a culture/Assembly file name and drop the .so extension
+						return Path.GetFileNameWithoutExtension (fileName.Substring (1).Replace ('%', '/'));
+
+					default:
+						return fileName;
+				}
 			}
 		}
 
