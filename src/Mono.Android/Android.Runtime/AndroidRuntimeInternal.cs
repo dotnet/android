@@ -6,7 +6,7 @@ namespace Android.Runtime
 {
 	public static class AndroidRuntimeInternal
 	{
-		internal static Action<Exception> mono_unhandled_exception = RuntimeNativeMethods.monodroid_debugger_unhandled_exception;
+		internal static readonly Action<Exception> mono_unhandled_exception = RuntimeNativeMethods.monodroid_debugger_unhandled_exception;
 
 #pragma warning disable CS0649 // Field is never assigned to.  This field is assigned from monodroid-glue.cc.
 		internal static volatile bool BridgeProcessing; // = false

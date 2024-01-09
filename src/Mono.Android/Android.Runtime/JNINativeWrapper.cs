@@ -73,7 +73,7 @@ namespace Android.Runtime {
 			ig.Emit (OpCodes.Leave, label);
 
 			bool  filter = Debugger.IsAttached || !JNIEnvInit.PropagateExceptions;
-			if (filter && AndroidRuntimeInternal.mono_unhandled_exception.Method != null) {
+			if (filter) {
 				ig.BeginExceptFilterBlock ();
 
 				ig.Emit (OpCodes.Call, AndroidRuntimeInternal.mono_unhandled_exception.Method);
