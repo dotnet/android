@@ -289,6 +289,7 @@ stages:
 - stage: compliance_scan
   displayName: Compliance
   dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
   jobs:
   - job: api_scan
     displayName: API Scan
@@ -298,9 +299,6 @@ stages:
     timeoutInMinutes: 480
     workspace:
       clean: all
-    variables:
-    - name: ApiScan.Enabled
-      value: true
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
@@ -316,8 +314,8 @@ stages:
         downloadPath: $(Build.StagingDirectory)\binutils-pdb
 
     - powershell: |
-        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(Build.StagingDirectory)\binutils-pdb"
-        Get-ChildItem -Path "$(Build.StagingDirectory)\binutils-pdb" -Recurse
+        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
+        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
       displayName: Extract binutils pdbs
 
     ### Copy .dll, .exe, .pdb files for APIScan
@@ -326,15 +324,13 @@ stages:
       inputs:
         Contents: |
           $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-          $(Build.StagingDirectory)\**\*.pdb
+          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
       displayName: List Files for APIScan
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
     - task: APIScan@2
@@ -343,10 +339,9 @@ stages:
         softwareFolder: $(Build.StagingDirectory)\apiscan
         symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
         softwareName: $(ApiScanName)
-        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)$(System.JobAttempt)
         isLargeApp: true
         toolVersion: Latest
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
       env:
         AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
 
@@ -356,7 +351,6 @@ stages:
         GdnExportAllTools: false
         GdnExportGdnToolApiScan: true
         GdnExportOutputSuppressionFile: source.gdnsuppress
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - task: PublishSecurityAnalysisLogs@3
       displayName: Publish Guardian Artifacts
@@ -366,11 +360,9 @@ stages:
         AllTools: false
         APIScan: true
         ToolLogsNotFoundAction: Warning
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
 
     - task: PostAnalysis@2
       displayName: Fail Build on Guardian Issues
       inputs:
         GdnBreakAllTools: false
         GdnBreakGdnToolApiScan: true
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
