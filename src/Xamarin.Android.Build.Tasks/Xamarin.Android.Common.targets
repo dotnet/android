@@ -1452,6 +1452,7 @@ because xbuild doesn't support framework reference assemblies.
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
+      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
       UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
   />
   <ItemGroup>
