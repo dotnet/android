@@ -244,25 +244,18 @@ namespace Xamarin.Android.Build.Tests
 			return null;
 		}
 
-		public int GetNumberOfAssemblies (bool countAbiAssembliesOnce = true, bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
+		public int GetNumberOfAssemblies (bool forceRefresh = false, AndroidTargetArch arch = AndroidTargetArch.None)
 		{
-			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh);
-			var dlls = contents.Where (x => x.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase));
+			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh, arch);
 
-			if (!countAbiAssembliesOnce) {
-				return dlls.Count ();
-			}
+			// We must count only .dll.so entries starting with the '#' character, as they are the actual managed assemblies.
+			// Other entries in `lib/{arch}` might be AOT shared libraries, which will also have the .dll.so extension.
+			var dlls = contents.Where (x => {
+				string fileName = Path.GetFileName (x);
+				return fileName[0] == '#' && fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase);
+			});
 
-			var cache = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			return dlls.Where (x => {
-				string name = Path.GetFileName (x);
-				if (cache.Contains (name)) {
-					return false;
-				}
-
-				cache.Add (name);
-				return true;
-			}).Count ();
+			return dlls.Count ();
 		}
 
 		/// <summary>

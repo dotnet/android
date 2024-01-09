@@ -253,7 +253,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
 
 			var abis = new [] { "armeabi-v7a", "x86" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseAssemblyStore", "True");
 
 			using (var b = CreateApkBuilder ()) {
@@ -273,7 +273,14 @@ namespace Xamarin.Android.Build.Tests
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
 
-				Assert.IsTrue (app_config.number_of_assemblies_in_apk == (uint)helper.GetNumberOfAssemblies (), "Assembly count must be equal between ApplicationConfig and the archive contents");
+				foreach (string abi in abis) {
+					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+					Assert.AreEqual (
+						app_config.number_of_assemblies_in_apk,
+						helper.GetNumberOfAssemblies (arch: arch),
+						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
+					);
+				}
 			}
 		}
 
@@ -800,7 +807,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Could not find android.jar for API level {proj.TargetSdkVersion}"), "XA5207 should have had a good error message.");
 				if (buildingInsideVisualStudio)
 					Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Either install it in the Android SDK Manager"), "XA5207 should have an error message for Visual Studio.");
-				else 
+				else
 				    Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"You can install the missing API level by running"), "XA5207 should have an error message for the command line.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);
