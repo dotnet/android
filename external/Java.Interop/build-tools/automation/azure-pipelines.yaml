@@ -16,6 +16,10 @@ pr:
     - README.md
     - Documentation/*
 
+parameters:
+- name: ApiScanSourceBranch
+  default: 'refs/heads/main'
+
 # Global variables
 variables:
   RunningOnCI: true
@@ -57,19 +61,11 @@ jobs:
 
   - template: templates\fail-on-issue.yaml
 
-  - task: ArchiveFiles@2
-    displayName: 'Archive build outputs'
+  - task: PublishPipelineArtifact@1
+    displayName: Publish build artifacts
     inputs:
-      rootFolderOrFile: 'bin'
-      archiveType: 'zip'
-      archiveFile: '$(Build.ArtifactStagingDirectory)/bin-dotnet.zip'
-      replaceExistingArchive: true
-    condition: succeededOrFailed()
-
-  - task: PublishBuildArtifacts@1
-    displayName: 'Publish Artifact: debug'
-    inputs:
-      ArtifactName: debug
+      artifactName: artifacts
+      targetPath: bin
     condition: succeededOrFailed()
 
 - job: mac_dotnet_build
@@ -94,6 +90,72 @@ jobs:
       platformName: .NET - MacOS
 
   - template: templates\fail-on-issue.yaml
+
+
+- job: api_scan
+  displayName: API Scan
+  dependsOn: windows_dotnet_build
+  condition: and(eq(dependencies.windows_dotnet_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
+  pool:
+    name: Azure Pipelines
+    vmImage: windows-2022
+  timeoutInMinutes: 480
+  workspace:
+    clean: all
+  steps:
+  - task: DownloadPipelineArtifact@2
+    displayName: Download build artifacts
+    inputs:
+      artifactName: artifacts
+      downloadPath: $(Build.SourcesDirectory)
+
+    ### Copy .dll, .exe, .pdb files for APIScan
+  - task: CopyFiles@2
+    displayName: Collect Files for APIScan
+    inputs:
+      Contents: |
+        $(Build.SourcesDirectory)\$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)\**\?(*.dll|*.exe|*.pdb)
+        !$(Build.SourcesDirectory)\**\jnimarshalmethod-gen.*
+        !$(Build.SourcesDirectory)\**\Mono.CSharp.dll
+        !$(Build.SourcesDirectory)\**\SgmlReader.exe
+        !$(Build.SourcesDirectory)\**\win-*\java-interop.dll
+      TargetFolder: $(Build.StagingDirectory)\apiscan
+      OverWrite: true
+      flattenFolders: true
+
+  - task: APIScan@2
+    displayName: Run APIScan
+    inputs:
+      softwareFolder: $(Build.StagingDirectory)\apiscan
+      symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
+      softwareName: $(ApiScanName)
+      softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)$(System.JobAttempt)
+      isLargeApp: true
+      toolVersion: Latest
+    env:
+      AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+
+  - task: SdtReport@2
+    displayName: Guardian Export - Security Report
+    inputs:
+      GdnExportAllTools: false
+      GdnExportGdnToolApiScan: true
+      GdnExportOutputSuppressionFile: source.gdnsuppress
+
+  - task: PublishSecurityAnalysisLogs@3
+    displayName: Publish Guardian Artifacts
+    inputs:
+      ArtifactName: APIScan Logs
+      ArtifactType: Container
+      AllTools: false
+      APIScan: true
+      ToolLogsNotFoundAction: Warning
+
+  - task: PostAnalysis@2
+    displayName: Fail Build on Guardian Issues
+    inputs:
+      GdnBreakAllTools: false
+      GdnBreakGdnToolApiScan: true
 
 
 - job: OneLocBuild
