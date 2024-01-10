@@ -376,7 +376,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 
 <Target Name="_WriteLockFile" Condition=" '$(_AndroidDetectParallelBuilds)' == 'True' ">
@@ -400,10 +399,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '%(FullPath)' != '' "
   />
 </Target>
-
-<ItemGroup>
-	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
-</ItemGroup>
 
 <Target Name="_AddAndroidCustomMetaData">
   <AppendCustomMetadataToItemGroup

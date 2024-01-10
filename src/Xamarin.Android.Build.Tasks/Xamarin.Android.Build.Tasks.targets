@@ -149,9 +149,6 @@
     <None Include="Xamarin.Android.VisualBasic.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Xamarin.Android.SkipCases.projitems">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="ManifestOverlays\Timing.xml">

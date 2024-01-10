@@ -157,7 +157,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.DesignTime.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.EmbeddedResource.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Javac.targets" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.SkipCases.projitems" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tooling.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Aidl.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Aidl.pdb" />
