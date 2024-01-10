@@ -585,11 +585,43 @@ namespace Xamarin.Android.Tasks
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
 		}
 
-		public static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, bool validate)
+		/// <summary>
+		/// Process a collection of assembly `ITaskItem` objects, splitting it on the assembly architecture (<see cref="GetTargetArch"/>) while, at the same time, ignoring
+		/// all assemblies which are **not** in the <paramref name="supportedAbis"/> collection.  If necessary, the selection can be further controlled by passing a qualifier
+		/// function in <paramref name="shouldSkip"/> which returns `true` if the assembly passed to it should be **skipped**.
+		///
+		/// This method is necessary because sometimes our tasks will be given assemblies for more architectures than indicated as supported in their `SupportedAbis` properties.
+		/// One such example is the `AotTests.BuildAMassiveApp` test, which passes around a set of assemblies for all the supported architectures, but it supports only two ABIs
+		/// via the `SupportedAbis` property.
+		/// </summary>
+		public static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, ICollection<string> supportedAbis, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
+		{
+			var supportedTargetArches = new HashSet<AndroidTargetArch> ();
+			foreach (string abi in supportedAbis) {
+				supportedTargetArches.Add (AbiToTargetArch (abi));
+			}
+
+			return GetPerArchAssemblies (
+				input,
+				supportedTargetArches,
+				validate,
+				shouldSkip
+			);
+		}
+
+		static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, HashSet<AndroidTargetArch> supportedTargetArches, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
 		{
 			var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
 			foreach (ITaskItem assembly in input) {
+				if (shouldSkip != null && shouldSkip (assembly)) {
+					continue;
+				}
+
 				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
+				if (!supportedTargetArches.Contains (arch)) {
+					continue;
+				}
+
 				if (!assembliesPerArch.TryGetValue (arch, out Dictionary<string, ITaskItem> assemblies)) {
 					assemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 					assembliesPerArch.Add (arch, assemblies);

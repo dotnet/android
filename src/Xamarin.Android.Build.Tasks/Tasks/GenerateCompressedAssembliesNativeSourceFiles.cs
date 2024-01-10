@@ -43,37 +43,46 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
+				ResolvedAssemblies,
+				SupportedAbis,
+				validate: true,
+				shouldSkip: (ITaskItem asm) => bool.TryParse (asm.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value
+			);
 			var archAssemblies = new Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> ();
 			var counters = new Dictionary<AndroidTargetArch, uint> ();
-			foreach (ITaskItem assembly in ResolvedAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-					continue;
-				}
 
-				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
-				if (!archAssemblies.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assemblies)) {
-					assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
-					archAssemblies.Add (arch, assemblies);
-				}
+			foreach (var kvpPerArch in perArchAssemblies) {
+				AndroidTargetArch arch = kvpPerArch.Key;
+				Dictionary<string, ITaskItem> resolvedArchAssemblies = kvpPerArch.Value;
 
-				var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
-				if (assemblies.ContainsKey (assemblyKey)) {
-					Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetAssemblyAbi(assembly)})");
-					continue;
-				}
+				foreach (var kvp in resolvedArchAssemblies) {
+					ITaskItem assembly = kvp.Value;
 
-				var fi = new FileInfo (assembly.ItemSpec);
-				if (!fi.Exists) {
-					Log.LogError ($"Assembly {assembly.ItemSpec} does not exist");
-					continue;
-				}
+					if (!archAssemblies.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assemblies)) {
+						assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
+						archAssemblies.Add (arch, assemblies);
+					}
+
+					var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
+					if (assemblies.ContainsKey (assemblyKey)) {
+						Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetAssemblyAbi(assembly)})");
+						continue;
+					}
+
+					var fi = new FileInfo (assembly.ItemSpec);
+					if (!fi.Exists) {
+						Log.LogError ($"Assembly {assembly.ItemSpec} does not exist");
+						continue;
+					}
 
 
-				if (!counters.TryGetValue (arch, out uint counter)) {
-					counter = 0;
+					if (!counters.TryGetValue (arch, out uint counter)) {
+						counter = 0;
+					}
+					assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length), counter++, arch, Path.GetFileNameWithoutExtension (assembly.ItemSpec)));
+					counters[arch] = counter;
 				}
-				assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length), counter++, arch, Path.GetFileNameWithoutExtension (assembly.ItemSpec)));
-				counters[arch] = counter;
 			}
 
 			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);

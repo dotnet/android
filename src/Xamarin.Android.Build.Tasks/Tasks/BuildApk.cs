@@ -448,12 +448,29 @@ namespace Xamarin.Android.Tasks
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
 			{
-				foreach (ITaskItem assembly in assemblies) {
-					if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-						Log.LogDebugMessage ($"Skipping {assembly.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
-						continue;
-					}
+				Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
+					assemblies,
+					SupportedAbis,
+					validate: true,
+					shouldSkip: (ITaskItem asm) => {
+						if (bool.TryParse (asm.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
+							Log.LogDebugMessage ($"Skipping {asm.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
+							return true;
+						}
 
+						return false;
+					}
+				);
+
+				foreach (var kvp in perArchAssemblies) {
+					Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
+					DoAddAssembliesFromArchCollection (kvp.Value);
+				}
+			}
+
+			void DoAddAssembliesFromArchCollection (Dictionary<string, ITaskItem> assemblies)
+			{
+				foreach (ITaskItem assembly in assemblies.Values) {
 					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 					}
