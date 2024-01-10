@@ -103,21 +103,10 @@ namespace Android.Runtime {
 			GC.SuppressFinalize (obj);
 		}
 
-		static void Initialize ()
-		{
-			AndroidRuntimeInternal.InitializeUnhandledExceptionMethod ();
-		}
-
 		internal static void PropagateUncaughtException (IntPtr env, IntPtr javaThreadPtr, IntPtr javaExceptionPtr)
 		{
 			if (!JNIEnvInit.PropagateExceptions)
 				return;
-
-			try {
-				Initialize ();
-			} catch (Exception e) {
-				Android.Runtime.AndroidEnvironment.FailFast ($"Unable to initialize UncaughtExceptionHandler. Nested exception caught: {e}");
-			}
 
 			var javaException = JavaObject.GetObject<Java.Lang.Throwable> (env, javaExceptionPtr, JniHandleOwnership.DoNotTransfer)!;
 
