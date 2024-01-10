@@ -25,6 +25,10 @@ resources:
     name: dotnet/maui
     endpoint: xamarin
 
+parameters:
+- name: ApiScanSourceBranch
+  default: 'refs/heads/main'
+
 # Global variables
 variables:
 - template: yaml-templates/variables.yaml
@@ -285,6 +289,7 @@ stages:
 - stage: compliance_scan
   displayName: Compliance
   dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
   jobs:
   - job: api_scan
     displayName: API Scan
@@ -294,9 +299,6 @@ stages:
     timeoutInMinutes: 480
     workspace:
       clean: all
-    variables:
-    - name: ApiScan.Enabled
-      value: true
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
@@ -305,19 +307,30 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
 
-    ### Copy .dll and .pdb files for APIScan
+    - task: DownloadPipelineArtifact@2
+      displayName: Download binutils pdbs
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        downloadPath: $(Build.StagingDirectory)\binutils-pdb
+
+    - powershell: |
+        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
+        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
+      displayName: Extract binutils pdbs
+
+    ### Copy .dll, .exe, .pdb files for APIScan
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
-        Contents: $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.pdb)
+        Contents: |
+          $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
+          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
         TargetFolder: $(Build.StagingDirectory)\apiscan
         OverWrite: true
         flattenFolders: true
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
       displayName: List Files for APIScan
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
     - task: APIScan@2
@@ -326,10 +339,9 @@ stages:
         softwareFolder: $(Build.StagingDirectory)\apiscan
         symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
         softwareName: $(ApiScanName)
-        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
+        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)$(System.JobAttempt)
         isLargeApp: true
         toolVersion: Latest
-      condition: and(succeeded(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
       env:
         AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
 
@@ -339,7 +351,6 @@ stages:
         GdnExportAllTools: false
         GdnExportGdnToolApiScan: true
         GdnExportOutputSuppressionFile: source.gdnsuppress
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     - task: PublishSecurityAnalysisLogs@3
       displayName: Publish Guardian Artifacts
@@ -349,11 +360,9 @@ stages:
         AllTools: false
         APIScan: true
         ToolLogsNotFoundAction: Warning
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
     - task: PostAnalysis@2
       displayName: Fail Build on Guardian Issues
       inputs:
         GdnBreakAllTools: false
         GdnBreakGdnToolApiScan: true
-      condition: and(succeededOrFailed(), eq(variables['ApiScan.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
