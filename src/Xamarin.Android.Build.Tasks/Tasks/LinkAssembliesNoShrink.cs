@@ -106,6 +106,7 @@ namespace Xamarin.Android.Tasks
 							save |= addKeepAliveStep.AddKeepAlives (assemblyDefinition);
 						if (save) {
 							Log.LogDebugMessage ($"Saving modified assembly: {destination.ItemSpec}");
+							Directory.CreateDirectory (Path.GetDirectoryName (destination.ItemSpec));
 							writerParameters.WriteSymbols = assemblyDefinition.MainModule.HasSymbols;
 							assemblyDefinition.Write (destination.ItemSpec, writerParameters);
 							continue;
