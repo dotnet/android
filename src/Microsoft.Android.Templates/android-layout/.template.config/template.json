@@ -14,5 +14,18 @@
   "primaryOutputs": [
     { "path": "Layout1.xml" }
   ],
-  "defaultName": "Layout1"
+  "defaultName": "Layout1",
+  "postActions": [
+    {
+      "id": "openInEditor",
+      "condition": "(HostIdentifier != \"dotnetcli\" && HostIdentifier != \"dotnetcli-preview\")",
+      "description": "Opens Layout1.xml in the editor",
+      "manualInstructions": [],
+      "actionId": "84C0DA21-51C8-4541-9940-6CA19AF04EE6",
+      "args": {
+        "files": "0"
+      },
+      "continueOnError": true
+    }
+  ]
 }
