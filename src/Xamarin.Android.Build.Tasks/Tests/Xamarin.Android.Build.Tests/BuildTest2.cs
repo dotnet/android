@@ -149,7 +149,7 @@ namespace Xamarin.Android.Build.Tests
 
 			if (forms) {
 				proj.PackageReferences.Clear ();
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
+				proj.PackageReferences.Add (KnownPackages.XamarinForms_5_0_0_2515);
 			}
 
 			byte [] apkDescData;
