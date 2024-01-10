@@ -646,8 +646,11 @@ namespace Lib2
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
 
 				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
-				var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", $"{lib2.ProjectName}.dll");
-				FileAssert.AreEqual (lib2Output, lib2InAppOutput, "new Library2 should have been copied to app output directory");
+
+				foreach (string abi in appBuilder.GetBuildAbis ()) {
+					var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
+					FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
+				}
 			}
 		}
 
