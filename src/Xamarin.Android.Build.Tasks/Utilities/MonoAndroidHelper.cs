@@ -603,7 +603,10 @@ namespace Xamarin.Android.Tasks
 				assemblies.Add (name, assembly);
 			}
 
-			if (!validate) {
+			// It's possible some assembly collections will be empty (e.g. `ResolvedUserAssemblies` as passed to the `GenerateJavaStubs` task), which
+			// isn't a problem and such empty collections should not be validated, as it will end in the "should never happen" exception below being
+			// thrown as a false negative.
+			if (assembliesPerArch.Count == 0 || !validate) {
 				return assembliesPerArch;
 			}
 

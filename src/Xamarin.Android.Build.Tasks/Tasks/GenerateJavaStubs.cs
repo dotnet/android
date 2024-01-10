@@ -185,7 +185,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in allAssembliesPerArch) {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
-				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, userAssembliesPerArch[arch], useMarshalMethods, generateJavaCode);
+				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, MaybeGetArchAssemblies (userAssembliesPerArch, arch), useMarshalMethods, generateJavaCode);
 
 				if (!success) {
 					return;
@@ -249,8 +249,17 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			IList<string> additionalProviders = MergeManifest (templateCodeGenState, userAssembliesPerArch[templateCodeGenState.TargetArch]);
+			IList<string> additionalProviders = MergeManifest (templateCodeGenState, MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
 			GenerateAdditionalProviderSources (templateCodeGenState, additionalProviders);
+
+			Dictionary<string, ITaskItem> MaybeGetArchAssemblies (Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> dict, AndroidTargetArch arch)
+			{
+				if (!dict.TryGetValue (arch, out Dictionary<string, ITaskItem> archDict)) {
+					return new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
+				}
+
+				return archDict;
+			}
 		}
 
 		void GenerateAdditionalProviderSources (NativeCodeGenState codeGenState, IList<string> additionalProviders)
