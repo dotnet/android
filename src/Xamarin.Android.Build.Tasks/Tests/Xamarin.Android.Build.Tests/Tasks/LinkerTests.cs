@@ -429,29 +429,32 @@ namespace UnnamedProject {
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
+				string projectDir = Path.Combine (proj.Root, b.ProjectDirectory);
 				var assemblyFile = "UnnamedProject.dll";
 				if (!isRelease || setLinkModeNone) {
 					foreach (string abi in b.GetBuildAbis ()) {
-						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)));
+						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)), projectDir);
 					}
 				} else {
-					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile));
+					CheckAssembly (BuildTest.GetLinkedPath (b,  true, assemblyFile), projectDir);
 				}
 			}
 
-			void CheckAssembly (string assemblyPath)
+			void CheckAssembly (string assemblyPath, string projectDir)
 			{
+				string shortAssemblyPath = Path.GetRelativePath (projectDir, assemblyPath);
+				Console.WriteLine ($"CheckAssembly for '{shortAssemblyPath}'");
 				using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
-				Assert.IsTrue (assembly != null);
+				Assert.IsTrue (assembly != null, $"Assembly '${shortAssemblyPath}' should have been loaded");
 
 				var td = assembly.MainModule.GetType ("UnnamedProject.MyClass");
-				Assert.IsTrue (td != null);
+				Assert.IsTrue (td != null, $"`UnnamedProject.MyClass` type definition should have been found in assembly '{shortAssemblyPath}'");
 
 				var mr = td.GetMethods ().Where (m => m.Name == "MyMethod").FirstOrDefault ();
-				Assert.IsTrue (mr != null);
+				Assert.IsTrue (mr != null, $"`MyMethod` method reference should have been found (assembly '{shortAssemblyPath}')");
 
 				var md = mr.Resolve ();
-				Assert.IsTrue (md != null);
+				Assert.IsTrue (md != null, $"`MyMethod` method reference should have been resolved (assembly '{shortAssemblyPath}')");
 
 				bool hasKeepAliveCall = false;
 				foreach (var i in md.Body.Instructions) {
@@ -465,7 +468,8 @@ namespace UnnamedProject {
 					break;
 				}
 
-				Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives);
+				string not = shouldAddKeepAlives ? String.Empty : " not";
+				Assert.IsTrue (hasKeepAliveCall == shouldAddKeepAlives, $"KeepAlive call should{not} have been found (assembly '{shortAssemblyPath}')");
 			}
 		}
 

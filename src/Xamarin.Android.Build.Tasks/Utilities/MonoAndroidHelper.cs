@@ -611,6 +611,7 @@ namespace Xamarin.Android.Tasks
 
 		static Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> GetPerArchAssemblies (IEnumerable<ITaskItem> input, HashSet<AndroidTargetArch> supportedTargetArches, bool validate, Func<ITaskItem, bool>? shouldSkip = null)
 		{
+			bool filterByTargetArches = supportedTargetArches.Count > 0;
 			var assembliesPerArch = new Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> ();
 			foreach (ITaskItem assembly in input) {
 				if (shouldSkip != null && shouldSkip (assembly)) {
@@ -618,7 +619,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (assembly);
-				if (!supportedTargetArches.Contains (arch)) {
+				if (filterByTargetArches && !supportedTargetArches.Contains (arch)) {
 					continue;
 				}
 
