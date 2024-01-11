@@ -1384,13 +1384,7 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
-      Condition=" '$(_AndroidApiLevel)' &gt;= '21' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
-  />
-  <CopyResource
-      Condition=" '$(_AndroidApiLevel)' &lt; '21' "
-      ResourceName="MonoRuntimeProvider.Bundled.20.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CreateTypeManagerJava
