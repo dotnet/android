@@ -344,13 +344,12 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			var nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
-				ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
-				RegisteredTaskObjectLifetime.Build
-			);
-
-			if (nativeCodeGenStates == null) {
-				throw new InvalidOperationException ("Internal error: native code generation states not registered");
+			Dictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
+			if (enableMarshalMethods) {
+				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
+					ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
+					RegisteredTaskObjectLifetime.Build
+				);
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
