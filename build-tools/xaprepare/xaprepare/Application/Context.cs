@@ -605,7 +605,8 @@ namespace Xamarin.Android.Prepare
 
 		void WriteBuildToolsInventoryCsv ()
 		{
-			var inventoryFilePath = Path.Combine (Path.GetDirectoryName (MainLogFilePath), "buildtoolsinventory.csv");
+			var mainLogFileDirectory = Path.GetDirectoryName (MainLogFilePath) ?? throw new ArgumentException ("Could not get directory for MainLogFilePath");
+			var inventoryFilePath = Path.Combine (mainLogFileDirectory, "buildtoolsinventory.csv");
 			var lines = new List<string> {
 				"BuildToolName,BuildToolVersion",
 			};
