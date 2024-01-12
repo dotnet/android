@@ -250,7 +250,7 @@ namespace Xamarin.Android.Tasks
 
 			var acwMapGen = new ACWMapGenerator (Log);
 			if (!acwMapGen.Generate (templateCodeGenState, AcwMapFile)) {
-				return;
+				Log.LogDebugMessage ("ACW map generation failed");
 			}
 
 			IList<string> additionalProviders = MergeManifest (templateCodeGenState, MaybeGetArchAssemblies (userAssembliesPerArch, templateCodeGenState.TargetArch));
