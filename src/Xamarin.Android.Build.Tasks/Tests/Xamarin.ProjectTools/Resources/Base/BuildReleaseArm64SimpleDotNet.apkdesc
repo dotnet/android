@@ -14,10 +14,10 @@
       "Size": 61443
     },
     "lib/arm64-v8a/#Mono.Android.dll.so": {
-      "Size": 90523
+      "Size": 90421
     },
     "lib/arm64-v8a/#Mono.Android.Runtime.dll.so": {
-      "Size": 5513
+      "Size": 5146
     },
     "lib/arm64-v8a/#System.Console.dll.so": {
       "Size": 6543
@@ -29,7 +29,7 @@
       "Size": 553334
     },
     "lib/arm64-v8a/#System.Runtime.dll.so": {
-      "Size": 2623
+      "Size": 2547
     },
     "lib/arm64-v8a/#System.Runtime.InteropServices.dll.so": {
       "Size": 4022
