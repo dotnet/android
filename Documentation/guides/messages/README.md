@@ -100,6 +100,7 @@ package from all the users on device and try again. If that does not work you ca
 Fast Deployment is not currently supported on this device.
 Please file an issue with the exact error message using the 'Help->Send Feedback->Report a Problem' menu item in Visual Studio
 or 'Help->Report a Problem' in Visual Studio for Mac.
++ [XA0138](xa0138.md): @(AndroidAsset) build action does not support 'AssetPack' Metadata in Library Projects.
 
 ## XA1xxx: Project related
 

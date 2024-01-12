@@ -19,6 +19,38 @@ or library project is built.
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
 files that would be included in the `assets` folder in a Java Android project.
 
+The `AndroidAsset` ItemGroup also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). Adding the `AssetPack` attribute to and `AndroidAsset` will automatically generate an asset pack of that name. This feature is only supported when using the `.aab`
+`AndroidPackageFormat`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
+
+```xml
+<ItemGroup>
+   <AndroidAsset Update="Asset/movie.mp4" />
+   <AndroidAsset Update="Asset/movie2.mp4" AssetPack="assets1" />
+   <AndroidAsset Update="Asset/movie3.mp4" AssetPack="assets2" />
+</ItemGroup>
+```
+
+This feature can be used to include large files in your application which would normally exceed the max
+package size limits of Google Play.
+
+If you have a large number of assets it might be more efficient to make use of the `base` asset pack.
+In this scenario you update ALL assets to be in a single asset pack then use the `AssetPack="base"` metadata
+to declare which specific assets end up in the base aab file. With this you can use wildcards to move most
+assets into the asset pack.
+
+```xml
+<ItemGroup>
+   <AndroidAsset Update="Assets/*" AssetPack="assets1" />
+   <AndroidAsset Update="Assets/movie.mp4" AssetPack="base" />
+   <AndroidAsset Update="Assets/some.png" AssetPack="base" />
+</ItemGroup>
+```
+
+In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, but ALL the other assets
+will end up in the `assets1` asset pack.
+
+The additional metadata is only supported on .NET Android 9 and above.
+
 ## AndroidAarLibrary
 
 The Build action of `AndroidAarLibrary` should be used to directly

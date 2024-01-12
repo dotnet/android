@@ -195,6 +195,7 @@ Extension points include:
 
 - [`$(AfterGenerateAndroidManifest)](~/android/deploy-test/building-apps/build-properties.md#aftergenerateandroidmanifest)
 - [`$(BeforeGenerateAndroidManifest)](~/android/deploy-test/building-apps/build-properties.md#beforegenerateandroidmanifest)
+- [`$(BeforeBuildAndroidAssetPacks)`](~/android/deploy-test/building-apps/build-properties.md#beforebuildandroidassetpacks)
 
 A word of caution about extending the build process: If not
 written correctly, build extensions can affect your build
