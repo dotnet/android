@@ -2,5 +2,6 @@
   "author": "Microsoft",
   "name": "Modello di attività Android",
   "description": "Classe di attività Android",
-  "symbols/namespace/description": "spazio dei nomi per il codice generato"
+  "symbols/namespace/description": "spazio dei nomi per il codice generato",
+  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
 }

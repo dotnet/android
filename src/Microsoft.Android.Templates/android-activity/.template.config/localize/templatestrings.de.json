@@ -2,5 +2,6 @@
   "author": "Microsoft",
   "name": "Android-Aktivitätsvorlage",
   "description": "Eine Android-Aktivitätsklasse",
-  "symbols/namespace/description": "Namespace für den generierten Code"
+  "symbols/namespace/description": "Namespace für den generierten Code",
+  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
 }
