@@ -538,6 +538,7 @@ namespace Xamarin.Android.Net
 
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
 				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+				cancellationToken.ThrowIfCancellationRequested ();
 
 				//
 				// Rewind the stream to beginning in case the HttpContent implementation
@@ -557,8 +558,14 @@ namespace Xamarin.Android.Net
 				//
 				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
 				//
-				if (stream.CanSeek)
-					stream.Seek (0, SeekOrigin.Begin);
+				if (stream.CanSeek) {
+					try {
+						stream.Seek (0, SeekOrigin.Begin);
+					} catch (ObjectDisposedException ex) {
+						Logger.Log (LogLevel.Error, LOG_APP, $"Stream disposed while writing content to putput: {ex}");
+						cancellationToken.ThrowIfCancellationRequested ();
+					}
+				}
 			}
 		}
 
