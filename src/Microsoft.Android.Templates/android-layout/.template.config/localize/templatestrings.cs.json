@@ -1,5 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Šablona rozložení pro Android",
-  "description": "Soubor rozložení Androidu (XML)"
+  "description": "Soubor rozložení Androidu (XML)",
+  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
 }
