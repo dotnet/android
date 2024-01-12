@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="..\..\Configuration.props" Condition=" '$(ConfigurationPropsImported)' != 'true' " />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Target Name="UpdateMonoAndroidContract">
     <Error

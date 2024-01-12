@@ -1,6 +1,7 @@
 <Project>
 
   <PropertyGroup>
+    <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
     <DotNetTargetFrameworkVersion>9.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
