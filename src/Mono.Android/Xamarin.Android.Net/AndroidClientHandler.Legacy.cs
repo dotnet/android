@@ -361,6 +361,7 @@ namespace Xamarin.Android.Net
 		protected virtual async Task WriteRequestContentToOutput (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
 		{
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
+				cancellationToken.ThrowIfCancellationRequested ();
 				try {
 					await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 				} catch (ObjectDisposedException ex) {
@@ -387,6 +388,7 @@ namespace Xamarin.Android.Net
 				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
 				//
 				if (stream.CanSeek) {
+					cancellationToken.ThrowIfCancellationRequested ();
 					try {
 						stream.Seek (0, SeekOrigin.Begin);
 					} catch (ObjectDisposedException ex) {

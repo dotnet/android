@@ -537,7 +537,6 @@ namespace Xamarin.Android.Net
 				return;
 
 			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
-				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 				cancellationToken.ThrowIfCancellationRequested ();
 				try {
 					await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
@@ -565,6 +564,7 @@ namespace Xamarin.Android.Net
 				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
 				//
 				if (stream.CanSeek) {
+					cancellationToken.ThrowIfCancellationRequested ();
 					try {
 						stream.Seek (0, SeekOrigin.Begin);
 					} catch (ObjectDisposedException ex) {
