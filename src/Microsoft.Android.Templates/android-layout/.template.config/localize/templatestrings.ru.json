@@ -1,5 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Шаблон макета Android",
-  "description": "Файл макета Android (XML)"
+  "description": "Файл макета Android (XML)",
+  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
 }
