@@ -17,7 +17,7 @@ namespace Xamarin.ProjectTools
 		public XamarinFormsMapsApplicationProject ([CallerMemberName] string packageName = "")
 			: base (packageName: packageName)
 		{
-			PackageReferences.Add (KnownPackages.XamarinFormsMaps_4_7_0_1142);
+			PackageReferences.Add (KnownPackages.XamarinFormsMaps_5_0_0_2515);
 			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Base);
 			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Basement);
 			PackageReferences.Add (KnownPackages.Xamarin_GooglePlayServices_Maps);

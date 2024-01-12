@@ -43,7 +43,7 @@ namespace Xamarin.ProjectTools
 		{
 			// Don't opt into ImplicitUsings
 			RemoveProperty (KnownProperties.ImplicitUsings);
-			PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
+			PackageReferences.Add (KnownPackages.XamarinFormsMaps_5_0_0_2515);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,
