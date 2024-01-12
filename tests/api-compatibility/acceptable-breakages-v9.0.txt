@@ -1,9 +1,0 @@
-Compat issues with assembly Mono.Android:
-InterfacesShouldHaveSameMembers : Interface member 'public System.String Android.Content.Res.IXmlResourceParser.GetAttributeNamespace(System.Int32)' is present in the implementation but not in the contract.
-CannotChangeAttribute : Attribute 'Android.Runtime.RegisterAttribute' on 'Android.Database.Sqlite.SQLiteDatabase.Path.get()' changed from '[RegisterAttribute("getPath", "()Ljava/lang/String;", "")]' in the contract to '[RegisterAttribute("getPath", "()Ljava/lang/String;", "GetGetPathHandler")]' in the implementation.
-CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Hardware.Fingerprints.FingerprintManager.Authenticate(Android.Hardware.Fingerprints.FingerprintManager.CryptoObject, Android.OS.CancellationSignal, Android.Hardware.Fingerprints.FingerprintAuthenticationFlags, Android.Hardware.Fingerprints.FingerprintManager.AuthenticationCallback, Android.OS.Handler)' in the contract but not the implementation.
-CannotRemoveAttribute : Attribute 'Android.Runtime.RequiresPermissionAttribute' exists on 'Android.Nfc.Tech.ITagTechnology.Close()' in the contract but not the implementation.
-TypesMustExist : Type 'Android.Telephony.CellIdentityCdma.InterfaceConsts' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Telephony.CellIdentityGsm.InterfaceConsts' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Telephony.CellIdentityLte.InterfaceConsts' does not exist in the implementation but it does exist in the contract.
-TypesMustExist : Type 'Android.Telephony.CellIdentityWcdma.InterfaceConsts' does not exist in the implementation but it does exist in the contract.

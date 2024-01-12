@@ -22,8 +22,10 @@ To update the contract assembly, run the `UpdateMonoAndroidContract` target
 and provide the `$(ContractAssembly)` MSBuild property.  `$(ContractAssembly)`
 should be the path to the new contract assembly to use:
 
-	msbuild Xamarin.Android.sln /t:UpdateMonoAndroidContract '/p:ContractAssembly=/Users/example/Downloads/\$ReferenceAssemblies/Microsoft/Framework/MonoAndroid/v10.0/Mono.Android.dll'
+    dotnet msbuild Xamarin.Android.sln -t:UpdateMonoAndroidContract "-p:ContractAssembly=C:/code/xamarin-android-backport/bin/Debug/lib/packs/Microsoft.Android.Ref.34/34.99.0/ref/net9.0/Mono.Android.dll"
 
+Note: using the assembly in the `ref` directory means it has already had IL stripped
+and is just API.
 
 ## Build Task
 
