@@ -96,9 +96,9 @@ BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 {
 	dynamic_local_string<SENSIBLE_PATH_MAX> dir{};
 	dir.assign_c (home.get_cstr ());
-	dir.append (MONODROID_PATH_SEPARATOR_CHAR);
+	dir.append (MONODROID_PATH_SEPARATOR);
 	dir.append (".__override__");
-	dir.append (MONODROID_PATH_SEPARATOR_CHAR);
+	dir.append (MONODROID_PATH_SEPARATOR);
 	dir.append (SharedConstants::android_abi);
 
 	return utils.strdup_new (dir.get ());
