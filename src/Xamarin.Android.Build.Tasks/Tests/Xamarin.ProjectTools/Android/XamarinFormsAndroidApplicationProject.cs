@@ -43,7 +43,11 @@ namespace Xamarin.ProjectTools
 		{
 			// Don't opt into ImplicitUsings
 			RemoveProperty (KnownProperties.ImplicitUsings);
-			PackageReferences.Add (KnownPackages.XamarinFormsMaps_5_0_0_2515);
+			PackageReferences.Add (KnownPackages.XamarinForms);
+
+			// Workarounds for Guava.ListenableFuture
+			// See: https://github.com/xamarin/AndroidX/issues/535
+			PackageReferences.Add (KnownPackages.AndroidXBrowser);
 
 			AndroidResources.Add (new AndroidItem.AndroidResource ("Resources\\values\\colors.xml") {
 				TextContent = () => colors_xml,
