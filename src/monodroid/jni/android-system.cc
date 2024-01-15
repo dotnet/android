@@ -305,17 +305,19 @@ size_t
 AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value)
 {
 #if defined (DEBUG) || !defined (ANDROID)
-	for (size_t oi = 0; oi < MAX_OVERRIDES; ++oi) {
-		if (override_dirs [oi]) {
-			std::unique_ptr<char[]> override_file {utils.path_combine (override_dirs [oi], name)};
-			log_info (LOG_DEFAULT, "Trying to get property from %s", override_file.get ());
-			size_t result = _monodroid_get_system_property_from_file (override_file.get (), value);
-			if (result == 0 || value == nullptr || (*value) == nullptr || **value == '\0') {
-				continue;
-			}
-			log_info (LOG_DEFAULT, "Property '%s' from  %s has value '%s'.", name, override_dirs [oi], *value);
-			return result;
+	for (const char *od : override_dirs) {
+		if (od == nullptr) {
+			continue;
 		}
+
+		std::unique_ptr<char[]> override_file {utils.path_combine (od, name)};
+		log_info (LOG_DEFAULT, "Trying to get property from %s", override_file.get ());
+		size_t result = _monodroid_get_system_property_from_file (override_file.get (), value);
+		if (result == 0 || value == nullptr || (*value) == nullptr || **value == '\0') {
+			continue;
+		}
+		log_info (LOG_DEFAULT, "Property '%s' from  %s has value '%s'.", name, od, *value);
+		return result;
 	}
 #endif
 	return 0;
@@ -410,7 +412,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 #ifdef RELEASE
 	return nullptr;
 #else
-	return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs), AndroidSystem::MAX_OVERRIDES, name, dl_flags);
+	return load_dso_from_specified_dirs (const_cast<const char**> (AndroidSystem::override_dirs.data ()), AndroidSystem::override_dirs.size (), name, dl_flags);
 #endif
 }
 
@@ -439,10 +441,10 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_st
 		return false;
 
 #ifndef RELEASE
-	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; i++) {
-		if (AndroidSystem::override_dirs [i] == nullptr)
+	for (const char *od : override_dirs) {
+		if (od == nullptr)
 			continue;
-		if (get_existing_dso_path_on_disk (AndroidSystem::override_dirs [i], dso_name, path))
+		if (get_existing_dso_path_on_disk (od, dso_name, path))
 			return true;
 	}
 #endif
@@ -459,11 +461,9 @@ AndroidSystem::count_override_assemblies (void)
 {
 	int c = 0;
 
-	for (size_t i = 0; i < MAX_OVERRIDES; ++i) {
+	for (const char *dir_path : override_dirs) {
 		monodroid_dir_t *dir;
 		monodroid_dirent_t *e;
-
-		const char *dir_path = override_dirs [i];
 
 		if (dir_path == nullptr || !utils.directory_exists (dir_path))
 			continue;
@@ -706,8 +706,8 @@ AndroidSystem::setup_environment ()
 	}
 #if defined (DEBUG) || !defined (ANDROID)
 	// TODO: for debug read from file in the override directory named `environment`
-	for (size_t oi = 0; oi < MAX_OVERRIDES; oi++) {
-		std::unique_ptr<char[]> env_override_file {utils.path_combine (override_dirs [oi], OVERRIDE_ENVIRONMENT_FILE_NAME)};
+	for (const char *od : override_dirs) {
+		std::unique_ptr<char[]> env_override_file {utils.path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME)};
 		if (utils.file_exists (env_override_file.get ())) {
 			setup_environment_from_override_file (env_override_file.get ());
 		}

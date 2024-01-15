@@ -7,7 +7,6 @@
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
-char* BasicAndroidSystem::override_dirs [MAX_OVERRIDES];
 const char **BasicAndroidSystem::app_lib_directories;
 size_t BasicAndroidSystem::app_lib_directories_size = 0;
 const char* BasicAndroidSystem::built_for_abi_name = nullptr;

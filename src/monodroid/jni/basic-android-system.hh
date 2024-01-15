@@ -1,6 +1,7 @@
 #ifndef __BASIC_ANDROID_SYSTEM_HH
 #define __BASIC_ANDROID_SYSTEM_HH
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
 
@@ -51,8 +52,7 @@ namespace xamarin::android::internal
 		static constexpr char SYSTEM_LIB_PATH[] = "";
 #endif
 
-		static constexpr size_t MAX_OVERRIDES = 1;
-		static char* override_dirs [MAX_OVERRIDES];
+		inline static std::array<char*, 1> override_dirs;
 		static const char **app_lib_directories;
 		static size_t app_lib_directories_size;
 		static const char* get_built_for_abi_name ();
@@ -60,17 +60,9 @@ namespace xamarin::android::internal
 	public:
 		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
 
-		const char* get_override_dir (size_t index) const
-		{
-			if (index >= MAX_OVERRIDES)
-				return nullptr;
-
-			return override_dirs [index];
-		}
-
 		void set_override_dir (uint32_t index, const char* dir)
 		{
-			if (index >= MAX_OVERRIDES)
+			if (index >= override_dirs.size ())
 				return;
 
 			override_dirs [index] = const_cast <char*> (dir);

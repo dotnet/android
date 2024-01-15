@@ -240,8 +240,6 @@ MonodroidRuntime::jit_done ([[maybe_unused]] MonoProfiler *prof, MonoMethod *met
 MonoAssembly*
 MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
 {
-	MonoAssembly *result = nullptr;
-
 #ifndef ANDROID
 	// First check if there are any in-memory assemblies
 	if (designerAssemblies.has_assemblies ()) {
@@ -256,19 +254,6 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		log_debug (LOG_ASSEMBLY, "No in-memory assemblies detected", mono_assembly_name_get_name (aname));
 	}
 #endif
-	const char *override_dir;
-	bool found = false;
-
-	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
-		override_dir = androidSystem.get_override_dir (oi);
-		if (override_dir != nullptr && utils.directory_exists (override_dir)) {
-			found = true;
-			break;
-		}
-	}
-	if (!found)
-		return nullptr;
-
 	const char *culture = reinterpret_cast<const char*> (mono_assembly_name_get_culture (aname));
 	const char *name    = reinterpret_cast<const char*> (mono_assembly_name_get_name (aname));
 	size_t culture_len;
@@ -293,10 +278,11 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	if (!is_dll)
 		file_name_len += dll_extension_len;
 
-	for (uint32_t oi = 0; oi < AndroidSystem::MAX_OVERRIDES; ++oi) {
-		override_dir = androidSystem.get_override_dir (oi);
-		if (override_dir == nullptr || !utils.directory_exists (override_dir))
+	MonoAssembly *result = nullptr;
+	for (const char *override_dir : AndroidSystem::override_dirs) {
+		if (override_dir == nullptr || !utils.directory_exists (override_dir)) {
 			continue;
+		}
 
 		size_t override_dir_len = strlen (override_dir);
 		static_local_string<SENSIBLE_PATH_MAX> fullpath (override_dir_len + file_name_len);
@@ -330,10 +316,10 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 	}
 
 	size_t filename_len = strlen (filename) + 1; // includes space for path separator
-	for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-		const char *odir = androidSystem.get_override_dir (i);
-		if (odir == nullptr)
+	for (const char *odir : AndroidSystem::override_dirs) {
+		if (odir == nullptr) {
 			continue;
+		}
 
 		size_t odir_len = strlen (odir);
 		static_local_string<SENSIBLE_PATH_MAX> p (odir_len + filename_len);
@@ -354,12 +340,12 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 {
 #if defined(DEBUG) || !defined (ANDROID)
 	if (application_config.instant_run_enabled) {
-		for (size_t i = 0; i < AndroidSystem::MAX_OVERRIDES; ++i) {
-			const char *p = androidSystem.get_override_dir (i);
-			if (p == nullptr || !utils.directory_exists (p))
+		for (const char *od : AndroidSystem::override_dirs) {
+			if (od == nullptr || !utils.directory_exists (od)) {
 				continue;
-			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", p);
-			embeddedAssemblies.try_load_typemaps_from_directory (p);
+			}
+			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", od);
+			embeddedAssemblies.try_load_typemaps_from_directory (od);
 		}
 	}
 #endif
@@ -748,7 +734,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
 	if (XA_UNLIKELY (log_methods)) {
-		std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.get_override_dir (0), "methods.txt")};
+		std::unique_ptr<char> jit_log_path {utils.path_combine (AndroidSystem::override_dirs [0], "methods.txt")};
 		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
 		utils.set_world_accessable (jit_log_path.get ());
 	}
@@ -856,8 +842,8 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
 #if defined (DEBUG)
 		log_fatal (LOG_DEFAULT, "No assemblies found in '%s' or '%s'. Assuming this is part of Fast Deployment. Exiting...",
-		           androidSystem.get_override_dir (0),
-		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
+		           AndroidSystem::override_dirs [0],
+		           (AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? AndroidSystem::override_dirs [1] : "<unavailable>");
 #else
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
 #endif
@@ -867,27 +853,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		Helpers::abort_application ();
 	}
 
-	MonoDomain *domain;
-#if !defined (NET)
-	if (is_root_domain) {
-#endif // ndef NET
-		domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
-#if !defined (NET)
-	} else {
-		MonoDomain* root_domain = mono_get_root_domain ();
-
-		constexpr char DOMAIN_NAME[] = "MonoAndroidDomain";
-		constexpr size_t DOMAIN_NAME_LENGTH = sizeof(DOMAIN_NAME) - 1;
-		constexpr size_t DOMAIN_NAME_TOTAL_SIZE = DOMAIN_NAME_LENGTH + SharedConstants::MAX_INTEGER_DIGIT_COUNT_BASE10;
-
-		static_local_string<DOMAIN_NAME_TOTAL_SIZE + 1> domain_name (DOMAIN_NAME_TOTAL_SIZE);
-		domain_name.append (DOMAIN_NAME);
-		domain_name.append (android_api_level);
-
-		domain = utils.monodroid_create_appdomain (root_domain, domain_name.get (), /*shadow_copy:*/ 1, /*shadow_directory:*/ androidSystem.get_override_dir (0));
-	}
-#endif // ndef NET
-
+	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
 	if constexpr (is_running_on_desktop) {
 		if (is_root_domain) {
 			c_unique_ptr<char> corlib_error_message_guard {const_cast<char*>(mono_check_corlib_version ())};
@@ -1660,7 +1626,7 @@ MonodroidRuntime::set_profile_options ()
 		constexpr char AOT_EXT[] = "aotprofile";
 
 		output_path
-			.assign_c (androidSystem.get_override_dir (0))
+			.assign_c (AndroidSystem::override_dirs [0])
 			.append (MONODROID_PATH_SEPARATOR)
 			.append (PROFILE_FILE_NAME_PREFIX)
 			.append (AOT_EXT);
@@ -1727,7 +1693,7 @@ MonodroidRuntime::set_profile_options ()
 		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
 
 		output_path
-			.assign_c (androidSystem.get_override_dir (0))
+			.assign_c (AndroidSystem.override_dirs [0])
 			.append (MONODROID_PATH_SEPARATOR)
 			.append (PROFILE_FILE_NAME_PREFIX);
 
@@ -2209,42 +2175,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	androidSystem.setup_process_args (runtimeApks);
-#if !defined (NET)
-	// JIT stats based on perf counters are disabled in dotnet/mono
-	if (XA_UNLIKELY (FastTiming::enabled () && !FastTiming::is_bare_mode ())) {
-		mono_counters_enable (static_cast<int>(XA_LOG_COUNTERS));
-
-		dynamic_local_string<SENSIBLE_PATH_MAX> counters_path;
-		utils.path_combine (counters_path, androidSystem.get_override_dir (0), "counters.txt");
-		log_info_nocheck (LOG_TIMING, "counters path: %s", counters_path.get ());
-		counters = utils.monodroid_fopen (counters_path.get (), "a");
-		utils.set_world_accessable (counters_path.get ());
-	}
-
-	void *dso_handle = nullptr;
-#if defined (WINDOWS) || defined (APPLE_OS_X)
-	const char *my_location = get_my_location ();
-	if (my_location != nullptr) {
-		std::unique_ptr<char[]> dso_path {utils.path_combine (my_location, API_DSO_NAME)};
-		log_info (LOG_DEFAULT, "Attempting to load %s", dso_path.get ());
-		dso_handle = java_interop_lib_load (dso_path.get (), JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
-#if defined (APPLE_OS_X)
-		delete[] my_location;
-#else   // !defined(APPLE_OS_X)
-		free (static_cast<void*>(const_cast<char*>(my_location))); // JI allocates with `calloc`
-#endif  // defined(APPLE_OS_X)
-	}
-
-	if (dso_handle == nullptr) {
-		log_info (LOG_DEFAULT, "Attempting to load %s with \"bare\" dlopen", API_DSO_NAME);
-		dso_handle = java_interop_lib_load (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY, nullptr);
-	}
-#endif  // defined(WINDOWS) || defined(APPLE_OS_X)
-	if (dso_handle == nullptr)
-		dso_handle = androidSystem.load_dso_from_any_directories (API_DSO_NAME, JAVA_INTEROP_LIB_LOAD_GLOBALLY);
-
-	init_internal_api_dso (dso_handle);
-#endif // ndef NET
 	mono_dl_fallback_register (monodroid_dlopen, monodroid_dlsym, nullptr, nullptr);
 
 	set_profile_options ();
