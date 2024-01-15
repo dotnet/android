@@ -785,8 +785,14 @@ OSBridge::AddReferenceTarget
 OSBridge::target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers)
 {
 	MonoGCBridgeSCC *scc = sccs [idx];
-	if (scc->num_objs > 0)
+	if (scc->num_objs > 0) {
+		// Disable array bounds checking here.  The compiler cannot determine that the above `if` expression protects
+		// the code from out of bounds access to array elements.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warray-bounds"
 		return target_from_mono_object (scc->objs [0]);
+#pragma clang diagnostic pop
+	}
 
 	jobject jobj = env->CallObjectMethod (temporary_peers, ArrayList_get, scc_get_stashed_index (scc));
 	return target_from_jobject (jobj);
@@ -828,7 +834,12 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
 		 */
 		if (scc->num_objs > 1) {
+			// Disable array bounds checking here.  The compiler cannot determine that the above `if` expression protects
+			// the code from out of bounds access to array elements.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warray-bounds"
 			MonoObject *first = scc->objs [0];
+#pragma clang diagnostic pop
 			MonoObject *prev = first;
 
 			/* start at the second item, ref j from j-1 */
