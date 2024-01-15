@@ -94,7 +94,14 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 char*
 BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 {
-	return utils.path_combine (home.get_cstr (), ".__override__");
+	dynamic_local_string<SENSIBLE_PATH_MAX> dir{};
+	dir.assign_c (home.get_cstr ());
+	dir.append (MONODROID_PATH_SEPARATOR_CHAR);
+	dir.append (".__override__");
+	dir.append (MONODROID_PATH_SEPARATOR_CHAR);
+	dir.append (SharedConstants::android_abi);
+
+	return utils.strdup_new (dir.get ());
 }
 
 const char*
