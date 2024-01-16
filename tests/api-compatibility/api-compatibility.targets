@@ -9,7 +9,6 @@
     />
     <PropertyGroup>
       <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
-      <_CilStrip>"$(XAInstallPrefix)\xbuild\Xamarin\Android\cil-strip.exe"</_CilStrip>
       <_ContractRefDll>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll</_ContractRefDll>
       <_ContractRefSrc>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll.cs</_ContractRefSrc>
     </PropertyGroup>
@@ -19,9 +18,6 @@
     />
     <Exec
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_GenAPI) &quot;$(_ContractRefDll)&quot; > &quot;$(_ContractRefSrc)&quot;"
-    />
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_CilStrip) &quot;$(_ContractRefDll)&quot;"
     />
     <ItemGroup>
       <_ZipEntry Include="$(_ContractRefDll)" />
