@@ -542,7 +542,7 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2263", "found in <manifest>"),  // unexpected element <xxxxx> found in <manifest>
 			Tuple.Create ("APT2264", "The system cannot find the file specified. (2)"), // Windows Long Path error from aapt2
 			Tuple.Create ("APT2265", "The system cannot find the file specified. (2)"), // Windows non-ASCII characters error from aapt2
-			Tuple.Create ("APT2266", "in <data> tag has value of")
+			Tuple.Create ("APT2266", "in <data> tag has value of") //  error: attribute ‘android:path’ in <data> tag has value of ‘code/fooauth://com.foo.foo, it must start with a leading slash ‘/’.
 		};
 	}
 }
