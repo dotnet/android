@@ -403,7 +403,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 void*
 AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags)
 {
-	return load_dso_from_specified_dirs (static_cast<const char**> (app_lib_directories), app_lib_directories_size, name, dl_flags);
+	return load_dso_from_specified_dirs (app_lib_directories.data (), app_lib_directories.size (), name, dl_flags);
 }
 
 void*
@@ -448,9 +448,10 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_st
 			return true;
 	}
 #endif
-	for (size_t i = 0; i < app_lib_directories_size; i++) {
-		if (get_existing_dso_path_on_disk (app_lib_directories [i], dso_name, path))
+	for (const char *app_lib_dir : app_lib_directories) {
+		if (get_existing_dso_path_on_disk (app_lib_dir, dso_name, path)) {
 			return true;
+		}
 	}
 
 	return false;

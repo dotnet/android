@@ -1,15 +1,9 @@
-#include <cerrno>
-
 #include "basic-android-system.hh"
 #include "cpp-util.hh"
 #include "globals.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
-
-const char **BasicAndroidSystem::app_lib_directories;
-size_t BasicAndroidSystem::app_lib_directories_size = 0;
-const char* BasicAndroidSystem::built_for_abi_name = nullptr;
 
 void
 BasicAndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
@@ -31,14 +25,21 @@ BasicAndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtim
 {
 	if (!is_embedded_dso_mode_enabled ()) {
 		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
-		BasicAndroidSystem::app_lib_directories_size = 1;
-		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
+
+		BasicAndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
 		BasicAndroidSystem::app_lib_directories [0] = utils.strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
 	} else {
 		log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
-		BasicAndroidSystem::app_lib_directories_size = runtimeApks.get_length ();
-		BasicAndroidSystem::app_lib_directories = new const char*[app_lib_directories_size]();
+
+		if (have_split_apks) {
+			// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
+			// dynamically in this case
+			BasicAndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
+		} else {
+			size_t app_lib_directories_size = have_split_apks ? 1 : runtimeApks.get_length ();
+			BasicAndroidSystem::app_lib_directories = std::span<const char*> (new const char*[app_lib_directories_size], app_lib_directories_size);
+		}
 
 		unsigned short built_for_cpu = 0, running_on_cpu = 0;
 		unsigned char is64bit = 0;
@@ -61,7 +62,7 @@ BasicAndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApk
 force_inline void
 BasicAndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept
 {
-	abort_unless (index < app_lib_directories_size, "Index out of range");
+	abort_unless (index < app_lib_directories.size (), "Index out of range");
 	app_lib_directories [index] = utils.string_concat (apk, "!/lib/", abi);
 	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
 	index++;
@@ -87,7 +88,12 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 		}
 	}
 
-	app_lib_directories_size = number_of_added_directories;
+	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
+		return;
+	}
+
+	abort_unless (number_of_added_directories > 0, "At least a single application lib directory must be added");
+	app_lib_directories = app_lib_directories.subspan (0, number_of_added_directories);
 }
 
 char*

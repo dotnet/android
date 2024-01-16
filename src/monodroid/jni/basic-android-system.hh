@@ -4,6 +4,7 @@
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <span>
 
 #include "cpu-arch.hh"
 #include "jni-wrappers.hh"
@@ -33,7 +34,7 @@ namespace xamarin::android::internal
 #pragma clang diagnostic pop
 #endif
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
-		static const char* built_for_abi_name;
+		inline static const char* built_for_abi_name = nullptr;
 
 	public:
 #ifdef ANDROID64
@@ -52,9 +53,12 @@ namespace xamarin::android::internal
 		static constexpr char SYSTEM_LIB_PATH[] = "";
 #endif
 
-		inline static std::array<char*, 1> override_dirs;
-		static const char **app_lib_directories;
-		static size_t app_lib_directories_size;
+		inline static std::array<char*, 1> override_dirs{};
+
+		// This optimizes things a little bit. The array is allocated at build time, so we pay no cost for its
+		// allocation and at run time it allows us to skip dynamic memory allocation.
+		inline static std::array<const char*, 1> single_app_lib_directory{};
+		inline static std::span<const char*> app_lib_directories;
 		static const char* get_built_for_abi_name ();
 
 	public:

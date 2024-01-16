@@ -216,8 +216,8 @@ get_libmonosgen_path ()
 		}
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
+	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+		if (runtime_exists (app_lib_dir, libmonoso)) {
 			return libmonoso;
 		}
 	}
@@ -270,8 +270,8 @@ get_libmonosgen_path ()
 		log_fatal (LOG_DEFAULT, "  %s", od);
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::app_lib_directories [i]);
+	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+		log_fatal (LOG_DEFAULT, "  %s", app_lib_dir);
 	}
 
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");
