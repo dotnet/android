@@ -541,7 +541,8 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2262", "unexpected element <activity> found in <manifest>"),
 			Tuple.Create ("APT2263", "found in <manifest>"),  // unexpected element <xxxxx> found in <manifest>
 			Tuple.Create ("APT2264", "The system cannot find the file specified. (2)"), // Windows Long Path error from aapt2
-			Tuple.Create ("APT2265", "The system cannot find the file specified. (2)") // Windows non-ASCII characters error from aapt2
+			Tuple.Create ("APT2265", "The system cannot find the file specified. (2)"), // Windows non-ASCII characters error from aapt2
+			Tuple.Create ("APT2266", "in <data> tag has value of")
 		};
 	}
 }
