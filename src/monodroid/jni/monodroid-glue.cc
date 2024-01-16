@@ -308,8 +308,16 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		}
 
 		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
-		if (utils.file_exists (fullpath.get ()))
-			result = mono_assembly_open_full (fullpath.get (), nullptr, 0);
+		if (utils.file_exists (fullpath.get ())) {
+			log_info (LOG_ASSEMBLY, "open_from_update_dir: assembly file exists");
+			MonoImageOpenStatus status{};
+			result = mono_assembly_open_full (fullpath.get (), &status, 0);
+			if (result == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", fullpath.get (), mono_image_strerror (status));
+			}
+		} else {
+			log_info (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST");
+		}
 		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
 			break;

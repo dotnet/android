@@ -438,7 +438,10 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 	}
 
 	if (a == nullptr) {
-		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load assembly %s", name.get ());
+		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load bundled assembly %s", name.get ());
+#if defined(DEBUG)
+		log_warn (LOG_ASSEMBLY, "open_from_bundles: the assembly might have been uploaded to the device with FastDev instead");
+#endif
 	}
 
 	return a;
