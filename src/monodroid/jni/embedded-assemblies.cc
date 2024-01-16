@@ -294,7 +294,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
 	abi_name
-		.assign_c (BasicAndroidSystem::get_built_for_abi_name ())
+		.assign (SharedConstants::android_lib_abi)
 		.append (zip_path_separator)
 		.append (name);
 

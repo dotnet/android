@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <string_view>
 #include <type_traits>
 
 #include <unistd.h>
@@ -97,10 +98,35 @@ namespace xamarin::android
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path1_len, path2, path2_len);
 		}
 
+		char* path_combine (const char *path1, std::string_view const& path2) noexcept
+		{
+			return path_combine (path1, path2.data ());
+		}
+
 		bool ends_with_slow (const char *str, const char *end)
 		{
 			char *p = const_cast<char*> (strstr (str, end));
 			return p != nullptr && p [strlen (end)] == '\0';
+		}
+
+		template<size_t MaxStackSpace>
+		bool ends_with (internal::dynamic_local_string<MaxStackSpace>& str, std::string_view const& sv) const noexcept
+		{
+			if (str.length () < sv.length ()) {
+				return false;
+			}
+
+			return memcmp (str.get () + str.length () - sv.length (), sv.data (), sv.length ()) == 0;
+		}
+
+		bool ends_with (const char *str, std::string_view const& sv) const noexcept
+		{
+			size_t len = strlen (str);
+			if (len < sv.length ()) {
+				return false;
+			}
+
+			return memcmp (str + len - sv.length (), sv.data (), sv.length ()) == 0;
 		}
 
 		template<size_t N>

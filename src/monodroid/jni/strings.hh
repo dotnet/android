@@ -5,6 +5,7 @@
 #include <cstring>
 #include <cerrno>
 #include <limits>
+#include <string_view>
 #include <type_traits>
 #include <unistd.h>
 
@@ -450,6 +451,11 @@ namespace xamarin::android::internal
 			return append (str.get (), str.length ());
 		}
 
+		force_inline string_base& append (std::string_view const& sv) noexcept
+		{
+			return append (sv.data (), sv.length ());
+		}
+
 		template<size_t Size>
 		force_inline string_base& append (const char (&s)[Size]) noexcept
 		{
@@ -518,6 +524,11 @@ namespace xamarin::android::internal
 				return *this;
 
 			return assign (s, strlen (s));
+		}
+
+		force_inline string_base& assign (std::string_view const& sv) noexcept
+		{
+			return assign (sv.data (), sv.size ());
 		}
 
 		template<size_t Size>

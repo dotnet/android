@@ -271,12 +271,10 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	}
 	pname.append (name, name_len);
 
-	constexpr size_t dll_extension_len = sizeof(SharedConstants::DLL_EXTENSION) - 1;
-
 	bool is_dll = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
 	size_t file_name_len = pname.length () + 1;
 	if (!is_dll)
-		file_name_len += dll_extension_len;
+		file_name_len += SharedConstants::DLL_EXTENSION.length ();
 
 	MonoAssembly *result = nullptr;
 	for (const char *override_dir : AndroidSystem::override_dirs) {
@@ -288,7 +286,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		static_local_string<SENSIBLE_PATH_MAX> fullpath (override_dir_len + file_name_len);
 		utils.path_combine (fullpath, override_dir, override_dir_len, pname.get (), pname.length ());
 		if (!is_dll) {
-			fullpath.append (SharedConstants::DLL_EXTENSION, dll_extension_len);
+			fullpath.append (SharedConstants::DLL_EXTENSION);
 		}
 
 		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
@@ -1000,11 +998,7 @@ MonodroidRuntime::init_android_runtime (
 
 	MonoAssembly *mono_android_assembly;
 
-#if defined (NET)
-	mono_android_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
-#else // def NET
-	mono_android_assembly = utils.monodroid_load_assembly (domain, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
-#endif // ndef NET
+	mono_android_assembly = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME.data ());
 	MonoImage *mono_android_assembly_image = mono_assembly_get_image (mono_android_assembly);
 
 	uint32_t i = 0;
@@ -1023,11 +1017,7 @@ MonodroidRuntime::init_android_runtime (
 	MonoMethod *method;
 
 	if constexpr (is_running_on_desktop) {
-#if defined (NET)
-		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
-#else
-		runtime = utils.monodroid_get_class_from_image (domain, mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENVINIT_CLASS_NAME);
-#endif // def NET
+		runtime = mono_class_from_name (mono_android_assembly_image, SharedConstants::ANDROID_RUNTIME_NS_NAME.data (), SharedConstants::JNIENVINIT_CLASS_NAME.data ());
 		method = mono_class_get_method_from_name (runtime, "Initialize", 1);
 	} else {
 		runtime = mono_class_get (mono_android_assembly_image, application_config.android_runtime_jnienv_class_token);
@@ -1038,11 +1028,7 @@ MonodroidRuntime::init_android_runtime (
 	abort_unless (method != nullptr, "INTERNAL ERROR: Unable to find the Android.Runtime.JNIEnvInit.Initialize method!");
 
 	MonoAssembly *ji_assm;
-#if defined (NET)
-	ji_assm = utils.monodroid_load_assembly (default_alc, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
-#else // def NET
-	ji_assm = utils.monodroid_load_assembly (domain, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME);
-#endif // ndef NET
+	ji_assm = utils.monodroid_load_assembly (default_alc, SharedConstants::JAVA_INTEROP_ASSEMBLY_NAME.data ());
 
 	MonoImage       *ji_image   = mono_assembly_get_image  (ji_assm);
 	for ( ; i < OSBridge::NUM_XA_GC_BRIDGE_TYPES + OSBridge::NUM_JI_GC_BRIDGE_TYPES; ++i) {
@@ -1117,9 +1103,9 @@ MonodroidRuntime::init_android_runtime (
 MonoClass*
 MonodroidRuntime::get_android_runtime_class ()
 {
-	MonoAssembly *assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME);
+	MonoAssembly *assm = utils.monodroid_load_assembly (default_alc, SharedConstants::MONO_ANDROID_ASSEMBLY_NAME.data ());
 	MonoImage *image   = mono_assembly_get_image (assm);
-	return mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME, SharedConstants::JNIENV_CLASS_NAME);
+	return mono_class_from_name (image, SharedConstants::ANDROID_RUNTIME_NS_NAME.data (), SharedConstants::JNIENV_CLASS_NAME.data ());
 }
 #else // def NET
 MonoClass*

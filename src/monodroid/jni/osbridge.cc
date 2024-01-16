@@ -1156,13 +1156,9 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 */
 	MonoClass *runtime = utils.monodroid_get_class_from_name (
 		domain,
-#if defined (NET)
-		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME,
-#else
-		SharedConstants::MONO_ANDROID_ASSEMBLY_NAME,
-#endif
-		SharedConstants::ANDROID_RUNTIME_NS_NAME,
-		SharedConstants::ANDROID_RUNTIME_INTERNAL_CLASS_NAME
+		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME.data (),
+		SharedConstants::ANDROID_RUNTIME_NS_NAME.data (),
+		SharedConstants::ANDROID_RUNTIME_INTERNAL_CLASS_NAME.data ()
 	);
 
 	node->domain = domain;

@@ -8,6 +8,7 @@
 #include <cstring>
 #include <limits>
 #include <functional>
+#include <string_view>
 #include <vector>
 #include <semaphore.h>
 
@@ -94,13 +95,21 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr char  assemblies_prefix[] = "assemblies/";
-		static constexpr char  zip_path_separator[] = "/";
+		static constexpr std::string_view assemblies_prefix { "assemblies/" };
+		static constexpr std::string_view zip_path_separator { "/" };
+		static constexpr std::string_view dot { "." };
+		static constexpr std::string_view assembly_store_prefix { "assemblies" };
+		static constexpr std::string_view assembly_store_extension { ".blob" };
 
-		static constexpr char assembly_store_prefix[] = "assemblies";
-		static constexpr char assembly_store_extension[] = ".blob";
-		static constexpr auto assembly_store_common_file_name = concat_const ("/", assembly_store_prefix, assembly_store_extension);
-		static constexpr auto assembly_store_arch_file_name = concat_const ("/", assembly_store_prefix, ".", SharedConstants::android_abi, assembly_store_extension);
+		static constexpr size_t assembly_store_common_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, assembly_store_extension);
+		static constexpr auto assembly_store_common_file_name = concat_string_views<assembly_store_common_file_name_size> (zip_path_separator, assembly_store_prefix, assembly_store_extension);
+
+		static constexpr size_t assembly_store_arch_file_name_size = calc_size (zip_path_separator,
+																				assembly_store_prefix,
+																				dot,
+																				SharedConstants::android_abi,
+																				assembly_store_extension);
+		static constexpr auto assembly_store_arch_file_name = concat_string_views<assembly_store_arch_file_name_size> (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
 
 
 #if defined (DEBUG) || !defined (ANDROID)
@@ -268,7 +277,7 @@ namespace xamarin::android::internal {
 
 		const char* get_assemblies_prefix () const
 		{
-			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix;
+			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix.data ();
 		}
 
 		uint32_t get_assemblies_prefix_length () const noexcept

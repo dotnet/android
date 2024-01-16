@@ -207,7 +207,7 @@ get_libmonosgen_path ()
 	copy_native_libraries_to_internal_location ();
 
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		return SharedConstants::MONO_SGEN_SO;
+		return SharedConstants::MONO_SGEN_SO.data ();
 	}
 
 	for (const char *od : BasicAndroidSystem::override_dirs) {

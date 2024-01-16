@@ -2,9 +2,11 @@
 #define __CPP_UTIL_HH
 
 #include <array>
+#include <concepts>
 #include <cstdarg>
 #include <cstdlib>
 #include <memory>
+#include <string_view>
 #include <type_traits>
 
 #include <semaphore.h>
@@ -124,6 +126,37 @@ namespace xamarin::android
 
 		return ret;
 	};
+
+	template<class T>
+	concept StringViewPart = std::is_same_v<T, std::string_view>;
+
+	template<size_t TotalLength, StringViewPart ...T>
+	consteval auto concat_string_views (T const&... parts)
+	{
+		std::array<char, TotalLength + 1> ret; // lgtm [cpp/paddingbyteinformationdisclosure] the buffer is filled in the loop below
+		ret[TotalLength] = 0;
+
+		size_t i = 0;
+		for (std::string_view const& sv : {parts...}) {
+			for (const char ch : sv) {
+				ret[i] = ch;
+				i++;
+			}
+		}
+
+		return ret;
+	}
+
+	consteval size_t calc_size (std::string_view const& sv1) noexcept
+	{
+		return sv1.size ();
+	}
+
+	template<StringViewPart ...T>
+	consteval size_t calc_size (std::string_view const& sv1, T const&... other_svs) noexcept
+	{
+		return sv1.size () + calc_size (other_svs...);
+	}
 
 	template <typename TEnum, std::enable_if_t<std::is_enum_v<TEnum>, int> = 0>
 	constexpr TEnum operator & (TEnum l, TEnum r) noexcept
