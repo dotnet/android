@@ -434,6 +434,21 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[Category ("XamarinBuildDownload")]
+		public void ExtraAaptManifest ()
+		{
+			var proj = new XamarinAndroidApplicationProject ();
+			proj.MainActivity = proj.DefaultMainActivity.Replace("base.OnCreate (bundle);", "base.OnCreate (bundle);\nFirebase.Crashlytics.FirebaseCrashlytics.Instance.SendUnsentReports();");
+			proj.PackageReferences.Add (new Package { Id = "Xamarin.Firebase.Crashlytics", Version = "118.5.1.1" });
+			proj.PackageReferences.Add(KnownPackages.Xamarin_Build_Download);
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
+			Assert.IsTrue (manifest.Contains ($"android:authorities=\"{proj.PackageName}.firebaseinitprovider\""), "placeholder not replaced");
+			Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
+		}
+
+[Test]
 		public void AarContentExtraction ()
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
