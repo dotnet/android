@@ -494,7 +494,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
   <AndroidError Code="XA1039"
       ResourceName="XA1039"
-      FormatArguments="9"
       Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
   />
 </Target>
