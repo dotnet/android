@@ -104,11 +104,7 @@ namespace xamarin::android::internal {
 		static constexpr size_t assembly_store_common_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, assembly_store_extension);
 		static constexpr auto assembly_store_common_file_name = concat_string_views<assembly_store_common_file_name_size> (zip_path_separator, assembly_store_prefix, assembly_store_extension);
 
-		static constexpr size_t assembly_store_arch_file_name_size = calc_size (zip_path_separator,
-																				assembly_store_prefix,
-																				dot,
-																				SharedConstants::android_abi,
-																				assembly_store_extension);
+		static constexpr size_t assembly_store_arch_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
 		static constexpr auto assembly_store_arch_file_name = concat_string_views<assembly_store_arch_file_name_size> (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
 
 
@@ -282,7 +278,7 @@ namespace xamarin::android::internal {
 
 		uint32_t get_assemblies_prefix_length () const noexcept
 		{
-			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : sizeof(assemblies_prefix) - 1;
+			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : assemblies_prefix.length ();
 		}
 
 		bool all_required_zip_entries_found () const noexcept
