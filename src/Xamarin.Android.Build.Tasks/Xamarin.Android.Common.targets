@@ -1542,6 +1542,10 @@ because xbuild doesn't support framework reference assemblies.
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
 
+  <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
+    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\*" />
+  </ItemGroup>
+
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
     <FileWrites Include="@(_TypeMapAssemblyInclude)" />
