@@ -448,7 +448,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
 		}
 
-[Test]
+		[Test]
 		public void AarContentExtraction ()
 		{
 			var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
