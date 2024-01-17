@@ -487,7 +487,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <ItemGroup>
     <_AndroidUnsupportedPackages
         Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
-        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and ($([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')))"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
     />
   </ItemGroup>
   <AndroidError Code="XA1039"
