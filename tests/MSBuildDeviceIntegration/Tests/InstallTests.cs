@@ -483,6 +483,7 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName, DeviceAbi)) {
 					overrideContents += RunAdbCommand ($"shell run-as {app.PackageName} find {dir}");
 				}
+				Console.WriteLine ($"#grendel: overrideContents == {overrideContents}");
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
