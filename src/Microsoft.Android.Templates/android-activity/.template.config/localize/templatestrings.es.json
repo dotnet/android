@@ -3,5 +3,5 @@
   "name": "Plantilla de actividad de Android",
   "description": "Una clase de actividad de Android",
   "symbols/namespace/description": "espacio de nombres para el código generado",
-  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
+  "postActions/openInEditor/description": "Abre Activity1.cs en el editor"
 }

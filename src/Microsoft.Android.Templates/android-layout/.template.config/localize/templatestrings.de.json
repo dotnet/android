@@ -2,5 +2,5 @@
   "author": "Microsoft",
   "name": "Android-Layoutvorlage",
   "description": "Eine Android-Layoutdatei (XML)",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "Öffnet Layout1.xml im Editor"
 }

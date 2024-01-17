@@ -2,5 +2,5 @@
   "author": "Microsoft",
   "name": "Android 版面配置範本",
   "description": "Android 配置 (XML) 檔案",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "在編輯器中開啟 Layout1.xml"
 }
