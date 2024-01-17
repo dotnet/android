@@ -396,13 +396,13 @@ namespace Xamarin.Android.Build.Tests
 			return serial.Trim ();
 		}
 
-		protected static string [] GetOverrideDirectoryPaths (string packageName)
+		protected static string [] GetOverrideDirectoryPaths (string packageName, string abi)
 		{
 			return new string [] {
-				$"/data/data/{packageName}/files/.__override__",
-				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__",
-				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__",
-				$"/storage/sdcard/Android/data/{packageName}/files/.__override__",
+				$"/data/data/{packageName}/files/.__override__/{abi}",
+				$"/storage/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
+				$"/mnt/shell/emulated/0/Android/data/{packageName}/files/.__override__/{abi}",
+				$"/storage/sdcard/Android/data/{packageName}/files/.__override__/{abi}",
 			};
 		}
 
