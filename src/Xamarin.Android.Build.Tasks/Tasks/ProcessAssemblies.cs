@@ -113,6 +113,12 @@ namespace Xamarin.Android.Tasks
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
 			foreach (ITaskItem assembly in InputAssemblies) {
+				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
+					// Designer builds don't produce assemblies, so library and main application DLLs might not
+					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
+					continue;
+				}
+
 				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
 				SetAssemblyAbiMetadata (assembly, symbol);
 				SetDestinationSubDirectory (assembly, symbol);
