@@ -52,9 +52,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view split_config_prefix { "/split_config." };
 		static constexpr std::string_view split_config_extension { ".apk" };
 
-		static constexpr size_t split_config_abi_apk_name_size = split_config_prefix.size () +
-																 android_abi.size () +
-																 split_config_extension.size ();
+		static constexpr size_t split_config_abi_apk_name_size = calc_size (split_config_prefix, android_abi, split_config_extension);
 		static constexpr auto split_config_abi_apk_name = concat_string_views<split_config_abi_apk_name_size> (split_config_prefix, android_abi, split_config_extension);
 
 		//
