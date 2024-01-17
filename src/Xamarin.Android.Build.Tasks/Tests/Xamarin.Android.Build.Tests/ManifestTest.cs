@@ -569,6 +569,32 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void ManifestDataPathError ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			var s = proj.AndroidManifest.Replace ("</application>", @"<activity android:name=""net.openid.appauth.RedirectUriReceiverActivity"" android:exported=""true"">
+			<intent-filter>
+				<action android:name=""android.intent.action.VIEW""/>
+				<category android:name=""android.intent.category.DEFAULT""/>
+				<category android:name=""android.intent.category.BROWSABLE""/>
+				<data android:path=""code/buildproauth://com.hyphensolutions.buildpro"" android:scheme=""msauth""/>
+				<data android:path=""callback"" android:scheme=""buildproauth""/>
+			</intent-filter>
+	</activity>
+</application>");
+			proj.AndroidManifest = s;
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
+				string error = messages.FirstOrDefault (x => x.Contains ("error APT2266:"));
+				Assert.IsNotNull (error, "Warning should be APT2266");
+			}
+		}
+
+		[Test]
 		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
