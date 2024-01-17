@@ -2,5 +2,5 @@
   "author": "Microsoft",
   "name": "Plantilla de diseño de Android",
   "description": "Un archivo de diseño de Android (XML)",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "Abre Layout1.xml en el editor"
 }
