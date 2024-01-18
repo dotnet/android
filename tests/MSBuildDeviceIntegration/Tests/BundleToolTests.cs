@@ -226,8 +226,8 @@ namespace Xamarin.Android.Build.Tests
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Java.Interop.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Mono.Android.dll.so");
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/%es%Localization.resources.dll");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#UnnamedProject.dll");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/%es%Localization.resources.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#UnnamedProject.dll.so");
 				} else {
 					expectedFiles.Add ($"base/lib/{abi}/#Java.Interop.dll.so");
 					expectedFiles.Add ($"base/lib/{abi}/#Mono.Android.dll.so");
