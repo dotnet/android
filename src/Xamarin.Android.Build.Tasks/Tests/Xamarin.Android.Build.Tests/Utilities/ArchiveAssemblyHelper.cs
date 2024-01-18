@@ -205,11 +205,13 @@ namespace Xamarin.Android.Build.Tests
 					string mangledName = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (name, culture);
 					entries.Add ($"{prefix}{mangledName}");
 					if (asm.DebugOffset > 0) {
-						entries.Add ($"{prefix}{Path.ChangeExtension (mangledName, "pdb")}");
+						mangledName = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.ChangeExtension (name, "pdb"));
+						entries.Add ($"{prefix}{mangledName}");
 					}
 
 					if (asm.ConfigOffset > 0) {
-						entries.Add ($"{prefix}{Path.ChangeExtension (mangledName, "config")}");
+						mangledName = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.ChangeExtension (name, "config"));
+						entries.Add ($"{prefix}{mangledName}");
 					}
 				}
 			}
