@@ -33,8 +33,13 @@ namespace Xamarin.Android.Tasks
 
 		public bool NdkRequired { get; set; }
 
+		public string JdkVersion { get; set; }
+
 		[Output]
 		public ITaskItem [] Dependencies { get; set; }
+
+		[Output]
+		public ITaskItem JdkDependency { get; set; }
 
 		ITaskItem CreateAndroidDependency (string include, string version)
 		{
@@ -68,6 +73,9 @@ namespace Xamarin.Android.Tasks
 			}
 			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
+			}
+			if (!string.IsNullOrEmpty (JdkVersion)) {
+				JdkDependency = CreateAndroidDependency ("jdk", JdkVersion);
 			}
 			Dependencies = dependencies.ToArray ();
 			return !Log.HasLoggedErrors;
