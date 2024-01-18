@@ -65,7 +65,7 @@ public class PrepareSatelliteAssemblies : AndroidTask
 		void SetDestinationPathsMetadata (ITaskItem item, string zipArchivePath)
 		{
 			item.SetMetadata ("DestinationSubPath", zipArchivePath);
-			item.SetMetadata ("DestinationSubDirectory", Path.GetDirectoryName (zipArchivePath));
+			item.SetMetadata ("DestinationSubDirectory", Path.GetDirectoryName (zipArchivePath) + Path.DirectorySeparatorChar);
 		}
 	}
 }
