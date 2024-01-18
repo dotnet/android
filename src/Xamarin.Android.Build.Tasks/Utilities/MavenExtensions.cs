@@ -1,3 +1,5 @@
+#nullable enable
+
 using System;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
@@ -25,6 +27,74 @@ static class MavenExtensions
 	/// </summary>
 	public static bool HasValue ([NotNullWhen (true)] this string? s) => !string.IsNullOrWhiteSpace (s);
 
+	/// <summary>
+	/// Removes the first subset of a delimited string. ("127.0.0.1" -> "0.0.1")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? ChompFirst (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.IndexOf (separator);
+
+		if (index < 0)
+			return string.Empty;
+
+		return s.Substring (index + 1);
+	}
+
+	/// <summary>
+	/// Removes the final subset of a delimited string. ("127.0.0.1" -> "127.0.0")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? ChompLast (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.LastIndexOf (separator);
+
+		if (index < 0)
+			return string.Empty;
+
+		return s.Substring (0, index);
+	}
+
+	/// <summary>
+	/// Returns the first subset of a delimited string. ("127.0.0.1" -> "127")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? FirstSubset (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.IndexOf (separator);
+
+		if (index < 0)
+			return s;
+
+		return s.Substring (0, index);
+	}
+
+	/// <summary>
+	/// Returns the final subset of a delimited string. ("127.0.0.1" -> "1")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? LastSubset (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.LastIndexOf (separator);
+
+		if (index < 0)
+			return s;
+
+		return s.Substring (index + 1);
+	}
+
 	// Helps to 'foreach' into a possibly null array
 	public static T [] OrEmpty<T> (this T []? value)
 	{
@@ -45,9 +115,25 @@ static class MavenExtensions
 		return artifact;
 	}
 
+	public static bool TryParseArtifact (string id, string version, TaskLoggingHelper log, [NotNullWhen (true)] out Java.Interop.Maven.Models.Artifact? artifact)
+	{
+		artifact = null;
+
+		var parts = id.Split (separator, StringSplitOptions.RemoveEmptyEntries);
+
+		if (parts.Length != 2 || parts.Any (string.IsNullOrWhiteSpace)) {
+			log.LogCodedError ("XA4235", Properties.Resources.XA4235, id);
+			return false;
+		}
+
+		artifact = new Java.Interop.Maven.Models.Artifact (parts [0], parts [1], version);
+
+		return true;
+	}
+
 	public static Project ParsePom (string pomFile)
 	{
-		Project result = null;
+		Project? result = null;
 
 		using (var sr = File.OpenRead (pomFile))
 			result = (Project) pom_serializer.Deserialize (new XmlTextReader (sr) {
