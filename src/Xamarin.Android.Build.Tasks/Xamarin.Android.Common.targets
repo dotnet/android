@@ -488,12 +488,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <ItemGroup>
     <_AndroidUnsupportedPackages
         Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
-        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and ($([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')))"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
     />
   </ItemGroup>
   <AndroidError Code="XA1039"
       ResourceName="XA1039"
-      FormatArguments="9"
       Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
   />
 </Target>
@@ -1542,6 +1543,10 @@ because xbuild doesn't support framework reference assemblies.
       Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
+
+  <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
+    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />

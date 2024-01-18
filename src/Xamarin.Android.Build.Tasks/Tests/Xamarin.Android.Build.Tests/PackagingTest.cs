@@ -634,7 +634,7 @@ public class Test
 		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = false
+				IsRelease = false,
 			};
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
 			if (filesLimit > 0)

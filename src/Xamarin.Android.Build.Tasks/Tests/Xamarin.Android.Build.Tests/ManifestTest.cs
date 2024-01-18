@@ -763,7 +763,7 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.AndroidXAppCompat
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
 			proj.SetProperty ("AndroidManifestMerger", "legacy");

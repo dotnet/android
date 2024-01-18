@@ -143,7 +143,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.AndroidXAppCompat
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
 			using (var b = CreateApkBuilder ()) {
@@ -823,7 +823,7 @@ namespace Lib1 {
 	</style>
 </resources>",
 					}
-				}
+				},
 			};
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
@@ -1022,7 +1022,7 @@ namespace Lib1 {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 				PackageReferences = {
-					KnownPackages.AndroidXAppCompat
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
