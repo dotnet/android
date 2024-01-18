@@ -483,6 +483,21 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
+<Target Name="_CheckUnsupportedPackages" AfterTargets="ResolvePackageAssets">
+  <ItemGroup>
+    <_AndroidUnsupportedPackages
+        Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
+    />
+  </ItemGroup>
+  <AndroidError Code="XA1039"
+      ResourceName="XA1039"
+      Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
+  />
+</Target>
+
 <Target Name="_CheckNonIdealConfigurations">
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AOT"
@@ -1527,6 +1542,10 @@ because xbuild doesn't support framework reference assemblies.
       Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
+
+  <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
+    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
