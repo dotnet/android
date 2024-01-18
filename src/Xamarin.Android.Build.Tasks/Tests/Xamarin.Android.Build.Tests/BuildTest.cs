@@ -1464,6 +1464,19 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void XA1039 ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				PackageReferences = {
+					KnownPackages.SupportCompat_27_0_2_1
+				}
+			};
+			using var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "build should have succeeded");
+			StringAssertEx.Contains ("warning XA1039", builder.LastBuildOutput, "Should get XA1039 warning");
+		}
+
+		[Test]
 		[NonParallelizable]
 		public void CheckLintErrorsAndWarnings ()
 		{
