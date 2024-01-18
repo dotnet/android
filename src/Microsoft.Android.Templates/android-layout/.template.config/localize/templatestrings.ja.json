@@ -2,5 +2,5 @@
   "author": "Microsoft",
   "name": "Android レイアウト テンプレート",
   "description": "Android レイアウト (XML) ファイル",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "エディターで Layout1.xml を開きます"
 }
