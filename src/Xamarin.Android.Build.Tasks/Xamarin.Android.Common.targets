@@ -499,6 +499,23 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
+<Target Name="_CheckUnsupportedPackages"
+    Condition=" '$(_AndroidIgnoreAndroidSupportWarning)' != 'true' "
+    AfterTargets="ResolvePackageAssets">
+  <ItemGroup>
+    <_AndroidUnsupportedPackages
+        Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
+    />
+  </ItemGroup>
+  <AndroidWarning Code="XA1039"
+      ResourceName="XA1039"
+      Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
+  />
+</Target>
+
 <Target Name="_CheckNonIdealConfigurations">
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AOT"
