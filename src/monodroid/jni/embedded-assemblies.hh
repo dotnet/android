@@ -135,10 +135,22 @@ namespace xamarin::android::internal {
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
-		size_t register_from (const char *apk_file)
+		size_t register_from_apk (const char *apk_file) noexcept
 		{
 			static_assert (should_register_fn != nullptr, "should_register_fn is a required template parameter");
-			return register_from (apk_file, should_register_fn);
+			return register_from_apk (apk_file, should_register_fn);
+		}
+
+		template<bool (*should_register_fn)(const char*)>
+		size_t register_from_filesystem () noexcept
+		{
+			static_assert (should_register_fn != nullptr, "should_register_fn is a required template parameter");
+			return register_from_filesystem (should_register_fn);
+		}
+
+		static constexpr decltype(assemblies_prefix) const& get_assemblies_prefix () noexcept
+		{
+			return assemblies_prefix;
 		}
 
 		bool get_register_debug_symbols () const
@@ -185,7 +197,11 @@ namespace xamarin::android::internal {
 	private:
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
-		size_t register_from (const char *apk_file, monodroid_should_register should_register);
+		size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
+		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
+		size_t register_discrete_assemblies_from_filesystem (monodroid_should_register should_register) noexcept;
+		size_t register_blobs_from_filesystem (monodroid_should_register should_register) noexcept;
+
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
 		template<LoaderData TLoaderData>

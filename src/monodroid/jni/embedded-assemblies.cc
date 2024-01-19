@@ -13,6 +13,8 @@
 #include <libgen.h>
 #include <cerrno>
 #include <unistd.h>
+#include <dirent.h>
+#include <sys/types.h>
 
 #if defined (HAVE_LZ4)
 #include <lz4.h>
@@ -1176,7 +1178,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 #endif
 
 size_t
-EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_register should_register)
+EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept
 {
 	size_t prev  = number_of_found_assemblies;
 
@@ -1185,4 +1187,56 @@ EmbeddedAssemblies::register_from (const char *apk_file, monodroid_should_regist
 	log_info (LOG_ASSEMBLY, "Package '%s' contains %i assemblies", apk_file, number_of_found_assemblies - prev);
 
 	return number_of_found_assemblies;
+}
+
+force_inline size_t
+EmbeddedAssemblies::register_discrete_assemblies_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "  will look for individual assemblies on the filesystem");
+
+	const char *lib_dir_path = androidSystem.app_lib_directories[0];
+	DIR *lib_dir = opendir (lib_dir_path);
+	if (lib_dir == nullptr) {
+		log_warn (LOG_ASSEMBLY, "Unable to open app library directory '%s': ", lib_dir_path, std::strerror (errno));
+		return 0;
+	}
+
+	size_t assembly_count = 0;
+	do {
+		errno = 0;
+		dirent *cur = readdir (lib_dir);
+		if (cur == nullptr) {
+			if (errno != 0) {
+				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", lib_dir_path, std::strerror (errno));
+				continue; // keep going, no harm
+			}
+			break;
+		}
+	} while (true);
+
+	closedir (lib_dir);
+	return assembly_count;
+}
+
+force_inline size_t
+EmbeddedAssemblies::register_blobs_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "  will look for assembly store on the filesystem");
+	return 0;
+}
+
+size_t
+EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
+
+	size_t assembly_count = 0;
+	if (application_config.have_assembly_store) {
+		assembly_count = register_blobs_from_filesystem (should_register);
+	} else {
+		assembly_count = register_discrete_assemblies_from_filesystem (should_register);
+	}
+
+	log_debug (LOG_ASSEMBLY, "Found %zu assemblies on the filesystem", assembly_count);
+	return assembly_count;
 }

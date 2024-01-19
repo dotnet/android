@@ -374,6 +374,11 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	}
 #endif
 
+	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
+		return;
+	}
+
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
 	bool got_split_config_abi_apk = false;
@@ -398,7 +403,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			}
 		}
 
-		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
+		size_t cur_num_assemblies  = embeddedAssemblies.register_from_apk<should_register_file> (apk_file.get_cstr ());
 
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
@@ -760,6 +765,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
 	if (XA_UNLIKELY (log_methods)) {
+		// TODO: this fails even if the override dir is created. Investigate.
 		std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.get_override_dir (0), "methods.txt")};
 		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
 		utils.set_world_accessable (jit_log_path.get ());
@@ -871,10 +877,11 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		           androidSystem.get_override_dir (0),
 		           (AndroidSystem::MAX_OVERRIDES > 1 && androidSystem.get_override_dir (1) != nullptr) ? androidSystem.get_override_dir (1) : "<unavailable>");
 #else
-		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
+		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
 #endif
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `assemblies/` are STORED (not compressed)");
-		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `assemblies/` are compressed");
+		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
+		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `%s` are STORED (not compressed)", assemblies_prefix);
+		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed", assemblies_prefix);
 
 		Helpers::abort_application ();
 	}
