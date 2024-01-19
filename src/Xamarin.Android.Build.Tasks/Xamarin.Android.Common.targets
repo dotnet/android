@@ -135,9 +135,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props"
-	Condition=" '$(UsingAndroidNETSdk)' != 'True' And Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props')" />
-
 <Import Project="Xamarin.Android.AvailableItems.targets" />
 
 <!--
@@ -209,8 +206,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<!-- Obsolete build property: should be removed in the future releases -->
 	<AndroidMultiDexSupportJar></AndroidMultiDexSupportJar>
-
-	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' And '$(UsingAndroidNETSdk)' != 'True' ">armeabi-v7a;arm64-v8a</AndroidSupportedAbis>
 
 	<!--- Default Lint Enabled and Disabled Checks -->
 	<AndroidLintEnabledIssues Condition=" '$(AndroidLintEnabledIssues)' == '' "></AndroidLintEnabledIssues>
@@ -300,8 +295,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
-	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' == 'true' ">False</_AndroidEnablePreloadAssembliesDefault>
-	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' != 'true' ">True</_AndroidEnablePreloadAssembliesDefault>
+	<_AndroidEnablePreloadAssembliesDefault>False</_AndroidEnablePreloadAssembliesDefault>
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
@@ -336,8 +330,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
-  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -388,15 +381,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AppExtensionReference Condition=" '%(ProjectReference.IsAppExtension)' == 'True' " Include="@(ProjectReference)" />
     <ProjectReference Remove="@(_AppExtensionReference)" />
   </ItemGroup>
-  <PropertyGroup>
-    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' == 'true' ">ErrorAndStop</_AppExtensionContinueOnError>
-    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' != 'true' ">WarnAndContinue</_AppExtensionContinueOnError>
-  </PropertyGroup>
   <AndroidError
       Code="XA4312"
       ResourceName="XA4312"
       FormatArguments="%(_AppExtensionReference.FullPath)"
-      ContinueOnError="$(_AppExtensionContinueOnError)"
       Condition=" '%(FullPath)' != '' "
   />
 </Target>
@@ -544,17 +532,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1023"
       Condition="  '$(AndroidDexTool)' == 'dx' "
   />
-  <AndroidWarning Code="XA1026"
-      ResourceName="XA1026"
-      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' "
-  />
   <AndroidError Code="XA1026"
       ResourceName="XA1026_dotnet"
-      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' "
+      Condition=" '$(AndroidUseAapt2)' != 'true' "
   />
   <AndroidWarning Code="XA1035"
       ResourceName="XA1035"
-      Condition=" '$(BundleAssemblies)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' "
+      Condition=" '$(BundleAssemblies)' == 'true' "
   />
 </Target>
 
@@ -844,23 +828,17 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckForObsoleteFrameworkAssemblies">
-  <PropertyGroup>
-    <_TreatErrorAsWarning Condition="'$(UsingAndroidNETSdk)' != 'true' " >True</_TreatErrorAsWarning>
-    <_TreatErrorAsWarning Condition=" '$(_TreatErrorAsWarning)' == ''">False</_TreatErrorAsWarning>
-  </PropertyGroup>
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
-    ContinueOnError="$(_TreatErrorAsWarning)"
   />
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'Xamarin.Android.NUnitLite' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="Xamarin.Android.NUnitLite;Xamarin.Legacy.NUnitLite"
-    ContinueOnError="$(_TreatErrorAsWarning)"
   />
 </Target>
 
@@ -972,8 +950,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
-		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
-		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)"   Condition=" '$(UsingAndroidNETSdk)' == 'true' " />
+		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)" />
 		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
@@ -1375,18 +1352,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
-    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
-    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
-
-    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
-    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
+    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
 <Target Name="_GetMonoPlatformJarPath">
   <PropertyGroup>
-    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(TargetFrameworkDirectory)</_AndroidJarAndDexDirectory>
-    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
+    <_AndroidJarAndDexDirectory>$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
   </PropertyGroup>
   <GetMonoPlatformJar Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
@@ -1458,7 +1431,6 @@ because xbuild doesn't support framework reference assemblies.
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
       ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
-      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
@@ -1649,7 +1621,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="__XA_PACKAGE_NAMING_POLICY__=$(AndroidPackageNamingPolicy)" />
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
-    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(UsingAndroidNETSdk)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
+    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
   </ItemGroup>
   <WriteLinesToFile
       File="$(IntermediateOutputPath)__environment__.txt"
@@ -1767,7 +1739,6 @@ because xbuild doesn't support framework reference assemblies.
     BoundExceptionType="$(AndroidBoundExceptionType)"
     InstantRunEnabled="$(_InstantRunEnabled)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
   >
@@ -2767,8 +2738,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets"
-        Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"

@@ -79,7 +79,6 @@ namespace Xamarin.Android.Tasks
 		public string TlsProvider { get; set; }
 		public string AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
-		public bool UsingAndroidNETSdk { get; set; }
 
 		[Output]
 		public string BuildId { get; set; }
@@ -177,7 +176,7 @@ namespace Xamarin.Android.Tasks
 				BrokenExceptionTransitions = false,
 				UsesAssemblyPreload = EnablePreloadAssembliesDefault,
 			};
-			environmentParser.Parse (Environments, sequencePointsMode, UsingAndroidNETSdk, Log);
+			environmentParser.Parse (Environments, sequencePointsMode, Log);
 
 			foreach (string line in environmentParser.EnvironmentVariableLines) {
 				AddEnvironmentVariableLine (line);
@@ -199,13 +198,6 @@ namespace Xamarin.Android.Tasks
 					AddEnvironmentVariable (defaultHttpMessageHandler[0], defaultHttpMessageHandler[1]);
 				else
 					AddEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE", HttpClientHandlerType.Trim ());
-			}
-
-			if (!UsingAndroidNETSdk && !environmentParser.HaveTlsProvider) {
-				if (TlsProvider == null)
-					AddEnvironmentVariable (defaultTlsProvider[0], defaultTlsProvider[1]);
-				else
-					AddEnvironmentVariable ("XA_TLS_PROVIDER", TlsProvider.Trim ());
 			}
 
 			if (!environmentParser.HaveMonoGCParams) {

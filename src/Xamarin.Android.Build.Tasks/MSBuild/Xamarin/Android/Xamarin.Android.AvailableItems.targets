@@ -29,31 +29,14 @@ This item group populates the Build Action drop-down in IDEs.
     <AvailableItemName Include="ProjectReference" />
     <AvailableItemName Include="AndroidManifestOverlay" />
   </ItemGroup>
-  <!-- Legacy, non-binding projects -->
-  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
-    <AvailableItemName Include="AndroidAarLibrary" />
-    <AvailableItemName Include="AndroidJavaLibrary" />
-  </ItemGroup>
-  <!-- Legacy, non-application projects -->
-  <ItemGroup Condition=" '$(AndroidApplication)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
-    <AvailableItemName Include="EmbeddedNativeLibrary" />
-  </ItemGroup>
-  <!-- Legacy binding projects or .NET 6 -->
-  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' or '$(UsingAndroidNETSdk)' == 'true' ">
+
+  <!-- All project types -->
+  <ItemGroup>
     <AvailableItemName Include="TransformFile" />
     <AvailableItemName Include="LibraryProjectProperties" />
     <AvailableItemName Include="JavaDocIndex" />
     <AvailableItemName Include="JavaDocJar" />
     <AvailableItemName Include="JavaSourceJar" />
-  </ItemGroup>
-  <!-- Legacy binding projects -->
-  <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
-    <AvailableItemName Include="EmbeddedJar" />
-    <AvailableItemName Include="EmbeddedNativeLibrary" />
-    <AvailableItemName Include="EmbeddedReferenceJar" />
-    <AvailableItemName Include="InputJar" />
-    <AvailableItemName Include="ReferenceJar" />
-    <AvailableItemName Include="LibraryProjectZip" />
   </ItemGroup>
 
   <!-- Default item metadata -->
@@ -64,13 +47,13 @@ This item group populates the Build Action drop-down in IDEs.
     </AndroidResource>
     <AndroidLibrary>
       <Bind>true</Bind>
-      <Pack Condition=" '$(UsingAndroidNETSdk)' == 'true' ">true</Pack>
+      <Pack>true</Pack>
     </AndroidLibrary>
     <LibraryProjectZip>
-      <Pack Condition=" '$(UsingAndroidNETSdk)' == 'true' ">true</Pack>
+      <Pack>true</Pack>
     </LibraryProjectZip>
     <AndroidJavaSource>
-      <Bind Condition=" '$(UsingAndroidNETSdk)' == 'true' ">true</Bind>
+      <Bind>true</Bind>
     </AndroidJavaSource>
     <AndroidAarLibrary>
       <!-- NOTE: .aar items should skip %(AndroidSkipResourceProcessing) by default -->
@@ -80,38 +63,26 @@ This item group populates the Build Action drop-down in IDEs.
 
   <!-- Convert @(AndroidLibrary) to the legacy item group names -->
   <Target Name="_CategorizeAndroidLibraries">
-    <!-- Applications, or legacy class libraries -->
-    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' or ('$(_AndroidIsBindingProject)' != 'true' and '$(UsingAndroidNETSdk)' != 'true') ">
+    <!-- Applications -->
+    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' ">
       <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' " />
       <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' " />
-    </ItemGroup>
-    <!-- Any library that is not an app -->
-    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
-      <EmbeddedNativeLibrary Include="@(AndroidNativeLibrary)" />
-    </ItemGroup>
-    <!-- Any .NET 6 project -->
-    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' ">
-      <LibraryProjectZip  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
-    </ItemGroup>
-    <!-- .NET 6 application projects -->
-    <ItemGroup Condition=" '$(AndroidApplication)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' ">
       <InputJar Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
     </ItemGroup>
-    <!-- .NET 6 class libraries-->
-    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' ">
+    <!-- Class libraries, not an application -->
+    <ItemGroup Condition=" '$(AndroidApplication)' != 'true' ">
+      <EmbeddedNativeLibrary Include="@(AndroidNativeLibrary)" />
       <AndroidAarLibrary  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <AndroidJavaLibrary Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
       <EmbeddedJar        Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <!-- .aar files should be copied to $(OutputPath) in .NET 6-->
+      <!-- .aar files should be copied to $(OutputPath) in .NET 6+ -->
       <None Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' " TfmSpecificPackageFile="%(AndroidLibrary.Pack)" Pack="false" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
       <!-- @(LibraryProjectZip) items that are not in @(AndroidLibrary) -->
       <None Include="@(LibraryProjectZip)" Exclude="@(AndroidLibrary)" TfmSpecificPackageFile="%(LibraryProjectZip.Pack)" Pack="false" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
     </ItemGroup>
-    <!-- Legacy binding projects -->
-    <ItemGroup Condition=" '$(_AndroidIsBindingProject)' == 'true' and '$(UsingAndroidNETSdk)' != 'true' ">
-      <LibraryProjectZip    Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <EmbeddedJar          Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' == 'true' " />
-      <EmbeddedReferenceJar Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.jar' and '%(AndroidLibrary.Bind)' != 'true' " />
+    <!-- All projects -->
+    <ItemGroup>
+      <LibraryProjectZip  Include="@(AndroidLibrary)" Condition=" '%(AndroidLibrary.Extension)' == '.aar' and '%(AndroidLibrary.Bind)' == 'true' " />
     </ItemGroup>
   </Target>
 
