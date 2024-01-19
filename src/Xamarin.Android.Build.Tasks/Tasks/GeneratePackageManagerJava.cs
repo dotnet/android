@@ -331,19 +331,6 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// In "classic" Xamarin.Android, we need to add libaot-*.dll.so files
-			if (!UsingAndroidNETSdk && usesMonoAOT) {
-				foreach (var assembly in ResolvedAssemblies) {
-					string name = $"libaot-{Path.GetFileNameWithoutExtension (assembly.ItemSpec)}.dll.so";
-					if (seenNativeLibraryNames.Contains (name)) {
-						continue;
-					}
-
-					seenNativeLibraryNames.Add (name);
-					uniqueNativeLibraries.Add (new TaskItem (name));
-				}
-			}
-
 			Dictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
 			if (enableMarshalMethods) {
 				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
