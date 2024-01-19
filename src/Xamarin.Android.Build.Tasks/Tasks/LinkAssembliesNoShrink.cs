@@ -46,8 +46,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string TargetName { get; set; } = "";
 
-		public bool UsingAndroidNETSdk { get; set; }
-
 		public bool AddKeepAlives { get; set; }
 
 		public bool UseDesignerAssembly { get; set; }
@@ -103,7 +101,7 @@ namespace Xamarin.Android.Tasks
 					// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
 					runState.cache = new TypeDefinitionCache ();
 					runState.fixAbstractMethodsStep = new FixAbstractMethodsStep (runState.resolver, runState.cache, Log);
-					runState.addKeepAliveStep = new AddKeepAlivesStep (runState.resolver, runState.cache, Log, UsingAndroidNETSdk);
+					runState.addKeepAliveStep = new AddKeepAlivesStep (runState.resolver, runState.cache, Log);
 					runState.fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (runState.resolver, Log);
 				}
 
@@ -128,7 +126,7 @@ namespace Xamarin.Android.Tasks
 			var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
 
 			// In .NET 6+, we can skip the main assembly
-			if (UsingAndroidNETSdk && !AddKeepAlives && assemblyName == TargetName) {
+			if (!AddKeepAlives && assemblyName == TargetName) {
 				CopyIfChanged (source, destination);
 				return;
 			}
@@ -137,17 +135,9 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			// Check AppDomain usage on any non-Product or Sdk assembly
-			AssemblyDefinition? assemblyDefinition = null;
-			if (!UsingAndroidNETSdk) {
-				assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
-				runState.fixAbstractMethodsStep.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogCodedWarning ("XA2000", msg));
-			}
-
 			// Only run the step on "MonoAndroid" assemblies
 			if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsSharedRuntimeAssembly (source.ItemSpec)) {
-				if (assemblyDefinition == null)
-				assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
+				AssemblyDefinition assemblyDefinition = runState.resolver!.GetAssembly (source.ItemSpec);
 
 				bool save = runState.fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
 				if (UseDesignerAssembly)
@@ -232,19 +222,17 @@ namespace Xamarin.Android.Tasks
 		{
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
-			readonly bool hasSystemPrivateCoreLib;
 
-			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger, bool hasSystemPrivateCoreLib)
+			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
 				: base (cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
-				this.hasSystemPrivateCoreLib = hasSystemPrivateCoreLib;
 			}
 
 			protected override AssemblyDefinition GetCorlibAssembly ()
 			{
-				return resolver.GetAssembly (hasSystemPrivateCoreLib ? "System.Private.CoreLib.dll" : "mscorlib.dll");
+				return resolver.GetAssembly ("System.Private.CoreLib.dll");
 			}
 
 			public override void LogMessage (string message)
