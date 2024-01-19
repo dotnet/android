@@ -1,0 +1,38 @@
+<!--
+***********************************************************************************************
+Xamarin.Android.Bindings.JavaDependencyVerification.targets
+
+This file contains MSBuild targets used to enable features using POM files to ensure
+that Java binding dependencies are satisfied.
+
+***********************************************************************************************
+-->
+
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+
+  <UsingTask TaskName="Xamarin.Android.Tasks.GetMicrosoftNuGetPackagesMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.JavaDependencyVerification" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
+
+  <Target Name="VerifyJavaDependencies"
+      Condition=" '@(AndroidLibrary->Count())' != '0' "
+      BeforeTargets="_CategorizeAndroidLibraries"
+      DependsOnTargets="MavenRestore">
+
+    <!-- Find the microsoft-package.json file for NuGet package hints. -->
+    <GetMicrosoftNuGetPackagesMap MavenCacheDirectory="$(MavenCacheDirectory)">
+      <Output TaskParameter="ResolvedPackageMap" PropertyName="_ResolvedPackageMap" />
+    </GetMicrosoftNuGetPackagesMap>
+    
+    <!-- Use downloaded POM files to ensure all Java dependencies are met. -->
+    <JavaDependencyVerification
+      AndroidLibraries="@(AndroidLibrary)"
+      AdditionalManifests="@(AndroidAdditionalJavaManifest)"
+      PackageReferences="@(PackageReference)"
+      ProjectReferences="@(ProjectReference)"
+      IgnoredDependencies="@(AndroidIgnoredDependency)"
+      MicrosoftPackagesFile="$(_ResolvedPackageMap)"
+      ProjectAssetsLockFile="$(ProjectAssetsFile)" />
+    
+  </Target>
+
+</Project>

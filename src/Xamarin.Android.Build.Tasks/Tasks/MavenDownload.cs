@@ -95,7 +95,9 @@ public class MavenDownload : AndroidAsyncTask
 
 		result.SetMetadata ("ArtifactSpec", item.ItemSpec);
 		result.SetMetadata ("ArtifactFile", artifact_file);
-		result.SetMetadata ("ArtifactPom", pom_file);
+		result.SetMetadata ("Manifest", pom_file);
+		result.SetMetadata ("JavaArtifact", $"{artifact.GroupId}:{artifact.Id}");
+		result.SetMetadata ("JavaVersion", artifact.Versions.FirstOrDefault ());
 
 		return result;
 	}

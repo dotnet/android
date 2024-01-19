@@ -2,8 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
+using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
 using Java.Interop.Maven;
 using Java.Interop.Maven.Models;
@@ -42,16 +44,14 @@ public class JavaDependencyVerification : AndroidTask
 	/// <summary>
 	/// Dependencies that we should ignore if they are missing.
 	/// </summary>
-	public ITaskItem []? IgnoredMavenDependencies { get; set; }
+	public ITaskItem []? IgnoredDependencies { get; set; }
 
 	/// <summary>
-	/// The cache directory to use for Maven artifacts.
+	/// The file location of 'microsoft-packages.json'.
 	/// </summary>
-	[Required]
-	public string MavenCacheDirectory { get; set; } = null!; // NRT enforced by [Required]
+	public string? MicrosoftPackagesFile { get; set; }
 
-	[Required]
-	public string ProjectAssetsLockFile { get; set; } = null!;
+	public string? ProjectAssetsLockFile { get; set; }
 
 	public override bool RunTask ()
 	{
@@ -63,12 +63,16 @@ public class JavaDependencyVerification : AndroidTask
 		var pom_resolver = new MSBuildLoggingPomResolver (Log);
 		var poms_to_verify = new List<Artifact> ();
 
-		foreach (var pom in AndroidLibraries.Select (al => al.GetMetadata ("Manifest")))
-			if (pom.HasValue () && pom_resolver.Register (pom) is Artifact art)
+		foreach (var pom in AndroidLibraries ?? [])
+			if (pom_resolver.RegisterFromAndroidLibrary (pom) is Artifact art)
 				poms_to_verify.Add (art);
 
-		foreach (var pom in AdditionalManifests?.Select (al => al.ItemSpec) ?? [])
-			pom_resolver.Register (pom);
+		//foreach (var pom in AndroidLibraries.Select (al => al.GetMetadata ("Manifest")))
+		//	if (pom.HasValue () && pom_resolver.Register (pom) is Artifact art)
+		//		poms_to_verify.Add (art);
+
+		foreach (var pom in AdditionalManifests ?? [])
+			pom_resolver.RegisterFromAndroidAdditionalJavaManifest (pom);
 
 		// If there were errors loading the requested POMs, bail
 		if (Log.HasLoggedErrors)
@@ -80,20 +84,35 @@ public class JavaDependencyVerification : AndroidTask
 		resolver.AddAndroidLibraries (AndroidLibraries);
 		resolver.AddPackageReferences (PackageReferences);
 		resolver.AddProjectReferences (ProjectReferences);
-		resolver.AddIgnoredDependencies (IgnoredMavenDependencies);
+		resolver.AddIgnoredDependencies (IgnoredDependencies);
 
 		// Parse microsoft-packages.json so we can provide package recommendations
-		var ms_packages = new MicrosoftNuGetPackageFinder (MavenCacheDirectory, Log);
+		var ms_packages = new MicrosoftNuGetPackageFinder (MicrosoftPackagesFile, Log);
 
 		// Verify dependencies
 		foreach (var pom in poms_to_verify) {
-			var resolved_pom = ResolvedProject.FromArtifact (pom, pom_resolver);
-
-			foreach (var dependency in resolved_pom.Dependencies)
-				resolver.EnsureDependencySatisfied (dependency, ms_packages);
+			if (TryResolveProject (pom, pom_resolver, out var resolved_pom)) {
+				foreach (var dependency in resolved_pom.Dependencies.Where (d => (d.IsRuntimeDependency () || d.IsCompileDependency ()) && !d.IsOptional ()))
+					resolver.EnsureDependencySatisfied (dependency, ms_packages);
+			} else {
+				Log.LogError ("Could not verify Java dependencies for artifact '{0}' due to missing POM file(s). See other error(s) for details.", pom);
+			}
 		}
 
 		return !Log.HasLoggedErrors;
+	}
+
+	static bool TryResolveProject (Artifact artifact, IPomResolver resolver, [NotNullWhen (true)]out ResolvedProject? project)
+	{
+		// ResolvedProject.FromArtifact will throw if a POM cannot be resolved, but our MSBuildLoggingPomResolver
+		// has already logged the failure as an MSBuild error.  We don't want to log it again as an unhandled exception.
+		try {
+			project = ResolvedProject.FromArtifact (artifact, resolver);
+			return true;
+		} catch {
+			project = null;
+			return false;
+		}
 	}
 }
 
@@ -288,7 +307,7 @@ class MSBuildLoggingPomResolver : IPomResolver
 		this.logger = logger;
 	}
 
-	public Artifact? Register (string filename)
+	Artifact? Register (string filename)
 	{
 		if (!File.Exists (filename)) {
 			logger.LogError ("Requested POM file '{0}' does not exist.", filename);
@@ -302,6 +321,52 @@ class MSBuildLoggingPomResolver : IPomResolver
 
 				logger.LogDebugMessage ("Registered POM for artifact '{0}' from '{1}'", project, filename);
 				return Artifact.Parse (project.ToString ());
+			}
+		} catch (Exception ex) {
+			logger.LogError ("Failed to register POM file '{0}': '{1}'", filename, ex);
+			return null;
+		}
+	}
+
+	public Artifact? RegisterFromAndroidLibrary (ITaskItem item)
+	{
+		var pom_file = item.GetMetadata ("Manifest");
+
+		if (!pom_file.HasValue ())
+			return null;
+
+		return RegisterFromTaskItem (item, "AndroidLibrary", pom_file);
+	}
+
+	public Artifact? RegisterFromAndroidAdditionalJavaManifest (ITaskItem item)
+		=> RegisterFromTaskItem (item, "AndroidAdditionalJavaManifest", item.ItemSpec);
+
+	Artifact? RegisterFromTaskItem (ITaskItem item, string itemName, string filename)
+	{
+		item.TryParseJavaArtifactAndVersion (itemName, logger, out var artifact);
+
+		if (!File.Exists (filename)) {
+			logger.LogError ("Requested POM file '{0}' does not exist.", filename);
+			return null;
+		}
+
+		try {
+			using (var file = File.OpenRead (filename)) {
+				var project = Project.Parse (file);
+				var registered_artifact = Artifact.Parse (project.ToString ());
+
+				// Return the registered artifact, preferring any overrides specified in the task item
+				var final_artifact = new Artifact (
+					artifact?.GroupId ?? registered_artifact.GroupId,
+					artifact?.Id ?? registered_artifact.Id,
+					artifact?.Version ?? registered_artifact.Version
+				);
+
+				poms.Add (final_artifact.ToString (), project);
+
+				logger.LogDebugMessage ("Registered POM for artifact '{0}' from '{1}'", final_artifact, filename);
+
+				return final_artifact;
 			}
 		} catch (Exception ex) {
 			logger.LogError ("Failed to register POM file '{0}': '{1}'", filename, ex);
@@ -324,11 +389,9 @@ class MicrosoftNuGetPackageFinder
 {
 	readonly PackageListFile? package_list;
 
-	public MicrosoftNuGetPackageFinder (string mavenCacheDir, TaskLoggingHelper log)
+	public MicrosoftNuGetPackageFinder (string? file, TaskLoggingHelper log)
 	{
-		var file = Path.Combine (mavenCacheDir, "microsoft-packages.json");
-
-		if (!File.Exists (file)) {
+		if (file is null || !File.Exists (file)) {
 			log.LogMessage ("'microsoft-packages.json' file not found, Android NuGet suggestions will not be provided");
 			return;
 		}
@@ -439,7 +502,7 @@ public class NuGetPackageVersionFinder
 
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
 
-		return new Artifact (match.Groups ["ArtifactId"].Value, match.Groups ["GroupId"].Value, match.Groups ["Version"].Value);
+		return new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
 	}
 }
 // https://docs.oracle.com/middleware/1212/core/MAVEN/maven_version.htm#MAVEN8855

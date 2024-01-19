@@ -13,6 +13,7 @@ using System.Xml.Serialization;
 using MavenNet;
 using MavenNet.Models;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
@@ -129,6 +130,51 @@ static class MavenExtensions
 		artifact = new Java.Interop.Maven.Models.Artifact (parts [0], parts [1], version);
 
 		return true;
+	}
+
+	public static bool TryParseJavaArtifactAndVersion (this ITaskItem task, string type, TaskLoggingHelper log, [NotNullWhen (true)] out Java.Interop.Maven.Models.Artifact? artifact)
+	{
+		artifact = null;
+
+		var item_name = task.ItemSpec;
+
+		// Convert "../../src/blah/Blah.csproj" to "Blah.csproj"
+		if (type == "ProjectReference")
+			item_name = Path.GetFileName (item_name);
+
+		var has_artifact = task.HasMetadata ("JavaArtifact");
+		var has_version = task.HasMetadata ("JavaVersion");
+
+		if (has_artifact && !has_version) {
+			log.LogError ("'JavaVersion' is required when using 'JavaArtifact' for {0} '{1}'.", type, item_name);
+			return false;
+		}
+
+		if (!has_artifact && has_version) {
+			log.LogError ("'JavaArtifact' is required when using 'JavaVersion' for {0} '{1}'.", type, item_name);
+			return false;
+		}
+
+		if (has_artifact && has_version) {
+			var id = task.GetMetadata ("JavaArtifact");
+			var version = task.GetMetadata ("JavaVersion");
+
+			if (string.IsNullOrWhiteSpace (id)) {
+				log.LogError ("'JavaArtifact' cannot be empty for {0} '{1}'.", type, item_name);
+				return false;
+			}
+
+			if (string.IsNullOrWhiteSpace (version)) {
+				log.LogError ("'JavaVersion' cannot be empty for {0} '{1}'.", type, item_name);
+				return false;
+			}
+
+			if (TryParseArtifact (id, version, log, out artifact))
+				return true;
+
+		}
+
+		return false;
 	}
 
 	public static Project ParsePom (string pomFile)
@@ -300,9 +346,11 @@ static class MavenExtensions
 		return version;
 	}
 
-	public static bool IsCompileDependency (this Dependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || dependency.Scope.IndexOf ("compile", StringComparison.OrdinalIgnoreCase) != -1;
+	public static bool IsCompileDependency (this Java.Interop.Maven.Models.ResolvedDependency dependency) => string.IsNullOrWhiteSpace (dependency.Scope) || dependency.Scope.IndexOf ("compile", StringComparison.OrdinalIgnoreCase) != -1;
 
-	public static bool IsRuntimeDependency (this Dependency dependency) => dependency?.Scope != null && dependency.Scope.IndexOf ("runtime", StringComparison.OrdinalIgnoreCase) != -1;
+	public static bool IsRuntimeDependency (this Java.Interop.Maven.Models.ResolvedDependency dependency) => dependency?.Scope != null && dependency.Scope.IndexOf ("runtime", StringComparison.OrdinalIgnoreCase) != -1;
+
+	public static bool IsOptional (this Java.Interop.Maven.Models.ResolvedDependency dependency) => dependency?.Optional != null && dependency.Optional.IndexOf ("true", StringComparison.OrdinalIgnoreCase) != -1;
 
 	public static Dependency? FindParentDependency (this Project project, Dependency dependency)
 	{

@@ -25,8 +25,6 @@ public class JavaDependencyVerificationTests
 		var engine = new MockBuildEngine (TestContext.Out, []);
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		Assert.True (task.RunTask ());
@@ -39,8 +37,6 @@ public class JavaDependencyVerificationTests
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", "missing.pom")],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -59,8 +55,6 @@ public class JavaDependencyVerificationTests
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -79,8 +73,6 @@ public class JavaDependencyVerificationTests
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -100,8 +92,6 @@ public class JavaDependencyVerificationTests
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -128,8 +118,6 @@ public class JavaDependencyVerificationTests
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
 			AdditionalManifests = [CreateAndroidAdditionManifestTaskItem (parent_pom.FilePath)],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -152,8 +140,7 @@ public class JavaDependencyVerificationTests
 		var task = new JavaDependencyVerification {
 			BuildEngine = engine,
 			AndroidLibraries = [CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath)],
-			MavenCacheDirectory = Path.GetDirectoryName (package_finder.FilePath)!,
-			ProjectAssetsLockFile = "",
+			MicrosoftPackagesFile = package_finder.FilePath,
 		};
 
 		var result = task.RunTask ();
@@ -179,8 +166,7 @@ public class JavaDependencyVerificationTests
 				CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath),
 				CreateAndroidLibraryTaskItem ("com.google.android.material-core.jar", null, "com.google.android:material-core", "1.0"),
 			],
-			MavenCacheDirectory = Path.GetDirectoryName (package_finder.FilePath)!,
-			ProjectAssetsLockFile = "",
+			MicrosoftPackagesFile = package_finder.FilePath,
 		};
 
 		var result = task.RunTask ();
@@ -203,8 +189,6 @@ public class JavaDependencyVerificationTests
 				CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath),
 				CreateAndroidLibraryTaskItem ("com.google.android.material-core.jar", null, "com.google.android:material-core", "1.0"),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -229,8 +213,6 @@ public class JavaDependencyVerificationTests
 			ProjectReferences = [
 				CreateAndroidLibraryTaskItem ("Google.Material.Core.csproj", null, "com.google.android:material-core", "1.0"),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -255,8 +237,6 @@ public class JavaDependencyVerificationTests
 			PackageReferences = [
 				CreateAndroidLibraryTaskItem ("Xamarin.Google.Material.Core", null, "com.google.android:material-core", "1.0"),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -278,11 +258,9 @@ public class JavaDependencyVerificationTests
 			AndroidLibraries = [
 				CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath),
 			],
-			IgnoredMavenDependencies = [
+			IgnoredDependencies = [
 				CreateAndroidLibraryTaskItem ("com.google.android:material-core", rawVersion: "1.0"),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -306,8 +284,6 @@ public class JavaDependencyVerificationTests
 				CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath),
 				CreateAndroidLibraryTaskItem ("com.google.android.material-core.jar", null, "com.google.android:material-core", "1.0"),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
@@ -331,8 +307,6 @@ public class JavaDependencyVerificationTests
 			AndroidLibraries = [
 				CreateAndroidLibraryTaskItem ("com.google.android.material.jar", pom.FilePath),
 			],
-			MavenCacheDirectory = "",
-			ProjectAssetsLockFile = "",
 		};
 
 		var result = task.RunTask ();
