@@ -79,20 +79,74 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	return true;
 }
 
+inline void
+EmbeddedAssemblies::load_individual_assembly (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+#if defined (DEBUG)
+	const char *last_slash = utils.find_last (entry_name, '/');
+	bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
+#else
+	constexpr bool entry_is_overridden = false;
+#endif
+
+	if (register_debug_symbols && !entry_is_overridden && utils.ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
+		if (bundled_debug_data == nullptr) {
+			bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
+			bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
+		}
+
+		bundled_debug_data->emplace_back ();
+		set_debug_entry_data (bundled_debug_data->back (), state.apk_fd, state.data_offset, state.file_size, state.prefix_len, state.max_assembly_name_size, entry_name);
+		return;
+	}
+
+	if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
+		return;
+	}
+
+#if defined (DEBUG)
+	if (entry_is_overridden) {
+		return;
+	}
+#endif
+
+	if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || state.bundled_assemblies_slow_path) [[unlikely]] {
+		if (!state.bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
+			log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.", application_config.number_of_assemblies_in_apk);
+		}
+
+		if (extra_bundled_assemblies == nullptr) {
+			extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
+		}
+
+		extra_bundled_assemblies->emplace_back ();
+		// <true> means we need to allocate memory to store the entry name, only the entries pre-allocated during
+		// build have valid pointer to the name storage area
+		set_entry_data<true> (
+			extra_bundled_assemblies->back (),
+			state.apk_fd,
+			state.data_offset,
+			state.file_size,
+			state.prefix_len,
+			state.max_assembly_name_size,
+			entry_name
+		);
+		return;
+	}
+
+	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, state.max_assembly_name_size, entry_name);
+	bundled_assembly_index++;
+	number_of_found_assemblies = bundled_assembly_index;
+	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
+}
+
 force_inline void
 EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
-	uint32_t max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
-
-	auto unmangle_name = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx) {
-		size_t new_size = name.length () - 4; // Includes the first ("marker") character and the .so extension
-		memmove (name.get () + start_idx, name.get() + start_idx + 1, new_size);
-		name.set_length (new_size);
-		log_debug (LOG_ASSEMBLY, "Unmangled name to '%s'", name.get ());
-	};
+	state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
+	state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
 
 	// clang-tidy claims we have a leak in the loop:
 	//
@@ -109,71 +163,15 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 		}
 
 		if (entry_name[state.prefix_len] == '#') {
-			unmangle_name (entry_name, state.prefix_len);
+			unmangle_name<UnmangleRegularAssembly> (entry_name, state.prefix_len);
 		} else if (entry_name[state.prefix_len] == '%') {
-			// Make sure assembly name is {CULTURE}/assembly.dll
-			unmangle_name (entry_name, state.prefix_len);
-			for (size_t idx = state.prefix_len; idx < entry_name.length (); idx++) {
-				if (entry_name[idx] == '%') {
-					entry_name[idx] = '/';
-					break;
-				}
-			}
+			unmangle_name<UnmangleSatelliteAssembly> (entry_name, state.prefix_len);
 		} else {
 			continue; // Can't be an assembly, the name's not mangled
 		}
 		log_debug (LOG_ASSEMBLY, "  interesting entry. Name modified to '%s'", entry_name.get ());
-
-#if defined (DEBUG)
-		const char *last_slash = utils.find_last (entry_name, '/');
-		bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
-#else
-		constexpr bool entry_is_overridden = false;
-#endif
-
-		if (register_debug_symbols && !entry_is_overridden && utils.ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
-			if (bundled_debug_data == nullptr) {
-				bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
-				bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
-			}
-
-			bundled_debug_data->emplace_back ();
-			set_debug_entry_data (bundled_debug_data->back (), state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-			continue;
-		}
-
-		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
-			continue;
-		}
-
-#if defined (DEBUG)
-		if (entry_is_overridden) {
-			continue;
-		}
-#endif
-
-		if (XA_UNLIKELY (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || bundled_assemblies_slow_path)) {
-			if (!bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
-				log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.", application_config.number_of_assemblies_in_apk);
-			}
-
-			if (extra_bundled_assemblies == nullptr) {
-				extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
-			}
-
-			extra_bundled_assemblies->emplace_back ();
-			// <true> means we need to allocate memory to store the entry name, only the entries pre-allocated during
-			// build have valid pointer to the name storage area
-			set_entry_data<true> (extra_bundled_assemblies->back (), state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-			continue;
-		}
-
-		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-		bundled_assembly_index++;
-		number_of_found_assemblies = bundled_assembly_index;
+		load_individual_assembly (entry_name, state, should_register);
 	}
-
-	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
 force_inline void

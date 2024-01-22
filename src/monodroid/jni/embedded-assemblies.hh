@@ -86,6 +86,8 @@ namespace xamarin::android::internal {
 			uint32_t              local_header_offset;
 			uint32_t              data_offset;
 			uint32_t              file_size;
+			bool                  bundled_assemblies_slow_path;
+			uint32_t              max_assembly_name_size;
 		};
 
 	private:
@@ -199,8 +201,8 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
 		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
-		size_t register_discrete_assemblies_from_filesystem (monodroid_should_register should_register) noexcept;
-		size_t register_blobs_from_filesystem (monodroid_should_register should_register) noexcept;
+		static bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept;
+		static bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept;
 
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
@@ -330,8 +332,31 @@ namespace xamarin::android::internal {
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
 		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
+		void load_individual_assembly (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
+
+		template<bool IsSatelliteAssembly>
+		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0) noexcept
+		{
+			size_t new_size = name.length () - 4; // Includes the first ("marker") character and the .so extension
+			memmove (name.get () + start_idx, name.get () + start_idx + 1, new_size);
+			name.set_length (new_size);
+
+			if constexpr (IsSatelliteAssembly) {
+				// Make sure assembly name is {CULTURE}/assembly.dll
+				for (size_t idx = start_idx; idx < name.length (); idx++) {
+					if (name[idx] == '%') {
+						name[idx] = '/';
+						break;
+					}
+				}
+			}
+			log_debug (LOG_ASSEMBLY, "Unmangled name to '%s'", name.get ());
+		};
 
 	private:
+		static inline constexpr bool UnmangleSatelliteAssembly = true;
+		static inline constexpr bool UnmangleRegularAssembly = false;
+
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
 		std::vector<XamarinAndroidBundledAssembly> *extra_bundled_assemblies = nullptr;
 

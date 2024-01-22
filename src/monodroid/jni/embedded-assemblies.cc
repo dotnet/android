@@ -1189,10 +1189,50 @@ EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_re
 	return number_of_found_assemblies;
 }
 
-force_inline size_t
-EmbeddedAssemblies::register_discrete_assemblies_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+force_inline bool
+EmbeddedAssemblies::maybe_register_assembly_from_filesystem ([[maybe_unused]] monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "  will look for individual assemblies on the filesystem");
+	log_debug (LOG_ASSEMBLY, "[assembly] entry: %s", dir_entry->d_name);
+
+	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
+	auto copy_dentry = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, const dirent* dir_entry)
+	{
+		name.assign_c (dir_entry->d_name);
+	};
+
+	// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
+	if (dir_entry->d_name[0] == '#') {
+		log_debug (LOG_ASSEMBLY, "  regular assembly");
+		assembly_count++;
+		copy_dentry (entry_name, dir_entry);
+		unmangle_name<UnmangleRegularAssembly> (entry_name);
+	} else if (dir_entry->d_name[0] == '%') {
+		log_debug (LOG_ASSEMBLY, "  satellite assembly");
+		assembly_count++;
+		copy_dentry (entry_name, dir_entry);
+		unmangle_name<UnmangleSatelliteAssembly> (entry_name);
+	} else {
+		return false;
+	}
+
+	return false;
+}
+
+force_inline bool
+EmbeddedAssemblies::maybe_register_blob_from_filesystem ([[maybe_unused]] monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "[blob] entry: %s", dir_entry->d_name);
+	return true;
+}
+
+// TODO: do the iterating here, call blobs or discrete entry functions for each entry.
+//
+//       Discrete assemblies are mmapped as if they were in the apk, FD is closed immediately.
+//       Blob is mmapped in the same way as if it was in the apk, FD is closed immediately.
+size_t
+EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
 
 	const char *lib_dir_path = androidSystem.app_lib_directories[0];
 	DIR *lib_dir = opendir (lib_dir_path);
@@ -1201,6 +1241,9 @@ EmbeddedAssemblies::register_discrete_assemblies_from_filesystem ([[maybe_unused
 		return 0;
 	}
 
+	bool (*register_fn)(monodroid_should_register, size_t&, const dirent*) = application_config.have_assembly_store ?
+	                                                                         maybe_register_blob_from_filesystem :
+	                                                                         maybe_register_assembly_from_filesystem;
 	size_t assembly_count = 0;
 	do {
 		errno = 0;
@@ -1210,32 +1253,26 @@ EmbeddedAssemblies::register_discrete_assemblies_from_filesystem ([[maybe_unused
 				log_warn (LOG_ASSEMBLY, "Failed to open a directory entry from '%s': %s", lib_dir_path, std::strerror (errno));
 				continue; // keep going, no harm
 			}
+			break; // No more entries, we're done
+		}
+
+		// We can ignore the obvious entries here...
+		if (cur->d_name[0] == '.') {
+			continue;
+		}
+
+		// ...and we can handle the runtime config entry
+		if (std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME, sizeof (SharedConstants::RUNTIME_CONFIG_BLOB_NAME) - 1) == 0) {
+			// TODO: map the blob
+			continue;
+		}
+
+		// We get `true` if it's time to terminate
+		if (register_fn (should_register, assembly_count, cur)) {
 			break;
 		}
 	} while (true);
-
 	closedir (lib_dir);
-	return assembly_count;
-}
-
-force_inline size_t
-EmbeddedAssemblies::register_blobs_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
-{
-	log_debug (LOG_ASSEMBLY, "  will look for assembly store on the filesystem");
-	return 0;
-}
-
-size_t
-EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
-{
-	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
-
-	size_t assembly_count = 0;
-	if (application_config.have_assembly_store) {
-		assembly_count = register_blobs_from_filesystem (should_register);
-	} else {
-		assembly_count = register_discrete_assemblies_from_filesystem (should_register);
-	}
 
 	log_debug (LOG_ASSEMBLY, "Found %zu assemblies on the filesystem", assembly_count);
 	return assembly_count;
