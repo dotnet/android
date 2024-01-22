@@ -28,7 +28,7 @@ Things to note:
   </PropertyGroup>
   <ItemGroup>
     <SdkSupportedTargetPlatformVersion Include="21.0" />
-    <EolWorkload Include="net6.0-android" Url="https://aka.ms/maui-support-policy" />
+    <EolWorkload Include="net$(TargetFrameworkVersion.TrimStart('vV'))-android" Url="https://aka.ms/maui-support-policy" />
   </ItemGroup>
   <Target Name="_ClearMissingWorkloads">
     <!--
