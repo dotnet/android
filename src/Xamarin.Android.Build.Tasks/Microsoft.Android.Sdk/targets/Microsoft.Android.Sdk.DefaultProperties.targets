@@ -8,8 +8,7 @@
     <MonoAndroidAssetsPrefix Condition=" '$(MonoAndroidAssetsPrefix)' == '' ">Assets</MonoAndroidAssetsPrefix>
     <AndroidResgenClass Condition=" '$(AndroidResgenClass)' == '' ">Resource</AndroidResgenClass>
     <AndroidEnableSGenConcurrent Condition=" '$(AndroidEnableSGenConcurrent)' == '' ">true</AndroidEnableSGenConcurrent>
-    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' == 'true' ">Xamarin.Android.Net.AndroidMessageHandler</AndroidHttpClientHandlerType>
-    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' and '$(UsingAndroidNETSdk)' != 'true' ">Xamarin.Android.Net.AndroidClientHandler</AndroidHttpClientHandlerType>
+    <AndroidHttpClientHandlerType Condition=" '$(AndroidHttpClientHandlerType)' == '' ">Xamarin.Android.Net.AndroidMessageHandler</AndroidHttpClientHandlerType>
     <AndroidGenerateResourceDesigner Condition=" '$(AndroidGenerateResourceDesigner)' == '' ">true</AndroidGenerateResourceDesigner>
     <AndroidUseDesignerAssembly Condition=" '$(AndroidUseDesignerAssembly)' == '' ">true</AndroidUseDesignerAssembly>
     <AndroidUseIntermediateDesignerFile Condition=" '$(AndroidUseDesignerAssembly)' == 'True' ">false</AndroidUseIntermediateDesignerFile>

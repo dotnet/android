@@ -2,5 +2,6 @@
   "author": "Microsoft",
   "name": "Шаблон действий Android",
   "description": "Класс активности Android",
-  "symbols/namespace/description": "пространство имен для созданного кода"
+  "symbols/namespace/description": "пространство имен для созданного кода",
+  "postActions/openInEditor/description": "Открывает Activity1.cs в редакторе"
 }

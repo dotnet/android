@@ -1007,4 +1007,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
   </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Android サポート ライブラリは .NET 9 以降ではサポートされていません。AndroidX に移行してください。詳細については、https://aka.ms/xamarin/androidx を参照してください。</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
 </root>

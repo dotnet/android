@@ -16,6 +16,9 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
   <UsingTask TaskName="Xamarin.Android.Tasks.ValidateJavaVersion"        AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_ResolveAndroidTooling">
+    <PropertyGroup>
+      <_AndroidUseJavaExeVersion Condition=" '$(_AndroidUseJavaExeVersion)' == '' ">false</_AndroidUseJavaExeVersion>
+    </PropertyGroup>
     <ValidateJavaVersion
         Condition=" '$(DesignTimeBuild)' != 'True' Or '$(AndroidUseManagedDesignTimeResourceGenerator)' != 'True' "
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
@@ -24,7 +27,8 @@ This file contains .NET 6+ calls to the <ValidateJavaVersion/> and
         JavacToolExe="$(JavacToolExe)"
         TargetPlatformVersion="$(TargetPlatformVersion)"
         LatestSupportedJavaVersion="$(LatestSupportedJavaVersion)"
-        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)">
+        MinimumSupportedJavaVersion="$(MinimumSupportedJavaVersion)"
+        UseJavaExeVersion="$(_AndroidUseJavaExeVersion)">
       <Output TaskParameter="JdkVersion"                PropertyName="_JdkVersion" />
       <Output TaskParameter="MinimumRequiredJdkVersion" PropertyName="_DefaultJdkVersion" />
     </ValidateJavaVersion>

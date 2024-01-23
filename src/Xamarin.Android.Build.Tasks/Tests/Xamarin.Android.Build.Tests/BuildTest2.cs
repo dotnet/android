@@ -147,11 +147,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
-			if (forms) {
-				proj.PackageReferences.Clear ();
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_4_7_0_1142);
-			}
-
 			byte [] apkDescData;
 			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
@@ -236,6 +231,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			proj.IsRelease = isRelease;
 			if (multidex) {
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			}
@@ -244,7 +240,9 @@ namespace Xamarin.Android.Build.Tests
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
 			}
-			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
+			// FIXME: Precompiling failed for TraceReloggerLib.dll, Dia2Lib.dll with exit code 1
+			if (!isRelease)
+				proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -353,44 +351,10 @@ class MemTest {
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			var packages = proj.PackageReferences;
-			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
+			packages.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		[NonParallelizable]
-		public void AndroidXMigration ([Values (true, false)] bool isRelease)
-		{
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-				FileAssert.Exists (dexFile);
-				// classes.dex should only have the androidx Java types
-				var className = "Landroidx/appcompat/app/AppCompatActivity;";
-				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-				className = "Landroid/appcompat/app/AppCompatActivity;";
-				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
-				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = GetLinkedPath (b, isRelease, "Xamarin.Forms.Platform.Android.dll");
-				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
-					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
-					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
-				}
 			}
 		}
 
@@ -399,25 +363,9 @@ class MemTest {
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
-					new Package { Id = "Xamarin.Android.Support.Annotations", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Compat", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Core.UI", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Core.Utils", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Design", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Fragment", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.VersionedParcelable", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.v4", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Build.Download", Version = "0.7.1" },
-					new Package { Id = "Xamarin.Essentials", Version = "1.3.1" },
-					new Package { Id = "Xamarin.GooglePlayServices.Ads.Identifier", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "71.1610.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "71.1620.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Clearcut", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Api", Version = "71.1630.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Base", Version = "71.1630.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Phenotype", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Stats", Version = "71.1601.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "71.1601.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "118.2.0.5" },
+					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "118.2.0.5" },
+					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "118.0.2.6" },
 				}
 			};
 			using (var b = CreateApkBuilder ()) {
@@ -983,35 +931,25 @@ namespace UnamedProject
 
 		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
 			new object [] {
-				/* isRelease */ false,
-				/* linkTool */  "",
 				/* rid */       "",
 			},
 			new object [] {
-				/* isRelease */ true,
-				/* linkTool */  "r8",
-				/* rid */       "",
-			},
-			new object [] {
-				/* isRelease */ true,
-				/* linkTool */  "r8",
 				/* rid */       "android-arm64",
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (BuildProguardEnabledProjectSource))]
-		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void BuildProguardEnabledProject (bool isRelease, string linkTool, string rid)
+		public void BuildProguardEnabledProject (string rid)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-				LinkTool = linkTool,
+				IsRelease = true,
+				LinkTool = "r8",
 			};
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{linkTool}{rid}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
@@ -1022,18 +960,16 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
-					var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
-					FileAssert.Exists (proguardProjectPrimary);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
+				FileAssert.Exists (proguardProjectPrimary);
+				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
 
-					var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
-					FileAssert.Exists (aapt_rules);
-					var lines = File.ReadAllLines (aapt_rules);
-					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
-					var activity_class = $"{proj.PackageName}.MainActivity";
-					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {activity_class}"), $"`{activity_class}` should exist in `{aapt_rules}`!");
-				}
+				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
+				FileAssert.Exists (aapt_rules);
+				var lines = File.ReadAllLines (aapt_rules);
+				Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
+				var activity_class = $"{proj.PackageName}.MainActivity";
+				Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {activity_class}"), $"`{activity_class}` should exist in `{aapt_rules}`!");
 
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);

@@ -172,7 +172,7 @@ implication, estoppel or otherwise."			}
 			Log.StatusLine ($"  {Context.Instance.Characters.Bullet} Processing: ", tpn.Name, ConsoleColor.Gray, ConsoleColor.White);
 
 			if (licenses.ContainsKey (tpn.Name)) {
-				Log.WarningLine ($"Duplicate Third Party Notice '{tpn.Name}' (old class: {licenses [tpn.Name]}; new class: {tpn})");
+				Log.InfoLine ($"Duplicate Third Party Notice '{tpn.Name}' (old class: {licenses [tpn.Name]}; new class: {tpn})");
 				return;
 			}
 

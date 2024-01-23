@@ -1,5 +1,0 @@
-Compat issues with assembly Mono.Android:
-CannotAddAbstractMembers : Member 'public Android.Graphics.Drawables.Drawable Android.Content.PM.PackageManager.GetActivityBanner(Android.Content.ComponentName)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Android.Graphics.Drawables.Drawable Android.Content.PM.PackageManager.GetActivityBanner(Android.Content.Intent)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Android.Graphics.Drawables.Drawable Android.Content.PM.PackageManager.GetApplicationBanner(Android.Content.PM.ApplicationInfo)' is abstract in the implementation but is missing in the contract.
-CannotAddAbstractMembers : Member 'public Android.Graphics.Drawables.Drawable Android.Content.PM.PackageManager.GetApplicationBanner(System.String)' is abstract in the implementation but is missing in the contract.
