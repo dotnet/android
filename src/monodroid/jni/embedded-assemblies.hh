@@ -77,8 +77,8 @@ namespace xamarin::android::internal {
 
 		struct ZipEntryLoadState
 		{
-			int                   apk_fd;
-			const char * const    apk_name;
+			int                   file_fd;
+			const char *          file_name;
 			const char * const    prefix;
 			uint32_t              prefix_len;
 			size_t                buf_offset;
@@ -88,6 +88,7 @@ namespace xamarin::android::internal {
 			uint32_t              file_size;
 			bool                  bundled_assemblies_slow_path;
 			uint32_t              max_assembly_name_size;
+			uint32_t              max_assembly_file_name_size;
 		};
 
 	private:
@@ -201,8 +202,8 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
 		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
-		static bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept;
-		static bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept;
+		bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
+		bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
 
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
@@ -327,12 +328,18 @@ namespace xamarin::android::internal {
 		static const TypeMapModuleEntry* binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept;
 #endif
 		template<bool NeedsNameAlloc>
-		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
 		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
 		void load_individual_assembly (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
+
+		void configure_state_for_individual_assembly_load (ZipEntryLoadState& state) noexcept
+		{
+			state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
+			state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
+		}
 
 		template<bool IsSatelliteAssembly>
 		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0) noexcept

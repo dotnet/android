@@ -185,6 +185,8 @@ partial class MonoAndroidHelper
 		return String.Join ("/", parts);
 	}
 
+	const string MANGLED_ASSEMBLY_NAME_EXT = ".so";
+
 	/// <summary>
 	/// Mangles APK/AAB entry name for assembly and their associated pdb and config entries in the
 	/// way expected by our native runtime.  Must **NOT** be used to mangle names when assembly stores
@@ -192,14 +194,14 @@ partial class MonoAndroidHelper
 	/// </summary>
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
-		const string ext = ".so";
-
 		if (!String.IsNullOrEmpty (culture)) {
-			return $"%{culture}%{name}{ext}";
+			return $"%{culture}%{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 
-		return $"#{name}{ext}";
+		return $"#{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 	}
+
+	public static ulong GetMangledAssemblyNameSizeOverhead () => (ulong)MANGLED_ASSEMBLY_NAME_EXT.Length + 1;
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 

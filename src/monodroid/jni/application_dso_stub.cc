@@ -78,7 +78,7 @@ static char second_assembly_name[AssemblyNameWidth];
 
 XamarinAndroidBundledAssembly bundled_assemblies[] = {
 	{
-		.apk_fd = -1,
+		.file_fd = -1,
 		.data_offset = 0,
 		.data_size = 0,
 		.data = nullptr,
@@ -87,7 +87,7 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 	},
 
 	{
-		.apk_fd = -1,
+		.file_fd = -1,
 		.data_offset = 0,
 		.data_size = 0,
 		.data = nullptr,

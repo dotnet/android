@@ -115,12 +115,16 @@ namespace Xamarin.Android.Tasks
 		{
 			public override ulong GetBufferSize (object data, string fieldName)
 			{
-				if (String.Compare ("name", fieldName, StringComparison.Ordinal) != 0) {
-					return 0;
+				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
+				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+					return xaba.name_length;
 				}
 
-				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
-				return xaba.name_length;
+				if (String.Compare ("file_name", fieldName, StringComparison.Ordinal) == 0) {
+					return xaba.name_length + MonoAndroidHelper.GetMangledAssemblyNameSizeOverhead ();
+				}
+
+				return 0;
 			}
 		}
 
@@ -129,7 +133,10 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof (XamarinAndroidBundledAssemblyContextDataProvider))]
 		sealed class XamarinAndroidBundledAssembly
 		{
-			public int  apk_fd;
+			public int  file_fd;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
+			public string file_name;
 			public uint data_offset;
 			public uint data_size;
 
@@ -260,7 +267,7 @@ namespace Xamarin.Android.Tasks
 				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
 
 				var emptyBundledAssemblyData = new XamarinAndroidBundledAssembly {
-					apk_fd = -1,
+					file_fd = -1,
 					data_offset = 0,
 					data_size = 0,
 					data = 0,

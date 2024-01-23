@@ -2,7 +2,8 @@
 #ifndef __XAMARIN_ANDROID_TYPEMAP_H
 #define __XAMARIN_ANDROID_TYPEMAP_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <string_view>
 
 #include <jni.h>
 #include <mono/metadata/image.h>
@@ -38,6 +39,9 @@ static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64B
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
+
+// Must be identical to MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT
+inline static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 
 #if defined (DEBUG) || !defined (ANDROID)
 struct BinaryTypeMapHeader
@@ -123,7 +127,8 @@ struct CompressedAssemblies
 
 struct XamarinAndroidBundledAssembly
 {
-	int32_t  apk_fd;
+	int32_t  file_fd;
+	char    *file_name;
 	uint32_t data_offset;
 	uint32_t data_size;
 	uint8_t *data;

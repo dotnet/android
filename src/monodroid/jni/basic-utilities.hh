@@ -217,6 +217,12 @@ namespace xamarin::android
 			return strdup_new (s, strlen (s));
 		}
 
+		template<size_t BufferSize>
+		char *strdup_new (internal::dynamic_local_string<BufferSize> const& buf) noexcept
+		{
+			return strdup_new (buf.get (), buf.length ());
+		}
+
 		char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0) noexcept
 		{
 			if (from_index >= s.length ()) {

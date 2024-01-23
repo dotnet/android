@@ -6,6 +6,8 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <functional>
+
 #include <sys/stat.h>
 #include <sys/mman.h>
 #include <fcntl.h>
@@ -162,7 +164,7 @@ template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
-	md_mmap_info map_info = md_mmap_apk_file (file.apk_fd, file.data_offset, file.data_size, file.name);
+	md_mmap_info map_info = md_mmap_apk_file (file.file_fd, file.data_offset, file.data_size, file.name);
 	if (MonodroidRuntime::is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
 	} else {
@@ -1190,36 +1192,58 @@ EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_re
 }
 
 force_inline bool
-EmbeddedAssemblies::maybe_register_assembly_from_filesystem ([[maybe_unused]] monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept
+EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
+	[[maybe_unused]] monodroid_should_register should_register,
+	size_t &assembly_count,
+	const dirent* dir_entry,
+	ZipEntryLoadState& state) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "[assembly] entry: %s", dir_entry->d_name);
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	auto copy_dentry = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, const dirent* dir_entry)
+	auto copy_dentry_and_update_state = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, ZipEntryLoadState& state, const dirent* dir_entry)
 	{
 		name.assign_c (dir_entry->d_name);
+
+		// We need to duplicate the name, alas, because of lazy assembly loading taking place. The name and `state.file_fd`
+		// will be used later on to open the file without having to use and store full path to the file.
+		state.file_name = dir_entry->d_name;
 	};
 
 	// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
 	if (dir_entry->d_name[0] == '#') {
 		log_debug (LOG_ASSEMBLY, "  regular assembly");
 		assembly_count++;
-		copy_dentry (entry_name, dir_entry);
+		copy_dentry_and_update_state (entry_name, state, dir_entry);
 		unmangle_name<UnmangleRegularAssembly> (entry_name);
 	} else if (dir_entry->d_name[0] == '%') {
 		log_debug (LOG_ASSEMBLY, "  satellite assembly");
 		assembly_count++;
-		copy_dentry (entry_name, dir_entry);
+		copy_dentry_and_update_state (entry_name, state, dir_entry);
 		unmangle_name<UnmangleSatelliteAssembly> (entry_name);
 	} else {
 		return false;
 	}
+	state.data_offset = 0;
+
+	struct stat sbuf;
+	if (fstatat (state.file_fd, state.file_name, &sbuf, 0) == -1) {
+		log_warn (LOG_ASSEMBLY, "Failed to stat assembly file '%s': %s", state.file_name, std::strerror (errno));
+		return false; // don't terminate, keep going
+	}
+	state.file_size = static_cast<decltype(state.file_size)>(sbuf.st_size);
+
+	load_individual_assembly (entry_name, state, should_register);
 
 	return false;
 }
 
 force_inline bool
-EmbeddedAssemblies::maybe_register_blob_from_filesystem ([[maybe_unused]] monodroid_should_register should_register, size_t &assembly_count, const dirent* dir_entry) noexcept
+EmbeddedAssemblies::maybe_register_blob_from_filesystem (
+	[[maybe_unused]] monodroid_should_register should_register,
+	size_t &assembly_count,
+	const dirent* dir_entry,
+	ZipEntryLoadState& state) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "[blob] entry: %s", dir_entry->d_name);
 	return true;
@@ -1235,15 +1259,34 @@ EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_
 	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
 
 	const char *lib_dir_path = androidSystem.app_lib_directories[0];
-	DIR *lib_dir = opendir (lib_dir_path);
+	DIR *lib_dir = opendir (lib_dir_path); // TODO: put it in a scope guard at some point
 	if (lib_dir == nullptr) {
-		log_warn (LOG_ASSEMBLY, "Unable to open app library directory '%s': ", lib_dir_path, std::strerror (errno));
+		log_warn (LOG_ASSEMBLY, "Unable to open app library directory '%s': %s", lib_dir_path, std::strerror (errno));
 		return 0;
 	}
 
-	bool (*register_fn)(monodroid_should_register, size_t&, const dirent*) = application_config.have_assembly_store ?
-	                                                                         maybe_register_blob_from_filesystem :
-	                                                                         maybe_register_assembly_from_filesystem;
+	ZipEntryLoadState state{};
+	configure_state_for_individual_assembly_load (state);
+
+	int dir_fd = dirfd (lib_dir);
+	if (dir_fd < 0) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "Unable to obtain file descriptor for directory '%s': %s", lib_dir_path, std::strerror (errno));
+		closedir (lib_dir);
+		return 0;
+	}
+
+	state.file_fd = dup (dir_fd);
+	if (state.file_fd < 0) [[unlikely]] {
+		log_warn (LOG_ASSEMBLY, "Unable to duplicate file descriptor %d for directory '%s': %s", dir_fd, lib_dir_path, std::strerror (errno));
+		closedir (lib_dir);
+		return 0;
+	}
+
+	auto register_fn =
+		application_config.have_assembly_store ?
+		std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem) :
+		std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem);
+
 	size_t assembly_count = 0;
 	do {
 		errno = 0;
@@ -1268,7 +1311,7 @@ EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_
 		}
 
 		// We get `true` if it's time to terminate
-		if (register_fn (should_register, assembly_count, cur)) {
+		if (register_fn (this, should_register, assembly_count, cur, state)) {
 			break;
 		}
 	} while (true);
