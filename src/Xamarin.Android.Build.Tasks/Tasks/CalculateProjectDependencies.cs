@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] Dependencies { get; set; }
 
 		[Output]
-		public ITaskItem JdkDependency { get; set; }
+		public ITaskItem[] JavaDependencies { get; set; }
 
 		ITaskItem CreateAndroidDependency (string include, string version)
 		{
@@ -54,6 +54,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var dependencies = new List<ITaskItem> ();
+			var javaDependencies = new List<ITaskItem> ();
 			var targetApiLevel = string.IsNullOrEmpty (AndroidApiLevel) ?
 				MonoAndroidHelper.SupportedVersions.GetApiLevelFromFrameworkVersion (TargetFrameworkVersion) :
 				MonoAndroidHelper.SupportedVersions.GetApiLevelFromId (AndroidApiLevel);
@@ -75,9 +76,10 @@ namespace Xamarin.Android.Tasks
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
 			}
 			if (!string.IsNullOrEmpty (JdkVersion)) {
-				JdkDependency = CreateAndroidDependency ("jdk", JdkVersion);
+				javaDependencies.Add (CreateAndroidDependency ("jdk", JdkVersion));
 			}
 			Dependencies = dependencies.ToArray ();
+			JavaDependencies = javaDependencies.ToArray ();
 			return !Log.HasLoggedErrors;
 		}
 	}

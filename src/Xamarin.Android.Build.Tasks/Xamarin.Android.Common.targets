@@ -2718,7 +2718,7 @@ because xbuild doesn't support framework reference assemblies.
   </PropertyGroup>
 </Target>
 
-<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JdkDependency)">
+<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JavaDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
     <_NdkRequired Condition="'$(EnableLLVM)' == 'True'">true</_NdkRequired>
@@ -2737,7 +2737,7 @@ because xbuild doesn't support framework reference assemblies.
     JdkVersion="$(JavaSdkVersion)"
   >
     <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
-    <Output TaskParameter="JdkDependency" ItemName="JdkDependency" />
+    <Output TaskParameter="JavaDependencies" ItemName="JavaDependency" />
   </CalculateProjectDependencies>
 </Target>
 
