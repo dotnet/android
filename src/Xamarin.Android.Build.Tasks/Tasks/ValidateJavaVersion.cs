@@ -29,6 +29,12 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string MinimumSupportedJavaVersion { get; set; }
 
+		/// <summary>
+		/// If true use the old method of calling `java -version` and `javac -version`
+		/// $(_AndroidUseJavaExeVersion) is passed in from MSBuild targets and defaults to false.
+		/// </summary>
+		public bool UseJavaExeVersion { get; set; } = true;
+
 		[Output]
 		public string MinimumRequiredJdkVersion { get; set; }
 
@@ -63,7 +69,7 @@ namespace Xamarin.Android.Tasks
 			var javac = JavacToolExe ?? (OS.IsWindows ? "javac.exe" : "javac");
 
 			return ValidateJava (java, JavaVersionRegex) &&
-				ValidateJava (javac, JavacVersionRegex);
+				(!UseJavaExeVersion || ValidateJava (javac, JavacVersionRegex));
 		}
 
 		protected virtual bool ValidateJava (string javaExe, Regex versionRegex)
@@ -97,6 +103,12 @@ namespace Xamarin.Android.Tasks
 
 		protected Version GetVersionFromTool (string javaExe, Regex versionRegex)
 		{
+			// New code path, reads directly from `release` text file
+			if (!UseJavaExeVersion && GetVersionFromFile (javaExe, out var version)) {
+				JdkVersion = version.ToString ();
+				return version;
+			}
+
 			// NOTE: this doesn't need to use GetRegisteredTaskObjectAssemblyLocal()
 			// because the path to java/javac is the key and the value is a System.Version.
 			var javaTool = Path.Combine (JavaSdkPath, "bin", javaExe);
@@ -127,6 +139,43 @@ namespace Xamarin.Android.Tasks
 				Log.LogCodedWarning ("XA0033", Properties.Resources.XA0033, javaExe, versionInfo);
 				return null;
 			}
+		}
+
+		bool GetVersionFromFile (string javaExe, out Version version)
+		{
+			var path = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
+			if (!File.Exists (path)) {
+				path = Path.Combine (JavaSdkPath, "release");
+			}
+			if (!File.Exists (path)) {
+				Log.LogDebugMessage ($"{path} does not exist, falling back to `java -version`");
+				version = new ();
+				return false;
+			}
+
+			using var stream = File.OpenRead (path);
+			using var reader = new StreamReader (stream);
+
+			string line;
+			while ((line = reader.ReadLine ()) != null) {
+				const string JAVA_VERSION = "JAVA_VERSION=\"";
+				int index = line.IndexOf (JAVA_VERSION, StringComparison.OrdinalIgnoreCase);
+				if (index != -1) {
+					var versionString = line.Substring (index + JAVA_VERSION.Length);
+					index = versionString.IndexOf ('"');
+					if (index != -1) {
+						versionString = versionString.Substring (0, index);
+					}
+					if (Version.TryParse (versionString, out version)) {
+						Log.LogDebugMessage ($"{path} contains JAVA_VERSION.");
+						return true;
+					}
+				}
+			}
+
+			Log.LogDebugMessage ($"{path} did not contain a valid JAVA_VERSION.");
+			version = new ();
+			return false;
 		}
 	}
 }
