@@ -780,31 +780,45 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		/// <summary>
-		/// Tests two .aar files with r-classes.jar
+		/// Tests two .aar files with r-classes.jar, repackaged.jar
 		/// </summary>
 		[Test]
-		public void AarWithRClassesJar ()
+		public void CheckDuplicateJavaLibraries ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var lib1 = new XamarinAndroidBindingProject {
 				ProjectName = "Library1",
 				AndroidClassParser = "class-parse",
 				Jars = {
+					// r-classes.jar
 					new AndroidItem.LibraryProjectZip ("Library1.aar") {
 						BinaryContent = () => ResourceData.Library1Aar
-					}
+					},
+					// repackaged.jar
+					new AndroidItem.AndroidLibrary ("emoji2-1.4.0.aar") {
+						MetadataValues = "Bind=false",
+						WebContent = "https://maven.google.com/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
+					},
 				},
 			};
 			var lib2 = new XamarinAndroidBindingProject {
 				ProjectName = "Library2",
 				AndroidClassParser = "class-parse",
 				Jars = {
+					// r-classes.jar
 					new AndroidItem.LibraryProjectZip ("Library2.aar") {
 						BinaryContent = () => ResourceData.Library2Aar
-					}
+					},
+					// repackaged.jar
+					new AndroidItem.AndroidLibrary ("connect-client-1.1.0-alpha07.aar") {
+						MetadataValues = "Bind=false",
+						WebContent = "https://maven.google.com/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
+					},
 				},
 			};
-			var app = new XamarinAndroidApplicationProject ();
+			var app = new XamarinAndroidApplicationProject {
+				SupportedOSPlatformVersion = "30", // androidx.health requires minSdkVersion="30"
+			};
 			app.AddReference (lib1);
 			app.AddReference (lib2);
 			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName)))
