@@ -15,6 +15,7 @@
     <AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
     <AndroidSdkPlatformVersion Condition="'$(AndroidSdkPlatformVersion)' == ''">android-34</AndroidSdkPlatformVersion>
     <AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">26.1.10909125</AndroidNdkVersion>
+    <JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">17.0.8.1</JavaSdkVersion>
 
     <!-- obsolete; should consider removing eventually -->
     <AndroidSdkToolsVersion Condition="'$(AndroidSdkToolsVersion)' == ''">26.1.1</AndroidSdkToolsVersion>
