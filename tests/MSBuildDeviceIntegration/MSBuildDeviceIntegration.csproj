@@ -39,7 +39,7 @@
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
     <PackageReference Include="NodaTime" Version="2.4.5" />
-    <PackageReference Include="MSBuild.StructuredLogger" Version="2.2.100" />
+    <PackageReference Include="MSBuild.StructuredLogger" Version="2.2.169" />
     <PackageReference Include="ICSharpCode.Decompiler" Version="7.2.1.6856" />
     <PackageReference Include="Humanizer" Version="$(HumanizerVersion)" />
   </ItemGroup>
