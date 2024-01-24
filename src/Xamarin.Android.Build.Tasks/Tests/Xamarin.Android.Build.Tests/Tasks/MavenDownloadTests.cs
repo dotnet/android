@@ -85,7 +85,7 @@ public class MavenDownloadTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ($"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- com.example_dummy.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- com.example_dummy.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+		Assert.AreEqual ($"Cannot download Maven artifact 'com.example:dummy'.{Environment.NewLine}- dummy-1.0.0.jar: Response status code does not indicate success: 404 (Not Found).{Environment.NewLine}- dummy-1.0.0.aar: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
 	}
 
 	[Test]
@@ -102,7 +102,7 @@ public class MavenDownloadTests
 			};
 
 			// Create the dummy jar so we bypass that step and try to download the dummy pom
-			var dummy_jar = Path.Combine (temp_cache_dir, "central", "com.example", "dummy", "1.0.0", "com.example_dummy.jar");
+			var dummy_jar = Path.Combine (temp_cache_dir, "central", "com.example", "dummy", "1.0.0", "dummy-1.0.0.jar");
 			Directory.CreateDirectory (Path.GetDirectoryName (dummy_jar)!);
 
 			using (File.Create (dummy_jar)) { }
@@ -110,7 +110,7 @@ public class MavenDownloadTests
 			await task.RunTaskAsync ();
 
 			Assert.AreEqual (1, engine.Errors.Count);
-			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy'.{Environment.NewLine}- com.example_dummy.pom: Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
+			Assert.AreEqual ($"Cannot download POM file for Maven artifact 'com.example:dummy:1.0.0'.{Environment.NewLine}- Response status code does not indicate success: 404 (Not Found).", engine.Errors [0].Message?.ReplaceLineEndings ());
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -136,12 +136,9 @@ public class MavenDownloadTests
 
 			var output_item = task.ResolvedAndroidMavenLibraries! [0];
 
-			Assert.AreEqual ("com.google.auto.value:auto-value-annotations", output_item.GetMetadata ("ArtifactSpec"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "com.google.auto.value_auto-value-annotations.jar"), output_item.GetMetadata ("ArtifactFile"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "com.google.auto.value_auto-value-annotations.pom"), output_item.GetMetadata ("ArtifactPom"));
-
-			Assert.True (File.Exists (output_item.GetMetadata ("ArtifactFile")));
-			Assert.True (File.Exists (output_item.GetMetadata ("ArtifactPom")));
+			Assert.AreEqual ("com.google.auto.value:auto-value-annotations", output_item.GetMetadata ("JavaArtifact"));
+			Assert.AreEqual ("1.10.4", output_item.GetMetadata ("JavaVersion"));
+			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -167,12 +164,9 @@ public class MavenDownloadTests
 
 			var output_item = task.ResolvedAndroidMavenLibraries! [0];
 
-			Assert.AreEqual ("androidx.core:core", output_item.GetMetadata ("ArtifactSpec"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "androidx.core_core.aar"), output_item.GetMetadata ("ArtifactFile"));
-			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "androidx.core_core.pom"), output_item.GetMetadata ("ArtifactPom"));
-
-			Assert.True (File.Exists (output_item.GetMetadata ("ArtifactFile")));
-			Assert.True (File.Exists (output_item.GetMetadata ("ArtifactPom")));
+			Assert.AreEqual ("androidx.core:core", output_item.GetMetadata ("JavaArtifact"));
+			Assert.AreEqual ("1.12.0", output_item.GetMetadata ("JavaVersion"));
+			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "core-1.12.0.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
 		}
@@ -190,7 +184,7 @@ public class MavenDownloadTests
 		return item;
 	}
 
-	void DeleteTempDirectory (string dir)
+	public static void DeleteTempDirectory (string dir)
 	{
 		try {
 			Directory.Delete (dir, true);

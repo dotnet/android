@@ -5,10 +5,9 @@ using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Text.RegularExpressions;
-using Java.Interop.Maven;
-using Java.Interop.Maven.Models;
+using Java.Interop.Tools.Maven;
+using Java.Interop.Tools.Maven.Models;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
@@ -172,7 +171,7 @@ class DependencyResolver
 			if (!id.HasValue () || !version.HasValue ())
 				continue;
 
-			if (version != null && MavenExtensions.TryParseArtifact (id, version, log, out var art)) {
+			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from AndroidLibrary '{3}'", art.GroupId, art.Id, art.Version, task.ItemSpec);
 				artifacts.Add (art);
 			}
@@ -222,7 +221,7 @@ class DependencyResolver
 			if (version is null)
 				continue;
 
-			if (version != null && MavenExtensions.TryParseArtifact (id, version, log, out var art)) {
+			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
 				artifacts.Add (art);
 			}
@@ -267,7 +266,7 @@ class DependencyResolver
 				return true;
 			}
 
-			if (MavenExtensions.TryParseArtifact (id, version, log, out var art)) {
+			if (MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from {3} '{4}' (JavaArtifact)", art.GroupId, art.Id, art.Version, type, item_name);
 				artifacts.Add (art);
 			}
@@ -307,27 +306,6 @@ class MSBuildLoggingPomResolver : IPomResolver
 		this.logger = logger;
 	}
 
-	Artifact? Register (string filename)
-	{
-		if (!File.Exists (filename)) {
-			logger.LogError ("Requested POM file '{0}' does not exist.", filename);
-			return null;
-		}
-
-		try {
-			using (var file = File.OpenRead (filename)) {
-				var project = Project.Parse (file);
-				poms.Add (project.ToString (), project);
-
-				logger.LogDebugMessage ("Registered POM for artifact '{0}' from '{1}'", project, filename);
-				return Artifact.Parse (project.ToString ());
-			}
-		} catch (Exception ex) {
-			logger.LogError ("Failed to register POM file '{0}': '{1}'", filename, ex);
-			return null;
-		}
-	}
-
 	public Artifact? RegisterFromAndroidLibrary (ITaskItem item)
 	{
 		var pom_file = item.GetMetadata ("Manifest");
@@ -343,7 +321,7 @@ class MSBuildLoggingPomResolver : IPomResolver
 
 	Artifact? RegisterFromTaskItem (ITaskItem item, string itemName, string filename)
 	{
-		item.TryParseJavaArtifactAndVersion (itemName, logger, out var artifact);
+		item.TryParseJavaArtifactAndJavaVersion (itemName, logger, out var artifact);
 
 		if (!File.Exists (filename)) {
 			logger.LogError ("Requested POM file '{0}' does not exist.", filename);
@@ -362,7 +340,8 @@ class MSBuildLoggingPomResolver : IPomResolver
 					artifact?.Version ?? registered_artifact.Version
 				);
 
-				poms.Add (final_artifact.ToString (), project);
+				// Use index instead of Add to handle duplicates
+				poms [final_artifact.ToString ()] = project;
 
 				logger.LogDebugMessage ("Registered POM for artifact '{0}' from '{1}'", final_artifact, filename);
 

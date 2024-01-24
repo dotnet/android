@@ -321,8 +321,6 @@
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
-    <_ExtraPackageSource Include="$(PkgMavenNet)\lib\netstandard2.0\MavenNet.pdb" />
-    <_ExtraPackageTarget Include="$(OutputPath)\MavenNet.pdb" />
 
     <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />

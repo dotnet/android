@@ -4,10 +4,10 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Xml;
-using Java.Interop.Maven.Models;
+using Java.Interop.Tools.Maven.Models;
 using Microsoft.Build.Utilities;
-using Newtonsoft.Json;
 using NUnit.Framework;
 using Xamarin.Android.Tasks;
 
@@ -347,7 +347,7 @@ public class JavaDependencyVerificationTests
 			Packages = [new MicrosoftNuGetPackageFinder.Package { JavaId = javaId, NuGetId = nugetId }]
 		};
 
-		return new TemporaryFile (JsonConvert.SerializeObject (package), "microsoft-packages.json");
+		return new TemporaryFile (JsonSerializer.Serialize (package), "microsoft-packages.json");
 	}
 }
 

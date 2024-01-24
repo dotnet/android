@@ -13,10 +13,10 @@ that Java binding dependencies are satisfied.
   <UsingTask TaskName="Xamarin.Android.Tasks.GetMicrosoftNuGetPackagesMap" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.JavaDependencyVerification" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
-  <Target Name="VerifyJavaDependencies"
+  <Target Name="_VerifyJavaDependencies"
       Condition=" '@(AndroidLibrary->Count())' != '0' "
       BeforeTargets="_CategorizeAndroidLibraries"
-      DependsOnTargets="MavenRestore">
+      DependsOnTargets="_MavenRestore">
 
     <!-- Find the microsoft-package.json file for NuGet package hints. -->
     <GetMicrosoftNuGetPackagesMap MavenCacheDirectory="$(MavenCacheDirectory)">
@@ -29,7 +29,7 @@ that Java binding dependencies are satisfied.
       AdditionalManifests="@(AndroidAdditionalJavaManifest)"
       PackageReferences="@(PackageReference)"
       ProjectReferences="@(ProjectReference)"
-      IgnoredDependencies="@(AndroidIgnoredDependency)"
+      IgnoredDependencies="@(AndroidIgnoredJavaDependency)"
       MicrosoftPackagesFile="$(_ResolvedPackageMap)"
       ProjectAssetsLockFile="$(ProjectAssetsFile)" />
     
