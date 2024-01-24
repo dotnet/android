@@ -9,7 +9,7 @@
 [submodule "external/Java.Interop"]
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
-    branch = main
+    branch = dev/jonp/ji-typemap-support
 [submodule "external/lz4"]
     path = external/lz4
     url = https://github.com/xamarin/lz4
