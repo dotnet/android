@@ -843,10 +843,17 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckDuplicateJavaLibraries" DependsOnTargets="_GetLibraryImports">
+  <ItemGroup>
+    <_AndroidExcludedDuplicateJavaLibraries Include="classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="r-classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="repackaged.jar" />
+  </ItemGroup>
   <CheckDuplicateJavaLibraries
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
-    LibraryProjectJars="@(ExtractedJarImports)" />
+    LibraryProjectJars="@(ExtractedJarImports)"
+    ExcludedFiles="@(_AndroidExcludedDuplicateJavaLibraries)"
+  />
 </Target>
 
 <Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
