@@ -69,8 +69,8 @@ namespace Xamarin.Android.Prepare
 				new AndroidPlatformComponent ("platform-30_r01",   apiLevel: "30", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-31_r01",   apiLevel: "31", pkgRevision: "1"),
 				new AndroidPlatformComponent ("platform-32_r01",   apiLevel: "32", pkgRevision: "1"),
-				new AndroidPlatformComponent ("platform-33-ext3_r03",   apiLevel: "33", pkgRevision: "3"),
-				new AndroidPlatformComponent ("platform-34-ext7_r02",   apiLevel: "34", pkgRevision: "2"),
+				new AndroidPlatformComponent ("platform-33-r03",   apiLevel: "33", pkgRevision: "3"),
+				new AndroidPlatformComponent ("platform-34_r02",   apiLevel: "34", pkgRevision: "2"),
 
 				new AndroidToolchainComponent ("sources-34_r01",
 					destDir: Path.Combine ("sources", "android-34"),
