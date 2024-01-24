@@ -164,7 +164,31 @@ template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
-	md_mmap_info map_info = md_mmap_apk_file (file.file_fd, file.data_offset, file.data_size, file.name);
+	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+	log_debug (LOG_ASSEMBLY, "  file.name == '%s'; file.file_name == '%s' (%p)", file.name, file.file_name, file.file_name);
+
+	int fd;
+	bool close_fd;
+	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+		log_debug (LOG_ASSEMBLY, "Mapping a runtime file from a filesystem");
+		close_fd = true;
+
+		// file.file_fd refers to the directory where our files live
+		auto temp_fd = Util::open_file_ro_at (file.file_fd, file.file_name);
+		if (!temp_fd) {
+			return;
+		}
+		fd = temp_fd.value ();
+	} else {
+		fd = file.file_fd;
+		close_fd = false;
+	}
+
+	md_mmap_info map_info = md_mmap_apk_file (fd, file.data_offset, file.data_size, file.name);
+	if (close_fd) {
+		close (fd);
+	}
+
 	if (MonodroidRuntime::is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
 	} else {
@@ -305,7 +329,9 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	MonoAssembly *a = nullptr;
 
 	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
+		log_debug (LOG_ASSEMBLY, "  [%zu] BEFORE: name == '%s'; file_name == '%s' (%p)", i, bundled_assemblies[i].name, bundled_assemblies[i].file_name, bundled_assemblies[i].file_name);
 		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
+		log_debug (LOG_ASSEMBLY, "  [%zu] AFTER: name == '%s'; file_name == '%s' (%p)", i, bundled_assemblies[i].name, bundled_assemblies[i].file_name, bundled_assemblies[i].file_name);
 		if (a != nullptr) {
 			return a;
 		}
@@ -1205,8 +1231,7 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	{
 		name.assign_c (dir_entry->d_name);
 
-		// We need to duplicate the name, alas, because of lazy assembly loading taking place. The name and `state.file_fd`
-		// will be used later on to open the file without having to use and store full path to the file.
+		// We don't need to duplicate the name here, it will be done farther on
 		state.file_name = dir_entry->d_name;
 	};
 
@@ -1226,14 +1251,13 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	}
 	state.data_offset = 0;
 
-	struct stat sbuf;
-	if (fstatat (state.file_fd, state.file_name, &sbuf, 0) == -1) {
-		log_warn (LOG_ASSEMBLY, "Failed to stat assembly file '%s': %s", state.file_name, std::strerror (errno));
+	auto file_size = Util::get_file_size_at (state.file_fd, state.file_name);
+	if (!file_size) {
 		return false; // don't terminate, keep going
 	}
-	state.file_size = static_cast<decltype(state.file_size)>(sbuf.st_size);
 
-	load_individual_assembly (entry_name, state, should_register);
+	state.file_size = static_cast<decltype(state.file_size)>(file_size.value ());
+	store_individual_assembly_data (entry_name, state, should_register);
 
 	return false;
 }
@@ -1246,13 +1270,34 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	ZipEntryLoadState& state) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "[blob] entry: %s", dir_entry->d_name);
+	if (dir_entry->d_name[0] != assembly_store_file_name[0]) {
+		return false; // keep going
+	}
+
+	log_debug (LOG_ASSEMBLY, "  expected store name: %s", assembly_store_file_name.data ());
+	if (strncmp (dir_entry->d_name, assembly_store_file_name.data (), assembly_store_file_name.size ()) != 0) {
+		return false; // keep going
+	}
+
+	log_debug (LOG_ASSEMBLY, "  found our blob");
+	dynamic_local_string<SENSIBLE_PATH_MAX> blob_name;
+	blob_name.assign_c (dir_entry->d_name);
+
+	state.data_offset = 0;
+	state.file_name = dir_entry->d_name;
+
+	auto file_size = Util::get_file_size_at (state.file_fd, state.file_name);
+	if (!file_size) {
+		return false; // don't terminate, keep going
+	}
+	state.file_size = static_cast<decltype(state.file_size)>(file_size.value ());
+
+	map_assembly_store (blob_name, state);
+	assembly_count = assembly_store.assembly_count;
+
 	return true;
 }
 
-// TODO: do the iterating here, call blobs or discrete entry functions for each entry.
-//
-//       Discrete assemblies are mmapped as if they were in the apk, FD is closed immediately.
-//       Blob is mmapped in the same way as if it was in the apk, FD is closed immediately.
 size_t
 EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
 {
@@ -1305,8 +1350,20 @@ EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_
 		}
 
 		// ...and we can handle the runtime config entry
-		if (std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME, sizeof (SharedConstants::RUNTIME_CONFIG_BLOB_NAME) - 1) == 0) {
-			// TODO: map the blob
+		if (!runtime_config_blob_found && std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME, sizeof (SharedConstants::RUNTIME_CONFIG_BLOB_NAME) - 1) == 0) {
+			log_debug (LOG_ASSEMBLY, "Mapping runtime config blob from '%s'", cur->d_name);
+			auto file_size = Util::get_file_size_at (state.file_fd, cur->d_name);
+			if (!file_size) {
+				continue;
+			}
+
+			auto fd = Util::open_file_ro_at (state.file_fd, cur->d_name);
+			if (!fd) {
+				continue;
+			}
+
+			runtime_config_blob_mmap = md_mmap_apk_file (fd.value (), 0, file_size.value (), cur->d_name);
+			runtime_config_blob_found = true;
 			continue;
 		}
 

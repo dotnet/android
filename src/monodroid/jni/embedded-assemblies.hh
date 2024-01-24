@@ -109,7 +109,8 @@ namespace xamarin::android::internal {
 		static constexpr char regular_assembly_marker = '#';
 		static constexpr char satellite_assembly_marker = '%';
 		static constexpr auto apk_lib_prefix = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-		static constexpr auto assembly_store_file_name = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "assemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr auto assembly_store_file_name = concat_const ("assemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr auto assembly_store_file_path = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "assemblies.", SharedConstants::android_lib_abi, ".blob.so");
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
@@ -333,12 +334,15 @@ namespace xamarin::android::internal {
 		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
 		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
-		void load_individual_assembly (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
+		void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
 
 		void configure_state_for_individual_assembly_load (ZipEntryLoadState& state) noexcept
 		{
 			state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
 			state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
+
+			// Enough room for the mangle character at the start, plus the extra extension
+			state.max_assembly_file_name_size = state.max_assembly_name_size + MANGLED_ASSEMBLY_NAME_EXT.length () + 1;
 		}
 
 		template<bool IsSatelliteAssembly>

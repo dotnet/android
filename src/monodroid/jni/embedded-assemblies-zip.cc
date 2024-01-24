@@ -80,7 +80,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 }
 
 inline void
-EmbeddedAssemblies::load_individual_assembly (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
+EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
 {
 #if defined (DEBUG)
 	const char *last_slash = utils.find_last (entry_name, '/');
@@ -126,8 +126,9 @@ EmbeddedAssemblies::load_individual_assembly (dynamic_local_string<SENSIBLE_PATH
 		return;
 	}
 
+	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index %zu", bundled_assembly_index);
 	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state, entry_name);
-
+	log_debug (LOG_ASSEMBLY, "[%zu] data set: name == '%s'; file_name == '%s'", bundled_assembly_index, bundled_assemblies [bundled_assembly_index].name, bundled_assemblies [bundled_assembly_index].file_name);
 	bundled_assembly_index++;
 	number_of_found_assemblies = bundled_assembly_index;
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
@@ -162,11 +163,11 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue; // Can't be an assembly, the name's not mangled
 		}
 		log_debug (LOG_ASSEMBLY, "  interesting entry. Name modified to '%s'", entry_name.get ());
-		load_individual_assembly (entry_name, state, should_register);
+		store_individual_assembly_data (entry_name, state, should_register);
 	}
 }
 
-force_inline void
+inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
 	if (number_of_mapped_assembly_stores > number_of_assembly_store_files) {
@@ -174,7 +175,27 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 		Helpers::abort_application ();
 	}
 
-	md_mmap_info assembly_store_map = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
+	int fd;
+	bool close_fd;
+	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+		log_debug (LOG_ASSEMBLY, "Mapping assembly blob file from filesystem");
+		close_fd = true;
+
+		// state.file_fd refers to the directory where our files live
+		auto temp_fd = Util::open_file_ro_at (state.file_fd, entry_name.get ());
+		if (!temp_fd) {
+			return;
+		}
+		fd = temp_fd.value ();
+	} else {
+		fd = state.file_fd;
+		close_fd = false;
+	}
+
+	md_mmap_info assembly_store_map = md_mmap_apk_file (fd, state.data_offset, state.file_size, entry_name.get ());
+	if (close_fd) {
+		close (fd);
+	}
 	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
@@ -210,7 +231,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_path.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -222,7 +243,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_name)) {
+		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_path)) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
 			continue;
@@ -310,17 +331,19 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 			entry.file_name = utils.strdup_new (state.file_name);
 		}
 	} else {
+		log_debug (LOG_ASSEMBLY, "Setting name for entry '%s'", entry_name.get ());
+
 		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
 		strncpy (entry.name, entry_name.get () + state.prefix_len, state.max_assembly_name_size);
 		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
+			log_debug (LOG_ASSEMBLY, "  setting file name, too, at %p, to value '%s', maximum length %zu", entry.file_name, state.file_name, state.max_assembly_file_name_size);
 			strncpy (entry.file_name, state.file_name, state.max_assembly_file_name_size);
 		}
 	}
 	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - state.prefix_len, state.max_assembly_name_size);
 	entry.data_offset = state.data_offset;
 	entry.data_size = state.file_size;
-	entry.file_name = const_cast<char*>(state.file_name);
 
 	log_debug (
 		LOG_ASSEMBLY,

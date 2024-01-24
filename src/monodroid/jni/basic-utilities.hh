@@ -7,6 +7,7 @@
 #include <cstdlib>
 #include <cstdio>
 #include <cstring>
+#include <optional>
 #include <type_traits>
 
 #include <unistd.h>
@@ -14,6 +15,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 #include "java-interop-util.h"
 #include "helpers.hh"
@@ -44,6 +46,27 @@ namespace xamarin::android
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
 
+		static std::optional<size_t> get_file_size_at (int dirfd, const char *file_name) noexcept
+		{
+			struct stat sbuf;
+			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
+				log_warn (LOG_ASSEMBLY, "Failed to stat file '%s': %s", file_name, std::strerror (errno));
+				return {};
+			}
+
+			return static_cast<size_t>(sbuf.st_size);
+		}
+
+		static std::optional<int> open_file_ro_at (int dirfd, const char *file_name) noexcept
+		{
+			int fd =  openat (dirfd, file_name, O_RDONLY);
+			if (fd < 0) {
+				log_error (LOG_ASSEMBLY, "Failed to open file '%s' for reading: %s", file_name, std::strerror (errno));
+				return {};
+			}
+
+			return fd;
+		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
 		template<size_t MaxStackSpace, typename TBuffer>
