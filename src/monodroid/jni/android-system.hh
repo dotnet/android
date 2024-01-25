@@ -2,6 +2,8 @@
 #ifndef __ANDROID_SYSTEM_H
 #define __ANDROID_SYSTEM_H
 
+#include <string_view>
+
 #include <stdint.h>
 #include <stdlib.h>
 #include <pthread.h>
@@ -42,7 +44,7 @@ namespace xamarin::android::internal
 	{
 	private:
 #if defined (DEBUG) || !defined (ANDROID)
-		static constexpr char OVERRIDE_ENVIRONMENT_FILE_NAME[] = "environment";
+		static constexpr std::string_view OVERRIDE_ENVIRONMENT_FILE_NAME { "environment" };
 		static constexpr uint32_t OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE = 22;
 		static BundledProperty *bundled_properties;
 #endif
@@ -57,6 +59,17 @@ namespace xamarin::android::internal
 		void  create_update_dir (char *override_dir);
 		int   monodroid_get_system_property (const char *name, char **value);
 		int   monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value);
+
+		int   monodroid_get_system_property (std::string_view const& name, char **value) noexcept
+		{
+			return monodroid_get_system_property (name.data (), value);
+		}
+
+		int   monodroid_get_system_property (std::string_view const& name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
+		{
+			return monodroid_get_system_property (name.data (), value);
+		}
+
 		size_t monodroid_get_system_property_from_overrides (const char *name, char ** value);
 		char* get_bundled_app (JNIEnv *env, jstring dir);
 		int   count_override_assemblies ();

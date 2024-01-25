@@ -613,17 +613,17 @@ Debug::enable_soft_breakpoints (void)
 	char *value;
 	/* Soft breakpoints are enabled by default */
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data ());
 		return 1;
 	}
 
 	bool ret;
 	if (strcmp ("0", value) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	}
 	delete[] value;
 	return ret;

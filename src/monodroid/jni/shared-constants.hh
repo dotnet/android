@@ -30,6 +30,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { "rc.bin" };
 		static constexpr std::string_view MONO_SGEN_SO                        { "libmonosgen-2.0.so" };
 		static constexpr std::string_view MONO_SGEN_ARCH_SO                   { "libmonosgen-" __BITNESS__ "-2.0.so" };
+		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };
 
 #if __arm__
 		static constexpr std::string_view android_abi        { "armeabi_v7a" };

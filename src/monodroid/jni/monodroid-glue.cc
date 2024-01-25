@@ -496,7 +496,7 @@ MonodroidRuntime::parse_gdb_options ()
 			time_t secs = time (nullptr);
 
 			if (v + 10 < secs) {
-				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY, val.get ());
+				log_warn (LOG_DEFAULT, "Found stale %s property with value '%s', not waiting.", Debug::DEBUG_MONO_GDB_PROPERTY.data (), val.get ());
 				do_wait = false;
 			}
 		}
@@ -2253,12 +2253,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		log_info_nocheck (
 			LOG_DEFAULT,
 			".NET Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
-			BuildInfo::xa_version,
-			BuildInfo::architecture,
-			BuildInfo::kind,
-			BuildInfo::date,
-			BuildInfo::ndk_version,
-			BuildInfo::ndk_api_level,
+			BuildInfo::xa_version.data (),
+			BuildInfo::architecture.data (),
+			BuildInfo::kind.data (),
+			BuildInfo::date.data (),
+			BuildInfo::ndk_version.data (),
+			BuildInfo::ndk_api_level.data (),
 			mono_get_runtime_build_info ()
 		);
 	}

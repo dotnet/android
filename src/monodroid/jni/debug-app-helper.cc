@@ -260,7 +260,7 @@ get_libmonosgen_path ()
 		return libmonoso;
 #endif
 
-	if (runtime_exists (BasicAndroidSystem::SYSTEM_LIB_PATH, libmonoso))
+	if (runtime_exists (BasicAndroidSystem::SYSTEM_LIB_PATH.data (), libmonoso))
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 

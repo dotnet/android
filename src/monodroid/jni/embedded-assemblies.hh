@@ -89,9 +89,9 @@ namespace xamarin::android::internal {
 		};
 
 	private:
-		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
-		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
-		static constexpr char  ZIP_EOCD_MAGIC[]    = "PK\5\6";
+		static constexpr std::string_view ZIP_CENTRAL_MAGIC { "PK\1\2" };
+		static constexpr std::string_view ZIP_LOCAL_MAGIC   { "PK\3\4" };
+		static constexpr std::string_view ZIP_EOCD_MAGIC    { "PK\5\6" };
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
@@ -106,11 +106,6 @@ namespace xamarin::android::internal {
 
 		static constexpr size_t assembly_store_arch_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
 		static constexpr auto assembly_store_arch_file_name = concat_string_views<assembly_store_arch_file_name_size> (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
-
-
-#if defined (DEBUG) || !defined (ANDROID)
-		static constexpr char override_typemap_entry_name[] = ".__override__";
-#endif
 
 	public:
 		/* filename is e.g. System.dll, System.dll.mdb, System.pdb */

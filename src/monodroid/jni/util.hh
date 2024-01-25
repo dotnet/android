@@ -18,6 +18,7 @@ constexpr int FALSE = 0;
 #endif // __cplusplus
 #endif
 
+#include <array>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_BSD_STRING_H
@@ -73,7 +74,7 @@ namespace xamarin::android
 {
 	class Util : public BasicUtilities
 	{
-		static constexpr const char hex_chars [] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+		static constexpr std::array<char, 16> hex_chars = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)
 		using timestruct = timespec;

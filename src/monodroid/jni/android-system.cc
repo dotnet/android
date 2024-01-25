@@ -510,7 +510,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 		if (max < 0)
 			max = std::numeric_limits<int>::max ();
 		if (*e) {
-			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC, override.get ());
+			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC.data (), override.get ());
 		}
 		log_warn (LOG_GC, "Overriding max JNI Global Reference count to %i", max);
 	}
@@ -708,7 +708,7 @@ AndroidSystem::setup_environment ()
 #if defined (DEBUG) || !defined (ANDROID)
 	// TODO: for debug read from file in the override directory named `environment`
 	for (const char *od : override_dirs) {
-		std::unique_ptr<char[]> env_override_file {utils.path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME)};
+		std::unique_ptr<char[]> env_override_file {utils.path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
 		if (utils.file_exists (env_override_file.get ())) {
 			setup_environment_from_override_file (env_override_file.get ());
 		}

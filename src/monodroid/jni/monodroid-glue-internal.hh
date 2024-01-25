@@ -3,6 +3,8 @@
 #define __MONODROID_GLUE_INTERNAL_H
 
 #include <string>
+#include <string_view>
+
 #include <jni.h>
 #include "android-system.hh"
 #include "osbridge.hh"
@@ -141,22 +143,17 @@ namespace xamarin::android::internal
 #endif
 
 	private:
-		static constexpr char base_apk_name[] = "/base.apk";
+		static constexpr std::string_view base_apk_name { "/base.apk" };
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
-		static constexpr bool is_running_on_desktop =
-#if ANDROID
-		false;
-#else
-		true;
-#endif
+		static constexpr bool is_running_on_desktop = false;
 
-		static constexpr char mono_component_debugger_name[]            = "libmono-component-debugger.so";
+		static constexpr std::string_view mono_component_debugger_name  { "libmono-component-debugger.so" };
 		static constexpr hash_t mono_component_debugger_hash            = xxhash::hash (mono_component_debugger_name);
 
-		static constexpr char mono_component_hot_reload_name[]          = "libmono-component-hot_reload.so";
+		static constexpr std::string_view mono_component_hot_reload_name { "libmono-component-hot_reload.so" };
 		static constexpr hash_t mono_component_hot_reload_hash          = xxhash::hash (mono_component_hot_reload_name);
 
-		static constexpr char mono_component_diagnostics_tracing_name[] = "libmono-component-diagnostics_tracing.so";
+		static constexpr std::string_view mono_component_diagnostics_tracing_name { "libmono-component-diagnostics_tracing.so" };
 		static constexpr hash_t mono_component_diagnostics_tracing_hash = xxhash::hash (mono_component_diagnostics_tracing_name);
 
 #if !defined (NET)

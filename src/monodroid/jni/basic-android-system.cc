@@ -99,5 +99,5 @@ BasicAndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstrin
 char*
 BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 {
-	return utils.path_combine (home.get_cstr (), ".__override__");
+	return utils.path_combine (home.get_cstr (), SharedConstants::OVERRIDE_DIRECTORY_NAME);
 }
