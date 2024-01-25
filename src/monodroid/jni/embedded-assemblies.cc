@@ -683,6 +683,20 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 
 	if (module->image == nullptr) {
 		module->image = mono_image_loaded (module->assembly_name);
+
+		if (module->image == nullptr) {
+			log_debug (LOG_ASSEMBLY, "typemap: assembly '%s' hasn't been loaded yet, attempting a full load", module->assembly_name);
+
+			// Trigger MonoVM's machinery to load an image. This will involve calling us back to find, uncompress (if
+            // necessary) and load the assembly from whatever storage the app uses.
+			MonoImageOpenStatus status{};
+			module->image = mono_image_open (module->assembly_name, &status);
+
+			if (status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly image '%s'. %s", module->assembly_name, mono_image_strerror (status));
+			}
+		}
+
 		if (module->image == nullptr) {
 			log_error (LOG_ASSEMBLY, "typemap: unable to load assembly '%s' when looking up managed type corresponding to Java type '%s'", module->assembly_name, to_utf8 (java_type_name).get ());
 			return nullptr;
