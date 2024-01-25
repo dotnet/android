@@ -261,25 +261,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
 		{
 			var packages = new List<Package> () {
-				KnownPackages.Android_Arch_Core_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
-				KnownPackages.AndroidSupportV4_27_0_2_1,
-				KnownPackages.SupportCompat_27_0_2_1,
-				KnownPackages.SupportCoreUI_27_0_2_1,
-				KnownPackages.SupportCoreUtils_27_0_2_1,
-				KnownPackages.SupportDesign_27_0_2_1,
-				KnownPackages.SupportFragment_27_0_2_1,
-				KnownPackages.SupportMediaCompat_27_0_2_1,
-				KnownPackages.SupportV7AppCompat_27_0_2_1,
-				KnownPackages.SupportV7CardView_27_0_2_1,
-				KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				KnownPackages.SupportV7RecyclerView_27_0_2_1,
-				KnownPackages.VectorDrawable_27_0_2_1,
-				new Package () { Id = "Xamarin.Android.Support.Annotations", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Transition", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.v7.Palette", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Animated.Vector.Drawable", Version = "27.0.2.1" },
+				KnownPackages.Xamarin_Jetbrains_Annotations,
 			};
 
 			string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
@@ -644,20 +626,8 @@ public class Test
 		[TestCase (-1, 200)]
 		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
 		{
-			var proj = new XamarinAndroidApplicationProject  {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = false,
-				PackageReferences = {
-					KnownPackages.SupportDesign_27_0_2_1,
-					KnownPackages.SupportV7CardView_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-					KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				},
 			};
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
 			if (filesLimit > 0)
