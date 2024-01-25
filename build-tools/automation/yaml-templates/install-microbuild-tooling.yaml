@@ -3,7 +3,7 @@ parameters:
   condition: succeeded()
 
 steps:
-- task: NuGetAuthenticate@0
+- task: NuGetAuthenticate@1
   displayName: authenticate with azure artifacts
   inputs:
     forceReinstallCredentialProvider: true
