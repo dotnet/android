@@ -344,7 +344,7 @@ stages:
         updateMono: false
         androidSdkPlatforms: 23,24,25,26,27,28,29,30,31,32,33,$(DefaultTestSdkPlatforms)
 
-    - task: NuGetAuthenticate@0
+    - task: NuGetAuthenticate@1
       displayName: authenticate with azure artifacts
       inputs:
         forceReinstallCredentialProvider: true
