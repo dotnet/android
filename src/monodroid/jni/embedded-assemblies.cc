@@ -701,11 +701,17 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 
 			// Trigger MonoVM's machinery to load an image. This will involve calling us back to find, uncompress (if
             // necessary) and load the assembly from whatever storage the app uses.
+			dynamic_local_string<SENSIBLE_PATH_MAX> assembly_name;
+			assembly_name.assign_c (module->assembly_name);
+			assembly_name.append (SharedConstants::DLL_EXTENSION);
+
 			MonoImageOpenStatus status{};
-			module->image = mono_image_open (module->assembly_name, &status);
+			MonoAssembly *assm = mono_assembly_open (assembly_name.get (), &status);
 
 			if (status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly image '%s'. %s", module->assembly_name, mono_image_strerror (status));
+				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly '%s'. %s", assembly_name.get (), mono_image_strerror (status));
+			} else {
+				module->image = mono_assembly_get_image (assm);
 			}
 		}
 
