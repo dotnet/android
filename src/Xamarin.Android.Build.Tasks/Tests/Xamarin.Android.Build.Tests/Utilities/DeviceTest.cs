@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
 				}
-				SetAdbLogcatBufferSize (64);
+				SetAdbLogcatBufferSize (128);
 				CreateGuestUser (GuestUserName);
 			}
 		}

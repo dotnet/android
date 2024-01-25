@@ -331,13 +331,10 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 			entry.file_name = utils.strdup_new (state.file_name);
 		}
 	} else {
-		log_debug (LOG_ASSEMBLY, "Setting name for entry '%s'", entry_name.get ());
-
 		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
 		strncpy (entry.name, entry_name.get () + state.prefix_len, state.max_assembly_name_size);
 		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
-			log_debug (LOG_ASSEMBLY, "  setting file name, too, at %p, to value '%s', maximum length %zu", entry.file_name, state.file_name, state.max_assembly_file_name_size);
 			strncpy (entry.file_name, state.file_name, state.max_assembly_file_name_size);
 		}
 	}

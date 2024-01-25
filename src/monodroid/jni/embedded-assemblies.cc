@@ -329,9 +329,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 	MonoAssembly *a = nullptr;
 
 	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
-		log_debug (LOG_ASSEMBLY, "  [%zu] BEFORE: name == '%s'; file_name == '%s' (%p)", i, bundled_assemblies[i].name, bundled_assemblies[i].file_name, bundled_assemblies[i].file_name);
 		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
-		log_debug (LOG_ASSEMBLY, "  [%zu] AFTER: name == '%s'; file_name == '%s' (%p)", i, bundled_assemblies[i].name, bundled_assemblies[i].file_name, bundled_assemblies[i].file_name);
 		if (a != nullptr) {
 			return a;
 		}
@@ -1238,8 +1236,6 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	const dirent* dir_entry,
 	ZipEntryLoadState& state) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "[assembly] entry: %s", dir_entry->d_name);
-
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	auto copy_dentry_and_update_state = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, ZipEntryLoadState& state, const dirent* dir_entry)
 	{
@@ -1251,12 +1247,10 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 
 	// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
 	if (dir_entry->d_name[0] == '#') {
-		log_debug (LOG_ASSEMBLY, "  regular assembly");
 		assembly_count++;
 		copy_dentry_and_update_state (entry_name, state, dir_entry);
 		unmangle_name<UnmangleRegularAssembly> (entry_name);
 	} else if (dir_entry->d_name[0] == '%') {
-		log_debug (LOG_ASSEMBLY, "  satellite assembly");
 		assembly_count++;
 		copy_dentry_and_update_state (entry_name, state, dir_entry);
 		unmangle_name<UnmangleSatelliteAssembly> (entry_name);
@@ -1283,17 +1277,14 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	const dirent* dir_entry,
 	ZipEntryLoadState& state) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "[blob] entry: %s", dir_entry->d_name);
 	if (dir_entry->d_name[0] != assembly_store_file_name[0]) {
 		return false; // keep going
 	}
 
-	log_debug (LOG_ASSEMBLY, "  expected store name: %s", assembly_store_file_name.data ());
 	if (strncmp (dir_entry->d_name, assembly_store_file_name.data (), assembly_store_file_name.size ()) != 0) {
 		return false; // keep going
 	}
 
-	log_debug (LOG_ASSEMBLY, "  found our blob");
 	dynamic_local_string<SENSIBLE_PATH_MAX> blob_name;
 	blob_name.assign_c (dir_entry->d_name);
 

@@ -324,7 +324,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 		}
 	}
 
-	if (result && utils.should_log (LOG_ASSEMBLY)) {
+	if (result != nullptr && utils.should_log (LOG_ASSEMBLY)) {
 		log_info_nocheck (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
 	}
 	return result;
