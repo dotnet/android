@@ -168,9 +168,11 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				TargetSdkVersion = "26",
 			};
+			var requestedJdkVersion = "17.0.8.1";
 			var parameters = new string [] {
 				$"TargetFrameworkRootPath={referencesPath}",
 				$"AndroidSdkDirectory={androidSdkPath}",
+				$"JavaSdkVersion={requestedJdkVersion}",
 			};
 
 			string buildToolsVersion = GetExpectedBuildToolsVersion ();
@@ -183,6 +185,7 @@ namespace Xamarin.Android.Build.Tests
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
+				StringAssertEx.ContainsRegex ($@"JavaDependency=\s*jdk\s*Version={requestedJdkVersion}", builder.LastBuildOutput, $"jdk {requestedJdkVersion} should be a dependency.");
 			}
 		}
 
