@@ -1006,4 +1006,8 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
   </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Não há suporte para as bibliotecas de suporte do Android no .NET 9 e posterior; migre para o AndroidX. Para obter detalhes, confira https://aka.ms/xamarin/androidx.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
 </root>

@@ -33,7 +33,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public void Parse (ITaskItem[] environments, SequencePointsMode sequencePointsMode, bool usingAndroidNETSdk, TaskLoggingHelper log)
+		public void Parse (ITaskItem[] environments, SequencePointsMode sequencePointsMode, TaskLoggingHelper log)
 		{
 			foreach (ITaskItem env in environments ?? Array.Empty<ITaskItem> ()) {
 				foreach (string line in File.ReadLines (env.ItemSpec)) {
@@ -55,9 +55,6 @@ namespace Xamarin.Android.Tasks
 					}
 					if (lineToWrite.StartsWith ("XA_HTTP_CLIENT_HANDLER_TYPE=", StringComparison.Ordinal))
 						HaveHttpMessageHandler = true;
-
-					if (!usingAndroidNETSdk && lineToWrite.StartsWith ("XA_TLS_PROVIDER=", StringComparison.Ordinal))
-						HaveTlsProvider = true;
 
 					if (lineToWrite.StartsWith ("mono.enable_assembly_preload=", StringComparison.Ordinal)) {
 						int idx = lineToWrite.IndexOf ('=');
