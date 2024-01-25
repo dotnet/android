@@ -1299,7 +1299,7 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 }
 
 size_t
-EmbeddedAssemblies::register_from_filesystem ([[maybe_unused]] monodroid_should_register should_register) noexcept
+EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
 
