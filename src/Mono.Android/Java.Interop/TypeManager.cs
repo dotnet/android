@@ -265,9 +265,14 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
+			if (handle == IntPtr.Zero) {
+				throw new NotSupportedException (
+						FormattableString.Invariant ($"Internal error: `handle` is NULL!"),
+						CreateJavaLocationException ());
+			}
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string class_name = GetClassName (class_ptr);
+			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
@@ -279,12 +284,18 @@ namespace Java.Interop {
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
 					JNIEnv.DeleteLocalRef (class_ptr);
+					class_name = null;
 					class_ptr = super_class_ptr;
-					class_name = GetClassName (class_ptr);
+					if (class_ptr != IntPtr.Zero) {
+						class_name = GetClassName (class_ptr);
+					}
 				}
 			}
 
-			JNIEnv.DeleteLocalRef (class_ptr);
+			if (class_ptr != IntPtr.Zero) {
+				JNIEnv.DeleteLocalRef (class_ptr);
+				class_ptr = IntPtr.Zero;
+			}
 
 			if (type == null) {
 				JNIEnv.DeleteRef (handle, transfer);
