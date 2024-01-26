@@ -170,6 +170,10 @@ namespace Xamarin.Android.Tasks
 			if (generateNativeAssembly) {
 				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, outputDirectory);
 			}
+
+			// Debug builds which don't generate native assembly must output data files in architecture-specific
+			// subdirectories, so that fastdev can properly sync them to the device.
+			outputDirectory = Path.Combine (outputDirectory, MonoAndroidHelper.ArchToAbi (state.TargetArch));
 			return GenerateDebugFiles (skipJniAddNativeMethodRegistrationAttributeScan, outputDirectory);
 		}
 
