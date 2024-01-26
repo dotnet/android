@@ -279,7 +279,7 @@ namespace xamarin::android::internal
 		static void  init_internal_api_dso (void *handle);
 #endif // ndef NET
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
-		void create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName);
+		void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
 		void create_xdg_directories_and_environment (jstring_wrapper &homeDir);
 		void disable_external_signal_handlers ();
 		void lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info);

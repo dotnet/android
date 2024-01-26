@@ -357,7 +357,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	bool have_dll_ext = utils.ends_with (name, SharedConstants::DLL_EXTENSION);
 
 	if (have_dll_ext) {
-		len -= sizeof(SharedConstants::DLL_EXTENSION) - 1;
+		len -= SharedConstants::DLL_EXTENSION.length ();
 	}
 
 	hash_t name_hash = xxhash::hash (name.get (), len);

@@ -82,6 +82,11 @@ namespace xamarin::android::internal
 			return equal (s, Size - 1);
 		}
 
+		force_inline bool equal (std::string_view const& s) noexcept
+		{
+			return equal (s.data (), s.length ());
+		}
+
 		force_inline bool starts_with_c (const char *s) const noexcept
 		{
 			if (s == nullptr)
@@ -107,6 +112,11 @@ namespace xamarin::android::internal
 		force_inline bool starts_with (const char (&s)[Size]) const noexcept
 		{
 			return starts_with (s, Size - 1);
+		}
+
+		force_inline bool starts_with (std::string_view const& s) const noexcept
+		{
+			return starts_with (s.data (), s.length ());
 		}
 
 		force_inline bool has_at (const char ch, size_t index) const noexcept
@@ -633,6 +643,11 @@ namespace xamarin::android::internal
 			return starts_with (s, Size - 1);
 		}
 
+		force_inline bool starts_with (std::string_view const& s) noexcept
+		{
+			return starts_with (s.data (), s.length ());
+		}
+
 		force_inline void set_length_after_direct_write (size_t new_length) noexcept
 		{
 			set_length (new_length);
@@ -830,6 +845,12 @@ namespace xamarin::android::internal
 		template<size_t N>
 		explicit dynamic_local_string (const char (&str)[N])
 			: base (N)
+		{
+			base::append (str);
+		}
+
+		explicit dynamic_local_string (std::string_view const& str)
+			: base (str.length ())
 		{
 			base::append (str);
 		}

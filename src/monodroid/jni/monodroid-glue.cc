@@ -478,9 +478,7 @@ MonodroidRuntime::parse_gdb_options ()
 	if (!(androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_GDB_PROPERTY, val) > 0))
 		return;
 
-	constexpr char wait_param[] = "wait:";
-	constexpr size_t wait_param_length = sizeof(wait_param) - 1;
-
+	constexpr std::string_view wait_param { "wait:" };
 	if (val.starts_with (wait_param)) {
 		/*
 		 * The form of the property should be: 'wait:<timestamp>', where <timestamp> should be
@@ -491,7 +489,7 @@ MonodroidRuntime::parse_gdb_options ()
 		 */
 		bool do_wait = true;
 
-		long long v = atoll (val.get () + wait_param_length);
+		long long v = atoll (val.get () + wait_param.length ());
 		if (v > 100000) {
 			time_t secs = time (nullptr);
 
@@ -514,26 +512,22 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 		return true;
 	}
 
-	constexpr char   ARG_DEBUG[]                   = "debug";
-	constexpr size_t ARG_DEBUG_LENGTH              = sizeof(ARG_DEBUG) - 1;
-	constexpr char   ARG_TIMEOUT[]                 = "timeout=";
-	constexpr size_t ARG_TIMEOUT_LENGTH            = sizeof(ARG_TIMEOUT) - 1;
-	constexpr char   ARG_SERVER[]                  = "server=";
-	constexpr size_t ARG_SERVER_LENGTH             = sizeof(ARG_SERVER) - 1;
-	constexpr char   ARG_LOGLEVEL[]                = "loglevel=";
-	constexpr size_t ARG_LOGLEVEL_LENGTH           = sizeof(ARG_LOGLEVEL) - 1;
+	constexpr std::string_view ARG_DEBUG    { "debug" };
+	constexpr std::string_view ARG_TIMEOUT  { "timeout=" };
+	constexpr std::string_view ARG_SERVER   { "server=" };
+	constexpr std::string_view ARG_LOGLEVEL { "loglevel=" };
 
 	bool ret = true;
 	string_segment token;
 	while (runtime_args.next_token (',', token)) {
-		if (token.starts_with (ARG_DEBUG, ARG_DEBUG_LENGTH)) {
+		if (token.starts_with (ARG_DEBUG)) {
 			char *host = nullptr;
 			int sdb_port = 1000, out_port = -1;
 
 			options->debug = true;
 
-			if (token.has_at ('=', ARG_DEBUG_LENGTH)) {
-				constexpr size_t arg_name_length = ARG_DEBUG_LENGTH + 1; // Includes the '='
+			if (token.has_at ('=', ARG_DEBUG.length ())) {
+				constexpr size_t arg_name_length = ARG_DEBUG.length () + 1; // Includes the '='
 
 				static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> hostport (token.length () - arg_name_length);
 				hostport.assign (token.start () + arg_name_length, token.length () - arg_name_length);
@@ -564,7 +558,7 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 					}
 					field++;
 				}
-			} else if (!token.has_at ('\0', ARG_DEBUG_LENGTH)) {
+			} else if (!token.has_at ('\0', ARG_DEBUG.length ())) {
 				log_error (LOG_DEFAULT, "Invalid --debug argument.");
 				ret = false;
 				continue;
@@ -588,15 +582,15 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 			options->host = host;
 			options->sdb_port = static_cast<uint16_t>(sdb_port);
 			options->out_port = out_port == -1 ? 0 : static_cast<uint16_t>(out_port);
-		} else if (token.starts_with (ARG_TIMEOUT, ARG_TIMEOUT_LENGTH)) {
-			if (!token.to_integer (options->timeout_time, ARG_TIMEOUT_LENGTH)) {
+		} else if (token.starts_with (ARG_TIMEOUT)) {
+			if (!token.to_integer (options->timeout_time, ARG_TIMEOUT.length ())) {
 				log_error (LOG_DEFAULT, "Invalid --timeout argument.");
 				ret = false;
 			}
-		} else if (token.starts_with (ARG_SERVER, ARG_SERVER_LENGTH)) {
-			options->server = token.has_at ('y', ARG_SERVER_LENGTH) || token.has_at ('Y', ARG_SERVER_LENGTH);
-		} else if (token.starts_with (ARG_LOGLEVEL, ARG_LOGLEVEL_LENGTH)) {
-			if (!token.to_integer (options->loglevel, ARG_LOGLEVEL_LENGTH)) {
+		} else if (token.starts_with (ARG_SERVER)) {
+			options->server = token.has_at ('y', ARG_SERVER.length ()) || token.has_at ('Y', ARG_SERVER.length ());
+		} else if (token.starts_with (ARG_LOGLEVEL)) {
+			if (!token.to_integer (options->loglevel, ARG_LOGLEVEL.length ())) {
 				log_error (LOG_DEFAULT, "Invalid --loglevel argument.");
 				ret = false;
 			}
@@ -705,8 +699,8 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		}
 
 		if (debug.enable_soft_breakpoints ()) {
-			constexpr char soft_breakpoints[] = "--soft-breakpoints";
-			debug_options[1] = const_cast<char*> (soft_breakpoints);
+			constexpr std::string_view soft_breakpoints { "--soft-breakpoints" };
+			debug_options[1] = const_cast<char*> (soft_breakpoints.data ());
 			mono_jit_parse_options (2, debug_options);
 		} else {
 			mono_jit_parse_options (1, debug_options);
@@ -951,8 +945,8 @@ MonodroidRuntime::init_android_runtime (
 #endif // ndef NET
 	JNIEnv *env, jclass runtimeClass, jobject loader)
 {
-	constexpr char icall_typemap_java_to_managed[] = "Java.Interop.TypeManager::monodroid_typemap_java_to_managed";
-	constexpr char icall_typemap_managed_to_java[] = "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java";
+	constexpr std::string_view icall_typemap_java_to_managed { "Java.Interop.TypeManager::monodroid_typemap_java_to_managed" };
+	constexpr std::string_view icall_typemap_managed_to_java { "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java" };
 
 #if defined (RELEASE) && defined (ANDROID)
 	// The reason for these using is that otherwise the compiler will complain about not being
@@ -960,11 +954,11 @@ MonodroidRuntime::init_android_runtime (
 	using j2mFn = MonoReflectionType* (*)(MonoString *java_type);
 	using m2jFn = const char* (*)(MonoReflectionType *type, const uint8_t *mvid);
 
-	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(static_cast<j2mFn>(EmbeddedAssemblies::typemap_java_to_managed)));
-	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(static_cast<m2jFn>(EmbeddedAssemblies::typemap_managed_to_java)));
+	mono_add_internal_call (icall_typemap_java_to_managed.data (), reinterpret_cast<const void*>(static_cast<j2mFn>(EmbeddedAssemblies::typemap_java_to_managed)));
+	mono_add_internal_call (icall_typemap_managed_to_java.data (), reinterpret_cast<const void*>(static_cast<m2jFn>(EmbeddedAssemblies::typemap_managed_to_java)));
 #else
-	mono_add_internal_call (icall_typemap_java_to_managed, reinterpret_cast<const void*>(typemap_java_to_managed));
-	mono_add_internal_call (icall_typemap_managed_to_java, reinterpret_cast<const void*>(typemap_managed_to_java));
+	mono_add_internal_call (icall_typemap_java_to_managed.data (), reinterpret_cast<const void*>(typemap_java_to_managed));
+	mono_add_internal_call (icall_typemap_managed_to_java.data (), reinterpret_cast<const void*>(typemap_managed_to_java));
 #endif // def RELEASE && def ANDROID
 
 #if defined (NET)
@@ -1484,16 +1478,17 @@ MonodroidRuntime::set_environment_variable_for_directory (const char *name, jstr
 }
 
 inline void
-MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, const char *relativePath, size_t relative_path_len, const char *environmentVariableName)
+MonodroidRuntime::create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept
 {
-	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path_len);
-	utils.path_combine (dir, home.get_cstr (), home_len, relativePath, relative_path_len);
+	static_local_string<SENSIBLE_PATH_MAX> dir (home_len + relative_path.length ());
+	utils.path_combine (dir, home.get_cstr (), home_len, relative_path.data (), relative_path.length ());
 	log_debug (LOG_DEFAULT, "Creating XDG directory: %s", dir.get ());
 	int rv = utils.create_directory (dir.get (), DEFAULT_DIRECTORY_MODE);
 	if (rv < 0 && errno != EEXIST)
 		log_warn (LOG_DEFAULT, "Failed to create XDG directory %s. %s", dir.get (), strerror (errno));
-	if (environmentVariableName)
-		setenv (environmentVariableName, dir.get (), 1);
+	if (!environment_variable_name.empty ()) {
+		setenv (environment_variable_name.data (), dir.get (), 1);
+	}
 }
 
 inline void
@@ -1501,15 +1496,13 @@ MonodroidRuntime::create_xdg_directories_and_environment (jstring_wrapper &homeD
 {
 	size_t home_len = strlen (homeDir.get_cstr ());
 
-	constexpr char XDG_DATA_HOME[] = "XDG_DATA_HOME";
-	constexpr char HOME_PATH[] = ".local/share";
-	constexpr size_t HOME_PATH_LEN = sizeof(HOME_PATH) - 1;
-	create_xdg_directory (homeDir, home_len, HOME_PATH, HOME_PATH_LEN, XDG_DATA_HOME);
+	constexpr std::string_view XDG_DATA_HOME { "XDG_DATA_HOME" };
+	constexpr std::string_view HOME_PATH { ".local/share" };
+	create_xdg_directory (homeDir, home_len, HOME_PATH, XDG_DATA_HOME);
 
-	constexpr char XDG_CONFIG_HOME[] = "XDG_CONFIG_HOME";
-	constexpr char CONFIG_PATH[] = ".config";
-	constexpr size_t CONFIG_PATH_LEN = sizeof(CONFIG_PATH) - 1;
-	create_xdg_directory (homeDir, home_len, CONFIG_PATH, CONFIG_PATH_LEN, XDG_CONFIG_HOME);
+	constexpr std::string_view XDG_CONFIG_HOME { "XDG_CONFIG_HOME" };
+	constexpr std::string_view CONFIG_PATH { ".config" };
+	create_xdg_directory (homeDir, home_len, CONFIG_PATH, XDG_CONFIG_HOME);
 }
 
 #if DEBUG
@@ -1533,12 +1526,12 @@ MonodroidRuntime::set_debug_env_vars (void)
 		size_t index = static_cast<size_t>(idx);
 		if (idx < 0 || index == arg.length () - 1) {
 			// ’name’ or ’name=’
-			constexpr char one[] = "1";
+			constexpr std::string_view one { "1" };
 			if (index == arg.length () - 1) {
 				arg[index] = '\0';
 			}
-			setenv (arg.get (), one, 1);
-			log_envvar (arg.get (), one);
+			setenv (arg.get (), one.data (), 1);
+			log_envvar (arg.get (), one.data ());
 		} else if (index == 0) {
 			// ’=value’
 			log_warn (LOG_DEFAULT, "Attempt to set environment variable without specifying name: '%s'", arg.get ());
@@ -1580,16 +1573,15 @@ MonodroidRuntime::set_profile_options ()
 
 	// NET+ supports only the AOT Mono profiler, if the prefix is absent or different than 'aot:' we consider the
 	// property to contain value for the dotnet tracing profiler.
-	constexpr char AOT_PREFIX[] = "aot:";
+	constexpr std::string_view AOT_PREFIX { "aot:" };
 	if (!value.starts_with (AOT_PREFIX)) {
 		// setenv(3) makes copies of its arguments
 		setenv ("DOTNET_DiagnosticPorts", value.get (), 1);
 		return;
 	}
 
-	constexpr char OUTPUT_ARG[] = "output=";
-	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
-	constexpr size_t start_index = sizeof(AOT_PREFIX); // one char past ':'
+	constexpr std::string_view OUTPUT_ARG { "output=" };
+	constexpr size_t start_index = AOT_PREFIX.length () + 1; // one char past ':'
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
 	bool have_output_arg = false;
@@ -1602,14 +1594,14 @@ MonodroidRuntime::set_profile_options ()
 			continue;
 		}
 
-		output_path.assign (param.start () + OUTPUT_ARG_LEN, param.length () - OUTPUT_ARG_LEN);
+		output_path.assign (param.start () + OUTPUT_ARG.length (), param.length () - OUTPUT_ARG.length ());
 		have_output_arg = true;
 		break;
 	}
 
 	if (!have_output_arg) {
-		constexpr char PROFILE_FILE_NAME_PREFIX[] = "profile.";
-		constexpr char AOT_EXT[] = "aotprofile";
+		constexpr std::string_view PROFILE_FILE_NAME_PREFIX { "profile." };
+		constexpr std::string_view AOT_EXT { "aotprofile" };
 
 		output_path
 			.assign_c (AndroidSystem::override_dirs [0])
@@ -1641,8 +1633,7 @@ MonodroidRuntime::set_profile_options ()
 		value.assign (prop_value.get (), prop_value.length ());
 	}
 
-	constexpr char OUTPUT_ARG[] = "output=";
-	constexpr size_t OUTPUT_ARG_LEN = sizeof(OUTPUT_ARG) - 1;
+	constexpr std::string_view OUTPUT_ARG { "output=" };
 
 	ssize_t colon_idx = value.index_of (':');
 	size_t start_index = colon_idx < 0 ? 0 : static_cast<size_t>(colon_idx + 1);
@@ -1663,18 +1654,14 @@ MonodroidRuntime::set_profile_options ()
 	}
 
 	if (!have_output_arg) {
-		constexpr char   MLPD_EXT[] = "mlpd";
-		constexpr char   AOT_EXT[] = "aotprofile";
-		constexpr char   COV_EXT[] = "xml";
-		constexpr char   LOG_PREFIX[] = "log:";
-		constexpr size_t LOG_PREFIX_LENGTH = sizeof(LOG_PREFIX) - 1;
-		constexpr char   AOT_PREFIX[] = "aot:";
-		constexpr size_t AOT_PREFIX_LENGTH = sizeof(AOT_PREFIX) - 1;
-		constexpr char   DEFAULT_PREFIX[] = "default:";
-		constexpr size_t DEFAULT_PREFIX_LENGTH = sizeof(DEFAULT_PREFIX) - 1;
-		constexpr char   COVERAGE_PREFIX[] = "coverage:";
-		constexpr size_t COVERAGE_PREFIX_LENGTH = sizeof(COVERAGE_PREFIX) - 1;
-		constexpr char   PROFILE_FILE_NAME_PREFIX[] = "profile.";
+		constexpr std::string_view   MLPD_EXT { "mlpd" };
+		constexpr std::string_view   AOT_EXT { "aotprofile" };
+		constexpr std::string_view   COV_EXT { "xml" };
+		constexpr std::string_view   LOG_PREFIX { "log:" };
+		constexpr std::string_view   AOT_PREFIX { "aot:" };
+		constexpr std::string_view   DEFAULT_PREFIX { "default:" };
+		constexpr std::string_view   COVERAGE_PREFIX { "coverage:" };
+		constexpr std::string_view   PROFILE_FILE_NAME_PREFIX { "profile." };
 
 		size_t length_adjust = colon_idx >= 1 ? 0 : 1;
 
@@ -1777,10 +1764,9 @@ MonodroidRuntime::load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, jst
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
-		constexpr char PREFIX[] = " (ALC): ";
-		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+		constexpr std::string_view PREFIX { " (ALC): " };
 
-		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
+		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX.length ()> more_info { PREFIX };
 		more_info.append_c (assm_name);
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
@@ -1824,7 +1810,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 	if (XA_UNLIKELY (FastTiming::enabled ())) {
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
-		constexpr char PREFIX[] = " (domain): ";
+		constexpr std::string_view PREFIX { " (domain): " };
 		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
 
 		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
@@ -1977,13 +1963,10 @@ MonodroidRuntime::get_my_location (bool remove_file_name)
 force_inline void
 MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_mask, bool have_log_assembly, bool have_log_gc)
 {
-	constexpr char   MASK_ASM[] = "asm";
-	constexpr size_t MASK_ASM_LEN = sizeof(MASK_ASM) - 1;
-	constexpr char   MASK_DLL[] = "dll";
-	constexpr size_t MASK_DLL_LEN = sizeof(MASK_DLL) - 1;
-	constexpr char   MASK_GC[] = "gc";
-	constexpr size_t MASK_GC_LEN = sizeof(MASK_GC) - 1;
-	constexpr char   COMMA[] = ",";
+	constexpr std::string_view MASK_ASM { "asm" };
+	constexpr std::string_view MASK_DLL { "dll" };
+	constexpr std::string_view MASK_GC  { "gc" };
+	constexpr std::string_view COMMA    { "," };
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> log_mask;
 	if (mono_log_mask == nullptr || *mono_log_mask.get () == '\0') {
@@ -2018,11 +2001,11 @@ MonodroidRuntime::setup_mono_tracing (std::unique_ptr<char[]> const& mono_log_ma
 
 	string_segment token;
 	while (input_log_mask.next_token (',', token)) {
-		if (need_asm && token.equal (MASK_ASM, MASK_ASM_LEN)) {
+		if (need_asm && token.equal (MASK_ASM)) {
 			need_asm = false;
-		} else if (need_dll && token.equal (MASK_DLL, MASK_DLL_LEN)) {
+		} else if (need_dll && token.equal (MASK_DLL)) {
 			need_dll = false;
-		} else if (need_gc && token.equal (MASK_GC, MASK_GC_LEN)) {
+		} else if (need_gc && token.equal (MASK_GC)) {
 			need_gc = false;
 		}
 
