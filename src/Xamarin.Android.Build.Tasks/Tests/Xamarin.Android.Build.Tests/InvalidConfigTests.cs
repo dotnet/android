@@ -58,16 +58,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void EolFrameworks()
+		public void EolFrameworks ([Values ("net6.0-android", "net7.0-android")] string targetFramework)
 		{
 			var library = new XamarinAndroidLibraryProject () {
-				TargetFramework = "net6.0-android",
+				TargetFramework = targetFramework,
 				EnableDefaultItems = true,
 			};
 			var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Restore (library), $"{library.ProjectName} restore should fail");
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "NETSDK1202"), $"{builder.BuildLogFile} should have NETSDK1202.");
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, $"NETSDK1202: The workload '{targetFramework}' is out of support"), $"{builder.BuildLogFile} should have NETSDK1202.");
 		}
 
 		[Test]
