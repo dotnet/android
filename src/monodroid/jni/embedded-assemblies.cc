@@ -685,17 +685,21 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 		if (module->image == nullptr) {
 			log_debug (LOG_ASSEMBLY, "typemap: assembly '%s' hasn't been loaded yet, attempting a full load", module->assembly_name);
 
-			// Trigger MonoVM's machinery to load an image. This will involve calling us back to find, uncompress (if
-            // necessary) and load the assembly from whatever storage the app uses.
-			dynamic_local_string<SENSIBLE_PATH_MAX> assembly_name;
-			assembly_name.assign_c (module->assembly_name);
-			assembly_name.append (SharedConstants::DLL_EXTENSION);
+			// Fake a request from MonoVM to load the assembly.
+			MonoAssemblyName *assembly_name = mono_assembly_name_new (module->assembly_name);
+			MonoAssembly *assm;
 
-			MonoImageOpenStatus status{};
-			MonoAssembly *assm = mono_assembly_open (assembly_name.get (), &status);
+			if (assembly_name == nullptr) {
+				log_error (LOG_ASSEMBLY, "typemap: failed to create Mono assembly name for '%s'", module->assembly_name);
+				assm = nullptr;
+			} else {
+				MonoAssemblyLoadContextGCHandle alc_gchandle = mono_alc_get_default_gchandle ();
+				MonoError mono_error;
+				assm = embeddedAssemblies.open_from_bundles (assembly_name, alc_gchandle, &mono_error, false /* ref_only */);
+			}
 
-			if (status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly '%s'. %s", assembly_name.get (), mono_image_strerror (status));
+			if (assm == nullptr) {
+				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly '%s'", module->assembly_name);
 			} else {
 				module->image = mono_assembly_get_image (assm);
 			}
