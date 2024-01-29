@@ -171,13 +171,17 @@ namespace Xamarin.Android.Tasks
 				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, outputDirectory);
 			}
 
-			// Debug builds which don't generate native assembly must output data files in architecture-specific
+			// Debug builds which don't put typemaps in native assembly must output data files in architecture-specific
 			// subdirectories, so that fastdev can properly sync them to the device.
-			outputDirectory = Path.Combine (outputDirectory, MonoAndroidHelper.ArchToAbi (state.TargetArch));
-			return GenerateDebugFiles (skipJniAddNativeMethodRegistrationAttributeScan, outputDirectory);
+			// The (empty) native assembly files, however, must still be generated in the usual directory.
+			return GenerateDebugFiles (
+				skipJniAddNativeMethodRegistrationAttributeScan,
+				typemapFilesOutputDirectory: Path.Combine (outputDirectory, MonoAndroidHelper.ArchToAbi (state.TargetArch)),
+				llFilesOutputDirectory: outputDirectory
+			);
 		}
 
-		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, string outputDirectory)
+		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, string typemapFilesOutputDirectory, string llFilesOutputDirectory)
 		{
 			var modules = new Dictionary<string, ModuleDebugData> (StringComparer.Ordinal);
 			int maxModuleFileNameWidth = 0;
@@ -197,7 +201,7 @@ namespace Xamarin.Android.Tasks
 						ManagedNameWidth = 0,
 						JavaToManagedMap = new List<TypeMapDebugEntry> (),
 						ManagedToJavaMap = new List<TypeMapDebugEntry> (),
-						OutputFilePath = Path.Combine (outputDirectory, outputFileName),
+						OutputFilePath = Path.Combine (typemapFilesOutputDirectory, outputFileName),
 						ModuleName = moduleName,
 						ModuleNameBytes = outputEncoding.GetBytes (moduleName),
 					};
@@ -228,7 +232,7 @@ namespace Xamarin.Android.Tasks
 				PrepareDebugMaps (module);
 			}
 
-			string typeMapIndexPath = Path.Combine (outputDirectory, "typemap.index");
+			string typeMapIndexPath = Path.Combine (typemapFilesOutputDirectory, "typemap.index");
 			using (var indexWriter = MemoryStreamPool.Shared.CreateBinaryWriter ()) {
 				OutputModules (modules, indexWriter, maxModuleFileNameWidth + 1);
 				indexWriter.Flush ();
@@ -237,7 +241,7 @@ namespace Xamarin.Android.Tasks
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
 			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
-			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
+			GenerateNativeAssembly (composer, composer.Construct (), llFilesOutputDirectory);
 
 			return true;
 		}
