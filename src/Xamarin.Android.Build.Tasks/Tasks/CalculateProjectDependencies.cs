@@ -35,6 +35,8 @@ namespace Xamarin.Android.Tasks
 
 		public string JdkVersion { get; set; }
 
+		public bool GetJavaDependencies { get; set; } = false;
+
 		[Output]
 		public ITaskItem [] Dependencies { get; set; }
 
@@ -75,7 +77,7 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (NdkVersion) && NdkRequired) {
 				dependencies.Add (CreateAndroidDependency ("ndk-bundle", NdkVersion));
 			}
-			if (!string.IsNullOrEmpty (JdkVersion)) {
+			if (!string.IsNullOrEmpty (JdkVersion) && GetJavaDependencies) {
 				javaDependencies.Add (CreateAndroidDependency ("jdk", JdkVersion));
 			}
 			Dependencies = dependencies.ToArray ();
