@@ -153,7 +153,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void GetDependencyWhenSDKIsMissingTest ([Values (true, false)] bool createSdkDirectory, [Values (true, false)] bool getJavaDeps)
+		public void GetDependencyWhenSDKIsMissingTest ([Values (true, false)] bool createSdkDirectory, [Values (true, false)] bool installJavaDeps)
 		{
 			var apis = new ApiInfo [] {
 			};
@@ -173,7 +173,7 @@ namespace Xamarin.Android.Build.Tests
 				$"TargetFrameworkRootPath={referencesPath}",
 				$"AndroidSdkDirectory={androidSdkPath}",
 				$"JavaSdkVersion={requestedJdkVersion}",
-				$"AndroidGetJavaDependencies={getJavaDeps}",
+				$"AndroidInstallJavaDependencies={installJavaDeps}",
 			};
 
 			string buildToolsVersion = GetExpectedBuildToolsVersion ();
@@ -186,7 +186,7 @@ namespace Xamarin.Android.Build.Tests
 				StringAssertEx.Contains ($"platforms/android-{apiLevel}", builder.LastBuildOutput, $"platforms/android-{apiLevel} should be a dependency.");
 				StringAssertEx.Contains ($"build-tools/{buildToolsVersion}", builder.LastBuildOutput, $"build-tools/{buildToolsVersion} should be a dependency.");
 				StringAssertEx.Contains ("platform-tools", builder.LastBuildOutput, "platform-tools should be a dependency.");
-				if (getJavaDeps)
+				if (installJavaDeps)
 					StringAssertEx.ContainsRegex ($@"JavaDependency=\s*jdk\s*Version={requestedJdkVersion}", builder.LastBuildOutput, $"jdk {requestedJdkVersion} should be a dependency.");
 				else
 					StringAssertEx.DoesNotContainRegex ($@"JavaDependency=\s*jdk\s*Version={requestedJdkVersion}", builder.LastBuildOutput, $"jdk {requestedJdkVersion} should not be a dependency.");
