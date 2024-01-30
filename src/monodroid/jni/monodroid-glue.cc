@@ -352,7 +352,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 
 		if (exists) {
 			log_info (LOG_ASSEMBLY, "should not register '%s' as it exists in the override directory '%s'", filename, odir);
-			return !exists;
+			return false;
 		}
 	}
 #endif

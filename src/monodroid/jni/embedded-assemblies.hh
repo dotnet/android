@@ -203,6 +203,9 @@ namespace xamarin::android::internal {
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
 		size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
 		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
+		size_t register_from_filesystem (const char *dir, bool look_for_mangled_names, monodroid_should_register should_register) noexcept;
+
+		template<bool MangledNamesMode>
 		bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
 		bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
 

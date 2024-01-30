@@ -470,6 +470,11 @@ namespace Xamarin.Android.Tasks
 
 			void DoAddAssembliesFromArchCollection (Dictionary<string, ITaskItem> assemblies)
 			{
+				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
+				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
+				// For this reason, they have to be treated just like other .so files, as far as compression rules are concerned.
+				// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
+				// or not we're supposed to compress .so files.
 				foreach (ITaskItem assembly in assemblies.Values) {
 					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
 						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
@@ -482,7 +487,7 @@ namespace Xamarin.Android.Tasks
 					if (UseAssemblyStore) {
 						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assembly);
 					} else {
-						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath, compressionMethod: UncompressedMethod);
+						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
 					}
 
 					// Try to add config if exists
@@ -508,11 +513,12 @@ namespace Xamarin.Android.Tasks
 							if (UseAssemblyStore) {
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
+								string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
 								AddFileToArchiveIfNewer (
 									apk,
 									symbolsPath,
-									assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols)),
-									compressionMethod: UncompressedMethod
+									archiveSymbolsPath,
+									compressionMethod: GetCompressionMethod (archiveSymbolsPath)
 								);
 							}
 						}
@@ -605,7 +611,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			CompressionMethod compressionMethod = UncompressedMethod;
+			CompressionMethod compressionMethod = GetCompressionMethod (inArchivePath);
 			if (apk.SkipExistingFile (configFile, inArchivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {configFile} as the archive file is up to date.");
 				return;

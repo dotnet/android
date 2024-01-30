@@ -195,10 +195,10 @@ partial class MonoAndroidHelper
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
 		if (!String.IsNullOrEmpty (culture)) {
-			return $"%{culture}%{name}{MANGLED_ASSEMBLY_NAME_EXT}";
+			return $"_{culture}_{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 
-		return $"#{name}{MANGLED_ASSEMBLY_NAME_EXT}";
+		return $"__{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 	}
 
 	public static ulong GetMangledAssemblyNameSizeOverhead () => (ulong)MANGLED_ASSEMBLY_NAME_EXT.Length + 1;

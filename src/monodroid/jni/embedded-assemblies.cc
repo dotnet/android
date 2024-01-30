@@ -1239,6 +1239,7 @@ EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_re
 	return number_of_found_assemblies;
 }
 
+template<bool MangledNamesMode>
 force_inline bool
 EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	[[maybe_unused]] monodroid_should_register should_register,
@@ -1255,17 +1256,21 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 		state.file_name = dir_entry->d_name;
 	};
 
-	// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
-	if (dir_entry->d_name[0] == '#') {
-		assembly_count++;
-		copy_dentry_and_update_state (entry_name, state, dir_entry);
-		unmangle_name<UnmangleRegularAssembly> (entry_name);
-	} else if (dir_entry->d_name[0] == '%') {
-		assembly_count++;
-		copy_dentry_and_update_state (entry_name, state, dir_entry);
-		unmangle_name<UnmangleSatelliteAssembly> (entry_name);
+	if constexpr (MangledNamesMode) {
+		// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
+		if (dir_entry->d_name[0] == '#') {
+			assembly_count++;
+			copy_dentry_and_update_state (entry_name, state, dir_entry);
+			unmangle_name<UnmangleRegularAssembly> (entry_name);
+		} else if (dir_entry->d_name[0] == '%') {
+			assembly_count++;
+			copy_dentry_and_update_state (entry_name, state, dir_entry);
+			unmangle_name<UnmangleSatelliteAssembly> (entry_name);
+		} else {
+			return false;
+		}
 	} else {
-		return false;
+		// TODO: check for .dll and .pdb extensions
 	}
 	state.data_offset = 0;
 
@@ -1313,12 +1318,10 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	return true;
 }
 
-size_t
-EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
+force_inline size_t
+EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look_for_mangled_names, monodroid_should_register should_register) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
-
-	const char *lib_dir_path = androidSystem.app_lib_directories[0];
+	log_debug (LOG_ASSEMBLY, "Looking for assemblies in '%s'", lib_dir_path);
 	DIR *lib_dir = opendir (lib_dir_path); // TODO: put it in a scope guard at some point
 	if (lib_dir == nullptr) {
 		log_warn (LOG_ASSEMBLY, "Unable to open app library directory '%s': %s", lib_dir_path, std::strerror (errno));
@@ -1343,9 +1346,12 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 	}
 
 	auto register_fn =
-		application_config.have_assembly_store ?
-		std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem) :
-		std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem);
+		application_config.have_assembly_store ? std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem) :
+		(look_for_mangled_names ?
+		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<true>) :
+		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<false>
+		)
+	);
 
 	size_t assembly_count = 0;
 	do {
@@ -1363,6 +1369,13 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 		if (cur->d_name[0] == '.') {
 			continue;
 		}
+
+#if defined (DEBUG)
+		if (!should_register (cur->d_name)) {
+			log_debug (LOG_ASSEMBLY, "In Debug build, '%s' should not be registered", cur->d_name);
+			continue;
+		}
+#endif // def DEBUG
 
 		// ...and we can handle the runtime config entry
 		if (!runtime_config_blob_found && std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME, sizeof (SharedConstants::RUNTIME_CONFIG_BLOB_NAME) - 1) == 0) {
@@ -1388,6 +1401,31 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 		}
 	} while (true);
 	closedir (lib_dir);
+
+	return assembly_count;
+}
+
+size_t
+EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
+{
+	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
+
+	constexpr bool LookForMangledNames = true;
+	size_t assembly_count = register_from_filesystem (
+		androidSystem.app_lib_directories[0],
+		LookForMangledNames,
+		should_register
+	);
+
+#if defined(DEBUG)
+	constexpr bool DoNotLookForMangledNames = false;
+
+	assembly_count += register_from_filesystem (
+		androidSystem.get_primary_override_dir (),
+		DoNotLookForMangledNames,
+		should_register
+	);
+#endif
 
 	log_debug (LOG_ASSEMBLY, "Found %zu assemblies on the filesystem", assembly_count);
 	return assembly_count;
