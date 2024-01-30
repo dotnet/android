@@ -99,7 +99,7 @@ BasicAndroidSystem::determine_primary_override_dir (jstring_wrapper &home)
 	dir.append (MONODROID_PATH_SEPARATOR);
 	dir.append (".__override__");
 	dir.append (MONODROID_PATH_SEPARATOR);
-	dir.append (SharedConstants::android_abi);
+	dir.append (SharedConstants::android_lib_abi);
 
 	return utils.strdup_new (dir.get ());
 }
