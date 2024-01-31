@@ -499,6 +499,23 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
+<Target Name="_CheckUnsupportedPackages"
+    Condition=" '$(_AndroidIgnoreAndroidSupportWarning)' != 'true' "
+    AfterTargets="ResolvePackageAssets">
+  <ItemGroup>
+    <_AndroidUnsupportedPackages
+        Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
+    />
+  </ItemGroup>
+  <AndroidWarning Code="XA1039"
+      ResourceName="XA1039"
+      Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
+  />
+</Target>
+
 <Target Name="_CheckNonIdealConfigurations">
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AOT"
@@ -865,10 +882,17 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckDuplicateJavaLibraries" DependsOnTargets="_GetLibraryImports">
+  <ItemGroup>
+    <_AndroidExcludedDuplicateJavaLibraries Include="classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="r-classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="repackaged.jar" />
+  </ItemGroup>
   <CheckDuplicateJavaLibraries
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
-    LibraryProjectJars="@(ExtractedJarImports)" />
+    LibraryProjectJars="@(ExtractedJarImports)"
+    ExcludedFiles="@(_AndroidExcludedDuplicateJavaLibraries)"
+  />
 </Target>
 
 <Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
@@ -1940,7 +1964,7 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
-    <_ProguardConfiguration Include="$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt" />
+    <_ProguardConfiguration Include="$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt"     Condition=" Exists ('$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />

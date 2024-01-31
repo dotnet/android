@@ -947,4 +947,8 @@ In this message, the term "handheld app" means "app for handheld devices."
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Android 지원 라이브러리는 .NET 9 이상에서 지원되지 않습니다. AndroidX로 마이그레이션하세요. 자세한 내용은 https://aka.ms/xamarin/androidx 페이지를 참조하세요.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
 </root>

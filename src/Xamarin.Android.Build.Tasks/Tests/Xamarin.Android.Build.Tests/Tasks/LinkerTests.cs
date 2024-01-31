@@ -517,6 +517,40 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void PreserveIX509TrustManagerSubclasses ([Values(true, false)] bool hasServerCertificateCustomValidationCallback)
+		{
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				(hasServerCertificateCustomValidationCallback
+					? "var handler = new Xamarin.Android.Net.AndroidMessageHandler { ServerCertificateCustomValidationCallback = (message, certificate, chain, errors) => true };\n"
+					: "var handler = new Xamarin.Android.Net.AndroidMessageHandler();\n") +
+				"var client = new System.Net.Http.HttpClient (handler);\n" +
+				"client.GetAsync (\"https://microsoft.com\").GetAwaiter ().GetResult ();");
+
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var assemblyPath = BuildTest.GetLinkedPath (b, true, "Mono.Android.dll");
+
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var types = new[] { "Javax.Net.Ssl.X509ExtendedTrustManager", "Javax.Net.Ssl.IX509TrustManagerInvoker" };
+					foreach (var typeName in types) {
+						var td = assembly.MainModule.GetType (typeName);
+						if (hasServerCertificateCustomValidationCallback) {
+							Assert.IsNotNull (td, $"{typeName} shouldn't have been linked out");
+						} else {
+							Assert.IsNull (td, $"{typeName} should have been linked out");
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
 		{
 			if (!Builder.UseDotNet)

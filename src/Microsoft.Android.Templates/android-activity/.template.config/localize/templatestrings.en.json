@@ -2,5 +2,6 @@
   "author": "Microsoft",
   "name": "Android Activity template",
   "description": "An Android Activity class",
-  "symbols/namespace/description": "namespace for the generated code"
+  "symbols/namespace/description": "namespace for the generated code",
+  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
 }

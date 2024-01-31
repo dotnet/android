@@ -947,4 +947,8 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Android Destek kitaplıkları .NET 9 ve sonraki sürümlerde desteklenmiyor, lütfen AndroidX'e geçin. Daha fazla ayrıntı için https://aka.ms/xamarin/androidx adresini ziyaret edin.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
 </root>

@@ -947,4 +947,8 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - An Android Resource Identifier.
     </comment>
   </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Le librerie di supporto Android non sono supportate in .NET 9 e versioni successive. Esegui la migrazione ad AndroidX. Per altri dettagli, vedi https://aka.ms/xamarin/androidx.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
 </root>
