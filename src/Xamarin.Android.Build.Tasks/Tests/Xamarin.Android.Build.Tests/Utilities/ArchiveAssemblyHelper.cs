@@ -250,11 +250,16 @@ namespace Xamarin.Android.Build.Tests
 		{
 			List<string> contents = ListArchiveContents (assembliesRootDir, forceRefresh, arch);
 
-			// We must count only .dll.so entries starting with the '#' character, as they are the actual managed assemblies.
+			// We must count only .dll.so entries starting with the '-' and '_' characters, as they are the actual managed assemblies.
 			// Other entries in `lib/{arch}` might be AOT shared libraries, which will also have the .dll.so extension.
 			var dlls = contents.Where (x => {
 				string fileName = Path.GetFileName (x);
-				return fileName[0] == '#' && fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase);
+				if (!fileName.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
+					return false;
+				}
+
+				return fileName.StartsWith (MonoAndroidHelper.MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER, StringComparison.OrdinalIgnoreCase) ||
+				       fileName.StartsWith (MonoAndroidHelper.MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER, StringComparison.OrdinalIgnoreCase);
 			});
 
 			return dlls.Count ();
@@ -319,7 +324,7 @@ namespace Xamarin.Android.Build.Tests
 					break;
 			}
 
-			char fileTypeMarker = '#';
+			string fileTypeMarker = MonoAndroidHelper.MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER;
 			var abis = new List<string> ();
 			if (!String.IsNullOrEmpty (abi)) {
 				abis.Add (abi);
@@ -334,8 +339,8 @@ namespace Xamarin.Android.Build.Tests
 			if (!String.IsNullOrEmpty (culture)) {
 				// Android doesn't allow us to put satellite assemblies in lib/{CULTURE}/assembly.dll.so, we must instead
 				// mangle the name.
-				fileName = $"{culture}%{fileName}";
-				fileTypeMarker = '%';
+				fileTypeMarker = MonoAndroidHelper.MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER;
+				fileName = $"{culture}{fileTypeMarker}-{fileName}";
 			}
 
 			var ret = new List<string> ();
@@ -478,23 +483,6 @@ namespace Xamarin.Android.Build.Tests
 			{
 				(string prefixAssemblies, string prefixLib) = GetArchivePrefixes (abi);
 				return existingFiles.Where (x => !fileNames.Contains (x.Replace (prefixAssemblies, string.Empty)) && !fileNames.Contains (x.Replace (prefixLib, String.Empty)));
-			}
-
-			string GetUnmangledFileName (string fullName)
-			{
-				string fileName = Path.GetFileName (fullName);
-				switch(fileName[0]) {
-					case '#':
-						// Drop the '#' prefix and the .so extension
-						return Path.GetFileNameWithoutExtension (fileName.Substring (1));
-
-					case '%':
-						// Drop the '%' prefix, replace the following '%s' with `/` to get a culture/Assembly file name and drop the .so extension
-						return Path.GetFileNameWithoutExtension (fileName.Substring (1).Replace ('%', '/'));
-
-					default:
-						return fileName;
-				}
 			}
 		}
 

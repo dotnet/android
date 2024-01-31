@@ -106,11 +106,9 @@ namespace xamarin::android::internal {
 		static constexpr uint32_t number_of_assembly_store_files = 1;
 		static constexpr char dso_suffix[] = ".so";
 		static constexpr char apk_lib_dir_name[] = "lib";
-		static constexpr char regular_assembly_marker = '#';
-		static constexpr char satellite_assembly_marker = '%';
 		static constexpr auto apk_lib_prefix = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-		static constexpr auto assembly_store_file_name = concat_const ("assemblies.", SharedConstants::android_lib_abi, ".blob.so");
-		static constexpr auto assembly_store_file_path = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "assemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr auto assembly_store_file_name = concat_const ("libassemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr auto assembly_store_file_path = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "libassemblies.", SharedConstants::android_lib_abi, ".blob.so");
 
 #if defined (DEBUG) || !defined (ANDROID)
 		static constexpr char override_typemap_entry_name[] = ".__override__";
@@ -339,26 +337,55 @@ namespace xamarin::android::internal {
 		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
 		void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
 
+		constexpr size_t get_mangled_name_max_size_overhead ()
+		{
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT_LEN +
+				   std::max (SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN, SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN) +
+				   1; // For the extra `-` char in the culture portion of satellite assembly's name
+		}
+
 		void configure_state_for_individual_assembly_load (ZipEntryLoadState& state) noexcept
 		{
 			state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
 			state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
 
 			// Enough room for the mangle character at the start, plus the extra extension
-			state.max_assembly_file_name_size = state.max_assembly_name_size + MANGLED_ASSEMBLY_NAME_EXT.length () + 1;
+			state.max_assembly_file_name_size = static_cast<uint32_t>(state.max_assembly_name_size + get_mangled_name_max_size_overhead ());
+		}
+
+		template<bool IsSatelliteAssembly>
+		static constexpr size_t get_mangled_prefix_length ()
+		{
+			if constexpr (IsSatelliteAssembly) {
+				return SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN;
+			} else {
+				return SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN;
+			}
+		}
+
+		template<bool IsSatelliteAssembly>
+		static constexpr size_t get_mangled_data_size ()
+		{
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT_LEN + get_mangled_prefix_length<IsSatelliteAssembly> ();
 		}
 
 		template<bool IsSatelliteAssembly>
 		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0) noexcept
 		{
-			size_t new_size = name.length () - 4; // Includes the first ("marker") character and the .so extension
-			memmove (name.get () + start_idx, name.get () + start_idx + 1, new_size);
+			constexpr size_t mangled_data_size = get_mangled_data_size<IsSatelliteAssembly> ();
+			if (name.length () <= mangled_data_size) {
+				// Nothing to do, the name is too short
+				return;
+			}
+
+			size_t new_size = name.length () - mangled_data_size;
+			memmove (name.get () + start_idx, name.get () + start_idx + get_mangled_prefix_length<IsSatelliteAssembly> (), new_size);
 			name.set_length (new_size);
 
 			if constexpr (IsSatelliteAssembly) {
 				// Make sure assembly name is {CULTURE}/assembly.dll
 				for (size_t idx = start_idx; idx < name.length (); idx++) {
-					if (name[idx] == '%') {
+					if (name[idx] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
 						name[idx] = '/';
 						break;
 					}

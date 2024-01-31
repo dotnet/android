@@ -17,6 +17,20 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+		// These three MUST be the same as like-named constants in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.Basic.cs
+		static constexpr char MANGLED_ASSEMBLY_NAME_EXT[] = ".so";
+		static constexpr size_t MANGLED_ASSEMBLY_NAME_EXT_LEN = sizeof(MANGLED_ASSEMBLY_NAME_EXT) - 1;
+
+		static constexpr char MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER[] = "lib_";
+		static constexpr size_t REGULAR_ASSEMBLY_MARKER_INDEX = 3;    // this ☝️
+		static constexpr size_t REGULAR_ASSEMBLY_PREFIX_LEN = sizeof(SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER) - 1;
+		static constexpr char REGULAR_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER[REGULAR_ASSEMBLY_MARKER_INDEX];
+
+		static constexpr char MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[] = "lib-";
+		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3;    // this ☝️
+		static constexpr size_t SATELLITE_ASSEMBLY_PREFIX_LEN = sizeof(SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER) - 1;
+		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
+
 #if defined (NET)
 		static constexpr char MONO_ANDROID_RUNTIME_ASSEMBLY_NAME[] = "Mono.Android.Runtime";
 #endif
@@ -32,7 +46,7 @@ namespace xamarin::android::internal
 		static constexpr char DLL_EXTENSION[] = ".dll";
 		static constexpr char PDB_EXTENSION[] = ".pdb";
 #if defined (NET)
-		static constexpr char RUNTIME_CONFIG_BLOB_NAME[] = "arc.bin.so";
+		static constexpr auto RUNTIME_CONFIG_BLOB_NAME = concat_const("libarc.bin", MANGLED_ASSEMBLY_NAME_EXT);
 #endif // def NET
 
 #if defined (ANDROID) || defined (__linux__) || defined (__linux)

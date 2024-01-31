@@ -1256,13 +1256,23 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 		state.file_name = dir_entry->d_name;
 	};
 
+	// We check whether dir_entry->d_name is an array with a fixed size and whether it's
+	// big enough so that we can index the array below without having to worry about buffer
+	// overflows.  These are compile-time checks and the status of the field won't change at
+	// runtime unless Android breaks compatibility (unlikely).
+	//
+	// Currently (Jan 2024), dir_try->d_name is declared as `char[256]` by Bionic
+	static_assert (std::is_bounded_array_v<decltype(dir_entry->d_name)>);
+	static_assert (sizeof(dir_entry->d_name) > SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN);
+	static_assert (sizeof(dir_entry->d_name) > SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN);
+
 	if constexpr (MangledNamesMode) {
-		// We're only interested in "mangled" file names, namely those starting with either the `#` or the `%` characters
-		if (dir_entry->d_name[0] == '#') {
+		// We're only interested in "mangled" file names, namely those starting with either the `lib_` or `lib-` prefixes
+		if (dir_entry->d_name[SharedConstants::REGULAR_ASSEMBLY_MARKER_INDEX] == SharedConstants::REGULAR_ASSEMBLY_MARKER_CHAR) {
 			assembly_count++;
 			copy_dentry_and_update_state (entry_name, state, dir_entry);
 			unmangle_name<UnmangleRegularAssembly> (entry_name);
-		} else if (dir_entry->d_name[0] == '%') {
+		} else if (dir_entry->d_name[SharedConstants::SATELLITE_ASSEMBLY_MARKER_INDEX] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
 			assembly_count++;
 			copy_dentry_and_update_state (entry_name, state, dir_entry);
 			unmangle_name<UnmangleSatelliteAssembly> (entry_name);
@@ -1270,7 +1280,14 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 			return false;
 		}
 	} else {
-		// TODO: check for .dll and .pdb extensions
+		if (utils.ends_with (dir_entry->d_name, SharedConstants::DLL_EXTENSION) ||
+			utils.ends_with (dir_entry->d_name, SharedConstants::PDB_EXTENSION)) {
+			assembly_count++;
+			copy_dentry_and_update_state (entry_name, state, dir_entry);
+		} else {
+			return false;
+		}
+
 	}
 	state.data_offset = 0;
 
@@ -1292,11 +1309,16 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	const dirent* dir_entry,
 	ZipEntryLoadState& state) noexcept
 {
+	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
+	log_debug (LOG_ASSEMBLY, "  entry: %s", dir_entry->d_name);
+
 	if (dir_entry->d_name[0] != assembly_store_file_name[0]) {
+		log_debug (LOG_ASSEMBLY, "   here 001");
 		return false; // keep going
 	}
 
 	if (strncmp (dir_entry->d_name, assembly_store_file_name.data (), assembly_store_file_name.size ()) != 0) {
+		log_debug (LOG_ASSEMBLY, "   here 002");
 		return false; // keep going
 	}
 
@@ -1365,6 +1387,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 			break; // No more entries, we're done
 		}
 
+		log_debug (LOG_ASSEMBLY, "  entry: %s", cur->d_name);
 		// We can ignore the obvious entries here...
 		if (cur->d_name[0] == '.') {
 			continue;
@@ -1378,7 +1401,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 #endif // def DEBUG
 
 		// ...and we can handle the runtime config entry
-		if (!runtime_config_blob_found && std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME, sizeof (SharedConstants::RUNTIME_CONFIG_BLOB_NAME) - 1) == 0) {
+		if (!runtime_config_blob_found && std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME.data (), SharedConstants::RUNTIME_CONFIG_BLOB_NAME.size ()) == 0) {
 			log_debug (LOG_ASSEMBLY, "Mapping runtime config blob from '%s'", cur->d_name);
 			auto file_size = Util::get_file_size_at (state.file_fd, cur->d_name);
 			if (!file_size) {

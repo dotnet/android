@@ -7,37 +7,37 @@
     "classes.dex": {
       "Size": 377856
     },
-    "lib/arm64-v8a/#_Microsoft.Android.Resource.Designer.dll.so": {
+    "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 1027
     },
-    "lib/arm64-v8a/#Java.Interop.dll.so": {
+    "lib/arm64-v8a/lib_Java.Interop.dll.so": {
       "Size": 61443
     },
-    "lib/arm64-v8a/#Mono.Android.dll.so": {
+    "lib/arm64-v8a/lib_Mono.Android.dll.so": {
       "Size": 90421
     },
-    "lib/arm64-v8a/#Mono.Android.Runtime.dll.so": {
+    "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
       "Size": 5143
     },
-    "lib/arm64-v8a/#System.Console.dll.so": {
+    "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 6537
     },
-    "lib/arm64-v8a/#System.Linq.dll.so": {
+    "lib/arm64-v8a/lib_System.Linq.dll.so": {
       "Size": 8540
     },
-    "lib/arm64-v8a/#System.Private.CoreLib.dll.so": {
+    "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
       "Size": 552396
     },
-    "lib/arm64-v8a/#System.Runtime.dll.so": {
+    "lib/arm64-v8a/lib_System.Runtime.dll.so": {
       "Size": 2541
     },
-    "lib/arm64-v8a/#System.Runtime.InteropServices.dll.so": {
+    "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 4019
     },
-    "lib/arm64-v8a/#UnnamedProject.dll.so": {
+    "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
       "Size": 2931
     },
-    "lib/arm64-v8a/arc.bin.so": {
+    "lib/arm64-v8a/libarc.bin.so": {
       "Size": 1512
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {

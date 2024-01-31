@@ -185,7 +185,10 @@ partial class MonoAndroidHelper
 		return String.Join ("/", parts);
 	}
 
-	const string MANGLED_ASSEMBLY_NAME_EXT = ".so";
+	// These 3 MUST be the same as the like-named constants in src/monodroid/jni/shared-constants.hh
+	public const string MANGLED_ASSEMBLY_NAME_EXT = ".so";
+	public const string MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER = "lib_";
+	public const string MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER = "lib-";
 
 	/// <summary>
 	/// Mangles APK/AAB entry name for assembly and their associated pdb and config entries in the
@@ -195,13 +198,23 @@ partial class MonoAndroidHelper
 	public static string MakeDiscreteAssembliesEntryName (string name, string? culture = null)
 	{
 		if (!String.IsNullOrEmpty (culture)) {
-			return $"_{culture}_{name}{MANGLED_ASSEMBLY_NAME_EXT}";
+			return $"{MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{culture}-{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 		}
 
-		return $"__{name}{MANGLED_ASSEMBLY_NAME_EXT}";
+		return $"{MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER}{name}{MANGLED_ASSEMBLY_NAME_EXT}";
 	}
 
-	public static ulong GetMangledAssemblyNameSizeOverhead () => (ulong)MANGLED_ASSEMBLY_NAME_EXT.Length + 1;
+	/// <summary>
+	/// Returns size of the extension + length of the prefix for mangled assembly names. This is
+	/// used to pre-allocate space for assembly names in `libxamarin-app.so`
+	/// <seealso cref="MakeDiscreteAssembliesEntryName"/>
+	/// </summary>
+	public static ulong GetMangledAssemblyNameSizeOverhead ()
+	{
+		// Satellite marker is one character more, for the `-` closing the culture part
+		return (ulong)MANGLED_ASSEMBLY_NAME_EXT.Length +
+		       (ulong)Math.Max (MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.Length + 1, MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.Length);
+	}
 
 	public static byte[] Utf8StringToBytes (string str) => Encoding.UTF8.GetBytes (str);
 

@@ -421,8 +421,8 @@ namespace Xamarin.Android.Tasks
 				foreach (string abi in SupportedAbis) {
 					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 					// like since we can finish scanning the zip central directory earlier at startup.
-					inArchivePath = MakeArchiveLibPath (abi, "arc.bin.so");
-					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: UncompressedMethod);
+					inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
 				}
 			}
 
@@ -442,8 +442,8 @@ namespace Xamarin.Android.Tasks
 
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
-				inArchivePath = MakeArchiveLibPath (abi, Path.GetFileName (kvp.Value));
-				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, UncompressedMethod);
+				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
+				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -649,14 +649,14 @@ namespace Xamarin.Android.Tasks
 				// All of the assemblies have their names mangled so that the possibility to clash with "real" shared
 				// library names is minimized. All of the assembly entries will start with a special character:
 				//
-				//   # - for regular assemblies (e.g. `#Mono.Android.dll.so`)
-				//   % - for satellite assemblies (e.g. `%es%Mono.Android.dll.so`)
+				//   `_` - for regular assemblies (e.g. `_Mono.Android.dll.so`)
+				//   `-` - for satellite assemblies (e.g. `-es-Mono.Android.dll.so`)
 				//
 				// Second of all, we need to treat satellite assemblies with even more care.
 				// If we encounter one of them, we will return the culture as part of the path transformed
-				// so that it forms a `%culture%` assembly file name prefix, not a `culture/` subdirectory.
+				// so that it forms a `-culture-` assembly file name prefix, not a `culture/` subdirectory.
 				// This is necessary because Android doesn't allow subdirectories in `lib/{ABI}/`
-
+				//
 				string[] subdirParts = subDirectory.TrimEnd ('/').Split ('/');
 				if (subdirParts.Length == 1) {
 					// Not a satellite assembly

@@ -193,9 +193,10 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			for (size_t i = str.length () - 1; i >= 0; i--) {
-				if (str[i] == ch) {
-					return str.get () + i;
+			for (size_t i = str.length (); i > 0; i--) {
+				const size_t index = i - 1;
+				if (str[index] == ch) {
+					return str.get () + index;
 				}
 			}
 

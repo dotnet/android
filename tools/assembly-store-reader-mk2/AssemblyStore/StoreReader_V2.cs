@@ -81,7 +81,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		};
 	}
 
-	static string GetBlobName (string abi) => $"assemblies.{abi}.blob.so";
+	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
 
 	protected override bool IsSupported ()
 	{

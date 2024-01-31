@@ -40,9 +40,6 @@ static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-end
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
-// Must be identical to MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT
-inline static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
-
 #if defined (DEBUG) || !defined (ANDROID)
 struct BinaryTypeMapHeader
 {

@@ -990,11 +990,11 @@ namespace Xamarin.Android.Tasks
 				string inArchiveName;
 
 				if (cultureName.Length == 0) {
-					// Regular assemblies get the '#' prefix
-					inArchiveName = $"#{name}.so";
+					// Regular assemblies get the 'lib_' prefix
+					inArchiveName = $"{MonoAndroidHelper.MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER}{name}{MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT}";
 				} else {
-					// Satellite assemblies get the '%{CULTURE}%' prefix
-					inArchiveName = $"%{cultureName}%{Path.GetFileName (name)}.so";
+					// Satellite assemblies get the 'lib-{CULTURE}-' prefix
+					inArchiveName = $"{MonoAndroidHelper.MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{cultureName}-{Path.GetFileName (name)}{MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT}";
 				}
 
 				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);

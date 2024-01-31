@@ -150,14 +150,18 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 	//
 	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
 	for (size_t i = 0; i < num_entries; i++) {
+		if (entry_name.length () <= SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN) {
+			continue;
+		}
+
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry) {
 			continue;
 		}
 
-		if (entry_name[state.prefix_len] == '#') {
+		if (entry_name[state.prefix_len + SharedConstants::REGULAR_ASSEMBLY_MARKER_INDEX] == SharedConstants::REGULAR_ASSEMBLY_MARKER_CHAR) {
 			unmangle_name<UnmangleRegularAssembly> (entry_name, state.prefix_len);
-		} else if (entry_name[state.prefix_len] == '%') {
+		} else if (entry_name[state.prefix_len + SharedConstants::SATELLITE_ASSEMBLY_MARKER_INDEX] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
 			unmangle_name<UnmangleSatelliteAssembly> (entry_name, state.prefix_len);
 		} else {
 			continue; // Can't be an assembly, the name's not mangled
@@ -324,6 +328,7 @@ template<bool NeedsNameAlloc>
 force_inline void
 EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
+	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 	entry.file_fd = state.file_fd;
 	if constexpr (NeedsNameAlloc) {
 		entry.name = utils.strdup_new (entry_name.get () + state.prefix_len);
