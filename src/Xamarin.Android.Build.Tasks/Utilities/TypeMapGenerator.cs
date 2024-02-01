@@ -257,7 +257,7 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData (), logger);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -289,7 +289,7 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (data);
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (data, logger);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -482,7 +482,7 @@ namespace Xamarin.Android.Tasks
 					module.Types = module.TypesScratch.Values.ToArray ();
 				}
 
-				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
+				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules, logger), logger);
 				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
 			}
 

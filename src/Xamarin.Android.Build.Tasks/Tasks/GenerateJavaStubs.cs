@@ -213,7 +213,7 @@ namespace Xamarin.Android.Tasks
 			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
-			List<JavaType> allJavaTypes = scanner.GetJavaTypes (GetAllTypemapAssemblies (allTypemapAssemblies.Values), res);
+			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
 			var javaTypes = new List<JavaType> ();
 
 			foreach (JavaType jt in allJavaTypes) {
@@ -420,19 +420,6 @@ namespace Xamarin.Android.Tasks
 					items.Add (assembly);
 				}
 			}
-		}
-
-		static ICollection<ITaskItem> GetAllTypemapAssemblies (ICollection<ITaskItem> assemblies)
-		{
-			// We need `Mono.Android.dll` to be *first*, so that in `acw-map.txt` the
-			// entry for `java/lang/Object` always resolves to `Java.Lang.Object, Mono.Android`.
-			var c = new List<ITaskItem>(assemblies);
-			var e = c.Find (item => string.Compare ("Mono.Android.dll", Path.GetFileName (item.ItemSpec), StringComparison.OrdinalIgnoreCase) == 0);
-			if (e != null) {
-				c.Remove (e);
-				c.Insert (0, e);
-			}
-			return c;
 		}
 
 		AssemblyDefinition LoadAssembly (string path, XAAssemblyResolver? resolver = null)

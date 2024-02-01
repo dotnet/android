@@ -176,7 +176,8 @@ namespace Xamarin.Android.Tasks
 
 		ulong moduleCounter = 0;
 
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData, Action<string> logger)
+			: base (logger)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();

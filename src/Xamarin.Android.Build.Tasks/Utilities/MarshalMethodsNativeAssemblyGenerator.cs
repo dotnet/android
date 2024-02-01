@@ -243,7 +243,8 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, Action<string> logger)
+			: base (logger)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
@@ -255,6 +256,7 @@ namespace Xamarin.Android.Tasks
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
 		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
+			: base (s => logger.LogDebugMessage (s))
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));

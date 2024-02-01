@@ -11,6 +11,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	{
 		bool constructed;
 
+		protected readonly Action<string> logger;
+
+		protected LlvmIrComposer (Action<string> logger)
+		{
+			this.logger = logger;
+		}
+
 		protected abstract void Construct (LlvmIrModule module);
 
 		public LlvmIrModule Construct ()

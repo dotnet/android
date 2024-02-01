@@ -6,6 +6,7 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -172,6 +173,7 @@ namespace Xamarin.Android.Tasks
 		public bool MarshalMethodsEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
+			: base (s => log.LogDebugMessage (s))
 		{
 			if (environmentVariables != null) {
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);

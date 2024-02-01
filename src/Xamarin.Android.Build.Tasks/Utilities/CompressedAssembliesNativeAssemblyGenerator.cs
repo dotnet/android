@@ -66,7 +66,8 @@ namespace Xamarin.Android.Tasks
 		StructureInfo compressedAssemblyDescriptorStructureInfo;
 		StructureInfo compressedAssembliesStructureInfo;
 
-		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies)
+		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies, Action<string> logger)
+			: base (logger)
 		{
 			this.assemblies = assemblies;
 		}

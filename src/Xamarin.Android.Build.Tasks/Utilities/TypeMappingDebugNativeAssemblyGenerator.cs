@@ -116,7 +116,8 @@ namespace Xamarin.Android.Tasks
 		List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 		StructureInstance<TypeMap> type_map;
 
-		public TypeMappingDebugNativeAssemblyGenerator (TypeMapGenerator.ModuleDebugData data)
+		public TypeMappingDebugNativeAssemblyGenerator (TypeMapGenerator.ModuleDebugData data, Action<string> logger)
+			: base (logger)
 		{
 			this.data = data;
 

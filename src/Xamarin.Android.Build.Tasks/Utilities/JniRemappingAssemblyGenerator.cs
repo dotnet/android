@@ -190,10 +190,12 @@ namespace Xamarin.Android.Tasks
 
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
-		public JniRemappingAssemblyGenerator ()
+		public JniRemappingAssemblyGenerator (Action<string> logger)
+			: base (logger)
 		{}
 
-		public JniRemappingAssemblyGenerator (List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+		public JniRemappingAssemblyGenerator (List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements, Action<string> logger)
+			: base (logger)
 		{
 			this.typeReplacementsInput = typeReplacements ?? throw new ArgumentNullException (nameof (typeReplacements));
 			this.methodReplacementsInput = methodReplacements ?? throw new ArgumentNullException (nameof (methodReplacements));
