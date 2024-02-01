@@ -8,6 +8,7 @@ namespace tmt
 		XamarinAppDebugDSO_Version? xapp;
 
 		public override string FormatVersion => xapp?.FormatVersion ?? "0";
+		protected override string LogTag => "DebugDSO";
 		public override string Description => xapp?.Description ?? "Xamarin App Debug DSO Forwarder";
 		public override Map Map => XAPP.Map;
 
@@ -19,6 +20,8 @@ namespace tmt
 
 		public override bool CanLoad (AnELF elf)
 		{
+			Log.Debug (LogTag, $"Checking if {elf.FilePath} is a Debug DSO");
+
 			xapp = null;
 			ulong format_tag = 0;
 			if (elf.HasSymbol (FormatTag))
@@ -33,7 +36,7 @@ namespace tmt
 					break;
 
 				default:
-					Log.Error ($"{elf.FilePath} format ({format_tag}) is not supported by this version of TMT");
+					Log.Debug (LogTag, $"{elf.FilePath} format (0x{format_tag:x}) is not supported by this version of TMT");
 					return false;
 			}
 
@@ -91,6 +94,8 @@ namespace tmt
 		}
 
 		const string TypeMapSymbolName = "type_map";
+
+		protected override string LogTag => "DebugDSO_V1";
 
 		Map? map;
 		SortedDictionary<string, MappedType> javaToManaged = new SortedDictionary<string, MappedType> (StringComparer.Ordinal);
@@ -172,7 +177,7 @@ namespace tmt
 			size += GetPaddedSize<string> (size); // managed_to_java (pointer)
 
 			string filePath = ELF.FilePath;
-			byte[] mapData = ELF.GetData (TypeMapSymbolName);
+			(byte[] mapData, _) = ELF.GetData (TypeMapSymbolName);
 			if (mapData.Length == 0) {
 				Log.Error ($"{filePath} doesn't have a valid '{TypeMapSymbolName}' symbol");
 				return false;

@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 
-using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
@@ -20,6 +19,11 @@ namespace tmt
 		public ELF32 (Stream stream, string filePath, IELF elf, ISymbolTable dynsymSection, ISection rodataSection, ISymbolTable? symSection)
 			: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
 		{}
+
+		public override ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset)
+		{
+			return 0;
+		}
 
 		public override byte[] GetData (ulong symbolValue, ulong size = 0)
 		{

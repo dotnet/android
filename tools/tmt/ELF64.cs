@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
-using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
@@ -21,6 +21,45 @@ namespace tmt
 			: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
 		{}
 
+		public override ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset)
+		{
+			var sym64 = symbol as SymbolEntry<ulong>;
+			if (sym64 == null) {
+				throw new ArgumentException ("must be of type SymbolEntry<ulong>, was {symbol.GetType ()}", nameof (symbol));
+			}
+
+			if (sym64.PointedSection == null) {
+				throw new ArgumentException ("does not belong to any section", nameof (symbol));
+			}
+
+			const string RelaDynSectionName = ".rela.dyn";
+			ISection? sec = GetSection (ELF, RelaDynSectionName);
+			if (sec == null) {
+				Log.Warning ("${filePath} does not contain dynamic relocation section ('{RelaDynSectionName}')");
+				return 0;
+			}
+
+			var relaDyn = sec as Section<ulong>;
+			if (relaDyn == null) {
+				Log.Warning ($"Invalid section type, expected 'Section<ulong>', got '{sec.GetType ()}'");
+				return 0;
+			}
+
+			List<ELF64RelocationAddend> rels = LoadRelocationsAddend (relaDyn);
+			if (rels.Count == 0) {
+				Log.Warning ($"Relocation section '{RelaDynSectionName}' is empty");
+				return 0;
+			}
+
+			ulong symRelocAddress = sym64.Value + pointerOffset;
+			Log.Debug ($"Pointer relocation address == 0x{symRelocAddress:x}");
+
+			ulong fileOffset = Relocations.GetValue (ELF, rels, symRelocAddress);
+			Log.Debug ($"File offset == 0x{fileOffset:x}");
+
+			return fileOffset;
+		}
+
 		public override byte[] GetData (ulong symbolValue, ulong size = 0)
 		{
 			Log.Debug ($"ELF64.GetData: Looking for symbol value {symbolValue:X08}");
@@ -30,7 +69,7 @@ namespace tmt
 				symbol = GetSymbol (Symbols, symbolValue);
 			}
 
-			if (symbol != null) {
+			if (symbol != null && symbol.PointedSection != null) {
 				Log.Debug ($"ELF64.GetData: found in section {symbol.PointedSection.Name}");
 				return GetData (symbol);
 			}
@@ -44,6 +83,28 @@ namespace tmt
 		protected override byte[] GetData (SymbolEntry<ulong> symbol)
 		{
 			return GetData (symbol, symbol.Size, OffsetInSection (symbol.PointedSection, symbol.Value));
+		}
+
+		List<ELF64RelocationAddend> LoadRelocationsAddend (Section<ulong> section)
+		{
+			var ret = new List<ELF64RelocationAddend> ();
+			byte[] data = section.GetContents ();
+			ulong offset = 0;
+
+			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}");
+			ulong counter = 0;
+			while (offset < (ulong)data.Length) {
+				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
+				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
+				long relAddend = Helpers.ReadInt64 (data, ref offset, is64Bit: true);
+
+				Console.WriteLine ($"[{counter}] 0x{relOffset:x} 0x{relInfo:x} 0x{relAddend:x}");
+				counter++;
+
+				ret.Add (new ELF64RelocationAddend (relOffset, relInfo, relAddend));
+			}
+
+			return ret;
 		}
 
 		Section<ulong> FindSectionForValue (ulong symbolValue)

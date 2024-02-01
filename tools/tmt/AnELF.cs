@@ -74,25 +74,26 @@ namespace tmt
 			return GetSymbol (symbolName) != null;
 		}
 
-		public byte[] GetData (string symbolName)
+		public (byte[] data, ISymbolEntry? symbol) GetData (string symbolName)
 		{
 			Log.Debug ($"Looking for symbol: {symbolName}");
 			ISymbolEntry? symbol = GetSymbol (symbolName);
-			if (symbol == null)
-				return EmptyArray;
+			if (symbol == null) {
+				return (EmptyArray, null);
+			}
 
 			if (Is64Bit) {
 				var symbol64 = symbol as SymbolEntry<ulong>;
 				if (symbol64 == null)
 					throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 64-bit symbol");
-				return GetData (symbol64);
+				return (GetData (symbol64), symbol);
 			}
 
 			var symbol32 = symbol as SymbolEntry<uint>;
 			if (symbol32 == null)
 				throw new InvalidOperationException ($"Symbol '{symbolName}' is not a valid 32-bit symbol");
 
-			return GetData (symbol32);
+			return (GetData (symbol32), symbol);
 		}
 
 		public abstract byte[] GetData (ulong symbolValue, ulong size);
@@ -136,12 +137,14 @@ namespace tmt
 
 		protected byte[] GetData (ISection section, ulong size, ulong offset)
 		{
-			Log.Debug ($"AnELF.GetData: section == {section.Name}; size == {size}; offset == {offset:X}");
+			Log.Debug ($"AnELF.GetData: section == {section.Name}; requested data size == {size}; offset in section == {offset:X}");
 			byte[] data = section.GetContents ();
+			var s = (Section<ulong>)section;
 
-			Log.Debug ($"  data length: {data.Length} (long: {data.LongLength})");
-			Log.Debug ($"  offset: {offset}; size: {size}");
+			Log.Debug ($"  section offset in file: {s.Offset}; section size: {s.Size}; alignment: {s.Alignment}");
+			Log.Debug ($"  section data length: {data.Length} (long: {data.LongLength})");
 			if ((ulong)data.LongLength < (offset + size)) {
+				Log.Debug ($"  not enough data in section");
 				return EmptyArray;
 			}
 
@@ -156,9 +159,17 @@ namespace tmt
 			return ret;
 		}
 
+		/// <summary>
+		/// Find a relocation corresponding to a pointer at offset <paramref name="pointerOffset"/> into
+		/// the specified <paramref name="symbol"/>.  Returns an `ulong`, which needs to be cast to `uint`
+		/// for 32-pointers (it can be done safely as the upper 32-bits will be 0 in such cases)
+		/// </summary>
+		public abstract ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset);
+
 		public uint GetUInt32 (string symbolName)
 		{
-			return GetUInt32 (GetData (symbolName), 0, symbolName);
+			(byte[] data, _) = GetData (symbolName);
+			return GetUInt32 (data, 0, symbolName);
 		}
 
 		public uint GetUInt32 (ulong symbolValue)
@@ -177,7 +188,8 @@ namespace tmt
 
 		public ulong GetUInt64 (string symbolName)
 		{
-			return GetUInt64 (GetData (symbolName), 0, symbolName);
+			(byte[] data, _) = GetData (symbolName);
+			return GetUInt64 (data, 0, symbolName);
 		}
 
 		public ulong GetUInt64 (ulong symbolValue)
