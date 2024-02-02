@@ -265,11 +265,6 @@ namespace Java.Interop {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
-			if (handle == IntPtr.Zero) {
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error: `handle` is NULL!"),
-						CreateJavaLocationException ());
-			}
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
 			string? class_name = GetClassName (class_ptr);

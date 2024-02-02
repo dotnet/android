@@ -50,10 +50,6 @@
     <Compile Remove="..\Mono.Data.Sqlite\SqliteTests.cs" />
   </ItemGroup>
 
-  <ItemGroup>
-    <AndroidEnvironment Include="Environment.txt" />
-  </ItemGroup>
-
   <ItemGroup Condition=" '$(AndroidPackageFormat)' != 'aab' ">
     <TestApk Include="$(OutputPath)$(_MonoAndroidTestPackage)-Signed.apk">
       <Package>$(_MonoAndroidTestPackage)</Package>
