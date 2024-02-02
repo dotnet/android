@@ -63,10 +63,8 @@ namespace Xamarin.Android.Tasks
 				WriteOptionsToResponseFile (sw);
 				// Include any user .java files
 				if (JavaSourceFiles != null)
-					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java")) {
-						var path    = file.ItemSpec.Replace (@"\", @"\\");
-						sw.WriteLine (string.Format ("\"{0}\"", path));
-					}
+					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java"))
+						sw.WriteLine (string.Format ("\"{0}\"", file.ItemSpec.Replace (@"\", @"\\")));
 
 				if (string.IsNullOrEmpty (StubSourceDirectory))
 					return;
@@ -88,9 +86,8 @@ namespace Xamarin.Android.Tasks
 					// Solution:
 					//    Since '\' is an escape character, we need to escape it.
 					// [0] http://download.oracle.com/javase/1.4.2/docs/api/java/io/StreamTokenizer.html#quoteChar(int)
-					var path    = file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC);
 					sw.WriteLine (string.Format ("\"{0}\"",
-								path));
+								file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC)));
 				}
 			}
 			Log.LogDebugMessage ($"javac response file contents: {TemporarySourceListFile}");
