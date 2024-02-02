@@ -228,7 +228,6 @@ namespace Xamarin.Android.Tasks
 		ICollection<string> uniqueAssemblyNames;
 		int numberOfAssembliesInApk;
 		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
-		TaskLoggingHelper logger;
 
 		StructureInfo marshalMethodsManagedClassStructureInfo;
 		StructureInfo marshalMethodNameStructureInfo;
@@ -243,8 +242,8 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, Action<string> logger)
-			: base (logger)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
@@ -255,13 +254,12 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, TaskLoggingHelper logger)
-			: base (s => logger.LogDebugMessage (s))
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
+			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			this.marshalMethods = marshalMethods;
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
@@ -336,7 +334,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (MarshalMethodInfo method in allMethods) {
 				if (seenNativeSymbols.Contains (method.NativeSymbolName)) {
-					logger.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
+					Log.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
 					continue;
 				}
 

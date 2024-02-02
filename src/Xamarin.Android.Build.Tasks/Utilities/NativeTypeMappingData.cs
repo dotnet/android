@@ -2,6 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
+using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
+
 namespace Xamarin.Android.Tasks
 {
 	class NativeTypeMappingData
@@ -12,7 +15,7 @@ namespace Xamarin.Android.Tasks
 		public uint MapModuleCount { get; }
 		public uint JavaTypeCount  { get; }
 
-		public NativeTypeMappingData (TypeMapGenerator.ModuleReleaseData[] modules, Action<string> logger)
+		public NativeTypeMappingData (TaskLoggingHelper log, TypeMapGenerator.ModuleReleaseData[] modules)
 		{
 			Modules = modules ?? throw new ArgumentNullException (nameof (modules));
 
@@ -49,7 +52,7 @@ namespace Xamarin.Android.Tasks
 				foreach (TypeMapGenerator.TypeMapReleaseEntry entry in data.Types) {
 					entry.ModuleIndex = moduleIndex;
 					if (tempJavaTypes.ContainsKey (entry.JavaName)) {
-						logger ($"Skipping typemap entry for `{entry.ManagedTypeName}, {data.AssemblyName}`; `{entry.JavaName}` is already mapped.");
+						log.LogDebugMessage ($"Skipping typemap entry for `{entry.ManagedTypeName}, {data.AssemblyName}`; `{entry.JavaName}` is already mapped.");
 						continue;
 					}
 					tempJavaTypes.Add (entry.JavaName, entry);
