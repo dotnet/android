@@ -139,7 +139,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("<#= info.JniType #>", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("<#= info.JniType #>", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class Java<#= info.TypeModifier #>Array : JavaPrimitiveArray<<#= info.ManagedType #>> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();

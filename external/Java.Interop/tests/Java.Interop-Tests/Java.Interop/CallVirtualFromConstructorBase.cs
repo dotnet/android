@@ -5,7 +5,7 @@ using Java.Interop.GenericMarshaler;
 
 namespace Java.InteropTests {
 
-	[JniTypeSignature (CallVirtualFromConstructorBase.JniTypeName)]
+	[JniTypeSignature (CallVirtualFromConstructorBase.JniTypeName, GenerateJavaPeer=false)]
 	public class CallVirtualFromConstructorBase : JavaObject {
 
 		internal    const   string          JniTypeName = "net/dot/jni/test/CallVirtualFromConstructorBase";

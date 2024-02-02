@@ -1,12 +1,47 @@
 <Project>
 
+  <ItemGroup>
+    <_BuildJavaInteropTestsJarInputs Include="$(TargetPath)" />
+    <_BuildJavaInteropTestsJarInputs Include="$(MSBuildThisFileFullPath)" />
+    <_BuildJavaInteropTestsJarInputs Include="java\**\*.java" />
+  </ItemGroup>
+
+  <Target Name="_CreateJavaCallableWrappers"
+      Condition=" '$(TargetPath)' != '' "
+      AfterTargets="Build"
+      Inputs="@(_BuildJavaInteropTestsJarInputs)"
+      Outputs="$(IntermediateOutputPath)java\.stamp">
+    <RemoveDir Directories="$(IntermediateOutputPath)java" />
+    <MakeDir Directories="$(IntermediateOutputPath)java" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_RefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
+      <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) -v &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_CollectGeneratdJcwSource">
+    <ItemGroup>
+      <_GeneratedJcwSource Include="$(IntermediateOutputPath)java\**\*.java" />
+    </ItemGroup>
+  </Target>
+
   <Target Name="BuildInteropTestJar"
-      BeforeTargets="Build"
-      Inputs="@(JavaInteropTestJar)"
+      AfterTargets="Build"
+      DependsOnTargets="_CreateJavaCallableWrappers;_CollectGeneratdJcwSource"
+      Inputs="@(JavaInteropTestJar);@(_GeneratedJcwSource)"
       Outputs="$(OutputPath)interop-test.jar">
     <MakeDir Directories="$(IntermediateOutputPath)it-classes" />
     <ItemGroup>
       <_Source Include="@(JavaInteropTestJar->Replace('%5c', '/'))" />
+      <_Source Include="@(_GeneratedJcwSource->Replace('%5c', '/'))" />
     </ItemGroup>
     <WriteLinesToFile
         File="$(IntermediateOutputPath)_java_sources.txt"

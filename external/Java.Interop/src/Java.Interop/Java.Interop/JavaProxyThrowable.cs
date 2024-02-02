@@ -4,7 +4,7 @@ using System;
 
 namespace Java.Interop {
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	sealed class JavaProxyThrowable : JavaException
 	{
 		new internal    const   string  JniTypeName = "net/dot/jni/internal/JavaProxyThrowable";

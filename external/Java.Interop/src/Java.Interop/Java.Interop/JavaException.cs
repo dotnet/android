@@ -4,7 +4,7 @@ using System;
 
 namespace Java.Interop
 {
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	unsafe public class JavaException : Exception, IJavaPeerable
 	{
 		internal    const   string          JniTypeName = "java/lang/Throwable";

@@ -52,7 +52,7 @@ namespace Java.InteropTests {
 		}
 	}
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	public class CrossReferenceBridge : JavaObject {
 		internal    const    string         JniTypeName = "net/dot/jni/test/CrossReferenceBridge";
 

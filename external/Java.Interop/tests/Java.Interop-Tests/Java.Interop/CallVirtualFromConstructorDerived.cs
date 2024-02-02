@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeSignature (CallVirtualFromConstructorDerived.JniTypeName)]
+	[JniTypeSignature (CallVirtualFromConstructorDerived.JniTypeName, GenerateJavaPeer=false)]
 	public class CallVirtualFromConstructorDerived : CallVirtualFromConstructorBase {
 		new internal    const   string          JniTypeName = "net/dot/jni/test/CallVirtualFromConstructorDerived";
 		static  readonly        JniPeerMembers  _members    = new JniPeerMembers (JniTypeName, typeof (CallVirtualFromConstructorDerived));

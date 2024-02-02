@@ -4,7 +4,7 @@ using System;
 
 namespace Java.Interop
 {
-	[JniTypeSignature ("java/lang/Object")]
+	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	unsafe public class JavaObject : IJavaPeerable
 	{
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));

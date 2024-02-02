@@ -161,7 +161,7 @@ namespace Java.InteropTests
 #endif  // NET
 	}
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class MyString : JavaObject {
 		internal    const   string      JniTypeName = "java/lang/String";
 
@@ -182,7 +182,7 @@ namespace Java.InteropTests
 	}
 
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class JavaLangRemappingTestObject : JavaObject {
 		internal    const    string         JniTypeName = "java/lang/Object";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestObject));
@@ -210,7 +210,7 @@ namespace Java.InteropTests
 		}
 	}
 
-	[JniTypeSignature (JavaLangRemappingTestRuntime.JniTypeName)]
+	[JniTypeSignature (JavaLangRemappingTestRuntime.JniTypeName, GenerateJavaPeer=false)]
 	internal class JavaLangRemappingTestRuntime : JavaObject {
 		internal    const    string         JniTypeName = "java/lang/Runtime";
 		static      readonly JniPeerMembers _members    = new JniPeerMembers (JniTypeName, typeof (JavaLangRemappingTestRuntime));
@@ -228,7 +228,7 @@ namespace Java.InteropTests
 		}
 	}
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class RenameClassBase : JavaObject {
 		internal    const       string          JniTypeName    = "net/dot/jni/test/RenameClassBase1";
 		static      readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (RenameClassBase));
@@ -246,7 +246,7 @@ namespace Java.InteropTests
 		}
 	}
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class RenameClassDerived : RenameClassBase {
 		internal    new     const       string          JniTypeName    = "net/dot/jni/test/RenameClassDerived";
 		public RenameClassDerived ()
@@ -260,7 +260,7 @@ namespace Java.InteropTests
 	}
 
 #if NET
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	interface IAndroidInterface : IJavaPeerable {
 		internal            const       string          JniTypeName    = "net/dot/jni/test/AndroidInterface";
 

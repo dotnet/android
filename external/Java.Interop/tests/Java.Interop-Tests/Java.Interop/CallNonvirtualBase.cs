@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeSignature (CallNonvirtualBase.JniTypeName)]
+	[JniTypeSignature (CallNonvirtualBase.JniTypeName, GenerateJavaPeer=false)]
 	public class CallNonvirtualBase : JavaObject
 	{
 		internal const string JniTypeName = "net/dot/jni/test/CallNonvirtualBase";

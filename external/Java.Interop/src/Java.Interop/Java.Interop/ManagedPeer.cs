@@ -13,7 +13,7 @@ using System.Text;
 
 namespace Java.Interop {
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	/* static */ sealed class ManagedPeer : JavaObject {
 
 		internal const string JniTypeName = "net/dot/jni/ManagedPeer";

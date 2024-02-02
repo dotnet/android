@@ -142,7 +142,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("Z", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("Z", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaBooleanArray : JavaPrimitiveArray<Boolean> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -337,7 +337,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("B", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("B", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaSByteArray : JavaPrimitiveArray<SByte> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -532,7 +532,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("C", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("C", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaCharArray : JavaPrimitiveArray<Char> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -727,7 +727,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("S", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("S", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaInt16Array : JavaPrimitiveArray<Int16> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -922,7 +922,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("I", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("I", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaInt32Array : JavaPrimitiveArray<Int32> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -1117,7 +1117,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("J", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("J", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaInt64Array : JavaPrimitiveArray<Int64> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -1312,7 +1312,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("F", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("F", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaSingleArray : JavaPrimitiveArray<Single> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();
@@ -1507,7 +1507,7 @@ namespace Java.Interop {
 		}
 	}
 
-	[JniTypeSignature ("D", ArrayRank=1, IsKeyword=true)]
+	[JniTypeSignature ("D", ArrayRank=1, IsKeyword=true, GenerateJavaPeer=false)]
 	public sealed class JavaDoubleArray : JavaPrimitiveArray<Double> {
 
 		internal    static  readonly    ValueMarshaler   ArrayMarshaler     = new ValueMarshaler ();

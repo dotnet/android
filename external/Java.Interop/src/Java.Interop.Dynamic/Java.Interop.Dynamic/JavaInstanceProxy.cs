@@ -13,7 +13,7 @@ using Java.Interop;
 
 namespace Java.Interop.Dynamic {
 
-	[JniTypeSignature ("java/lang/Object")]
+	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	class JavaInstanceProxy : JavaObject {
 
 		public JavaInstanceProxy (ref JniObjectReference reference, JniObjectReferenceOptions transfer)

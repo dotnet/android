@@ -30,6 +30,7 @@
     <ProjectReference Include="..\..\src\Java.Interop.GenericMarshaler\Java.Interop.GenericMarshaler.csproj" />
     <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
+    <ProjectReference Include="..\..\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <ItemGroup>

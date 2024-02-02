@@ -121,7 +121,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 			}
 			children = children ?? new List<JavaCallableWrapperGenerator> ();
 			foreach (TypeDefinition nt in type.NestedTypes) {
-				if (!nt.IsSubclassOf ("Java.Lang.Object", cache))
+				if (!nt.HasJavaPeer (cache))
 					continue;
 				if (!JavaNativeTypeManager.IsNonStaticInnerClass (nt, cache))
 					continue;

@@ -9,7 +9,7 @@ using NUnit.Framework;
 namespace Java.InteropTests
 {
 #if !NO_MARSHAL_MEMBER_BUILDER_SUPPORT
-	[JniTypeSignature (TestType.JniTypeName)]
+	[JniTypeSignature (TestType.JniTypeName, GenerateJavaPeer=false)]
 	public partial class TestType : JavaObject
 	{
 		internal    const    string         JniTypeName = "net/dot/jni/test/TestType";

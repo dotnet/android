@@ -92,6 +92,25 @@ namespace Java.Interop.Tools.Cecil {
 			return false;
 		}
 
+		public static bool HasJavaPeer (this TypeDefinition type, IMetadataResolver resolver)
+		{
+			if (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", resolver))
+				return true;
+
+			foreach (var t in type.GetTypeAndBaseTypes (resolver)) {
+				switch (t.FullName) {
+					case "Java.Lang.Object":
+					case "Java.Lang.Throwable":
+					case "Java.Interop.JavaObject":
+					case "Java.Interop.JavaException":
+						return true;
+					default:
+						break;
+				}
+			}
+			return false;
+		}
+
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
 		public static bool ImplementsInterface (this TypeDefinition type, string interfaceName) => throw new NotSupportedException ();
 

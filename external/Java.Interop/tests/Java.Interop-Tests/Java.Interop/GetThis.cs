@@ -4,7 +4,7 @@ using Java.Interop;
 
 namespace Java.InteropTests
 {
-	[JniTypeSignature (GetThis.JniTypeName)]
+	[JniTypeSignature (GetThis.JniTypeName, GenerateJavaPeer=false)]
 	public class GetThis : JavaObject
 	{
 		internal const string JniTypeName = "net/dot/jni/test/GetThis";

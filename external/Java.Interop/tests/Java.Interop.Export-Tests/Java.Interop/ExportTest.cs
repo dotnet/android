@@ -30,7 +30,7 @@ delegate bool _JniMarshal_PPZBCSIJFDLLLLLDFJ_Z (
 
 namespace Java.InteropTests
 {
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	public class ExportTest : JavaObject
 	{
 		internal const string JniTypeName = "net/dot/jni/test/ExportType";

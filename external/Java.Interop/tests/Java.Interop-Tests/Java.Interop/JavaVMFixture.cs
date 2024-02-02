@@ -39,7 +39,11 @@ namespace Java.InteropTests {
 			[RenameClassDerived.JniTypeName]    = typeof (RenameClassDerived),
 			[CallVirtualFromConstructorBase.JniTypeName]    = typeof (CallVirtualFromConstructorBase),
 			[CallVirtualFromConstructorDerived.JniTypeName] = typeof (CallVirtualFromConstructorDerived),
+			[CrossReferenceBridge.JniTypeName]              = typeof (CrossReferenceBridge),
 			[GetThis.JniTypeName]                           = typeof (GetThis),
+			[JavaDisposedObject.JniTypeName]                = typeof (JavaDisposedObject),
+			[JavaObjectWithMissingJavaPeer.JniTypeName]     = typeof (JavaObjectWithMissingJavaPeer),
+			[MyDisposableObject.JniTypeName]                = typeof (JavaDisposedObject),
 		};
 
 		public JavaVMFixtureTypeManager ()

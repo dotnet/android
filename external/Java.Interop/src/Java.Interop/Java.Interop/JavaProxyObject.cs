@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 
 namespace Java.Interop {
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	sealed class JavaProxyObject : JavaObject, IEquatable<JavaProxyObject>
 	{
 		internal const string JniTypeName = "net/dot/jni/internal/JavaProxyObject";

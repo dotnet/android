@@ -164,11 +164,13 @@ namespace Java.InteropTests
 			var r   = new JniObjectReference ();
 			Assert.Throws<ArgumentException> (() => new JavaObject (ref r, JniObjectReferenceOptions.CopyAndDispose));
 
-			// Note: This may break if/when JavaVM provides "default"
-			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
 #if __ANDROID__
 			Assert.Throws<Java.Lang.ClassNotFoundException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
 #else   // !__ANDROID__
+			// Note: `JavaObjectWithNoJavaPeer` creation works on Android because tooling provides all
+			// typemap entries.  On desktop, we use the hardcoded dictionary in JavaVMFixture, which
+   			// deliberately *lacks* an  entry for `JavaObjectWithNoJavaPeer`.
+			Assert.Throws<NotSupportedException> (() => new JavaObjectWithNoJavaPeer ());
 			Assert.Throws<JavaException> (() => new JavaObjectWithMissingJavaPeer ()).Dispose ();
 #endif  // !__ANDROID__
 		}
@@ -201,16 +203,20 @@ namespace Java.InteropTests
 		}
 	}
 
+#if !__ANDROID__
 	class JavaObjectWithNoJavaPeer : JavaObject {
 	}
+#endif  // !__ANDROID__
 
-	[JniTypeSignature (JniTypeName)]
+	[JniTypeSignature (JniTypeName, GenerateJavaPeer=false)]
 	class JavaObjectWithMissingJavaPeer : JavaObject {
 		internal    const   string  JniTypeName = "__this__/__type__/__had__/__better__/__not__/__Exist__";
 	}
 
-	[JniTypeSignature ("java/lang/Object")]
+	[JniTypeSignature (JniTypeName)]
 	class JavaDisposedObject : JavaObject {
+
+		internal    const   string  JniTypeName = "net/dot/jni/test/JavaDisposedObject";
 
 		public Action   OnDisposed;
 		public Action   OnFinalized;
@@ -230,8 +236,10 @@ namespace Java.InteropTests
 		}
 	}
 
-	[JniTypeSignature ("java/lang/Object")]
+	[JniTypeSignature (JniTypeName)]
 	class MyDisposableObject : JavaObject {
+		internal    const   string  JniTypeName = "net/dot/jni/test/MyDisposableObject";
+
 		bool _isDisposed;
 
 		public MyDisposableObject ()

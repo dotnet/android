@@ -197,8 +197,9 @@ namespace Java.InteropTests
 		}
 	}
 
+	[JniTypeSignature (JniTypeName)]
 	class GenericHolder<T> : JavaObject {
-		public  const   string  JniTypeName = "net/dot/jni/test/tests/GenericHolder";
+		public  const   string  JniTypeName = "net/dot/jni/test/GenericHolder";
 
 		public  T   Value   {get; set;}
 	}

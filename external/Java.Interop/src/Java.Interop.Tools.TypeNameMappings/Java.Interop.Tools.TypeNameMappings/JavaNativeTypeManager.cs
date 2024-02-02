@@ -717,7 +717,7 @@ namespace Java.Interop.Tools.TypeNameMappings
 			if (!type.IsNested)
 				return false;
 
-			if (!type.DeclaringType.IsSubclassOf ("Java.Lang.Object", cache))
+			if (!type.DeclaringType.HasJavaPeer (cache))
 				return false;
 
 			foreach (var baseType in type.GetBaseTypes (cache)) {
