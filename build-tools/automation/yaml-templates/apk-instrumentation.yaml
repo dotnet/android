@@ -11,7 +11,7 @@ parameters:
   artifactFolder: ""
   useDotNet: true
   condition: succeeded()
-  retryCountOnTaskFailure: 0
+  retryCountOnTaskFailure: 1
 
 steps:
 - ${{ if eq(parameters.useDotNet, false) }}:
