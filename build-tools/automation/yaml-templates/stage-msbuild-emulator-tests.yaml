@@ -86,7 +86,7 @@ stages:
       avdAbi: x86
       avdType: android-wear
       deviceName: wear_square
-      androidSdkPlatforms: 33
+      androidSdkPlatforms: 34
     pool:
       vmImage: $(HostedMacImage)
     workspace:

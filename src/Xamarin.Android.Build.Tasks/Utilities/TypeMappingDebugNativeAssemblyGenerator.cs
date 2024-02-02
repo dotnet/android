@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -116,7 +118,8 @@ namespace Xamarin.Android.Tasks
 		List<StructureInstance<TypeMapEntry>> managedToJavaMap;
 		StructureInstance<TypeMap> type_map;
 
-		public TypeMappingDebugNativeAssemblyGenerator (TypeMapGenerator.ModuleDebugData data)
+		public TypeMappingDebugNativeAssemblyGenerator (TaskLoggingHelper log, TypeMapGenerator.ModuleDebugData data)
+			: base (log)
 		{
 			this.data = data;
 

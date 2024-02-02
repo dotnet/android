@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -66,7 +68,8 @@ namespace Xamarin.Android.Tasks
 		StructureInfo compressedAssemblyDescriptorStructureInfo;
 		StructureInfo compressedAssembliesStructureInfo;
 
-		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<string, CompressedAssemblyInfo> assemblies)
+		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<string, CompressedAssemblyInfo> assemblies)
+			: base (log)
 		{
 			this.assemblies = assemblies;
 		}

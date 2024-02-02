@@ -386,13 +386,13 @@ namespace Xamarin.Android.Tasks
 
 			if (enableMarshalMethods) {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
+					Log,
 					assemblyCount,
 					uniqueAssemblyNames,
-					marshalMethodsState?.MarshalMethods,
-					Log
+					marshalMethodsState?.MarshalMethods
 				);
 			} else {
-				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (assemblyCount, uniqueAssemblyNames);
+				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (Log, assemblyCount, uniqueAssemblyNames);
 			}
 			LLVMIR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGen.Construct ();
 

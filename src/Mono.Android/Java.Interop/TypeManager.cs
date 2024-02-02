@@ -297,15 +297,19 @@ namespace Java.Interop {
 				class_ptr = IntPtr.Zero;
 			}
 
-			if (type == null) {
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{JNIEnv.GetClassNameFromInstance (handle)}'. (Where is the Java.Lang.Object wrapper?!)"),
-						CreateJavaLocationException ());
+			if (targetType != null &&
+					(type == null ||
+					 !targetType.IsAssignableFrom (type))) {
+				type = targetType;
 			}
 
-			if (targetType != null && !targetType.IsAssignableFrom (type))
-				type = targetType;
+			if (type == null) {
+				class_name = JNIEnv.GetClassNameFromInstance (handle);
+				JNIEnv.DeleteRef (handle, transfer);
+				throw new NotSupportedException (
+						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
+						CreateJavaLocationException ());
+			}
 
 			if (type.IsInterface || type.IsAbstract) {
 				var invokerType = JavaObjectExtensions.GetInvokerType (type);

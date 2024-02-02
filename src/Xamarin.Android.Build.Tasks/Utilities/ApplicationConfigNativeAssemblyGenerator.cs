@@ -6,6 +6,7 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -135,7 +136,6 @@ namespace Xamarin.Android.Tasks
 
 		SortedDictionary <string, string>? environmentVariables;
 		SortedDictionary <string, string>? systemProperties;
-		TaskLoggingHelper log;
 		StructureInstance? application_config;
 		List<StructureInstance<DSOCacheEntry>>? dsoCache;
 		List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
@@ -172,6 +172,7 @@ namespace Xamarin.Android.Tasks
 		public bool MarshalMethodsEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
+			: base (log)
 		{
 			if (environmentVariables != null) {
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
@@ -180,8 +181,6 @@ namespace Xamarin.Android.Tasks
 			if (systemProperties != null) {
 				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
 			}
-
-			this.log = log;
 		}
 
 		protected override void Construct (LlvmIrModule module)
@@ -322,7 +321,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)));
 			}
 
 			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();
