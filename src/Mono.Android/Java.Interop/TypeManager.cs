@@ -267,7 +267,7 @@ namespace Java.Interop {
 		{
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string class_name = GetClassName (class_ptr);
+			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
@@ -279,12 +279,18 @@ namespace Java.Interop {
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
 					JNIEnv.DeleteLocalRef (class_ptr);
+					class_name = null;
 					class_ptr = super_class_ptr;
-					class_name = GetClassName (class_ptr);
+					if (class_ptr != IntPtr.Zero) {
+						class_name = GetClassName (class_ptr);
+					}
 				}
 			}
 
-			JNIEnv.DeleteLocalRef (class_ptr);
+			if (class_ptr != IntPtr.Zero) {
+				JNIEnv.DeleteLocalRef (class_ptr);
+				class_ptr = IntPtr.Zero;
+			}
 
 			if (targetType != null &&
 					(type == null ||
