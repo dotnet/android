@@ -66,7 +66,6 @@ namespace Xamarin.Android.Tasks
 					foreach (var file in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".java")) {
 						var path    = file.ItemSpec.Replace (@"\", @"\\");
 						sw.WriteLine (string.Format ("\"{0}\"", path));
-						Log.LogDebugMessage ($"javac source: {path}");
 					}
 
 				if (string.IsNullOrEmpty (StubSourceDirectory))
@@ -92,8 +91,11 @@ namespace Xamarin.Android.Tasks
 					var path    = file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC);
 					sw.WriteLine (string.Format ("\"{0}\"",
 								path));
-					Log.LogDebugMessage ($"javac source: {path}");
 				}
+			}
+			Log.LogDebugMessage ($"javac response file contents: {TemporarySourceListFile}");
+			foreach (var line in File.ReadLines (TemporarySourceListFile)) {
+				Log.LogDebugMessage ($"  {line}");
 			}
 		}
 	}
