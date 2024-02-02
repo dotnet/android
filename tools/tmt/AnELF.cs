@@ -97,6 +97,12 @@ namespace tmt
 		}
 
 		public abstract byte[] GetData (ulong symbolValue, ulong size);
+		public abstract byte[] GetDataFromPointer (ulong pointerValue, ulong size);
+
+		public string GetASCIIZFromPointer (ulong pointerValue)
+		{
+			return GetASCIIZ (GetDataFromPointer (pointerValue, 0), 0);
+		}
 
 		public string GetASCIIZ (ulong symbolValue)
 		{
@@ -137,11 +143,11 @@ namespace tmt
 
 		protected byte[] GetData (ISection section, ulong size, ulong offset)
 		{
-			Log.Debug ($"AnELF.GetData: section == {section.Name}; requested data size == {size}; offset in section == {offset:X}");
+			Log.Debug ($"AnELF.GetData: section == '{section.Name}'; requested data size == {size}; offset in section == 0x{offset:x}");
 			byte[] data = section.GetContents ();
 			var s = (Section<ulong>)section;
 
-			Log.Debug ($"  section offset in file: {s.Offset}; section size: {s.Size}; alignment: {s.Alignment}");
+			Log.Debug ($"  section offset in file: 0x{s.Offset:x}; section size: {s.Size}; alignment: {s.Alignment}");
 			Log.Debug ($"  section data length: {data.Length} (long: {data.LongLength})");
 			if ((ulong)data.LongLength < (offset + size)) {
 				Log.Debug ($"  not enough data in section");

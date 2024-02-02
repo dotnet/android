@@ -33,7 +33,7 @@ static class Relocations
 			return (ulong)rel.Addend;
 		}
 
-		Log.Warning ($"[AArch64] Relocation of supported type for symbol at offset 0x{symbolOffset:x} not found");
+		Log.Debug ($"[AArch64] Relocation of supported type for symbol at offset 0x{symbolOffset:x} not found");
 		return 0;
 	}
 

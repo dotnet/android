@@ -60,6 +60,38 @@ namespace tmt
 			return fileOffset;
 		}
 
+		public override byte[] GetDataFromPointer (ulong pointerValue, ulong size)
+		{
+			Log.Debug ($"Looking for section containing pointer 0x{pointerValue:x}");
+			ulong dataOffset = 0;
+			Section<ulong>? section = null;
+
+			foreach (Section<ulong> s in ELF.Sections) {
+				if (s.Type != SectionType.ProgBits) {
+					continue;
+				}
+
+				if (s.LoadAddress > pointerValue || (s.LoadAddress + s.Size) < pointerValue) {
+					continue;
+				}
+
+				Log.Debug ($"  Section '{s.Name}' matches");
+
+				// Pointer is a load address, we convert it to the in-section offset by subtracting section load address from
+				// the pointer
+				dataOffset = pointerValue - s.LoadAddress;
+				Log.Debug ($"  Pointer data section offset: 0x{dataOffset:x}");
+				section = s;
+				break;
+			}
+
+			if (section == null) {
+				throw new InvalidOperationException ($"Data for pointer 0x{pointerValue:x} not located");
+			}
+
+			return GetData (section, size, dataOffset);
+		}
+
 		public override byte[] GetData (ulong symbolValue, ulong size = 0)
 		{
 			Log.Debug ($"ELF64.GetData: Looking for symbol value {symbolValue:X08}");
@@ -92,14 +124,10 @@ namespace tmt
 			ulong offset = 0;
 
 			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}");
-			ulong counter = 0;
 			while (offset < (ulong)data.Length) {
 				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
 				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
 				long relAddend = Helpers.ReadInt64 (data, ref offset, is64Bit: true);
-
-				Console.WriteLine ($"[{counter}] 0x{relOffset:x} 0x{relInfo:x} 0x{relAddend:x}");
-				counter++;
 
 				ret.Add (new ELF64RelocationAddend (relOffset, relInfo, relAddend));
 			}

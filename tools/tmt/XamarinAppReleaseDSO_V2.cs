@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.IO.Hashing;
 using System.Text;
 
 using ELFSharp.ELF.Sections;
+using Xamarin.Android.Tasks;
 
 namespace tmt;
 
@@ -42,16 +44,18 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 		public uint java_name_index;
 	}
 
-	const string MapModulesSymbolName = "map_modules";
-	const string ModuleCountSymbolName = "map_module_count";
+	const string MapModulesSymbolName    = "map_modules";
+	const string ModuleCountSymbolName   = "map_module_count";
 	const string JavaTypeCountSymbolName = "java_type_count";
 	const string JavaTypeNamesSymbolName = "java_type_names";
-	const string MapJavaSymbolName = "map_java";
+	const string MapJavaSymbolName       = "map_java";
+	const string MapJavaHashesSymbolName = "map_java_hashes";
 
 	Map? map;
 	List<TypeMapModule>? modules;
 	List<TypeMapJava>? javaTypes;
 	List<string>? javaTypeNames;
+	List<ulong>? javaTypeNameHashes;
 
 	public override string FormatVersion => "2";
 	public override Map Map => map ?? throw new InvalidOperationException ("Data hasn't been loaded yet");
@@ -66,7 +70,8 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 		       HasSymbol (elf, ModuleCountSymbolName) &&
 		       HasSymbol (elf, JavaTypeCountSymbolName) &&
 		       HasSymbol (elf, JavaTypeNamesSymbolName) &&
-		       HasSymbol (elf, MapJavaSymbolName);
+		       HasSymbol (elf, MapJavaSymbolName) &&
+		       HasSymbol (elf, MapJavaHashesSymbolName);
 	}
 
 	protected override bool LoadMaps ()
@@ -74,7 +79,10 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 		try {
 			string filePath = ELF.FilePath;
 			modules = LoadMapModules (filePath);
+
+			// Order in which the entries are loaded is important.  Farther loads use data gathered in the preceding ones
 			javaTypes = LoadJavaTypes (filePath);
+			javaTypeNameHashes = LoadJavaTypeNameHashes (filePath);
 			javaTypeNames = LoadJavaTypeNames (filePath);
 			return true;
 		} catch (Exception ex) {
@@ -273,21 +281,99 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 
 		List<TypeMapModuleEntry> EnsureMap (TypeMapModule m)
 		{
-			if (m.map == null)
-			throw new InvalidOperationException ($"Module {m.module_uuid} ({m.assembly_name}) has no map?");
+			if (m.map == null) {
+				throw new InvalidOperationException ($"Module {m.module_uuid} ({m.assembly_name}) has no map?");
+			}
+
 			return m.map;
 		}
 	}
 
+	List<ulong> LoadJavaTypeNameHashes (string filePath)
+	{
+		Log.Debug ();
+		Log.Debug (LogTag, "Reading Java type name hashes");
+
+		ulong size = 0;
+		if (Is64Bit) {
+			size += GetPaddedSize<ulong> (size); // hashes are 64-bit
+		} else {
+			size += GetPaddedSize<uint> (size); // hashes are 32-bit
+		}
+
+		(byte[] hashesData, ISymbolEntry? symbol) = ELF.GetData (MapJavaHashesSymbolName);
+		if (hashesData.Length == 0 || symbol == null) {
+			throw new InvalidOperationException ($"{filePath} doesn't have a valid '{MapJavaHashesSymbolName}' symbol");
+		}
+
+		var ret = new List<ulong> ();
+		ulong offset = 0;
+		for (ulong i = 0; i < (ulong)hashesData.Length / size; i++) {
+			ulong hash;
+			if (Is64Bit) {
+				hash = ReadUInt64 (hashesData, ref offset);
+			} else {
+				hash = (ulong)ReadUInt32 (hashesData, ref offset);
+			}
+
+			Log.Debug (LogTag, $"  [{i}] 0x{HashToHexString(hash)}");
+			ret.Add (hash);
+		}
+
+		Log.Debug ();
+		Log.Debug (LogTag, $"Java type name hashes loaded (count: {ret.Count})");
+
+		return ret;
+	}
+
 	List<string> LoadJavaTypeNames (string filePath)
 	{
+		Log.Debug ();
+		Log.Debug (LogTag, "Reading Java type names");
+
+		ulong size = 0;
+		size += GetPaddedSize<string> (size); // pointers
+
+		(byte[] namesData, ISymbolEntry? symbol) = ELF.GetData (JavaTypeNamesSymbolName);
+		if (namesData.Length == 0 || symbol == null) {
+			throw new InvalidOperationException ($"{filePath} doesn't have a valid '{JavaTypeNamesSymbolName}' symbol");
+		}
+
 		var ret = new List<string> ();
+		ulong offset = 0;
+		for (ulong i = 0; i < (ulong)namesData.Length / size; i++) {
+			ulong pointer = ReadPointer (symbol, namesData, ref offset);
+			string? name;
+
+			if (pointer != 0) {
+				name = ELF.GetASCIIZFromPointer (pointer);
+			} else {
+				name = null;
+			}
+
+			ret.Add (name ?? String.Empty);
+
+			ulong hash = TypeMapHelper.HashJavaName (name ?? String.Empty, Is64Bit);
+			int javaTypeIndex = javaTypeNameHashes!.IndexOf (hash);
+
+			if (javaTypeIndex < 0) {
+				Log.Warning (LogTag, $"Hash 0x{HashToHexString(hash)} for Java type name '{name}' not found in the '{MapJavaHashesSymbolName}' array");
+			}
+
+			Log.Debug (LogTag, $"  [{i}] {(name ?? String.Empty)} (hash: 0x{HashToHexString(hash)})");
+		}
+
+		Log.Debug ();
+		Log.Debug (LogTag, $"Java type names loaded (count: {ret.Count})");
 
 		return ret;
 	}
 
 	List<TypeMapJava> LoadJavaTypes (string filePath)
 	{
+		Log.Debug ();
+		Log.Debug (LogTag, "Reading Java types");
+
 		ulong javaTypeCount = (ulong)ELF.GetUInt32 (JavaTypeCountSymbolName);
 
 		// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapJava)
@@ -317,11 +403,17 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 			ret.Add (javaEntry);
 		}
 
+		Log.Debug (LogTag, $"Java types loaded (count: {ret.Count})");
+		Log.Debug ();
+
 		return ret;
 	}
 
 	List<TypeMapModule> LoadMapModules (string filePath)
 	{
+		Log.Debug ();
+		Log.Debug (LogTag, "Reading map modules");
+
 		ulong moduleCount = (ulong)ELF.GetUInt32 (ModuleCountSymbolName);
 
 		// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModule)
@@ -366,39 +458,38 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 			Log.Debug ($"  duplicate_count == {module.duplicate_count} (offset: {offset})");
 
 			// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModuleEntry)
-			ulong prevOffset = offset;
-
-			// TODO: need a new routine here.  If pointer is 0, then we look for relocations but then `GetData(symbolValue, mapSize)` cannot
-			//       be used as it expects to find an actual symbol, but with null pointers returned by `ReadPointer` there are no associated
-			//       entries in the symbol table(s).  In such instance we need to locate a section that contains the pointer by load address of
-			//       its containing symbol.
-			ulong pointer = ReadPointer (moduleData, ref offset);
-			if (pointer == 0) {
-				pointer = ELF.DeterminePointerAddress (symbol, prevOffset);
-			}
+			ulong pointer = ReadPointer (symbol, moduleData, ref offset);
 			Log.Debug ($"  *map == 0x{pointer:x} (offset: {offset})");
+
+			if (pointer == 0) {
+				throw new InvalidOperationException ($"Broken typemap structure, map pointer for module {module.module_uuid} is null");
+			}
 
 			size  = 0;
 			size += GetPaddedSize<uint> (size); // type_token_id
 			size += GetPaddedSize<uint> (size); // java_map_index
 
 			ulong mapSize = size * module.entry_count;
-			byte[] data = ELF.GetData (pointer, mapSize);
+			byte[] data = ELF.GetDataFromPointer (pointer, mapSize);
 
 			module.map = new List<TypeMapModuleEntry> ();
 			ReadMapEntries (module.map, data, module.entry_count);
 
 			// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModuleEntry)
-			pointer = ReadPointer (moduleData, ref offset);
+			pointer = ReadPointer (symbol, moduleData, ref offset);
+
 			if (pointer != 0) {
 				mapSize = size *  module.duplicate_count;
-				data = ELF.GetData (pointer, mapSize);
+				data = ELF.GetDataFromPointer (pointer, mapSize);
 				module.duplicate_map = new List<TypeMapModuleEntry> ();
 				ReadMapEntries (module.duplicate_map, data, module.duplicate_count);
 			}
 
-			pointer = ReadPointer (moduleData, ref offset);
-			module.assembly_name = ELF.GetASCIIZ (pointer);
+			pointer = ReadPointer (symbol, moduleData, ref offset);
+			if (pointer != 0) {
+				module.assembly_name = ELF.GetASCIIZFromPointer (pointer);
+			}
+
 			Log.Debug ($"  assembly_name == {module.assembly_name}");
 			Log.Debug ("");
 
@@ -408,7 +499,13 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 			ReadPointer (moduleData, ref offset);
 
 			ret.Add (module);
+
+			// Padding
+			offset += offset % size;
 		}
+
+		Log.Debug (LogTag, $"Map modules loaded (count: {ret.Count})");
+		Log.Debug ();
 
 		return ret;
 
@@ -438,4 +535,6 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 
 		return javaTypeNames[(int)tmj.java_name_index];
 	}
+
+	string HashToHexString (ulong hash) => Is64Bit ? $"{hash:X16}" : $"{hash:X8}";
 }

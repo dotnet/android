@@ -22,7 +22,12 @@ namespace tmt
 
 		public override ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset)
 		{
-			return 0;
+			throw new NotImplementedException ();
+		}
+
+		public override byte[] GetDataFromPointer (ulong pointerValue, ulong size)
+		{
+			throw new NotImplementedException ();
 		}
 
 		public override byte[] GetData (ulong symbolValue, ulong size = 0)

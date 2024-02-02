@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using ELFSharp.ELF.Sections;
+
 namespace tmt
 {
 	abstract class XamarinAppDSO : ITypemap
@@ -77,6 +79,17 @@ namespace tmt
 		protected ulong ReadPointer (byte[] data, ref ulong offset, bool packed = false)
 		{
 			return Helpers.ReadPointer (data, ref offset, Is64Bit, packed);
+		}
+
+		protected ulong ReadPointer (ISymbolEntry symbol, byte[] data, ref ulong offset, bool packed = false)
+		{
+			ulong prevOffset = offset;
+			ulong pointer = ReadPointer (data, ref offset, packed);
+			if (pointer == 0) {
+				pointer = ELF.DeterminePointerAddress (symbol, prevOffset);
+			}
+
+			return pointer;
 		}
 
 		protected ulong GetPaddedSize<S> (ulong sizeSoFar)
