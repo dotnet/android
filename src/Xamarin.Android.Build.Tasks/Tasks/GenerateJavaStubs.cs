@@ -570,7 +570,7 @@ namespace Xamarin.Android.Tasks
 
 		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
 		{
-			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
+			var tmg = new TypeMapGenerator (Log, SupportedAbis);
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}

@@ -695,6 +695,30 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 
 	if (module->image == nullptr) {
 		module->image = mono_image_loaded (module->assembly_name);
+
+		if (module->image == nullptr) {
+			log_debug (LOG_ASSEMBLY, "typemap: assembly '%s' hasn't been loaded yet, attempting a full load", module->assembly_name);
+
+			// Fake a request from MonoVM to load the assembly.
+			MonoAssemblyName *assembly_name = mono_assembly_name_new (module->assembly_name);
+			MonoAssembly *assm;
+
+			if (assembly_name == nullptr) {
+				log_error (LOG_ASSEMBLY, "typemap: failed to create Mono assembly name for '%s'", module->assembly_name);
+				assm = nullptr;
+			} else {
+				MonoAssemblyLoadContextGCHandle alc_gchandle = mono_alc_get_default_gchandle ();
+				MonoError mono_error;
+				assm = embeddedAssemblies.open_from_bundles (assembly_name, alc_gchandle, &mono_error, false /* ref_only */);
+			}
+
+			if (assm == nullptr) {
+				log_warn (LOG_ASSEMBLY, "typemap: failed to load managed assembly '%s'", module->assembly_name);
+			} else {
+				module->image = mono_assembly_get_image (assm);
+			}
+		}
+
 		if (module->image == nullptr) {
 			log_error (LOG_ASSEMBLY, "typemap: unable to load assembly '%s' when looking up managed type corresponding to Java type '%s'", module->assembly_name, to_utf8 (java_type_name).get ());
 			return nullptr;

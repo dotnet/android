@@ -77,7 +77,7 @@ class XAJavaTypeScanner
 
 	void AddJavaType (TypeDefinition type, Dictionary<string, TypeData> types, AndroidTargetArch arch)
 	{
-		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
+		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
 			string typeName = type.GetPartialAssemblyQualifiedName (cache);
 			if (!types.TryGetValue (typeName, out TypeData typeData)) {

@@ -90,6 +90,10 @@ namespace Xamarin.Android.Tasks
 								file.Replace (@"\", @"\\").Normalize (NormalizationForm.FormC)));
 				}
 			}
+			Log.LogDebugMessage ($"javac response file contents: {TemporarySourceListFile}");
+			foreach (var line in File.ReadLines (TemporarySourceListFile)) {
+				Log.LogDebugMessage ($"  {line}");
+			}
 		}
 	}
 }

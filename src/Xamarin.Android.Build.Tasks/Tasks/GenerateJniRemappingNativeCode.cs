@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 
 		void GenerateEmpty ()
 		{
-			Generate (new JniRemappingAssemblyGenerator (), typeReplacementsCount: 0);
+			Generate (new JniRemappingAssemblyGenerator (Log), typeReplacementsCount: 0);
 		}
 
 		void Generate ()
@@ -74,7 +74,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Generate (new JniRemappingAssemblyGenerator (typeReplacements, methodReplacements), typeReplacements.Count);
+			Generate (new JniRemappingAssemblyGenerator (Log, typeReplacements, methodReplacements), typeReplacements.Count);
 		}
 
 		void Generate (JniRemappingAssemblyGenerator jniRemappingComposer, int typeReplacementsCount)
