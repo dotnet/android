@@ -35,7 +35,7 @@ namespace tmt
 			const string RelaDynSectionName = ".rela.dyn";
 			ISection? sec = GetSection (ELF, RelaDynSectionName);
 			if (sec == null) {
-				Log.Warning ("${filePath} does not contain dynamic relocation section ('{RelaDynSectionName}')");
+				Log.Warning ($"{FilePath} does not contain dynamic relocation section ('{RelaDynSectionName}')");
 				return 0;
 			}
 
@@ -125,9 +125,9 @@ namespace tmt
 
 			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}");
 			while (offset < (ulong)data.Length) {
-				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
-				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, is64Bit: true);
-				long relAddend = Helpers.ReadInt64 (data, ref offset, is64Bit: true);
+				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
+				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
+				long relAddend = Helpers.ReadInt64 (data, ref offset, Is64Bit);
 
 				ret.Add (new ELF64RelocationAddend (relOffset, relInfo, relAddend));
 			}

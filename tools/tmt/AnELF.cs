@@ -141,13 +141,24 @@ namespace tmt
 			return GetData (symbol.PointedSection, size, offset);
 		}
 
+		void LogSectionInfo<T> (Section<T> section) where T: struct
+		{
+			Log.Debug ($"  section offset in file: 0x{section.Offset:x}; section size: {section.Size}; alignment: {section.Alignment}");
+		}
+
 		protected byte[] GetData (ISection section, ulong size, ulong offset)
 		{
 			Log.Debug ($"AnELF.GetData: section == '{section.Name}'; requested data size == {size}; offset in section == 0x{offset:x}");
 			byte[] data = section.GetContents ();
-			var s = (Section<ulong>)section;
 
-			Log.Debug ($"  section offset in file: 0x{s.Offset:x}; section size: {s.Size}; alignment: {s.Alignment}");
+			if (section is Section<ulong> sec64) {
+				LogSectionInfo (sec64);
+			} else if (section is Section<uint> sec32) {
+				LogSectionInfo (sec32);
+			} else {
+				throw new NotSupportedException ($"Are we in the 128-bit future yet? Unsupported section type {section.GetType ()}");
+			}
+
 			Log.Debug ($"  section data length: {data.Length} (long: {data.LongLength})");
 			if ((ulong)data.LongLength < (offset + size)) {
 				Log.Debug ($"  not enough data in section");
