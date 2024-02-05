@@ -83,7 +83,7 @@ class XAJavaTypeScanner
 
 	void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
 	{
-		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
+		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
 			types.Add (type);
 		} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {

@@ -92,7 +92,7 @@ namespace Xamarin.Android.Tasks
 
 			void Generate (Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> dict)
 			{
-				var composer = new CompressedAssembliesNativeAssemblyGenerator (dict);
+				var composer = new CompressedAssembliesNativeAssemblyGenerator (Log, dict);
 				LLVMIR.LlvmIrModule compressedAssemblies = composer.Construct ();
 
 				foreach (string abi in SupportedAbis) {

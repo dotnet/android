@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Java.Interop.Tools.Cecil;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -240,7 +242,7 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, new ModuleDebugData ());
 			GenerateNativeAssembly (composer, composer.Construct (), llFilesOutputDirectory);
 
 			return true;
@@ -271,7 +273,7 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (data);
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, data);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -403,7 +405,7 @@ namespace Xamarin.Android.Tasks
 				// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
 				// build) and has no value for the end user. The message is left here because it may be useful to us
 				// in our devloop at some point.
-				//logger ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
+				//log.LogDebugMessage ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
 				moduleData.DuplicateTypes.Add (entry);
 			} else {
 				moduleData.TypesScratch.Add (entry.JavaName, entry);
@@ -431,7 +433,7 @@ namespace Xamarin.Android.Tasks
 				module.Types = module.TypesScratch.Values.ToArray ();
 			}
 
-			var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
+			var composer = new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules));
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;

@@ -1,6 +1,8 @@
 using System;
 using System.IO;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR
@@ -8,6 +10,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	abstract class LlvmIrComposer
 	{
 		bool constructed;
+
+		protected readonly TaskLoggingHelper Log;
+
+		protected LlvmIrComposer (TaskLoggingHelper log)
+		{
+			this.Log = log ?? throw new ArgumentNullException (nameof (log));
+		}
 
 		protected abstract void Construct (LlvmIrModule module);
 

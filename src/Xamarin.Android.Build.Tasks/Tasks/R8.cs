@@ -1,3 +1,4 @@
+using System;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using System.Collections.Generic;
@@ -82,16 +83,15 @@ namespace Xamarin.Android.Tasks
 
 			if (EnableShrinking) {
 				if (!string.IsNullOrEmpty (AcwMapFile)) {
-					var acwLines = File.ReadAllLines (AcwMapFile);
+					var acwMap      = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (AcwMapFile), StringComparer.OrdinalIgnoreCase);
+					var javaTypes   = new List<string> (acwMap.Values.Count);
+					foreach (var v in acwMap.Values) {
+						javaTypes.Add (v);
+					}
+					javaTypes.Sort (StringComparer.Ordinal);
 					using (var appcfg = File.CreateText (ProguardGeneratedApplicationConfiguration)) {
-						for (int i = 0; i + 2 < acwLines.Length; i += 3) {
-							try {
-								var line = acwLines [i + 2];
-								var java = line.Substring (line.IndexOf (';') + 1);
-								appcfg.WriteLine ("-keep class " + java + " { *; }");
-							} catch {
-								// skip invalid lines
-							}
+						foreach (var java in javaTypes) {
+							appcfg.WriteLine ($"-keep class {java} {{ *; }}");
 						}
 					}
 				}

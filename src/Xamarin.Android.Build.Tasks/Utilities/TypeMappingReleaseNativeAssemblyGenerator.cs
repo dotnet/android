@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO.Hashing;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -179,7 +181,8 @@ namespace Xamarin.Android.Tasks
 
 		ulong moduleCounter = 0;
 
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (TaskLoggingHelper log, NativeTypeMappingData mappingData)
+			: base (log)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();

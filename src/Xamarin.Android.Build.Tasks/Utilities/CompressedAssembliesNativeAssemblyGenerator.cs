@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 using Xamarin.Android.Tools;
 
@@ -74,7 +76,8 @@ namespace Xamarin.Android.Tasks
 		StructureInfo compressedAssembliesStructureInfo;
 		Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> archData = new Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> ();
 
-		public CompressedAssembliesNativeAssemblyGenerator (IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
+		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
+			: base (log)
 		{
 			this.archAssemblies = archAssemblies;
 		}

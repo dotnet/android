@@ -228,7 +228,6 @@ namespace Xamarin.Android.Tasks
 
 		readonly ICollection<string> uniqueAssemblyNames;
 		readonly int numberOfAssembliesInApk;
-		readonly TaskLoggingHelper logger;
 
 		StructureInfo marshalMethodsManagedClassStructureInfo;
 		StructureInfo marshalMethodNameStructureInfo;
@@ -244,7 +243,8 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (AndroidTargetArch targetArch, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+			: base (log)
 		{
 			this.targetArch = targetArch;
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
@@ -256,9 +256,9 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper logger, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState)
+			: base (log)
 		{
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
@@ -308,7 +308,7 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> entryList in marshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;
 				foreach (MarshalMethodEntry entry in entryList) {
-					logger.LogDebugMessage ($"MM: processing {entry.DeclaringType.FullName} {entry.NativeCallback.FullName}");
+					Log.LogDebugMessage ($"MM: processing {entry.DeclaringType.FullName} {entry.NativeCallback.FullName}");
 					ProcessAndAddMethod (allMethods, entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
 				}
 			}
@@ -338,7 +338,7 @@ namespace Xamarin.Android.Tasks
 
 			foreach (MarshalMethodInfo method in allMethods) {
 				if (seenNativeSymbols.Contains (method.NativeSymbolName)) {
-					logger.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
+					Log.LogDebugMessage ($"Removed MM duplicate '{method.NativeSymbolName}' (implemented: {method.Method.ImplementedMethod.FullName}; registered: {method.Method.RegisteredMethod.FullName}");
 					continue;
 				}
 
@@ -658,7 +658,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
-			logger.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
+			Log.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
 			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 
