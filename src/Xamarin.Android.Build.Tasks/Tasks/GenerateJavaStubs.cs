@@ -20,6 +20,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
 namespace Xamarin.Android.Tasks
 {
@@ -473,23 +474,32 @@ namespace Xamarin.Android.Tasks
 
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning, cache, classifier) {
-							GenerateOnCreateOverrides = generateOnCreateOverrides,
-							ApplicationJavaClass = ApplicationJavaClass,
-							MonoRuntimeInitialization = monoInit,
+						var reader_options = new CallableWrapperReaderOptions {
+							DefaultApplicationJavaClass = ApplicationJavaClass,
+							DefaultGenerateOnCreateOverrides = generateOnCreateOverrides,
+							DefaultMonoRuntimeInitialization = monoInit,
+							MethodClassifier = classifier,
 						};
 
-						jti.Generate (writer);
+						var jcw_type = CecilImporter.CreateType (t, cache, reader_options);
+						
+						var writer_options = new CallableWrapperWriterOptions {
+							CodeGenerationTarget = JavaPeerStyle.XAJavaInterop1
+						};
+
+						jcw_type.Generate (writer, writer_options);
+
 						if (useMarshalMethods) {
 							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
 								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName (cache)}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
 						}
+
 						writer.Flush ();
 
-						var path = jti.GetDestinationPath (outputPath);
+						var path = jcw_type.GetDestinationPath (outputPath);
 						Files.CopyIfStreamChanged (writer.BaseStream, path);
-						if (jti.HasExport && !hasExportReference)
+						if (jcw_type.HasExport && !hasExportReference)
 							Diagnostic.Error (4210, Properties.Resources.XA4210);
 					} catch (XamarinAndroidException xae) {
 						ok = false;
