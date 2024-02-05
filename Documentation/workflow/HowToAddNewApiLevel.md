@@ -28,7 +28,7 @@ the new platform will be downloaded to your local Android SDK.
 - Run `xaprepare android-sdk-platforms=all` to download all Android SDK platforms
 - Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
 - Run the following command to create a merged `api.xml`:
-  - `dotnet-local.cmd build build-tools\create-android-api -t:_GenerateApiDescription`
+  - `dotnet-local.cmd build build-tools\create-android-api -t:GenerateApiDescription`
 - Copy the `bin\BuildDebug\api\api-xx.xml` file to `src\Mono.Android\Profiles`
 
 ### Other Infrastructure Changes
