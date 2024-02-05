@@ -1267,6 +1267,87 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Could not verify Java dependencies for artifact &apos;{0}&apos; due to missing POM file(s). See other error(s) for details..
+        /// </summary>
+        public static string XA4240 {
+            get {
+                return ResourceManager.GetString("XA4240", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
+        /// </summary>
+        public static string XA4241 {
+            get {
+                return ResourceManager.GetString("XA4241", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied. Microsoft maintains the NuGet package &apos;{1}&apos; that could fulfill this dependency..
+        /// </summary>
+        public static string XA4242 {
+            get {
+                return ResourceManager.GetString("XA4242", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; is required when using &apos;{1}&apos; for &apos;{2}&apos; item &apos;{3}&apos;..
+        /// </summary>
+        public static string XA4243 {
+            get {
+                return ResourceManager.GetString("XA4243", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Attribute &apos;{0}&apos; cannot be empty for &apos;{1}&apos; item &apos;{2}&apos;..
+        /// </summary>
+        public static string XA4244 {
+            get {
+                return ResourceManager.GetString("XA4244", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Specified POM file &apos;{0}&apos; does not exist..
+        /// </summary>
+        public static string XA4245 {
+            get {
+                return ResourceManager.GetString("XA4245", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not parse POM file &apos;{0}&apos;: &apos;{1}&apos;..
+        /// </summary>
+        public static string XA4246 {
+            get {
+                return ResourceManager.GetString("XA4246", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve POM file for artifact &apos;{0}&apos;..
+        /// </summary>
+        public static string XA4247 {
+            get {
+                return ResourceManager.GetString("XA4247", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Could not find NuGet package &apos;{0}&apos; version &apos;{1}&apos; in lock file. Ensure NuGet Restore has run since this &lt;PackageReference&gt; was added..
+        /// </summary>
+        public static string XA4248 {
+            get {
+                return ResourceManager.GetString("XA4248", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {

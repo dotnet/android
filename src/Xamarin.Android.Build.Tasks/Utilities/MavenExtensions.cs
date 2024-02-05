@@ -122,10 +122,9 @@ static class MavenExtensions
 		return true;
 	}
 
-	public static bool TryParseJavaArtifactAndJavaVersion (this ITaskItem task, string type, TaskLoggingHelper log, [NotNullWhen (true)] out Artifact? artifact)
+	public static bool TryParseJavaArtifactAndJavaVersion (this ITaskItem task, string type, TaskLoggingHelper log, [NotNullWhen (true)] out Artifact? artifact, out bool attributesSpecified)
 	{
 		artifact = null;
-
 		var item_name = task.ItemSpec;
 
 		// Convert "../../src/blah/Blah.csproj" to "Blah.csproj"
@@ -135,13 +134,16 @@ static class MavenExtensions
 		var has_artifact = task.HasMetadata ("JavaArtifact");
 		var has_version = task.HasMetadata ("JavaVersion");
 
+		// Lets callers know if user attempted to specify JavaArtifact or JavaVersion, even if they did it incorrectly
+		attributesSpecified = has_artifact || has_version;
+
 		if (has_artifact && !has_version) {
-			log.LogError ("'JavaVersion' is required when using 'JavaArtifact' for {0} '{1}'.", type, item_name);
+			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaVersion", "JavaArtifact", type, item_name);
 			return false;
 		}
 
 		if (!has_artifact && has_version) {
-			log.LogError ("'JavaArtifact' is required when using 'JavaVersion' for {0} '{1}'.", type, item_name);
+			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaArtifact", "JavaVersion", type, item_name);
 			return false;
 		}
 
@@ -150,17 +152,19 @@ static class MavenExtensions
 			var version = task.GetMetadata ("JavaVersion");
 
 			if (string.IsNullOrWhiteSpace (id)) {
-				log.LogError ("'JavaArtifact' cannot be empty for {0} '{1}'.", type, item_name);
+				log.LogCodedError ("XA4244", Properties.Resources.XA4244, "JavaArtifact", type, item_name);
 				return false;
 			}
 
 			if (string.IsNullOrWhiteSpace (version)) {
-				log.LogError ("'JavaVersion' cannot be empty for {0} '{1}'.", type, item_name);
+				log.LogCodedError ("XA4244", Properties.Resources.XA4244, "JavaVersion", type, item_name);
 				return false;
 			}
 
-			if (TryParseArtifactWithVersion (id, version, log, out artifact))
+			if (TryParseArtifactWithVersion (id, version, log, out artifact)) {
+				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from {3} '{4}' (JavaArtifact)", artifact.GroupId, artifact.Id, artifact.Version, type, item_name);
 				return true;
+			}
 		}
 
 		return false;

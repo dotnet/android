@@ -13,10 +13,6 @@ using Xamarin.Android.Tasks;
 
 namespace Xamarin.Android.Build.Tests;
 
-// - PackageReference with nuget tags
-// - ProjectAssetsLockFile?
-// - Download microsoft-packages.json
-
 public class JavaDependencyVerificationTests
 {
 	[Test]
@@ -43,7 +39,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Requested POM file 'missing.pom' does not exist.", engine.Errors [0].Message);
+		Assert.AreEqual ("Specified POM file 'missing.pom' does not exist.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -61,7 +57,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.True (engine.Errors [0].Message?.StartsWith ("Failed to register POM file"));
+		Assert.True (engine.Errors [0].Message?.StartsWith ("Could not parse POM file"));
 	}
 
 	[Test]
@@ -98,7 +94,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Java dependency 'com.google.android:missing' version '1.0' is not satisfied.", engine.Errors [0].Message);
+		Assert.AreEqual ("Java dependency 'com.google.android:missing:1.0' is not satisfied.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -124,7 +120,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Java dependency 'com.google.android:missing' version '2.0' is not satisfied.", engine.Errors [0].Message);
+		Assert.AreEqual ("Java dependency 'com.google.android:missing:2.0' is not satisfied.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -147,7 +143,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("Java dependency 'com.google.android:material-core' version '1.0' is not satisfied. Microsoft maintains the NuGet package 'Xamarin.Google.Material.Core' that could fulfill this dependency.", engine.Errors [0].Message);
+		Assert.AreEqual ("Java dependency 'com.google.android:material-core:1.0' is not satisfied. Microsoft maintains the NuGet package 'Xamarin.Google.Material.Core' that could fulfill this dependency.", engine.Errors [0].Message);
 	}
 
 	[Test]
@@ -290,8 +286,7 @@ public class JavaDependencyVerificationTests
 
 		Assert.True (result);
 		Assert.AreEqual (0, engine.Errors.Count);
-		Assert.AreEqual (1, engine.Warnings.Count);
-		Assert.AreEqual ("Could not determine required version of Java dependency 'com.google.android:material-core'. Validation of this dependency will not take version into account.", engine.Warnings [0].Message);
+		Assert.AreEqual (0, engine.Warnings.Count);
 	}
 
 	[Test]
@@ -312,8 +307,6 @@ public class JavaDependencyVerificationTests
 		var result = task.RunTask ();
 
 		Assert.False (result);
-		Assert.AreEqual (1, engine.Warnings.Count);
-		Assert.AreEqual ("Could not determine required version of Java dependency 'com.google.android:material-core'. Validation of this dependency will not take version into account.", engine.Warnings [0].Message);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:material-core' is not satisfied.", engine.Errors [0].Message);
 	}

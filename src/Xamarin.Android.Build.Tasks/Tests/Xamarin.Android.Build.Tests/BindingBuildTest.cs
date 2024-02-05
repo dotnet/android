@@ -810,7 +810,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				Assert.IsFalse (b.Build (proj), "Build should have failed.");
 
 				// Ensure an error was raised
-				StringAssertEx.Contains ("error : Java dependency 'androidx.annotation:annotation' version '1.2.0' is not satisfied.", b.LastBuildOutput);
+				StringAssertEx.Contains ("error XA4242: Java dependency 'androidx.annotation:annotation:1.2.0' is not satisfied.", b.LastBuildOutput);
 			}
 		}
 

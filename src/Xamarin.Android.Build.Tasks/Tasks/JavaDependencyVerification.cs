@@ -66,10 +66,6 @@ public class JavaDependencyVerification : AndroidTask
 			if (pom_resolver.RegisterFromAndroidLibrary (pom) is Artifact art)
 				poms_to_verify.Add (art);
 
-		//foreach (var pom in AndroidLibraries.Select (al => al.GetMetadata ("Manifest")))
-		//	if (pom.HasValue () && pom_resolver.Register (pom) is Artifact art)
-		//		poms_to_verify.Add (art);
-
 		foreach (var pom in AdditionalManifests ?? [])
 			pom_resolver.RegisterFromAndroidAdditionalJavaManifest (pom);
 
@@ -94,7 +90,7 @@ public class JavaDependencyVerification : AndroidTask
 				foreach (var dependency in resolved_pom.Dependencies.Where (d => (d.IsRuntimeDependency () || d.IsCompileDependency ()) && !d.IsOptional ()))
 					resolver.EnsureDependencySatisfied (dependency, ms_packages);
 			} else {
-				Log.LogError ("Could not verify Java dependencies for artifact '{0}' due to missing POM file(s). See other error(s) for details.", pom);
+				Log.LogCodedError ("XA4240", Properties.Resources.XA4240, pom);
 			}
 		}
 
@@ -117,7 +113,7 @@ public class JavaDependencyVerification : AndroidTask
 
 class DependencyResolver
 {
-	List<Artifact> artifacts = new List<Artifact> ();
+	readonly List<Artifact> artifacts = new List<Artifact> ();
 
 	readonly NuGetPackageVersionFinder? finder;
 	readonly TaskLoggingHelper log;
@@ -133,7 +129,7 @@ class DependencyResolver
 	public bool EnsureDependencySatisfied (ResolvedDependency dependency, MicrosoftNuGetPackageFinder packages)
 	{
 		if (!dependency.Version.HasValue ())
-			log.LogWarning ("Could not determine required version of Java dependency '{0}:{1}'. Validation of this dependency will not take version into account.", dependency.GroupId, dependency.ArtifactId);
+			log.LogMessage ("Could not determine required version of Java dependency '{0}:{1}'. Validation of this dependency will not take version into account.", dependency.GroupId, dependency.ArtifactId);
 
 		var satisfied = TrySatisfyDependency (dependency);
 
@@ -141,22 +137,12 @@ class DependencyResolver
 			return true;
 
 		var suggestion = packages.GetNuGetPackage ($"{dependency.GroupId}:{dependency.ArtifactId}");
+		var artifact_spec = dependency.ToArtifactString (dependency.Version.HasValue ());
 
-		// Message if we couldn't determine the required version
-		if (!dependency.Version.HasValue ()) {
-			if (suggestion is string nuget)
-				log.LogError ("Java dependency '{0}:{1}' is not satisfied. Microsoft maintains the NuGet package '{2}' that could fulfill this dependency.", dependency.GroupId, dependency.ArtifactId, nuget);
-			else
-				log.LogError ("Java dependency '{0}:{1}' is not satisfied.", dependency.GroupId, dependency.ArtifactId);
-
-			return false;
-		}
-
-		// Message if we could determine the required version
-		if (suggestion is string nuget2)
-			log.LogError ("Java dependency '{0}:{1}' version '{2}' is not satisfied. Microsoft maintains the NuGet package '{3}' that could fulfill this dependency.", dependency.GroupId, dependency.ArtifactId, dependency.Version, nuget2);
+		if (suggestion is string nuget)
+			log.LogCodedError ("XA4242", Properties.Resources.XA4242, artifact_spec, nuget);
 		else
-			log.LogError ("Java dependency '{0}:{1}' version '{2}' is not satisfied.", dependency.GroupId, dependency.ArtifactId, dependency.Version);
+			log.LogCodedError ("XA4242", Properties.Resources.XA4241, artifact_spec);
 
 		return false;
 	}
@@ -183,7 +169,13 @@ class DependencyResolver
 		foreach (var task in tasks.OrEmpty ()) {
 
 			// See if JavaArtifact/JavaVersion overrides were used
-			if (TryParseJavaArtifactAndVersion ("PackageReference", task))
+			if (task.TryParseJavaArtifactAndJavaVersion ("PackageReference", log, out var explicit_artifact, out var attributes_specified)) {
+				artifacts.Add (explicit_artifact);
+				continue;
+			}
+
+			// If user tried to specify JavaArtifact or JavaVersion, but did it incorrectly, we do not perform any fallback
+			if (attributes_specified)
 				continue;
 
 			// Try parsing the NuGet metadata for Java version information instead
@@ -204,7 +196,13 @@ class DependencyResolver
 	{
 		foreach (var task in tasks.OrEmpty ()) {
 			// See if JavaArtifact/JavaVersion overrides were used
-			if (TryParseJavaArtifactAndVersion ("ProjectReference", task))
+			if (task.TryParseJavaArtifactAndJavaVersion ("ProjectReference", log, out var explicit_artifact, out var attributes_specified)) {
+				artifacts.Add (explicit_artifact);
+				continue;
+			}
+
+			// If user tried to specify JavaArtifact or JavaVersion, but did it incorrectly, we do not perform any fallback
+			if (attributes_specified)
 				continue;
 
 			// There currently is no alternate way to figure this out. Perhaps in
@@ -226,55 +224,6 @@ class DependencyResolver
 				artifacts.Add (art);
 			}
 		}
-	}
-
-	// "type" is PackageReference or ProjectReference
-	// Returns "true" if JavaArtifact/JavaVersion is used, even if it was used incorrectly and is useless.
-	// This is so the caller will know to try alternate methods if neither JavaArtifact or JavaVersion were specified.
-	bool TryParseJavaArtifactAndVersion (string type, ITaskItem task)
-	{
-		var item_name = task.ItemSpec;
-
-		// Convert "../../src/blah/Blah.csproj" to "Blah.csproj"
-		if (type == "ProjectReference")
-			item_name = Path.GetFileName (item_name);
-
-		var has_artifact = task.HasMetadata ("JavaArtifact");
-		var has_version = task.HasMetadata ("JavaVersion");
-
-		if (has_artifact && !has_version) {
-			log.LogError ("'JavaVersion' is required when using 'JavaArtifact' for {0} '{1}'.", type, item_name);
-			return true;
-		}
-
-		if (!has_artifact && has_version) {
-			log.LogError ("'JavaArtifact' is required when using 'JavaVersion' for {0} '{1}'.", type, item_name);
-			return true;
-		}
-
-		if (has_artifact && has_version) {
-			var id = task.GetMetadata ("JavaArtifact");
-			var version = task.GetMetadata ("JavaVersion");
-
-			if (string.IsNullOrWhiteSpace (id)) {
-				log.LogError ("'JavaArtifact' cannot be empty for {0} '{1}'.", type, item_name);
-				return true;
-			}
-
-			if (string.IsNullOrWhiteSpace (version)) {
-				log.LogError ("'JavaVersion' cannot be empty for {0} '{1}'.", type, item_name);
-				return true;
-			}
-
-			if (MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
-				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from {3} '{4}' (JavaArtifact)", art.GroupId, art.Id, art.Version, type, item_name);
-				artifacts.Add (art);
-			}
-
-			return true;
-		}
-
-		return false;
 	}
 
 	bool TrySatisfyDependency (ResolvedDependency dependency)
@@ -321,10 +270,10 @@ class MSBuildLoggingPomResolver : IPomResolver
 
 	Artifact? RegisterFromTaskItem (ITaskItem item, string itemName, string filename)
 	{
-		item.TryParseJavaArtifactAndJavaVersion (itemName, logger, out var artifact);
+		item.TryParseJavaArtifactAndJavaVersion (itemName, logger, out var artifact, out var _);
 
 		if (!File.Exists (filename)) {
-			logger.LogError ("Requested POM file '{0}' does not exist.", filename);
+			logger.LogCodedError ("XA4245", Properties.Resources.XA4245, filename);
 			return null;
 		}
 
@@ -348,7 +297,7 @@ class MSBuildLoggingPomResolver : IPomResolver
 				return final_artifact;
 			}
 		} catch (Exception ex) {
-			logger.LogError ("Failed to register POM file '{0}': '{1}'", filename, ex);
+			logger.LogCodedError ("XA4246", Properties.Resources.XA4246, filename, ex.Message);
 			return null;
 		}
 	}
@@ -358,7 +307,7 @@ class MSBuildLoggingPomResolver : IPomResolver
 		if (poms.TryGetValue (artifact.ToString (), out var project))
 			return project;
 
-		logger.LogError ("Unable to resolve POM for artifact '{0}'.", artifact);
+		logger.LogCodedError ("XA4247", Properties.Resources.XA4247, artifact);
 
 		throw new InvalidOperationException ($"No POM registered for {artifact}");
 	}
@@ -406,10 +355,10 @@ class MicrosoftNuGetPackageFinder
 
 public class NuGetPackageVersionFinder
 {
-	LockFile lock_file;
-	Dictionary<string, Artifact> cache = new Dictionary<string, Artifact> ();
-	Regex tag = new Regex ("artifact_versioned=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
-	Regex tag2 = new Regex ("artifact=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
+	readonly LockFile lock_file;
+	readonly Dictionary<string, Artifact> cache = new Dictionary<string, Artifact> ();
+	readonly Regex tag = new Regex ("artifact_versioned=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
+	readonly Regex tag2 = new Regex ("artifact=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
 
 	NuGetPackageVersionFinder (LockFile lockFile)
 	{
@@ -423,7 +372,7 @@ public class NuGetPackageVersionFinder
 			var lock_file = lock_file_format.Read (filename);
 			return new NuGetPackageVersionFinder (lock_file);
 		} catch (Exception e) {
-			log.LogError (e.Message);
+			log.LogMessage ("Could not parse NuGet lock file. Java dependencies fulfilled by NuGet packages may not be available: '{0}'.", e.Message);
 			return null;
 		}
 	}
@@ -440,7 +389,7 @@ public class NuGetPackageVersionFinder
 		var nuget = lock_file.GetLibrary (library, new NuGet.Versioning.NuGetVersion (version));
 
 		if (nuget is null) {
-			log.LogError ("Could not find NuGet package '{0}' version '{1}' in lock file. Ensure NuGet Restore has run since this <PackageReference> was added.", library, version);
+			log.LogCodedError ("XA4248", Properties.Resources.XA4248, library, version);
 			return null;
 		}
 
@@ -635,8 +584,6 @@ public class MavenVersionRange
 	{
 		if (!range.HasValue ())
 			yield break;
-
-		var versionGroups = new List<string> ();
 
 		// Do a pass over the range string to parse out version groups
 		// eg: (1.0],(1.1,]

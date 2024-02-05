@@ -64,7 +64,7 @@ This can be done by adding additional `<AndroidLibrary>` items to the project:
 
 ```xml
 <ItemGroup>
-  <AndroidLibrary JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" />
+  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" />
 </ItemGroup>
 ```
 
@@ -72,7 +72,7 @@ To include the Java library but not produce C# bindings for it, mark it with `Bi
 
 ```xml
 <ItemGroup>
-  <AndroidLibrary JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" Bind="false" />
+  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" Bind="false" />
 </ItemGroup>
 ```
 
