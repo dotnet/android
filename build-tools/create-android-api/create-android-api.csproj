@@ -97,8 +97,7 @@
   </Target>
   
   <!-- Merges various 'api-X.xml.in' files into single 'api.xml' file -->
-  <Target Name="_GenerateApiDescription"
-      BeforeTargets="Build"
+  <Target Name="GenerateApiDescription"
       DependsOnTargets="_AdjustApiXml"
       Inputs="@(ApiFileDefinition->'%(ApiAdjustedXml)')"
       Outputs="@(_MergedXmlFiles->'%(MergedXml)')">
