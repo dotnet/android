@@ -18,7 +18,7 @@
   </ItemGroup>
   
   <PropertyGroup>
-    <_ApiXmlLocation>..\..\bin\Build$(Configuration)\api\</_ApiXmlLocation>
+    <_ApiXmlLocation>Profiles\</_ApiXmlLocation>
   </PropertyGroup>
   
   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
