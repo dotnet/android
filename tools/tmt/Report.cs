@@ -118,7 +118,8 @@ namespace tmt
 					tableGenerator = TableGenerateJavaToManagedRelease;
 					consoleGenerator = ConsoleGenerateJavaToManagedRelease;
 				} else {
-					throw new NotImplementedException ();
+					tableGenerator = TableGenerateJavaToManagedDebug;
+					consoleGenerator = ConsoleGenerateJavaToManagedDebug;
 				}
 
 				Generate ("Java to Managed", table, typemap.Map.JavaToManaged, full, tableGenerator, consoleGenerator);
@@ -139,7 +140,8 @@ namespace tmt
 					tableGenerator = TableGenerateManagedToJavaRelease;
 					consoleGenerator = ConsoleGenerateManagedToJavaRelease;
 				} else {
-					throw new NotImplementedException ();
+					tableGenerator = TableGenerateManagedToJavaDebug;
+					consoleGenerator = ConsoleGenerateManagedToJavaDebug;
 				}
 
 				Generate ("Managed to Java", table, typemap.Map.ManagedToJava, full, tableGenerator, consoleGenerator);
@@ -260,6 +262,13 @@ namespace tmt
 			}
 		}
 
+		void TableGenerateJavaToManagedDebug (Table table, MapEntry entry, bool full)
+		{
+			table.JavaType.Add (entry.JavaType.Name);
+			table.ManagedType.Add (GetManagedTypeNameDebug (entry));
+			table.Duplicate.Add (entry.ManagedType.IsDuplicate);
+		}
+
 		void TableGenerateJavaToManagedRelease (Table table, MapEntry entry, bool full)
 		{
 			string managedTypeName = GetManagedTypeNameRelease (entry);
@@ -274,6 +283,13 @@ namespace tmt
 
 			table.MVID.Add (entry.ManagedType.MVID);
 			table.TokenID.Add (entry.ManagedType.TokenID);
+		}
+
+		void TableGenerateManagedToJavaDebug (Table table, MapEntry entry, bool full)
+		{
+			table.JavaType.Add (entry.JavaType.Name);
+			table.ManagedType.Add (GetManagedTypeNameDebug (entry));
+			table.Duplicate.Add (entry.ManagedType.IsDuplicate);
 		}
 
 		void TableGenerateManagedToJavaRelease (Table table, MapEntry entry, bool full)

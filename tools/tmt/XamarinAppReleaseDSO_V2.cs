@@ -449,17 +449,17 @@ class XamarinAppReleaseDSO_V2 : XamarinAppReleaseDSO_Version
 			Array.Copy (moduleData, (int)offset, mvid, 0, mvid.Length);
 			module.module_uuid = new Guid (mvid);
 			offset += (ulong)mvid.Length;
-			Log.Debug ($"  module_uuid == {module.module_uuid} (offset: {offset})");
+			Log.Debug (LogTag, $"  module_uuid == {module.module_uuid} (offset: {offset})");
 
 			module.entry_count = ReadUInt32 (moduleData, ref offset);
-			Log.Debug ($"  entry_count == {module.entry_count} (offset: {offset})");
+			Log.Debug (LogTag, $"  entry_count == {module.entry_count} (offset: {offset})");
 
 			module.duplicate_count = ReadUInt32 (moduleData, ref offset);
-			Log.Debug ($"  duplicate_count == {module.duplicate_count} (offset: {offset})");
+			Log.Debug (LogTag, $"  duplicate_count == {module.duplicate_count} (offset: {offset})");
 
 			// MUST be kept in sync with: src/monodroid/jni/xamarin-app.hh (struct TypeMapModuleEntry)
 			ulong pointer = ReadPointer (symbol, moduleData, ref offset);
-			Log.Debug ($"  *map == 0x{pointer:x} (offset: {offset})");
+			Log.Debug (LogTag, $"  *map == 0x{pointer:x} (offset: {offset})");
 
 			if (pointer == 0) {
 				throw new InvalidOperationException ($"Broken typemap structure, map pointer for module {module.module_uuid} is null");

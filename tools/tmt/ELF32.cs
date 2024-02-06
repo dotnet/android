@@ -21,12 +21,8 @@ namespace tmt
 			: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
 		{}
 
-		ulong DeterminePointerAddress (SymbolEntry<uint> symbol, uint pointerOffset)
+		public override ulong DeterminePointerAddress (ulong symbolValue, ulong pointerOffset)
 		{
-			if (symbol.PointedSection == null) {
-				throw new ArgumentException ("does not belong to any section", nameof (symbol));
-			}
-
 			const string RelDynSectionName = ".rel.dyn";
 			ISection? sec = GetSection (ELF, RelDynSectionName);
 			if (sec == null) {
@@ -46,7 +42,7 @@ namespace tmt
 				return 0;
 			}
 
-			uint symRelocAddress = symbol.Value + pointerOffset;
+			uint symRelocAddress = (uint)symbolValue + (uint)pointerOffset;
 			Log.Debug ($"Pointer relocation address == 0x{symRelocAddress:x}");
 
 			ulong fileOffset = Relocations.GetValue (ELF, rels, symRelocAddress);
@@ -62,7 +58,7 @@ namespace tmt
 				throw new ArgumentException ("must be of type SymbolEntry<uint>, was {symbol.GetType ()}", nameof (symbol));
 			}
 
-			return DeterminePointerAddress (sym32, (uint)pointerOffset);
+			return DeterminePointerAddress (sym32.Value, pointerOffset);
 		}
 
 		byte[] GetDataFromPointer (uint pointerValue, uint size)

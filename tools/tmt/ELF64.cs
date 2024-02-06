@@ -28,10 +28,11 @@ namespace tmt
 				throw new ArgumentException ("must be of type SymbolEntry<ulong>, was {symbol.GetType ()}", nameof (symbol));
 			}
 
-			if (sym64.PointedSection == null) {
-				throw new ArgumentException ("does not belong to any section", nameof (symbol));
-			}
+			return DeterminePointerAddress (sym64.Value, pointerOffset);
+		}
 
+		public override ulong DeterminePointerAddress (ulong symbolValue, ulong pointerOffset)
+		{
 			const string RelaDynSectionName = ".rela.dyn";
 			ISection? sec = GetSection (ELF, RelaDynSectionName);
 			if (sec == null) {
@@ -51,7 +52,7 @@ namespace tmt
 				return 0;
 			}
 
-			ulong symRelocAddress = sym64.Value + pointerOffset;
+			ulong symRelocAddress = symbolValue + pointerOffset;
 			Log.Debug ($"Pointer relocation address == 0x{symRelocAddress:x}");
 
 			ulong fileOffset = Relocations.GetValue (ELF, rels, symRelocAddress);
@@ -122,15 +123,17 @@ namespace tmt
 			var ret = new List<ELF64RelocationAddend> ();
 			byte[] data = section.GetContents ();
 			ulong offset = 0;
+			ulong numEntries = (ulong)data.Length / 24; // One record is 3 64-bit words
 
-			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}");
-			while (offset < (ulong)data.Length) {
+			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}; entries == {numEntries}");
+			while ((ulong)ret.Count < numEntries) {
 				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
 				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
 				long relAddend = Helpers.ReadInt64 (data, ref offset, Is64Bit);
 
 				ret.Add (new ELF64RelocationAddend (relOffset, relInfo, relAddend));
 			}
+			Log.Debug ($"Read {ret.Count} entries");
 
 			return ret;
 		}

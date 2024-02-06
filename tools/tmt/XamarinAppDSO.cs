@@ -92,6 +92,17 @@ namespace tmt
 			return pointer;
 		}
 
+		protected ulong ReadPointer (ulong symbolValue, byte[] data, ref ulong offset, bool packed = false)
+		{
+			ulong prevOffset = offset;
+			ulong pointer = ReadPointer (data, ref offset, packed);
+			if (pointer == 0) {
+				pointer = ELF.DeterminePointerAddress (symbolValue, prevOffset);
+			}
+
+			return pointer;
+		}
+
 		protected ulong GetPaddedSize<S> (ulong sizeSoFar)
 		{
 			return Helpers.GetPaddedSize<S> (sizeSoFar, Is64Bit);

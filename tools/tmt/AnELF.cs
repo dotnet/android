@@ -182,6 +182,7 @@ namespace tmt
 		/// for 32-pointers (it can be done safely as the upper 32-bits will be 0 in such cases)
 		/// </summary>
 		public abstract ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset);
+		public abstract ulong DeterminePointerAddress (ulong symbolValue, ulong pointerOffset);
 
 		public uint GetUInt32 (string symbolName)
 		{
