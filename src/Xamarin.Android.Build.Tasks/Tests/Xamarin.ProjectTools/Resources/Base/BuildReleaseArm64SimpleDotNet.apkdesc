@@ -5,37 +5,37 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 377856
+      "Size": 377684
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 1027
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 61443
+      "Size": 63876
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 90421
+      "Size": 90449
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5143
+      "Size": 5147
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 6537
+      "Size": 6531
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 8540
+      "Size": 8537
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 552396
+      "Size": 553280
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 2541
+      "Size": 2536
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 4019
+      "Size": 4010
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 2931
+      "Size": 2934
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 1512
@@ -44,10 +44,10 @@
       "Size": 87080
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 351224
+      "Size": 360088
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3187680
+      "Size": 3185368
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
@@ -59,16 +59,16 @@
       "Size": 155560
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 12336
+      "Size": 13560
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3114
+      "Size": 3147
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 2987
+      "Size": 3020
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -95,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2664855
+  "PackageSize": 2668984
 }
