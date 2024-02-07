@@ -8,31 +8,17 @@
 #include <mono/metadata/assembly.h>
 
 #include "embedded-assemblies.hh"
-#include "cpp-util.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
 
 using namespace xamarin::android::internal;
 
-// This type is needed when calling read(2) in a MinGW build, as it defines the `count` parameter as `unsigned int`
-// instead of `size_t` which then causes the following warning if we pass a value of type `size_t`:
-//
-//   warning: conversion from ‘size_t’ {aka ‘long long unsigned int’} to ‘unsigned int’ may change value [-Wconversion]
-//
-#if defined (WINDOWS)
-using read_count_type = unsigned int;
-#else
 using read_count_type = size_t;
-#endif
 
 force_inline bool
 EmbeddedAssemblies::is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept
 {
-	return utils.ends_with (name, ".pdb")
-#if !defined (NET)
-		|| utils.ends_with (name, ".mdb")
-#endif
-		;
+	return utils.ends_with (name, ".pdb");
 }
 
 force_inline bool
@@ -65,7 +51,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-#if defined (NET)
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
@@ -73,7 +58,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 			return false;
 		}
 	}
-#endif // def NET
 
 	// assemblies must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
@@ -124,19 +108,6 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if !defined(NET)
-		if (utils.ends_with (entry_name, ".config")) {
-			char *assembly_name = strdup (basename (entry_name.get ()));
-			// Remove '.config' suffix
-			*strrchr (assembly_name, '.') = '\0';
-
-			md_mmap_info map_info = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
-			mono_register_config_for_assembly (assembly_name, (const char*)map_info.area);
-
-			continue;
-		}
-#endif // ndef NET
-
 		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
 			continue;
 
@@ -145,7 +116,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 #endif
 
-		if (XA_UNLIKELY (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || bundled_assemblies_slow_path)) {
+		if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || bundled_assemblies_slow_path) [[unlikely]] {
 			if (!bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
 				log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.");
 			}

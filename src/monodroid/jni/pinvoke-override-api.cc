@@ -496,7 +496,7 @@ MonodroidRuntime::handle_other_pinvoke_request (const char *library_name, hash_t
 
 		handle = fetch_or_create_pinvoke_map_entry (lib_name, entry_name, entrypoint_name_hash, lib_map, /* need_lock */ false);
 	} else {
-		if (XA_UNLIKELY (iter->second == nullptr)) {
+		if (iter->second == nullptr) [[unlikely]] {
 			log_warn (LOG_ASSEMBLY, "Internal error: null entry in p/invoke map for key '%s'", library_name);
 			return nullptr; // fall back to `monodroid_dlopen`
 		}
@@ -520,7 +520,7 @@ MonodroidRuntime::monodroid_pinvoke_override (const char *library_name, const ch
 	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash) {
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes, internal_pinvokes_count);
 
-		if (XA_UNLIKELY (entry == nullptr)) {
+		if (entry == nullptr) [[unlikely]] {
 			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' (hash: 0x%zx) not found in compile-time map.", library_name, entrypoint_name, entrypoint_hash);
 			log_fatal (LOG_ASSEMBLY, "compile-time map contents:");
 			for (size_t i = 0; i < internal_pinvokes_count; i++) {

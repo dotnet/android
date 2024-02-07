@@ -6,37 +6,27 @@
 // Based on code from mt's libmonotouch/debug.m file.
 //
 
-#include <array>
+#include <cctype>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <string_view>
 
-#ifndef WINDOWS
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/utsname.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#endif
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <cerrno>
-#include <cctype>
 
 #include <mono/metadata/mono-debug.h>
 
-#ifdef ANDROID
 #include <android/log.h>
-#endif
-
-#if defined (APPLE_OS_X)
-#include <dlfcn.h>
-#endif  // def APPLE_OX_X
 
 #include "java-interop-util.h"
 
@@ -133,7 +123,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
+	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME.data (), "_", name)};
 	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)
@@ -142,7 +132,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	return false;
 }
 
-#if defined (DEBUG) && !defined (WINDOWS)
+#if defined (DEBUG)
 void
 Debug::set_debugger_log_level (const char *level)
 {
@@ -241,7 +231,7 @@ void
 Debug::start_debugging_and_profiling ()
 {
 	size_t total_time_index;
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		total_time_index = internal_timing->start_event (TimingEventKind::DebugStart);
 	}
 
@@ -262,7 +252,7 @@ Debug::start_debugging_and_profiling ()
 	}
 	delete[] connect_args;
 
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);
 	}
 }
@@ -529,8 +519,6 @@ Debug::process_cmd (int fd, char *cmd)
 	return false;
 }
 
-#if !defined (WINDOWS)
-
 void
 Debug::start_debugging (void)
 {
@@ -586,10 +574,6 @@ Debug::start_profiling ()
 	monodroid_profiler_load (androidSystem.get_runtime_libdir (), profiler_description, nullptr);
 }
 
-#endif  // !def WINDOWS
-
-#ifdef ANDROID
-#ifdef DEBUG
 static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", nullptr
 };
@@ -629,18 +613,6 @@ Debug::enable_soft_breakpoints (void)
 	delete[] value;
 	return ret;
 }
-#endif /* DEBUG */
-#else  /* !defined (ANDROID) */
-#if defined (DEBUG) && !defined (WINDOWS)
-#ifndef enable_soft_breakpoints
-[[maybe_unused]] bool
-Debug::enable_soft_breakpoints (void)
-{
-	return false;
-}
-#endif /* DEBUG */
-#endif // enable_soft_breakpoints
-#endif /* defined (ANDROID) */
 
 // TODO: this is less than ideal. We can't use std::function or std::bind beause we
 // don't have the C++ stdlib on Android (well, we do but including it would make the

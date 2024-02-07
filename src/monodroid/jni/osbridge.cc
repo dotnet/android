@@ -1,9 +1,7 @@
 #include <cstring>
 
 #include <sys/types.h>
-#if defined (__linux__) || defined (__linux)
 #include <sys/syscall.h>
-#endif
 
 #if defined (HAVE_GETTID_IN_UNISTD_H)
 #if !defined __USE_GNU
@@ -16,15 +14,6 @@
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/threads.h>
-
-#if defined (WINDOWS)
-#include <windef.h>
-#include <winbase.h>
-#include <shlobj.h>
-#include <objbase.h>
-#include <knownfolders.h>
-#include <shlwapi.h>
-#endif
 
 #include "globals.hh"
 #include "osbridge.hh"
@@ -85,26 +74,7 @@ gc_cross_references_cb (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, Mon
 	osBridge.gc_cross_references (num_sccs, sccs, num_xrefs, xrefs);
 }
 
-#ifdef WINDOWS
-using tid_type = int;
-#else
 using tid_type = pid_t;
-#endif
-// glibc does *not* have a wrapper for the gettid syscall, Android NDK has it
-#if !defined (ANDROID) && !defined (HAVE_GETTID_IN_UNISTD_H)
-static tid_type gettid ()
-{
-#ifdef WINDOWS
-	return GetCurrentThreadId ();
-#elif defined (__linux__) || defined (__linux)
-	return static_cast<tid_type>(syscall (SYS_gettid));
-#else
-	uint64_t tid;
-	pthread_threadid_np (nullptr, &tid);
-	return static_cast<tid_type>(tid);
-#endif
-}
-#endif // ANDROID
 
 // Do this instead of using memset so that individual pointers are set atomically
 void
@@ -1165,45 +1135,3 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 
 	domains_list = node;
 }
-
-#if !defined (NET) && !defined (ANDROID)
-void
-OSBridge::remove_monodroid_domain (MonoDomain *domain)
-{
-	MonodroidBridgeProcessingInfo *node = domains_list;
-	MonodroidBridgeProcessingInfo *prev = nullptr;
-
-	while (node != nullptr) {
-		if (node->domain != domain) {
-			prev = node;
-			node = node->next;
-			continue;
-		}
-
-		if (prev != nullptr)
-			prev->next = node->next;
-		else
-			domains_list = node->next;
-
-		free (node);
-
-		break;
-	}
-}
-
-void
-OSBridge::on_destroy_contexts ()
-{
-	/* If domains_list is now empty, we are about to unload Monodroid.dll.
-	 * Clear the global bridge info structure since it's pointing into soon-invalid memory.
-	 * FIXME: It is possible for a thread to get into `gc_bridge_class_kind` after this clear
-	 *        occurs, but before the stop-the-world during mono_domain_unload. If this happens,
-	 *        it can falsely mark a class as transparent. This is considered acceptable because
-	 *        this case is *very* rare and the worst case scenario is a resource leak.
-	 *        The real solution would be to add a new callback, called while the world is stopped
-	 *        during `mono_gc_clear_domain`, and clear the bridge info during that.
-	 */
-	if (!domains_list)
-		osBridge.clear_mono_java_gc_bridge_info ();
-}
-#endif // ndef NET && ndef ANDROID

@@ -1,14 +1,12 @@
 #include <array>
-#include <cstdlib>
-#include <cstdarg>
-#include <strings.h>
-#include <cstring>
-#include <unistd.h>
 #include <cerrno>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
+#include <strings.h>
+#include <unistd.h>
 
-#ifdef ANDROID
 #include <android/log.h>
-#endif
 
 #include "logger.hh"
 
@@ -50,24 +48,7 @@ static constexpr std::array<const char*, 12> log_names = {
 #endif
 
 // ffs(value) returns index of lowest bit set in `value`
-#define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [ffs (value)])
-
-#ifndef ANDROID
-static void
-__android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
-{
-  printf ("%d [%s] ", prio, tag);
-  vprintf (fmt, ap);
-  putchar ('\n');
-  fflush (stdout);
-}
-
-static void
-__android_log_write (int prio, const char* tag, const char* message)
-{
-	printf ("%d [%s] %s\n", prio, tag, message);
-}
-#endif
+#define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [static_cast<size_t>(ffs (value))])
 
 unsigned int log_categories = LOG_NONE;
 unsigned int log_timing_categories;
@@ -98,8 +79,7 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	if (f) {
 		utils.set_world_accessable (path);
 	} else {
-		log_warn (category, "Could not open path '%s' for logging: %s",
-				path, strerror (errno));
+		log_warn (category, "Could not open path '%s' for logging: %s", path, strerror (errno));
 	}
 
 	free (p);
@@ -149,10 +129,6 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 {
 	mono_log_mask = nullptr;
 	mono_log_level = nullptr;
-
-#if !ANDROID
-	log_categories = LOG_DEFAULT;
-#endif
 	log_timing_categories = LOG_TIMING_DEFAULT;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
@@ -260,7 +236,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
-#if !defined (WINDOWS) && defined (DEBUG)
+#if defined (DEBUG)
 		constexpr std::string_view DEBUGGER_LOG_LEVEL { "debugger-log-level=" };
 		if (param.starts_with (DEBUGGER_LOG_LEVEL)) {
 			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> level;

@@ -39,10 +39,8 @@ namespace xamarin::android::internal
 	public:
 #ifdef ANDROID64
 		static constexpr std::string_view SYSTEM_LIB_PATH { "/system/lib64" };
-#elif ANDROID
-		static constexpr std::string_view SYSTEM_LIB_PATH { "/system/lib" };
 #else
-		static constexpr std::string_view SYSTEM_LIB_PATH { "" };
+		static constexpr std::string_view SYSTEM_LIB_PATH { "/system/lib" };
 #endif
 
 		inline static std::array<char*, 1> override_dirs{};

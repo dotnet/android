@@ -10,7 +10,6 @@
 #include <unistd.h>
 
 #include "platform-compat.hh"
-#include "logger.hh"
 #include "helpers.hh"
 #include "shared-constants.hh"
 
@@ -202,7 +201,7 @@ namespace xamarin::android::internal
 	private:
 		force_inline bool can_access (size_t index) const noexcept
 		{
-			if (XA_UNLIKELY (!initialized () || start () == nullptr)) {
+			if (!initialized () || start () == nullptr) [[unlikely]] {
 				return false;
 			}
 
@@ -763,7 +762,7 @@ namespace xamarin::android::internal
 
 		force_inline void ensure_valid_index (size_t access_index) const noexcept
 		{
-			if (XA_LIKELY (access_index < idx && access_index < buffer.size ())) {
+			if (access_index < idx && access_index < buffer.size ()) [[likely]] {
 				return;
 			}
 

@@ -7,9 +7,9 @@
 namespace xamarin::android::internal
 {
 // _WIN32 is defined with _WIN64 so _WIN64 must be checked first.
-#if __SIZEOF_POINTER__ == 8 || defined (_WIN64)
+#if __SIZEOF_POINTER__ == 8
 #define __BITNESS__ "64bit"
-#elif __SIZEOF_POINTER__ == 4 || defined (_WIN32)
+#elif __SIZEOF_POINTER__ == 4
 #define __BITNESS__ "32bit"
 #else
 #error Unknown pointer size for this platform

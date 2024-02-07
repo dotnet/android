@@ -27,7 +27,7 @@ namespace xamarin::android
 		};
 
 	private:
-		static constexpr char INITIALIZER_NAME[] = "mono_profiler_init";
+		static inline constexpr std::string_view INITIALIZER_NAME { "mono_profiler_init" };
 
 	public:
 		/* Android property containing connection information, set by XS */
@@ -55,7 +55,7 @@ namespace xamarin::android
 		bool load_profiler (void *handle, const char *desc, const char *symbol);
 		bool load_profiler_from_handle (void *dso_handle, const char *desc, const char *name);
 
-#if !defined (WINDOWS) && defined (DEBUG)
+#if defined (DEBUG)
 	public:
 		bool         enable_soft_breakpoints ();
 		void         start_debugging_and_profiling ();
@@ -97,7 +97,7 @@ namespace xamarin::android
 		timespec         wait_ts;
 		bool             got_debugger_log_level = false;
 		int              debugger_log_level = 0;
-#endif
+#endif // def DEBUG
 	};
 }
 #else // __cplusplus
