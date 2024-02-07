@@ -44,23 +44,31 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     />
   </Target>
 
+  <Target Name="_CollectLibrariesToBind" DependsOnTargets="_CategorizeAndroidLibraries">
+    <ItemGroup>
+      <_LibrariesToBind  Include="@(EmbeddedJar)" />
+      <_LibrariesToBind  Include="@(InputJar)" />
+      <_LibrariesToBind  Include="@(LibraryProjectZip)" />
+      <_LibrariesToBind  Include="@(_JavaBindingSource)" Condition=" '%(_JavaBindingSource.Bind)' == 'true' "/>
+    </ItemGroup>
+  </Target>
+
   <Target Name="_SetAndroidGenerateManagedBindings"
-      Condition=" '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' Or '@(_JavaBindingSource->Count())' != '0' ">
+      Condition=" '@(_LibrariesToBind->Count())' != '0' ">
     <PropertyGroup>
       <!-- Used throughout to determine if C# binding-related targets should skip -->
       <_AndroidGenerateManagedBindings>true</_AndroidGenerateManagedBindings>
     </PropertyGroup>
   </Target>
 
-  <Target Name="_CollectGeneratedManagedBindingFiles">
+  <Target Name="_CollectGeneratedManagedBindingFiles" AfterTargets="GenerateBindings">
     <ItemGroup>
       <_GeneratedManagedBindingFiles Include="$(GeneratedOutputPath)**\*.cs" />
     </ItemGroup>
   </Target>
 
   <Target Name="_ClearGeneratedManagedBindings"
-      Condition=" '@(InputJar->Count())' == '0' And '@(EmbeddedJar->Count())' == '0' And '@(LibraryProjectZip->Count())' == '0' And '@(_JavaBindingSource->Count())' == '0' "
-      DependsOnTargets="_CollectGeneratedManagedBindingFiles"
+      Condition=" '@(_LibrariesToBind->Count())' == '0' And '$(DesignTimeBuild)' != 'True' "
   >
     <Delete Files="@(_GeneratedManagedBindingFiles)" />
   </Target>
@@ -75,7 +83,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
 
   <Target Name="GenerateBindings"
       Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' "
-      DependsOnTargets="ExportJarToXml;_ResolveMonoAndroidSdks"
       Inputs="$(ApiOutputFile);@(TransformFile);@(ReferencePath);@(ReferenceDependencyPaths);@(_AndroidMSBuildAllProjects)"
       Outputs="$(_GeneratorStampFile)">
 
@@ -128,21 +135,35 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         Nullable="$(Nullable)"
         UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
         NamespaceTransforms="@(AndroidNamespaceReplacement)"
-    />
+        GeneratedFileListFile="$(GeneratedOutputPath)src\$(AssemblyName).projitems"
+    >
+      <Output TaskParameter="GeneratedFiles" ItemName="_GeneratedBindingFiles" />
+    </BindingsGenerator>
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
     <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
 
+    <ItemGroup Condition=" '@(_GeneratedBindingFiles->Count())' != '0' ">
+      <_ExistingGeneratedFiles Include="$(GeneratedOutputPath)**\*.cs" />
+      <_ExistingGeneratedFiles Remove="@(_GeneratedBindingFiles)" />
+    </ItemGroup>
+
+    <!-- Delete any files which should not be there. -->
+    <Delete Files="@(_ExistingGeneratedFiles)" Condition=" '@(_ExistingGeneratedFiles->Count())' != '0' "/>
+
     <ItemGroup>
       <FileWrites Include="$(GeneratedOutputPath)**\*.cs" />
+      <FileWrites Include="$(GeneratedOutputPath)src\$(AssemblyName).projitems" />
       <FileWrites Include="$(_GeneratorStampFile)" />
     </ItemGroup>
+
+    <!-- Read the file list. -->
 
   </Target>
 
   <Target Name="AddBindingsToCompile"
       Condition=" '$(_AndroidGenerateManagedBindings)' == 'true' Or '@(_GeneratedManagedBindingFiles->Count())' != '0' "
-      DependsOnTargets="GenerateBindings;_CollectGeneratedManagedBindingFiles">
+    >
     <!-- bindings need AllowUnsafeBlocks -->
     <PropertyGroup>
       <AllowUnsafeBlocks Condition=" '$(AllowUnsafeBlocks)' != 'true' ">true</AllowUnsafeBlocks>

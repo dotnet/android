@@ -6,7 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.XPath;
 using Microsoft.Build.Framework;
+using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -66,6 +68,10 @@ namespace Xamarin.Android.Tasks
 		public string JavadocVerbosity { get; set; }
 
 		public bool UseJavaLegacyResolver { get; set; }
+
+		public string GeneratedFileListFile { get; set; }
+		[Output]
+		public ITaskItem [] GeneratedFiles { get; set; } = Array.Empty<ITaskItem> ();
 
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
@@ -133,7 +139,20 @@ namespace Xamarin.Android.Tasks
 			if (Log.HasLoggedErrors)
 				return false;
 
-			return base.RunTask ();
+			var result = base.RunTask ();
+			List<ITaskItem> files = new List<ITaskItem> ();
+			if (result && GeneratedFileListFile != null && File.Exists (GeneratedFileListFile)) {
+				var doc = XDocument.Load (GeneratedFileListFile);
+				var compileItems = doc.XPathSelectElements ("//Project/ItemGroup/Compile");
+				foreach (var item in compileItems) {
+					var file = item.Attribute ("Include");
+					if (file != null && File.Exists (file.Value)) {
+						files.Add (new TaskItem (file.Value));
+					}
+				}
+			}
+			GeneratedFiles = files.ToArray ();
+			return result;
 		}
 
 		void WriteLine (StreamWriter sw, string line)
