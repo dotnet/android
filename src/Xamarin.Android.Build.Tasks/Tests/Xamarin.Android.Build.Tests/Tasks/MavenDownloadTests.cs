@@ -24,7 +24,7 @@ public class MavenDownloadTests
 		await task.RunTaskAsync ();
 
 		Assert.AreEqual (1, engine.Errors.Count);
-		Assert.AreEqual ("'<AndroidMavenLibrary>' item 'com.google.android.material:material' is missing required metadata 'Version'", engine.Errors [0].Message);
+		Assert.AreEqual ("'<AndroidMavenLibrary>' item 'com.google.android.material:material' is missing required attribute 'Version'.", engine.Errors [0].Message);
 	}
 
 	[Test]

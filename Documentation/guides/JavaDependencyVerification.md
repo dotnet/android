@@ -90,11 +90,10 @@ Additionally, a POM file can "import" dependency information from another POM fi
 </dependencyManagement>
 ```
 
-Dependency information cannot be accurately determined without also having access to these additional POM files, and will results in errors like:
+Dependency information cannot be accurately determined without also having access to these additional POM files, and will results in an error like:
 
 ```
 error : Unable to resolve POM for artifact 'com.squareup.okio:okio-parent:1.17.4'.
-error : Could not verify Java dependencies for artifact 'com.squareup.okio:okio:1.17.4' due to missing POM files. See other error(s) for details.
 ```
 
 In this case, we need to provide the POM file for `com.squareup.okio:okio-parent:1.17.4`:

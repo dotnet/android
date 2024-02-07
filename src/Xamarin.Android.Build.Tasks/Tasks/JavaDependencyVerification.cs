@@ -89,8 +89,6 @@ public class JavaDependencyVerification : AndroidTask
 			if (TryResolveProject (pom, pom_resolver, out var resolved_pom)) {
 				foreach (var dependency in resolved_pom.Dependencies.Where (d => (d.IsRuntimeDependency () || d.IsCompileDependency ()) && !d.IsOptional ()))
 					resolver.EnsureDependencySatisfied (dependency, ms_packages);
-			} else {
-				Log.LogCodedError ("XA4240", Properties.Resources.XA4240, pom);
 			}
 		}
 

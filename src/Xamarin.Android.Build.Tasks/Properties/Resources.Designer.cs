@@ -840,6 +840,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details..
+        /// </summary>
+        public static string XA1039 {
+            get {
+                return ResourceManager.GetString("XA1039", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {
@@ -1209,7 +1218,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &apos;&lt;{0}&gt;&apos; item &apos;{1}&apos; is missing required metadata &apos;{2}&apos;.
+        ///   Looks up a localized string similar to &apos;&lt;{0}&gt;&apos; item &apos;{1}&apos; is missing required attribute &apos;{2}&apos;..
         /// </summary>
         public static string XA4234 {
             get {
@@ -1248,30 +1257,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Cannot download parent POM file for Maven artifact &apos;{0}:{1}&apos;.
-        ///- {2}: {3}.
-        /// </summary>
-        public static string XA4238 {
-            get {
-                return ResourceManager.GetString("XA4238", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
         /// </summary>
         public static string XA4239 {
             get {
                 return ResourceManager.GetString("XA4239", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Could not verify Java dependencies for artifact &apos;{0}&apos; due to missing POM file(s). See other error(s) for details..
-        /// </summary>
-        public static string XA4240 {
-            get {
-                return ResourceManager.GetString("XA4240", resourceCulture);
             }
         }
         
@@ -1321,7 +1311,8 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Could not parse POM file &apos;{0}&apos;: &apos;{1}&apos;..
+        ///   Looks up a localized string similar to Could not parse POM file &apos;{0}&apos;.
+        ///- {1}.
         /// </summary>
         public static string XA4246 {
             get {
