@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using System.Xml;
 using System.Collections.Generic;
@@ -45,7 +45,7 @@ namespace Xamarin.Android.Tools
 			if (manifest.Element ("uses-sdk") is XElement uses)
 				usesSdk = uses;
 			else
-				manifest.Add (usesSdk = new XElement ("uses-sdk"));
+				usesSdk = new XElement ("uses-sdk");
 		}
 
 		public static string CanonicalizePackageName (string packageNameOrAssemblyName)
@@ -71,7 +71,6 @@ namespace Xamarin.Android.Tools
 			return new AndroidAppManifest (versions, XDocument.Parse (
 				@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"">
-  <uses-sdk />
   <application android:label="""">
   </application>
 </manifest>")) {
@@ -102,6 +101,14 @@ namespace Xamarin.Android.Tools
 
 		public void Write (XmlWriter writer)
 		{
+			// Make sure that if the <uses-sdk /> XML element does not have any attributes (i.e. minSdkVersion
+			// and targetSdkVersion), do NOT write it into the output. This is to avoid issues like
+			// https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1874249/
+			if (usesSdk.HasAttributes && usesSdk.Parent == null)
+				manifest.Add (usesSdk);
+			else if (!usesSdk.HasAttributes && usesSdk.Parent != null)
+				usesSdk.Remove ();
+
 			doc.Save (writer);
 		}
 
