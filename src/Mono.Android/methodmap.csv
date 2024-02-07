@@ -1656,7 +1656,7 @@
 21, android.net, NetworkRequest.Builder, addTransportType, transportType, Android.Net.TransportType
 21, android.net, NetworkRequest.Builder, removeCapability, capability, Android.Net.NetCapability
 21, android.net, NetworkRequest.Builder, removeTransportType, transportType, Android.Net.TransportType
-21, android.net.wifi, WifiManager.WpsCallback, onFailed, reason, Android.Net.WpsFailureReason
+21, android.net.wifi, WifiManager.WpsCallback, onFailed, reason, Android.Net.Wifi.WpsFailureReason
 21, android.os, PowerManager.WakeLock, release, flags, Android.OS.WakeLockFlags
 21, android.provider, ContactsContract.CommonDataKinds.Event, getTypeLabel, type, Android.Provider.EventDataKind
 21, android.service.notification, NotificationListenerService, getCurrentInterruptionFilter, return, Android.Service.Notification.InterruptionFilterType
@@ -1991,9 +1991,6 @@
 24, android.icu.text, Collator, setDecomposition, decomposition, Android.Icu.Text.CollatorDecompositionMode
 24, android.icu.text, Collator, getStrength, return, Android.Icu.Text.CollationStrength
 24, android.icu.text, Collator, setStrength, newStrength, Android.Icu.Text.CollationStrength
-24, android.icu.text, Collator, getEquivalentReorderCodes, reorderCode, Android.Icu.Text.CollatorReorderCodes
-24, android.icu.text, Collator, getReorderCodes, return, Android.Icu.Text.CollatorReorderCodes[]
-24, android.icu.text, Collator, setReorderCodes, order, params Android.Icu.Text.CollatorReorderCodes[]
 24, android.icu.text, DateFormat.Field, ofCalendarField, calendarField, Android.Icu.Util.CalendarField
 24, android.icu.text, DateFormat, getDateInstance, dateStyle, Android.Icu.Text.DateFormatStyle
 24, android.icu.text, DateFormat, getDateInstance, style, Android.Icu.Text.DateFormatStyle
@@ -2077,7 +2074,7 @@
 24, android.nfc.cardemulation, HostNfcFService, onDeactivated, reason, Android.Nfc.CardEmulators.DeactivationReasonF
 
 24, android.os, HardwarePropertiesManager, getDeviceTemperatures, type, Android.OS.DeviceTemperatureType
-24, android.os, HardwarePropertiesManager, getDeviceTemperatures, source, Android.OS.DeviceTemperatureSource
+24, android.os, HardwarePropertiesManager, getDeviceTemperatures, source, Android.OS.TemperatureSource
 24, android.service.notification, Condition, flags, , Android.Service.Notification.ConditionFlags
 24, android.service.notification, Condition, state, , Android.Service.Notification.ConditionState
 24, android.service.notification, Condition, relevanceToString, flags, Android.Service.Notification.ConditionFlags
@@ -2392,8 +2389,8 @@
 28, android.content.pm, PermissionInfo, getProtectionFlags, return, Android.Content.PM.Protection
 28, android.content.pm, ShortcutInfo, getDisabledReason, return, Android.Content.PM.ShortcutDisabledReason
 28, android.graphics.drawable, Icon, getType, return, Android.Graphics.Drawables.IconType
-28, android.graphics, ImageDecoder, getAllocator, return, Android.Graphics.ImageDecoderAllocatorType
-28, android.graphics, ImageDecoder, setAllocator, allocator, Android.Graphics.ImageDecoderAllocatorType
+28, android.graphics, ImageDecoder, getAllocator, return, Android.Graphics.ImageDecoderAllocator
+28, android.graphics, ImageDecoder, setAllocator, allocator, Android.Graphics.ImageDecoderAllocator
 28, android.graphics, ImageDecoder, getMemorySizePolicy, return, Android.Graphics.ImageDecoderMemoryPolicy
 28, android.graphics, ImageDecoder, setMemorySizePolicy, policy, Android.Graphics.ImageDecoderMemoryPolicy
 28, android.graphics, ImageDecoder.DecodeException, getError, return, Android.Graphics.ImageDecoderErrorType
@@ -2432,9 +2429,9 @@
 28, android.telephony.data, ApnSetting.Builder, setProtocol, protocol, Android.Telephony.Data.Protocols
 28, android.telephony.data, ApnSetting.Builder, setRoamingProtocol, roamingProtocol, Android.Telephony.Data.Protocols
 28, android.telephony, Call.Callback, onHandoverFailed, failureReason, Android.Telephony.HandoverFailureReason
-28, android.telephony.mbms, StreamingServiceCallback, onStreamMethodUpdated, methodType, Android.Telephony.StreamingMethod
+28, android.telephony.mbms, StreamingServiceCallback, onStreamMethodUpdated, methodType, Android.Telephony.Mbms.StreamingMethod
 28, android.telephony.mbms, StreamingServiceCallback, onStreamStateUpdated, state, Android.Telephony.StreamingState
-28, android.telephony.mbms, StreamingServiceCallback, onStreamStateUpdated, reason, Android.Telephony.StreamingStateChangedReason
+28, android.telephony.mbms, StreamingServiceCallback, onStreamStateUpdated, reason, Android.Telephony.Mbms.StreamingStateChangedReason
 28, android.telephony.mbms, DownloadStatusListener, onStatusUpdated, status, Android.Telephony.Mbms.DownloadStatus
 28, android.telephony, TelephonyScanManager.NetworkScanCallback, onError, error, Android.Telephony.ScanResultCode
 28, android.telephony, NetworkScanRequest, ctor, scanType, Android.Telephony.NetworkScanType
@@ -2500,7 +2497,6 @@
 29, android.app, Service, startForeground, foregroundServiceType, Android.Content.PM.ForegroundService
 // Cannot change this at this state.
 // 27, android.app, WallpaperManager.OnColorsChangedListener, onColorsChanged, which, Android.App.WallpaperManagerFlags
-29, android.content, Context, bindIsolatedService, flags, Android.App.Bind
 29, android.content.pm, PackageInstaller.SessionInfo, getStagedSessionErrorCode, return, Android.Content.PM.StagedSession
 29, android.content.pm, PackageInstaller, installExistingPackage, installReason, Android.Content.PM.InstallReason
 // Cannot change this at this state.
@@ -2525,7 +2521,6 @@
 29, android.hardware.camera2.params, RecommendedStreamConfigurationMap, getValidOutputFormatsForInput, inputFormat, Android.Graphics.ImageFormatType
 29, android.hardware.camera2.params, RecommendedStreamConfigurationMap, getRecommendedUseCase, return, Android.Hardware.Camera2.Params.UsecaseMode
 29, android.hardware, HardwareBuffer, isSupported, format, Android.Hardware.HardwareBufferFormat
-29, android.hardware, HardwareBuffer, isSupported, usage, Android.Hardware.HardwareBufferUsage
 // Cannot change this at this state.
 // 24, android.icu.lang, UScript, getScript, return, Android.Icu.Lang.UScriptCode
 29, android.icu.text, Bidi, writeReverse, options, Android.Icu.Text.BidiOptions
@@ -2674,7 +2669,6 @@
 30,android/app,NotificationManager$Policy,ctor,suppressedVisualEffects,Android.App.SuppressedEffects
 30,android/app,SyncNotedAppOp,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 30,android/content,ContentResolver,notifyChange,flags,Android.Content.NotifyChangeFlags
-30,android/content,Context,bindServiceAsUser,flags,Android.Content.Bind
 30,android/content,Context,createWindowContext,type,Android.Views.WindowManagerTypes
 30,android/content,Context,sendOrderedBroadcast,initialCode,Android.App.Result
 30,android/content,ContextWrapper,sendOrderedBroadcast,initialCode,Android.App.Result
