@@ -657,15 +657,13 @@ OSBridge::add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_han
 
 	java_class = env->GetObjectClass (handle);
 	add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
+	env->DeleteLocalRef (java_class);
 	if (add_method_id) {
 		env->CallVoidMethod (handle, add_method_id, reffed_handle);
-		env->DeleteLocalRef (java_class);
-
 		return 1;
 	}
 
 	env->ExceptionClear ();
-	env->DeleteLocalRef (java_class);
 	return 0;
 }
 
@@ -921,7 +919,6 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 	MonoClass *klass;
 #endif
 	MonoObject *obj;
-	jclass java_class;
 	jobject jref;
 	jmethodID clear_method_id;
 	int i, j, total, alive, refs_added;
@@ -953,8 +950,9 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 				sccs [i]->is_alive = 1;
 				mono_field_get_value (obj, bridge_info->refs_added, &refs_added);
 				if (refs_added) {
-					java_class = env->GetObjectClass (jref);
+					jclass java_class = env->GetObjectClass (jref);
 					clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
+					env->DeleteLocalRef (java_class);
 					if (clear_method_id) {
 						env->CallVoidMethod (jref, clear_method_id);
 					} else {
@@ -968,7 +966,6 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 						}
 #endif
 					}
-					env->DeleteLocalRef (java_class);
 				}
 			} else {
 				abort_unless (!sccs [i]->is_alive, "Bridge SCC at index %d must NOT be alive", i);

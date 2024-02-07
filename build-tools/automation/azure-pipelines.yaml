@@ -342,7 +342,7 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
-        androidSdkPlatforms: 23,24,25,26,27,28,29,30,31,32,33,$(DefaultTestSdkPlatforms)
+        androidSdkPlatforms: $(DefaultTestSdkPlatforms)
 
     - task: NuGetAuthenticate@1
       displayName: authenticate with azure artifacts

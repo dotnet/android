@@ -45,11 +45,15 @@ namespace Xamarin.Android.Prepare
 	class AndroidPlatformComponent : AndroidToolchainComponent
 	{
 		public string ApiLevel { get; }
+		public bool IsLatestStable { get; }
+		public bool IsPreview { get; }
 
-		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision)
-			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision, buildToolName: $"android-sdk-{name}", buildToolVersion:$"{apiLevel}.{pkgRevision}")
+		public AndroidPlatformComponent (string name, string apiLevel, string pkgRevision, bool isLatestStable = false, bool isPreview = false)
+			: base (name, Path.Combine ("platforms", $"android-{apiLevel}"), pkgRevision: pkgRevision, buildToolName: $"android-sdk-{name}", buildToolVersion: $"{apiLevel}.{pkgRevision}")
 		{
 			ApiLevel = apiLevel;
+			IsLatestStable = isLatestStable;
+			IsPreview = isPreview;
 		}
 	}
 

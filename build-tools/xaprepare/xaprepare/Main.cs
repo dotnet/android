@@ -30,7 +30,7 @@ namespace Xamarin.Android.Prepare
 			public bool IgnoreMaxMonoVersion   { get; set; }
 			public bool IgnoreMinMonoVersion   { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
-			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
+			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = new [] { "latest" };
 		}
 
 		public static int Main (string[] args)
@@ -105,7 +105,7 @@ namespace Xamarin.Android.Prepare
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
 				{"ignore-max-mono-version=", $"Ignore the maximum supported Mono version restriction", v => parsedOptions.IgnoreMaxMonoVersion = ParseBoolean (v)},
 				{"ignore-min-mono-version=", $"Ignore the minimum supported Mono version restriction", v => parsedOptions.IgnoreMinMonoVersion = ParseBoolean (v)},
-				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed. Defaults to all if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
+				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed or 'latest' or 'all'. Defaults to 'latest' if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
 			};
@@ -333,6 +333,15 @@ namespace Xamarin.Android.Prepare
 
 		static IEnumerable<string> ParseAndroidSdkPlatformLevels (string list)
 		{
+			// If the user specified "all" we return 'all' to indicate that all platforms should be installed.
+			if (string.Compare ("all", list, StringComparison.OrdinalIgnoreCase) == 0)
+				return new string [] { "all" };
+
+			// If the user did not specify anything, we return "latest" to indicate that only the latest platform should be installed.
+			if (string.IsNullOrEmpty (list) || string.Compare ("latest", list, StringComparison.OrdinalIgnoreCase) == 0)
+				return new string [] { "latest" };
+
+			// The user specified a list of platform levels to install, so we should respect that.
 			return list.Split (',').Select (item => item.Trim ());
 		}
 	}

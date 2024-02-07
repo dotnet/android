@@ -22,7 +22,6 @@
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">26</AndroidJavaRuntimeApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
@@ -40,10 +39,11 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
+    <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidJavaRuntimeApiLevel>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.56</AndroidNetPreviousVersion>
+    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.79</AndroidNetPreviousVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
