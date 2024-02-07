@@ -39,6 +39,7 @@ using System.Reflection;
 using Java.Interop.Tools.Diagnostics;
 
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 
 namespace Java.Interop.Tools.Cecil {
 
@@ -149,9 +150,6 @@ namespace Java.Interop.Tools.Cecil {
 
 		protected virtual AssemblyDefinition ReadAssembly (string file)
 		{
-			bool haveDebugSymbols = loadDebugSymbols &&
-				(File.Exists (Path.ChangeExtension (file, ".pdb")) ||
-				 File.Exists (file + ".mdb"));
 			var reader_parameters = new ReaderParameters () {
 				ApplyWindowsRuntimeProjections  = loadReaderParameters.ApplyWindowsRuntimeProjections,
 				AssemblyResolver                = this,
@@ -159,11 +157,9 @@ namespace Java.Interop.Tools.Cecil {
 				InMemory                        = loadReaderParameters.InMemory,
 				MetadataResolver                = loadReaderParameters.MetadataResolver,
 				ReadingMode                     = loadReaderParameters.ReadingMode,
-				ReadSymbols                     = haveDebugSymbols,
 				ReadWrite                       = loadReaderParameters.ReadWrite,
 				ReflectionImporterProvider      = loadReaderParameters.ReflectionImporterProvider,
 				SymbolReaderProvider            = loadReaderParameters.SymbolReaderProvider,
-				SymbolStream                    = loadReaderParameters.SymbolStream,
 			};
 			try {
 				return LoadFromMemoryMappedFile (file, reader_parameters);
@@ -171,9 +167,11 @@ namespace Java.Interop.Tools.Cecil {
 				logger (
 						TraceLevel.Verbose,
 						$"Failed to read '{file}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
-				logger (TraceLevel.Verbose, $"{ex.ToString ()}");
+				logger (TraceLevel.Verbose, ex.ToString ());
 				reader_parameters.ReadSymbols = false;
 				return LoadFromMemoryMappedFile (file, reader_parameters);
+			} finally {
+				reader_parameters.SymbolStream?.Dispose ();
 			}
 		}
 
@@ -181,27 +179,71 @@ namespace Java.Interop.Tools.Cecil {
 		{
 			// We can't use MemoryMappedFile when ReadWrite is true
 			if (options.ReadWrite) {
+				if (loadDebugSymbols) {
+					LoadSymbols (file, options, File.OpenRead);
+				}
 				return AssemblyDefinition.ReadAssembly (file, options);
 			}
 
-			MemoryMappedViewStream? viewStream = null;
+			// We know the capacity for disposables
+			var disposables = new List<IDisposable> (
+				(1 + (loadDebugSymbols ? 1 : 0)) * OpenMemoryMappedViewStream_disposables_Add_calls);
 			try {
-				// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
-				using var fileStream = new FileStream (file, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, false);
-				using var mappedFile = MemoryMappedFile.CreateFromFile (
-					fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, true);
-				viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
+				if (loadDebugSymbols) {
+					LoadSymbols (file, options, f => OpenMemoryMappedViewStream (f, disposables));
+				}
 
+				var viewStream = OpenMemoryMappedViewStream (file, disposables);
 				AssemblyDefinition result = ModuleDefinition.ReadModule (viewStream, options).Assembly;
+
+				// Transfer ownership to `viewStreams` collection
 				viewStreams.Add (viewStream);
-
-				// We transferred the ownership of the viewStream to the collection.
-				viewStream = null;
-
+				disposables.Remove (viewStream);
+				if (options.SymbolStream is MemoryMappedViewStream m) {
+					viewStreams.Add (m);
+					disposables.Remove (m);
+					options.SymbolStream = null; // Prevents caller from disposing
+				}
 				return result;
 			} finally {
-				viewStream?.Dispose ();
+				for (int i = disposables.Count - 1; i >= 0; i--) {
+					disposables [i].Dispose ();
+				}
 			}
+		}
+
+		static void LoadSymbols (string assemblyPath, ReaderParameters options, Func<string, Stream> getStream)
+		{
+			var symbolStream = options.SymbolStream;
+			if (symbolStream == null) {
+				var symbolPath = Path.ChangeExtension (assemblyPath, ".pdb");
+				if (File.Exists (symbolPath)) {
+					symbolStream = getStream (symbolPath);
+				}
+			}
+			options.ReadSymbols = symbolStream != null;
+			options.SymbolStream = symbolStream;
+		}
+
+		/// <summary>
+		/// Number of times OpenMemoryMappedViewStream() calls disposables.Add()
+		/// </summary>
+		const int OpenMemoryMappedViewStream_disposables_Add_calls = 3;
+
+		static MemoryMappedViewStream OpenMemoryMappedViewStream (string file, List<IDisposable> disposables)
+		{
+			// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
+			var fileStream = new FileStream (file, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, useAsync: false);
+			disposables.Add (fileStream);
+
+			var mappedFile = MemoryMappedFile.CreateFromFile (
+				fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, leaveOpen: true);
+			disposables.Add (mappedFile);
+
+			var viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
+			disposables.Add (viewStream);
+
+			return viewStream;
 		}
 
 		public AssemblyDefinition GetAssembly (string fileName)
