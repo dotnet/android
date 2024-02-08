@@ -1309,16 +1309,11 @@ EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	const dirent* dir_entry,
 	ZipEntryLoadState& state) noexcept
 {
-	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-	log_debug (LOG_ASSEMBLY, "  entry: %s", dir_entry->d_name);
-
 	if (dir_entry->d_name[0] != assembly_store_file_name[0]) {
-		log_debug (LOG_ASSEMBLY, "   here 001");
 		return false; // keep going
 	}
 
 	if (strncmp (dir_entry->d_name, assembly_store_file_name.data (), assembly_store_file_name.size ()) != 0) {
-		log_debug (LOG_ASSEMBLY, "   here 002");
 		return false; // keep going
 	}
 
@@ -1387,7 +1382,6 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 			break; // No more entries, we're done
 		}
 
-		log_debug (LOG_ASSEMBLY, "  entry: %s", cur->d_name);
 		// We can ignore the obvious entries here...
 		if (cur->d_name[0] == '.') {
 			continue;
@@ -1395,7 +1389,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 
 #if defined (DEBUG)
 		if (!should_register (cur->d_name)) {
-			log_debug (LOG_ASSEMBLY, "In Debug build, '%s' should not be registered", cur->d_name);
+			assembly_count++;
 			continue;
 		}
 #endif // def DEBUG
