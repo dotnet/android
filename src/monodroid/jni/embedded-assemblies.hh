@@ -3,51 +3,42 @@
 #define INC_MONODROID_EMBEDDED_ASSEMBLIES_H
 
 #include <array>
-
 #include <cerrno>
 #include <cstring>
 #include <limits>
-#include <functional>
-#include <vector>
-#include <semaphore.h>
+#include <string_view>
 #include <tuple>
+#include <vector>
+
+#include <dirent.h>
+#include <semaphore.h>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
-
-#if defined (NET)
 #include <mono/metadata/mono-private-unstable.h>
-#endif
 
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
-#include "mono-image-loader.hh"
+#include "cppcompat.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
 
-#undef HAVE_CONCEPTS
-
-// Xcode has supports for concepts only since 12.5
-#if __has_include (<concepts>)
-#define HAVE_CONCEPTS
 #include <concepts>
-#endif // __has_include
 
 struct TypeMapHeader;
 
 namespace xamarin::android::internal {
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 	struct TypeMappingInfo;
 #endif
 
-#if defined (RELEASE) && defined (ANDROID)
+#if defined (RELEASE)
 #define STATIC_IN_ANDROID_RELEASE static
 #else
 #define STATIC_IN_ANDROID_RELEASE
-#endif // def RELEASE && def ANDROID
+#endif // def RELEASE
 
-#if defined (HAVE_CONCEPTS)
 	template<typename T>
 	concept ByteArrayContainer = requires (T a) {
 		a.size ();
@@ -57,16 +48,8 @@ namespace xamarin::android::internal {
 
 	template<typename T>
 	concept LoaderData = requires (T a) {
-		requires std::same_as<T, bool>
-#if defined (NET)
-		|| std::same_as<T, MonoAssemblyLoadContextGCHandle>
-#endif
-		;
+		requires std::same_as<T, bool> || std::same_as<T, MonoAssemblyLoadContextGCHandle>;
 	};
-#else
-#define ByteArrayContainer class
-#define LoaderData typename
-#endif
 
 	class EmbeddedAssemblies final
 	{
@@ -92,47 +75,51 @@ namespace xamarin::android::internal {
 		};
 
 	private:
-		static constexpr char  ZIP_CENTRAL_MAGIC[] = "PK\1\2";
-		static constexpr char  ZIP_LOCAL_MAGIC[]   = "PK\3\4";
-		static constexpr char  ZIP_EOCD_MAGIC[]    = "PK\5\6";
+		static constexpr std::string_view ZIP_CENTRAL_MAGIC { "PK\1\2" };
+		static constexpr std::string_view ZIP_LOCAL_MAGIC   { "PK\3\4" };
+		static constexpr std::string_view ZIP_EOCD_MAGIC    { "PK\5\6" };
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr char  zip_path_separator[] = "/";
-		static constexpr auto  assemblies_prefix   = concat_const ("lib", zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+
+		// TODO: fix
+		static constexpr std::string_view zip_path_separator { "/" };
+		static constexpr std::string_view apk_lib_dir_name { "lib" };
+		static constexpr size_t assemblies_prefix_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr auto  assemblies_prefix   = concat_string_views<assemblies_prefix_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 
 		// We have two records for each assembly, for names with and without the extension
 		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
 		static constexpr uint32_t number_of_assembly_store_files = 1;
-		static constexpr char dso_suffix[] = ".so";
-		static constexpr char apk_lib_dir_name[] = "lib";
-		static constexpr auto apk_lib_prefix = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-		static constexpr auto assembly_store_file_name = concat_const ("libassemblies.", SharedConstants::android_lib_abi, ".blob.so");
-		static constexpr auto assembly_store_file_path = concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, "libassemblies.", SharedConstants::android_lib_abi, ".blob.so");
+		static constexpr std::string_view dso_suffix { ".so" };
 
-#if defined (DEBUG) || !defined (ANDROID)
-		static constexpr char override_typemap_entry_name[] = ".__override__";
-#endif
+		static constexpr auto apk_lib_prefix = assemblies_prefix; // concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr std::string_view assembly_store_prefix { "libassemblies." };
+		static constexpr std::string_view assembly_store_extension { ".blob" };
+
+		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr auto assembly_store_file_name = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+
+		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr auto assembly_store_file_path = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 
 	public:
 		/* filename is e.g. System.dll, System.dll.mdb, System.pdb */
 		using monodroid_should_register = bool (*)(const char *filename);
 
 	public:
-#if defined (RELEASE) && defined (ANDROID)
+#if defined (RELEASE)
 		EmbeddedAssemblies () noexcept
 		{}
-#endif  // def RELEASE && def ANDROID
+#endif  // def RELEASE
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 		void try_load_typemaps_from_directory (const char *path);
 #endif
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
 		void install_preload_hooks_for_appdomains ();
-#if defined (NET)
 		void install_preload_hooks_for_alc ();
-#endif // def NET
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (MonoString *java_type) noexcept;
 
 		/* returns current number of *all* assemblies found from all invocations */
@@ -167,7 +154,6 @@ namespace xamarin::android::internal {
 
 		void set_assemblies_prefix (const char *prefix);
 
-#if defined (NET)
 		void get_runtime_config_blob (const char *& area, uint32_t& size) const
 		{
 			area = static_cast<char*>(runtime_config_blob_mmap.area);
@@ -180,7 +166,6 @@ namespace xamarin::android::internal {
 		{
 			return application_config.have_runtime_config_blob && runtime_config_blob_mmap.area != nullptr;
 		}
-#endif
 
 		bool keep_scanning () const noexcept
 		{
@@ -231,7 +216,7 @@ namespace xamarin::android::internal {
 			TLoaderData loader_data,
 			bool ref_only) noexcept;
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 		template<typename H>
 		bool typemap_read_header (int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd);
 		std::unique_ptr<uint8_t[]> typemap_load_index (int dir_fd, const char *dir_path, const char *index_path);
@@ -240,15 +225,12 @@ namespace xamarin::android::internal {
 		bool typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module);
 		static ssize_t do_read (int fd, void *buf, size_t count);
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
-#endif // DEBUG || !ANDROID
+#endif // DEBUG
 
 		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-#if defined (NET)
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
-#else // def NET
-		static MonoAssembly* open_from_bundles_refonly (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
-#endif // ndef NET
+
 		void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
 		void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
@@ -266,17 +248,6 @@ namespace xamarin::android::internal {
 
 		template<class T>
 		bool zip_ensure_valid_params (T const& buf, size_t index, size_t to_read) const noexcept;
-
-		// template<size_t BufSize>
-		// bool zip_read_field (std::array<uint8_t, BufSize> const& buf, size_t index, uint16_t& u)
-		// {
-		// 	return zip_read_field_unchecked (buf, u, index);
-		// }
-
-		// bool zip_read_field (std::vector<uint8_t> const& buf, size_t index, uint16_t& u)
-		// {
-		// 	return zip_read_field_unchecked (buf, u, index);
-		// }
 
 		template<ByteArrayContainer T>
 		bool zip_read_field (T const& src, size_t source_index, uint16_t& dst) const noexcept;
@@ -309,10 +280,7 @@ namespace xamarin::android::internal {
 		{
 			return
 				number_of_mapped_assembly_stores == number_of_assembly_store_files && number_of_zip_dso_entries >= application_config.number_of_shared_libraries
-#if defined (NET)
-				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob)
-#endif // NET
-				;
+				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
 		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
@@ -323,7 +291,7 @@ namespace xamarin::android::internal {
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 		static int compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept;
 #else
 		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept;
@@ -339,8 +307,8 @@ namespace xamarin::android::internal {
 
 		constexpr size_t get_mangled_name_max_size_overhead ()
 		{
-			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT_LEN +
-				   std::max (SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN, SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN) +
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT.size() +
+				   std::max (SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size(), SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size()) +
 				   1; // For the extra `-` char in the culture portion of satellite assembly's name
 		}
 
@@ -357,16 +325,16 @@ namespace xamarin::android::internal {
 		static constexpr size_t get_mangled_prefix_length ()
 		{
 			if constexpr (IsSatelliteAssembly) {
-				return SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN;
+				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size ();
 			} else {
-				return SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN;
+				return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size ();
 			}
 		}
 
 		template<bool IsSatelliteAssembly>
 		static constexpr size_t get_mangled_data_size ()
 		{
-			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT_LEN + get_mangled_prefix_length<IsSatelliteAssembly> ();
+			return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size () + get_mangled_prefix_length<IsSatelliteAssembly> ();
 		}
 
 		template<bool IsSatelliteAssembly>
@@ -406,17 +374,16 @@ namespace xamarin::android::internal {
 		size_t                 bundled_assembly_index = 0;
 		size_t                 number_of_found_assemblies = 0;
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 		TypeMappingInfo       *java_to_managed_maps;
 		TypeMappingInfo       *managed_to_java_maps;
 		TypeMap               *type_maps;
 		size_t                 type_map_count;
-#endif // DEBUG || !ANDROID
+#endif // DEBUG
 		const char            *assemblies_prefix_override = nullptr;
-#if defined (NET)
+
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
-#endif // def NET
 		uint32_t               number_of_mapped_assembly_stores = 0;
 		uint32_t               number_of_zip_dso_entries = 0;
 		bool                   need_to_scan_more_apks = true;
@@ -425,9 +392,5 @@ namespace xamarin::android::internal {
 		std::mutex             assembly_decompress_mutex;
 	};
 }
-
-#if !defined (NET)
-MONO_API int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
-#endif // ndef NET
 
 #endif /* INC_MONODROID_EMBEDDED_ASSEMBLIES_H */

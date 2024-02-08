@@ -3,6 +3,7 @@
 #define __OS_BRIDGE_H
 
 #include <jni.h>
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/sgen-bridge.h>
 
 namespace xamarin::android::internal
@@ -122,9 +123,6 @@ namespace xamarin::android::internal
 		void initialize_on_onload (JavaVM *vm, JNIEnv *env);
 		void initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass);
 		void add_monodroid_domain (MonoDomain *domain);
-#if !defined (NET)
-		void remove_monodroid_domain (MonoDomain *domain);
-#endif // ndef NET
 		void on_destroy_contexts ();
 
 	private:

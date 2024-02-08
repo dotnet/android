@@ -2,29 +2,18 @@
 #include <cerrno>
 #include <cctype>
 #include <vector>
-#include <type_traits>
 #include <libgen.h>
 
 #include <mono/metadata/assembly.h>
 
 #include "embedded-assemblies.hh"
-#include "cpp-util.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
 #include "xxhash.hh"
 
 using namespace xamarin::android::internal;
 
-// This type is needed when calling read(2) in a MinGW build, as it defines the `count` parameter as `unsigned int`
-// instead of `size_t` which then causes the following warning if we pass a value of type `size_t`:
-//
-//   warning: conversion from ‘size_t’ {aka ‘long long unsigned int’} to ‘unsigned int’ may change value [-Wconversion]
-//
-#if defined (WINDOWS)
-using read_count_type = unsigned int;
-#else
 using read_count_type = size_t;
-#endif
 
 force_inline bool
 EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
@@ -59,7 +48,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		}
 	}
 
-#if defined (NET)
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
@@ -67,7 +55,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 			return false;
 		}
 	}
-#endif // def NET
 
 	// assemblies must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
@@ -150,7 +137,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 	//
 	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
 	for (size_t i = 0; i < num_entries; i++) {
-		if (entry_name.length () <= SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN) {
+		if (entry_name.length () <= SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size()) {
 			continue;
 		}
 
@@ -166,6 +153,7 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 		} else {
 			continue; // Can't be an assembly, the name's not mangled
 		}
+
 		log_debug (LOG_ASSEMBLY, "  interesting entry. Name modified to '%s'", entry_name.get ());
 		store_individual_assembly_data (entry_name, state, should_register);
 	}
@@ -391,7 +379,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 		return false;
 	}
 
-	if (memcmp (signature.data (), ZIP_EOCD_MAGIC, signature.size ()) == 0) {
+	if (memcmp (signature.data (), ZIP_EOCD_MAGIC.data (), signature.size ()) == 0) {
 		return zip_extract_cd_info (eocd, cd_offset, cd_size, cd_entries);
 	}
 
@@ -416,7 +404,7 @@ EmbeddedAssemblies::zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_
 	bool found = false;
 	const uint8_t* data = buf.data ();
 	for (ssize_t i = static_cast<ssize_t>(alloc_size - (ZIP_EOCD_LEN + 2)); i >= 0; i--) {
-		if (memcmp (data + i, ZIP_EOCD_MAGIC, sizeof(ZIP_EOCD_MAGIC)) != 0)
+		if (memcmp (data + i, ZIP_EOCD_MAGIC.data (), sizeof(ZIP_EOCD_MAGIC)) != 0)
 			continue;
 
 		found = true;
@@ -459,7 +447,7 @@ EmbeddedAssemblies::zip_adjust_data_offset (int fd, ZipEntryLoadState &state)
 		return false;
 	}
 
-	if (memcmp (signature.data (), ZIP_LOCAL_MAGIC, signature.size ()) != 0) {
+	if (memcmp (signature.data (), ZIP_LOCAL_MAGIC.data (), signature.size ()) != 0) {
 		log_error (LOG_ASSEMBLY, "Invalid Local Header entry signature at offset %u", state.local_header_offset);
 		return false;
 	}
@@ -596,7 +584,7 @@ EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynami
 		return false;
 	}
 
-	if (memcmp (signature.data (), ZIP_CENTRAL_MAGIC, signature.size ()) != 0) {
+	if (memcmp (signature.data (), ZIP_CENTRAL_MAGIC.data (), signature.size ()) != 0) {
 		log_error (LOG_ASSEMBLY, "Invalid Central Directory entry signature");
 		return false;
 	}

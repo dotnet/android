@@ -1,8 +1,11 @@
 #ifndef __BASIC_ANDROID_SYSTEM_HH
 #define __BASIC_ANDROID_SYSTEM_HH
 
+#include <array>
 #include <cstddef>
 #include <cstdint>
+#include <span>
+#include <string_view>
 
 #include "cpu-arch.hh"
 #include "jni-wrappers.hh"
@@ -32,45 +35,27 @@ namespace xamarin::android::internal
 #pragma clang diagnostic pop
 #endif
 		static constexpr size_t ANDROID_ABI_NAMES_SIZE = sizeof(android_abi_names) / sizeof (android_abi_names[0]);
-		static const char* built_for_abi_name;
 
 	public:
 #ifdef ANDROID64
-		static constexpr char SYSTEM_LIB_PATH[] = "/system/lib64";
-#elif ANDROID
-		static constexpr char SYSTEM_LIB_PATH[] = "/system/lib";
-#elif LINUX_FLATPAK
-		static constexpr char SYSTEM_LIB_PATH[] = "/app/lib/mono";
-#elif defined (__linux__) || defined (__linux)
-		static constexpr char SYSTEM_LIB_PATH[] = "/usr/lib";
-#elif APPLE_OS_X
-		static constexpr char SYSTEM_LIB_PATH[] = "/Library/Frameworks/Xamarin.Android.framework/Versions/Current/lib/xamarin.android/xbuild/Xamarin/Android/lib/host-Darwin";
-#elif WINDOWS
-		static const char *SYSTEM_LIB_PATH;
+		static constexpr std::string_view SYSTEM_LIB_PATH { "/system/lib64" };
 #else
-		static constexpr char SYSTEM_LIB_PATH[] = "";
+		static constexpr std::string_view SYSTEM_LIB_PATH { "/system/lib" };
 #endif
 
-		static constexpr size_t MAX_OVERRIDES = 1;
-		static char* override_dirs [MAX_OVERRIDES];
-		static const char **app_lib_directories;
-		static size_t app_lib_directories_size;
-		static const char* get_built_for_abi_name ();
+		inline static std::array<char*, 1> override_dirs{};
+
+		// This optimizes things a little bit. The array is allocated at build time, so we pay no cost for its
+		// allocation and at run time it allows us to skip dynamic memory allocation.
+		inline static std::array<const char*, 1> single_app_lib_directory{};
+		inline static std::span<const char*> app_lib_directories;
 
 	public:
 		void setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks);
 
-		const char* get_override_dir (size_t index) const
-		{
-			if (index >= MAX_OVERRIDES)
-				return nullptr;
-
-			return override_dirs [index];
-		}
-
 		void set_override_dir (uint32_t index, const char* dir)
 		{
-			if (index >= MAX_OVERRIDES)
+			if (index >= override_dirs.size ())
 				return;
 
 			override_dirs [index] = const_cast <char*> (dir);

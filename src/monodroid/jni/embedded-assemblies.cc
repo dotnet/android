@@ -1,19 +1,16 @@
 #include <host-config.h>
 
-#if !defined (__MINGW32__) || (defined (__MINGW32__) && __GNUC__ >= 10)
-#include <compare>
-#endif // ndef MINGW32 || def MINGW32 && GNUC >= 10
+#include <cctype>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <functional>
 
-#include <sys/stat.h>
-#include <sys/mman.h>
 #include <fcntl.h>
-#include <cctype>
 #include <libgen.h>
-#include <cerrno>
+#include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <sys/types.h>
@@ -29,13 +26,9 @@
 #include <mono/metadata/mono-debug.h>
 #include <mono/metadata/reflection.h>
 
-#include "java-interop-util.h"
-
-#include "monodroid.h"
 #include "util.hh"
 #include "embedded-assemblies.hh"
 #include "globals.hh"
-#include "monodroid-glue.hh"
 #include "mono-image-loader.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
@@ -88,14 +81,14 @@ EmbeddedAssemblies::set_assembly_data_and_size (uint8_t* source_assembly_data, u
 force_inline void
 EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[maybe_unused]] const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
-#if defined (ANDROID) && defined (HAVE_LZ4) && defined (RELEASE)
+#if defined (HAVE_LZ4) && defined (RELEASE)
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
-		if (XA_UNLIKELY (compressed_assemblies.descriptors == nullptr)) {
+		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
 			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
 			Helpers::abort_application ();
 		}
-		if (XA_UNLIKELY (header->descriptor_index >= compressed_assemblies.count)) {
+		if (header->descriptor_index >= compressed_assemblies.count) [[unlikely]] {
 			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
 			Helpers::abort_application ();
 		}
@@ -110,7 +103,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 				return;
 			}
 
-			if (XA_UNLIKELY (cad.data == nullptr)) {
+			if (cad.data == nullptr) [[unlikely]] {
 				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
 				Helpers::abort_application ();
 			}
@@ -142,7 +135,7 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 
 		set_assembly_data_and_size (reinterpret_cast<uint8_t*>(cad.data), cad.uncompressed_file_size, assembly_data, assembly_data_size);
 	} else
-#endif
+#endif // def HAVE_LZ4 && def RELEASE
 	{
 		set_assembly_data_and_size (data, data_size, assembly_data, assembly_data_size);
 	}
@@ -210,7 +203,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	}
 
 	if constexpr (LogMapping) {
-		if (XA_UNLIKELY (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr)) {
+		if (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
 			const char *p = (const char*) file.data;
 
 			std::array<char, 9> header;
@@ -303,10 +296,6 @@ EmbeddedAssemblies::load_bundled_assembly (
 		return nullptr;
 	}
 
-#if !defined (NET)
-	// In dotnet the call is a no-op
-	mono_config_for_assembly (image);
-#endif
 	return a;
 }
 
@@ -322,7 +311,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
 	abi_name
-		.assign_c (BasicAndroidSystem::get_built_for_abi_name ())
+		.assign (SharedConstants::android_lib_abi)
 		.append (zip_path_separator)
 		.append (name);
 
@@ -389,17 +378,7 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		if (store_entry.debug_data_offset != 0) {
 			assembly_runtime_info.debug_info_data = assembly_store.data_start + store_entry.debug_data_offset;
 		}
-#if !defined (NET)
-		if (bba->config_data_size != 0) {
-			assembly_runtime_info.config_data = rd.data_start + bba->config_data_offset;
 
-			// Mono takes ownership of the pointers
-			mono_register_config_for_assembly (
-				utils.string_concat (name.get (), ".dll"),
-				utils.strdup_new (reinterpret_cast<const char*>(assembly_runtime_info.config_data))
-			);
-		}
-#endif // NET
 		log_debug (
 			LOG_ASSEMBLY,
 			"Mapped: image_data == %p; debug_info_data == %p; config_data == %p; descriptor == %p; data size == %u; debug data size == %u; config data size == %u; name == '%s'",
@@ -435,9 +414,6 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 		return nullptr;
 	}
 
-#if !defined (NET)
-	mono_config_for_assembly (image);
-#endif
 	return a;
 }
 
@@ -475,26 +451,12 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 	return a;
 }
 
-#if defined (NET)
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data, MonoError *error)
 {
 	constexpr bool ref_only = false;
 	return embeddedAssemblies.open_from_bundles (aname, alc_gchandle, error, ref_only);
 }
-#else // def NET
-
-// The duplicated `ref_only` parameters in the two functions below look weird, but the first one of them is used to
-// call the right instance of the templateed MonoImageLoader::load method (just as`alc_gchandle` above) which loads a
-// `MonoImage`, while the other is used when loading a `MonoAssembly`
-MonoAssembly*
-EmbeddedAssemblies::open_from_bundles_refonly (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
-{
-	constexpr bool ref_only = true;
-
-	return embeddedAssemblies.open_from_bundles (aname, ref_only /* loader_data */, nullptr /* error */, ref_only);
-}
-#endif // ndef NET
 
 MonoAssembly*
 EmbeddedAssemblies::open_from_bundles_full (MonoAssemblyName *aname, [[maybe_unused]] char **assemblies_path, [[maybe_unused]] void *user_data)
@@ -508,12 +470,8 @@ void
 EmbeddedAssemblies::install_preload_hooks_for_appdomains ()
 {
 	mono_install_assembly_preload_hook (open_from_bundles_full, nullptr);
-#if !defined (NET)
-	mono_install_assembly_refonly_preload_hook (open_from_bundles_refonly, nullptr);
-#endif // ndef NET
 }
 
-#if defined (NET)
 void
 EmbeddedAssemblies::install_preload_hooks_for_alc ()
 {
@@ -523,7 +481,6 @@ EmbeddedAssemblies::install_preload_hooks_for_alc ()
 		0 /* append */
 	);
 }
-#endif // def NET
 
 template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_precalculated_size>
 force_inline const Entry*
@@ -577,7 +534,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 	return nullptr;
 }
 
-#if defined (RELEASE) && defined (ANDROID)
+#if defined (RELEASE)
 force_inline const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
@@ -596,9 +553,9 @@ EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, 
 
 	return arr[right].type_token_id == key ? &arr[right] : nullptr;
 }
-#endif // def RELEASE && def ANDROID
+#endif // def RELEASE
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 force_inline int
 EmbeddedAssemblies::compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept
 {
@@ -626,7 +583,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), type_map.java_to_managed, type_map.entry_count);
 	}
 
-	if (XA_UNLIKELY (entry == nullptr)) {
+	if (entry == nullptr) [[unlikely]] {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name.get ());
 		return nullptr;
 	}
@@ -639,20 +596,20 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
  	log_debug (LOG_DEFAULT, "typemap: Java type '%s' corresponds to managed type '%s'", java_type_name.get (), managed_type_name);
 
 	MonoType *type = mono_reflection_type_from_name (const_cast<char*>(managed_type_name), nullptr);
-	if (XA_UNLIKELY (type == nullptr)) {
+	if (type == nullptr) [[unlikely]] {
 		log_info (LOG_ASSEMBLY, "typemap: managed type '%s' (mapped from Java type '%s') could not be loaded", managed_type_name, java_type_name.get ());
 		return nullptr;
 	}
 
 	MonoReflectionType *ret = mono_type_get_object (utils.get_current_domain (), type);
-	if (XA_UNLIKELY (ret == nullptr)) {
+	if (ret == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type '%s'", managed_type_name);
 		return nullptr;
 	}
 
 	return ret;
 }
-#else
+#else // def DEBUG
 force_inline MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept
 {
@@ -718,14 +675,11 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 		return nullptr;
 	}
 
-#if defined (NET)
 	// MonoVM in dotnet runtime doesn't use the `domain` parameter passed to `mono_type_get_object` (since AppDomains
 	// are gone in NET 6+), in fact, the function `mono_type_get_object` calls (`mono_type_get_object_checked`) itself
 	// calls `mono_get_root_domain`. Thus, we can save on a one function call here by passing `nullptr`
 	constexpr MonoDomain *domain = nullptr;
-#else
-	MonoDomain *domain = utils.get_current_domain ();
-#endif
+
 	MonoReflectionType *ret = mono_type_get_object (domain, mono_class_get_type (klass));
 	if (ret == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type with token ID %u in assembly '%s', corresponding to Java type '%s'", java_entry->type_token_id, module->assembly_name, to_utf8 (java_type_name).get ());
@@ -734,18 +688,18 @@ EmbeddedAssemblies::typemap_java_to_managed (hash_t hash, const MonoString *java
 
 	return ret;
 }
-#endif
+#endif // ndef DEBUG
 
 MonoReflectionType*
 EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 {
 	size_t total_time_index;
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		timing = new Timing ();
 		total_time_index = internal_timing->start_event (TimingEventKind::JavaToManaged);
 	}
 
-	if (XA_UNLIKELY (java_type == nullptr)) {
+	if (java_type == nullptr) [[unlikely]]{
 		log_warn (LOG_ASSEMBLY, "typemap: null 'java_type' passed to 'typemap_java_to_managed'");
 		return nullptr;
 	}
@@ -753,7 +707,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	// We need to generate hash for all the bytes, and since MonoString is Unicode, we double the length to get the
 	// number of bytes.
 	int name_len = mono_string_length (java_type) << 1;
-	if (XA_UNLIKELY (name_len <= 0)) {
+	if (name_len <= 0) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: empty 'java_type' passed to 'typemap_java_to_managed'");
 		return nullptr;
 	}
@@ -762,14 +716,14 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 	hash_t hash = xxhash::hash (reinterpret_cast<const char*>(type_chars), static_cast<size_t>(name_len));
 	MonoReflectionType *ret = typemap_java_to_managed (hash, java_type);
 
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);
 	}
 
 	return ret;
 }
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 force_inline const TypeMapEntry*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noexcept
 {
@@ -806,14 +760,14 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		.append (image_name, image_name_len);
 
 	const TypeMapEntry *entry = typemap_managed_to_java (full_name.get ());
-	if (XA_UNLIKELY (entry == nullptr)) {
+	if (entry == nullptr) [[unlikely]] {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a Java type from managed type '%s'", full_name.get ());
 		return nullptr;
 	}
 
 	return entry->to;
 }
-#else
+#else // def DEBUG
 force_inline int
 EmbeddedAssemblies::compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept
 {
@@ -854,19 +808,19 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 		}
 	}
 
-	if (XA_UNLIKELY (entry->java_map_index >= java_type_count)) {
+	if (entry->java_map_index >= java_type_count) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) has invalid Java type index %u", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index);
 		return nullptr;
 	}
 
 	TypeMapJava const& java_entry = map_java[entry->java_map_index];
-	if (XA_UNLIKELY (java_entry.java_name_index >= java_type_count)) {
+	if (java_entry.java_name_index >= java_type_count) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: type with token %d (0x%x) in module {%s} (%s) points to invalid Java type at index %u (invalid type name index %u)", token, token, MonoGuidString (mvid).get (), match->assembly_name, entry->java_map_index, java_entry.java_name_index);
 		return nullptr;
 	}
 	const char *ret = java_type_names[java_entry.java_name_index];
 
-	if (XA_UNLIKELY (ret == nullptr)) {
+	if (ret == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: empty Java type name returned for entry at index %u", entry->java_map_index);
 	}
 
@@ -882,13 +836,13 @@ EmbeddedAssemblies::typemap_managed_to_java ([[maybe_unused]] MonoType *type, Mo
 
 	return ret;
 }
-#endif
+#endif // ndef DEBUG
 
 const char*
 EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type, const uint8_t *mvid) noexcept
 {
 	size_t total_time_index;
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		timing = new Timing ();
 		total_time_index = internal_timing->start_event (TimingEventKind::ManagedToJava);
 	}
@@ -901,7 +855,7 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 
 	const char *ret = typemap_managed_to_java (type, mono_class_from_mono_type (type), mvid);
 
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);
 	}
 
@@ -951,7 +905,7 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	zip_load_entries (fd, apk, should_register);
 }
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count)
 {
 	ssize_t ret;
@@ -959,11 +913,7 @@ ssize_t EmbeddedAssemblies::do_read (int fd, void *buf, size_t count)
 		ret = ::read (
 			fd,
 			buf,
-#if defined (WINDOWS)
-			static_cast<unsigned int>(count)
-#else
 			count
-#endif
 		);
 	} while (ret < 0 && errno == EINTR);
 
@@ -975,14 +925,7 @@ bool
 EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char *file_type, const char *dir_path, const char *file_path, uint32_t expected_magic, H &header, size_t &file_size, int &fd)
 {
 	struct stat sbuf;
-	int res;
-
-#if __ANDROID_API__ < 21
-	std::unique_ptr<char> full_file_path {utils.path_combine (dir_path, file_path)};
-	res = stat (full_file_path.get (), &sbuf);
-#else
-	res = fstatat (dir_fd, file_path, &sbuf, 0);
-#endif
+	int res = fstatat (dir_fd, file_path, &sbuf, 0);
 	if (res < 0) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to stat %s file '%s/%s': %s", file_type, dir_path, file_path, strerror (errno));
 		return false;
@@ -994,11 +937,7 @@ EmbeddedAssemblies::typemap_read_header ([[maybe_unused]] int dir_fd, const char
 		return false;
 	}
 
-#if __ANDROID_API__ < 21
-	fd = open (full_file_path.get (), O_RDONLY);
-#else
 	fd = openat (dir_fd, file_path, O_RDONLY);
-#endif
 	if (fd < 0) {
 		log_error (LOG_ASSEMBLY, "typemap: failed to open %s file %s/%s for reading: %s", file_type, dir_path, file_path, strerror (errno));
 		return false;
@@ -1193,18 +1132,13 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 	}
 
 	std::unique_ptr<char> dir_path {utils.path_combine (path, "typemaps")};
-	monodroid_dir_t *dir;
-	if ((dir = utils.monodroid_opendir (dir_path.get ())) == nullptr) {
+	DIR *dir;
+	if ((dir = ::opendir (dir_path.get ())) == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
 		return;
 	}
 
-	int dir_fd;
-#if __ANDROID_API__ < 21
-	dir_fd = -1;
-#else
-	dir_fd = dirfd (dir);
-#endif
+	int dir_fd = dirfd (dir);
 
 	constexpr char index_name[] = "typemap.index";
 
@@ -1223,9 +1157,9 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		}
 	}
 
-	utils.monodroid_closedir (dir);
+	::closedir (dir);
 }
-#endif
+#endif // def DEBUG
 
 size_t
 EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept
@@ -1263,8 +1197,8 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 	//
 	// Currently (Jan 2024), dir_try->d_name is declared as `char[256]` by Bionic
 	static_assert (std::is_bounded_array_v<decltype(dir_entry->d_name)>);
-	static_assert (sizeof(dir_entry->d_name) > SharedConstants::REGULAR_ASSEMBLY_PREFIX_LEN);
-	static_assert (sizeof(dir_entry->d_name) > SharedConstants::SATELLITE_ASSEMBLY_PREFIX_LEN);
+	static_assert (sizeof(dir_entry->d_name) > SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size());
+	static_assert (sizeof(dir_entry->d_name) > SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size());
 
 	if constexpr (MangledNamesMode) {
 		// We're only interested in "mangled" file names, namely those starting with either the `lib_` or `lib-` prefixes
