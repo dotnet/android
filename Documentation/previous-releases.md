@@ -3,6 +3,8 @@ Xamarin.Android Previous Releases
 
 | Platform        | Link   |
 |-----------------|--------|
+| **Commercial Xamarin.Android 13.2 (d17-5)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-5-Windows-x86_64] |
+| **Commercial Xamarin.Android 13.2 (d17-5)** for macOS                                       | [Download][commercial-d17-5-macOS-x86_64]   |
 | **Commercial Xamarin.Android 13.1 (d17-4)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-4-Windows-x86_64] |
 | **Commercial Xamarin.Android 13.1 (d17-4)** for macOS                                       | [Download][commercial-d17-4-macOS-x86_64]   |
 | **Commercial Xamarin.Android 13.0 (d17-3)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-3-Windows-x86_64] |
@@ -70,3 +72,5 @@ Xamarin.Android Previous Releases
 [commercial-d17-3-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-3-macos
 [commercial-d17-4-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-4-windows
 [commercial-d17-4-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-4-macos
+[commercial-d17-5-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-5-windows
+[commercial-d17-5-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-5-macos
