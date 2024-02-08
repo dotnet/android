@@ -334,7 +334,9 @@ namespace xamarin::android::internal {
 		template<bool IsSatelliteAssembly>
 		static constexpr size_t get_mangled_data_size ()
 		{
-			return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size () + get_mangled_prefix_length<IsSatelliteAssembly> ();
+			return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size () +
+				   get_mangled_prefix_length<IsSatelliteAssembly> () +
+				   1; // For the extra `-` char in the culture portion of satellite assembly's name;
 		}
 
 		template<bool IsSatelliteAssembly>
