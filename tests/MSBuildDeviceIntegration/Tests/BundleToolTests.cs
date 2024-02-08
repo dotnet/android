@@ -163,26 +163,26 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var abi in Abis) {
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/%es%Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#UnnamedProject.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 				} else {
-					expectedFiles.Add ($"lib/{abi}/#Java.Interop.dll.so");
-					expectedFiles.Add ($"lib/{abi}/#Mono.Android.dll.so");
-					expectedFiles.Add ($"lib/{abi}/#Localization.dll.so");
-					expectedFiles.Add ($"lib/{abi}/%es%Localization.resources.dll.so");
-					expectedFiles.Add ($"lib/{abi}/#UnnamedProject.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib_Java.Interop.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib_Mono.Android.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib_Localization.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib_UnnamedProject.dll.so");
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#System.Private.CoreLib.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
-					expectedFiles.Add ($"lib/{abi}/#System.Private.CoreLib.dll.so");
+					expectedFiles.Add ($"lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
 				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
@@ -223,26 +223,26 @@ namespace Xamarin.Android.Build.Tests
 			foreach (var abi in Abis) {
 				// All assemblies are in per-abi directories now
 				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Java.Interop.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Mono.Android.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#Localization.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/%es%Localization.resources.dll.so");
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#UnnamedProject.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Java.Interop.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Mono.Android.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_Localization.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_UnnamedProject.dll.so");
 				} else {
-					expectedFiles.Add ($"base/lib/{abi}/#Java.Interop.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/#Mono.Android.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/#Localization.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/%es%Localization.resources.dll.so");
-					expectedFiles.Add ($"base/lib/{abi}/#UnnamedProject.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib_Java.Interop.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib_Mono.Android.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib_Localization.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib-es-Localization.resources.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib_UnnamedProject.dll.so");
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
 				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
 				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
 				if (usesAssemblyBlobs) {
-					expectedFiles.Add ($"{blobEntryPrefix}{abi}/#System.Private.CoreLib.dll.so");
+					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
-					expectedFiles.Add ($"base/lib/{abi}/#System.Private.CoreLib.dll.so");
+					expectedFiles.Add ($"base/lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
 				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
