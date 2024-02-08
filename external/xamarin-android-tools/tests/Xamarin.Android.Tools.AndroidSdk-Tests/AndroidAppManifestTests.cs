@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -171,6 +171,46 @@ namespace Xamarin.Android.Tools.Tests
 			var manifest    = AndroidAppManifest.Load (doc, versions);
 
 			Assert.AreEqual ("@android:style/Theme.Material.Light", manifest.ApplicationTheme);
+		}
+
+		[Test]
+		public void CanAddAndRemoveUsesSdk ()
+		{
+			XNamespace aNS  = "http://schemas.android.com/apk/res/android";
+			var versions    = new AndroidVersions (new AndroidVersion [0]);
+			var doc         = XDocument.Parse (@"
+				<manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""com.xamarin.Foo"">
+					<uses-sdk android:minSdkVersion=""8"" android:targetSdkVersion=""12"" />
+					<application android:label=""Foo"" android:icon=""@drawable/ic_icon"" android:theme=""@android:style/Theme.Material.Light"">
+					</application>
+				</manifest>");
+			var manifest    = AndroidAppManifest.Load (doc, versions);
+
+			manifest.MinSdkVersion = null;
+			manifest.TargetSdkVersion = null;
+
+			var sb = new StringBuilder ();
+			using (var writer = XmlWriter.Create (sb)) {
+				manifest.Write (writer);
+			}
+
+			var newDoc      = XDocument.Parse (sb.ToString ());
+			var usesSdk     = newDoc.Element ("manifest").Element ("uses-sdk");
+			Assert.IsNull (usesSdk, "uses-sdk should not exist");
+
+			manifest.MinSdkVersion = 8;
+			manifest.TargetSdkVersion = 12;
+
+			sb = new StringBuilder ();
+			using (var writer = XmlWriter.Create (sb)) {
+				manifest.Write (writer);
+			}
+
+			newDoc = XDocument.Parse (sb.ToString ());
+			usesSdk = newDoc.Element ("manifest").Element ("uses-sdk");
+			Assert.IsNotNull (usesSdk, "uses-sdk should exist");
+			Assert.AreEqual ("8", usesSdk.Attribute (aNS + "minSdkVersion").Value);
+			Assert.AreEqual ("12", usesSdk.Attribute (aNS + "targetSdkVersion").Value);
 		}
 	}
 }
