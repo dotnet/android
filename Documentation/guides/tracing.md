@@ -18,12 +18,6 @@ $ adb reverse tcp:0 tcp:9001
 ```
 This will allocate a random port on remote and forward it to port 9001 on the host. The forwarded port is printed by adb
 
-### Configure the device so that the profiled app suspends until tracing utility connects
-
-```sh
-$ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend'
-```
-
 ### Install `dotnet-dsrouter`
 
 Generally, you can use a stable `dotnet-dsrouter` from NuGet:
@@ -67,19 +61,33 @@ dbug: dotnet-dsrouter[0]
       Waiting for new ipc connection at endpoint "dotnet-diagnostic-dsrouter-21352".
 ```
 
-### For Android devices
+Use `dotnet-dsrouter android` instead, if you are testing on an
+Android device. The `adb reverse` command mentioned above is required
+for physical devices.
 
-For profiling an Android application running on an Android device:
+### Configure the device so that the profiled app suspends until tracing utility connects
 
+Note the log message that `dotnet-dsrouter` prints that mentions
+`$DOTNET_DiagnosticPorts`. `$DOTNET_DiagnosticPorts` is an environment
+variable that could be defined in an `@(AndroidEnvironment)`, but it
+is simpler to use the `debug.mono.profile` Android system property.
+Android system properties can be used without rebuilding the app.
+
+Based on the value `dotnet-dsrouter` logs for
+`DOTNET_DiagnosticPorts`, choose one of:
+
+```sh
+# Emulators will be 10.x.x.x
+$ adb shell setprop debug.mono.profile '10.0.2.2:9000,suspend,connect'
+# Devices will be 127.0.0.1, but require `adb reverse` as mentioned above
+$ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
 ```
-$ dotnet-dsrouter server-server -tcps 127.0.0.1:9001 --verbose debug
-```
 
-Eventually, we will be able to simply do `dotnet-dsrouter android` when
-[dotnet/diagnostics#4337][4337] is resolved. `adb reverse tcp:9000 tcp:9001` is
-also currently required as mentioned above.
+`suspend` is useful as it blocks application startup, so you can
+actually `dotnet-trace` startup times of the application.
 
-[4337]: https://github.com/dotnet/diagnostics/issues/4337
+If you are wanting to collect a `gcdump` or just get things working,
+try `nosuspend` instead.
 
 ### Start the tracing client
 
@@ -111,6 +119,10 @@ The `--format` argument is optional and it defaults to `nettrace`. However, `net
 Perfview on Windows, while the speedscope JSON files can be viewed "on" Unix by uploading them to https://speedscope.app
 
 ### Compile and run the application
+
+`$(AndroidEnableProfiler)` must be set to `true` as it includes the
+Mono diagnostic component in the application. This component is the
+`libmono-component-diagnostics_tracing.so` native library.
 
 ```
 $ dotnet build -f net8.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
@@ -187,6 +199,9 @@ $ dotnet-gcdump collect -p 38604
 ```
 
 This will create a `*.gcdump` file in the current directory.
+
+Note that using `nosuspend` in the `debug.mono.profile` property is
+useful, as it won't block application startup.
 
 ## Memory Dumps for Android in .NET 7
 
