@@ -82,11 +82,10 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
 
-		// TODO: fix
 		static constexpr std::string_view zip_path_separator { "/" };
 		static constexpr std::string_view apk_lib_dir_name { "lib" };
 		static constexpr size_t assemblies_prefix_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
-		static constexpr auto  assemblies_prefix   = concat_string_views<assemblies_prefix_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr auto assemblies_prefix = concat_string_views<assemblies_prefix_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
 
 		// We have two records for each assembly, for names with and without the extension
 		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;

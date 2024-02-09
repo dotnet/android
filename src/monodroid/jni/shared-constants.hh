@@ -20,16 +20,11 @@ namespace xamarin::android::internal
 	public:
 		// These three MUST be the same as like-named constants in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.Basic.cs
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
-//		static constexpr size_t MANGLED_ASSEMBLY_NAME_EXT_LEN = sizeof(MANGLED_ASSEMBLY_NAME_EXT) - 1;
-
 		static constexpr std::string_view MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER { "lib_" };
 		static constexpr size_t REGULAR_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
-//		static constexpr size_t REGULAR_ASSEMBLY_PREFIX_LEN = sizeof(SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER) - 1;
 		static constexpr char REGULAR_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER[REGULAR_ASSEMBLY_MARKER_INDEX];
-
 		static constexpr std::string_view MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER { "lib-" };
 		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
-//		static constexpr size_t SATELLITE_ASSEMBLY_PREFIX_LEN = sizeof(SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER) - 1;
 		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
 
 		static constexpr std::string_view MONO_ANDROID_RUNTIME_ASSEMBLY_NAME  { "Mono.Android.Runtime" };
