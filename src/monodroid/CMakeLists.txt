@@ -322,6 +322,16 @@ endif()
 # Compiler and linker flags
 set(LINK_LIBS "")
 
+#
+# -Wformat-nonliteral is disabled as it's not very practical, because we use proxy functions to
+# pass formats to the final Android logger functions. The Android functions have attributes that
+# cause warnings similar to:
+#
+#  warning G4FD2E6FD: format string is not a string literal [-Wformat-nonliteral]
+#
+# The warning is, in general, a good practice because the compiler can verify the printf format
+# at compile time, but in our case it's not very useful.
+#
 set(LOCAL_COMMON_COMPILER_ARGS
   -Wall
   -Wconversion
@@ -333,6 +343,7 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Wextra
   -Wformat-security
   -Wformat=2
+  -Wno-format-nonliteral
   -Wimplicit-fallthrough
   -Wmisleading-indentation
   -Wnull-dereference
@@ -341,7 +352,6 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Wsign-compare
   -Wtrampolines
   -Wuninitialized
-  -fstack-clash-protection
   -fstrict-flex-arrays=3
   )
 
@@ -370,6 +380,10 @@ endif()
 
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
+  list(APPEND LOCAL_COMMON_LINKER_ARGS
+    -fstack-clash-protection
+  )
+
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
     list(APPEND LOCAL_COMMON_COMPILER_ARGS
       -fno-omit-frame-pointer

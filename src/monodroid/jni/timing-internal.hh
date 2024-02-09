@@ -2,44 +2,20 @@
 #define __TIMING_INTERNAL_HH
 
 #include <atomic>
-#include <array>
-#include <charconv>
+#include <concepts>
 #include <ctime>
-#include <string>
-#include <type_traits>
 #include <vector>
 
-#include "cpp-util.hh"
 #include "logger.hh"
 #include "startup-aware-lock.hh"
 #include "strings.hh"
 #include "util.hh"
 #include "shared-constants.hh"
 
-#undef HAVE_CONCEPTS
-
-// Xcode has supports for concepts only since 12.5, however
-// even in 13.2 support for them appears buggy. Disable for
-// now
-#if __has_include (<concepts>) && !defined(__APPLE__)
-#define HAVE_CONCEPTS
-#include <concepts>
-#endif // __has_include && ndef __APPLE__
-
 namespace xamarin::android::internal
 {
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
-	using timestruct = timespec;
-#else
-	using timestruct = timeval;
-#endif
-
-#if defined (ANDROID)
 	// bionic should use `time_t` in the timespec struct, but it uses `long` instead
 	using time_type = long;
-#else
-	using time_type = time_t;
-#endif
 
 	// Events should never change their assigned values and no values should be reused.
 	// Values are used by the test runner to determine what measurement was taken.
@@ -85,7 +61,6 @@ namespace xamarin::android::internal
 		const char*      more_info;
 	};
 
-#if defined (HAVE_CONCEPTS)
 	template<typename T>
 	concept TimingPointType = requires (T a) {
 		{ a.sec } -> std::same_as<time_t&>;
@@ -98,7 +73,6 @@ namespace xamarin::android::internal
 		{ a.ms } -> std::same_as<uint32_t&>;
 		{ a.ns } -> std::same_as<uint32_t&>;
 	};
-#endif
 
 	class FastTiming final
 	{
@@ -132,7 +106,7 @@ namespace xamarin::android::internal
 
 		force_inline static void initialize (bool log_immediately) noexcept
 		{
-			if (XA_LIKELY (!utils.should_log (LOG_TIMING))) {
+			if (!utils.should_log (LOG_TIMING)) [[likely]] {
 				return;
 			}
 
@@ -161,7 +135,7 @@ namespace xamarin::android::internal
 		{
 			size_t index = next_event_index.fetch_add (1);
 
-			if (XA_UNLIKELY (index >= events.capacity ())) {
+			if (index >= events.capacity ()) [[unlikely]] {
 				StartupAwareLock lock (event_vector_realloc_mutex);
 				if (index >= events.size ()) { // don't increase unnecessarily, if another thread has already done that
 					// Double the vector size. We should, in theory, check for integer overflow here, but it's more
@@ -183,7 +157,7 @@ namespace xamarin::android::internal
 
 		force_inline void end_event (size_t event_index, bool uses_more_info = false) noexcept
 		{
-			if (XA_UNLIKELY (!is_valid_event_index (event_index, __PRETTY_FUNCTION__))) {
+			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
 			}
 
@@ -194,7 +168,7 @@ namespace xamarin::android::internal
 		template<size_t MaxStackSize, typename TStorage, typename TChar = char>
 		force_inline void add_more_info (size_t event_index, string_base<MaxStackSize, TStorage, TChar> const& str) noexcept
 		{
-			if (XA_UNLIKELY (!is_valid_event_index (event_index, __PRETTY_FUNCTION__))) {
+			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
 			}
 
@@ -204,7 +178,7 @@ namespace xamarin::android::internal
 
 		force_inline void add_more_info (size_t event_index, const char* str) noexcept
 		{
-			if (XA_UNLIKELY (!is_valid_event_index (event_index, __PRETTY_FUNCTION__))) {
+			if (!is_valid_event_index (event_index, __PRETTY_FUNCTION__)) [[unlikely]] {
 				return;
 			}
 
@@ -215,23 +189,14 @@ namespace xamarin::android::internal
 		force_inline static void get_time (time_t &seconds_out, uint64_t& ns_out) noexcept
 		{
 			int ret;
-			timestruct tv_ctm;
+			timespec tv_ctm;
 
-#if defined (ANDROID) || defined (__linux__) || defined (__linux)
 			ret = clock_gettime (CLOCK_MONOTONIC, &tv_ctm);
 			ns_out = ret == 0 ? static_cast<uint64_t>(tv_ctm.tv_nsec) : 0;
-#else
-			ret = gettimeofday (&tv_ctm, static_cast<timestruct*> (nullptr));
-			ns_out = ret == 0 ? static_cast<uint64_t>(tv_ctm.tv_usec * 1000LL) : 0;
-#endif
 			seconds_out = ret == 0 ? tv_ctm.tv_sec : 0;
 		}
 
-#if defined (HAVE_CONCEPTS)
 		template<TimingPointType P, TimingIntervalType I>
-#else
-		template<typename P, typename I>
-#endif
 		force_inline static void calculate_interval (P const& start, P const& end, I &result) noexcept
 		{
 			uint64_t nsec;
@@ -255,11 +220,7 @@ namespace xamarin::android::internal
 			result.ns = static_cast<uint32_t>(nsec  % ns_in_millisecond);
 		}
 
-#if defined (HAVE_CONCEPTS)
 		template<TimingPointType P, TimingIntervalType I>
-#else
-		template<typename P, typename I>
-#endif
 		force_inline static void calculate_interval (P const& start, P const& end, I &result, uint64_t& total_ns) noexcept
 		{
 			calculate_interval (start, end, result);
@@ -282,7 +243,7 @@ namespace xamarin::android::internal
 
 		force_inline bool is_valid_event_index (size_t index, const char *method_name) noexcept
 		{
-			if (XA_UNLIKELY (index >= events.capacity ())) {
+			if (index >= events.capacity ()) [[unlikely]] {
 				log_warn (LOG_TIMING, "Invalid event index passed to method '%s'", method_name);
 				return false;
 			}

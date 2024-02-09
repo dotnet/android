@@ -20,7 +20,7 @@ namespace xamarin::android
 		{
 			Ret ret;
 
-			if (XA_UNLIKELY (__builtin_add_overflow (a, b, &ret))) {
+			if (__builtin_add_overflow (a, b, &ret)) [[unlikely]] {
 				log_fatal (LOG_DEFAULT, "Integer overflow on addition at %s:%u", file, line);
 				abort_application ();
 			}
@@ -44,7 +44,7 @@ namespace xamarin::android
 		{
 			Ret ret;
 
-			if (XA_UNLIKELY (__builtin_mul_overflow (a, b, &ret))) {
+			if (__builtin_mul_overflow (a, b, &ret)) [[unlikely]] {
 				log_fatal (LOG_DEFAULT, "Integer overflow on multiplication at %s:%u", file, line);
 				abort_application ();
 			}

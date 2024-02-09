@@ -32,6 +32,7 @@
 */
 
 #include <cstdint>
+#include <string_view>
 
 #include "platform-compat.hh"
 
@@ -62,6 +63,12 @@ namespace xamarin::android
 		force_inline static constexpr uint32_t hash (const char (&input)[Size]) noexcept
 		{
 			return hash<Seed> (input, Size - 1);
+		}
+
+		template<uint32_t Seed = 0>
+		force_inline static constexpr uint32_t hash (std::string_view const& input) noexcept
+		{
+			return hash<Seed> (input.data (), input.length ());
 		}
 
 	private:
@@ -156,6 +163,12 @@ namespace xamarin::android
 		force_inline static constexpr uint64_t hash (const char (&input)[Size]) noexcept
 		{
 			return hash<Seed> (input, Size - 1);
+		}
+
+		template<uint64_t Seed = 0>
+		force_inline static constexpr uint64_t hash (std::string_view const& input) noexcept
+		{
+			return hash<Seed> (input.data (), input.length ());
 		}
 
 	private:
