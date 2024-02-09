@@ -60,13 +60,13 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<PermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<PermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.PermissionAttribute");
 			foreach (var attr in attrs) {
 				PermissionAttribute self = new PermissionAttribute ();
 
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 
 				yield return self;
 			}

@@ -27,13 +27,13 @@ namespace Android.App
 
 		ICollection<string> specified;
 
-		public static IEnumerable<SupportsGLTextureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<SupportsGLTextureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.SupportsGLTextureAttribute");
 			foreach (var attr in attrs) {
 				if (attr.HasConstructorArguments && attr.ConstructorArguments.Count == 1) {
 					SupportsGLTextureAttribute self = new SupportsGLTextureAttribute((string)attr.ConstructorArguments[0].Value);
-					self.specified = mapping.Load (self, attr);
+					self.specified = mapping.Load (self, attr, cache);
 					self.specified.Add("Name");
 					yield return self;					 
 				}
