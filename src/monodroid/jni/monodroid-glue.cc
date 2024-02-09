@@ -247,8 +247,12 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			if (od == nullptr || !utils.directory_exists (od)) {
 				continue;
 			}
-			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", od);
-			embeddedAssemblies.try_load_typemaps_from_directory (od);
+
+			// TODO: temporary hack for the location of typemaps, to be fixed
+			dynamic_local_string<SENSIBLE_PATH_MAX> above { od };
+			above.append ("/..");
+			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
+			embeddedAssemblies.try_load_typemaps_from_directory (above.get());
 		}
 	}
 #endif

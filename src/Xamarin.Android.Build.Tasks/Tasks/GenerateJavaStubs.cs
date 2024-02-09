@@ -6,7 +6,7 @@ using System.IO;
 using System.Linq;
 using Microsoft.Build.Framework;
 using Mono.Cecil;
-
+using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
@@ -89,7 +89,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] Environments { get; set; }
 
 		[Output]
-		public string [] GeneratedBinaryTypeMaps { get; set; }
+		public ITaskItem[] GeneratedBinaryTypeMaps { get; set; }
 
 		internal const string AndroidSkipJavaStubGeneration = "AndroidSkipJavaStubGeneration";
 
@@ -422,7 +422,19 @@ namespace Xamarin.Android.Tasks
 			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, TypemapOutputDirectory, GenerateNativeAssembly)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
 			}
-			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
+
+			string abi = MonoAndroidHelper.ArchToAbi (state.TargetArch);
+			var items = new List<ITaskItem> ();
+			foreach (string file in tmg.GeneratedBinaryTypeMaps) {
+				var item = new TaskItem (file);
+				string fileName = Path.GetFileName (file);
+				item.SetMetadata ("DestinationSubPath", $"{abi}/{fileName}");
+				item.SetMetadata ("DestinationSubDirectory", $"{abi}/");
+				item.SetMetadata ("Abi", abi);
+				items.Add (item);
+			}
+
+			GeneratedBinaryTypeMaps = items.ToArray ();
 		}
 	}
 }

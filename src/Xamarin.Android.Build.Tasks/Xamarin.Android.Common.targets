@@ -1524,13 +1524,13 @@ because xbuild doesn't support framework reference assemblies.
   </GenerateJavaStubs>
 
   <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
-    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\*" />
+    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\**\*" />
   </ItemGroup>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
     <FileWrites Include="@(_TypeMapAssemblyInclude)" />
-    <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '$(_InstantRunEnabled)' == 'True' " />
+    <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
     <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
 
