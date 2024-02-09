@@ -159,6 +159,7 @@ namespace Xamarin.Android.Tasks
 			}
 			Directory.CreateDirectory (outputDirectory);
 
+			state.JniAddNativeMethodRegistrationAttributePresent = skipJniAddNativeMethodRegistrationAttributeScan;
 			string typemapsOutputDirectory = Path.Combine (outputDirectory, "typemaps");
 			if (debugBuild) {
 				return GenerateDebug (skipJniAddNativeMethodRegistrationAttributeScan, typemapsOutputDirectory, generateNativeAssembly);
