@@ -324,18 +324,17 @@ namespace xamarin::android::internal {
 		static constexpr size_t get_mangled_prefix_length ()
 		{
 			if constexpr (IsSatelliteAssembly) {
-				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size ();
+				// +1 for the extra `-` char in the culture portion of satellite assembly's name;
+				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.length () + 1;
 			} else {
-				return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size ();
+				return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.length ();
 			}
 		}
 
 		template<bool IsSatelliteAssembly>
 		static constexpr size_t get_mangled_data_size ()
 		{
-			return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size () +
-				   get_mangled_prefix_length<IsSatelliteAssembly> () +
-				   1; // For the extra `-` char in the culture portion of satellite assembly's name;
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT.length () + get_mangled_prefix_length<IsSatelliteAssembly> ();
 		}
 
 		template<bool IsSatelliteAssembly>
