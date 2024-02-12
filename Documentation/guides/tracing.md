@@ -47,7 +47,7 @@ DOTNET_DiagnosticPorts=10.0.2.2:9000,nosuspend,connect
 DOTNET_DiagnosticPorts=10.0.2.2:9000,suspend,connect
 Run diagnotic tool connecting application on android emulator through dotnet-dsrouter pid=1234:
 dotnet-trace collect -p 1234
-See https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dsrouter for additional details and examples.
+See https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter for additional details and examples.
 
 info: dotnet-dsrouter-1234[0]
       Starting dotnet-dsrouter using pid=1234
@@ -99,7 +99,10 @@ $ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
 actually `dotnet-trace` startup times of the application.
 
 If you are wanting to collect a `gcdump` or just get things working,
-try `nosuspend` instead.
+try `nosuspend` instead. See the [`dotnet-dsrouter`
+documentation][nosuspend] for further information.
+
+[nosuspend]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter#collect-a-trace-using-dotnet-trace-from-a-net-application-running-on-android
 
 ### Start the tracing client
 
