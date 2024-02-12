@@ -137,10 +137,6 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 	//
 	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
 	for (size_t i = 0; i < num_entries; i++) {
-		if (entry_name.length () <= SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size()) {
-			continue;
-		}
-
 		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
 		if (!interesting_entry) {
 			continue;
@@ -154,7 +150,6 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue; // Can't be an assembly, the name's not mangled
 		}
 
-		log_debug (LOG_ASSEMBLY, "  interesting entry. Name modified to '%s'", entry_name.get ());
 		store_individual_assembly_data (entry_name, state, should_register);
 	}
 }
@@ -316,7 +311,6 @@ template<bool NeedsNameAlloc>
 force_inline void
 EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
-	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
 	entry.file_fd = state.file_fd;
 	if constexpr (NeedsNameAlloc) {
 		entry.name = utils.strdup_new (entry_name.get () + state.prefix_len);
