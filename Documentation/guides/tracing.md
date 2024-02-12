@@ -80,13 +80,18 @@ variable that could be defined in an `@(AndroidEnvironment)`, but it
 is simpler to use the `debug.mono.profile` Android system property.
 Android system properties can be used without rebuilding the app.
 
-Based on the value `dotnet-dsrouter` logs for
-`DOTNET_DiagnosticPorts`, choose one of:
+For emulators, `$DOTNET_DiagnosticPorts` should specify an IP address
+of 10.0.2.2:
 
 ```sh
-# Emulators will be 10.x.x.x
 $ adb shell setprop debug.mono.profile '10.0.2.2:9000,suspend,connect'
-# Devices will be 127.0.0.1, but require `adb reverse` as mentioned above
+```
+
+For devices, `$DOTNET_DiagnosticPorts` should specify an IP address of
+127.0.0.1, and the port number should be the [port used used with adb
+reverse](#start-the-tracing-routerproxy-on-host), e.g:
+
+```sh
 $ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
 ```
 
