@@ -36,34 +36,41 @@ $ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tool
 
 ### Start the tracing router/proxy on host
 
-For profiling an Android application running on an Android emulator:
+For profiling an Android application running on an Android _emulator_:
 ```sh
-$ dotnet-dsrouter android-emu --verbose debug
-WARNING: dotnet-dsrouter is a development tool not intended for production environments.
-
-Start an application on android emulator with one of the following environment variables set:
+$ dotnet-dsrouter android-emu
+How to connect current dotnet-dsrouter pid=1234 with android emulator and diagnostics tooling.
+Start an application on android emulator with ONE of the following environment variables set:
+[Default Tracing]
 DOTNET_DiagnosticPorts=10.0.2.2:9000,nosuspend,connect
+[Startup Tracing]
 DOTNET_DiagnosticPorts=10.0.2.2:9000,suspend,connect
+Run diagnotic tool connecting application on android emulator through dotnet-dsrouter pid=1234:
+dotnet-trace collect -p 1234
+See https://learn.microsoft.com/en-us/dotnet/core/diagnostics/dotnet-dsrouter for additional details and examples.
 
-info: dotnet-dsrouter[0]
-      Starting dotnet-dsrouter using pid=21352
-dbug: dotnet-dsrouter[0]
-      Using default IPC server path, dotnet-diagnostic-dsrouter-21352.
-dbug: dotnet-dsrouter[0]
-      Attach to default dotnet-dsrouter IPC server using --process-id 21352 diagnostic tooling argument.
-info: dotnet-dsrouter[0]
-      Starting IPC server (dotnet-diagnostic-dsrouter-21352) <--> TCP server (127.0.0.1:9000) router.
-dbug: dotnet-dsrouter[0]
-      Trying to create new router instance.
-dbug: dotnet-dsrouter[0]
-      Waiting for a new TCP connection at endpoint "127.0.0.1:9000".
-dbug: dotnet-dsrouter[0]
-      Waiting for new ipc connection at endpoint "dotnet-diagnostic-dsrouter-21352".
+info: dotnet-dsrouter-1234[0]
+      Starting dotnet-dsrouter using pid=1234
+info: dotnet-dsrouter-1234[0]
+      Starting IPC server (dotnet-diagnostic-dsrouter-1234) <--> TCP server (127.0.0.1:9000) router.
 ```
 
-Use `dotnet-dsrouter android` instead, if you are testing on an
-Android device. The `adb reverse` command mentioned above is required
-for physical devices.
+For profiling an Android application running on an Android _device_:
+
+```sh
+# `adb reverse` is required when using hardware devices
+$ adb reverse tcp:9000 tcp:9001
+$ dotnet-dsrouter android
+How to connect current dotnet-dsrouter pid=1234 with android device and diagnostics tooling.
+Start an application on android device with ONE of the following environment variables set:
+[Default Tracing]
+DOTNET_DiagnosticPorts=127.0.0.1:9000,nosuspend,connect
+[Startup Tracing]
+DOTNET_DiagnosticPorts=127.0.0.1:9000,suspend,connect
+Run diagnotic tool connecting application on android device through dotnet-dsrouter pid=1234:
+dotnet-trace collect -p 1234
+...
+```
 
 ### Configure the device so that the profiled app suspends until tracing utility connects
 
