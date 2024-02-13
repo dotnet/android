@@ -49,7 +49,7 @@ namespace Android.App
 		TypeDefinition type;
 		ICollection<string> specified;
 
-		public static LayoutAttribute FromTypeDefinition (TypeDefinition type)
+		public static LayoutAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = type.GetCustomAttributes ("Android.App.LayoutAttribute")
 				.SingleOrDefault ();
@@ -58,7 +58,7 @@ namespace Android.App
 			LayoutAttribute self = new LayoutAttribute () {
 				type = type,
 			};
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			return self;
 		}
 

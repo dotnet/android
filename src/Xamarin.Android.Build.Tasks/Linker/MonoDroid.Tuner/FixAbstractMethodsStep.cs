@@ -141,7 +141,7 @@ namespace MonoDroid.Tuner
 			return !type.IsAbstract && type.IsSubclassOf ("Java.Lang.Object", cache);
 		}
 
-		static bool CompareTypes (TypeReference iType, TypeReference tType)
+		bool CompareTypes (TypeReference iType, TypeReference tType)
 		{
 			if (iType.IsGenericParameter)
 				return true;
@@ -164,11 +164,11 @@ namespace MonoDroid.Tuner
 			if (iType.Namespace != tType.Namespace)
 				return false;
 
-			TypeDefinition iTypeDef = iType.Resolve ();
+			TypeDefinition iTypeDef = cache.Resolve (iType);
 			if (iTypeDef == null)
 				return false;
 
-			TypeDefinition tTypeDef = tType.Resolve ();
+			TypeDefinition tTypeDef = cache.Resolve (tType);
 			if (tTypeDef == null)
 				return false;
 
@@ -198,7 +198,7 @@ namespace MonoDroid.Tuner
 				return false;
 
 			foreach (var o in tMethod.Overrides)
-				if (o != null && iMethod == o.Resolve ())
+				if (o != null && iMethod.Name == o.Name && iMethod == cache.Resolve (o))
 					return true;
 
 			return false;
@@ -252,7 +252,7 @@ namespace MonoDroid.Tuner
 
 			foreach (var ifaceInfo in type.Interfaces) {
 				var iface    = ifaceInfo.InterfaceType;
-				var ifaceDef = iface.Resolve ();
+				var ifaceDef = cache.Resolve (iface);
 				if (ifaceDef == null) {
 					LogMessage ($"Unable to unresolve interface: {iface.FullName}");
 					continue;

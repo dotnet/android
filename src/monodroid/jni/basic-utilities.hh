@@ -3,14 +3,13 @@
 
 #include <array>
 #include <cstddef>
-#include <cstdint>
-#include <cstdlib>
 #include <cstdio>
+#include <cstdlib>
 #include <cstring>
+#include <string_view>
 #include <type_traits>
 
 #include <unistd.h>
-
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
@@ -18,7 +17,6 @@
 #include "java-interop-util.h"
 #include "helpers.hh"
 #include "cpp-util.hh"
-#include "platform-compat.hh"
 #include "strings.hh"
 
 namespace xamarin::android
@@ -27,10 +25,7 @@ namespace xamarin::android
 	{
 	public:
 		FILE            *monodroid_fopen (const char* filename, const char* mode);
-		int              monodroid_stat (const char *path, monodroid_stat_t *s);
-		monodroid_dir_t *monodroid_opendir (const char *filename);
-		int              monodroid_closedir (monodroid_dir_t *dirp);
-		int              monodroid_dirent_hasextension (monodroid_dirent_t *e, const char *extension);
+		int              monodroid_dirent_hasextension (dirent *e, const char *extension);
 		void             monodroid_strfreev (char **str_array);
 		char           **monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 		char            *monodroid_strdup_printf (const char *format, ...);
@@ -69,7 +64,7 @@ namespace xamarin::android
 			}
 
 			buf.append (path1, path1_len);
-			buf.append (MONODROID_PATH_SEPARATOR);
+			buf.append ("/");
 			buf.append (path2, path2_len);
 		}
 
@@ -97,10 +92,35 @@ namespace xamarin::android
 			path_combine <MaxStackSpace, decltype(buf)> (buf, path1, path1_len, path2, path2_len);
 		}
 
+		char* path_combine (const char *path1, std::string_view const& path2) noexcept
+		{
+			return path_combine (path1, path2.data ());
+		}
+
 		bool ends_with_slow (const char *str, const char *end)
 		{
 			char *p = const_cast<char*> (strstr (str, end));
 			return p != nullptr && p [strlen (end)] == '\0';
+		}
+
+		template<size_t MaxStackSpace>
+		bool ends_with (internal::dynamic_local_string<MaxStackSpace>& str, std::string_view const& sv) const noexcept
+		{
+			if (str.length () < sv.length ()) {
+				return false;
+			}
+
+			return memcmp (str.get () + str.length () - sv.length (), sv.data (), sv.length ()) == 0;
+		}
+
+		bool ends_with (const char *str, std::string_view const& sv) const noexcept
+		{
+			size_t len = strlen (str);
+			if (len < sv.length ()) {
+				return false;
+			}
+
+			return memcmp (str + len - sv.length (), sv.data (), sv.length ()) == 0;
 		}
 
 		template<size_t N>
@@ -130,7 +150,7 @@ namespace xamarin::android
 			constexpr size_t end_length = N - 1;
 
 			size_t len = str.length ();
-			if (XA_UNLIKELY (len < end_length)) {
+			if (len < end_length) [[unlikely]] {
 				return false;
 			}
 
@@ -143,7 +163,7 @@ namespace xamarin::android
 			constexpr size_t end_length = N - 1;
 
 			size_t len = str.length ();
-			if (XA_UNLIKELY (len < end_length)) {
+			if (len < end_length) [[unlikely]] {
 				return false;
 			}
 
@@ -156,7 +176,7 @@ namespace xamarin::android
 			constexpr size_t end_length = N - 1;
 
 			size_t len = str.length ();
-			if (XA_UNLIKELY (len < end_length)) {
+			if (len < end_length) [[unlikely]] {
 				return false;
 			}
 
@@ -196,7 +216,7 @@ namespace xamarin::android
 
 		char *strdup_new (const char* s, size_t len)
 		{
-			if (XA_UNLIKELY (len == 0 || s == nullptr)) {
+			if (len == 0 || s == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
@@ -210,7 +230,7 @@ namespace xamarin::android
 
 		char *strdup_new (const char* s)
 		{
-			if (XA_UNLIKELY (s == nullptr)) {
+			if (s == nullptr) [[unlikely]] {
 				return nullptr;
 			}
 
@@ -240,20 +260,7 @@ namespace xamarin::android
 
 			return ret;
 		}
-#if defined (WINDOWS)
-		/* Those two conversion functions are only properly implemented on Windows
-		 * because that's the only place where they should be useful.
-		 */
-		char            *utf16_to_utf8 (const wchar_t *widestr)
-		{
-			return ::utf16_to_utf8 (widestr);
-		}
 
-		wchar_t         *utf8_to_utf16 (const char *mbstr)
-		{
-			return ::utf8_to_utf16 (mbstr);
-		}
-#endif // def WINDOWS
 		bool            is_path_rooted (const char *path);
 
 		template<typename CharType = char>
@@ -286,11 +293,7 @@ namespace xamarin::android
 
 		int make_directory (const char *path, [[maybe_unused]] mode_t mode)
 		{
-#if WINDOWS
-			return mkdir (path);
-#else
-			return mkdir (path, mode);
-#endif
+			return ::mkdir (path, mode);
 		}
 
 	private:

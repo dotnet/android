@@ -19,7 +19,7 @@ static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-end
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 struct BinaryTypeMapHeader
 {
 	uint32_t magic;
@@ -276,7 +276,7 @@ MONO_API MONO_API_EXPORT const JniRemappingTypeReplacementEntry jni_remapping_ty
 
 MONO_API MONO_API_EXPORT const uint64_t format_tag;
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 MONO_API MONO_API_EXPORT const TypeMap type_map; // MUST match src/Xamarin.Android.Build.Tasks/Utilities/TypeMappingDebugNativeAssemblyGenerator.cs
 #else
 MONO_API MONO_API_EXPORT const uint32_t map_module_count;
@@ -303,7 +303,7 @@ MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
 //
 // Support for marshal methods
 //
-#if defined (RELEASE) && defined (ANDROID) && defined (NET)
+#if defined (RELEASE)
 struct MarshalMethodsManagedClass
 {
 	const uint32_t   token;
@@ -352,6 +352,6 @@ MONO_API MONO_API_EXPORT const MarshalMethodName mm_method_names[];
 using get_function_pointer_fn = void(*)(uint32_t mono_image_index, uint32_t class_index, uint32_t method_token, void*& target_ptr);
 
 MONO_API MONO_API_EXPORT void xamarin_app_init (JNIEnv *env, get_function_pointer_fn fn) noexcept;
-#endif // def RELEASE && def ANDROID && def NET
+#endif // def RELEASE
 
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

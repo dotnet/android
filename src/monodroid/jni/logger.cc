@@ -1,13 +1,12 @@
-#include <stdlib.h>
-#include <stdarg.h>
+#include <array>
+#include <cerrno>
+#include <cstdarg>
+#include <cstdlib>
+#include <cstring>
 #include <strings.h>
-#include <string.h>
 #include <unistd.h>
-#include <errno.h>
 
-#ifdef ANDROID
 #include <android/log.h>
-#endif
 
 #include "logger.hh"
 
@@ -27,7 +26,7 @@ using namespace xamarin::android;
 using namespace xamarin::android::internal;
 
 // Must match the same ordering as LogCategories
-static const char* log_names[] = {
+static constexpr std::array<const char*, 12> log_names = {
 	"*none*",
 	"monodroid",
 	"monodroid-assembly",
@@ -49,24 +48,7 @@ static const char* log_names[] = {
 #endif
 
 // ffs(value) returns index of lowest bit set in `value`
-#define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [ffs (value)])
-
-#ifndef ANDROID
-static void
-__android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
-{
-  printf ("%d [%s] ", prio, tag);
-  vprintf (fmt, ap);
-  putchar ('\n');
-  fflush (stdout);
-}
-
-static void
-__android_log_write (int prio, const char* tag, const char* message)
-{
-	printf ("%d [%s] %s\n", prio, tag, message);
-}
-#endif
+#define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [static_cast<size_t>(ffs (value))])
 
 unsigned int log_categories = LOG_NONE;
 unsigned int log_timing_categories;
@@ -97,8 +79,7 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	if (f) {
 		utils.set_world_accessable (path);
 	} else {
-		log_warn (category, "Could not open path '%s' for logging: %s",
-				path, strerror (errno));
+		log_warn (category, "Could not open path '%s' for logging: %s", path, strerror (errno));
 	}
 
 	free (p);
@@ -128,15 +109,14 @@ init_reference_logging (const char *override_dir)
 	}
 }
 
-template<size_t NameSize>
 force_inline static bool
-set_category (const char (&name)[NameSize], string_segment& arg, unsigned int entry, bool arg_starts_with_name = false)
+set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name = false)
 {
 	if ((log_categories & entry) == entry) {
 		return false;
 	}
 
-	if (arg_starts_with_name ? arg.starts_with (name, NameSize - 1) : arg.equal (name, NameSize - 1)) {
+	if (arg_starts_with_name ? arg.starts_with (name) : arg.equal (name)) {
 		log_categories |= entry;
 		return true;
 	}
@@ -149,10 +129,6 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 {
 	mono_log_mask = nullptr;
 	mono_log_level = nullptr;
-
-#if !ANDROID
-	log_categories = LOG_DEFAULT;
-#endif
 	log_timing_categories = LOG_TIMING_DEFAULT;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
@@ -161,10 +137,9 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 	string_segment param;
 	while (value.next_token (',', param)) {
-		constexpr char CAT_ALL[] = "all";
-		constexpr size_t CAT_ALL_SIZE = sizeof(CAT_ALL) - 1;
+		constexpr std::string_view CAT_ALL { "all" };
 
-		if (param.equal (CAT_ALL, CAT_ALL_SIZE)) {
+		if (param.equal (CAT_ALL)) {
 			log_categories = 0xFFFFFFFF;
 			break;
 		}
@@ -205,10 +180,9 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
-		constexpr char CAT_GREF_EQUALS[] = "gref=";
-		constexpr size_t CAT_GREF_EQUALS_LEN = sizeof(CAT_GREF_EQUALS) - 1;
+		constexpr std::string_view CAT_GREF_EQUALS { "gref=" };
 		if (set_category (CAT_GREF_EQUALS, param, LOG_GREF, true /* arg_starts_with_name */)) {
-			gref_file = utils.strdup_new (param, CAT_GREF_EQUALS_LEN);
+			gref_file = utils.strdup_new (param, CAT_GREF_EQUALS.length ());
 			continue;
 		}
 
@@ -222,10 +196,9 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
-		constexpr char CAT_LREF_EQUALS[] = "lref=";
-		constexpr size_t CAT_LREF_EQUALS_LEN = sizeof(CAT_LREF_EQUALS) - 1;
+		constexpr std::string_view CAT_LREF_EQUALS { "lref=" };
 		if (set_category (CAT_LREF_EQUALS, param, LOG_LREF, true /* arg_starts_with_name */)) {
-			lref_file = utils.strdup_new (param, CAT_LREF_EQUALS_LEN);
+			lref_file = utils.strdup_new (param, CAT_LREF_EQUALS.length ());
 			continue;
 		}
 
@@ -251,26 +224,23 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 			continue;
 		}
 
-		constexpr char MONO_LOG_MASK_ARG[] = "mono_log_mask=";
-		constexpr size_t MONO_LOG_MASK_ARG_LEN = sizeof(MONO_LOG_MASK_ARG) - 1;
+		constexpr std::string_view MONO_LOG_MASK_ARG { "mono_log_mask=" };
 		if (param.starts_with (MONO_LOG_MASK_ARG)) {
-			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG_LEN);
+			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG.length ());
 			continue;
 		}
 
-		constexpr char MONO_LOG_LEVEL_ARG[] = "mono_log_level=";
-		constexpr size_t MONO_LOG_LEVEL_ARG_LEN = sizeof(MONO_LOG_LEVEL_ARG) - 1;
+		constexpr std::string_view MONO_LOG_LEVEL_ARG { "mono_log_level=" };
 		if (param.starts_with (MONO_LOG_LEVEL_ARG)) {
-			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG_LEN);
+			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG.length ());
 			continue;
 		}
 
-#if !defined (WINDOWS) && defined (DEBUG)
-		constexpr char DEBUGGER_LOG_LEVEL[] = "debugger-log-level=";
-		constexpr size_t DEBUGGER_LOG_LEVEL_LEN = sizeof (DEBUGGER_LOG_LEVEL) - 1;
+#if defined (DEBUG)
+		constexpr std::string_view DEBUGGER_LOG_LEVEL { "debugger-log-level=" };
 		if (param.starts_with (DEBUGGER_LOG_LEVEL)) {
 			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> level;
-			level.assign (param.start () + DEBUGGER_LOG_LEVEL_LEN, param.length () - DEBUGGER_LOG_LEVEL_LEN);
+			level.assign (param.start () + DEBUGGER_LOG_LEVEL.length (), param.length () - DEBUGGER_LOG_LEVEL.length ());
 			debug.set_debugger_log_level (level.get ());
 		}
 #endif

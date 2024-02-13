@@ -400,7 +400,7 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-net7.0\ref\Java.Interop.dll"
+        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll"
         DestinationFolder="$(MicrosoftAndroidRefPackDir)"
         SkipUnchangedFiles="true"
     />

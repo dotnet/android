@@ -1,0 +1,3 @@
+M:Mono.Cecil.FieldReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached
+M:Mono.Cecil.MethodReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.
+M:Mono.Cecil.TypeReference.Resolve();Use IMetadataResolver.Resolve() instead, so future calls can be cached.

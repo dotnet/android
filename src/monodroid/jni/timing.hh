@@ -6,9 +6,7 @@
 #include <cstdlib>
 #include <sys/time.h>
 
-#ifdef ANDROID
 #include <android/log.h>
-#endif
 
 #include "cppcompat.hh"
 #include "logger.hh"

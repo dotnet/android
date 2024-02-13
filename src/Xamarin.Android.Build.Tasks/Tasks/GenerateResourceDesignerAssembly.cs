@@ -67,8 +67,10 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		bool Run(DirectoryAssemblyResolver res)
+		bool Run (DirectoryAssemblyResolver res)
 		{
+			var cache = new TypeDefinitionCache ();
+
 			foreach (var dir in FrameworkDirectories) {
 				if (Directory.Exists (dir.ItemSpec))
 					res.SearchDirectories.Add (dir.ItemSpec);
@@ -98,26 +100,26 @@ namespace Xamarin.Android.Tasks
 			var netstandardDef = module.AssemblyResolver.Resolve(netstandardAsm);
 
 			if (!IsApplication) {
-				MethodReference referenceAssemblyConstructor = ImportCustomAttributeConstructor ("System.Runtime.CompilerServices.ReferenceAssemblyAttribute", module, netstandardDef.MainModule);
+				MethodReference referenceAssemblyConstructor = ImportCustomAttributeConstructor (cache, "System.Runtime.CompilerServices.ReferenceAssemblyAttribute", module, netstandardDef.MainModule);
 				module.Assembly.CustomAttributes.Add (new CustomAttribute (referenceAssemblyConstructor));
 			} else {
 				// Add the InternalsVisibleToAttribute so the app can access ResourceConstant
 				if (!string.IsNullOrEmpty (AssemblyName)) {
-					MethodReference internalsVisibleToAttributeConstructor = ImportCustomAttributeConstructor ("System.Runtime.CompilerServices.InternalsVisibleToAttribute", module, netstandardDef.MainModule, argCount: 1);
+					MethodReference internalsVisibleToAttributeConstructor = ImportCustomAttributeConstructor (cache, "System.Runtime.CompilerServices.InternalsVisibleToAttribute", module, netstandardDef.MainModule, argCount: 1);
 					var ar = new CustomAttribute (internalsVisibleToAttributeConstructor);
 					ar.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, AssemblyName));
 					module.Assembly.CustomAttributes.Add (ar);
 				}
 			}
 
-			MethodReference targetFrameworkConstructor = ImportCustomAttributeConstructor ("System.Runtime.Versioning.TargetFrameworkAttribute", module, netstandardDef.MainModule, argCount: 1);
+			MethodReference targetFrameworkConstructor = ImportCustomAttributeConstructor (cache, "System.Runtime.Versioning.TargetFrameworkAttribute", module, netstandardDef.MainModule, argCount: 1);
 
 			var attr = new CustomAttribute (targetFrameworkConstructor);
 			attr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, $".NETStandard,Version=v2.1"));
 			attr.Properties.Add (new CustomAttributeNamedArgument ("FrameworkDisplayName", new CustomAttributeArgument (module.TypeSystem.String, "")));
 			module.Assembly.CustomAttributes.Add (attr);
 
-			MethodReference editorBrowserConstructor = ImportCustomAttributeConstructor ("System.ComponentModel.EditorBrowsableAttribute", module, netstandardDef.MainModule, argCount: 1);
+			MethodReference editorBrowserConstructor = ImportCustomAttributeConstructor (cache, "System.ComponentModel.EditorBrowsableAttribute", module, netstandardDef.MainModule, argCount: 1);
 			TypeReference e = ImportType ("System.ComponentModel.EditorBrowsableState", module, netstandardDef.MainModule);
 			var editorBrowserAttr = new CustomAttribute (editorBrowserConstructor);
 			editorBrowserAttr.ConstructorArguments.Add (new CustomAttributeArgument (e, System.ComponentModel.EditorBrowsableState.Never));
@@ -135,7 +137,7 @@ namespace Xamarin.Android.Tasks
 				att,
 				objectRef
 			);
-			CreateCtor (resourceDesigner, module);
+			CreateCtor (cache, resourceDesigner, module);
 			resourceDesigner.CustomAttributes.Add (editorBrowserAttr);
 			module.Types.Add (resourceDesigner);
 			TypeDefinition constDesigner = null;
@@ -148,7 +150,7 @@ namespace Xamarin.Android.Tasks
 					attrib | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit,
 					objectRef
 				);
-				CreateCtor (constDesigner, module);
+				CreateCtor (cache, constDesigner, module);
 				constDesigner.CustomAttributes.Add (editorBrowserAttr);
 				module.Types.Add (constDesigner);
 			}
@@ -168,13 +170,13 @@ namespace Xamarin.Android.Tasks
 					switch (r.Type) {
 						case RType.Integer:
 							if (IsApplication)
-								CreateIntField (r.ResourceTypeName, r.Identifier, r.Id, constDesigner, module);
-							CreateIntProperty (r.ResourceTypeName, r.Identifier, r.Id, resourceDesigner, module);
+								CreateIntField (cache, r.ResourceTypeName, r.Identifier, r.Id, constDesigner, module);
+							CreateIntProperty (cache, r.ResourceTypeName, r.Identifier, r.Id, resourceDesigner, module);
 							break;
 						case RType.Array:
 							if (IsApplication)
-								CreateIntArrayField (r.ResourceTypeName, r.Identifier, r.Ids, constDesigner, module);
-							CreateIntArrayProperty (r.ResourceTypeName, r.Identifier, r.Ids, resourceDesigner, module);
+								CreateIntArrayField (cache, r.ResourceTypeName, r.Identifier, r.Ids, constDesigner, module);
+							CreateIntArrayProperty (cache, r.ResourceTypeName, r.Identifier, r.Ids, resourceDesigner, module);
 							break;
 					}
 				}
@@ -203,10 +205,10 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		MethodReference ImportCustomAttributeConstructor (string type, ModuleDefinition module, ModuleDefinition sourceModule = null, int argCount = 0)
+		MethodReference ImportCustomAttributeConstructor (TypeDefinitionCache cache, string type, ModuleDefinition module, ModuleDefinition sourceModule = null, int argCount = 0)
 		{
 			var tr = module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
-			var tv = tr.Resolve();
+			var tv = cache.Resolve (tr);
 			return module.ImportReference (tv.Methods.First(x => x.IsConstructor && (x.Parameters?.Count ?? 0) == argCount));
 		}
 
@@ -215,36 +217,36 @@ namespace Xamarin.Android.Tasks
 			return module.ImportReference ((sourceModule ?? module).ExportedTypes.First(x => x.FullName == type).Resolve ());
 		}
 
-		void CreateIntProperty (string resourceClass, string propertyName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,
+		void CreateIntProperty (TypeDefinitionCache cache, string resourceClass, string propertyName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,
 			MethodAttributes attributes = MethodAttributes.Public, TypeAttributes typeAttributes = TypeAttributes.NestedPublic)
 		{
-			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
+			TypeDefinition nestedType = CreateResourceClass (cache, resourceDesigner, resourceClass, module, typeAttributes);
 			PropertyDefinition p = CreateProperty (propertyName, value, module, attributes);
 			nestedType.Properties.Add (p);
 			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () - 1), p.GetMethod);
 		}
 
-		void CreateIntField (string resourceClass, string fieldName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,
+		void CreateIntField (TypeDefinitionCache cache, string resourceClass, string fieldName, int value, TypeDefinition resourceDesigner, ModuleDefinition module,
 			FieldAttributes attributes = FieldAttributes.Public, TypeAttributes typeAttributes = TypeAttributes.NestedPublic)
 		{
-			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
+			TypeDefinition nestedType = CreateResourceClass (cache, resourceDesigner, resourceClass, module, typeAttributes);
 			FieldDefinition p = CreateField (fieldName, value, module, attributes);
 			nestedType.Fields.Add (p);
 		}
 
-		void CreateIntArrayProperty (string resourceClass, string propertyName, int[] values, TypeDefinition resourceDesigner, ModuleDefinition module,
+		void CreateIntArrayProperty (TypeDefinitionCache cache, string resourceClass, string propertyName, int[] values, TypeDefinition resourceDesigner, ModuleDefinition module,
 			MethodAttributes attributes = MethodAttributes.Public, TypeAttributes typeAttributes = TypeAttributes.NestedPublic)
 		{
-			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
+			TypeDefinition nestedType = CreateResourceClass (cache, resourceDesigner, resourceClass, module, typeAttributes);
 			PropertyDefinition p = CreateArrayProperty (propertyName, values, module, attributes);
 			nestedType.Properties.Add (p);
 			nestedType.Methods.Insert (Math.Max(0, nestedType.Methods.Count () - 1), p.GetMethod);
 		}
 
-		void CreateIntArrayField (string resourceClass, string fieldName, int[] values, TypeDefinition resourceDesigner, ModuleDefinition module,
+		void CreateIntArrayField (TypeDefinitionCache cache, string resourceClass, string fieldName, int[] values, TypeDefinition resourceDesigner, ModuleDefinition module,
 			FieldAttributes attributes = FieldAttributes.Public, TypeAttributes typeAttributes = TypeAttributes.NestedPublic)
 		{
-			TypeDefinition nestedType = CreateResourceClass (resourceDesigner, resourceClass, module, typeAttributes);
+			TypeDefinition nestedType = CreateResourceClass (cache, resourceDesigner, resourceClass, module, typeAttributes);
 			FieldDefinition p = CreateArrayField (fieldName, values, module, attributes);
 			nestedType.Fields.Add (p);
 			MethodDefinition ctor = GetOrCreateStaticCtor (nestedType, module);
@@ -264,12 +266,12 @@ namespace Xamarin.Android.Tasks
 		Dictionary<string, TypeDefinition> resourceClasses = new Dictionary<string, TypeDefinition> (StringComparer.OrdinalIgnoreCase);
 		Dictionary<string, MethodDefinition> staticConstructors = new Dictionary<string, MethodDefinition> ();
 
-		void CreateCtor (TypeDefinition type, ModuleDefinition module)
+		void CreateCtor (TypeDefinitionCache cache, TypeDefinition type, ModuleDefinition module)
 		{
 			var ctor = new MethodDefinition (".ctor", MethodAttributes.SpecialName | MethodAttributes.RTSpecialName | MethodAttributes.HideBySig | MethodAttributes.Public, module.TypeSystem.Void);
 			var ctoril = ctor.Body.GetILProcessor ();
 			ctoril.Emit (OpCodes.Ldarg_0);
-			var o = module.TypeSystem.Object.Resolve ();
+			var o = cache.Resolve (module.TypeSystem.Object);
 			ctoril.Emit (OpCodes.Call, module.ImportReference (o.Methods.First (x => x.IsConstructor)));
 			ctoril.Emit (OpCodes.Ret);
 			type.Methods.Add (ctor);
@@ -287,7 +289,7 @@ namespace Xamarin.Android.Tasks
 			return ctor;
 		}
 
-		TypeDefinition CreateResourceClass (TypeDefinition resourceDesigner, string className, ModuleDefinition module, TypeAttributes attributes = TypeAttributes.NestedPublic)
+		TypeDefinition CreateResourceClass (TypeDefinitionCache cache, TypeDefinition resourceDesigner, string className, ModuleDefinition module, TypeAttributes attributes = TypeAttributes.NestedPublic)
 		{
 			string name = ResourceParser.GetNestedTypeName (className);
 			string key = resourceDesigner.Name + name;
@@ -295,7 +297,7 @@ namespace Xamarin.Android.Tasks
 				return resourceClasses[key];
 			}
 			var resourceClass = new TypeDefinition (string.Empty, name, attributes | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.BeforeFieldInit | TypeAttributes.Sealed, objectRef);
-			CreateCtor (resourceClass, module);
+			CreateCtor (cache, resourceClass, module);
 			resourceDesigner.NestedTypes.Add (resourceClass);
 			resourceClasses[key] = resourceClass;
 			return resourceClass;

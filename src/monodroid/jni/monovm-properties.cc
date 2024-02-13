@@ -9,7 +9,7 @@ MonoVMProperties::property_array MonoVMProperties::_property_keys {
 };
 
 MonoVMProperties::property_array MonoVMProperties::_property_values {
-	SharedConstants::runtime_identifier,
+	SharedConstants::runtime_identifier.data (),
 	nullptr,
 	nullptr,
 };

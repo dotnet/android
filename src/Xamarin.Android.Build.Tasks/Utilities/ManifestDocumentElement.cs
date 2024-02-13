@@ -112,7 +112,7 @@ namespace Xamarin.Android.Manifest {
 			});
 		}
 
-		public ICollection<string> Load (T value, CustomAttribute attribute)
+		public ICollection<string> Load (T value, CustomAttribute attribute, TypeDefinitionCache cache)
 		{
 			if (attribute == null)
 				return null;
@@ -123,7 +123,7 @@ namespace Xamarin.Android.Manifest {
 				specified.Add (e.Name);
 				var s = Mappings [e.Name].Setter;
 				if (s != null)
-					s (value, e.Argument.GetSettableValue ());
+					s (value, e.Argument.GetSettableValue (cache));
 			}
 
 			return specified;

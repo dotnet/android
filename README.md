@@ -27,18 +27,6 @@ Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xama
 [maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
 [xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
 
-# Build Status
-
-| Platform              | Status |
-|-----------------------|--------|
-| **OSS macOS**         | [![OSS macOS x86_64][oss-macOS-x86_64-icon]][oss-macOS-x86_64-status] |
-| **OSS Ubuntu**        | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
-
-[oss-macOS-x86_64-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin/xamarin-android/Xamarin.Android-OSS?branchName=main&stageName=Mac
-[oss-macOS-x86_64-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=48&branchName=main&stageName=Mac
-[oss-ubuntu-x86_64-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin/xamarin-android/Xamarin.Android-OSS?branchName=main&stageName=Linux
-[oss-ubuntu-x86_64-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=48&branchName=main&stageName=Linux
-
 # Downloads
 
 ## Current
@@ -53,16 +41,13 @@ Classic Xamarin.Android installers are available here:
 
 | Platform        | Link   |
 |-----------------|--------|
-| **Commercial Xamarin.Android 13.2 (d17-5)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-5-Windows-x86_64] |
-| **Commercial Xamarin.Android 13.2 (d17-5)** for macOS                                       | [Download][commercial-d17-5-macOS-x86_64]   |
-| **OSS Xamarin.Android (main)** for Ubuntu\*                                                 | [![OSS Linux/Ubuntu x86_64][oss-ubuntu-x86_64-icon]][oss-ubuntu-x86_64-status] |
-
-*\* Please note that the OSS installer packages are not digitally signed.*
+| **Commercial Xamarin.Android 13.2.2 (d17-8)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-8-Windows-x86_64] |
+| **Commercial Xamarin.Android 13.2.2 (d17-8)** for VSMac 2022                                  | [Download][commercial-d17-8-macOS-x86_64]   |
 
 [Previous Releases](Documentation/previous-releases.md) are also available for download.
 
-[commercial-d17-5-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-5-windows
-[commercial-d17-5-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-5-macos
+[commercial-d17-8-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-8-windows
+[commercial-d17-8-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-8-macos
 
 # Contributing
 

@@ -1,9 +1,8 @@
 #if !defined (__BUILD_INFO_HH)
 #define __BUILD_INFO_HH
 
-#if defined (ANDROID)
+#include <string_view>
 #include <android/ndk-version.h>
-#endif // def ANDROID
 
 namespace xamarin::android::internal
 {
@@ -14,40 +13,28 @@ namespace xamarin::android::internal
 	class BuildInfo final
 	{
 	public:
-		static constexpr char xa_version[] = XA_VERSION;
-		static constexpr char date[] = __DATE__;
+		static inline constexpr std::string_view xa_version { XA_VERSION };
+		static inline constexpr std::string_view date { __DATE__ };
 
-		static constexpr char kind[] =
+		static inline constexpr std::string_view kind {
 #if defined (DEBUG)
-			"Debug";
+			"Debug" };
 #else // ndef DEBUG
-			"Release";
+			"Release" };
 #endif
 
-		static constexpr char architecture[] =
+		static inline constexpr std::string_view architecture {
 #if defined (__aarch64__)
-			"ARM64";
+			"ARM64" };
 #elif defined (__arm__)
-			"ARM32";
+			"ARM32" };
 #elif defined (__amd64__) || defined (__x86_64__)
-			"X86_64";
+			"X86_64" };
 #elif defined (__i386__)
-			"X86";
+			"X86" };
 #endif
 
-		static constexpr char ndk_version[] =
-#if defined (ANDROID)
-			VERSION_STRING (__NDK_MAJOR__, __NDK_MINOR__, __NDK_BUILD__);
-#else // def ANDROID
-			"";
-#endif // // ndef ANDROID
-
-		static constexpr char ndk_api_level[] =
-#if defined (__ANDROID_API__)
-			API_STRING(__ANDROID_API__);
-#else // def __ANDROID_API__
-			"";
-#endif // ndef __ANDROID_API__
-	};
+		static inline constexpr std::string_view ndk_version { VERSION_STRING (__NDK_MAJOR__, __NDK_MINOR__, __NDK_BUILD__) };
+		static inline constexpr std::string_view ndk_api_level { API_STRING(__ANDROID_API__) }; };
 }
 #endif // ndef __BUILD_INFO_HH
