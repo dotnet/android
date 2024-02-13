@@ -37,7 +37,7 @@ namespace MonoDroid.Tuner {
 		{
 			if (!IsActiveFor (type.Module.Assembly))
 				return;
-			if (!type.Inherits ("Android.App.Application"))
+			if (!type.Inherits ("Android.App.Application", cache))
 				return;
 
 			ProcessAttributeProvider (type);

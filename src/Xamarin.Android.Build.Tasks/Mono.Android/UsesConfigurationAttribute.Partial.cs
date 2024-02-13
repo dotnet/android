@@ -49,14 +49,14 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<UsesConfigurationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<UsesConfigurationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.UsesConfigurationAttribute");
 			foreach (var attr in attrs) {
 
 				UsesConfigurationAttribute self = new UsesConfigurationAttribute ();
 
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 
 				yield return self;
 			}

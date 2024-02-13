@@ -5,6 +5,7 @@
   <Import Project="$(XamarinAndroidSourcePath)build-tools\installers\create-installers.targets" />
   <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
+  <Import Project="$(XamarinAndroidSourcePath)build-tools\banned-apis\banned-apis.targets" />
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>

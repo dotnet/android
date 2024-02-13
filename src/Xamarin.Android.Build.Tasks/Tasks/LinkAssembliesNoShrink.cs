@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 					runState.cache = new TypeDefinitionCache ();
 					runState.fixAbstractMethodsStep = new FixAbstractMethodsStep (runState.resolver, runState.cache, Log);
 					runState.addKeepAliveStep = new AddKeepAlivesStep (runState.resolver, runState.cache, Log);
-					runState.fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (runState.resolver, Log);
+					runState.fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (runState.resolver, runState.cache, Log);
 				}
 
 				DoRunTask (source, destination, runState, writerParameters);
@@ -173,7 +173,8 @@ namespace Xamarin.Android.Tasks
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
 
-			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base(cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;

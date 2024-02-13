@@ -20,30 +20,30 @@ namespace MonoDroid.Tuner {
 		const string IJavaPeerable = "Java.Interop.IJavaPeerable";
 		const string JavaThrowable = "Java.Lang.Throwable";
 
-		public static bool IsJavaObject (this TypeDefinition type)
+		public static bool IsJavaObject (this TypeDefinition type, IMetadataResolver resolver)
 		{
-			return type.Inherits (JavaObject);
+			return type.Inherits (JavaObject, resolver);
 		}
 
-		public static bool IsJavaException (this TypeDefinition type)
+		public static bool IsJavaException (this TypeDefinition type, IMetadataResolver resolver)
 		{
-			return type.Inherits (JavaThrowable);
+			return type.Inherits (JavaThrowable, resolver);
 		}
 
-		public static bool ImplementsIJavaObject (this TypeDefinition type)
+		public static bool ImplementsIJavaObject (this TypeDefinition type, IMetadataResolver resolver)
 		{
-			return type.Implements (IJavaObject);
+			return type.Implements (IJavaObject, resolver);
 		}
 
-		public static bool ImplementsIJavaPeerable (this TypeDefinition type)
+		public static bool ImplementsIJavaPeerable (this TypeDefinition type, IMetadataResolver resolver)
 		{
-			return type.Implements (IJavaPeerable);
+			return type.Implements (IJavaPeerable, resolver);
 		}
 
-		public static object GetSettableValue (this CustomAttributeArgument arg)
+		public static object GetSettableValue (this CustomAttributeArgument arg, IMetadataResolver cache)
 		{
 			TypeReference tr = arg.Value as TypeReference;
-			TypeDefinition td = tr != null ? tr.Resolve () : null;
+			TypeDefinition td = tr != null ? cache.Resolve (tr) : null;
 			return td != null ? td.FullName + "," + td.Module.Assembly.FullName : arg.Value;
 		}
 
@@ -119,14 +119,14 @@ namespace MonoDroid.Tuner {
 			return assembly.MainModule.GetType (typeName);
 		}
 
-		public static bool Implements (this TypeReference self, string interfaceName)
+		public static bool Implements (this TypeReference self, string interfaceName, IMetadataResolver resolver)
 		{
 			if (interfaceName == null)
 				throw new ArgumentNullException ("interfaceName");
 			if (self == null)
 				return false;
 
-			TypeDefinition type = self.Resolve ();
+			TypeDefinition type = resolver.Resolve (self);
 			if (type == null)
 				return false;	// not enough information available
 
@@ -134,10 +134,10 @@ namespace MonoDroid.Tuner {
 			if (type.IsInterface && (type.FullName == interfaceName))
 				return true;
 
-			return Implements (type, interfaceName, (interfaceName.IndexOf ('`') >= 0));
+			return Implements (type, interfaceName, (interfaceName.IndexOf ('`') >= 0), resolver);
 		}
 
-		public static bool Implements (TypeDefinition type, string interfaceName, bool generic)
+		public static bool Implements (TypeDefinition type, string interfaceName, bool generic, IMetadataResolver resolver)
 		{
 			while (type != null) {
 				// does the type implements it itself
@@ -148,24 +148,28 @@ namespace MonoDroid.Tuner {
 						if (fullname == interfaceName)
 							return true;
 						//if not, then maybe one of its parent interfaces does
-						if (Implements (iface.Resolve (), interfaceName, generic))
+						if (Implements (resolver.Resolve (iface), interfaceName, generic, resolver))
 							return true;
 					}
 				}
 
-				type = type.BaseType != null ? type.BaseType.Resolve () : null;
+				if (type.BaseType != null) {
+					type = resolver.Resolve (type.BaseType);
+				} else {
+					type = null;
+				}
 			}
 			return false;
 		}
 
-		public static bool Inherits (this TypeReference self, string className)
+		public static bool Inherits (this TypeReference self, string className, IMetadataResolver resolver)
 		{
 			if (className == null)
 				throw new ArgumentNullException ("className");
 			if (self == null)
 				return false;
 
-			TypeReference current = self.Resolve ();
+			TypeReference current = resolver.Resolve (self);
 			while (current != null) {
 				string fullname = current.FullName;
 				if (fullname == className)
@@ -173,7 +177,7 @@ namespace MonoDroid.Tuner {
 				if (fullname == "System.Object")
 					return false;
 
-				TypeDefinition td = current.Resolve ();
+				TypeDefinition td = resolver.Resolve (current);
 				if (td == null)
 					return false;		// could not resolve type
 				current = td.BaseType;
@@ -285,7 +289,7 @@ namespace MonoDroid.Tuner {
 				if (iface.InterfaceType.IsGenericInstance)
 					continue;
 
-				var itype = iface.InterfaceType.Resolve ();
+				var itype = resolver.Resolve (iface.InterfaceType);
 				if (itype == null || !itype.HasMethods)
 					continue;
 

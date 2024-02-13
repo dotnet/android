@@ -28,7 +28,7 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<UsesLibraryAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<UsesLibraryAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.UsesLibraryAttribute");
 			foreach (var attr in attrs) {
@@ -49,7 +49,7 @@ namespace Android.App {
 					extra = Array.Empty<string> ();
 				}
 
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 
 				foreach (var e in extra)
 					self.specified.Add (e);

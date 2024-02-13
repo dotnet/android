@@ -141,10 +141,12 @@ namespace Xamarin.Android.Tasks
 			readonly List<string> paramTypes;
 			readonly string returnType;
 			readonly TaskLoggingHelper log;
+			readonly TypeDefinitionCache cache;
 
-			public NativeCallbackSignature (MethodDefinition target, TaskLoggingHelper log)
+			public NativeCallbackSignature (MethodDefinition target, TaskLoggingHelper log, TypeDefinitionCache cache)
 			{
 				this.log = log;
+				this.cache = cache;
 				returnType = MapType (target.ReturnType);
 				paramTypes = new List<string> {
 					"System.IntPtr", // jnienv
@@ -160,7 +162,7 @@ namespace Xamarin.Android.Tasks
 			{
 				string? typeName = null;
 				if (!typeRef.IsGenericParameter && !typeRef.IsArray) {
-					TypeDefinition typeDef = typeRef.Resolve ();
+					TypeDefinition typeDef = cache.Resolve (typeRef);
 					if (typeDef == null) {
 						throw new InvalidOperationException ($"Unable to resolve type '{typeRef.FullName}'");
 					}
@@ -492,7 +494,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			var ncbs = new NativeCallbackSignature (registeredMethod, log);
+			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
 				log.LogWarning ($"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");

@@ -25,19 +25,5 @@ namespace Mono.Linker {
 				return Base.DeclaringType.IsInterface;
 			}
 		}
-
-		public TypeDefinition InterfaceType
-		{
-			get
-			{
-				if (!IsOverrideOfInterfaceMember)
-					return null;
-
-				if (MatchingInterfaceImplementation != null)
-					return MatchingInterfaceImplementation.InterfaceType.Resolve ();
-
-				return Base.DeclaringType;
-			}
-		}
 	}
 }

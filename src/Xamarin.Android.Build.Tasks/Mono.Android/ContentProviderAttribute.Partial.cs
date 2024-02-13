@@ -106,14 +106,14 @@ namespace Android.Content {
 
 		ICollection<string> specified;
 
-		public static ContentProviderAttribute FromTypeDefinition (TypeDefinition type)
+		public static ContentProviderAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = type.GetCustomAttributes ("Android.Content.ContentProviderAttribute")
 				.SingleOrDefault ();
 			if (attr == null)
 				return null;
 			var self = new ContentProviderAttribute (ToStringArray (attr.ConstructorArguments [0].Value));
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			self.specified.Add ("Authorities");
 			return self;
 		}
