@@ -297,7 +297,7 @@ namespace tmt
 			string managedTypeName = GetManagedTypeNameRelease (entry);
 			string generic = entry.ManagedType.IsGeneric ? IgnoredGeneric : "no";
 
-			table.ManagedType.Add (entry.ManagedType.TypeName);
+			table.ManagedType.Add (managedTypeName);
 			table.JavaType.Add (entry.JavaType.Name);
 			table.Generic.Add (generic);
 			table.Duplicate.Add (entry.ManagedType.IsDuplicate);
@@ -586,9 +586,9 @@ namespace tmt
 		void ConsoleGenerateManagedToJavaRelease (MapEntry entry, bool full)
 		{
 			if (!full) {
-				Log.Info ($"    {GetManagedTypeNameDebug (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
+				Log.Info ($"    {GetManagedTypeNameRelease (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
 			} else {
-				Log.Info ($"    {GetManagedTypeNameDebug (entry)}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
+				Log.Info ($"    {GetManagedTypeNameRelease (entry)}; MVID: {entry.ManagedType.MVID}; Token ID: {TokenIdToString (entry)} -> {entry.JavaType.Name}{GetAdditionalInfo (entry)}");
 			}
 		}
 
