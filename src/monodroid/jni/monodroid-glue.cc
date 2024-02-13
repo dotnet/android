@@ -644,6 +644,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	bool log_methods = FastTiming::enabled () && !FastTiming::is_bare_mode ();
 	if (log_methods) [[unlikely]] {
 		std::unique_ptr<char> jit_log_path {utils.path_combine (AndroidSystem::override_dirs [0], "methods.txt")};
+		utils.create_directory (AndroidSystem::override_dirs [0], 0755);
 		jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
 		utils.set_world_accessable (jit_log_path.get ());
 	}
