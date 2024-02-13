@@ -13,6 +13,7 @@ using Xamarin.Android.Tools;
 using Android.App;
 using Mono.Cecil;
 using System.Reflection;
+using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -1172,10 +1173,11 @@ class TestActivity : Activity { }"
 		[Test]
 		public void IntentFilterDataPathTest ()
 		{
+			var cache = new TypeDefinitionCache ();
 			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
 			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
 
-			var intent = IntentFilterAttribute.FromTypeDefinition (type).Single (f => f.Actions.Contains ("singularAction"));
+			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("singularAction"));
 			var xml = intent.ToElement ("dummy.packageid").ToString ();
 
 			var expected =
@@ -1191,10 +1193,11 @@ class TestActivity : Activity { }"
 		[Test]
 		public void IntentFilterDataPathsTest ()
 		{
+			var cache = new TypeDefinitionCache ();
 			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
 			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
 
-			var intent = IntentFilterAttribute.FromTypeDefinition (type).Single (f => f.Actions.Contains ("pluralAction"));
+			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("pluralAction"));
 			var xml = intent.ToElement ("dummy.packageid").ToString ();
 
 			var expected =

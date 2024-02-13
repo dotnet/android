@@ -15,7 +15,19 @@ using Microsoft.Android.Sdk.ILLink;
 
 
 namespace MonoDroid.Tuner  {
-	public abstract class LinkDesignerBase : BaseStep {
+	public abstract class LinkDesignerBase : BaseStep
+	{
+#if ILLINK
+		protected IMetadataResolver Cache => Context;
+#else   // !ILLINK
+		public LinkDesignerBase (IMetadataResolver cache)
+		{
+			Cache = cache;
+		}
+
+		protected IMetadataResolver Cache { get; private set; }
+#endif  // !ILLINK
+
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);

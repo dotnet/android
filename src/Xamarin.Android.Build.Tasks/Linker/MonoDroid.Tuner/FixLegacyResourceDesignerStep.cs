@@ -26,6 +26,10 @@ namespace MonoDroid.Tuner
 		internal const string DesignerAssemblyName = "_Microsoft.Android.Resource.Designer";
 		internal const string DesignerAssemblyNamespace = "_Microsoft.Android.Resource.Designer";
 
+#if !ILLINK
+		public FixLegacyResourceDesignerStep (IMetadataResolver cache) : base (cache) { }
+#endif
+
 		bool designerLoaded = false;
 		AssemblyDefinition designerAssembly = null;
 		TypeDefinition designerType = null;
@@ -93,7 +97,7 @@ namespace MonoDroid.Tuner
 
 			LogMessage ($"    Adding reference {designerAssembly.Name.Name}.");
 			assembly.MainModule.AssemblyReferences.Add (designerAssembly.Name);
-			var importedDesignerType = assembly.MainModule.ImportReference (designerType.Resolve ());
+			var importedDesignerType = assembly.MainModule.ImportReference (Cache.Resolve (designerType));
 
 			LogMessage ($"    FixupAssemblyTypes {assembly.Name.Name}.");
 			// now replace all ldsfld with a call to the property get_ method.
@@ -150,7 +154,7 @@ namespace MonoDroid.Tuner
 					(fieldRef.DeclaringType?.ToString()?.Contains (".Resource/") ?? false)) {
 				var canResolve = false;
 				try {
-					var resolved  = fieldRef.Resolve ();
+					var resolved  = Cache.Resolve (fieldRef);
 					canResolve    = resolved != null;
 				} catch (Exception) {
 				}

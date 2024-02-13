@@ -29,7 +29,7 @@ namespace Microsoft.Android.Sdk.ILLink
 				return;
 
 			// Mono.Android interfaces will always inherit IJavaObject
-			if (!type.ImplementsIJavaObject ())
+			if (!type.ImplementsIJavaObject (cache))
 				return;
 
 			foreach (MethodReference method in type.Methods)

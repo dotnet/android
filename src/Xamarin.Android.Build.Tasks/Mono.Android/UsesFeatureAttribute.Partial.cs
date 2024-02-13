@@ -50,7 +50,7 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<UsesFeatureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<UsesFeatureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.UsesFeatureAttribute");
 			foreach (var attr in attrs) {
@@ -59,7 +59,7 @@ namespace Android.App {
 
 				if (attr.HasProperties) {	
 					// handle the case where the user sets additional properties
-					self.specified = mapping.Load (self, attr);
+					self.specified = mapping.Load (self, attr, cache);
 					if (self.specified.Contains("GLESVersion") && self.GLESVersion==0) {
 						throw new InvalidOperationException("Invalid value '0' for UsesFeatureAttribute.GLESVersion.");
 					}

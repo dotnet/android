@@ -61,11 +61,11 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<InstrumentationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<InstrumentationAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			foreach (CustomAttribute attr in provider.GetCustomAttributes ("Android.App.InstrumentationAttribute")) {
 				InstrumentationAttribute self = new InstrumentationAttribute ();
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 				yield return self;
 			}
 		}

@@ -23,7 +23,7 @@ namespace MonoDroid.Tuner {
 
 		public void ProcessType (TypeDefinition type)
 		{
-			if (type.IsJavaException ())
+			if (type.IsJavaException (cache))
 				PreserveJavaException (type);
 		}
 

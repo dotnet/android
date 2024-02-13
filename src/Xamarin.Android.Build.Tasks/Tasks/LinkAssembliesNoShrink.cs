@@ -69,7 +69,7 @@ namespace Xamarin.Android.Tasks
 				var cache = new TypeDefinitionCache ();
 				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
 				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log);
-				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log);
+				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, cache, Log);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
@@ -126,7 +126,8 @@ namespace Xamarin.Android.Tasks
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
 
-			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base(cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
