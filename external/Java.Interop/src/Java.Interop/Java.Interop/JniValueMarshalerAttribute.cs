@@ -1,6 +1,7 @@
 ﻿#nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace Java.Interop {
@@ -25,7 +26,10 @@ namespace Java.Interop {
 			MarshalerType   = marshalerType;
 		}
 
-		public  Type    MarshalerType   {get;}
+		public  Type    MarshalerType   {
+			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+			get;
+		}
 	}
 }
 

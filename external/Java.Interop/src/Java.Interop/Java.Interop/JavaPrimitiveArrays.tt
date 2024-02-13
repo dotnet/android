@@ -241,14 +241,21 @@ namespace Java.Interop {
 				typeof (Java<#= info.TypeModifier #>Array) == targetType;
 		}
 
-		public static object? CreateMarshaledValue (IntPtr handle, Type? targetType)
+		public static object? CreateMarshaledValue (
+				IntPtr handle,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			return ArrayMarshaler.CreateValue (handle, targetType);
 		}
 
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<<#= info.TypeModifier #>>> {
 
-			public override IList<<#= info.TypeModifier #>> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+			public override IList<<#= info.TypeModifier #>> CreateGenericValue (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					Type? targetType)
 			{
 				return JavaArray<<#= info.TypeModifier #>>.CreateValue (
 						ref reference,
@@ -273,6 +280,7 @@ namespace Java.Interop {
 				JavaArray<<#= info.ManagedType #>>.DestroyArgumentState<Java<#= info.TypeModifier #>Array> (value, ref state, synchronize);
 			}
 
+			[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 			public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
 			{
 				Func<IntPtr, Type?, object?>  m = Java<#= info.TypeModifier #>Array.CreateMarshaledValue;

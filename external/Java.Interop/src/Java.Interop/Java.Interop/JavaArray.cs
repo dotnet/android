@@ -362,7 +362,12 @@ namespace Java.Interop
 		}
 	}
 	
-	public abstract class JavaPrimitiveArray<T> : JavaArray<T> {
+	public abstract class JavaPrimitiveArray<
+			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			T
+	>
+		: JavaArray<T>
+	{
 
 		internal JavaPrimitiveArray (ref JniObjectReference reference, JniObjectReferenceOptions transfer)
 			: base (ref reference, transfer)

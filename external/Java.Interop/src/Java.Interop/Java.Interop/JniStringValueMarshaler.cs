@@ -14,7 +14,11 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniStringValueMarshaler     Instance    = new JniStringValueMarshaler ();
 
-		public override string? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override string? CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			return JniEnvironment.Strings.ToString (ref reference, options, targetType ?? typeof (string));
 		}
@@ -32,6 +36,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			Func<string, JniObjectReference>    m   = JniEnvironment.Strings.NewString;
@@ -46,6 +51,7 @@ namespace Java.Interop {
 			return hdl;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			Func<string, JniObjectReference>    m   = JniEnvironment.Strings.NewString;
@@ -57,6 +63,7 @@ namespace Java.Interop {
 			return ReturnObjectReferenceToJni (context, sourceValue.Name, obj);
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			Func<IntPtr, string?>   m   = JniEnvironment.Strings.ToString;

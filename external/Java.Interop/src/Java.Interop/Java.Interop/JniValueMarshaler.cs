@@ -120,6 +120,9 @@ namespace Java.Interop {
 
 	public abstract class JniValueMarshaler {
 
+		internal const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+		internal const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
+
 		public  virtual     bool                    IsJniValueType {
 			get {return false;}
 		}
@@ -129,7 +132,11 @@ namespace Java.Interop {
 			get {return IntPtr_type;}
 		}
 
-		public  abstract    object?                 CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null);
+		public  abstract    object?                 CreateValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateArgumentState (object? value, ParameterAttributes synchronize = 0)
 		{
@@ -139,12 +146,16 @@ namespace Java.Interop {
 		public  abstract    JniValueMarshalerState  CreateObjectReferenceArgumentState (object? value, ParameterAttributes synchronize = 0);
 		public  abstract    void                    DestroyArgumentState (object? value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
 
-		internal object? CreateValue (IntPtr handle, Type? targetType)
+		internal object? CreateValue (
+				IntPtr handle,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			var r = new JniObjectReference (handle);
 			return CreateValue (ref r, JniObjectReferenceOptions.Copy, targetType);
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public  virtual     Expression              CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize = 0, Type? targetType = null)
 		{
 			Func<IntPtr, Type, object?> m   = CreateValue;
@@ -165,6 +176,7 @@ namespace Java.Interop {
 			return self;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public  virtual     Expression              CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			CreateParameterFromManagedExpression (context, sourceValue, 0);
@@ -186,6 +198,8 @@ namespace Java.Interop {
 		}
 
 		delegate void DestroyArgumentStateCb (object value, ref JniValueMarshalerState state, ParameterAttributes synchronize);
+
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public  virtual     Expression              CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			Func<object, ParameterAttributes, JniValueMarshalerState>   c   = CreateArgumentState;
@@ -216,10 +230,19 @@ namespace Java.Interop {
 		}
 	}
 
-	public abstract class JniValueMarshaler<T> : JniValueMarshaler {
+	public abstract class JniValueMarshaler<
+			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			T
+	>
+		: JniValueMarshaler
+	{
 
 		[return: MaybeNull]
-		public  abstract    T                       CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null);
+		public  abstract    T                       CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType = null);
 
 		public  virtual     JniValueMarshalerState  CreateGenericArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0)
 		{
@@ -229,7 +252,11 @@ namespace Java.Interop {
 		public  abstract    JniValueMarshalerState  CreateGenericObjectReferenceArgumentState ([MaybeNull] T value, ParameterAttributes synchronize = 0);
 		public  abstract    void                    DestroyGenericArgumentState ([AllowNull] T value, ref JniValueMarshalerState state, ParameterAttributes synchronize = 0);
 
-		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType = null)
+		public override object? CreateValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType = null)
 		{
 			return CreateGenericValue (ref reference, options, targetType ?? typeof (T));
 		}

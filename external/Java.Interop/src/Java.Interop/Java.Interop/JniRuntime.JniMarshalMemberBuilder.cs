@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -31,6 +31,7 @@ namespace Java.Interop {
 #if NET
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, "Java.Interop.MarshalMemberBuilder", "Java.Interop.Export")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "DynamicDependency should preserve the constructor.")]
+		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "DynamicDependency should preserve the constructor.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2035", Justification = "Java.Interop.Export.dll is not always present.")]
 #endif
 		partial void SetMarshalMemberBuilder (CreationOptions options)
@@ -179,28 +180,39 @@ namespace Java.Interop {
 	sealed class IntPtrValueMarshaler : JniValueMarshaler<IntPtr> {
 		internal    static  IntPtrValueMarshaler Instance = new IntPtrValueMarshaler ();
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterFromManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			return sourceValue;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			return sourceValue;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (Java.Interop.Expressions.JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			return sourceValue;
 		}
 
 
-		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override object? CreateValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			throw new NotSupportedException ();
 		}
 
-		public override IntPtr CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override IntPtr CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			throw new NotSupportedException ();
 		}

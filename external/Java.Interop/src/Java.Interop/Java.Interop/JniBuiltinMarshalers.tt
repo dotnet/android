@@ -1,4 +1,4 @@
-﻿<#@ template  language="C#" #>
+<#@ template  language="C#" #>
 <#@ assembly  name="System.Core" #>
 <#@ import    namespace="System.Collections.Generic" #>
 <#@ import    namespace="System.Linq" #>
@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
 
@@ -181,14 +182,22 @@ namespace Java.Interop {
 		    get {return typeof (<#= type.Type #>);}
 		}
 
-		public override object? CreateValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override object? CreateValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
 			return CreateGenericValue (ref reference, options, targetType);
 		}
 
-		public override <#= type.Type #> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override <#= type.Type #> CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			if (!reference.IsValid)
 				return default (<#= type.Type #>);
@@ -196,12 +205,12 @@ namespace Java.Interop {
 			return Jni<#= type.Name #>.GetValueFromJni (ref reference, options, targetType);
 		}
 
-		public override JniValueMarshalerState CreateGenericArgumentState (<#= type.Type #> value, ParameterAttributes synchronize = ParameterAttributes.In)
+		public override JniValueMarshalerState CreateGenericArgumentState ([MaybeNull] <#= type.Type #> value, ParameterAttributes synchronize = ParameterAttributes.In)
 		{
 			return new JniValueMarshalerState (new JniArgumentValue (value));
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (<#= type.Type #> value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] <#= type.Type #> value, ParameterAttributes synchronize)
 		{
 			var r = Jni<#= type.Name #>.CreateLocalRef (value);
 			return new JniValueMarshalerState (r);
@@ -221,16 +230,19 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 		    return sourceValue;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			return sourceValue;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			return sourceValue;
@@ -241,7 +253,11 @@ namespace Java.Interop {
 
 		internal    static  readonly    JniNullable<#= type.Type #>ValueMarshaler   Instance    = new JniNullable<#= type.Type #>ValueMarshaler ();
 
-		public override <#= type.Type #>? CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override <#= type.Type #>? CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;
@@ -249,7 +265,7 @@ namespace Java.Interop {
 			return Jni<#= type.Name #>.GetValueFromJni (ref reference, options, targetType: null);
 		}
 
-		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState (<#= type.Type #>? value, ParameterAttributes synchronize)
+		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull] <#= type.Type #>? value, ParameterAttributes synchronize)
 		{
 		    if (!value.HasValue)
 		        return new JniValueMarshalerState ();

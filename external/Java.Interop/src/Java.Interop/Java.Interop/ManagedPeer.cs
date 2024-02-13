@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -17,6 +17,8 @@ namespace Java.Interop {
 	/* static */ sealed class ManagedPeer : JavaObject {
 
 		internal const string JniTypeName = "net/dot/jni/ManagedPeer";
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+		internal const DynamicallyAccessedMemberTypes ConstructorsMethodsNestedTypes = Constructors | DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
 
 
 		static  readonly    JniPeerMembers  _members        = new JniPeerMembers (JniTypeName, typeof (ManagedPeer));
@@ -140,7 +142,11 @@ namespace Java.Interop {
 
 		static Dictionary<string, ConstructorInfo?> ConstructorCache    = new Dictionary<string, ConstructorInfo?> ();
 
-		static ConstructorInfo? GetConstructor (Type type, string jniTypeName, string signature)
+		static ConstructorInfo? GetConstructor (
+				[DynamicallyAccessedMembers (Constructors)]
+				Type type,
+				string jniTypeName,
+				string signature)
 		{
 			var ctorCacheKey    = jniTypeName + "." + signature;
 			lock (ConstructorCache) {
@@ -290,7 +296,7 @@ namespace Java.Interop {
 			}
 		}
 
-		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+		[return: DynamicallyAccessedMembers (ConstructorsMethodsNestedTypes)]
 		static Type GetTypeFromSignature (JniRuntime.JniTypeManager typeManager, JniTypeSignature typeSignature, string? context = null)
 		{
 			return typeManager.GetType (typeSignature) ??

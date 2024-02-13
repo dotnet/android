@@ -271,7 +271,7 @@ namespace Java.Interop
 		static unsafe JavaVMInterface CreateInvoker (IntPtr handle)
 		{
 			IntPtr p = Marshal.ReadIntPtr (handle);
-			return (JavaVMInterface) Marshal.PtrToStructure (p, typeof (JavaVMInterface))!;
+			return (JavaVMInterface) Marshal.PtrToStructure<JavaVMInterface> (p)!;
 		}
 
 		~JniRuntime ()

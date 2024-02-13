@@ -14,6 +14,10 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
     <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <!-- TODO: enable these when all warnings are solved -->
+    <!--<IsTrimmable>true</IsTrimmable>-->
+    <!--<EnableAotAnalyzer>true</EnableAotAnalyzer>-->
     <MSBuildWarningsAsMessages>NU1702</MSBuildWarningsAsMessages>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">

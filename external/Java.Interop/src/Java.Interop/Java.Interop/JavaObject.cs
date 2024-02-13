@@ -1,12 +1,15 @@
 #nullable enable
 
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Java.Interop
 {
 	[JniTypeSignature ("java/lang/Object", GenerateJavaPeer=false)]
 	unsafe public class JavaObject : IJavaPeerable
 	{
+		internal const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+
 		readonly static JniPeerMembers _members = new JniPeerMembers ("java/lang/Object", typeof (JavaObject));
 
 		public int                  JniIdentityHashCode { get; private set; }

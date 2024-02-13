@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 
 using System;
 using System.Collections.Generic;
@@ -7,7 +7,11 @@ using System.Reflection;
 
 namespace Java.Interop
 {
-	public class JavaObjectArray<T> : JavaArray<T>
+	public class JavaObjectArray<
+			[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+			T
+	>
+		: JavaArray<T>
 	{
 		internal    static  readonly    ValueMarshaler   Instance           = new ValueMarshaler ();
 
@@ -164,7 +168,11 @@ namespace Java.Interop
 
 		internal sealed class ValueMarshaler : JniValueMarshaler<IList<T>> {
 
-			public override IList<T> CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+			public override IList<T> CreateGenericValue (
+					ref JniObjectReference reference,
+					JniObjectReferenceOptions options,
+					[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+					Type? targetType)
 			{
 				return JavaArray<T>.CreateValue (ref reference, options, targetType, (ref JniObjectReference h, JniObjectReferenceOptions t) => new JavaObjectArray<T> (ref h, t) {
 					forMarshalCollection    = true,
@@ -194,7 +202,11 @@ namespace Java.Interop
 		[SuppressMessage ("Design", "CA1034", Justification = "https://github.com/xamarin/Java.Interop/commit/bb7ca5d02aa3fc2b447ad57af1256e74e5f954fa")]
 		partial class Arrays {
 
-			public static JavaObjectArray<T>? CreateMarshalObjectArray<T> (IEnumerable<T>? value)
+			public static JavaObjectArray<T>? CreateMarshalObjectArray<
+					[DynamicallyAccessedMembers (JavaObject.ConstructorsAndInterfaces)]
+					T
+			> (
+					IEnumerable<T>? value)
 			{
 				if (value == null) {
 					return null;
