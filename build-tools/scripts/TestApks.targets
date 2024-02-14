@@ -371,7 +371,6 @@
     <!-- SDK component installation can be frail, try a few times. -->
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
     </Exec>
@@ -381,7 +380,6 @@
     />
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
@@ -392,7 +390,6 @@
     />
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />

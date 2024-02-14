@@ -66,7 +66,7 @@ namespace Android.App {
 
 		HashSet<string> specified = new HashSet<string> ();
 
-		public static IEnumerable<IntentFilterAttribute> FromTypeDefinition (TypeDefinition type)
+		public static IEnumerable<IntentFilterAttribute> FromTypeDefinition (TypeDefinition type, IMetadataResolver cache)
 		{
 			IEnumerable<CustomAttribute> attrs = type.GetCustomAttributes ("Android.App.IntentFilterAttribute");
 			if (!attrs.Any ())
@@ -75,7 +75,7 @@ namespace Android.App {
 				var self = new IntentFilterAttribute (ToStringArray (attr.ConstructorArguments [0].Value));
 				foreach (var e in attr.Properties) {
 					self.specified.Add (e.Name);
-					setters [e.Name] (self, e.Argument.GetSettableValue ());
+					setters [e.Name] (self, e.Argument.GetSettableValue (cache));
 				}
 				yield return self;
 			}

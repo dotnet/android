@@ -4,22 +4,12 @@
         <HostOsName Condition=" '$(HostOsName)' == '' ">@OS_NAME@</HostOsName>
         <HostOsFlavor Condition=" '$(HostOsFlavor)' == '' ">@HOST_OS_FLAVOR@</HostOsFlavor>
         <HostOsRelease Condition=" '$(HostOsRelease)' == '' ">@OS_RELEASE@</HostOsRelease>
-        <HostTriplet Condition=" '$(HostTriplet)' == '' ">@HOST_TRIPLE@</HostTriplet>
-        <HostTriplet32 Condition=" '$(HostTriplet32)' == '' ">@HOST_TRIPLE32@</HostTriplet32>
-        <HostTriplet64 Condition=" '$(HostTriplet64)' == '' ">@HOST_TRIPLE64@</HostTriplet64>
         <HostCpuCount Condition=" '$(HostCpuCount)' == '' ">@HOST_CPUS@</HostCpuCount>
         <HostBits Condition=" '$(HostBits)' == '' ">@ARCHITECTURE_BITS@</HostBits>
-        <HostCcName Condition=" '$(HostCcName)' == '' ">@HOST_CC@</HostCcName>
-        <HostCxxName Condition=" '$(HostCxxName)' == '' ">@HOST_CXX@</HostCxxName>
-        <HostCc32 Condition=" '$(HostCc32)' == '' ">@HOST_CC32@</HostCc32>
-        <HostCc64 Condition=" '$(HostCc64)' == '' ">@HOST_CC64@</HostCc64>
-        <HostCxx32 Condition=" '$(HostCxx32)' == '' ">@HOST_CXX32@</HostCxx32>
-        <HostCxx64 Condition=" '$(HostCxx64)' == '' ">@HOST_CXX64@</HostCxx64>
         <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">@JavaSdkDirectory@</JavaSdkDirectory>
         <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
         <JavaPath Condition=" '$(JavaPath)' == '' ">@java@</JavaPath>
-        <HostHomebrewPrefix Condition=" '$(HostHomebrewPrefix)' == '' ">@HOST_HOMEBREW_PREFIX@</HostHomebrewPrefix>
         <NdkLlvmTag Condition=" '$(NdkLlvmTag)' == '' ">@NDK_LLVM_TAG@</NdkLlvmTag>
     </PropertyGroup>
 </Project>

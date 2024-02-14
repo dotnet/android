@@ -37,16 +37,11 @@ projects.
     </PropertyGroup>
     <ItemGroup>
       <FileWrites Include="$(TargetFrameworkMonikerAssemblyAttributesPath)" />
-      <!-- These references are implicitly defined in .NET 5 -->
-      <Reference Include="$(_JavaInteropReferences)" Condition=" '$(UsingAndroidNETSdk)' != 'True' " />
     </ItemGroup>
   </Target>
 
-  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' == 'True' ">
+  <PropertyGroup>
     <_ResolveSdksDependsOnTargets>ResolveTargetingPackAssets</_ResolveSdksDependsOnTargets>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(UsingAndroidNETSdk)' != 'True' ">
-    <_ResolveSdksDependsOnTargets>_GetReferenceAssemblyPaths</_ResolveSdksDependsOnTargets>
   </PropertyGroup>
 
   <Target Name="_ResolveSdks" DependsOnTargets="$(_ResolveSdksDependsOnTargets)">
@@ -55,17 +50,14 @@ projects.
           `C:\Program Files\dotnet\packs\Microsoft.NETCore.App.Ref\5.0.0-preview.6.20264.1\ref\net5.0\`
          See https://github.com/dotnet/sdk/blob/9eeb58e24af894597a534326156d09173d9f0f91/src/Tasks/Microsoft.NET.Build.Tasks/ResolveTargetingPackAssets.cs#L56
     -->
-    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' == 'true' ">
+    <ItemGroup>
       <_AndroidApiInfo Include="$(MSBuildThisFileDirectory)..\data\*\AndroidApiInfo.xml" />
       <_AndroidApiInfoDirectories Include="@(_AndroidApiInfo->'%(RootDir)%(Directory)')" />
       <_ResolveSdksFrameworkRefAssemblyPaths Include="@(Reference->'$([System.String]::Copy('%(RootDir)%(Directory)').TrimEnd('\'))')" Condition=" '%(Reference.FrameworkReferenceName)' != '' " />
     </ItemGroup>
-    <ItemGroup Condition=" '$(UsingAndroidNETSdk)' != 'true' ">
-      <_AndroidApiInfoDirectories Include="$(_XATargetFrameworkDirectories)" />
-    </ItemGroup>
     <PropertyGroup>
       <_AndroidAllowMissingSdkTooling Condition=" '$(_AndroidAllowMissingSdkTooling)' == '' ">False</_AndroidAllowMissingSdkTooling>
-      <_XATargetFrameworkDirectories Condition=" '$(UsingAndroidNETSdk)' == 'True' ">@(_ResolveSdksFrameworkRefAssemblyPaths->Distinct())</_XATargetFrameworkDirectories>
+      <_XATargetFrameworkDirectories>@(_ResolveSdksFrameworkRefAssemblyPaths->Distinct())</_XATargetFrameworkDirectories>
     </PropertyGroup>
     <ResolveSdks
         ContinueOnError="$(_AndroidAllowMissingSdkTooling)"
@@ -99,9 +91,12 @@ projects.
   <Target Name="_GetJavaPlatformJar">
     <GetJavaPlatformJar
         AndroidSdkPlatform="$(_AndroidApiLevel)"
+        AndroidSdkDirectory="$(AndroidSdkDirectory)"
         AndroidManifest="$(_AndroidManifestAbs)"
         DesignTimeBuild="$(DesignTimeBuild)"
+        BuildingInsideVisualStudio="$(BuildingInsideVisualStudio)"
         SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
+        TargetFramework="$(TargetFramework)"
     >
       <Output TaskParameter="JavaPlatformJarPath" PropertyName="JavaPlatformJarPath" />
       <Output TaskParameter="TargetSdkVersion"    PropertyName="_AndroidTargetSdkVersion" />

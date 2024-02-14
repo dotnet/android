@@ -31,7 +31,7 @@ by projects that use the Microsoft.Android framework in .NET 6+.
     </PropertyGroup>
 
     <ItemGroup>
-      <_AndroidRefPackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-net7.0\ref\Java.Interop.dll" />
+      <_AndroidRefPackAssemblies Include="$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll" />
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)ref\Mono.Android.dll" />
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)ref\Mono.Android.Runtime.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->

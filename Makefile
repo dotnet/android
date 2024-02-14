@@ -7,7 +7,7 @@ RUNTIME       := $(shell which mono64 2> /dev/null && echo mono64 || echo mono) 
 SOLUTION       = Xamarin.Android.sln
 TEST_TARGETS   = build-tools/scripts/RunTests.targets
 API_LEVEL     ?=
-PREPARE_NET_FX = net7.0
+PREPARE_NET_FX = net8.0
 PREPARE_ARGS =
 PREPARE_PROJECT = build-tools/xaprepare/xaprepare/xaprepare.csproj
 PREPARE_MSBUILD_FLAGS = $(PREPARE_MSBUILD_ARGS) $(MSBUILD_ARGS)
@@ -57,18 +57,6 @@ endif
 
 ifneq ($(PREPARE_AUTOPROVISION),0)
 _PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
-endif
-
-ifeq ($(OS_NAME),Darwin)
-ifeq ($(HOMEBREW_PREFIX),)
-HOMEBREW_PREFIX ?= $(shell brew --prefix)
-endif
-else
-HOMEBREW_PREFIX := $prefix
-endif
-
-ifeq ($(wildcard Configuration.OperatingSystem.props),)
-PREPARE_MSBUILD_FLAGS += "/p:HostHomebrewPrefix=$(HOMEBREW_PREFIX)"
 endif
 
 ifneq ($(PREPARE_SCENARIO),)

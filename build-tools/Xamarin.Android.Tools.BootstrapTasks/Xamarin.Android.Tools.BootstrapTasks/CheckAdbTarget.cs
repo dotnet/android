@@ -31,6 +31,9 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 
 		public override bool Execute ()
 		{
+			// Log messages as output rather than warnings
+			WriteOutputAsMessage = true;
+
 			base.Execute ();
 
 			// We always succeed
@@ -43,12 +46,14 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} shell getprop ro.build.version.sdk",
 					IgnoreExitCode = true,
+					LogIgnoredExitCodeAsWarning = false,
 					MergeStdoutAndStderr = false,
 				},
 
 				new CommandInfo {
 					ArgumentsString = $"{AdbTarget} shell pm path com.android.shell",
 					IgnoreExitCode = true,
+					LogIgnoredExitCodeAsWarning = false,
 					MergeStdoutAndStderr = false,
 					ShouldRun = () => IsValidTarget
 				},

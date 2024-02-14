@@ -416,7 +416,7 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
   <data name="XA1019" xml:space="preserve">
     <value>El archivo "LibraryProjectProperties" en "{0}" se encuentra en un directorio principal del directorio de salida intermedio del proyecto de enlaces. Ajuste la ruta de acceso para usar el archivo "project.properties" original directamente desde el directorio del proyecto de la biblioteca de Android.</value>
     <comment>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
-In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a Xamarin.Android project written in C# or F#.
+In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</comment>
   </data>
   <data name="XA1020" xml:space="preserve">
@@ -438,8 +438,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
-    <value>Omitiendo el archivo de configuración "{0}". Los archivos de configuración .NET no se admiten en proyectos Xamarin.Android destinados a .NET 6 o versiones posteriores.</value>
-    <comment>The following are literal names and should not be translated: .NET, Xamarin.Android.
+    <value>Ignorando el archivo de configuración "{0}". Los archivos de configuración .NET no son compatibles con proyectos .NET Android que tengan como objetivo .NET 6 o superior.</value>
+    <comment>The following are literal names and should not be translated: .NET, .NET Android.
 {0} - The file name such as 'Foo.dll.config'</comment>
   </data>
   <data name="XA1025" xml:space="preserve">
@@ -451,7 +451,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>No se admite el uso de AAPT en los proyectos de Xamarin.Android destinados a .NET 6 o versiones posteriores. Habilite "Use el sistema de empaquetado de Android incremental (aapt2)" en las páginas de propiedades del proyecto de Visual Studio o edite el archivo del proyecto en un editor de texto y establezca la propiedad "AndroidUseAapt2" de MSBuild en "true".</value>
+    <value>El uso de AAPT no es compatible con proyectos .NET Android que tengan como objetivo .NET 6 o superior. Habilite "Use el sistema de empaquetado de Android incremental (aapt2)" en las páginas de propiedades del proyecto de Visual Studio o edite el archivo del proyecto en un editor de texto y establezca la propiedad "AndroidUseAapt2" de MSBuild en "true".</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
@@ -511,7 +511,7 @@ Cambie el valor de AndroidManifest.xml para que coincida con el valor $(Supporte
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>Se detectó el uso de AppDomain.CreateDomain() en el ensamblado: {0}. En .NET 6 y versiones posteriores solo se admitirá una instancia de AppDomain, por lo que esta API ya no estará disponible en Xamarin.Android una vez que se haya lanzado .NET 6.</value>
+    <value>Uso de AppDomain.CreateDomain() detectado en el ensamblado: {0}.NET 6 y superiores solo admitirán un único AppDomain, por lo que esta API dejará de estar disponible en .NET Android una vez que se publique .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
@@ -710,12 +710,12 @@ In this message, "root element" refers to the root element of an XML file.
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4231" xml:space="preserve">
-    <value>El valor "{0}" del analizador de clases de Android está en desuso y se quitará en una versión futura de Xamarin.Android. Actualice las propiedades del proyecto para usar "class-parse".</value>
+    <value>El valor "{0}" del analizador de clases de Android está obsoleto y se eliminará en una futura versión de .NET Android. Actualice las propiedades del proyecto para usar "class-parse".</value>
     <comment>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>El destino "{0}" de generación de código de Android está en desuso y se quitará en una versión futura de Xamarin.Android. Actualice las propiedades del proyecto para usar "XAJavaInterop1".</value>
+    <value>El objetivo de generación de código Android "{0}" está obsoleto y se eliminará en una futura versión de .NET Android. Actualice las propiedades del proyecto para usar "XAJavaInterop1".</value>
     <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -796,7 +796,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA4312" xml:space="preserve">
-    <value>La referencia al proyecto de aplicación Android Wear "{0}" de un proyecto de aplicación Android está en desuso y ya no se admitirá en una versión futura de Xamarin.Android. Quítela y distribuya en cambio la aplicación Wear como una aplicación independiente.</value>
+    <value>Hacer referencia al proyecto de aplicación Android Wear "{0}" desde un proyecto de aplicación Android está obsoleto y ya no se admitirá en una versión futura de .NET Android. Elimine la referencia al proyecto de la aplicación Android Wear del proyecto de la aplicación Android y distribuya en su lugar la aplicación Wear como una aplicación independiente.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
@@ -867,19 +867,23 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 {0} - The missing tool name</comment>
   </data>
   <data name="XA5207" xml:space="preserve">
-    <value>No se encontró ningún archivo android.jar para el nivel de API {0}. Esto significa que la plataforma Android SDK para el nivel de API {0} no está instalada. Instálela en el Administrador de Android SDK ({2}) o cambie el proyecto Xamarin.Android para que tenga como destino una versión de la API que esté instalada. (Falta {1}).</value>
+    <value>No se ha podido encontrar android.jar para el nivel API {0}. Esto significa que la plataforma Android SDK para el nivel API {0} no está instalada; se esperaba que estuviera en "{1}".
+{2}
+Consulte https://aka.ms/xa5207 para obtener más detalles.</value>
     <comment>The following are literal names and should not be translated: android.jar
 {0} - The API level name
 {1} - The expected path of the android.jar file
-{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
-  </data>
-  <data name="XA5207_SDK_Manager_macOS" xml:space="preserve">
-    <value>Herramientas &gt; Abrir el Administrador de Android SDK...</value>
-    <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
+{2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>Herramientas &gt; Android &gt; Administrador de Android SDK...</value>
-    <comment>This string is the location of a menu command in Visual Studio.</comment>
+    <value>Instálelo en el Android SDK Manager (herramientas &gt; Android &gt; Android SDK Manager...) o cambie el proyecto .NET Android para que se dirija a una versión de la API que esté instalada.</value>
+    <comment>This string is the instrucitons to install the component</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
+    <value>Puede instalar el nivel de API que falta ejecutando "dotnet build -t:InstallAndroidDependencies -f {0}"-p:AndroidSdkDirectory={1}"`, o cambiar el proyecto para que tenga como objetivo una versión de API que esté instalada.</value>
+    <comment>This string is the instrucitons to install the component
+{0} - The TargetFramework the app is targeting.
+{1} - The current AndroidSdkDirectory path.</comment>
   </data>
   <data name="XA5211" xml:space="preserve">
     <value>El nombre del paquete de la aplicación Wear que se ha insertado es distinto del nombre del paquete de la aplicación para dispositivos de mano ({0}! = {1}).</value>
@@ -948,5 +952,62 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
+  </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>"&lt;{0}&gt;" el elemento "{1}" en los metadatos necesarios "{2}"</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>La especificación de artefacto de Maven "{0}" no es válida. El formato correcto es "group_id:artifact_id".</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>No se puede descargar el artefacto de Maven "{0}:{1}".
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>No se puede descargar archivo POM para el artefacto de Maven "{0}:{1}".
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>No se puede descargar el archivo POM primario para el artefacto de Maven "{0}:{1}".
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>Repositorio de Maven desconocido: "{0}".</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>La propiedad '{0}' de MSBuild está en desuso y se quitará en .NET {1}. Consulte https://aka.ms/net-android-deprecations para obtener más detalles.</value>
+    <comment>The following are literal names and should not be translated: MSBuild, .NET.
+{0} - The deprecated MSBuild property name
+{1} - The numeric version of .NET</comment>
+  </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Las bibliotecas de compatibilidad con Android no se admiten en .NET 9 y versiones posteriores. Migre a AndroidX. Consulte https://aka.ms/xamarin/androidx para obtener más detalles.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
 </root>

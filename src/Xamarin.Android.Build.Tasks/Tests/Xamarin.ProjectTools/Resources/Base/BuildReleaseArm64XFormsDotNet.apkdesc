@@ -2,237 +2,264 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3572
+      "Size": 6652
     },
     "assemblies/_Microsoft.Android.Resource.Designer.dll": {
-      "Size": 2102
+      "Size": 2281
     },
     "assemblies/FormsViewGroup.dll": {
-      "Size": 7112
+      "Size": 8100
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 69472
+      "Size": 69705
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 447387
+      "Size": 458238
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5514
+      "Size": 5151
     },
     "assemblies/mscorlib.dll": {
-      "Size": 3852
+      "Size": 4002
     },
     "assemblies/netstandard.dll": {
-      "Size": 5565
+      "Size": 5643
     },
     "assemblies/rc.bin": {
       "Size": 1512
     },
     "assemblies/System.Collections.Concurrent.dll": {
-      "Size": 11502
+      "Size": 11530
     },
     "assemblies/System.Collections.dll": {
-      "Size": 15398
+      "Size": 15430
     },
     "assemblies/System.Collections.NonGeneric.dll": {
-      "Size": 7442
+      "Size": 7452
     },
     "assemblies/System.ComponentModel.dll": {
-      "Size": 1925
+      "Size": 1939
     },
     "assemblies/System.ComponentModel.Primitives.dll": {
-      "Size": 2538
+      "Size": 2549
     },
     "assemblies/System.ComponentModel.TypeConverter.dll": {
-      "Size": 6020
-    },
-    "assemblies/System.Console.dll": {
-      "Size": 6565
-    },
-    "assemblies/System.Core.dll": {
-      "Size": 1977
-    },
-    "assemblies/System.Diagnostics.DiagnosticSource.dll": {
-      "Size": 9057
-    },
-    "assemblies/System.Diagnostics.TraceSource.dll": {
-      "Size": 6540
-    },
-    "assemblies/System.dll": {
-      "Size": 2332
-    },
-    "assemblies/System.Drawing.dll": {
-      "Size": 1923
-    },
-    "assemblies/System.Drawing.Primitives.dll": {
-      "Size": 11967
-    },
-    "assemblies/System.IO.Compression.Brotli.dll": {
-      "Size": 11187
-    },
-    "assemblies/System.IO.Compression.dll": {
-      "Size": 15856
-    },
-    "assemblies/System.IO.IsolatedStorage.dll": {
-      "Size": 9862
-    },
-    "assemblies/System.Linq.dll": {
-      "Size": 19555
-    },
-    "assemblies/System.Linq.Expressions.dll": {
-      "Size": 165111
-    },
-    "assemblies/System.Net.Http.dll": {
-      "Size": 67637
-    },
-    "assemblies/System.Net.Primitives.dll": {
-      "Size": 22426
-    },
-    "assemblies/System.Net.Requests.dll": {
-      "Size": 3589
-    },
-    "assemblies/System.ObjectModel.dll": {
-      "Size": 8106
-    },
-    "assemblies/System.Private.CoreLib.dll": {
-      "Size": 845653
-    },
-    "assemblies/System.Private.DataContractSerialization.dll": {
-      "Size": 193645
-    },
-    "assemblies/System.Private.Uri.dll": {
-      "Size": 42849
-    },
-    "assemblies/System.Private.Xml.dll": {
-      "Size": 215960
-    },
-    "assemblies/System.Private.Xml.Linq.dll": {
-      "Size": 16631
-    },
-    "assemblies/System.Runtime.dll": {
-      "Size": 2740
-    },
-    "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3851
-    },
-    "assemblies/System.Runtime.Serialization.dll": {
-      "Size": 1850
-    },
-    "assemblies/System.Runtime.Serialization.Formatters.dll": {
-      "Size": 2469
-    },
-    "assemblies/System.Runtime.Serialization.Primitives.dll": {
-      "Size": 3747
-    },
-    "assemblies/System.Security.Cryptography.dll": {
-      "Size": 8089
-    },
-    "assemblies/System.Text.RegularExpressions.dll": {
-      "Size": 158950
-    },
-    "assemblies/System.Xml.dll": {
-      "Size": 1741
-    },
-    "assemblies/System.Xml.Linq.dll": {
-      "Size": 1761
-    },
-    "assemblies/UnnamedProject.dll": {
-      "Size": 4987
-    },
-    "assemblies/Xamarin.AndroidX.Activity.dll": {
-      "Size": 5942
-    },
-    "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
       "Size": 6033
     },
+    "assemblies/System.Console.dll": {
+      "Size": 6578
+    },
+    "assemblies/System.Core.dll": {
+      "Size": 1974
+    },
+    "assemblies/System.Diagnostics.DiagnosticSource.dll": {
+      "Size": 9068
+    },
+    "assemblies/System.Diagnostics.TraceSource.dll": {
+      "Size": 6552
+    },
+    "assemblies/System.dll": {
+      "Size": 2328
+    },
+    "assemblies/System.Drawing.dll": {
+      "Size": 1939
+    },
+    "assemblies/System.Drawing.Primitives.dll": {
+      "Size": 11975
+    },
+    "assemblies/System.IO.Compression.Brotli.dll": {
+      "Size": 11196
+    },
+    "assemblies/System.IO.Compression.dll": {
+      "Size": 15880
+    },
+    "assemblies/System.IO.IsolatedStorage.dll": {
+      "Size": 9875
+    },
+    "assemblies/System.Linq.dll": {
+      "Size": 19599
+    },
+    "assemblies/System.Linq.Expressions.dll": {
+      "Size": 165117
+    },
+    "assemblies/System.Net.Http.dll": {
+      "Size": 67653
+    },
+    "assemblies/System.Net.Primitives.dll": {
+      "Size": 22432
+    },
+    "assemblies/System.Net.Requests.dll": {
+      "Size": 3602
+    },
+    "assemblies/System.ObjectModel.dll": {
+      "Size": 8699
+    },
+    "assemblies/System.Private.CoreLib.dll": {
+      "Size": 849922
+    },
+    "assemblies/System.Private.DataContractSerialization.dll": {
+      "Size": 193991
+    },
+    "assemblies/System.Private.Uri.dll": {
+      "Size": 42860
+    },
+    "assemblies/System.Private.Xml.dll": {
+      "Size": 216226
+    },
+    "assemblies/System.Private.Xml.Linq.dll": {
+      "Size": 16639
+    },
+    "assemblies/System.Runtime.dll": {
+      "Size": 2708
+    },
+    "assemblies/System.Runtime.InteropServices.dll": {
+      "Size": 4028
+    },
+    "assemblies/System.Runtime.Serialization.dll": {
+      "Size": 1865
+    },
+    "assemblies/System.Runtime.Serialization.Formatters.dll": {
+      "Size": 2484
+    },
+    "assemblies/System.Runtime.Serialization.Primitives.dll": {
+      "Size": 3758
+    },
+    "assemblies/System.Security.Cryptography.dll": {
+      "Size": 8111
+    },
+    "assemblies/System.Text.RegularExpressions.dll": {
+      "Size": 159112
+    },
+    "assemblies/System.Xml.dll": {
+      "Size": 1758
+    },
+    "assemblies/System.Xml.Linq.dll": {
+      "Size": 1774
+    },
+    "assemblies/UnnamedProject.dll": {
+      "Size": 5015
+    },
+    "assemblies/Xamarin.AndroidX.Activity.dll": {
+      "Size": 16149
+    },
+    "assemblies/Xamarin.AndroidX.AppCompat.AppCompatResources.dll": {
+      "Size": 6225
+    },
     "assemblies/Xamarin.AndroidX.AppCompat.dll": {
-      "Size": 119847
+      "Size": 138721
     },
     "assemblies/Xamarin.AndroidX.CardView.dll": {
-      "Size": 6799
+      "Size": 6977
     },
     "assemblies/Xamarin.AndroidX.CoordinatorLayout.dll": {
-      "Size": 17257
+      "Size": 17886
     },
     "assemblies/Xamarin.AndroidX.Core.dll": {
-      "Size": 100666
+      "Size": 127505
+    },
+    "assemblies/Xamarin.AndroidX.CursorAdapter.dll": {
+      "Size": 8997
     },
     "assemblies/Xamarin.AndroidX.DrawerLayout.dll": {
-      "Size": 14631
+      "Size": 15319
     },
     "assemblies/Xamarin.AndroidX.Fragment.dll": {
-      "Size": 41733
+      "Size": 51744
     },
     "assemblies/Xamarin.AndroidX.Legacy.Support.Core.UI.dll": {
-      "Size": 6080
+      "Size": 6242
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.Common.dll": {
-      "Size": 6469
+      "Size": 6900
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.LiveData.Core.dll": {
-      "Size": 6615
+      "Size": 6743
     },
     "assemblies/Xamarin.AndroidX.Lifecycle.ViewModel.dll": {
-      "Size": 3068
+      "Size": 7011
     },
     "assemblies/Xamarin.AndroidX.Loader.dll": {
-      "Size": 12923
+      "Size": 13082
     },
     "assemblies/Xamarin.AndroidX.RecyclerView.dll": {
-      "Size": 89997
+      "Size": 93990
     },
     "assemblies/Xamarin.AndroidX.SavedState.dll": {
-      "Size": 4906
+      "Size": 5114
     },
     "assemblies/Xamarin.AndroidX.SwipeRefreshLayout.dll": {
-      "Size": 10572
+      "Size": 13974
     },
     "assemblies/Xamarin.AndroidX.ViewPager.dll": {
-      "Size": 18593
+      "Size": 19060
     },
     "assemblies/Xamarin.Forms.Core.dll": {
-      "Size": 528450
+      "Size": 565831
     },
     "assemblies/Xamarin.Forms.Platform.Android.dll": {
-      "Size": 337925
+      "Size": 374486
     },
     "assemblies/Xamarin.Forms.Platform.dll": {
-      "Size": 11080
+      "Size": 18767
     },
     "assemblies/Xamarin.Forms.Xaml.dll": {
-      "Size": 60774
+      "Size": 63655
     },
     "assemblies/Xamarin.Google.Android.Material.dll": {
-      "Size": 42282
+      "Size": 66417
     },
     "classes.dex": {
-      "Size": 3514468
+      "Size": 9458972
+    },
+    "classes2.dex": {
+      "Size": 103648
+    },
+    "kotlin/annotation/annotation.kotlin_builtins": {
+      "Size": 928
+    },
+    "kotlin/collections/collections.kotlin_builtins": {
+      "Size": 3685
+    },
+    "kotlin/coroutines/coroutines.kotlin_builtins": {
+      "Size": 200
+    },
+    "kotlin/internal/internal.kotlin_builtins": {
+      "Size": 646
+    },
+    "kotlin/kotlin.kotlin_builtins": {
+      "Size": 18640
+    },
+    "kotlin/ranges/ranges.kotlin_builtins": {
+      "Size": 3399
+    },
+    "kotlin/reflect/reflect.kotlin_builtins": {
+      "Size": 2396
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 97080
+      "Size": 87080
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 334784
+      "Size": 339864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3193200
+      "Size": 3184512
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 93952
+      "Size": 94504
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 154904
+      "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 102888
-    },
-    "META-INF/android.support.design_material.version": {
-      "Size": 12
+      "Size": 115280
     },
     "META-INF/androidx.activity_activity.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.annotation_annotation-experimental.version": {
       "Size": 6
     },
     "META-INF/androidx.appcompat_appcompat-resources.version": {
@@ -242,13 +269,13 @@
       "Size": 6
     },
     "META-INF/androidx.arch.core_core-runtime.version": {
-      "Size": 6
+      "Size": 67
     },
     "META-INF/androidx.asynclayoutinflater_asynclayoutinflater.version": {
       "Size": 6
     },
     "META-INF/androidx.browser_browser.version": {
-      "Size": 6
+      "Size": 60
     },
     "META-INF/androidx.cardview_cardview.version": {
       "Size": 6
@@ -256,8 +283,11 @@
     "META-INF/androidx.coordinatorlayout_coordinatorlayout.version": {
       "Size": 6
     },
-    "META-INF/androidx.core_core.version": {
+    "META-INF/androidx.core_core-ktx.version": {
       "Size": 6
+    },
+    "META-INF/androidx.core_core.version": {
+      "Size": 7
     },
     "META-INF/androidx.cursoradapter_cursoradapter.version": {
       "Size": 6
@@ -269,6 +299,15 @@
       "Size": 6
     },
     "META-INF/androidx.drawerlayout_drawerlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.dynamicanimation_dynamicanimation.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2-views-helper.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.emoji2_emoji2.version": {
       "Size": 6
     },
     "META-INF/androidx.fragment_fragment.version": {
@@ -292,7 +331,13 @@
     "META-INF/androidx.lifecycle_lifecycle-livedata.version": {
       "Size": 6
     },
+    "META-INF/androidx.lifecycle_lifecycle-process.version": {
+      "Size": 6
+    },
     "META-INF/androidx.lifecycle_lifecycle-runtime.version": {
+      "Size": 72
+    },
+    "META-INF/androidx.lifecycle_lifecycle-viewmodel-savedstate.version": {
       "Size": 6
     },
     "META-INF/androidx.lifecycle_lifecycle-viewmodel.version": {
@@ -307,7 +352,22 @@
     "META-INF/androidx.media_media.version": {
       "Size": 6
     },
+    "META-INF/androidx.navigation_navigation-common.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-runtime.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.navigation_navigation-ui.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.preference_preference.version": {
+      "Size": 6
+    },
     "META-INF/androidx.print_print.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.profileinstaller_profileinstaller.version": {
       "Size": 6
     },
     "META-INF/androidx.recyclerview_recyclerview.version": {
@@ -319,7 +379,13 @@
     "META-INF/androidx.slidingpanelayout_slidingpanelayout.version": {
       "Size": 6
     },
+    "META-INF/androidx.startup_startup-runtime.version": {
+      "Size": 6
+    },
     "META-INF/androidx.swiperefreshlayout_swiperefreshlayout.version": {
+      "Size": 6
+    },
+    "META-INF/androidx.tracing_tracing.version": {
       "Size": 6
     },
     "META-INF/androidx.transition_transition.version": {
@@ -337,25 +403,73 @@
     "META-INF/androidx.viewpager_viewpager.version": {
       "Size": 6
     },
+    "META-INF/androidx.viewpager2_viewpager2.version": {
+      "Size": 6
+    },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1213
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 77024
+      "Size": 97490
+    },
+    "META-INF/com.android.tools/proguard/coroutines.pro": {
+      "Size": 1345
+    },
+    "META-INF/com.android.tools/r8-from-1.6.0/coroutines.pro": {
+      "Size": 899
+    },
+    "META-INF/com.android.tools/r8-upto-3.0.0/coroutines.pro": {
+      "Size": 558
+    },
+    "META-INF/com.android.tools/r8/coroutines.pro": {
+      "Size": 1190
     },
     "META-INF/com.google.android.material_material.version": {
-      "Size": 10
+      "Size": 6
+    },
+    "META-INF/kotlin-project-structure-metadata.json": {
+      "Size": 552
+    },
+    "META-INF/kotlinx_coroutines_android.version": {
+      "Size": 5
+    },
+    "META-INF/kotlinx_coroutines_core.version": {
+      "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 76897
+      "Size": 97363
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
+      "Size": 96
+    },
+    "META-INF/maven/com.google.guava/listenablefuture/pom.xml": {
+      "Size": 2226
     },
     "META-INF/proguard/androidx-annotations.pro": {
-      "Size": 339
+      "Size": 433
+    },
+    "META-INF/proguard/coroutines.pro": {
+      "Size": 1363
+    },
+    "META-INF/services/kotlinx.coroutines.CoroutineExceptionHandler": {
+      "Size": 54
+    },
+    "META-INF/services/kotlinx.coroutines.internal.MainDispatcherFactory": {
+      "Size": 52
     },
     "res/anim-v21/design_bottom_sheet_slide_in.xml": {
       "Size": 616
     },
     "res/anim-v21/design_bottom_sheet_slide_out.xml": {
+      "Size": 616
+    },
+    "res/anim-v21/fragment_fast_out_extra_slow_in.xml": {
+      "Size": 364
+    },
+    "res/anim-v21/mtrl_bottom_sheet_slide_in.xml": {
+      "Size": 616
+    },
+    "res/anim-v21/mtrl_bottom_sheet_slide_out.xml": {
       "Size": 616
     },
     "res/anim/abc_fade_in.xml": {
@@ -448,6 +562,21 @@
     "res/anim/exittoright.xml": {
       "Size": 468
     },
+    "res/anim/mtrl_card_lowers_interpolator.xml": {
+      "Size": 400
+    },
+    "res/anim/nav_default_enter_anim.xml": {
+      "Size": 460
+    },
+    "res/anim/nav_default_exit_anim.xml": {
+      "Size": 460
+    },
+    "res/anim/nav_default_pop_enter_anim.xml": {
+      "Size": 460
+    },
+    "res/anim/nav_default_pop_exit_anim.xml": {
+      "Size": 460
+    },
     "res/animator-v21/design_appbar_state_list_animator.xml": {
       "Size": 1216
     },
@@ -457,14 +586,62 @@
     "res/animator/design_fab_show_motion_spec.xml": {
       "Size": 796
     },
+    "res/animator/fragment_close_enter.xml": {
+      "Size": 1128
+    },
+    "res/animator/fragment_close_exit.xml": {
+      "Size": 1128
+    },
+    "res/animator/fragment_fade_enter.xml": {
+      "Size": 452
+    },
+    "res/animator/fragment_fade_exit.xml": {
+      "Size": 452
+    },
+    "res/animator/fragment_open_enter.xml": {
+      "Size": 1128
+    },
+    "res/animator/fragment_open_exit.xml": {
+      "Size": 1128
+    },
+    "res/animator/linear_indeterminate_line1_head_interpolator.xml": {
+      "Size": 400
+    },
+    "res/animator/linear_indeterminate_line1_tail_interpolator.xml": {
+      "Size": 400
+    },
+    "res/animator/linear_indeterminate_line2_head_interpolator.xml": {
+      "Size": 400
+    },
+    "res/animator/linear_indeterminate_line2_tail_interpolator.xml": {
+      "Size": 400
+    },
     "res/animator/mtrl_btn_state_list_anim.xml": {
       "Size": 2664
     },
     "res/animator/mtrl_btn_unelevated_state_list_anim.xml": {
       "Size": 120
     },
+    "res/animator/mtrl_card_state_list_anim.xml": {
+      "Size": 1208
+    },
     "res/animator/mtrl_chip_state_list_anim.xml": {
       "Size": 1072
+    },
+    "res/animator/mtrl_extended_fab_change_size_collapse_motion_spec.xml": {
+      "Size": 1116
+    },
+    "res/animator/mtrl_extended_fab_change_size_expand_motion_spec.xml": {
+      "Size": 1116
+    },
+    "res/animator/mtrl_extended_fab_hide_motion_spec.xml": {
+      "Size": 608
+    },
+    "res/animator/mtrl_extended_fab_show_motion_spec.xml": {
+      "Size": 820
+    },
+    "res/animator/mtrl_extended_fab_state_list_animator.xml": {
+      "Size": 2724
     },
     "res/animator/mtrl_fab_hide_motion_spec.xml": {
       "Size": 796
@@ -477,6 +654,27 @@
     },
     "res/animator/mtrl_fab_transformation_sheet_expand_spec.xml": {
       "Size": 1888
+    },
+    "res/animator/nav_default_enter_anim.xml": {
+      "Size": 452
+    },
+    "res/animator/nav_default_exit_anim.xml": {
+      "Size": 452
+    },
+    "res/animator/nav_default_pop_enter_anim.xml": {
+      "Size": 452
+    },
+    "res/animator/nav_default_pop_exit_anim.xml": {
+      "Size": 452
+    },
+    "res/color-night-v8/material_timepicker_button_stroke.xml": {
+      "Size": 376
+    },
+    "res/color-night-v8/material_timepicker_clockface.xml": {
+      "Size": 376
+    },
+    "res/color-night-v8/material_timepicker_modebutton_tint.xml": {
+      "Size": 340
     },
     "res/color-v21/abc_btn_colored_borderless_text_material.xml": {
       "Size": 464
@@ -507,9 +705,6 @@
     },
     "res/color-v23/abc_tint_switch_track.xml": {
       "Size": 664
-    },
-    "res/color-v23/design_tint_password_toggle.xml": {
-      "Size": 376
     },
     "res/color/abc_background_cache_hint_selector_material_dark.xml": {
       "Size": 468
@@ -565,56 +760,203 @@
     "res/color/abc_tint_switch_track.xml": {
       "Size": 768
     },
+    "res/color/checkbox_themeable_attribute_color.xml": {
+      "Size": 464
+    },
+    "res/color/design_box_stroke_color.xml": {
+      "Size": 712
+    },
     "res/color/design_error.xml": {
       "Size": 464
     },
-    "res/color/design_tint_password_toggle.xml": {
-      "Size": 480
+    "res/color/design_icon_tint.xml": {
+      "Size": 376
     },
-    "res/color/mtrl_bottom_nav_colored_item_tint.xml": {
-      "Size": 684
+    "res/color/material_cursor_color.xml": {
+      "Size": 340
     },
-    "res/color/mtrl_bottom_nav_item_tint.xml": {
-      "Size": 684
+    "res/color/material_on_background_disabled.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_background_emphasis_high_type.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_background_emphasis_medium.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_primary_disabled.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_primary_emphasis_high_type.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_primary_emphasis_medium.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_surface_disabled.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_surface_emphasis_high_type.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_surface_emphasis_medium.xml": {
+      "Size": 376
+    },
+    "res/color/material_on_surface_stroke.xml": {
+      "Size": 376
+    },
+    "res/color/material_slider_active_tick_marks_color.xml": {
+      "Size": 520
+    },
+    "res/color/material_slider_active_track_color.xml": {
+      "Size": 500
+    },
+    "res/color/material_slider_halo_color.xml": {
+      "Size": 500
+    },
+    "res/color/material_slider_inactive_tick_marks_color.xml": {
+      "Size": 520
+    },
+    "res/color/material_slider_inactive_track_color.xml": {
+      "Size": 520
+    },
+    "res/color/material_slider_thumb_color.xml": {
+      "Size": 500
+    },
+    "res/color/material_timepicker_button_background.xml": {
+      "Size": 500
+    },
+    "res/color/material_timepicker_button_stroke.xml": {
+      "Size": 376
+    },
+    "res/color/material_timepicker_clock_text_color.xml": {
+      "Size": 464
+    },
+    "res/color/material_timepicker_clockface.xml": {
+      "Size": 376
+    },
+    "res/color/material_timepicker_modebutton_tint.xml": {
+      "Size": 376
     },
     "res/color/mtrl_btn_bg_color_selector.xml": {
-      "Size": 464
+      "Size": 500
     },
     "res/color/mtrl_btn_ripple_color.xml": {
       "Size": 948
     },
     "res/color/mtrl_btn_stroke_color_selector.xml": {
-      "Size": 376
+      "Size": 520
+    },
+    "res/color/mtrl_btn_text_btn_bg_color_selector.xml": {
+      "Size": 520
     },
     "res/color/mtrl_btn_text_btn_ripple_color.xml": {
       "Size": 948
     },
     "res/color/mtrl_btn_text_color_selector.xml": {
-      "Size": 464
+      "Size": 500
+    },
+    "res/color/mtrl_calendar_item_stroke_color.xml": {
+      "Size": 808
+    },
+    "res/color/mtrl_calendar_selected_range.xml": {
+      "Size": 376
+    },
+    "res/color/mtrl_card_view_foreground.xml": {
+      "Size": 788
+    },
+    "res/color/mtrl_card_view_ripple.xml": {
+      "Size": 768
     },
     "res/color/mtrl_chip_background_color.xml": {
-      "Size": 608
+      "Size": 848
     },
     "res/color/mtrl_chip_close_icon_tint.xml": {
       "Size": 1092
     },
-    "res/color/mtrl_chip_ripple_color.xml": {
-      "Size": 948
+    "res/color/mtrl_chip_surface_color.xml": {
+      "Size": 340
     },
     "res/color/mtrl_chip_text_color.xml": {
+      "Size": 520
+    },
+    "res/color/mtrl_choice_chip_background_color.xml": {
+      "Size": 848
+    },
+    "res/color/mtrl_choice_chip_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_choice_chip_text_color.xml": {
+      "Size": 808
+    },
+    "res/color/mtrl_error.xml": {
       "Size": 464
+    },
+    "res/color/mtrl_fab_bg_color_selector.xml": {
+      "Size": 500
+    },
+    "res/color/mtrl_fab_icon_text_color_selector.xml": {
+      "Size": 500
     },
     "res/color/mtrl_fab_ripple_color.xml": {
       "Size": 948
+    },
+    "res/color/mtrl_filled_background_color.xml": {
+      "Size": 808
+    },
+    "res/color/mtrl_filled_icon_tint.xml": {
+      "Size": 644
+    },
+    "res/color/mtrl_filled_stroke_color.xml": {
+      "Size": 788
+    },
+    "res/color/mtrl_indicator_text_color.xml": {
+      "Size": 520
+    },
+    "res/color/mtrl_navigation_bar_colored_item_tint.xml": {
+      "Size": 520
+    },
+    "res/color/mtrl_navigation_bar_colored_ripple_color.xml": {
+      "Size": 948
+    },
+    "res/color/mtrl_navigation_bar_item_tint.xml": {
+      "Size": 520
+    },
+    "res/color/mtrl_navigation_bar_ripple_color.xml": {
+      "Size": 1672
+    },
+    "res/color/mtrl_navigation_item_background_color.xml": {
+      "Size": 644
+    },
+    "res/color/mtrl_navigation_item_icon_tint.xml": {
+      "Size": 624
+    },
+    "res/color/mtrl_navigation_item_text_color.xml": {
+      "Size": 624
+    },
+    "res/color/mtrl_on_primary_text_btn_text_color_selector.xml": {
+      "Size": 500
+    },
+    "res/color/mtrl_on_surface_ripple_color.xml": {
+      "Size": 808
+    },
+    "res/color/mtrl_outlined_icon_tint.xml": {
+      "Size": 644
+    },
+    "res/color/mtrl_outlined_stroke_color.xml": {
+      "Size": 788
+    },
+    "res/color/mtrl_popupmenu_overlay_color.xml": {
+      "Size": 376
     },
     "res/color/mtrl_tabs_colored_ripple_color.xml": {
       "Size": 948
     },
     "res/color/mtrl_tabs_icon_color_selector_colored.xml": {
-      "Size": 464
+      "Size": 500
     },
     "res/color/mtrl_tabs_icon_color_selector.xml": {
-      "Size": 464
+      "Size": 500
     },
     "res/color/mtrl_tabs_legacy_text_color_selector.xml": {
       "Size": 464
@@ -623,6 +965,9 @@
       "Size": 1672
     },
     "res/color/mtrl_text_btn_text_color_selector.xml": {
+      "Size": 888
+    },
+    "res/color/radiobutton_themeable_attribute_color.xml": {
       "Size": 464
     },
     "res/color/switch_thumb_material_dark.xml": {
@@ -631,11 +976,29 @@
     "res/color/switch_thumb_material_light.xml": {
       "Size": 464
     },
-    "res/drawable-anydpi-v21/design_ic_visibility_off.xml": {
-      "Size": 1144
+    "res/color/test_mtrl_calendar_day_selected.xml": {
+      "Size": 340
     },
-    "res/drawable-anydpi-v21/design_ic_visibility.xml": {
-      "Size": 540
+    "res/color/test_mtrl_calendar_day.xml": {
+      "Size": 340
+    },
+    "res/drawable-anydpi-v21/ic_call_answer_low.xml": {
+      "Size": 1320
+    },
+    "res/drawable-anydpi-v21/ic_call_answer_video_low.xml": {
+      "Size": 736
+    },
+    "res/drawable-anydpi-v21/ic_call_answer_video.xml": {
+      "Size": 772
+    },
+    "res/drawable-anydpi-v21/ic_call_answer.xml": {
+      "Size": 1356
+    },
+    "res/drawable-anydpi-v21/ic_call_decline_low.xml": {
+      "Size": 1492
+    },
+    "res/drawable-anydpi-v21/ic_call_decline.xml": {
+      "Size": 1528
     },
     "res/drawable-hdpi-v4/abc_ab_share_pack_mtrl_alpha.9.png": {
       "Size": 272
@@ -663,39 +1026,6 @@
     },
     "res/drawable-hdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
       "Size": 171
-    },
-    "res/drawable-hdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 202
-    },
-    "res/drawable-hdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 404
-    },
-    "res/drawable-hdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 226
-    },
-    "res/drawable-hdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 215
-    },
-    "res/drawable-hdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 389
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 263
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 522
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 668
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 197
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 328
-    },
-    "res/drawable-hdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 431
     },
     "res/drawable-hdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
       "Size": 167
@@ -748,22 +1078,13 @@
     "res/drawable-hdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
       "Size": 190
     },
-    "res/drawable-hdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+    "res/drawable-hdpi-v4/abc_text_select_handle_left_mtrl.png": {
       "Size": 278
     },
-    "res/drawable-hdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
-      "Size": 278
-    },
-    "res/drawable-hdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
-      "Size": 398
-    },
-    "res/drawable-hdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+    "res/drawable-hdpi-v4/abc_text_select_handle_middle_mtrl.png": {
       "Size": 396
     },
-    "res/drawable-hdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 263
-    },
-    "res/drawable-hdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+    "res/drawable-hdpi-v4/abc_text_select_handle_right_mtrl.png": {
       "Size": 262
     },
     "res/drawable-hdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
@@ -778,11 +1099,23 @@
     "res/drawable-hdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
       "Size": 178
     },
-    "res/drawable-hdpi-v4/design_ic_visibility_off.png": {
-      "Size": 507
+    "res/drawable-hdpi-v4/ic_call_answer_low.png": {
+      "Size": 472
     },
-    "res/drawable-hdpi-v4/design_ic_visibility.png": {
-      "Size": 470
+    "res/drawable-hdpi-v4/ic_call_answer_video_low.png": {
+      "Size": 254
+    },
+    "res/drawable-hdpi-v4/ic_call_answer_video.png": {
+      "Size": 254
+    },
+    "res/drawable-hdpi-v4/ic_call_answer.png": {
+      "Size": 472
+    },
+    "res/drawable-hdpi-v4/ic_call_decline_low.png": {
+      "Size": 375
+    },
+    "res/drawable-hdpi-v4/ic_call_decline.png": {
+      "Size": 375
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -802,47 +1135,35 @@
     "res/drawable-hdpi-v4/notify_panel_notification_icon_bg.png": {
       "Size": 107
     },
-    "res/drawable-ldrtl-hdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
+    "res/drawable-ldpi-v4/ic_call_answer_low.png": {
+      "Size": 270
+    },
+    "res/drawable-ldpi-v4/ic_call_answer_video_low.png": {
       "Size": 199
     },
-    "res/drawable-ldrtl-hdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 400
+    "res/drawable-ldpi-v4/ic_call_answer_video.png": {
+      "Size": 199
+    },
+    "res/drawable-ldpi-v4/ic_call_answer.png": {
+      "Size": 270
+    },
+    "res/drawable-ldpi-v4/ic_call_decline_low.png": {
+      "Size": 201
+    },
+    "res/drawable-ldpi-v4/ic_call_decline.png": {
+      "Size": 201
     },
     "res/drawable-ldrtl-hdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 345
     },
-    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 127
-    },
-    "res/drawable-ldrtl-mdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 253
-    },
     "res/drawable-ldrtl-mdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 318
-    },
-    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 178
-    },
-    "res/drawable-ldrtl-xhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 494
     },
     "res/drawable-ldrtl-xhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 417
     },
-    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 260
-    },
-    "res/drawable-ldrtl-xxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 705
-    },
     "res/drawable-ldrtl-xxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 525
-    },
-    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 325
-    },
-    "res/drawable-ldrtl-xxxhdpi-v17/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 905
     },
     "res/drawable-ldrtl-xxxhdpi-v17/abc_spinner_mtrl_am_alpha.9.png": {
       "Size": 437
@@ -873,39 +1194,6 @@
     },
     "res/drawable-mdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
       "Size": 173
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 133
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 251
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 152
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 139
-    },
-    "res/drawable-mdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 270
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 193
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 364
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 467
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 146
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 253
-    },
-    "res/drawable-mdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 310
     },
     "res/drawable-mdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
       "Size": 167
@@ -958,22 +1246,13 @@
     "res/drawable-mdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
       "Size": 186
     },
-    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl.png": {
       "Size": 203
     },
-    "res/drawable-mdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
-      "Size": 203
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
-      "Size": 311
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+    "res/drawable-mdpi-v4/abc_text_select_handle_middle_mtrl.png": {
       "Size": 310
     },
-    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 187
-    },
-    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+    "res/drawable-mdpi-v4/abc_text_select_handle_right_mtrl.png": {
       "Size": 186
     },
     "res/drawable-mdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
@@ -988,11 +1267,23 @@
     "res/drawable-mdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
       "Size": 178
     },
-    "res/drawable-mdpi-v4/design_ic_visibility_off.png": {
-      "Size": 351
+    "res/drawable-mdpi-v4/ic_call_answer_low.png": {
+      "Size": 317
     },
-    "res/drawable-mdpi-v4/design_ic_visibility.png": {
-      "Size": 309
+    "res/drawable-mdpi-v4/ic_call_answer_video_low.png": {
+      "Size": 206
+    },
+    "res/drawable-mdpi-v4/ic_call_answer_video.png": {
+      "Size": 206
+    },
+    "res/drawable-mdpi-v4/ic_call_answer.png": {
+      "Size": 317
+    },
+    "res/drawable-mdpi-v4/ic_call_decline_low.png": {
+      "Size": 264
+    },
+    "res/drawable-mdpi-v4/ic_call_decline.png": {
+      "Size": 264
     },
     "res/drawable-mdpi-v4/icon.png": {
       "Size": 1490
@@ -1012,24 +1303,6 @@
     "res/drawable-mdpi-v4/notify_panel_notification_icon_bg.png": {
       "Size": 98
     },
-    "res/drawable-v21/$avd_hide_password__0.xml": {
-      "Size": 1176
-    },
-    "res/drawable-v21/$avd_hide_password__1.xml": {
-      "Size": 592
-    },
-    "res/drawable-v21/$avd_hide_password__2.xml": {
-      "Size": 556
-    },
-    "res/drawable-v21/$avd_show_password__0.xml": {
-      "Size": 1136
-    },
-    "res/drawable-v21/$avd_show_password__1.xml": {
-      "Size": 592
-    },
-    "res/drawable-v21/$avd_show_password__2.xml": {
-      "Size": 556
-    },
     "res/drawable-v21/abc_action_bar_item_background_material.xml": {
       "Size": 264
     },
@@ -1045,23 +1318,26 @@
     "res/drawable-v21/abc_list_divider_material.xml": {
       "Size": 516
     },
-    "res/drawable-v21/avd_hide_password.xml": {
-      "Size": 660
+    "res/drawable-v21/ic_arrow_down_24dp.xml": {
+      "Size": 644
     },
-    "res/drawable-v21/avd_show_password.xml": {
-      "Size": 660
+    "res/drawable-v21/material_cursor_drawable.xml": {
+      "Size": 588
     },
-    "res/drawable-v21/design_bottom_navigation_item_background.xml": {
+    "res/drawable-v21/mtrl_navigation_bar_item_background.xml": {
       "Size": 264
-    },
-    "res/drawable-v21/design_password_eye.xml": {
-      "Size": 816
     },
     "res/drawable-v21/notification_action_background.xml": {
       "Size": 1180
     },
+    "res/drawable-v21/preference_list_divider_material.xml": {
+      "Size": 516
+    },
     "res/drawable-v23/abc_control_background_material.xml": {
       "Size": 304
+    },
+    "res/drawable-v23/mtrl_popupmenu_background_dark.xml": {
+      "Size": 1228
     },
     "res/drawable-watch-v20/abc_dialog_material_background.xml": {
       "Size": 372
@@ -1092,39 +1368,6 @@
     },
     "res/drawable-xhdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
       "Size": 228
-    },
-    "res/drawable-xhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 178
-    },
-    "res/drawable-xhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 492
-    },
-    "res/drawable-xhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 243
-    },
-    "res/drawable-xhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 183
-    },
-    "res/drawable-xhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 480
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 333
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 652
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 887
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 235
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 421
-    },
-    "res/drawable-xhdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 548
     },
     "res/drawable-xhdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
       "Size": 167
@@ -1177,22 +1420,13 @@
     "res/drawable-xhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
       "Size": 194
     },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
-      "Size": 336
-    },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+    "res/drawable-xhdpi-v4/abc_text_select_handle_left_mtrl.png": {
       "Size": 335
     },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
-      "Size": 583
-    },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+    "res/drawable-xhdpi-v4/abc_text_select_handle_middle_mtrl.png": {
       "Size": 585
     },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 319
-    },
-    "res/drawable-xhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+    "res/drawable-xhdpi-v4/abc_text_select_handle_right_mtrl.png": {
       "Size": 318
     },
     "res/drawable-xhdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
@@ -1207,11 +1441,23 @@
     "res/drawable-xhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
       "Size": 182
     },
-    "res/drawable-xhdpi-v4/design_ic_visibility_off.png": {
-      "Size": 629
+    "res/drawable-xhdpi-v4/ic_call_answer_low.png": {
+      "Size": 623
     },
-    "res/drawable-xhdpi-v4/design_ic_visibility.png": {
-      "Size": 593
+    "res/drawable-xhdpi-v4/ic_call_answer_video_low.png": {
+      "Size": 290
+    },
+    "res/drawable-xhdpi-v4/ic_call_answer_video.png": {
+      "Size": 290
+    },
+    "res/drawable-xhdpi-v4/ic_call_answer.png": {
+      "Size": 623
+    },
+    "res/drawable-xhdpi-v4/ic_call_decline_low.png": {
+      "Size": 452
+    },
+    "res/drawable-xhdpi-v4/ic_call_decline.png": {
+      "Size": 452
     },
     "res/drawable-xhdpi-v4/icon.png": {
       "Size": 3098
@@ -1257,39 +1503,6 @@
     },
     "res/drawable-xxhdpi-v4/abc_ic_commit_search_api_mtrl_alpha.png": {
       "Size": 224
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 263
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 710
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 348
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 262
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 700
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 459
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 983
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 1291
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 309
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 577
-    },
-    "res/drawable-xxhdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 789
     },
     "res/drawable-xxhdpi-v4/abc_list_divider_mtrl_alpha.9.png": {
       "Size": 171
@@ -1342,22 +1555,13 @@
     "res/drawable-xxhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
       "Size": 204
     },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_left_mtrl.png": {
       "Size": 420
     },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
-      "Size": 420
-    },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_middle_mtrl_dark.png": {
-      "Size": 752
-    },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_middle_mtrl_light.png": {
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_middle_mtrl.png": {
       "Size": 753
     },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 422
-    },
-    "res/drawable-xxhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
+    "res/drawable-xxhdpi-v4/abc_text_select_handle_right_mtrl.png": {
       "Size": 422
     },
     "res/drawable-xxhdpi-v4/abc_textfield_activated_mtrl_alpha.9.png": {
@@ -1372,11 +1576,23 @@
     "res/drawable-xxhdpi-v4/abc_textfield_search_default_mtrl_alpha.9.png": {
       "Size": 186
     },
-    "res/drawable-xxhdpi-v4/design_ic_visibility_off.png": {
+    "res/drawable-xxhdpi-v4/ic_call_answer_low.png": {
       "Size": 884
     },
-    "res/drawable-xxhdpi-v4/design_ic_visibility.png": {
-      "Size": 868
+    "res/drawable-xxhdpi-v4/ic_call_answer_video_low.png": {
+      "Size": 384
+    },
+    "res/drawable-xxhdpi-v4/ic_call_answer_video.png": {
+      "Size": 384
+    },
+    "res/drawable-xxhdpi-v4/ic_call_answer.png": {
+      "Size": 884
+    },
+    "res/drawable-xxhdpi-v4/ic_call_decline_low.png": {
+      "Size": 628
+    },
+    "res/drawable-xxhdpi-v4/ic_call_decline.png": {
+      "Size": 628
     },
     "res/drawable-xxhdpi-v4/icon.png": {
       "Size": 4674
@@ -1399,39 +1615,6 @@
     "res/drawable-xxxhdpi-v4/abc_btn_switch_to_on_mtrl_00012.9.png": {
       "Size": 2816
     },
-    "res/drawable-xxxhdpi-v4/abc_ic_menu_copy_mtrl_am_alpha.png": {
-      "Size": 327
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_menu_cut_mtrl_alpha.png": {
-      "Size": 910
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_menu_paste_mtrl_am_alpha.png": {
-      "Size": 461
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_menu_selectall_mtrl_alpha.png": {
-      "Size": 305
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_menu_share_mtrl_alpha.png": {
-      "Size": 899
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_black_16dp.png": {
-      "Size": 599
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_black_36dp.png": {
-      "Size": 1269
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_black_48dp.png": {
-      "Size": 1680
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_16dp.png": {
-      "Size": 376
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_36dp.png": {
-      "Size": 760
-    },
-    "res/drawable-xxxhdpi-v4/abc_ic_star_half_black_48dp.png": {
-      "Size": 991
-    },
     "res/drawable-xxxhdpi-v4/abc_scrubber_control_to_pressed_mtrl_000.png": {
       "Size": 415
     },
@@ -1447,26 +1630,50 @@
     "res/drawable-xxxhdpi-v4/abc_tab_indicator_mtrl_alpha.9.png": {
       "Size": 202
     },
-    "res/drawable-xxxhdpi-v4/abc_text_select_handle_left_mtrl_dark.png": {
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_left_mtrl.png": {
       "Size": 513
     },
-    "res/drawable-xxxhdpi-v4/abc_text_select_handle_left_mtrl_light.png": {
+    "res/drawable-xxxhdpi-v4/abc_text_select_handle_right_mtrl.png": {
       "Size": 513
     },
-    "res/drawable-xxxhdpi-v4/abc_text_select_handle_right_mtrl_dark.png": {
-      "Size": 513
+    "res/drawable-xxxhdpi-v4/ic_call_answer_low.png": {
+      "Size": 1171
     },
-    "res/drawable-xxxhdpi-v4/abc_text_select_handle_right_mtrl_light.png": {
-      "Size": 513
+    "res/drawable-xxxhdpi-v4/ic_call_answer_video_low.png": {
+      "Size": 465
     },
-    "res/drawable-xxxhdpi-v4/design_ic_visibility_off.png": {
-      "Size": 1201
+    "res/drawable-xxxhdpi-v4/ic_call_answer_video.png": {
+      "Size": 465
     },
-    "res/drawable-xxxhdpi-v4/design_ic_visibility.png": {
-      "Size": 1155
+    "res/drawable-xxxhdpi-v4/ic_call_answer.png": {
+      "Size": 1171
+    },
+    "res/drawable-xxxhdpi-v4/ic_call_decline_low.png": {
+      "Size": 823
+    },
+    "res/drawable-xxxhdpi-v4/ic_call_decline.png": {
+      "Size": 823
     },
     "res/drawable-xxxhdpi-v4/icon.png": {
       "Size": 6832
+    },
+    "res/drawable/$avd_hide_password__0.xml": {
+      "Size": 1176
+    },
+    "res/drawable/$avd_hide_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable/$avd_hide_password__2.xml": {
+      "Size": 556
+    },
+    "res/drawable/$avd_show_password__0.xml": {
+      "Size": 1136
+    },
+    "res/drawable/$avd_show_password__1.xml": {
+      "Size": 592
+    },
+    "res/drawable/$avd_show_password__2.xml": {
+      "Size": 556
     },
     "res/drawable/abc_btn_borderless_material.xml": {
       "Size": 588
@@ -1504,8 +1711,23 @@
     "res/drawable/abc_ic_go_search_api_material.xml": {
       "Size": 640
     },
+    "res/drawable/abc_ic_menu_copy_mtrl_am_alpha.xml": {
+      "Size": 756
+    },
+    "res/drawable/abc_ic_menu_cut_mtrl_alpha.xml": {
+      "Size": 1096
+    },
     "res/drawable/abc_ic_menu_overflow_material.xml": {
       "Size": 792
+    },
+    "res/drawable/abc_ic_menu_paste_mtrl_am_alpha.xml": {
+      "Size": 796
+    },
+    "res/drawable/abc_ic_menu_selectall_mtrl_alpha.xml": {
+      "Size": 920
+    },
+    "res/drawable/abc_ic_menu_share_mtrl_alpha.xml": {
+      "Size": 980
     },
     "res/drawable/abc_ic_search_api_material.xml": {
       "Size": 812
@@ -1532,13 +1754,13 @@
       "Size": 1064
     },
     "res/drawable/abc_ratingbar_indicator_material.xml": {
-      "Size": 704
+      "Size": 124
     },
     "res/drawable/abc_ratingbar_material.xml": {
-      "Size": 704
+      "Size": 124
     },
     "res/drawable/abc_ratingbar_small_material.xml": {
-      "Size": 704
+      "Size": 124
     },
     "res/drawable/abc_seekbar_thumb_material.xml": {
       "Size": 1100
@@ -1551,6 +1773,12 @@
     },
     "res/drawable/abc_spinner_textfield_background_material.xml": {
       "Size": 1160
+    },
+    "res/drawable/abc_star_black_48dp.xml": {
+      "Size": 640
+    },
+    "res/drawable/abc_star_half_black_48dp.xml": {
+      "Size": 600
     },
     "res/drawable/abc_switch_thumb_material.xml": {
       "Size": 464
@@ -1566,6 +1794,12 @@
     },
     "res/drawable/abc_vector_test.xml": {
       "Size": 612
+    },
+    "res/drawable/avd_hide_password.xml": {
+      "Size": 660
+    },
+    "res/drawable/avd_show_password.xml": {
+      "Size": 660
     },
     "res/drawable/btn_checkbox_checked_mtrl.xml": {
       "Size": 2688
@@ -1594,8 +1828,26 @@
     "res/drawable/design_fab_background.xml": {
       "Size": 372
     },
+    "res/drawable/design_ic_visibility_off.xml": {
+      "Size": 1144
+    },
+    "res/drawable/design_ic_visibility.xml": {
+      "Size": 540
+    },
+    "res/drawable/design_password_eye.xml": {
+      "Size": 816
+    },
     "res/drawable/design_snackbar_background.xml": {
       "Size": 484
+    },
+    "res/drawable/ic_clock_black_24dp.xml": {
+      "Size": 752
+    },
+    "res/drawable/ic_keyboard_black_24dp.xml": {
+      "Size": 852
+    },
+    "res/drawable/ic_mtrl_checked_circle.xml": {
+      "Size": 672
     },
     "res/drawable/ic_mtrl_chip_checked_black.xml": {
       "Size": 600
@@ -1606,8 +1858,50 @@
     "res/drawable/ic_mtrl_chip_close_circle.xml": {
       "Size": 808
     },
-    "res/drawable/mtrl_snackbar_background.xml": {
-      "Size": 484
+    "res/drawable/material_ic_calendar_black_24dp.xml": {
+      "Size": 696
+    },
+    "res/drawable/material_ic_clear_black_24dp.xml": {
+      "Size": 752
+    },
+    "res/drawable/material_ic_edit_black_24dp.xml": {
+      "Size": 716
+    },
+    "res/drawable/material_ic_keyboard_arrow_left_black_24dp.xml": {
+      "Size": 712
+    },
+    "res/drawable/material_ic_keyboard_arrow_right_black_24dp.xml": {
+      "Size": 700
+    },
+    "res/drawable/material_ic_menu_arrow_down_black_24dp.xml": {
+      "Size": 648
+    },
+    "res/drawable/material_ic_menu_arrow_up_black_24dp.xml": {
+      "Size": 648
+    },
+    "res/drawable/mtrl_dialog_background.xml": {
+      "Size": 716
+    },
+    "res/drawable/mtrl_dropdown_arrow.xml": {
+      "Size": 464
+    },
+    "res/drawable/mtrl_ic_arrow_drop_down.xml": {
+      "Size": 564
+    },
+    "res/drawable/mtrl_ic_arrow_drop_up.xml": {
+      "Size": 564
+    },
+    "res/drawable/mtrl_ic_cancel.xml": {
+      "Size": 724
+    },
+    "res/drawable/mtrl_ic_error.xml": {
+      "Size": 644
+    },
+    "res/drawable/mtrl_popupmenu_background_dark.xml": {
+      "Size": 740
+    },
+    "res/drawable/mtrl_popupmenu_background.xml": {
+      "Size": 740
     },
     "res/drawable/mtrl_tabs_default_indicator.xml": {
       "Size": 628
@@ -1626,6 +1920,12 @@
     },
     "res/drawable/notification_tile_bg.xml": {
       "Size": 304
+    },
+    "res/drawable/test_custom_background.xml": {
+      "Size": 336
+    },
+    "res/drawable/test_level_drawable.xml": {
+      "Size": 448
     },
     "res/drawable/tooltip_frame_dark.xml": {
       "Size": 484
@@ -1666,11 +1966,23 @@
     "res/interpolator/mtrl_linear.xml": {
       "Size": 132
     },
+    "res/layout-land/material_clock_period_toggle_land.xml": {
+      "Size": 1276
+    },
+    "res/layout-land/material_timepicker.xml": {
+      "Size": 1884
+    },
+    "res/layout-land/mtrl_picker_header_dialog.xml": {
+      "Size": 1440
+    },
+    "res/layout-ldrtl-v17/material_textinput_timepicker.xml": {
+      "Size": 1140
+    },
     "res/layout-sw600dp-v13/design_layout_snackbar.xml": {
       "Size": 528
     },
     "res/layout-sw600dp-v13/mtrl_layout_snackbar.xml": {
-      "Size": 528
+      "Size": 492
     },
     "res/layout-v21/notification_action_tombstone.xml": {
       "Size": 1228
@@ -1687,8 +1999,17 @@
     "res/layout-v22/abc_alert_dialog_button_bar_material.xml": {
       "Size": 1584
     },
+    "res/layout-v22/material_timepicker_dialog.xml": {
+      "Size": 3184
+    },
+    "res/layout-v22/mtrl_alert_dialog_actions.xml": {
+      "Size": 1764
+    },
     "res/layout-v26/abc_screen_toolbar.xml": {
       "Size": 1560
+    },
+    "res/layout-v26/mtrl_calendar_month.xml": {
+      "Size": 744
     },
     "res/layout-watch-v20/abc_alert_dialog_button_bar_material.xml": {
       "Size": 1208
@@ -1724,7 +2045,7 @@
       "Size": 1536
     },
     "res/layout/abc_alert_dialog_material.xml": {
-      "Size": 2476
+      "Size": 2648
     },
     "res/layout/abc_alert_dialog_title_material.xml": {
       "Size": 1560
@@ -1742,7 +2063,7 @@
       "Size": 528
     },
     "res/layout/abc_list_menu_item_icon.xml": {
-      "Size": 684
+      "Size": 780
     },
     "res/layout/abc_list_menu_item_layout.xml": {
       "Size": 1396
@@ -1787,16 +2108,16 @@
       "Size": 1660
     },
     "res/layout/browser_actions_context_menu_row.xml": {
-      "Size": 1164
+      "Size": 1212
     },
     "res/layout/custom_dialog.xml": {
       "Size": 612
     },
     "res/layout/design_bottom_navigation_item.xml": {
-      "Size": 1492
+      "Size": 1528
     },
     "res/layout/design_bottom_sheet_dialog.xml": {
-      "Size": 1184
+      "Size": 1224
     },
     "res/layout/design_layout_snackbar_include.xml": {
       "Size": 1444
@@ -1823,7 +2144,7 @@
       "Size": 564
     },
     "res/layout/design_navigation_item.xml": {
-      "Size": 536
+      "Size": 576
     },
     "res/layout/design_navigation_menu_item.xml": {
       "Size": 856
@@ -1831,8 +2152,14 @@
     "res/layout/design_navigation_menu.xml": {
       "Size": 528
     },
-    "res/layout/design_text_input_password_icon.xml": {
-      "Size": 564
+    "res/layout/design_text_input_end_icon.xml": {
+      "Size": 616
+    },
+    "res/layout/design_text_input_start_icon.xml": {
+      "Size": 612
+    },
+    "res/layout/expand_button.xml": {
+      "Size": 1720
     },
     "res/layout/fallbacktabbardonotuse.xml": {
       "Size": 692
@@ -1841,16 +2168,139 @@
       "Size": 496
     },
     "res/layout/flyoutcontent.xml": {
-      "Size": 944
+      "Size": 776
+    },
+    "res/layout/image_frame.xml": {
+      "Size": 1088
     },
     "res/layout/main.xml": {
       "Size": 544
     },
+    "res/layout/material_chip_input_combo.xml": {
+      "Size": 372
+    },
+    "res/layout/material_clock_display_divider.xml": {
+      "Size": 752
+    },
+    "res/layout/material_clock_display.xml": {
+      "Size": 1172
+    },
+    "res/layout/material_clock_period_toggle.xml": {
+      "Size": 1504
+    },
+    "res/layout/material_clockface_textview.xml": {
+      "Size": 476
+    },
+    "res/layout/material_clockface_view.xml": {
+      "Size": 1012
+    },
+    "res/layout/material_radial_view_group.xml": {
+      "Size": 768
+    },
+    "res/layout/material_textinput_timepicker.xml": {
+      "Size": 1092
+    },
+    "res/layout/material_time_chip.xml": {
+      "Size": 380
+    },
+    "res/layout/material_time_input.xml": {
+      "Size": 1208
+    },
+    "res/layout/material_timepicker_dialog.xml": {
+      "Size": 3132
+    },
+    "res/layout/material_timepicker_textinput_display.xml": {
+      "Size": 684
+    },
+    "res/layout/material_timepicker.xml": {
+      "Size": 1136
+    },
+    "res/layout/mtrl_alert_dialog_actions.xml": {
+      "Size": 1620
+    },
+    "res/layout/mtrl_alert_dialog_title.xml": {
+      "Size": 956
+    },
+    "res/layout/mtrl_alert_dialog.xml": {
+      "Size": 2476
+    },
+    "res/layout/mtrl_alert_select_dialog_item.xml": {
+      "Size": 588
+    },
+    "res/layout/mtrl_alert_select_dialog_multichoice.xml": {
+      "Size": 940
+    },
+    "res/layout/mtrl_alert_select_dialog_singlechoice.xml": {
+      "Size": 940
+    },
+    "res/layout/mtrl_calendar_day_of_week.xml": {
+      "Size": 400
+    },
+    "res/layout/mtrl_calendar_day.xml": {
+      "Size": 352
+    },
+    "res/layout/mtrl_calendar_days_of_week.xml": {
+      "Size": 436
+    },
+    "res/layout/mtrl_calendar_horizontal.xml": {
+      "Size": 1176
+    },
+    "res/layout/mtrl_calendar_month_labeled.xml": {
+      "Size": 728
+    },
+    "res/layout/mtrl_calendar_month_navigation.xml": {
+      "Size": 1748
+    },
+    "res/layout/mtrl_calendar_month.xml": {
+      "Size": 688
+    },
+    "res/layout/mtrl_calendar_months.xml": {
+      "Size": 428
+    },
+    "res/layout/mtrl_calendar_vertical.xml": {
+      "Size": 740
+    },
+    "res/layout/mtrl_calendar_year.xml": {
+      "Size": 352
+    },
     "res/layout/mtrl_layout_snackbar_include.xml": {
-      "Size": 1404
+      "Size": 952
     },
     "res/layout/mtrl_layout_snackbar.xml": {
-      "Size": 528
+      "Size": 492
+    },
+    "res/layout/mtrl_navigation_rail_item.xml": {
+      "Size": 1464
+    },
+    "res/layout/mtrl_picker_actions.xml": {
+      "Size": 984
+    },
+    "res/layout/mtrl_picker_dialog.xml": {
+      "Size": 1140
+    },
+    "res/layout/mtrl_picker_fullscreen.xml": {
+      "Size": 848
+    },
+    "res/layout/mtrl_picker_header_dialog.xml": {
+      "Size": 1440
+    },
+    "res/layout/mtrl_picker_header_fullscreen.xml": {
+      "Size": 2728
+    },
+    "res/layout/mtrl_picker_header_selection_text.xml": {
+      "Size": 712
+    },
+    "res/layout/mtrl_picker_header_title_text.xml": {
+      "Size": 624
+    },
+    "res/layout/mtrl_picker_header_toggle.xml": {
+      "Size": 576
+    },
+    "res/layout/mtrl_picker_text_input_date_range.xml": {
+      "Size": 1460
+    },
+    "res/layout/mtrl_picker_text_input_date.xml": {
+      "Size": 984
     },
     "res/layout/notification_media_action.xml": {
       "Size": 564
@@ -1885,6 +2335,54 @@
     "res/layout/notification_template_part_time.xml": {
       "Size": 440
     },
+    "res/layout/preference_category_material.xml": {
+      "Size": 1768
+    },
+    "res/layout/preference_category.xml": {
+      "Size": 384
+    },
+    "res/layout/preference_dialog_edittext.xml": {
+      "Size": 1272
+    },
+    "res/layout/preference_dropdown_material.xml": {
+      "Size": 712
+    },
+    "res/layout/preference_dropdown.xml": {
+      "Size": 2544
+    },
+    "res/layout/preference_information_material.xml": {
+      "Size": 2056
+    },
+    "res/layout/preference_information.xml": {
+      "Size": 1732
+    },
+    "res/layout/preference_list_fragment.xml": {
+      "Size": 812
+    },
+    "res/layout/preference_material.xml": {
+      "Size": 2052
+    },
+    "res/layout/preference_recyclerview.xml": {
+      "Size": 544
+    },
+    "res/layout/preference_widget_checkbox.xml": {
+      "Size": 472
+    },
+    "res/layout/preference_widget_seekbar_material.xml": {
+      "Size": 3056
+    },
+    "res/layout/preference_widget_seekbar.xml": {
+      "Size": 2896
+    },
+    "res/layout/preference_widget_switch_compat.xml": {
+      "Size": 504
+    },
+    "res/layout/preference_widget_switch.xml": {
+      "Size": 472
+    },
+    "res/layout/preference.xml": {
+      "Size": 2352
+    },
     "res/layout/rootlayout.xml": {
       "Size": 1352
     },
@@ -1906,15 +2404,78 @@
     "res/layout/tabbar.xml": {
       "Size": 692
     },
+    "res/layout/test_action_chip.xml": {
+      "Size": 488
+    },
+    "res/layout/test_chip_zero_corner_radius.xml": {
+      "Size": 640
+    },
+    "res/layout/test_design_checkbox.xml": {
+      "Size": 836
+    },
+    "res/layout/test_design_radiobutton.xml": {
+      "Size": 840
+    },
+    "res/layout/test_navigation_bar_item_layout.xml": {
+      "Size": 1528
+    },
+    "res/layout/test_reflow_chipgroup.xml": {
+      "Size": 1060
+    },
+    "res/layout/test_toolbar_custom_background.xml": {
+      "Size": 400
+    },
+    "res/layout/test_toolbar_elevation.xml": {
+      "Size": 400
+    },
+    "res/layout/test_toolbar_surface.xml": {
+      "Size": 392
+    },
+    "res/layout/test_toolbar.xml": {
+      "Size": 360
+    },
+    "res/layout/text_view_with_line_height_from_appearance.xml": {
+      "Size": 408
+    },
+    "res/layout/text_view_with_line_height_from_layout.xml": {
+      "Size": 552
+    },
+    "res/layout/text_view_with_line_height_from_style.xml": {
+      "Size": 396
+    },
+    "res/layout/text_view_with_theme_line_height.xml": {
+      "Size": 408
+    },
+    "res/layout/text_view_without_line_height.xml": {
+      "Size": 364
+    },
     "res/layout/toolbar.xml": {
       "Size": 496
+    },
+    "res/xml/image_share_filepaths.xml": {
+      "Size": 308
     },
     "res/xml/splits0.xml": {
       "Size": 8404
     },
+    "res/xml/standalone_badge_gravity_bottom_end.xml": {
+      "Size": 312
+    },
+    "res/xml/standalone_badge_gravity_bottom_start.xml": {
+      "Size": 312
+    },
+    "res/xml/standalone_badge_gravity_top_start.xml": {
+      "Size": 312
+    },
+    "res/xml/standalone_badge_offset.xml": {
+      "Size": 360
+    },
+    "res/xml/standalone_badge.xml": {
+      "Size": 268
+    },
     "resources.arsc": {
-      "Size": 325240
+      "Size": 812848
     }
   },
-  "PackageSize": 7949326
+  "PackageSize": 10864931
 }

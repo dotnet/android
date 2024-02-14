@@ -2,5 +2,6 @@
   "author": "Microsoft",
   "name": "Modèle d’activité Android",
   "description": "Une classe d’activité Android",
-  "symbols/namespace/description": "espace de noms pour le code généré"
+  "symbols/namespace/description": "espace de noms pour le code généré",
+  "postActions/openInEditor/description": "Ouvre Activity1.cs dans l’éditeur"
 }

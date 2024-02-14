@@ -20,10 +20,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
     <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
-    <ClassParseToolExe          Condition=" '$(UsingAndroidNETSdk)' == 'true' ">class-parse.dll</ClassParseToolExe>
-    <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.exe</ClassParseToolExe>
-    <BindingsGeneratorToolExe   Condition=" '$(UsingAndroidNETSdk)' == 'true' ">generator.dll</BindingsGeneratorToolExe>
-    <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.exe</BindingsGeneratorToolExe>
+    <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.dll</ClassParseToolExe>
+    <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.dll</BindingsGeneratorToolExe>
     <JavadocToMdocToolExe       Condition=" '$(JavadocToMdocToolExe)' == '' ">javadoc-to-mdoc.exe</JavadocToMdocToolExe>
     <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>
@@ -32,6 +30,19 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <DocumentationFile Condition=" '$(DocumentationFile)' == '' and '$(_ComputeFilesToPublishForRuntimeIdentifiers)' != 'true' ">$(OutputPath)$(AssemblyName).xml</DocumentationFile>
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
+
+  <Target Name="_CheckNonIdealBindingConfigurations">
+    <AndroidWarning Code="XA1037"
+        ResourceName="XA1037"
+        FormatArguments="_AndroidUseJavaLegacyResolver;10"
+        Condition=" '$(_AndroidUseJavaLegacyResolver)' == 'true' "
+    />
+    <AndroidWarning Code="XA1037"
+        ResourceName="XA1037"
+        FormatArguments="_AndroidEmitLegacyInterfaceInvokers;10"
+        Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == 'true' "
+    />
+  </Target>
 
   <Target Name="_SetAndroidGenerateManagedBindings"
       Condition=" '@(InputJar->Count())' != '0' Or '@(EmbeddedJar->Count())' != '0' Or '@(LibraryProjectZip->Count())' != '0' Or '@(_JavaBindingSource->Count())' != '0' ">

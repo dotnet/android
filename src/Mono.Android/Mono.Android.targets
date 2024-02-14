@@ -18,7 +18,7 @@
   </ItemGroup>
   
   <PropertyGroup>
-    <_ApiXmlLocation>..\..\bin\Build$(Configuration)\api\</_ApiXmlLocation>
+    <_ApiXmlLocation>Profiles\</_ApiXmlLocation>
   </PropertyGroup>
   
   <!-- Creates 'AssemblyInfo.cs' with appropriate version information -->
@@ -243,8 +243,8 @@
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
-    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/mdoc.exe"</_Mdoc>
-    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/mdoc.exe"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net471/mdoc.exe"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net471/mdoc.exe"</_Mdoc>
   </PropertyGroup>
 
   <!-- Generate documentation using MDoc -->
@@ -277,32 +277,31 @@
   <Target Name="_RunMdoc">
     <PropertyGroup>
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
-      <_AssemblyBasename>$(_MonoAndroidNETDefaultOutDir)Mono.Android</_AssemblyBasename>
-      <_ImportXml>-i "$(_AssemblyBasename).xml"</_ImportXml>
-      <_Assembly>$(_AssemblyBasename).dll</_Assembly>
-      <_JIAssembly>$(_MonoAndroidNETDefaultOutDir)Java.Interop.dll</_JIAssembly>
       <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
       <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
-      <_Lang>--lang fsharp</_Lang>
-      <!-- $(FrameworksXmlContent) describes the docs versions found at android-api-docs/tree/master/docs/Mono.Android/en/FrameworksIndex/
-            and https://learn.microsoft.com/en-us/dotnet/api/android?view=xamarin-android-sdk-13 -->
-      <FrameworksXmlContent>
-<![CDATA[
-<Frameworks>
-  <Framework Name="$(DocsFxMoniker)" Source="$(DocsFxMoniker)" />
-</Frameworks>
-]]>
-      </FrameworksXmlContent>
+      <_ExtraMdocArgs>-lang docid -lang fsharp --debug --delete</_ExtraMdocArgs>
     </PropertyGroup>
-    <!-- Create a temporary directory which contains frameworks.xml and our framework assembly.
-         Copy Mono.Android.dll and Java.Interop.dll to the %(Source) path described in frameworks.xml (e.g. net-android-34.0) -->
+    <ItemGroup>
+      <_FxAssembly Include="$(_MonoAndroidNETDefaultOutDir)*.dll" />
+      <_FxAssemblyXml Include="@(_FxAssembly->'%(RelativeDir)%(Filename).xml')" Condition=" Exists('%(RelativeDir)%(Filename).xml') " />
+    </ItemGroup>
+    <!-- Create a docs framework directory which contains:
+          src/Mono.Android/obj/docs-gen-temp
+          ├── frameworks.xml
+          └── net-android-34.0
+              ├── Java.Interop.dll
+              ├── Java.Interop.xml
+              ├── Mono.Android.Runtime.dll
+              ├── Mono.Android.dll
+              └── Mono.Android.xml
+    -->
     <RemoveDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)" />
     <MakeDir Directories="$(_RootFxDir)$(DocsFxMoniker)" />
     <Copy
-        SourceFiles="$(_Assembly);$(_JIAssembly)"
+        SourceFiles="@(_FxAssembly);@(_FxAssemblyXml)"
         DestinationFolder="$(_RootFxDir)$(DocsFxMoniker)"
     />
     <WriteLinesToFile
@@ -310,7 +309,11 @@
         Lines="$(FrameworksXmlContent)"
     />
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug update --use-docid --delete $(_Libdir) $(_ImportXml) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_Lang)"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) fx-bootstrap -fx $(_RootFxDir) -importContent true"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Exec
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>

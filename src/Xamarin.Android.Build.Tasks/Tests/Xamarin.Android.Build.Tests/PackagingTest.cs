@@ -261,25 +261,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
 		{
 			var packages = new List<Package> () {
-				KnownPackages.Android_Arch_Core_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
-				KnownPackages.AndroidSupportV4_27_0_2_1,
-				KnownPackages.SupportCompat_27_0_2_1,
-				KnownPackages.SupportCoreUI_27_0_2_1,
-				KnownPackages.SupportCoreUtils_27_0_2_1,
-				KnownPackages.SupportDesign_27_0_2_1,
-				KnownPackages.SupportFragment_27_0_2_1,
-				KnownPackages.SupportMediaCompat_27_0_2_1,
-				KnownPackages.SupportV7AppCompat_27_0_2_1,
-				KnownPackages.SupportV7CardView_27_0_2_1,
-				KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				KnownPackages.SupportV7RecyclerView_27_0_2_1,
-				KnownPackages.VectorDrawable_27_0_2_1,
-				new Package () { Id = "Xamarin.Android.Support.Annotations", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Transition", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.v7.Palette", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Animated.Vector.Drawable", Version = "27.0.2.1" },
+				KnownPackages.Xamarin_Jetbrains_Annotations,
 			};
 
 			string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
@@ -586,6 +568,51 @@ public class Test
 		}
 
 		[Test]
+		public void CheckExcludedFilesCanBeModified ()
+		{
+
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				string expected = $"Ignoring jar entry 'kotlin/Error.kotlin_metadata'";
+				Assert.IsTrue (b.LastBuildOutput.ContainsText (expected), $"Error.kotlin_metadata should have been ignored.");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsFalse (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been ignored.");
+				}
+				proj.OtherBuildItems.Add (new BuildItem ("AndroidPackagingOptionsExclude") {
+					Remove = () => "$([MSBuild]::Escape('*.kotlin*'))",
+				});
+				Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("kotlin/Error.kotlin_metadata"), "Error.kotlin_metadata should have been included.");
+				}
+			}
+		}
+
+		[Test]
+		public void CheckIncludedFilesArePresent ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_Reflect);
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var apk = Path.Combine (Root, b.ProjectDirectory,
+					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+				using (var zip = ZipHelper.OpenZip (apk)) {
+					Assert.IsTrue (zip.ContainsEntry ("kotlin/reflect/reflect.kotlin_builtins"), "reflect.kotlin_builtins should have been included.");
+				}
+			}
+		}
+
+		[Test]
 		[TestCase (1, -1)]
 		[TestCase (5, -1)]
 		[TestCase (50, -1)]
@@ -599,20 +626,8 @@ public class Test
 		[TestCase (-1, 200)]
 		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
 		{
-			var proj = new XamarinAndroidApplicationProject  {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = false,
-				PackageReferences = {
-					KnownPackages.SupportDesign_27_0_2_1,
-					KnownPackages.SupportV7CardView_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-					KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				},
 			};
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
 			if (filesLimit > 0)

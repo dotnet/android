@@ -17,9 +17,9 @@
   </ItemGroup>
   
   <ItemGroup>
-    <AllRuntimeSource Include="java/mono/**/*.java" />
-    <AllRuntimeSource Include="..\..\src-ThirdParty\bazel\java\mono\**\*.java" />
-    <AllRuntimeSource Include="$(JavaInteropSourceDirectory)\src\Java.Interop\java\com\xamarin\**\*.java" />
+    <AllRuntimeSource Include="java/**/*.java" />
+    <AllRuntimeSource Include="..\..\src-ThirdParty\bazel\java\**\*.java" />
+    <AllRuntimeSource Include="$(JavaInteropSourceDirectory)\src\Java.Interop\java\**\*.java" />
   </ItemGroup>
   
   <Import Project="java-runtime.targets" />

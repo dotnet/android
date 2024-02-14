@@ -53,7 +53,7 @@ namespace Xamarin.Android.Prepare
 			if (DebianRelease.Major >= 10 || (IsTesting && String.Compare ("buster", CodeName, StringComparison.OrdinalIgnoreCase) == 0)) {
 				if (Context.IsRunningOnHostedAzureAgent)
 					Dependencies.AddRange (packages10AndNewerBuildBots);
-				if (DebianRelease.Major >= 13) {
+				if (DebianRelease.Major >= 13 || (String.Compare ("SparkyLinux", Name, StringComparison.OrdinalIgnoreCase) == 0 && DebianRelease.Major >= 7)) {
 					Dependencies.AddRange (packagesTrixieAndLater);
 				} else {
 					Dependencies.AddRange (packagesPreTrixie);

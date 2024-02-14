@@ -33,7 +33,7 @@ resources:
   - repository: maui
     type: github
     name: dotnet/maui
-    ref: refs/heads/net8.0
+    ref: refs/heads/net9.0
     endpoint: xamarin
 
 parameters:
@@ -51,7 +51,7 @@ variables:
     value: dotnet8-internal-dnceng-internal-feed
 - ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - name: DotNetFeedCredential
-    value: dnceng-dotnet8
+    value: dnceng-dotnet9
 - ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Real
@@ -342,17 +342,17 @@ stages:
         installLegacyDotNet: false
         restoreNUnitConsole: false
         updateMono: false
-        androidSdkPlatforms: 23,24,25,26,27,28,29,30,31,32,$(DefaultTestSdkPlatforms)
+        androidSdkPlatforms: $(DefaultTestSdkPlatforms)
 
-    - task: NuGetAuthenticate@0
+    - task: NuGetAuthenticate@1
       displayName: authenticate with azure artifacts
       inputs:
         forceReinstallCredentialProvider: true
 
     - script: |
-        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_11_X64%
-        echo ##vso[task.setvariable variable=JAVA_HOME]%JAVA_HOME_11_X64%
-      displayName: set JI_JAVA_HOME, JAVA_HOME
+        echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
+        echo ##vso[task.setvariable variable=JAVA_HOME]%JAVA_HOME_17_X64%
+      displayName: set JI_JAVA_HOME, JAVA_HOME to $(JAVA_HOME_17_X64)
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -405,6 +405,14 @@ stages:
         xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
         displayName: Create MAUI template
         continueOnError: false
+
+    - powershell: |
+        $project = '$(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj'
+        [xml] $xml = Get-Content $project
+        $node = $xml.SelectSingleNode('/Project/PropertyGroup/TargetFrameworks')
+        $node.InnerText = '$(DotNetTargetFramework)-android'
+        $xml.Save($project)
+      displayName: set TargetFrameworks to Android-only
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:

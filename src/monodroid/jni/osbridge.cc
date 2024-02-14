@@ -1,9 +1,7 @@
 #include <cstring>
 
 #include <sys/types.h>
-#if defined (__linux__) || defined (__linux)
 #include <sys/syscall.h>
-#endif
 
 #if defined (HAVE_GETTID_IN_UNISTD_H)
 #if !defined __USE_GNU
@@ -16,15 +14,6 @@
 #include <mono/metadata/class.h>
 #include <mono/metadata/object.h>
 #include <mono/metadata/threads.h>
-
-#if defined (WINDOWS)
-#include <windef.h>
-#include <winbase.h>
-#include <shlobj.h>
-#include <objbase.h>
-#include <knownfolders.h>
-#include <shlwapi.h>
-#endif
 
 #include "globals.hh"
 #include "osbridge.hh"
@@ -85,26 +74,7 @@ gc_cross_references_cb (int num_sccs, MonoGCBridgeSCC **sccs, int num_xrefs, Mon
 	osBridge.gc_cross_references (num_sccs, sccs, num_xrefs, xrefs);
 }
 
-#ifdef WINDOWS
-using tid_type = int;
-#else
 using tid_type = pid_t;
-#endif
-// glibc does *not* have a wrapper for the gettid syscall, Android NDK has it
-#if !defined (ANDROID) && !defined (HAVE_GETTID_IN_UNISTD_H)
-static tid_type gettid ()
-{
-#ifdef WINDOWS
-	return GetCurrentThreadId ();
-#elif defined (__linux__) || defined (__linux)
-	return static_cast<tid_type>(syscall (SYS_gettid));
-#else
-	uint64_t tid;
-	pthread_threadid_np (nullptr, &tid);
-	return static_cast<tid_type>(tid);
-#endif
-}
-#endif // ANDROID
 
 // Do this instead of using memset so that individual pointers are set atomically
 void
@@ -657,15 +627,13 @@ OSBridge::add_reference_jobject (JNIEnv *env, jobject handle, jobject reffed_han
 
 	java_class = env->GetObjectClass (handle);
 	add_method_id = env->GetMethodID (java_class, "monodroidAddReference", "(Ljava/lang/Object;)V");
+	env->DeleteLocalRef (java_class);
 	if (add_method_id) {
 		env->CallVoidMethod (handle, add_method_id, reffed_handle);
-		env->DeleteLocalRef (java_class);
-
 		return 1;
 	}
 
 	env->ExceptionClear ();
-	env->DeleteLocalRef (java_class);
 	return 0;
 }
 
@@ -785,8 +753,14 @@ OSBridge::AddReferenceTarget
 OSBridge::target_from_scc (MonoGCBridgeSCC **sccs, int idx, JNIEnv *env, jobject temporary_peers)
 {
 	MonoGCBridgeSCC *scc = sccs [idx];
-	if (scc->num_objs > 0)
+	if (scc->num_objs > 0) {
+		// Disable array bounds checking here.  The compiler cannot determine that the above `if` expression protects
+		// the code from out of bounds access to array elements.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warray-bounds"
 		return target_from_mono_object (scc->objs [0]);
+#pragma clang diagnostic pop
+	}
 
 	jobject jobj = env->CallObjectMethod (temporary_peers, ArrayList_get, scc_get_stashed_index (scc));
 	return target_from_jobject (jobj);
@@ -828,7 +802,12 @@ OSBridge::gc_prepare_for_java_collection (JNIEnv *env, int num_sccs, MonoGCBridg
 		 * Solution: Make all objects within the SCC directly or indirectly reference each other
 		 */
 		if (scc->num_objs > 1) {
+			// Disable array bounds checking here.  The compiler cannot determine that the above `if` expression protects
+			// the code from out of bounds access to array elements.
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Warray-bounds"
 			MonoObject *first = scc->objs [0];
+#pragma clang diagnostic pop
 			MonoObject *prev = first;
 
 			/* start at the second item, ref j from j-1 */
@@ -910,7 +889,6 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 	MonoClass *klass;
 #endif
 	MonoObject *obj;
-	jclass java_class;
 	jobject jref;
 	jmethodID clear_method_id;
 	int i, j, total, alive, refs_added;
@@ -942,8 +920,9 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 				sccs [i]->is_alive = 1;
 				mono_field_get_value (obj, bridge_info->refs_added, &refs_added);
 				if (refs_added) {
-					java_class = env->GetObjectClass (jref);
+					jclass java_class = env->GetObjectClass (jref);
 					clear_method_id = env->GetMethodID (java_class, "monodroidClearReferences", "()V");
+					env->DeleteLocalRef (java_class);
 					if (clear_method_id) {
 						env->CallVoidMethod (jref, clear_method_id);
 					} else {
@@ -957,7 +936,6 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 						}
 #endif
 					}
-					env->DeleteLocalRef (java_class);
 				}
 			} else {
 				abort_unless (!sccs [i]->is_alive, "Bridge SCC at index %d must NOT be alive", i);
@@ -1145,13 +1123,9 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 */
 	MonoClass *runtime = utils.monodroid_get_class_from_name (
 		domain,
-#if defined (NET)
-		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME,
-#else
-		SharedConstants::MONO_ANDROID_ASSEMBLY_NAME,
-#endif
-		SharedConstants::ANDROID_RUNTIME_NS_NAME,
-		SharedConstants::ANDROID_RUNTIME_INTERNAL_CLASS_NAME
+		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME.data (),
+		SharedConstants::ANDROID_RUNTIME_NS_NAME.data (),
+		SharedConstants::ANDROID_RUNTIME_INTERNAL_CLASS_NAME.data ()
 	);
 
 	node->domain = domain;
@@ -1161,45 +1135,3 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 
 	domains_list = node;
 }
-
-#if !defined (NET) && !defined (ANDROID)
-void
-OSBridge::remove_monodroid_domain (MonoDomain *domain)
-{
-	MonodroidBridgeProcessingInfo *node = domains_list;
-	MonodroidBridgeProcessingInfo *prev = nullptr;
-
-	while (node != nullptr) {
-		if (node->domain != domain) {
-			prev = node;
-			node = node->next;
-			continue;
-		}
-
-		if (prev != nullptr)
-			prev->next = node->next;
-		else
-			domains_list = node->next;
-
-		free (node);
-
-		break;
-	}
-}
-
-void
-OSBridge::on_destroy_contexts ()
-{
-	/* If domains_list is now empty, we are about to unload Monodroid.dll.
-	 * Clear the global bridge info structure since it's pointing into soon-invalid memory.
-	 * FIXME: It is possible for a thread to get into `gc_bridge_class_kind` after this clear
-	 *        occurs, but before the stop-the-world during mono_domain_unload. If this happens,
-	 *        it can falsely mark a class as transparent. This is considered acceptable because
-	 *        this case is *very* rare and the worst case scenario is a resource leak.
-	 *        The real solution would be to add a new callback, called while the world is stopped
-	 *        during `mono_gc_clear_domain`, and clear the bridge info during that.
-	 */
-	if (!domains_list)
-		osBridge.clear_mono_java_gc_bridge_info ();
-}
-#endif // ndef NET && ndef ANDROID

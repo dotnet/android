@@ -326,6 +326,16 @@ endif()
 # Compiler and linker flags
 set(LINK_LIBS "")
 
+#
+# -Wformat-nonliteral is disabled as it's not very practical, because we use proxy functions to
+# pass formats to the final Android logger functions. The Android functions have attributes that
+# cause warnings similar to:
+#
+#  warning G4FD2E6FD: format string is not a string literal [-Wformat-nonliteral]
+#
+# The warning is, in general, a good practice because the compiler can verify the printf format
+# at compile time, but in our case it's not very useful.
+#
 set(LOCAL_COMMON_COMPILER_ARGS
   -Wall
   -Wconversion
@@ -335,15 +345,36 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Werror=format-security
   -Werror=return-type
   -Wextra
-  -Wformat
   -Wformat-security
+  -Wformat=2
+  -Wno-format-nonliteral
+  -Wimplicit-fallthrough
   -Wmisleading-indentation
   -Wnull-dereference
   -Wpointer-arith
   -Wshadow
   -Wsign-compare
+  -Wtrampolines
   -Wuninitialized
+  -fstrict-flex-arrays=3
   )
+
+# Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
+# assisted by the hardware.
+if((CMAKE_ANDROID_ARCH_ABI STREQUAL "x86") OR (CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64"))
+  # -fcf-protection=full: Enable control flow protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on many x86 architectures
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fcf-protection=full
+  )
+endif()
+
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # -mbranch-protection=standard: Enable branch protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on AArch64
+  # In clang -mbranch-protection=standard is equivalent to -mbranch-protection=bti+pac-ret and invokes the AArch64 Branch Target Identification (BTI) and Pointer Authentication using key A (pac-ret)
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -mbranch-protection=standard
+  )
+endif()
 
 if(COMPILER_DIAG_COLOR)
   list(APPEND LOCAL_COMMON_COMPILER_ARGS
@@ -353,6 +384,10 @@ endif()
 
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
+  list(APPEND LOCAL_COMMON_LINKER_ARGS
+    -fstack-clash-protection
+  )
+
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
     list(APPEND LOCAL_COMMON_COMPILER_ARGS
       -fno-omit-frame-pointer

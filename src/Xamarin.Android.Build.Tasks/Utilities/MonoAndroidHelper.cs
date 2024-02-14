@@ -482,14 +482,14 @@ namespace Xamarin.Android.Tasks
 			yield return executable;
 		}
 
-		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false)
+		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
 				if (!designTimeBuild) {
 					var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
-					var sdkManagerMenuPath = OS.IsWindows ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_macOS;
-					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, Path.Combine (expectedPath, "android.jar"), sdkManagerMenuPath);
+					var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
+					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, Path.Combine (expectedPath, "android.jar"), string.Format (sdkManagerMenuPath, targetFramework, androidSdkDirectory));
 				}
 				return null;
 			}

@@ -167,7 +167,6 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 			};
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\android-crop-1.0.1.aar") {
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
@@ -187,13 +186,12 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		[TestCaseSource (nameof (ClassParseOptions))]
 		[NonParallelizable]
-		public void BuildLibraryZipBindigLibraryWithAarOfJar (string classParser)
+		public void BuildLibraryZipBindingLibraryWithAarOfJar (string classParser)
 		{
 			var proj = new XamarinAndroidBindingProject () {
 				IsRelease = true,
 			};
 			proj.AndroidClassParser = classParser;
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			proj.Jars.Add (new AndroidItem.LibraryProjectZip ("Jars\\aFileChooserBinaries.zip") {
 				WebContentFileNameFromAzure = "aFileChooserBinaries.zip"
 			});
@@ -202,41 +200,6 @@ namespace Xamarin.Android.Build.Tests
 					<attr path=""/api/package[@name='com.ipaulpro.afilechooser']/class[@name='FileListAdapter']/method[@name='getItem' and count(parameter)=1 and parameter[1][@type='int']]"" name=""managedReturn"">Java.Lang.Object</attr>
 					<attr path=""/api/package[@name='com.ipaulpro.afilechooser']/class[@name='FileLoader']/method[@name='loadInBackground' and count(parameter)=0]"" name=""managedName"">LoadInBackgroundImpl</attr>
 				</metadata>";
-			proj.Sources.Add (new BuildItem (BuildActions.Compile, "Fixup.cs") {
-				TextContent = () => @"using System;
-using System.Collections.Generic;
-using Android.App;
-using Android.Runtime;
-
-namespace Com.Ipaulpro.Afilechooser {
-	[Activity (Name = ""com.ipaulpro.afilechooser.FileChooserActivity"",
-	           Icon = ""@drawable/ic_chooser"",
-	           Exported = true)]
-	[IntentFilter (new string [] {""android.intent.action.GET_CONTENT""},
-	               Categories = new string [] {
-				""android.intent.category.DEFAULT"",
-				//""android.intent.category.OPENABLE""
-				},
-	               DataMimeType = ""*/*"")]
-	public partial class FileChooserActivity
-	{
-	}
-
-	public partial class FileListFragment : global::Android.Support.V4.App.ListFragment, global::Android.Support.V4.App.LoaderManager.ILoaderCallbacks {
-
-		public void OnLoadFinished (global::Android.Support.V4.Content.Loader p0, Java.Lang.Object p1)
-		{
-			OnLoadFinished (p0, (IList<Java.IO.File>) new JavaList<Java.IO.File> (p1.Handle, JniHandleOwnership.DoNotTransfer));
-		}
-	}
-	public partial class FileLoader : Android.Support.V4.Content.AsyncTaskLoader {
-		public override Java.Lang.Object LoadInBackground ()
-		{
-			return (Java.Lang.Object) LoadInBackgroundImpl ();
-		}
-	}
-}"
-			});
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			}
@@ -467,7 +430,6 @@ namespace Foo {
 	<attr path=""/api/package[@name='com.actionbarsherlock.view']"" name=""managedName"">Xamarin.ActionbarSherlockBinding.Views</attr>
 </metadata>",
 			};
-			binding.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
 			using (var bindingBuilder = CreateDllBuilder (Path.Combine ("temp", "RemoveEventHandlerResolution", "Binding"))) {
 				Assert.IsTrue (bindingBuilder.Build (binding), "binding build should have succeeded");
 			}
@@ -760,31 +722,45 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 		}
 
 		/// <summary>
-		/// Tests two .aar files with r-classes.jar
+		/// Tests two .aar files with r-classes.jar, repackaged.jar
 		/// </summary>
 		[Test]
-		public void AarWithRClassesJar ()
+		public void CheckDuplicateJavaLibraries ()
 		{
 			var path = Path.Combine ("temp", TestName);
 			var lib1 = new XamarinAndroidBindingProject {
 				ProjectName = "Library1",
 				AndroidClassParser = "class-parse",
 				Jars = {
+					// r-classes.jar
 					new AndroidItem.LibraryProjectZip ("Library1.aar") {
 						BinaryContent = () => ResourceData.Library1Aar
-					}
+					},
+					// repackaged.jar
+					new AndroidItem.AndroidLibrary ("emoji2-1.4.0.aar") {
+						MetadataValues = "Bind=false",
+						WebContent = "https://maven.google.com/androidx/emoji2/emoji2/1.4.0/emoji2-1.4.0.aar",
+					},
 				},
 			};
 			var lib2 = new XamarinAndroidBindingProject {
 				ProjectName = "Library2",
 				AndroidClassParser = "class-parse",
 				Jars = {
+					// r-classes.jar
 					new AndroidItem.LibraryProjectZip ("Library2.aar") {
 						BinaryContent = () => ResourceData.Library2Aar
-					}
+					},
+					// repackaged.jar
+					new AndroidItem.AndroidLibrary ("connect-client-1.1.0-alpha07.aar") {
+						MetadataValues = "Bind=false",
+						WebContent = "https://maven.google.com/androidx/health/connect/connect-client/1.1.0-alpha07/connect-client-1.1.0-alpha07.aar",
+					},
 				},
 			};
-			var app = new XamarinAndroidApplicationProject ();
+			var app = new XamarinAndroidApplicationProject {
+				SupportedOSPlatformVersion = "30", // androidx.health requires minSdkVersion="30"
+			};
 			app.AddReference (lib1);
 			app.AddReference (lib2);
 			using (var lib1Builder = CreateDllBuilder (Path.Combine (path, lib1.ProjectName)))
@@ -793,6 +769,26 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				Assert.IsTrue (lib1Builder.Build (lib1), "Library1 build should have succeeded.");
 				Assert.IsTrue (lib2Builder.Build (lib2), "Library2 build should have succeeded.");
 				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void AndroidMavenLibrary ()
+		{
+			// Test that <AndroidMavenLibrary> downloads .jar from Maven and successfully binds it
+			var item = new BuildItem ("AndroidMavenLibrary", "com.google.auto.value:auto-value-annotations");
+			item.Metadata.Add ("Version", "1.10.4");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item }
+			};
+
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+				// Ensure the generated file exists
+				var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Com.Google.Auto.Value.AutoValueAttribute.cs"));
+				FileAssert.Exists (cs_file);
 			}
 		}
 	}

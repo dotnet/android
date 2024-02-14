@@ -1,14 +1,13 @@
 #include <cerrno>
+#include <cstring>
 
 #include <dlfcn.h>
-#include <string.h>
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#ifdef ANDROID
+
 #include <android/log.h>
-#endif
 
 #include "basic-android-system.hh"
 #include "basic-utilities.hh"
@@ -37,23 +36,6 @@ bool maybe_load_library (const char *path);
 	va_start ((_args_), (_format_)); \
 	__android_log_vprint ((_level_), (_tag_), (_format_), (_args_)); \
 	va_end ((_args_));
-
-#ifndef ANDROID
-#define ANDROID_LOG_INFO  1
-#define ANDROID_LOG_WARN  2
-#define ANDROID_LOG_ERROR 3
-#define ANDROID_LOG_FATAL 4
-#define ANDROID_LOG_DEBUG 5
-
-static void
-__android_log_vprint (int prio, const char* tag, const char* fmt, va_list ap)
-{
-	printf ("%d [%s] ", prio, tag);
-	vprintf (fmt, ap);
-	putchar ('\n');
-	fflush (stdout);
-}
-#endif
 
 static constexpr char TAG[] = "debug-app-helper";
 
@@ -95,7 +77,6 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	}
 }
 
-#if defined (ANDROID)
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 {
@@ -130,21 +111,15 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 	delete[] from_file;
 	delete[] to_file;
 }
-#else  /* !defined (ANDROID) */
-static void
-copy_file_to_internal_location ([[maybe_unused]] char *to_dir, [[maybe_unused]] char *from_dir, [[maybe_unused]] char* file)
-{
-}
-#endif /* defined (ANDROID) */
 
 static void
 copy_native_libraries_to_internal_location ()
 {
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		monodroid_dir_t *dir;
-		monodroid_dirent_t *e;
+	for (const char *od : BasicAndroidSystem::override_dirs) {
+		DIR *dir;
+		dirent *e;
 
-		char *dir_path = utils.path_combine (BasicAndroidSystem::override_dirs [i], "lib");
+		char *dir_path = utils.path_combine (od, "lib");
 		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
 
 		if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
@@ -153,7 +128,7 @@ copy_native_libraries_to_internal_location ()
 			continue;
 		}
 
-		if ((dir = utils.monodroid_opendir (dir_path)) == nullptr) {
+		if ((dir = ::opendir (dir_path)) == nullptr) {
 			log_warn (LOG_DEFAULT, "could not open directory: `%s`", dir_path);
 			delete[] dir_path;
 			continue;
@@ -162,18 +137,10 @@ copy_native_libraries_to_internal_location ()
 		while ((e = readdir (dir)) != nullptr) {
 			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
 			if (utils.monodroid_dirent_hasextension (e, ".so")) {
-#if WINDOWS
-				char *file_name = utils.utf16_to_utf8 (e->d_name);
-#else   /* def WINDOWS */
-				char *file_name = e->d_name;
-#endif  /* ndef WINDOWS */
-				copy_file_to_internal_location (androidSystem.get_primary_override_dir (), dir_path, file_name);
-#if WINDOWS
-				free (file_name);
-#endif  /* def WINDOWS */
+				copy_file_to_internal_location (androidSystem.get_primary_override_dir (), dir_path, e->d_name);
 			}
 		}
-		utils.monodroid_closedir (dir);
+		::closedir (dir);
 		delete[] dir_path;
 	}
 }
@@ -207,17 +174,17 @@ get_libmonosgen_path ()
 	copy_native_libraries_to_internal_location ();
 
 	if (androidSystem.is_embedded_dso_mode_enabled ()) {
-		return SharedConstants::MONO_SGEN_SO;
+		return SharedConstants::MONO_SGEN_SO.data ();
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		if (runtime_exists (BasicAndroidSystem::override_dirs [i], libmonoso)) {
+	for (const char *od : BasicAndroidSystem::override_dirs) {
+		if (runtime_exists (od, libmonoso)) {
 			return libmonoso;
 		}
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		if (runtime_exists (BasicAndroidSystem::app_lib_directories [i], libmonoso)) {
+	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+		if (runtime_exists (app_lib_dir, libmonoso)) {
 			return libmonoso;
 		}
 	}
@@ -255,23 +222,18 @@ get_libmonosgen_path ()
 		return libmonoso;
 	delete[] libmonoso;
 
-#ifdef WINDOWS
-	if (runtime_exists (get_libmonoandroid_directory_path (), libmonoso))
-		return libmonoso;
-#endif
-
-	if (runtime_exists (BasicAndroidSystem::SYSTEM_LIB_PATH, libmonoso))
+	if (runtime_exists (BasicAndroidSystem::SYSTEM_LIB_PATH.data (), libmonoso))
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
-	for (size_t i = 0; i < BasicAndroidSystem::MAX_OVERRIDES; ++i) {
-		if (BasicAndroidSystem::override_dirs [i] == nullptr)
+	for (const char *od : BasicAndroidSystem::override_dirs) {
+		if (od == nullptr)
 			continue;
-		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::override_dirs [i]);
+		log_fatal (LOG_DEFAULT, "  %s", od);
 	}
 
-	for (size_t i = 0; i < BasicAndroidSystem::app_lib_directories_size; i++) {
-		log_fatal (LOG_DEFAULT, "  %s", BasicAndroidSystem::app_lib_directories [i]);
+	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+		log_fatal (LOG_DEFAULT, "  %s", app_lib_dir);
 	}
 
 	log_fatal (LOG_DEFAULT, "Do you have a shared runtime build of your app with AndroidManifest.xml android:minSdkVersion < 10 while running on a 64-bit Android 5.0 target? This combination is not supported.");

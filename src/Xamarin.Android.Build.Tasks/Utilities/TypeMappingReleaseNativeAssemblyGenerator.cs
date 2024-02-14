@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO.Hashing;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -176,7 +178,8 @@ namespace Xamarin.Android.Tasks
 
 		ulong moduleCounter = 0;
 
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (TaskLoggingHelper log, NativeTypeMappingData mappingData)
+			: base (log)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();
@@ -400,22 +403,11 @@ namespace Xamarin.Android.Tasks
 				TypeMapJava entry = cs.JavaMap[i].Instance;
 
 				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
-				entry.JavaNameHash32 = (uint)HashName (entry.JavaName, is64Bit: false);
+				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: false);
 				hashes32.Add (entry.JavaNameHash32);
 
-				entry.JavaNameHash64 = HashName (entry.JavaName, is64Bit: true);
+				entry.JavaNameHash64 = TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: true);
 				hashes64.Add (entry.JavaNameHash64);
-			}
-
-			ulong HashName (string name, bool is64Bit)
-			{
-				if (name.Length == 0) {
-					return UInt64.MaxValue;
-				}
-
-				// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
-				// the same
-				return GetXxHash (name, is64Bit);
 			}
 		}
 	}

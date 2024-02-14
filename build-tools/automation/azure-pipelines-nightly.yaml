@@ -20,6 +20,14 @@ resources:
     type: github
     name: xamarin/monodroid
     endpoint: xamarin
+  - repository: maui
+    type: github
+    name: dotnet/maui
+    endpoint: xamarin
+
+parameters:
+- name: ApiScanSourceBranch
+  default: 'refs/heads/main'
 
 # Global variables
 variables:
@@ -114,6 +122,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $(JAVA_HOME_11_X64)
 
     - template: yaml-templates/run-dotnet-preview.yaml
       parameters:
@@ -121,9 +130,6 @@ stages:
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
-
-    - script: echo "##vso[task.setvariable variable=Java8SdkDirectory]$JAVA_HOME_8_X64"
-      displayName: set Java8SdkDirectory
 
     - template: yaml-templates/start-stop-emulator.yaml
       parameters:
@@ -154,6 +160,7 @@ stages:
       emulatorMSBuildArgs: -p:TestAvdExtraBootArgs=-writable-system
       jobName: SystemApplicationTests
       jobTimeout: 120
+      jdkTestFolder: $HOME/android-toolchain/jdk-17
       testSteps:
       - template: run-nunit-tests.yaml
         parameters:
@@ -186,6 +193,10 @@ stages:
     steps:
     - template: agent-cleanser/v1.yml@yaml-templates
 
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
+      displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
+
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
@@ -193,6 +204,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -239,6 +251,10 @@ stages:
     steps:
     - template: agent-cleanser/v1.yml@yaml-templates
 
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
+      displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
+
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
@@ -246,6 +262,7 @@ stages:
         restoreNUnitConsole: false
         updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: $HOME/android-toolchain/jdk-17
 
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -267,3 +284,85 @@ stages:
         artifactName: Test Results - Localization With Emulator - macOS-$(System.JobPositionInPhase)
 
     - template: yaml-templates/fail-on-issue.yaml
+
+
+- stage: compliance_scan
+  displayName: Compliance
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
+  jobs:
+  - job: api_scan
+    displayName: API Scan
+    pool:
+      name: Azure Pipelines
+      vmImage: windows-2022
+    timeoutInMinutes: 480
+    workspace:
+      clean: all
+    steps:
+    - template: yaml-templates/setup-test-environment.yaml
+      parameters:
+        installApkDiff: false
+        installLegacyDotNet: false
+        restoreNUnitConsole: false
+        updateMono: false
+
+    - task: DownloadPipelineArtifact@2
+      displayName: Download binutils pdbs
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        downloadPath: $(Build.StagingDirectory)\binutils-pdb
+
+    - powershell: |
+        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
+        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
+      displayName: Extract binutils pdbs
+
+    ### Copy .dll, .exe, .pdb files for APIScan
+    - task: CopyFiles@2
+      displayName: Collect Files for APIScan
+      inputs:
+        Contents: |
+          $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
+          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
+        TargetFolder: $(Build.StagingDirectory)\apiscan
+        OverWrite: true
+        flattenFolders: true
+
+    - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
+      displayName: List Files for APIScan
+
+    ### Run latest version of APIScan listed at https://www.1eswiki.com/wiki/APIScan_Build_Task
+    - task: APIScan@2
+      displayName: Run APIScan
+      inputs:
+        softwareFolder: $(Build.StagingDirectory)\apiscan
+        symbolsFolder: 'SRV*http://symweb;$(Build.StagingDirectory)\apiscan'
+        softwareName: $(ApiScanName)
+        softwareVersionNum: $(Build.SourceBranchName)-$(Build.SourceVersion)$(System.JobAttempt)
+        isLargeApp: true
+        toolVersion: Latest
+      env:
+        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+
+    - task: SdtReport@2
+      displayName: Guardian Export - Security Report
+      inputs:
+        GdnExportAllTools: false
+        GdnExportGdnToolApiScan: true
+        GdnExportOutputSuppressionFile: source.gdnsuppress
+
+    - task: PublishSecurityAnalysisLogs@3
+      displayName: Publish Guardian Artifacts
+      inputs:
+        ArtifactName: APIScan Logs
+        ArtifactType: Container
+        AllTools: false
+        APIScan: true
+        ToolLogsNotFoundAction: Warning
+
+    - task: PostAnalysis@2
+      displayName: Fail Build on Guardian Issues
+      inputs:
+        GdnBreakAllTools: false
+        GdnBreakGdnToolApiScan: true

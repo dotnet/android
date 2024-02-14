@@ -13,26 +13,16 @@
 
     <Compile Include="..\Xamarin.Android.Build.Tasks\obj\$(Configuration)\Profile.g.cs" Link="Profile.g.cs" />
 
-    <!--Include required linker sources-->
+    <!--Include shared linker sources-->
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AddKeepAlivesStep.cs" Link="MonoDroid.Tuner\AddKeepAlivesStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\AndroidLinkConfiguration.cs" Link="MonoDroid.Tuner\AndroidLinkConfiguration.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\Extensions.cs" Link="MonoDroid.Tuner\Extensions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixAbstractMethodsStep.cs" Link="MonoDroid.Tuner\FixAbstractMethodsStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" Link="MonoDroid.Tuner\FixLegacyResourceDesignerStep.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\GenerateProguardConfiguration.cs" Link="MonoDroid.Tuner\GenerateProguardConfiguration.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\GetAssembliesStep.cs" Link="MonoDroid.Tuner\GetAssembliesStep.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\LinkDesignerBase.cs" Link="MonoDroid.Tuner\LinkDesignerBase.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MarkJavaObjects.cs" Link="MonoDroid.Tuner\MarkJavaObjects.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveApplications.cs" Link="MonoDroid.Tuner\PreserveApplications.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveExportedTypes.cs" Link="MonoDroid.Tuner\PreserveExportedTypes.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\PreserveJavaExceptions.cs" Link="MonoDroid.Tuner\PreserveJavaExceptions.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\RemoveResourceDesignerStep.cs" Link="MonoDroid.Tuner\RemoveResourceDesignerStep.cs" />
-    <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\StripEmbeddedLibraries.cs" Link="MonoDroid.Tuner\StripEmbeddedLibraries.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidProfile.cs" Link="MonoDroid.Tuner\MonoDroidProfile.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\Mobile.Tuner\MobileProfile.cs" Link="Mobile.Tuner\MobileProfile.cs" />
-
-    <!--TODO: Subclasses MarkStep
-    <Compile Remove="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidMarkStep.cs" /-->
 
     <!--Other Xamarin.Android / Java.Interop files-->
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\CustomAttributeProviderRocks.cs" Link="Java.Interop\CustomAttributeProviderRocks.cs" />

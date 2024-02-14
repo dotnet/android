@@ -6,35 +6,27 @@
 // Based on code from mt's libmonotouch/debug.m file.
 //
 
+#include <cctype>
+#include <cerrno>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <string_view>
 
-#ifndef WINDOWS
 #include <arpa/inet.h>
 #include <sys/socket.h>
 #include <sys/select.h>
 #include <sys/utsname.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
-#endif
-
 #include <sys/types.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <cerrno>
-#include <cctype>
 
 #include <mono/metadata/mono-debug.h>
 
-#ifdef ANDROID
 #include <android/log.h>
-#endif
-
-#if defined (APPLE_OS_X)
-#include <dlfcn.h>
-#endif  // def APPLE_OX_X
 
 #include "java-interop-util.h"
 
@@ -131,7 +123,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME, "_", name)};
+	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME.data (), "_", name)};
 	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)
@@ -140,7 +132,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	return false;
 }
 
-#if defined (DEBUG) && !defined (WINDOWS)
+#if defined (DEBUG)
 void
 Debug::set_debugger_log_level (const char *level)
 {
@@ -239,7 +231,7 @@ void
 Debug::start_debugging_and_profiling ()
 {
 	size_t total_time_index;
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		total_time_index = internal_timing->start_event (TimingEventKind::DebugStart);
 	}
 
@@ -260,7 +252,7 @@ Debug::start_debugging_and_profiling ()
 	}
 	delete[] connect_args;
 
-	if (XA_UNLIKELY (FastTiming::enabled ())) {
+	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index);
 	}
 }
@@ -438,39 +430,40 @@ cleanup:
 bool
 Debug::process_cmd (int fd, char *cmd)
 {
-	static constexpr char CONNECT_OUTPUT_CMD[] = "connect output";
-	if (strcmp (cmd, CONNECT_OUTPUT_CMD) == 0) {
+	constexpr std::string_view CONNECT_OUTPUT_CMD { "connect output" };
+	if (strcmp (cmd, CONNECT_OUTPUT_CMD.data ()) == 0) {
 		dup2 (fd, 1);
 		dup2 (fd, 2);
 		return true;
 	}
 
-	static constexpr char CONNECT_STDOUT_CMD[] = "connect stdout";
-	if (strcmp (cmd, CONNECT_STDOUT_CMD) == 0) {
+	constexpr std::string_view CONNECT_STDOUT_CMD { "connect stdout" };
+	if (strcmp (cmd, CONNECT_STDOUT_CMD.data ()) == 0) {
 		dup2 (fd, 1);
 		return true;
 	}
 
-	static constexpr char CONNECT_STDERR_CMD[] = "connect stderr";
-	if (strcmp (cmd, CONNECT_STDERR_CMD) == 0) {
+	constexpr std::string_view CONNECT_STDERR_CMD { "connect stderr" };
+	if (strcmp (cmd, CONNECT_STDERR_CMD.data ()) == 0) {
 		dup2 (fd, 2);
 		return true;
 	}
 
-	static constexpr char DISCARD_CMD[] = "discard";
-	if (strcmp (cmd, DISCARD_CMD) == 0) {
+	constexpr std::string_view DISCARD_CMD { "discard" };
+	if (strcmp (cmd, DISCARD_CMD.data ()) == 0) {
 		return true;
 	}
 
-	static constexpr char PING_CMD[] = "ping";
-	if (strcmp (cmd, PING_CMD) == 0) {
-		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> ("pong")), 5))
+	constexpr std::string_view PING_CMD { "ping" };
+	constexpr std::string_view PONG_REPLY { "pong" };
+	if (strcmp (cmd, PING_CMD.data ()) == 0) {
+		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> (PONG_REPLY.data ())), 5))
 			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back (%s)\n", strerror (errno));
 		return false;
 	}
 
-	static constexpr char EXIT_PROCESS_CMD[] = "exit process";
-	if (strcmp (cmd, EXIT_PROCESS_CMD) == 0) {
+	constexpr std::string_view EXIT_PROCESS_CMD { "exit process" };
+	if (strcmp (cmd, EXIT_PROCESS_CMD.data ()) == 0) {
 		log_info (LOG_DEFAULT, "Debugger requested an exit, will exit immediately.\n");
 		fflush (stdout);
 		fflush (stderr);
@@ -478,16 +471,15 @@ Debug::process_cmd (int fd, char *cmd)
 	}
 
 	bool use_fd = false;
-	static constexpr char START_DEBUGGER_CMD[] = "start debugger: ";
-	static constexpr size_t START_DEBUGGER_CMD_LEN = sizeof(START_DEBUGGER_CMD) - 1;
-	static constexpr char VALUE_NO[] = "no";
-	if (strncmp (cmd, START_DEBUGGER_CMD, START_DEBUGGER_CMD_LEN) == 0) {
-		const char *debugger = cmd + START_DEBUGGER_CMD_LEN;
+	constexpr std::string_view START_DEBUGGER_CMD { "start debugger: " };
+	constexpr std::string_view VALUE_NO { "no" };
+	if (strncmp (cmd, START_DEBUGGER_CMD.data (), START_DEBUGGER_CMD.length ()) == 0) {
+		const char *debugger = cmd + START_DEBUGGER_CMD.length ();
 
-		static constexpr char DEBUGGER_SDB[] = "sdb";
-		if (strcmp (debugger, VALUE_NO) == 0) {
+		constexpr std::string_view DEBUGGER_SDB { "sdb" };
+		if (strcmp (debugger, VALUE_NO.data ()) == 0) {
 			/* disabled */
-		} else if (strcmp (debugger, DEBUGGER_SDB) == 0) {
+		} else if (strcmp (debugger, DEBUGGER_SDB.data ()) == 0) {
 			sdb_fd = fd;
 			use_fd = true;
 		}
@@ -499,16 +491,15 @@ Debug::process_cmd (int fd, char *cmd)
 		return use_fd;
 	}
 
-	static constexpr char START_PROFILER_CMD[] = "start profiler: ";
-	static constexpr size_t START_PROFILER_CMD_LEN = sizeof(START_PROFILER_CMD) - 1;
-	if (strncmp (cmd, START_PROFILER_CMD, START_PROFILER_CMD_LEN) == 0) {
-		const char *prof = cmd + START_PROFILER_CMD_LEN;
+	constexpr std::string_view START_PROFILER_CMD { "start profiler: " };
+	if (strncmp (cmd, START_PROFILER_CMD.data (), START_PROFILER_CMD.length ()) == 0) {
+		const char *prof = cmd + START_PROFILER_CMD.length ();
 
-		static constexpr char PROFILER_LOG[] = "log:";
-		static constexpr size_t PROFILER_LOG_LEN = sizeof(PROFILER_LOG) - 1;
-		if (strcmp (prof, VALUE_NO) == 0) {
+		constexpr std::string_view PROFILER_LOG { "log:" };
+
+		if (strcmp (prof, VALUE_NO.data ()) == 0) {
 			/* disabled */
-		} else if (strncmp (prof, PROFILER_LOG, PROFILER_LOG_LEN) == 0) {
+		} else if (strncmp (prof, PROFILER_LOG.data (), PROFILER_LOG.length ()) == 0) {
 			use_fd = true;
 			profiler_fd = fd;
 			profiler_description = utils.monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
@@ -528,8 +519,6 @@ Debug::process_cmd (int fd, char *cmd)
 	return false;
 }
 
-#if !defined (WINDOWS)
-
 void
 Debug::start_debugging (void)
 {
@@ -547,7 +536,7 @@ Debug::start_debugging (void)
 	embeddedAssemblies.set_register_debug_symbols (true);
 
 	char *debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
-	char *debug_options[] = {
+	std::array<char*, 2> debug_options = {
 		debug_arg,
 		nullptr
 	};
@@ -557,11 +546,11 @@ Debug::start_debugging (void)
 	log_warn (LOG_DEBUGGER, "Trying to initialize the debugger with options: %s", debug_arg);
 
 	if (enable_soft_breakpoints ()) {
-		constexpr char soft_breakpoints[] = "--soft-breakpoints";
-		debug_options[1] = const_cast<char*> (soft_breakpoints);
-		mono_jit_parse_options (2, debug_options);
+		constexpr std::string_view soft_breakpoints { "--soft-breakpoints" };
+		debug_options[1] = const_cast<char*> (soft_breakpoints.data ());
+		mono_jit_parse_options (2, debug_options.data ());
 	} else {
-		mono_jit_parse_options (1, debug_options);
+		mono_jit_parse_options (1, debug_options.data ());
 	}
 
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
@@ -585,10 +574,6 @@ Debug::start_profiling ()
 	monodroid_profiler_load (androidSystem.get_runtime_libdir (), profiler_description, nullptr);
 }
 
-#endif  // !def WINDOWS
-
-#ifdef ANDROID
-#ifdef DEBUG
 static const char *soft_breakpoint_kernel_list[] = {
 	"2.6.32.21-g1e30168", nullptr
 };
@@ -613,33 +598,21 @@ Debug::enable_soft_breakpoints (void)
 	char *value;
 	/* Soft breakpoints are enabled by default */
 	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data ());
 		return 1;
 	}
 
 	bool ret;
 	if (strcmp ("0", value) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS, value);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	}
 	delete[] value;
 	return ret;
 }
-#endif /* DEBUG */
-#else  /* !defined (ANDROID) */
-#if defined (DEBUG) && !defined (WINDOWS)
-#ifndef enable_soft_breakpoints
-[[maybe_unused]] bool
-Debug::enable_soft_breakpoints (void)
-{
-	return false;
-}
-#endif /* DEBUG */
-#endif // enable_soft_breakpoints
-#endif /* defined (ANDROID) */
 
 // TODO: this is less than ideal. We can't use std::function or std::bind beause we
 // don't have the C++ stdlib on Android (well, we do but including it would make the

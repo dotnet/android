@@ -4,339 +4,49 @@ namespace Xamarin.ProjectTools
 {
 	public static class KnownPackages
 	{
-		public static Package AndroidSupportV4_27_0_2_1 = new Package () {
-			Id = "Xamarin.Android.Support.v4",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.v4") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v4.27.0.2.1\\lib\\MonoAndroid70\\Xamarin.Android.Support.v4.dll" }
-			}
+		public static Package XamarinAndroidXWear = new Package {
+			Id = "Xamarin.AndroidX.Wear",
+			Version = "1.2.0.5"
 		};
-		public static Package AndroidWear_2_2_0 = new Package () {
-			Id = "Xamarin.Android.Wear",
-			Version = "2.2.0",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Wearable") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Wear.2.2.0\\lib\\MonoAndroid80\\Xamarin.Android.Wear.dll" }
-				}
-		};
-		public static Package SupportV7RecyclerView_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.v7.RecyclerView",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.V7.RecyclerView") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.RecyclerView.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.RecyclerView.dll"
-				}
-			}
-		};
-		public static Package SupportV7CardView_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.v7.Cardview",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.v7.CardView") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.CardView.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.CardView.dll" }
-			}
-		};
-		public static Package SupportV7AppCompat_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.v7.AppCompat",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.v7.AppCompat") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.AppCompat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.AppCompat.dll" }
-			}
-		};
-		public static Package SupportCompat_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Compat",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Compat") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Compat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Compat.dll" }
-			}
-		};
-		public static Package SupportCoreUI_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Core.UI",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Core.UI") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.UI.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Core.UI.dll" }
-			}
-		};
-		public static Package SupportCoreUtils_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Core.Utils",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Core.Utils") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Core.Utils.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Core.Utils.dll" }
-			}
-		};
-		public static Package SupportFragment_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Fragment",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Fragment") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Fragment.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Fragment.dll" }
-			}
-		};
-		public static Package SupportMediaCompat_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Media.Compat",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Media.Compat") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Media.Compat.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Media.Compat.dll" }
-			}
-		};
-		public static Package SupportPercent_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Percent",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Percent") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Percent.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Percent.dll" }
-			}
-		};
-		public static Package SupportV7MediaRouter_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.v7.MediaRouter",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.v7.MediaRouter") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v7.MediaRouter.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.v7.MediaRouter.dll" }
-			}
-		};
-		public static Package SupportConstraintLayout_1_0_2_2 = new Package {
-			Id = "Xamarin.Android.Support.Constraint.Layout",
-			Version = "1.0.2.2",
-			TargetFramework = "MonoAndroid70",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Constraint.Layout") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Constraint.Layout.1.0.2.2\\lib\\MonoAndroid70\\Xamarin.Android.Support.Constraint.Layout.dll"
-				}
-			}
-		};
-		public static Package VectorDrawable_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Vector.Drawable",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Vector.Drawable") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Vector.Drawable.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Vector.Drawable.dll" }
-			},
-		};
-		public static Package SupportDesign_27_0_2_1 = new Package {
-			Id = "Xamarin.Android.Support.Design",
-			Version = "27.0.2.1",
-			TargetFramework = "MonoAndroid81",
-			References = {
-				new BuildItem.Reference ("Xamarin.Android.Support.Design") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.Design.27.0.2.1\\lib\\MonoAndroid81\\Xamarin.Android.Support.Design.dll" }
-				}
-		};
-		public static Package XamarinFormsPCL_2_3_4_231 = new Package {
+		public static Package XamarinForms = new Package {
 			Id = "Xamarin.Forms",
-			Version = "2.3.4.231",
-			TargetFramework = "portable-net45+win+wp80+MonoAndroid10+xamarinios10+MonoTouch10",
-			References = {
-				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\\Xamarin.Forms.Core.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\portable-win+net45+wp80+win81+wpa81+MonoAndroid10+MonoTouch10+Xamarin.iOS10\\Xamarin.Forms.Xaml.dll"
-				},
-			}
+			Version = "5.0.0.2622",
 		};
-		public static Package XamarinForms_2_3_4_231 = new Package {
-			Id = "Xamarin.Forms",
-			Version = "2.3.4.231",
-			TargetFramework = "MonoAndroid44",
-			References =  {
-				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.Android.dll"
-				},
-				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\MonoAndroid10\\FormsViewGroup.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\MonoAndroid10\\Xamarin.Forms.Core.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\MonoAndroid10\\Xamarin.Forms.Xaml.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.2.3.4.231\\lib\\MonoAndroid10\\Xamarin.Forms.Platform.dll"
-				},
-			}
-		};
-		public static Package XamarinForms_4_0_0_425677 = new Package {
-			Id = "Xamarin.Forms",
-			Version = "4.0.0.425677",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
-				},
-				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\FormsViewGroup.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
-				},
-			}
-		};
-		public static Package XamarinForms_4_7_0_1142 = new Package {
-			Id = "Xamarin.Forms",
-			Version = "4.7.0.1142",
-			TargetFramework = "MonoAndroid10.0",
-		};
-		public static Package XamarinForms_5_0_0_2515 = new Package {
-			Id = "Xamarin.Forms",
-			Version = "5.0.0.2515",
-			TargetFramework = "MonoAndroid10.0",
-		};
-		public static Package XamarinFormsMaps_4_7_0_1142 = new Package {
+		public static Package XamarinFormsMaps = new Package {
 			Id = "Xamarin.Forms.Maps",
-			Version = "4.7.0.1142",
-			TargetFramework = "MonoAndroid10.0",
+			Version = "5.0.0.2622",
 		};
-		public static Package XamarinFormsMaps_5_0_0_2515 = new Package {
-			Id = "Xamarin.Forms.Maps",
-			Version = "5.0.0.2515",
-			TargetFramework = "MonoAndroid10.0",
-		};
-		public static Package XamarinFormsMaps_4_0_0_425677 = new Package {
-			Id = "Xamarin.Forms.Maps",
-			Version = "4.0.0.425677",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.Forms.Maps.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.Android.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Maps") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.Maps.4.0.0.425677\\lib\\MonoAndroid90\\Xamarin.Forms.Maps.dll"
-				},
-			}
-		};
-		public static Package XamarinForms_4_4_0_991265 = new Package {
-			Id = "Xamarin.Forms",
-			Version = "4.4.0.991265",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.Forms.Platform.Android") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.Android.dll"
-				},
-				new BuildItem.Reference ("FormsViewGroup") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\FormsViewGroup.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Core") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Core.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Xaml") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Xaml.dll"
-				},
-				new BuildItem.Reference ("Xamarin.Forms.Platform") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Forms.4.4.0.991265\\lib\\MonoAndroid90\\Xamarin.Forms.Platform.dll"
-				},
-			}
-		};
-		public static Package AndroidXMigration = new Package {
-			Id = "Xamarin.AndroidX.Migration",
-			Version = "1.0.6.1",
-			TargetFramework = "MonoAndroid10",
+		public static Package AndroidXConstraintLayout = new Package {
+			Id = "Xamarin.AndroidX.ConstraintLayout",
+			Version = "2.1.4.9",
 		};
 		public static Package AndroidXAppCompat = new Package {
 			Id = "Xamarin.AndroidX.AppCompat",
-			Version = "1.1.0.1",
-			TargetFramework = "MonoAndroid10",
-		};
-		public static Package AndroidXAppCompat_1_6_0_1 = new Package {
-			Id = "Xamarin.AndroidX.AppCompat",
-			Version = "1.6.0.1",
-			TargetFramework = "MonoAndroid10",
+			Version = "1.6.1.6",
 		};
 		public static Package AndroidXBrowser = new Package {
 			Id = "Xamarin.AndroidX.Browser",
-			Version = "1.2.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.AndroidX.Browser") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Browser.1.0.0\\lib\\MonoAndroid90\\Xamarin.AndroidX.Browser.dll"
-				},
-			}
-		};
-		public static Package AndroidXMediaRouter = new Package {
-			Id = "Xamarin.AndroidX.MediaRouter",
-			Version = "1.1.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.AndroidX.MediaRouter") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.MediaRouter.1.1.0\\lib\\MonoAndroid90\\Xamarin.AndroidX.MediaRouter.dll"
-				},
-			}
+			Version = "1.5.0.3",
 		};
 		public static Package AndroidXLegacySupportV4 = new Package {
 			Id = "Xamarin.AndroidX.Legacy.Support.V4",
-			Version = "1.0.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.AndroidX.Legacy.Support.V4") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Legacy.Support.V4.1.0.0\\lib\\MonoAndroid90\\Xamarin.AndroidX.Legacy.Support.V4.dll"
-				},
-			}
-		};
-		public static Package AndroidXLifecycleLiveData = new Package {
-			Id = "Xamarin.AndroidX.Lifecycle.LiveData",
-			Version = "2.2.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.AndroidX.Lifecycle.LiveData") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Lifecycle.LiveData.2.1.0\\lib\\MonoAndroid90\\Xamarin.AndroidX.Lifecycle.LiveData.dll"
-				},
-			}
+			Version = "1.0.0.22",
 		};
 		public static Package AndroidXAppCompatResources = new Package {
 			Id = "Xamarin.AndroidX.AppCompat.AppCompatResources",
-			Version = "1.1.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.AndroidX.AppCompat.AppCompatResources") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.AppCompat.AppCompatResources.1.1.0.1\\lib\\MonoAndroid90\\Xamarin.AndroidX.AppCompat.AppCompatResources.dll"
-				},
-			}
+			Version = "1.6.1.7",
+		};
+		public static Package AndroidXLifecycleLiveData = new Package {
+			Id = "Xamarin.AndroidX.Lifecycle.LiveData",
+			Version = "2.6.2.3",
 		};
 		public static Package AndroidXWorkRuntime = new Package {
 			Id = "Xamarin.AndroidX.Work.Runtime",
-			Version = "2.3.4.3",
-			TargetFramework = "MonoAndroid90",
-			References = {
-				new BuildItem.Reference("Xamarin.AndroidX.Work.Runtime") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.AndroidX.Work.Runtime.2.3.4.3\\lib\\MonoAndroid90\\Xamarin.AndroidX.Work.Runtime.dll"
-				}
-			}
+			Version = "2.9.0",
 		};
 		public static Package XamarinGoogleAndroidMaterial = new Package {
 			Id = "Xamarin.Google.Android.Material",
-			Version = "1.0.0.1",
-			TargetFramework = "MonoAndroid90",
-			References =  {
-				new BuildItem.Reference ("Xamarin.Google.Android.Material") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Google.Android.Material.1.0.0\\lib\\MonoAndroid90\\Xamarin.Google.Android.Material.dll"
-				},
-			}
+			Version = "1.10.0.2",
 		};
 		public static Package CocosSharp_PCL_Shared_1_5_0_0 = new Package {
 			Id = "CocosSharp.PCL.Shared",
@@ -361,16 +71,6 @@ namespace Xamarin.ProjectTools
 			References = {
 				new BuildItem.Reference ("MonoGame.Framework") {
 					MetadataValues = "HintPath=..\\packages\\MonoGame.Framework.Android.3.4.0.459\\lib\\MonoAndroid\\MonoGame.Framework.dll"
-				},
-			}
-		};
-		public static Package Xamarin_Android_Support_v8_RenderScript_28_0_0_3 = new Package {
-			Id = "Xamarin.Android.Support.v8.RenderScript",
-			Version = "28.0.0.3",
-			TargetFramework = "MonoAndroid90",
-			References = {
-				new BuildItem.Reference ("MonoGame.Framework") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Support.v8.RenderScript.28.0.0.3\\lib\\MonoAndroid90\\Xamarin.Android.Support.v8.RenderScript.dll"
 				},
 			}
 		};
@@ -425,79 +125,9 @@ namespace Xamarin.ProjectTools
 				}
 			}
 		};
-		public static Package Android_Arch_Core_Common_26_1_0 = new Package {
-			Id = "Xamarin.Android.Arch.Core.Common",
-			Version = "26.1.0",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Arch.Core.Common") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Core.Common.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Core.Common.dll"
-				}
-			}
-		};
-		public static Package Android_Arch_Lifecycle_Common_26_1_0 = new Package {
-			Id = "Xamarin.Android.Arch.Lifecycle.Common",
-			Version = "26.1.0",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Arch.Lifecycle.Common") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Lifecycle.Common.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Lifecycle.Common.dll"
-				}
-			}
-		};
-		public static Package Android_Arch_Lifecycle_Runtime_26_1_0 = new Package {
-			Id = "Xamarin.Android.Arch.Lifecycle.Runtime",
-			Version = "26.1.0",
-			TargetFramework = "MonoAndroid80",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Arch.Lifecycle.Runtime") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Lifecycle.Runtime.26.1.0\\lib\\MonoAndroid80\\Xamarin.Android.Arch.Lifecycle.Runtime.dll"
-				}
-			}
-		};
-		public static Package Android_Arch_Work_Runtime = new Package {
-			Id = "Xamarin.Android.Arch.Work.Runtime",
-			Version = "1.0.0",
-			TargetFramework = "MonoAndroid90",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Arch.Work.Runtime") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Arch.Work.Runtime.1.0.0\\lib\\MonoAndroid90\\Xamarin.Android.Arch.Work.Runtime.dll"
-				}
-			}
-		};
-		public static Package Xamarin_Android_Crashlytics = new Package {
-			Id = "Xamarin.Android.Crashlytics",
-			Version = "2.9.4.4",
-			TargetFramework = "MonoAndroid60",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Crashlytics") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Crashlytics.2.9.4.4\\lib\\MonoAndroid60\\Xamarin.Android.Crashlytics.dll"
-				}
-			}
-		};
-		public static Package Xamarin_Android_Fabric = new Package {
-			Id = "Xamarin.Android.Fabric",
-			Version = "1.4.3.4",
-			TargetFramework = "MonoAndroid60",
-			References = {
-				new BuildItem.Reference("Xamarin.Android.Fabric") {
-					MetadataValues = "HintPath=..\\packages\\Xamarin.Android.Fabric.1.4.3.4\\lib\\MonoAndroid60\\Xamarin.Android.Fabric.dll"
-				}
-			}
-		};
 		public static Package Xamarin_Build_Download = new Package {
 			Id = "Xamarin.Build.Download",
-			Version = "0.11.2",
-		};
-
-		public static Package Xamarin_Build_Download_0_11_3 = new Package {
-			Id = "Xamarin.Build.Download",
-			Version = "0.11.3",
-		};
-		// NOTE: old version required for some tests
-		public static Package Xamarin_Build_Download_0_4_11 = new Package {
-			Id = "Xamarin.Build.Download",
-			Version = "0.4.11",
+			Version = "0.11.4",
 		};
 		public static Package NuGet_Build_Packaging = new Package {
 			Id = "NuGet.Build.Packaging",
@@ -522,6 +152,10 @@ namespace Xamarin.ProjectTools
 		public static Package Xamarin_Kotlin_StdLib_Common = new Package {
 			Id = "Xamarin.Kotlin.Stdlib.Common",
 			Version = "1.6.20.1"
+		};
+		public static Package Xamarin_Kotlin_Reflect = new Package {
+			Id = "Xamarin.Kotlin.Reflect",
+			Version = "1.9.10.2"
 		};
 		public static Package Acr_UserDialogs = new Package {
 			Id = "Acr.UserDialogs",
@@ -567,7 +201,7 @@ namespace Xamarin.ProjectTools
 		};
 		public static Package ZXing_Net_Mobile = new Package {
 			Id = "ZXing.Net.Mobile",
-			Version = "2.4.1",
+			Version = "3.0.0-beta5", // version with AndroidX
 			TargetFramework = "MonoAndroid10",
 		};
 		public static Package Xamarin_Legacy_OpenTK = new Package {
@@ -579,6 +213,10 @@ namespace Xamarin.ProjectTools
 			Id = "Xamarin.Legacy.NUnitLite",
 			Version = "0.0.1-alpha",
 			TargetFramework = "MonoAndroid10",
+		};
+		public static Package Xamarin_Jetbrains_Annotations = new Package {
+			Id = "Xamarin.Jetbrains.Annotations",
+			Version = "24.1.0.1",
 		};
 		public static Package Mono_AotProfiler_Android  = new Package {
 			Id = "Mono.AotProfiler.Android",

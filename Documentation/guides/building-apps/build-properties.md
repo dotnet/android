@@ -832,6 +832,13 @@ APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
 + `x86_64`
 + `x86`
 
+## AndroidInstallJavaDependencies
+
+The default value is `true` for command line builds. When set to `true`, enables
+installation of the Java SDK when running the `<InstallAndroidDependencies/>` target.
+
+Support for this property was added in .NET 9.
+
 ## AndroidJavadocVerbosity
 
 Specifies how "verbose"

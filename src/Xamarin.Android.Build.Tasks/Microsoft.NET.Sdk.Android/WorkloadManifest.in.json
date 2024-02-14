@@ -4,8 +4,8 @@
     "android": {
       "description": ".NET SDK Workload for building Android applications.",
       "packs": [
+        "Microsoft.Android.Sdk.net9",
         "Microsoft.Android.Sdk.net8",
-        "Microsoft.Android.Sdk.net7",
         "Microsoft.Android.Ref.34",
         "Microsoft.Android.Runtime.34.android-arm",
         "Microsoft.Android.Runtime.34.android-arm64",
@@ -13,17 +13,17 @@
         "Microsoft.Android.Runtime.34.android-x64",
         "Microsoft.Android.Templates"
       ],
-      "platforms": [ "win-x64", "win-arm64", "linux-x64", "osx-x64", "osx-arm64" ],
+      "platforms": [ "win-x64", "win-arm64", "linux-x64", "linux-arm64", "osx-x64", "osx-arm64" ],
       "extends" : [ 
-        "microsoft-net-runtime-android-net7",
-        "microsoft-net-runtime-android-aot-net7",
+        "microsoft-net-runtime-android-net8",
+        "microsoft-net-runtime-android-aot-net8",
         "microsoft-net-runtime-android",
         "microsoft-net-runtime-android-aot"
       ]
     }
   },
   "packs": {
-    "Microsoft.Android.Sdk.net8": {
+    "Microsoft.Android.Sdk.net9": {
       "kind": "sdk",
       "version": "@WORKLOAD_VERSION@",
       "alias-to": {
@@ -32,19 +32,21 @@
         "win-x86": "Microsoft.Android.Sdk.Windows",
         "win-x64": "Microsoft.Android.Sdk.Windows",
         "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux"
+        "linux-x64": "Microsoft.Android.Sdk.Linux",
+        "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
-    "Microsoft.Android.Sdk.net7": {
+    "Microsoft.Android.Sdk.net8": {
       "kind": "sdk",
-      "version": "@NET7_VERSION@",
+      "version": "@NET_PREVIOUS_VERSION@",
       "alias-to": {
         "osx-x64": "Microsoft.Android.Sdk.Darwin",
         "osx-arm64": "Microsoft.Android.Sdk.Darwin",
         "win-x86": "Microsoft.Android.Sdk.Windows",
         "win-x64": "Microsoft.Android.Sdk.Windows",
         "win-arm64": "Microsoft.Android.Sdk.Windows",
-        "linux-x64": "Microsoft.Android.Sdk.Linux"
+        "linux-x64": "Microsoft.Android.Sdk.Linux",
+        "linux-arm64": "Microsoft.Android.Sdk.Linux"
       }
     },
     "Microsoft.Android.Ref.34": {

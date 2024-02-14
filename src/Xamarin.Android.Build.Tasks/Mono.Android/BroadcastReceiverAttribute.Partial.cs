@@ -71,14 +71,14 @@ namespace Android.Content {
 
 		ICollection<string> specified;
 
-		public static BroadcastReceiverAttribute FromTypeDefinition (TypeDefinition type)
+		public static BroadcastReceiverAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = type.GetCustomAttributes ("Android.Content.BroadcastReceiverAttribute")
 				.SingleOrDefault ();
 			if (attr == null)
 				return null;
 			var self = new BroadcastReceiverAttribute ();
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			return self;
 		}
 

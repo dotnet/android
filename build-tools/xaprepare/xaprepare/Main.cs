@@ -16,8 +16,6 @@ namespace Xamarin.Android.Prepare
 			public bool ShowHelp               { get; set; } = false;
 			public bool DumpProps              { get; set; } = false;
 			public bool NoEmoji                { get; set; } = !Configurables.Defaults.UseEmoji;
-			public bool NoMingwW64             { get; set; } = false;
-			public bool ForceRuntimesBuild     { get; set; } = false;
 			public string? HashAlgorithm       { get; set; }
 			public uint MakeConcurrency        { get; set; } = 0;
 			public ExecutionMode ExecutionMode { get; set; } = Configurables.Defaults.ExecutionMode;
@@ -31,10 +29,8 @@ namespace Xamarin.Android.Prepare
 			public bool AutoProvisionUsesSudo  { get; set; }
 			public bool IgnoreMaxMonoVersion   { get; set; }
 			public bool IgnoreMinMonoVersion   { get; set; }
-			public string? MonoArchiveCustomUrl { get; set; }
-			public bool EnableAll              { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
-			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = Enumerable.Empty<string> ();
+			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = new [] { "latest" };
 		}
 
 		public static int Main (string[] args)
@@ -95,9 +91,7 @@ namespace Xamarin.Android.Prepare
 				{"d|dump-properties", "Dump values of all the defined properties to the screen", v => parsedOptions.DumpProps = true },
 				{"j|make-concurrency=", "Number of concurrent jobs for make to run. A positive integer or 0 for the default. Defaults to the number of CPUs/cores", v => parsedOptions.MakeConcurrency = EnsureUInt (v, "Invalid Make concurrency value") },
 				{"no-emoji", "Do not use any emoji characters in the output", v => parsedOptions.NoEmoji = true },
-				{"no-mingw-w64", "Do not install mingw-w64 compiler", v => parsedOptions.NoMingwW64 = true },
 				{"r|run-mode=", $"Specify the execution mode: {GetExecutionModes()}. See documentation for mode descriptions. Default: {Configurables.Defaults.ExecutionMode}", v => parsedOptions.ExecutionMode = ParseExecutionMode (v)},
-				{"f|build-runtimes", $"Build runtimes even if the bundle/archives are available.", v => parsedOptions.ForceRuntimesBuild = true },
 				{"H|hash-algorithm=", "Use the specified hash algorithm instead of the default {Configurables.Defaults.HashAlgorithm}", v => parsedOptions.HashAlgorithm = v?.Trim () },
 				{"D|debug-ext=", $"Extension of files with debug information for managed DLLs and executables. Default: {parsedOptions.DebugFileExtension}", v => parsedOptions.DebugFileExtension = v?.Trim () ?? String.Empty },
 				{"v|verbosity=", $"Set console log verbosity to {{LEVEL}}. Level name may be abbreviated to the smallest unique part (one of: {GetVerbosityLevels ()}). Default: {Context.Instance.LoggingVerbosity.ToString().ToLowerInvariant ()}", v => parsedOptions.Verbosity = ParseLogVerbosity (v) },
@@ -105,15 +99,13 @@ namespace Xamarin.Android.Prepare
 				{"ls", "List names of all known scenarios", v => parsedOptions.ListScenarios = true },
 				{"cf=", $"{{NAME}} of the compression format to use for some archives (e.g. the XA bundle). One of: {GetCompressionFormatNames ()}; Default: {parsedOptions.CompressionFormat}", v => parsedOptions.CompressionFormat = v?.Trim () ?? String.Empty},
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
-				{"a|enable-all", "Enable preparation of all the supported targets, ABIs etc", v => parsedOptions.EnableAll = true},
 				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim () ?? String.Empty)},
 				"",
 				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
 				{"ignore-max-mono-version=", $"Ignore the maximum supported Mono version restriction", v => parsedOptions.IgnoreMaxMonoVersion = ParseBoolean (v)},
 				{"ignore-min-mono-version=", $"Ignore the minimum supported Mono version restriction", v => parsedOptions.IgnoreMinMonoVersion = ParseBoolean (v)},
-				{"mono-archive-url=", "Use a specific URL for the mono archive.", v => parsedOptions.MonoArchiveCustomUrl = v?.Trim () },
-				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed. Defaults to all if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
+				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed or 'latest' or 'all'. Defaults to 'latest' if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
 			};
@@ -138,17 +130,13 @@ namespace Xamarin.Android.Prepare
 
 			Context.Instance.MakeConcurrency       = parsedOptions.MakeConcurrency;
 			Context.Instance.NoEmoji               = parsedOptions.NoEmoji;
-			Context.Instance.NoMingwW64            = parsedOptions.NoMingwW64;
 			Context.Instance.ExecutionMode         = parsedOptions.ExecutionMode;
-			Context.Instance.ForceRuntimesBuild    = parsedOptions.ForceRuntimesBuild;
 			Context.Instance.LoggingVerbosity      = parsedOptions.Verbosity;
 			Context.Instance.DebugFileExtension    = parsedOptions.DebugFileExtension;
 			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
 			Context.Instance.IgnoreMaxMonoVersion  = parsedOptions.IgnoreMaxMonoVersion;
 			Context.Instance.IgnoreMinMonoVersion  = parsedOptions.IgnoreMinMonoVersion;
-			Context.Instance.MonoArchiveCustomUrl  = parsedOptions.MonoArchiveCustomUrl ?? String.Empty;
-			Context.Instance.EnableAllTargets      = parsedOptions.EnableAll;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 			Context.Instance.AndroidSdkPlatforms   = parsedOptions.AndroidSdkPlatforms;
 
@@ -345,6 +333,15 @@ namespace Xamarin.Android.Prepare
 
 		static IEnumerable<string> ParseAndroidSdkPlatformLevels (string list)
 		{
+			// If the user specified "all" we return 'all' to indicate that all platforms should be installed.
+			if (string.Compare ("all", list, StringComparison.OrdinalIgnoreCase) == 0)
+				return new string [] { "all" };
+
+			// If the user did not specify anything, we return "latest" to indicate that only the latest platform should be installed.
+			if (string.IsNullOrEmpty (list) || string.Compare ("latest", list, StringComparison.OrdinalIgnoreCase) == 0)
+				return new string [] { "latest" };
+
+			// The user specified a list of platform levels to install, so we should respect that.
 			return list.Split (',').Select (item => item.Trim ());
 		}
 	}

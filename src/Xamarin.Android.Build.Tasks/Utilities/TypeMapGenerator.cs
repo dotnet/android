@@ -5,6 +5,8 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
 using Microsoft.Android.Build.Tasks;
@@ -133,7 +135,7 @@ namespace Xamarin.Android.Tasks
 			public string GetAssemblyName (TypeDefinition td) => td.Module.Assembly.FullName;
 		}
 
-		Action<string> logger;
+		TaskLoggingHelper log;
 		Encoding outputEncoding;
 		byte[] moduleMagicString;
 		byte[] typemapIndexMagicString;
@@ -141,9 +143,9 @@ namespace Xamarin.Android.Tasks
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (Action<string> logger, string[] supportedAbis)
+		public TypeMapGenerator (TaskLoggingHelper log, string[] supportedAbis)
 		{
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			if (supportedAbis == null)
 				throw new ArgumentNullException (nameof (supportedAbis));
 			this.supportedAbis = supportedAbis;
@@ -257,7 +259,7 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, new ModuleDebugData ());
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -289,7 +291,7 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (data);
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, data);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -443,7 +445,7 @@ namespace Xamarin.Android.Tasks
 				// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
 				// build) and has no value for the end user. The message is left here because it may be useful to us
 				// in our devloop at some point.
-				//logger ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
+				//log.LogDebugMessage ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
 				moduleData.DuplicateTypes.Add (entry);
 			} else {
 				moduleData.TypesScratch.Add (entry.JavaName, entry);
@@ -482,7 +484,7 @@ namespace Xamarin.Android.Tasks
 					module.Types = module.TypesScratch.Values.ToArray ();
 				}
 
-				var composer = new TypeMappingReleaseNativeAssemblyGenerator (new NativeTypeMappingData (modules));
+				var composer = new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules));
 				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
 			}
 

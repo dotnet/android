@@ -33,14 +33,14 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<MetaDataAttribute> FromCustomAttributeProvider (ICustomAttributeProvider type)
+		public static IEnumerable<MetaDataAttribute> FromCustomAttributeProvider (ICustomAttributeProvider type, TypeDefinitionCache cache)
 		{
 			IEnumerable<CustomAttribute> attrs = type.GetCustomAttributes ("Android.App.MetaDataAttribute");
 			if (!attrs.Any ())
 				yield break;
 			foreach (CustomAttribute attr in attrs) {
 				var self = new MetaDataAttribute ((string) attr.ConstructorArguments [0].Value);
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 				self.specified.Add ("Name");
 				yield return self;
 			}

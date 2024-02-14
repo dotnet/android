@@ -14,10 +14,8 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.AndroidLatestStableApiLevel,         StripQuotes ("@AndroidLatestStableApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestUnstableApiLevel,       StripQuotes ("@AndroidLatestUnstableApiLevel@"));
 			properties.Add (KnownProperties.AndroidLatestStableFrameworkVersion, StripQuotes ("@AndroidLatestStableFrameworkVersion@"));
-			properties.Add (KnownProperties.AndroidMxeFullPath,                  StripQuotes (@"@AndroidMxeFullPath@"));
 			properties.Add (KnownProperties.AndroidNdkDirectory,                 StripQuotes (@"@AndroidNdkDirectory@"));
 			properties.Add (KnownProperties.AndroidSdkDirectory,                 StripQuotes (@"@AndroidSdkDirectory@"));
-			properties.Add (KnownProperties.AndroidSupportedHostJitAbis,         StripQuotes ("@AndroidSupportedHostJitAbis@"));
 			properties.Add (KnownProperties.AndroidSupportedTargetAotAbis,       StripQuotes ("@AndroidSupportedTargetAotAbis@"));
 			properties.Add (KnownProperties.AndroidSupportedTargetJitAbis,       StripQuotes ("@AndroidSupportedTargetJitAbis@"));
 			properties.Add (KnownProperties.AndroidToolchainCacheDirectory,      StripQuotes (@"@AndroidToolchainCacheDirectory@"));
@@ -47,12 +45,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.LibZipSourceFullPath,                StripQuotes (@"@LibZipSourceFullPath@"));
 			properties.Add (KnownProperties.ManagedRuntime,                      StripQuotes (@"@ManagedRuntime@"));
 			properties.Add (KnownProperties.MicrosoftAndroidSdkOutDir,           StripQuotes (@"@MicrosoftAndroidSdkOutDir@"));
-			properties.Add (KnownProperties.MingwCommandPrefix32,                StripQuotes ("@MingwCommandPrefix32@"));
-			properties.Add (KnownProperties.MingwCommandPrefix64,                StripQuotes ("@MingwCommandPrefix64@"));
-			properties.Add (KnownProperties.MingwDependenciesRootDirectory,      StripQuotes (@"@MingwDependenciesRootDirectory@"));
-			properties.Add (KnownProperties.MingwZlibLibraryName,                StripQuotes ("@MingwZlibLibraryName@"));
-			properties.Add (KnownProperties.MingwZlibRootDirectory32,            StripQuotes (@"@MingwZlibRootDirectory32@"));
-			properties.Add (KnownProperties.MingwZlibRootDirectory64,            StripQuotes (@"@MingwZlibRootDirectory64@"));
 			properties.Add (KnownProperties.MonoCecilVersion,                    StripQuotes ("@MonoCecilVersion@"));
 			properties.Add (KnownProperties.MonoDarwinPackageUrl,                StripQuotes ("@MonoDarwinPackageUrl@"));
 			properties.Add (KnownProperties.MonoRequiredMinimumVersion,          StripQuotes ("@MonoRequiredMinimumVersion@"));
@@ -62,7 +54,6 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.Pkg7Zip_CommandLine,                 StripQuotes (@"@Pkg7-Zip_CommandLine@"));
 			properties.Add (KnownProperties.PkgXamarin_LibZipSharp,              StripQuotes (@"@PkgXamarin_LibZipSharp@"));
 			properties.Add (KnownProperties.ProductVersion,                      StripQuotes ("@ProductVersion@"));
-			properties.Add (KnownProperties.RemapAssemblyRefToolExecutable,      StripQuotes (@"@RemapAssemblyRefToolExecutable@"));
 			properties.Add (KnownProperties.XABuildToolsFolder,                  StripQuotes (@"@XABuildToolsFolder@"));
 			properties.Add (KnownProperties.XABuildToolsVersion,                 StripQuotes ("@XABuildToolsVersion@"));
 			properties.Add (KnownProperties.XABuildToolsPackagePrefixMacOS,      StripQuotes ("@XABuildToolsPackagePrefixMacOS@"));
@@ -71,6 +62,7 @@ namespace Xamarin.Android.Prepare
 			properties.Add (KnownProperties.XABuildToolsPackagePrefix,           StripQuotes ("@XABuildToolsPackagePrefix@"));
 			properties.Add (KnownProperties.XABinRelativeInstallPrefix,          StripQuotes (@"@XABinRelativeInstallPrefix@"));
 			properties.Add (KnownProperties.XAInstallPrefix,                     StripQuotes (@"@XAInstallPrefix@"));
+			properties.Add (KnownProperties.XAPackagesDir,                       StripQuotes (@"@XAPackagesDir@"));
 			properties.Add (KnownProperties.XAPlatformToolsVersion,              StripQuotes ("@XAPlatformToolsVersion@"));
 			properties.Add (KnownProperties.XAPlatformToolsPackagePrefix,        StripQuotes ("@XAPlatformToolsPackagePrefix@"));
 		}

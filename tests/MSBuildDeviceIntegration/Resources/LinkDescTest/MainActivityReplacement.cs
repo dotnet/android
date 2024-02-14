@@ -9,7 +9,7 @@ using Android.OS;
 
 namespace UnnamedProject
 {
-	[Register("unnamedproject.unnamedproject.MainActivity"), Activity(Label = "UnnamedProject", MainLauncher = true, Icon = "@drawable/icon")]
+	[Register("unnamedproject.unnamedproject.MainActivity"), Activity(Label = "UnnamedProject", MainLauncher = true, Icon = "@drawable/icon", Theme = "@style/MainTheme")]
 	public class MainActivity : Activity
 	{
 		int count = 1;
