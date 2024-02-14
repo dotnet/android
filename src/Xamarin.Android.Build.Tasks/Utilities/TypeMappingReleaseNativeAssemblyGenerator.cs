@@ -415,16 +415,7 @@ namespace Xamarin.Android.Tasks
 
 				// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
 				// the same
-				return HashBytes (Encoding.Unicode.GetBytes (name), is64Bit);
-			}
-
-			ulong HashBytes (byte[] bytes, bool is64Bit)
-			{
-				if (is64Bit) {
-					return XxHash64.HashToUInt64 (bytes);
-				}
-
-				return (ulong)XxHash32.HashToUInt32 (bytes);
+				return GetXxHash (name, is64Bit);
 			}
 		}
 	}

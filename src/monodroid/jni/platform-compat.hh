@@ -48,10 +48,6 @@ typedef struct dirent monodroid_dirent_t;
 #define never_inline
 #endif
 
-#ifndef inline
-#define inline inline
-#endif
-
 #ifndef XA_LIKELY
 #define XA_LIKELY(expr) (expr)
 #endif

@@ -38,7 +38,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		{
 			byte[] stringBytes = Encoding.UTF8.GetBytes (str);
 			if (is64Bit) {
-				return XxHash64.HashToUInt64 (stringBytes);
+				return XxHash3.HashToUInt64 (stringBytes);
 			}
 
 			return (ulong)XxHash32.HashToUInt32 (stringBytes);

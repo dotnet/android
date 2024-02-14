@@ -162,6 +162,8 @@ set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 set(XA_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${XA_BUILD_CONFIGURATION}")
 set(XA_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Build${XA_BUILD_CONFIGURATION}")
 set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
+set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
 
 if(NOT ANDROID)
   if(WIN32 OR MINGW)
@@ -202,6 +204,8 @@ set(LZ4_SOURCES
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
 include_directories(${ROBIN_MAP_DIR}/include)
+include_directories(${EXTERNAL_DIR})
+include_directories(${CONSTEXPR_XXH3_DIR})
 
 if(NOT ANDROID)
   string(REPLACE " " ";" JDK_INCLUDE_LIST ${JDK_INCLUDE})

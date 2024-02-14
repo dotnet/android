@@ -37,7 +37,7 @@ namespace Xamarin.Android.Tasks
 
 			byte[] nameBytes = Encoding.UTF8.GetBytes (name);
 			NameHash32 = XxHash32.HashToUInt32 (nameBytes);
-			NameHash64 = XxHash64.HashToUInt64 (nameBytes);
+			NameHash64 = XxHash3.HashToUInt64 (nameBytes);
 		}
 	}
 }
