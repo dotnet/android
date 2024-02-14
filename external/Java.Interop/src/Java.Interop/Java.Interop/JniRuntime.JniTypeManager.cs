@@ -269,8 +269,18 @@ namespace Java.Interop {
 
 			static  readonly    string[]    EmptyStringArray    = Array.Empty<string> ();
 			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
+			const string NotUsedInAndroid = "This code path is not used in Android projects.";
 
+			// FIXME: https://github.com/xamarin/java.interop/issues/1192
+			[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = NotUsedInAndroid)]
+			static Type MakeArrayType (Type type) => type.MakeArrayType ();
 
+			// FIXME: https://github.com/xamarin/java.interop/issues/1192
+			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = NotUsedInAndroid)]
+			[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = NotUsedInAndroid)]
+			static Type MakeGenericType (Type type, Type arrayType) => type.MakeGenericType (arrayType);
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
 			[return: DynamicallyAccessedMembers (MethodsConstructorsInterfaces)]
 			public  Type?    GetType (JniTypeSignature typeSignature)
 			{
@@ -309,7 +319,7 @@ namespace Java.Interop {
 						var rank        = typeSignature.ArrayRank;
 						var arrayType   = type;
 						while (rank-- > 0) {
-							arrayType   = typeof (JavaObjectArray<>).MakeGenericType (arrayType);
+							arrayType   = MakeGenericType (typeof (JavaObjectArray<>), arrayType);
 						}
 						yield return arrayType;
 					}
@@ -318,7 +328,7 @@ namespace Java.Interop {
 						var rank        = typeSignature.ArrayRank;
 						var arrayType   = type;
 						while (rank-- > 0) {
-							arrayType   = arrayType.MakeArrayType ();
+							arrayType   = MakeArrayType (arrayType);
 						}
 						yield return arrayType;
 					}
@@ -341,14 +351,14 @@ namespace Java.Interop {
 					var rank        = typeSignature.ArrayRank-1;
 					var arrayType   = t;
 					while (rank-- > 0) {
-						arrayType   = typeof (JavaObjectArray<>).MakeGenericType (arrayType);
+						arrayType   = MakeGenericType (typeof (JavaObjectArray<>), arrayType);
 					}
 					yield return arrayType;
 
 					rank            = typeSignature.ArrayRank-1;
 					arrayType       = t;
 					while (rank-- > 0) {
-						arrayType   = arrayType.MakeArrayType ();
+						arrayType   = MakeArrayType (arrayType);
 					}
 					yield return arrayType;
 				}
@@ -462,6 +472,11 @@ namespace Java.Interop {
 
 			static Type [] registerMethodParameters = new Type [] { typeof (JniNativeMethodRegistrationArguments) };
 
+			// https://github.com/xamarin/xamarin-android/blob/5472eec991cc075e4b0c09cd98a2331fb93aa0f3/src/Microsoft.Android.Sdk.ILLink/PreserveRegistrations.cs#L85
+			const string MarshalMethods = "'jni_marshal_methods' is preserved by the PreserveRegistrations trimmer step.";
+
+			[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = MarshalMethods)]
+			[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = MarshalMethods)]
 			bool TryLoadJniMarshalMethods (
 					JniType nativeClass,
 					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
