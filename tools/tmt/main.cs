@@ -150,7 +150,7 @@ namespace tmt
 			var loader = new Loader (parsedOptions.ArchFilter, parsedOptions.LoadOnlyFirst.Value);
 			List<ITypemap> typemaps = loader.TryLoad (loadFrom);
 			if (typemaps.Count == 0) {
-				Log.Info ($"No type maps found in '{loadFrom}");
+				Log.Error ($"No supported type maps found in '{loadFrom}");
 				return 1;
 			}
 
