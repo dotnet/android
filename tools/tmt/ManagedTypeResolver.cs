@@ -40,7 +40,7 @@ namespace tmt
 				AlreadyWarned.Add (assemblyName);
 			}
 
-			return $"[token id: {tokenID}]";
+			return $"`token id: {tokenID}`";
 		}
 
 		protected bool TryLookup (string assemblyPath, Guid mvid, uint tokenID, out string typeName)
