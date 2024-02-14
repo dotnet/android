@@ -1,6 +1,8 @@
 #if !defined (__XXHASH_HH)
 #define __XXHASH_HH
 
+#include <type_traits>
+
 #if INTPTR_MAX == INT64_MAX
 #define XXH_NO_STREAM
 #define XXH_INLINE_ALL
@@ -8,8 +10,6 @@
 #include <xxHash/xxhash.h>
 #include <constexpr-xxh3.h>
 #endif
-
-#include <type_traits>
 
 //
 // Based on original code at https://github.com/ekpyron/xxhashct
@@ -159,6 +159,11 @@ namespace xamarin::android
 		force_inline static constexpr XXH64_hash_t hash (const char *p, size_t len) noexcept
 		{
 			return XXH3_64bits (static_cast<const void*>(p), len);
+		}
+
+		force_inline static consteval XXH64_hash_t hash (std::string_view const& input) noexcept
+		{
+			return constexpr_xxh3::XXH3_64bits_const (input.data (), input.length ());
 		}
 
 		// The C XXH64_64bits function from xxhash.h is not `constexpr` or `consteval`, so we cannot call it here.
