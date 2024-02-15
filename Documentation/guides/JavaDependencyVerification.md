@@ -8,7 +8,7 @@ A common problem when creating Java binding libraries for .NET Android is not pr
 
 Unlike .NET assemblies, a Java library does not specify its dependencies in the package. The dependency information is stored in external files called POM files. In order to consume this information to ensure correct dependencies an additional layer of files must be added to a binding project.
 
-Note: the preferred way of interacting with this system is to use [`<AndroidMavenLibrary>`](AndroidMavenLibrary.md) which will automatically download and include any needed POM files.
+Note: the preferred way of interacting with this system is to use [`<AndroidMavenLibrary>`](AndroidMavenLibrary.md) which will automatically download any needed POM files.
 
 For example:
 

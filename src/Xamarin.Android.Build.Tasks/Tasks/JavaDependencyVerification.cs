@@ -111,7 +111,7 @@ public class JavaDependencyVerification : AndroidTask
 
 class DependencyResolver
 {
-	readonly List<Artifact> artifacts = new List<Artifact> ();
+	readonly Dictionary<string, Artifact> artifacts = new ();
 
 	readonly NuGetPackageVersionFinder? finder;
 	readonly TaskLoggingHelper log;
@@ -157,7 +157,7 @@ class DependencyResolver
 
 			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from AndroidLibrary '{3}'", art.GroupId, art.Id, art.Version, task.ItemSpec);
-				artifacts.Add (art);
+				artifacts.Add (art.ToGroupAndArtifactId (), art);
 			}
 		}
 	}
@@ -168,7 +168,7 @@ class DependencyResolver
 
 			// See if JavaArtifact/JavaVersion overrides were used
 			if (task.TryParseJavaArtifactAndJavaVersion ("PackageReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact);
+				artifacts.Add (explicit_artifact.ToGroupAndArtifactId (), explicit_artifact);
 				continue;
 			}
 
@@ -181,7 +181,7 @@ class DependencyResolver
 
 			if (artifact != null) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from PackageReference '{3}'", artifact.GroupId, artifact.Id, artifact.Version, task.ItemSpec);
-				artifacts.Add (artifact);
+				artifacts.Add (artifact.ToGroupAndArtifactId (), artifact);
 
 				continue;
 			}
@@ -195,7 +195,7 @@ class DependencyResolver
 		foreach (var task in tasks.OrEmpty ()) {
 			// See if JavaArtifact/JavaVersion overrides were used
 			if (task.TryParseJavaArtifactAndJavaVersion ("ProjectReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact);
+				artifacts.Add (explicit_artifact.ToGroupAndArtifactId (), explicit_artifact);
 				continue;
 			}
 
@@ -219,7 +219,7 @@ class DependencyResolver
 
 			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
-				artifacts.Add (art);
+				artifacts.Add (art.ToGroupAndArtifactId (), art);
 			}
 		}
 	}
@@ -227,19 +227,14 @@ class DependencyResolver
 	bool TrySatisfyDependency (ResolvedDependency dependency)
 	{
 		if (!dependency.Version.HasValue ())
-			return artifacts.Any (a =>
-				a.GroupId == dependency.GroupId
-				&& a.Id == dependency.ArtifactId);
+			return artifacts.ContainsKey (dependency.ToGroupAndArtifactId ());
 
 		var dep_versions = MavenVersionRange.Parse (dependency.Version);
 
-		var satisfied = artifacts.Any (a =>
-			a.GroupId == dependency.GroupId
-			&& a.Id == dependency.ArtifactId
-			&& dep_versions.Any (r => r.ContainsVersion (MavenVersion.Parse (a.Version)))
-		);
+		if (artifacts.TryGetValue (dependency.ToGroupAndArtifactId (), out var artifact))
+			return dep_versions.Any (r => r.ContainsVersion (MavenVersion.Parse (artifact.Version)));
 
-		return satisfied;
+		return false;
 	}
 }
 
@@ -429,263 +424,5 @@ public class NuGetPackageVersionFinder
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
 
 		return new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
-	}
-}
-// https://docs.oracle.com/middleware/1212/core/MAVEN/maven_version.htm#MAVEN8855
-public class MavenVersion : IComparable, IComparable<MavenVersion>, IEquatable<MavenVersion>
-{
-	public string? Major { get; private set; }
-	public string? Minor { get; private set; }
-	public string? Patch { get; private set; }
-	public string RawVersion { get; private set; }
-	public bool IsValid { get; private set; } = true;
-
-	private MavenVersion (string rawVersion) => RawVersion = rawVersion;
-
-	public static MavenVersion Parse (string version)
-	{
-		var mv = new MavenVersion (version);
-
-		if (!version.HasValue ()) {
-			mv.IsValid = false;
-			return mv;
-		}
-
-		// We're going to parse through this assuming it's a valid Maven version
-		mv.Major = version.FirstSubset ('.');
-		version = version.ChompFirst ('.');
-
-		if (!TryParsePart (mv.Major, out var _, out var _))
-			mv.IsValid = false;
-
-		if (!version.HasValue ())
-			return mv;
-
-		mv.Minor = version.FirstSubset ('.');
-		version = version.ChompFirst ('.');
-
-		if (!TryParsePart (mv.Minor, out var _, out var _))
-			mv.IsValid = false;
-
-		if (!version.HasValue ())
-			return mv;
-
-		mv.Patch = version.FirstSubset ('.');
-		version = version.ChompFirst ('.');
-
-		if (!TryParsePart (mv.Patch, out var _, out var _))
-			mv.IsValid = false;
-
-		if (!version.HasValue ())
-			return mv;
-
-		// If there's something left, this is a nonstandard Maven version and all bets are off
-		mv.IsValid = false;
-
-		return mv;
-	}
-
-	public int CompareTo (object obj)
-	{
-		return CompareTo (obj as MavenVersion);
-	}
-
-	public int CompareTo (MavenVersion? other)
-	{
-		if (other is null)
-			return 1;
-
-		// If either instance is nonstandard, Maven does a simple string compare
-		if (!IsValid || !other.IsValid)
-			return string.Compare (RawVersion, other.RawVersion);
-
-		var major_compare = ComparePart (Major ?? "0", other.Major ?? "0");
-
-		if (major_compare != 0)
-			return major_compare;
-
-		var minor_compare = ComparePart (Minor ?? "0", other.Minor ?? "0");
-
-		if (minor_compare != 0)
-			return minor_compare;
-
-		return ComparePart (Patch ?? "0", other.Patch ?? "0");
-	}
-
-	public bool Equals (MavenVersion other)
-	{
-		return CompareTo (other) == 0;
-	}
-
-	int ComparePart (string a, string b)
-	{
-		// Check if they're the same string
-		if (a == b)
-			return 0;
-
-		// Don't need to check the return because this shouldn't be called if IsValid = false
-		TryParsePart (a, out var a_version, out var a_qualifier);
-		TryParsePart (b, out var b_version, out var b_qualifier);
-
-		// If neither have a qualifier, treat them like numbers
-		if (a_qualifier is null && b_qualifier is null)
-			return a_version.CompareTo (b_version);
-
-		// If the numeric versions are different, just use those
-		if (a_version != b_version)
-			return a_version.CompareTo (b_version);
-
-		// Identical versions with different qualifier fields are compared by using basic string comparison.
-		if (a_qualifier is not null && b_qualifier is not null)
-			return a_qualifier.CompareTo (b_qualifier);
-
-		// All versions with a qualifier are older than the same version without a qualifier (release version).
-		if (a_qualifier is not null)
-			return -1;
-
-		return 1;
-	}
-
-	static bool TryParsePart (string part, out int version, out string? qualifier)
-	{
-		// These can look like:
-		// 1
-		// 1-anything
-		var version_string = part.FirstSubset ('-');
-		qualifier = null;
-
-		// The first piece must be a number
-		if (!int.TryParse (version_string, out version))
-			return false;
-
-		part = part.ChompFirst ('-');
-
-		if (part.HasValue ())
-			qualifier = part;
-
-		return true;
-	}
-}
-
-public class MavenVersionRange
-{
-	public string? MinVersion { get; private set; }
-	public string? MaxVersion { get; private set; }
-	public bool IsMinInclusive { get; private set; } = true;
-	public bool IsMaxInclusive { get; private set; }
-	public bool HasLowerBound { get; private set; }
-	public bool HasUpperBound { get; private set; }
-
-	// Adapted from https://github.com/Redth/MavenNet/blob/master/MavenNet/MavenVersionRange.cs
-	// Original version uses NuGetVersion, which doesn't cover all "valid" Maven version cases
-	public static IEnumerable<MavenVersionRange> Parse (string range)
-	{
-		if (!range.HasValue ())
-			yield break;
-
-		// Do a pass over the range string to parse out version groups
-		// eg: (1.0],(1.1,]
-		var in_group = false;
-		var current_group = string.Empty;
-
-		foreach (var c in range) {
-			if (c == '(' || c == '[') {
-				current_group += c;
-				in_group = true;
-			} else if (c == ')' || c == ']' || (!in_group && c == ',')) {
-				// Don't add the , separating groups
-				if (in_group)
-					current_group += c;
-
-				in_group = false;
-
-				if (current_group.HasValue ())
-					yield return ParseSingle (current_group);
-
-				current_group = string.Empty;
-			} else {
-				current_group += c;
-			}
-		}
-
-		if (!string.IsNullOrEmpty (current_group))
-			yield return ParseSingle (current_group);
-	}
-
-	static MavenVersionRange ParseSingle (string range)
-	{
-		var mv = new MavenVersionRange ();
-
-		// Check for opening ( or [
-		if (range [0] == '(') {
-			mv.IsMinInclusive = false;
-			range = range.Substring (1);
-		} else if (range [0] == '[') {
-			range = range.Substring (1);
-		}
-
-		var last = range.Length - 1;
-
-		// Check for closing ) or ]
-		if (range [last] == ')') {
-			mv.IsMaxInclusive = false;
-			range = range.Substring (0, last);
-		} else if (range [last] == ']') {
-			mv.IsMaxInclusive = true;
-			range = range.Substring (0, last);
-		}
-
-		// Look for a single value
-		if (!range.Contains (",")) {
-			mv.MinVersion = range;
-			mv.HasLowerBound = true;
-
-			// Special case [1.0]
-			if (mv.IsMinInclusive && mv.IsMaxInclusive) {
-				mv.MaxVersion = range;
-				mv.HasUpperBound = true;
-			}
-
-			return mv;
-		}
-
-		// Split the 2 values (note either can be empty)
-		var lower = range.FirstSubset (',').Trim ();
-		var upper = range.LastSubset (',').Trim ();
-
-		if (lower.HasValue ()) {
-			mv.MinVersion = lower;
-			mv.HasLowerBound = true;
-		}
-
-		if (upper.HasValue ()) {
-			mv.MaxVersion = upper;
-			mv.HasUpperBound = true;
-		}
-
-		return mv;
-	}
-
-	public bool ContainsVersion (MavenVersion version)
-	{
-		if (HasLowerBound) {
-			var min_version = MavenVersion.Parse (MinVersion!);
-
-			if (IsMinInclusive && version.CompareTo (min_version) < 0)
-				return false;
-			else if (!IsMinInclusive && version.CompareTo (min_version) <= 0)
-				return false;
-		}
-
-		if (HasUpperBound) {
-			var max_version = MavenVersion.Parse (MaxVersion!);
-
-			if (IsMaxInclusive && version.CompareTo (max_version) > 0)
-				return false;
-			else if (!IsMaxInclusive && version.CompareTo (max_version) >= 0)
-				return false;
-		}
-
-		return true;
 	}
 }

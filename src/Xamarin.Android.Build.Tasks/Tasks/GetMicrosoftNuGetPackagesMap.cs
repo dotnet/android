@@ -36,7 +36,7 @@ public class GetMicrosoftNuGetPackagesMap : AndroidAsyncTask
 		if (!all_files.Any (x => x.IsToday)) {
 			// No file for today, download a new one
 			try {
-				var http = new HttpClient ();
+				using var http = new HttpClient ();
 				var json = await http.GetStringAsync ("https://aka.ms/ms-nuget-packages");
 				var outfile = Path.Combine (MavenCacheDirectory, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
 
