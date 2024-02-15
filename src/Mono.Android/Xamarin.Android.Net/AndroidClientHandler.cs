@@ -67,8 +67,11 @@ namespace Xamarin.Android.Net
 
 		public AndroidClientHandler ()
 		{
-			_underlyingHander = GetUnderlyingHandler () as AndroidMessageHandler ?? throw new InvalidOperationException ("Unknown underlying handler.  Only AndroidMessageHandler is supported for AndroidClientHandler");
+			object? handler = GetUnderlyingHandler ();
+			_underlyingHander = handler as AndroidMessageHandler ?? throw new InvalidOperationException ($"Unknown underlying handler '{GetHandlerTypeName (handler)}'.  Only AndroidMessageHandler is supported for AndroidClientHandler");
 		}
+
+		static string GetHandlerTypeName (object? handler) => handler?.GetType()?.FullName ?? "<null>";
 
 		/// <summary>
 		/// <para>
