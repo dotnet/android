@@ -10,15 +10,15 @@
     </Dependency>
     <Dependency Name="Microsoft.NETCore.App.Ref" Version="7.0.17">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>01387a5edb56147c6098d91f93874e1a46e4ae42</Sha>
+      <Sha>500be9553eeab2afd11d317cde23bfe22449cbb3</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.net6.Manifest-7.0.100" Version="7.0.16" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.net6.Manifest-7.0.100" Version="7.0.17" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>ca510604d1667f32b4fa4653e3d3b64be8136bdc</Sha>
+      <Sha>ec6dc98ec8a69a8eed65d46fda484669a963626d</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-7.0.100" Version="7.0.16" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.net7.Manifest-7.0.100" Version="7.0.17" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>ca510604d1667f32b4fa4653e3d3b64be8136bdc</Sha>
+      <Sha>ec6dc98ec8a69a8eed65d46fda484669a963626d</Sha>
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
