@@ -27,13 +27,7 @@ namespace Java.Interop {
 			}
 		}
 
-		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Design", "CA1031:Do not catch general exception types", Justification = "the *.Export assemblies are optional, so we don't care when they cannot be loaded (they are presumably missing)")]
-#if NET
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, "Java.Interop.MarshalMemberBuilder", "Java.Interop.Export")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "DynamicDependency should preserve the constructor.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "DynamicDependency should preserve the constructor.")]
-		[UnconditionalSuppressMessage ("Trimming", "IL2035", Justification = "Java.Interop.Export.dll is not always present.")]
-#endif
 		partial void SetMarshalMemberBuilder (CreationOptions options)
 		{
 			if (!options.UseMarshalMemberBuilder) {
@@ -45,14 +39,7 @@ namespace Java.Interop {
 				return;
 			}
 
-			Assembly jie;
-			try {
-				jie = Assembly.Load (new AssemblyName ("Java.Interop.Export"));
-			} catch (Exception e) {
-				System.Diagnostics.Debug.WriteLine ($"Java.Interop.Export assembly was not loaded: {e}");
-				return;
-			}
-			var t   = jie.GetType ("Java.Interop.MarshalMemberBuilder");
+			var t   = Type.GetType ("Java.Interop.MarshalMemberBuilder, Java.Interop.Export", throwOnError: false);
 			if (t == null)
 				throw new InvalidOperationException ("Could not find Java.Interop.MarshalMemberBuilder from Java.Interop.Export.dll!");
 			var b   = (JniMarshalMemberBuilder) Activator.CreateInstance (t)!;
