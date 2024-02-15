@@ -1,5 +1,8 @@
 using System;
+using System.Collections;
 using System.Globalization;
+
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks.LLVMIR;
 
@@ -9,6 +12,13 @@ enum LlvmIrVariableWriteOptions
 	None                    = 0x0000,
 	ArrayWriteIndexComments = 0x0001,
 	ArrayFormatInRows       = 0x0002,
+}
+
+enum LlvmIrVariableNumberFormat
+{
+	Default,
+	Hexadecimal,
+	Decimal,
 }
 
 abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
@@ -28,6 +38,8 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	public uint ArrayStride                        { get; set; } = 8;
 	public object? Value                           { get; set; }
 	public string? Comment                         { get; set; }
+
+	public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Decimal;
 
 	/// <summary>
 	/// Both global and local variables will want their names to matter in equality checks, but function
@@ -146,6 +158,50 @@ class LlvmIrLocalVariable : LlvmIrVariable
 	}
 }
 
+enum LlvmIrStreamedArrayDataProviderState
+{
+	NextSection,
+	LastSection,
+	NextSectionNoData,
+	LastSectionNoData,
+}
+
+abstract class LlvmIrStreamedArrayDataProvider
+{
+	/// <summary>
+	/// Type of every member of the array returned by <see cref="GetData ()"/>.  Generator will check
+	/// every member type against this property, allowing also derived types.
+	/// </summary>
+	public Type ArrayElementType { get; }
+
+	protected LlvmIrStreamedArrayDataProvider (Type arrayElementType)
+	{
+		ArrayElementType = arrayElementType;
+	}
+
+	/// <summary>
+	/// Whenever <see cref="GetData ()"/> returns the generator will call this method to obtain the new section
+	/// comment, if any, to be output before the actual data.  Returning `String.Empty` prevents the comment
+	/// from being added.
+	/// </summary>
+	public virtual string GetSectionStartComment (LlvmIrModuleTarget target) => String.Empty;
+
+	/// <summary>
+	/// Provide the next chunk of data for the specified target (ABI).  Implementations need to return at least one
+	/// non-empty collection of data.  The returned collection **must** be exactly the size of contained data (e.g. it cannot be
+	/// a byte array rented from a byte pool, because these can be bigger than requested.  When returning the last (or the only) section,
+	/// <paramref name="status"/> must have a value of <see cref="LlvmIrStreamedArrayDataProviderState.LastSection"/>.
+	/// Each section may be preceded by a comment, <see cref="GetSectionStartComment"/>.
+	/// </summary>
+	public abstract (LlvmIrStreamedArrayDataProviderState status, ICollection data) GetData (LlvmIrModuleTarget target);
+
+	/// <summary>
+	/// Provide the total data size for the specified target (ABI).  This needs to be used instead of <see cref="LlvmIrVariable.ArrayItemCount"/>
+	/// because a variable instance is created once and shared by all targets, while per-target data sets might have different sizes.
+	/// </summary>
+	public abstract ulong GetTotalDataSize (LlvmIrModuleTarget target);
+}
+
 class LlvmIrGlobalVariable : LlvmIrVariable
 {
 	/// <summary>
@@ -162,8 +218,39 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// </summary>
 	public virtual LlvmIrVariableOptions? Options { get; set; }
 
+	/// <summary>
+	/// There are situations when a variable differs enough between architectures, that the difference cannot be
+	/// handled with <seealso cref="BeforeWriteCallback"/>.  In such situations one can create a separate variable
+	/// for each architecture and set this property.
+	/// </summary>
+	public AndroidTargetArch? TargetArch { get; set; }
+
+	/// <summary>
+	/// If set to `true`, initialize the array with a shortcut zero-initializer statement.  Useful when pre-allocating
+	/// space for runtime use that won't be filled in with any data at the build time.
+	/// </summary>
 	public bool ZeroInitializeArray { get; set; }
+
+	/// <summary>
+	/// Specify number of items in an array. Used in cases when we want to pre-allocate an array without giving it any
+	/// value, thus making it impossible for the generator to discover the number of items automatically.  This is useful
+	/// when using <seealso cref="ZeroInitializeArray" />.  This property is used **only** if the variable <see cref="LlvmIrVariable.Value"/>
+	/// is `null`.
+	/// </summary>
 	public ulong ArrayItemCount { get; set; }
+
+	/// <summary>
+	/// If set, it will override any automatically calculated alignment for this variable
+	/// </summary>
+	public ulong? Alignment                        { get; set; }
+
+	/// <summary>
+	/// If set, the provider will be called to obtain all the data to be placed in an array variable. The total amount
+	/// of data that will be returned by the provider **must** be specified in the <see cref="ArrayItemCount"/> property,
+	/// in order for the generator to properly declare the variable.  The generator will verify that the amount of data
+	/// is exactly that much and throw an exception otherwise.
+	/// </summary>
+	public LlvmIrStreamedArrayDataProvider? ArrayDataProvider { get; set; }
 
 	/// <summary>
 	/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
@@ -196,10 +283,15 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	/// generating output for a specific target (e.g. 32-bit vs 64-bit integer variables).  If the variable requires such
 	/// type changes, this should be done at generation time from within the <see cref="BeforeWriteCallback"/> method.
 	/// </summary>
-	public void OverrideValueAndType (Type newType, object? newValue)
+	public void OverrideTypeAndValue (Type newType, object? newValue)
 	{
 		Type = newType;
 		Value = newValue;
+	}
+
+	public void OverrideName (string newName)
+	{
+		Name = newName;
 	}
 }
 

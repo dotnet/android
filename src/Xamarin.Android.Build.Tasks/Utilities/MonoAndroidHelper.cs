@@ -1,18 +1,16 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
-using System.Security.Cryptography;
 using System.Text;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
-using Microsoft.Android.Build.Tasks;
 
 #if MSBUILD
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 #endif
@@ -277,22 +275,6 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		static readonly Dictionary<string, string> ClangAbiMap = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
-			{"arm64-v8a",   "aarch64"},
-			{"armeabi-v7a", "arm"},
-			{"x86",         "i686"},
-			{"x86_64",      "x86_64"}
-		};
-
-		public static string MapAndroidAbiToClang (string androidAbi)
-		{
-			if (ClangAbiMap.TryGetValue (androidAbi, out string clangAbi)) {
-				return clangAbi;
-			}
-			return null;
-		}
-#endif
-
 		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
 		{
 			var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
@@ -313,6 +295,7 @@ namespace Xamarin.Android.Tasks
 			var reader = pe.GetMetadataReader ();
 			return HasMonoAndroidReference (reader);
 		}
+#endif
 
 		public static bool HasMonoAndroidReference (MetadataReader reader)
 		{
@@ -387,7 +370,6 @@ namespace Xamarin.Android.Tasks
 
 			return ret;
 		}
-#endif
 
 		public static bool SaveMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, string> map)
 		{
@@ -448,6 +430,7 @@ namespace Xamarin.Android.Tasks
 				return Files.CopyIfStreamChanged (writer.BaseStream, mapFile);
 			}
 		}
+#endif // MSBUILD
 
 		public static string [] GetProguardEnvironmentVaribles (string proguardHome)
 		{
@@ -482,6 +465,8 @@ namespace Xamarin.Android.Tasks
 			yield return executable;
 		}
 
+
+#if MSBUILD
 		public static string TryGetAndroidJarPath (TaskLoggingHelper log, string platform, bool designTimeBuild = false, bool buildingInsideVisualStudio = false, string targetFramework = "", string androidSdkDirectory = "")
 		{
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
@@ -503,7 +488,7 @@ namespace Xamarin.Android.Tasks
 
 		public static Dictionary<string, string> LoadResourceCaseMap (IBuildEngine4 engine, Func<object, object> keyCallback) =>
 			engine.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, string>> (keyCallback (ResourceCaseMapKey), RegisteredTaskObjectLifetime.Build) ?? new Dictionary<string, string> (0);
-
+#endif // MSBUILD
 		public static string FixUpAndroidResourcePath (string file, string resourceDirectory, string resourceDirectoryFullPath, Dictionary<string, string> resource_name_case_map)
 		{
 			string newfile = null;
@@ -523,7 +508,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		static readonly char [] DirectorySeparators = new [] { Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar };
-
+#if MSBUILD
 		/// <summary>
 		/// Returns the relative path that should be used for an @(AndroidAsset) item
 		/// </summary>
@@ -535,57 +520,9 @@ namespace Xamarin.Android.Tasks
 			path = head.Length == path.Length ? path : path.Substring ((head.Length == 0 ? 0 : head.Length + 1) + assetsDirectory.Length).TrimStart (DirectorySeparators);
 			return path;
 		}
+#endif // MSBUILD
 
-		public static AndroidTargetArch AbiToTargetArch (string abi)
-		{
-			return abi switch {
-				"armeabi-v7a" => AndroidTargetArch.Arm,
-				"arm64-v8a"   => AndroidTargetArch.Arm64,
-				"x86_64"      => AndroidTargetArch.X86_64,
-				"x86"         => AndroidTargetArch.X86,
-				_             => throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'")
-			};
-		}
 
-		public static string AbiToRid (string abi)
-		{
-			switch (abi) {
-				case "arm64-v8a":
-					return "android-arm64";
-
-				case "armeabi-v7a":
-					return "android-arm";
-
-				case "x86":
-					return "android-x86";
-
-				case "x86_64":
-					return "android-x64";
-
-				default:
-					throw new InvalidOperationException ($"Internal error: unsupported ABI '{abi}'");
-			}
-		}
-
-		public static string ArchToRid (AndroidTargetArch arch)
-		{
-			return arch switch {
-				AndroidTargetArch.Arm64  => "android-arm64",
-				AndroidTargetArch.Arm    => "android-arm",
-				AndroidTargetArch.X86    => "android-x86",
-				AndroidTargetArch.X86_64 => "android-x64",
-				_                        => throw new InvalidOperationException ($"Internal error: unsupported ABI '{arch}'")
-			};
-		}
-
-		public static string? CultureInvariantToString (object? obj)
-		{
-			if (obj == null) {
-				return null;
-			}
-
-			return Convert.ToString (obj, CultureInfo.InvariantCulture);
-		}
 
 		/// <summary>
 		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).
@@ -604,15 +541,19 @@ namespace Xamarin.Android.Tasks
 			return apiLevel;
 		}
 
-		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem)
+#if MSBUILD
+		public static string GetAssemblyAbi (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("Abi");
 			if (String.IsNullOrEmpty (abi)) {
-				return AndroidTargetArch.None;
+				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks ABI metadata");
 			}
 
-			return AbiToTargetArch (abi);
+			return abi;
 		}
+
+		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
+#endif // MSBUILD
 
 		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
 		{
