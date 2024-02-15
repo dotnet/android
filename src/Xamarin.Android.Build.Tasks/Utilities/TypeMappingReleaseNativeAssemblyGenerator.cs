@@ -407,31 +407,11 @@ namespace Xamarin.Android.Tasks
 				TypeMapJava entry = cs.JavaMap[i].Instance;
 
 				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
-				entry.JavaNameHash32 = (uint)HashName (entry.JavaName, is64Bit: false);
+				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: false);
 				hashes32.Add (entry.JavaNameHash32);
 
-				entry.JavaNameHash64 = HashName (entry.JavaName, is64Bit: true);
+				entry.JavaNameHash64 = TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: true);
 				hashes64.Add (entry.JavaNameHash64);
-			}
-
-			ulong HashName (string name, bool is64Bit)
-			{
-				if (name.Length == 0) {
-					return UInt64.MaxValue;
-				}
-
-				// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
-				// the same
-				return HashBytes (Encoding.Unicode.GetBytes (name), is64Bit);
-			}
-
-			ulong HashBytes (byte[] bytes, bool is64Bit)
-			{
-				if (is64Bit) {
-					return XxHash64.HashToUInt64 (bytes);
-				}
-
-				return (ulong)XxHash32.HashToUInt32 (bytes);
 			}
 		}
 	}

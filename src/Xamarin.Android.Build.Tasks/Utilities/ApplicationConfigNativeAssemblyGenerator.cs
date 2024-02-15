@@ -150,7 +150,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
-		const ulong FORMAT_TAG = 0x015E6972616D58;
+		const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
 
 		SortedDictionary <string, string>? environmentVariables;
 		SortedDictionary <string, string>? systemProperties;
