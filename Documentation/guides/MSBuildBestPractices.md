@@ -42,7 +42,7 @@ You can then start your test app with the `dotnet-local` script (so it uses your
 MSBUILDDEBUGONSTART=2 ~/<some xamarin.android checkout>/dotnet-local.sh build -m:1
 ```
 
-### [MacOS](#tab/linux)
+### [Linux](#tab/linux)
 
 ```dotnetcli
 MSBUILDDEBUGONSTART=2 ~/<some xamarin.android checkout>/dotnet-local.sh build -m:1
