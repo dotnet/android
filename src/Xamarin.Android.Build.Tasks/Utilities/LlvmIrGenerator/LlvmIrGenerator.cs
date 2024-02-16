@@ -798,7 +798,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			context.Output.Write (']');
 		}
 
- 		uint GetArrayStride (LlvmIrVariable variable)
+		uint GetArrayStride (LlvmIrVariable variable)
 		{
 			if ((variable.WriteOptions & LlvmIrVariableWriteOptions.ArrayFormatInRows) == LlvmIrVariableWriteOptions.ArrayFormatInRows) {
 				return variable.ArrayStride > 0 ? variable.ArrayStride : 1;

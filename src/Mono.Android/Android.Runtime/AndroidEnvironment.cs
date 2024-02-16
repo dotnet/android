@@ -335,12 +335,15 @@ namespace Android.Runtime {
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
 		static object GetHttpMessageHandler ()
 		{
+			Logger.Log (LogLevel.Warn, "MonoAndroid", "GetHttpMessageHandler ()");
 			if (httpMessageHandlerType is null) {
+				Logger.Log (LogLevel.Warn, "MonoAndroid", "  httpMessageHandlerType is null");
 				var handlerTypeName = Environment.GetEnvironmentVariable ("XA_HTTP_CLIENT_HANDLER_TYPE")?.Trim ();
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"  handlerTypeName from env == '{handlerTypeName}'");
 				Type? handlerType = null;
 				if (!String.IsNullOrEmpty (handlerTypeName))
 					handlerType = Type.GetType (handlerTypeName, throwOnError: false);
-
+				Logger.Log (LogLevel.Warn, "MonoAndroid", $"  handlerType #1 == '{handlerType}'");
 				// We don't do any type checking or casting here to avoid dependency on System.Net.Http in Mono.Android.dll
 				if (handlerType is null || !IsAcceptableHttpMessageHandlerType (handlerType)) {
 					handlerType = GetFallbackHttpMessageHandlerType ();
@@ -348,13 +351,14 @@ namespace Android.Runtime {
 
 				httpMessageHandlerType = handlerType;
 			}
-
+			Logger.Log (LogLevel.Warn, "MonoAndroid", $"  httpMessageHandlerType == '{httpMessageHandlerType}'");
 			return Activator.CreateInstance (httpMessageHandlerType)
 				?? throw new InvalidOperationException ($"Could not create an instance of HTTP message handler type {httpMessageHandlerType.AssemblyQualifiedName}");
 		}
 
 		static bool IsAcceptableHttpMessageHandlerType (Type handlerType)
 		{
+			Logger.Log (LogLevel.Warn, "MonoAndroid", $"IsAcceptableHttpMessageHandlerType ({handlerType})");
 			if (Extends (handlerType, "System.Net.Http.HttpClientHandler, System.Net.Http")) {
 				// It's not possible to construct HttpClientHandler in this method because it would cause infinite recursion
 				// as HttpClientHandler's constructor calls the GetHttpMessageHandler function
@@ -366,6 +370,7 @@ namespace Android.Runtime {
 				return false;
 			}
 
+			Logger.Log (LogLevel.Warn, "MonoAndroid", "  all's good");
 			return true;
 		}
 
