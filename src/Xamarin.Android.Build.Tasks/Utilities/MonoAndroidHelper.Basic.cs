@@ -87,7 +87,7 @@ partial class MonoAndroidHelper
 	public static AndroidTargetArch AbiToTargetArch (string abi)
 	{
 		if (!AbiToArchMap.TryGetValue (abi, out AndroidTargetArch arch)) {
-			throw new NotSupportedException ($"Internal error: unsupported ABI '{abi}'");
+			return AndroidTargetArch.None;
 		};
 
 		return arch;

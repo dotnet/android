@@ -542,14 +542,9 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string GetAssemblyAbi (ITaskItem asmItem)
+		public static string? GetAssemblyAbi (ITaskItem asmItem)
 		{
-			string? abi = asmItem.GetMetadata ("Abi");
-			if (String.IsNullOrEmpty (abi)) {
-				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks ABI metadata");
-			}
-
-			return abi;
+			return asmItem.GetMetadata ("Abi");
 		}
 
 		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
