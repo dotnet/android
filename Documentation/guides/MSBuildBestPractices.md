@@ -5,6 +5,52 @@ This guide is a work-in-progress, but really has two main goals:
 - What are good MSBuild practice in relation to what we already have
   going on in Xamarin.Android MSBuild targets?
 
+## Debugging MSBuild Tasks
+
+One thing that is very useful is the ability to debug your Tasks while
+they are being run on a build process. This is possible thanks to the
+`MSBUILDDEBUGONSTART` environment variable. When set to `2` this will
+force MSBuild to wait for a debugger connection before continuing.
+You will see the following prompt.
+
+```dotnetcli
+Waiting for debugger to attach (dotnet PID 13001).  Press enter to continue...
+```
+
+You can then use VS or VSCode to attach to this process and debug you tasks.
+
+In the case of .NET Android we need to do a couple of thing first though. Firstly
+we need to disable the use of `ILRepacker` on the `Xamarin.Android.Build.Tasks`
+assembly. This is because `ILRepacker` does NOT handle debug symbols very well.
+Assemblies it generates seem to be JIT optimized so the debugger will not load
+the symbols. A new MSBuild property has been introduced to disable this feature
+while debugging. `_ILRepackEnabled` can be set as an environment variable which
+MSBuild will pickup. 
+
+```dotnetcli
+make prepare && _ILRepackEnabled=false make jenkins
+```
+
+This will disable the `ILRepacker` for the build.
+
+You can then start your test app with the `dotnet-local` script (so it uses your build)
+
+```dotnetcli
+MSBUILDDEBUGONSTART=2 ~/<some xamarin.android checkout>/dotnet-local.sh build -m:1
+```
+
+Once MSBuild starts it will print the following
+
+```dotnetcli
+Waiting for debugger to attach (dotnet PID xxxx).  Press enter to continue...
+```
+
+You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the Xamarin.Android.sln solution open. For VSCode open the workspace then use the `Debug MSBuild Task` Run and Debug option. You will be prompted for the PID and it will then connect.
+
+Once connection go back to your command prompt and press ENTER so that the MSBuild process can continue.
+
+You will be able to set breakpoints in Tasks (but not Targets) and step through code from this point on.
+
 ## Naming
 
 MSBuild targets, properties, and item groups are prefixed with an
