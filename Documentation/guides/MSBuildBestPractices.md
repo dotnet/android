@@ -25,9 +25,10 @@ assembly. This is because `ILRepacker` does NOT handle debug symbols very well.
 Assemblies it generates seem to be JIT optimized so the debugger will not load
 the symbols. A new MSBuild property has been introduced to disable this feature
 while debugging. `_ILRepackEnabled` can be set as an environment variable which
-MSBuild will pickup. 
+MSBuild will pickup. You will also need to build the `Debug` Configuration.
 
 ```dotnetcli
+export CONFIGURATION=Debug
 make prepare && _ILRepackEnabled=false make jenkins
 ```
 
