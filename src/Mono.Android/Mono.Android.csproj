@@ -3,6 +3,8 @@
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
+  <!-- TODO: To be enabled in a future PR -->
+  <!-- <Import Project="$(XamarinAndroidSourcePath)build-tools/trim-analyzers/trim-analyzers.targets" /> -->
 
   <PropertyGroup>
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>

@@ -395,11 +395,18 @@ namespace Android.Graphics
 
 	public class ColorValueMarshaler : JniValueMarshaler<Color>
 	{
+		const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+		const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
+
 		public override Type MarshalType {
 			get { return typeof (int); }
 		}
 
-		public override Color CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type targetType)
+		public override Color CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type targetType)
 		{
 			throw new NotImplementedException ();
 		}
@@ -414,6 +421,7 @@ namespace Android.Graphics
 			throw new NotImplementedException ();
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type targetType)
 		{
 			var c = typeof (Color).GetConstructor (new[]{typeof (int)})!;
@@ -424,6 +432,7 @@ namespace Android.Graphics
 			return v;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize)
 		{
 			var r = Expression.Variable (MarshalType, sourceValue.Name + "_p");
@@ -433,6 +442,7 @@ namespace Android.Graphics
 			return r;
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			return CreateParameterFromManagedExpression (context, sourceValue, 0);
