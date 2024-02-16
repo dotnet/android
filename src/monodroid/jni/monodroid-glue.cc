@@ -733,8 +733,10 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
 	}
 
+	log_info (LOG_ASSEMBLY, "grendel: create_domain, runtime config present? %s", embeddedAssemblies.have_runtime_config_blob () ? "yes" : "no");
 	if (embeddedAssemblies.have_runtime_config_blob ()) {
 		runtime_config_args.kind = 1;
+		log_info (LOG_ASSEMBLY, "grendel: registering runtime config blob");
 		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
 	}
@@ -1319,6 +1321,8 @@ MonodroidRuntime::set_profile_options ()
 			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
+
+		utils.create_public_directory (AndroidSystem::override_dirs[0]);
 	}
 
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
