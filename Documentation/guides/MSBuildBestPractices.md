@@ -39,6 +39,8 @@ You can then start your test app with the `dotnet-local` script (so it uses your
 MSBUILDDEBUGONSTART=2 ~/<some xamarin.android checkout>/dotnet-local.sh build -m:1
 ```
 
+Note: the `-m:1` is important as it restricts MSBuild to 1 node.
+
 Once MSBuild starts it will print the following
 
 ```dotnetcli
