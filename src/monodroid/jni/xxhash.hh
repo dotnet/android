@@ -156,7 +156,7 @@ namespace xamarin::android
 	class xxhash64 final
 	{
 	public:
-		force_inline static constexpr XXH64_hash_t hash (const char *p, size_t len) noexcept
+		force_inline static XXH64_hash_t hash (const char *p, size_t len) noexcept
 		{
 			return XXH3_64bits (static_cast<const void*>(p), len);
 		}
