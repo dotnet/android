@@ -50,7 +50,7 @@ Waiting for debugger to attach (dotnet PID xxxx).  Press enter to continue...
 
 You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the Xamarin.Android.sln solution open. For VSCode open the workspace then use the `Debug MSBuild Task` Run and Debug option. You will be prompted for the PID and it will then connect.
 
-Once connection go back to your command prompt and press ENTER so that the MSBuild process can continue.
+Once connected go back to your command prompt and press ENTER so that the MSBuild process can continue.
 
 You will be able to set breakpoints in Tasks (but not Targets) and step through code from this point on.
 
