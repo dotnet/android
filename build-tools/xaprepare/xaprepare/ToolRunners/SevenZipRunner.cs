@@ -38,6 +38,13 @@ namespace Xamarin.Android.Prepare
 			ProcessRunner runner = CreateProcessRunner ("x");
 			AddStandardArguments (runner);
 			AddArguments (runner, extraArguments);
+
+			// Ignore some "dangerous" symbolic symlinks in the ZIP archives. This allows 7zip to unpack Android NDK archives
+			// without error.  The option appears to be undocumented, but was mentioned by the 7zip author here:
+			//
+			//   https://sourceforge.net/p/sevenzip/discussion/45798/thread/187ce54fb0/
+			//
+			runner.AddArgument ("-snld");
 			runner.AddQuotedArgument ($"-o{outputDirectory}");
 			runner.AddQuotedArgument (archivePath);
 
