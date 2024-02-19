@@ -1321,8 +1321,9 @@ MonodroidRuntime::set_profile_options ()
 			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
-
-		utils.create_public_directory (AndroidSystem::override_dirs[0]);
+	}
+	if (utils.create_directory (AndroidSystem::override_dirs[0], 0) < 0) {
+		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", AndroidSystem::override_dirs[0], std::strerror (errno));
 	}
 
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());
