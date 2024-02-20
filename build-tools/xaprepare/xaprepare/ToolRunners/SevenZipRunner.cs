@@ -10,6 +10,10 @@ namespace Xamarin.Android.Prepare
 	{
 		const double DefaultTimeout = 30; // minutes
 		static readonly Version bsoepMinVersion = new Version (15, 5);
+
+		// Just an educated guess.  The official download page had versions 19 and then 23+ available
+		// and the 19 one didn't support the `-snld` switch
+		static readonly Version snldMinVersion = new Version (20, 0);
 		Version version;
 
 		protected override string DefaultToolExecutableName => "7za";
@@ -36,12 +40,6 @@ namespace Xamarin.Android.Prepare
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
 
 			ProcessRunner runner = CreateProcessRunner ("x");
-			// Ignore some "dangerous" symbolic symlinks in the ZIP archives. This allows 7zip to unpack Android NDK archives
-			// without error.  The option appears to be undocumented, but was mentioned by the 7zip author here:
-			//
-			//   https://sourceforge.net/p/sevenzip/discussion/45798/thread/187ce54fb0/
-			//
-			runner.AddArgument ("-snld");
 
 			AddStandardArguments (runner);
 			AddArguments (runner, extraArguments);
@@ -121,6 +119,18 @@ namespace Xamarin.Android.Prepare
 
 		void AddStandardArguments (ProcessRunner runner)
 		{
+			Log.DebugLine ($"7-zip standard arguments, for 7z version {version}");
+
+			// Ignore some "dangerous" symbolic symlinks in the ZIP archives. This allows 7zip to unpack Android NDK archives
+			// without error.  The option appears to be undocumented, but was mentioned by the 7zip author here:
+			//
+			//   https://sourceforge.net/p/sevenzip/discussion/45798/thread/187ce54fb0/
+			//
+			if (version >= snldMinVersion) {
+				Log.DebugLine ("Adding option to ignore dangerous symlinks");
+				runner.AddArgument ("-snld");
+			}
+
 			// Disable progress indicator (doesn't appear to have any effect with some versions of 7z)
 			runner.AddArgument ("-bd");
 

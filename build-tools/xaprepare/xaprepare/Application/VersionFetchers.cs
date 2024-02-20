@@ -18,7 +18,7 @@ namespace Xamarin.Android.Prepare
 
 		public Dictionary<string, ProgramVersionParser> Fetchers => GetFetchers ();
 
-		static Regex MakeRegex (string regex)
+		internal static Regex MakeRegex (string regex)
 		{
 			return new Regex (regex, RegexOptions.Compiled | RegexOptions.Singleline);
 		}
@@ -30,8 +30,11 @@ namespace Xamarin.Android.Prepare
 					return fetchers;
 
 				fetchers = new Dictionary <string, ProgramVersionParser> (Context.Instance.OS.DefaultStringComparer) {
-					{"7z",       "--help",    MakeRegex ($"Version {StandardVersionRegex}"),   3},
-					{"7za",      "--help",    MakeRegex ($"Version {StandardVersionRegex}"),   3},
+					// Program-specific parsers
+					{"7z",       new SevenZipVersionParser ("7z", MakeRegex ($"Version {StandardVersionRegex}"))},
+					{"7za",      new SevenZipVersionParser ("7za", MakeRegex ($"Version {StandardVersionRegex}"))},
+
+					// Regex parsers
 					{"autoconf", "--version", StandardVersionAtEOL,                            1},
 					{"automake", "--version", StandardVersionAtEOL,                            1},
 					{"brew",     "--version", MakeRegex ($"^Homebrew {StandardVersionRegex}"), 1},
