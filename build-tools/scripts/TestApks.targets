@@ -104,7 +104,7 @@
         WriteOutputAsMessage="True"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) shell setprop debug.mono.log default,assembly,timing=bare"
+        Arguments="$(_AdbTarget) shell setprop debug.mono.log default,assembly,timing=bare,mono_log_level=debug,mono_log_mask=all"
         IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"
