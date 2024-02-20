@@ -1,42 +1,64 @@
-# Using a device connected via USB
+# Tracing .NET Android Applications
 
-## Startup profiling
-### Set up reverse port forwarding:
+Attaching `dotnet-trace` to a .NET Android application, allows you to
+get profiling information in formats like `.nettrace` and
+`.speedscope`. These give you CPU sampling information about the time
+spent in each method in your application. This is quite useful for
+finding *where* time is spent in the startup or general performance of
+your .NET applications.
 
-Note that you can skip this step if the Android application is running on an
-Android emulator; it is only required for physical Android devices.
+To use `dotnet-trace` on Android, the following tools/components work
+together to make this happen:
+
+* [`dotnet-trace`][dotnet-trace] itself is a .NET global tool.
+
+* [`dotnet-dsrouter`][dotnet-dsrouter] is a .NET global tool that
+  forwards a connection from a remote Android or iOS device or
+  emulator to a local port on your development machine.
+
+* [`dotnet-gcdump`][dotnet-gcdump] is a .NET global tool that can be
+  used to collect memory dumps of .NET applications.
+
+* The Mono Diagnostic component, `libmono-component-diagnostics_tracing.so`,
+  is included in the application and is used to collect the trace data.
+
+See the [`dotnet-trace` documentation][dotnet-trace] for further details about its usage.
+
+[dotnet-trace]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-trace
+[dotnet-dsrouter]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter
+[dotnet-gcdump]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-gcdump
+
+## Install .NET Global Tools
+
+Generally, you can install the required tooling such as:
 
 ```sh
-$ adb reverse tcp:9000 tcp:9001
-```
-This will forward port 9000 on device to port 9001.
-
-_Alternatively:_
-```sh
-$ adb reverse tcp:0 tcp:9001
-43399
-```
-This will allocate a random port on remote and forward it to port 9001 on the host. The forwarded port is printed by adb
-
-### Install `dotnet-dsrouter`
-
-Generally, you can use a stable `dotnet-dsrouter` from NuGet:
-
-```sh
+$ dotnet tool install -g dotnet-trace
+You can invoke the tool using the following command: dotnet-trace
+Tool 'dotnet-trace' was successfully installed.
 $ dotnet tool install -g dotnet-dsrouter
+You can invoke the tool using the following command: dotnet-dsrouter
+Tool 'dotnet-dsrouter' was successfully installed.
+$ dotnet tool install -g dotnet-gcdump
+You can invoke the tool using the following command: dotnet-gcdump
+Tool 'dotnet-gcdump' was successfully installed.
+```
+
+You can also install prerelease builds from the nightly feed
+`https://aka.ms/dotnet-tools/index.json`:
+
+```sh
+$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
 You can invoke the tool using the following command: dotnet-dsrouter
 Tool 'dotnet-dsrouter' was successfully installed.
 ```
 
-Or use a build from the nightly feed `https://aka.ms/dotnet-tools/index.json`:
+## Configuration & Setup
 
-```sh
-$ dotnet tool install -g dotnet-dsrouter --add-source=https://aka.ms/dotnet-tools/index.json --prerelease
-```
+### Running `dotnet-dsrouter` on the Host
 
-### Start the tracing router/proxy on host
+For profiling an Android application running on an Android *emulator*:
 
-For profiling an Android application running on an Android _emulator_:
 ```sh
 $ dotnet-dsrouter android-emu
 How to connect current dotnet-dsrouter pid=1234 with android emulator and diagnostics tooling.
@@ -55,7 +77,7 @@ info: dotnet-dsrouter-1234[0]
       Starting IPC server (dotnet-diagnostic-dsrouter-1234) <--> TCP server (127.0.0.1:9000) router.
 ```
 
-For profiling an Android application running on an Android _device_:
+For profiling an Android application running on an Android *device*:
 
 ```sh
 # `adb reverse` is required when using hardware devices
@@ -72,12 +94,12 @@ dotnet-trace collect -p 1234
 ...
 ```
 
-### Configure the device so that the profiled app suspends until tracing utility connects
+### Android System Properties
 
 Note the log message that `dotnet-dsrouter` prints that mentions
 `$DOTNET_DiagnosticPorts`. `$DOTNET_DiagnosticPorts` is an environment
-variable that could be defined in an `@(AndroidEnvironment)`, but it
-is simpler to use the `debug.mono.profile` Android system property.
+variable that could be defined in an `@(AndroidEnvironment)` file, but
+it is simpler to use the `debug.mono.profile` Android system property.
 Android system properties can be used without rebuilding the app.
 
 For emulators, `$DOTNET_DiagnosticPorts` should specify an IP address
@@ -92,6 +114,8 @@ For devices, `$DOTNET_DiagnosticPorts` should specify an IP address of
 reverse](#start-the-tracing-routerproxy-on-host), e.g:
 
 ```sh
+# `adb reverse` is required when using hardware devices
+$ adb reverse tcp:9000 tcp:9001
 $ adb shell setprop debug.mono.profile '127.0.0.1:9000,suspend,connect'
 ```
 
@@ -104,11 +128,11 @@ documentation][nosuspend] for further information.
 
 [nosuspend]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-dsrouter#collect-a-trace-using-dotnet-trace-from-a-net-application-running-on-android
 
-### Start the tracing client
+### Running `dotnet-trace` on the Host
 
 First, run `dotnet-trace ps` to find a list of processes:
 
-```
+```sh
 > dotnet-trace ps
  38604  dotnet-dsrouter  C:\Users\myuser\.dotnet\tools\dotnet-dsrouter.exe  "C:\Users\myuser\.dotnet\tools\dotnet-dsrouter.exe" android-emu --verbose debug
 ```
@@ -118,7 +142,7 @@ connect *through it* appropriately.
 
 Using the process ID from the previous step, run `dotnet-trace collect`:
 
-```
+```sh
 $ dotnet-trace collect -p 38604 --format speedscope
 No profile or providers specified, defaulting to trace profile 'cpu-sampling'
 
@@ -130,19 +154,23 @@ Waiting for connection on /tmp/maui-app
 Start an application with the following environment variable: DOTNET_DiagnosticPorts=/tmp/maui-app
 ```
 
-The `--format` argument is optional and it defaults to `nettrace`. However, `nettrace` files can be viewed only with
-Perfview on Windows, while the speedscope JSON files can be viewed "on" Unix by uploading them to https://speedscope.app
+The `--format` argument is optional and it defaults to `nettrace`.
+However, `nettrace` files can be viewed only with Perfview or Visual
+Studio on Windows, while the speedscope JSON files can be viewed "on"
+Unix by uploading them to [https://speedscope.app/][speedscope].
 
-### Compile and run the application
+[speedscope]: https://speedscope.app/
+
+### Running the .NET Android Application
 
 `$(AndroidEnableProfiler)` must be set to `true` as it includes the
 Mono diagnostic component in the application. This component is the
 `libmono-component-diagnostics_tracing.so` native library.
 
-```
+```sh
 $ dotnet build -f net8.0-android -t:Run -c Release -p:AndroidEnableProfiler=true
 ```
-_NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`._
+*NOTE: `-f net8.0-android` is only needed for projects with multiple `$(TargetFrameworks)`.*
 
 Once the application is installed and started, `dotnet-trace` should show something similar to:
 
@@ -168,14 +196,8 @@ directory.
 
 ## How to get GC memory dumps?
 
-If running on desktop, you can use the `dotnet-gcdump` global tool.
-This can be installed via:
-
-```dotnetcli
-$ dotnet tool install --global dotnet-gcdump
-```
-
-To use it, for example:
+If running on desktop, you can use the `dotnet-gcdump` global tool for
+local processes. For example:
 
 ```sh
 # `hw-readline` is a standard Hello World, with a `Console.ReadLine()` at the end
@@ -194,6 +216,7 @@ $ dotnet-gcdump collect -p 33972
 Writing gcdump to '.../hw-readline/20230314_113922_33972.gcdump'...
 	Finished writing 5624131 bytes.
 ```
+
 See the [`dotnet-gcdump` documentation][dotnet-gcdump]
 for further details about its usage.
 
@@ -258,12 +281,11 @@ This saves a `foo.gcdump` that you can open in Visual Studio.
 See the [dotnet/runtime documentation][gc-dumps-on-mono] for
 additional details.
 
-[dotnet-gcdump]: https://learn.microsoft.com/dotnet/core/diagnostics/dotnet-gcdump
 [mono-events]: https://github.com/dotnet/runtime/blob/c887c92d8af4ce65b19962b777f96ae8eb997a42/src/coreclr/vm/ClrEtwAll.man#L7433-L7468
 [dotnet-trace-help]: https://github.com/dotnet/diagnostics/blob/6d755e8b5435b1380c118e9d81e075654b0330c9/documentation/dotnet-trace-instructions.md#dotnet-trace-help
 [gc-dumps-on-mono]: https://github.com/dotnet/runtime/blob/728fd85bc7ad04f5a0ea2ad0d4d8afe371ff9b64/docs/design/mono/diagnostics-tracing.md#collect-gc-dumps-on-monovm
 
-## How to `dotnet trace` our build?
+## How to `dotnet trace` a Build?
 
 Setting this up is easy, the main issue is there end up being
 potentially *a lot* of threads (30-40) depending on the build.
