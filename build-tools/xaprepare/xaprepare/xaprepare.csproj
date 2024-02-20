@@ -1,16 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../Configuration.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>$(LangVersion)</LangVersion>
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
     <AssemblyName>xaprepare</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <Import Project="../../../Configuration.props" />
 
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)/BuildInfo.Generated.cs" />
