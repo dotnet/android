@@ -87,6 +87,12 @@ extends:
         name: AzurePipelines-EO
         image: $(WindowsPoolImage1ESPT)
         os: windows
+      sourceRepositoriesToScan:
+        include:
+        - repository: monodroid
+        exclude:
+        - repository: yaml-templates
+        - repository: maui
     # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
