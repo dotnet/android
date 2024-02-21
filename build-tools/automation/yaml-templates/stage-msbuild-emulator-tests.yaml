@@ -31,13 +31,11 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: setup-test-environment.yaml
+    - template: setup-test-environment.yaml@self
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        installLegacyDotNet: false
         installLegacyXamarinAndroid: true
-        restoreNUnitConsole: false
         updateMono: true
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
@@ -49,29 +47,29 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: start-stop-emulator.yaml
+    - template: start-stop-emulator.yaml@self
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: run-sliced-nunit-tests.yaml
+    - template: run-sliced-nunit-tests.yaml@self
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
         testRunTitle: MSBuildDeviceIntegration On Device - macOS
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
-      - template: start-stop-emulator.yaml
+      - template: start-stop-emulator.yaml@self
         parameters:
           command: stop
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: upload-results.yaml
+    - template: upload-results.yaml@self
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: fail-on-issue.yaml
+    - template: fail-on-issue.yaml@self
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
 
@@ -92,13 +90,10 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: setup-test-environment.yaml
+    - template: setup-test-environment.yaml@self
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
@@ -109,7 +104,7 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: start-stop-emulator.yaml
+    - template: start-stop-emulator.yaml@self
       parameters:
         specificImage: true
         deviceName: $(deviceName)
@@ -119,7 +114,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: run-sliced-nunit-tests.yaml
+    - template: run-sliced-nunit-tests.yaml@self
       parameters:
         testRunTitle: WearOS On Device - macOS
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
@@ -127,7 +122,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
-      - template: start-stop-emulator.yaml
+      - template: start-stop-emulator.yaml@self
         parameters:
           command: stop
           specificImage: true
@@ -137,12 +132,12 @@ stages:
           avdType: $(avdType)
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: upload-results.yaml
+    - template: upload-results.yaml@self
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: fail-on-issue.yaml
+    - template: fail-on-issue.yaml@self
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}

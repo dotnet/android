@@ -25,17 +25,14 @@ jobs:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-    - template: kill-processes.yaml
+    - template: kill-processes.yaml@self
 
-    - template: clean.yaml
+    - template: clean.yaml@self
 
-  - template: setup-test-environment.yaml
+  - template: setup-test-environment.yaml@self
     parameters:
       installTestSlicer: true
-      installLegacyDotNet: false
       installLegacyXamarinAndroid: true
-      restoreNUnitConsole: false
-      updateMono: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
@@ -45,7 +42,7 @@ jobs:
       artifactName: $(TestAssembliesArtifactName)
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-  - template: run-sliced-nunit-tests.yaml
+  - template: run-sliced-nunit-tests.yaml@self
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }}
@@ -53,11 +50,11 @@ jobs:
       retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
-  - template: upload-results.yaml
+  - template: upload-results.yaml@self
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
-  - template: fail-on-issue.yaml
+  - template: fail-on-issue.yaml@self
     parameters:
       condition: ${{ parameters.shouldFailOnIssue }}

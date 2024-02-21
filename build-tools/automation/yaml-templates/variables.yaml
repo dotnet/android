@@ -35,6 +35,10 @@ variables:
   value: windows-2022
 - name: 1ESWindowsPool
   value: android-win-2022
+- name: WindowsPoolImage1ESPT
+  value: 1ESPT-Windows2022
+- name: LinuxPoolImage1ESPT
+  value: 1ESPT-Ubuntu22.04
 - name: VSEngMicroBuildPool
   value: VSEngSS-MicroBuild2022-1ES
 - name: TeamName

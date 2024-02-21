@@ -10,7 +10,7 @@ steps:
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
   displayName: set JI_JAVA_HOME
 
-- template: use-dot-net.yaml
+- template: use-dot-net.yaml@self
   parameters:
     remove_dotnet: true
 
@@ -72,7 +72,7 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- template: install-microbuild-tooling.yaml
+- template: install-microbuild-tooling.yaml@self
   parameters:
     condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
 
@@ -121,7 +121,7 @@ steps:
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-ex.binlog
 
-- template: remove-microbuild-tooling.yaml
+- template: remove-microbuild-tooling.yaml@self
   parameters:
     condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
@@ -129,13 +129,13 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: upload nupkgs
   inputs:
     artifactName: ${{ parameters.nugetArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: upload test assemblies
   inputs:
     artifactName: ${{ parameters.testAssembliesArtifactName }}
@@ -148,13 +148,13 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: zip Windows toolchain pdb files
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: upload Windows toolchain pdb files
   inputs:
     artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
     targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: upload build tools inventory
   inputs:
     artifactName: AndroidBuildToolsInventory

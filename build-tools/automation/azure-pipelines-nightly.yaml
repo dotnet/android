@@ -118,9 +118,6 @@ stages:
     steps:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $(JAVA_HOME_11_X64)
 
@@ -200,9 +197,6 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $HOME/android-toolchain/jdk-17
 
@@ -258,9 +252,6 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $HOME/android-toolchain/jdk-17
 
@@ -303,9 +294,6 @@ stages:
     - template: yaml-templates/setup-test-environment.yaml
       parameters:
         installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
 
     - task: DownloadPipelineArtifact@2
       displayName: Download binutils pdbs

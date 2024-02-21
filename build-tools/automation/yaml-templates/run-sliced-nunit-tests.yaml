@@ -28,7 +28,7 @@ steps:
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
-  - template: run-nunit-tests.yaml
+  - template: run-nunit-tests.yaml@self
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
       testAssembly: ${{ parameters.testAssembly }}
@@ -70,7 +70,7 @@ steps:
       custom: build-server
       arguments: shutdown
 
-  - template: run-nunit-tests.yaml
+  - template: run-nunit-tests.yaml@self
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
       testAssembly: ${{ parameters.testAssembly }}

@@ -12,7 +12,7 @@ steps:
   displayName: Set upload artifact name
   condition: ${{ parameters.condition }}
 
-- task: PublishPipelineArtifact@1
+- task: 1ES.PublishPipelineArtifact@1
   displayName: ${{ parameters.displayName }}
   inputs:
     artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)

@@ -1,6 +1,4 @@
 parameters:
-  buildPoolName: $(MacBuildPoolName)
-  buildPoolImage: $(MacBuildPoolImage)
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
@@ -28,9 +26,10 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: ${{ parameters.buildPoolName }}
-      vmImage: ${{ parameters.buildPoolImage }}
-      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private'), ne(variables['Build.DefinitionName'], 'xamarin.megapipeline')), eq(variables['Build.Reason'], 'PullRequest')) }}:
+      name: $(MacBuildPoolName)
+      vmImage: $(MacBuildPoolImage)
+      os: macOS
+      ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
         demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
@@ -44,37 +43,14 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: commercial-build.yaml
+    - template: commercial-build.yaml@self
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
 
-    - powershell: |
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
-      displayName: create SBOM directories
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: generate components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        BuildDropPath: $(Build.StagingDirectory)/empty
-        BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
-        ManifestDirPath: $(Build.StagingDirectory)/sbom-components
-        PackageName: .NET Android
-        Verbosity: Verbose
-
-    - task: PublishBuildArtifacts@1
-      displayName: publish components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        artifactName: sbom-components-macos
-        pathToPublish: $(Build.StagingDirectory)/sbom-components
-
-    - template: upload-results.yaml
+    - template: upload-results.yaml@self
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}

@@ -1,6 +1,4 @@
 parameters:
-  buildPoolName: $(LinuxBuildPoolName)
-  buildPoolImage: $(LinuxBuildPoolImage)
   buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
@@ -24,8 +22,9 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: ${{ parameters.buildPoolName }}
-      vmImage: ${{ parameters.buildPoolImage }}
+      name: AzurePipelines-EO
+      vmImage: $(LinuxPoolImage1ESPT)
+      os: linux
     timeoutInMinutes: 180
     workspace:
       clean: all
@@ -44,7 +43,7 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
-    - template: setup-ubuntu.yaml
+    - template: setup-ubuntu.yaml@self
 
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
@@ -90,33 +89,10 @@ stages:
         artifactName: ${{ parameters.nugetArtifactName }}
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - powershell: |
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
-      displayName: create SBOM directories
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: generate components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        BuildDropPath: $(Build.StagingDirectory)/empty
-        BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
-        ManifestDirPath: $(Build.StagingDirectory)/sbom-components
-        PackageName: .NET Android
-        Verbosity: Verbose
-
-    - task: PublishBuildArtifacts@1
-      displayName: publish components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        artifactName: sbom-components-linux
-        pathToPublish: $(Build.StagingDirectory)/sbom-components
-
-    - template: upload-results.yaml
+    - template: upload-results.yaml@self
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
-    - template: fail-on-issue.yaml
+    - template: fail-on-issue.yaml@self
