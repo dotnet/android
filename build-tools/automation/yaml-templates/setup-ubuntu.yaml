@@ -13,7 +13,7 @@ steps:
 #    sudo apt install -y --no-install-recommends mono-complete nuget msbuild
 #  displayName: install mono preview
 
-#- template: build-tools/automation/yaml-templates/use-dot-net.yaml@self
+#- template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
 #  parameters:
 #    remove_dotnet: true
 

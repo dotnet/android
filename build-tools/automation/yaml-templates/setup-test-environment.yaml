@@ -35,14 +35,14 @@ steps:
 
 # Install .NET 6 for legacy tests
 - ${{ if eq(parameters.installLegacyDotNet, true) }}:
-  - template: build-tools/automation/yaml-templates/use-dot-net.yaml@self
+  - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
     parameters:
       version: 6.0
       quality: GA
       remove_dotnet: ${{ parameters.remove_dotnet }}
 
 # Install latest .NET
-- template: build-tools/automation/yaml-templates/use-dot-net.yaml@self
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
@@ -52,7 +52,7 @@ steps:
     arguments: shutdown
 
 - ${{ if eq(parameters.updateMono, true) }}:
-  - template: build-tools/automation/yaml-templates/run-xaprepare.yaml@self
+  - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
     parameters:
       displayName: run xaprepare-UpdateMono
       arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
@@ -60,7 +60,7 @@ steps:
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
-  - template: build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
     parameters:
       toolName: boots
       version: $(BootsToolVersion)
@@ -68,7 +68,7 @@ steps:
   - powershell: boots --stable Xamarin.Android
     displayName: install Xamarin.Android stable
 
-- template: build-tools/automation/yaml-templates/run-xaprepare.yaml@self
+- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
   parameters:
     arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
     xaSourcePath: ${{ parameters.xaSourcePath }}
@@ -98,13 +98,13 @@ steps:
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
-  - template: build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
-  - template: build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
     parameters:
       toolName: dotnet-test-slicer
       version: $(TestSlicerToolVersion)

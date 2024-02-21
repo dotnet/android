@@ -48,7 +48,7 @@ parameters:
 
 # Global variables
 variables:
-- template: build-tools/automation/yaml-templates/variables.yaml@self
+- template: /build-tools/automation/yaml-templates/variables.yaml@self
 - template: templates/common/vs-release-vars.yml@sdk-insertions
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
@@ -94,12 +94,12 @@ extends:
         os: windows
     # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
     stages:
-    - template: build-tools/automation/yaml-templates/build-macos.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
-    - template: build-tools/automation/yaml-templates/build-windows.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 
     # Check - "Xamarin.Android (Linux > Build)"
-    - template: build-tools/automation/yaml-templates/build-linux.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
 
     - stage: smoke_tests
       displayName: Package Tests
@@ -114,7 +114,7 @@ extends:
         workspace:
           clean: all
         steps:
-        - template: build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+        - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
           parameters:
             xaprepareScenario: EmulatorTestDependencies
 
@@ -130,7 +130,7 @@ extends:
             projects: $(System.DefaultWorkingDirectory)/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks.csproj
             arguments: -c Debug -bl:$(System.DefaultWorkingDirectory)/bin/TestDebug/BootstrapTasks.binlog
 
-        - template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: Xamarin.Android.sln
             arguments: >-
@@ -139,16 +139,16 @@ extends:
             displayName: prepare java.interop Debug
             continueOnError: false
 
-        - template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: Xamarin.Android.sln
             arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) --no-restore
             displayName: prepare java.interop $(XA.Build.Configuration)
             continueOnError: false
 
-        - template: build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+        - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)
@@ -157,7 +157,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
             artifactFolder: $(DotNetTargetFramework)-$(XA.Build.Configuration)
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             buildConfiguration: $(XA.Build.Configuration)
             configuration: Debug
@@ -167,7 +167,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
             artifactFolder: $(DotNetTargetFramework)-Debug
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-NoAab
@@ -177,7 +177,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.apk
             artifactFolder: $(DotNetTargetFramework)-NoAab
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-Interpreter
@@ -187,7 +187,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
             artifactFolder: $(DotNetTargetFramework)-Interpreter
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-NoAot
@@ -197,7 +197,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
             artifactFolder: $(DotNetTargetFramework)-NoAot
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-AotLlvm
@@ -207,7 +207,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
             artifactFolder: $(DotNetTargetFramework)-AotLlvm
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Xamarin.Android.JcwGen_Tests
@@ -216,7 +216,7 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
             artifactFolder: $(DotNetTargetFramework)-Default
 
-        - template: build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Xamarin.Android.JcwGen_Tests_FastDev
@@ -226,7 +226,7 @@ extends:
             artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
             extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
 
-        - template: build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
@@ -239,20 +239,20 @@ extends:
             args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
         - ${{ if ne(parameters.macTestAgentsUseCleanImages, true) }}:
-          - template: build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+          - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
             parameters:
               command: stop
 
-        - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             artifactName: Test Results - APKs .NET $(XA.Build.Configuration) - macOS
 
-        - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             artifactName: Test Results - APKs .NET Debug - macOS
             configuration: Debug
 
-        - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
 
     - stage: linux_tests
       displayName: Linux Tests
@@ -269,37 +269,37 @@ extends:
         workspace:
           clean: all
         steps:
-        - template: build-tools/automation/yaml-templates/setup-ubuntu.yaml@self
+        - template: /build-tools/automation/yaml-templates/setup-ubuntu.yaml@self
 
-        - template: build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+        - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
 
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(TestAssembliesArtifactName)
             downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-        - template: build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = BuildTest"
             testResultsFile: TestResult-BuildTest-Linux-$(XA.Build.Configuration).xml
 
-        - template: build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = PackagingTest"
             testResultsFile: TestResult-PackagingTest-Linux-$(XA.Build.Configuration).xml
 
-        - template: build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
             testResultsFile: TestResult-XASdkTests-Linux-$(XA.Build.Configuration).xml
 
-        - template: build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
@@ -312,16 +312,16 @@ extends:
             scriptPath: dotnet-local.sh
             args: build samples/HelloWorld/HelloWorld/HelloWorld.DotNet.csproj
 
-        - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+        - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
           parameters:
             configuration: $(XA.Build.Configuration)
             artifactName: Test Results - MSBuild - Linux
 
-        - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
 
-    - template: build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/stage-msbuild-tests.yaml@self
 
-    - template: build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/stage-msbuild-emulator-tests.yaml@self
       parameters:
         usesCleanImages: ${{ parameters.macTestAgentsUseCleanImages }}
 
@@ -346,7 +346,7 @@ extends:
           path: s/maui
           persistCredentials: true
 
-        - template: build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+        - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -405,7 +405,7 @@ extends:
             projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
-        - template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
             arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
@@ -421,7 +421,7 @@ extends:
             $xml.Save($project)
           displayName: set TargetFrameworks to Android-only
 
-        - template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
@@ -431,7 +431,7 @@ extends:
             xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
             displayName: Build MAUI template - Debug
 
-        - template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+        - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             project: $(Build.StagingDirectory)/MauiTestProj/MauiTestProj.csproj
             arguments: >-
@@ -450,14 +450,14 @@ extends:
             TargetFolder: $(Build.StagingDirectory)/logs
             flattenFolders: true
 
-        - template: build-tools/automation/yaml-templates/publish-artifact.yaml@self
+        - template: /build-tools/automation/yaml-templates/publish-artifact.yaml@self
           parameters:
             displayName: upload build and test results
             artifactName: Test Results - MAUI Integration
             targetPath: $(Build.StagingDirectory)/logs
             condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
 
-        - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+        - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
 
 
     - stage: dotnet_prepare_release

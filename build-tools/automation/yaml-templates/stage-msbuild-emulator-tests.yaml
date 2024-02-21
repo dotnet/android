@@ -31,7 +31,7 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
       parameters:
         installTestSlicer: true
         installApkDiff: false
@@ -47,12 +47,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
@@ -64,12 +64,12 @@ stages:
           command: stop
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
 
@@ -90,7 +90,7 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
       parameters:
         installTestSlicer: true
         installApkDiff: false
@@ -104,7 +104,7 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
       parameters:
         specificImage: true
         deviceName: $(deviceName)
@@ -114,7 +114,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
       parameters:
         testRunTitle: WearOS On Device - macOS
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
@@ -122,7 +122,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
-      - template: build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+      - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
         parameters:
           command: stop
           specificImage: true
@@ -132,12 +132,12 @@ stages:
           avdType: $(avdType)
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}

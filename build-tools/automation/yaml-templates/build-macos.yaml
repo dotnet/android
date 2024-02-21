@@ -43,14 +43,14 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: build-tools/automation/yaml-templates/commercial-build.yaml@self
+    - template: /build-tools/automation/yaml-templates/commercial-build.yaml@self
       parameters:
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
 
-    - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}

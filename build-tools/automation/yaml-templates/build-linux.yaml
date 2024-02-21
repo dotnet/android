@@ -43,7 +43,7 @@ stages:
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
 
-    - template: build-tools/automation/yaml-templates/setup-ubuntu.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-ubuntu.yaml@self
 
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
@@ -89,10 +89,10 @@ stages:
         artifactName: ${{ parameters.nugetArtifactName }}
         targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - template: build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
-    - template: build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self

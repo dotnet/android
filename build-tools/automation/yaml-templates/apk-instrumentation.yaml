@@ -13,7 +13,7 @@ parameters:
   retryCountOnTaskFailure: 1
 
 steps:
-- template: build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
   parameters:
     configuration: ${{ parameters.buildConfiguration }}
     xaSourcePath: ${{ parameters.xaSourcePath }}
