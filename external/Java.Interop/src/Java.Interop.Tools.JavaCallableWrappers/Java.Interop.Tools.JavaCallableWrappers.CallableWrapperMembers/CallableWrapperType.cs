@@ -315,7 +315,7 @@ public class CallableWrapperType
 	StreamWriter OpenStream (string outputPath)
 	{
 		var destination = GetDestinationPath (outputPath);
-		Directory.CreateDirectory (Path.GetDirectoryName (destination));
+		Directory.CreateDirectory (Path.GetDirectoryName (destination)!);
 
 		return new StreamWriter (new FileStream (destination, FileMode.Create, FileAccess.Write));
 	}

@@ -22,7 +22,7 @@ static class CecilExtensions
 	public static IEnumerable<TAttribute> GetAttributes<TAttribute> (Mono.Cecil.ICustomAttributeProvider p, Func<CustomAttribute, TAttribute?> selector)
 			where TAttribute : class
 	{
-		return GetAttributes (p, typeof (TAttribute).FullName, selector);
+		return GetAttributes (p, typeof (TAttribute).FullName!, selector);
 	}
 
 	public static IEnumerable<TAttribute> GetAttributes<TAttribute> (Mono.Cecil.ICustomAttributeProvider p, string attributeName, Func<CustomAttribute, TAttribute?> selector)

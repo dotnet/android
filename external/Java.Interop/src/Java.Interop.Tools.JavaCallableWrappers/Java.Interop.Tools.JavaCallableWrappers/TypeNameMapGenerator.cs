@@ -179,7 +179,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 				var k = key (type, Cache);
 
-				TypeDefinition e;
+				TypeDefinition? e;
 				if (!typeMap.TryGetValue (k, out e)) {
 					typeMap.Add (k, type);
 				} else if (type.IsAbstract || type.IsInterface || e.IsAbstract || e.IsInterface) {
@@ -190,7 +190,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 						b = type;
 					typeMap [k] = b;
 				} else {
-					List<string> a;
+					List<string>? a;
 					if (!aliases.TryGetValue (k, out a)) {
 						aliases.Add (k, a = new List<string> ());
 						a.Add (value (e, Cache));
@@ -266,7 +266,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers {
 
 	class ArrayComparer<T> : IComparer<T[]> {
 
-		public int Compare (T[] x, T[] y)
+		public int Compare (T []? x, T []? y)
 		{
 			if (x == null && y == null)
 				return 0;

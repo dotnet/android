@@ -1,12 +1,18 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>
+  </PropertyGroup>
+  <Import Condition="Exists ('$(XAConfigPath)')" Project="$(XAConfigPath)" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;$(DotNetTargetFramework)</TargetFrameworks>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <SignAssembly>true</SignAssembly>
+    <ProduceReferenceAssembly>true</ProduceReferenceAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
     <DefineConstants>$(DefineConstants);JCW_ONLY_TYPE_NAMES;HAVE_CECIL</DefineConstants>
   </PropertyGroup>
@@ -17,13 +23,19 @@
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' != 'netstandard2.0' ">
+    <IsTrimmable>true</IsTrimmable>
+    <EnableSingleFileAnalyzer>true</EnableSingleFileAnalyzer>
+    <EnableAotAnalyzer>true</EnableAotAnalyzer>
+  </PropertyGroup>
+
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
 
   <ItemGroup>
     <Compile Include="..\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings\JavaNativeTypeManager.cs">
       <Link>JavaNativeTypeManager.cs</Link>
     </Compile>
-    <Compile Include="..\utils\NullableAttributes.cs">
+    <Compile Include="..\utils\NullableAttributes.cs" Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
       <Link>NullableAttributes.cs</Link>
     </Compile>
   </ItemGroup>

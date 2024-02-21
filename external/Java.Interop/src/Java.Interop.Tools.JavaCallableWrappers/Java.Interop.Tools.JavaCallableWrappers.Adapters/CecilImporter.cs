@@ -547,13 +547,13 @@ public class CecilImporter
 	static string ManagedValueToJavaSource (object value)
 	{
 		if (value is string)
-			return "\"" + value.ToString ().Replace ("\"", "\"\"") + '"';
+			return "\"" + value.ToString ()?.Replace ("\"", "\"\"") + '"';
 		else if (value.GetType ().FullName == "Java.Lang.Class")
 			return value.ToString () + ".class";
 		else if (value is bool v)
 			return v ? "true" : "false";
 		else
-			return value.ToString ();
+			return value.ToString () ?? "";
 	}
 
 	static string GetJavaAccess (MethodAttributes access)
