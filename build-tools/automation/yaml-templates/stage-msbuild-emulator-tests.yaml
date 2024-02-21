@@ -25,7 +25,9 @@ stages:
       parallel: ${{ parameters.agent_count }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
@@ -86,7 +88,9 @@ stages:
       deviceName: wear_square
       androidSdkPlatforms: 34
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
+      os: macOS
     workspace:
       clean: all
     steps:

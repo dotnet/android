@@ -25,7 +25,7 @@ stages:
       name: AzurePipelines-EO
       image: $(LinuxPoolImage1ESPT)
       os: linux
-    timeoutInMinutes: 180
+    timeoutInMinutes: 240
     workspace:
       clean: all
     variables:

@@ -71,10 +71,11 @@ variables:
     value: true
 
 extends:
-  ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-    template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
-  ${{ else }}:
-    template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
+  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  #${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+  #  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  #${{ else }}:
+  #  template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
@@ -82,7 +83,7 @@ extends:
       codeql:
         runSourceLanguagesInSourceAnalysis: true
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)\build-tools\automation\guardian\source.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
       sourceAnalysisPool:
         name: AzurePipelines-EO
         image: $(WindowsPoolImage1ESPT)
@@ -110,7 +111,9 @@ extends:
       - job: mac_apk_tests_net
         displayName: macOS > Tests > APKs .NET
         pool:
+          name: Azure Pipelines
           vmImage: $(HostedMacImage)
+          os: macOS
         timeoutInMinutes: 180
         workspace:
           clean: all
@@ -336,7 +339,10 @@ extends:
       # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
       - job: maui_tests_integration
         displayName: MAUI Integration
-        pool: $(1ESWindowsPool)
+        pool:
+          name: AzurePipelines-EO
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
         timeoutInMinutes: 180
         workspace:
           clean: all

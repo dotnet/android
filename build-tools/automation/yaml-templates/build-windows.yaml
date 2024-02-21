@@ -26,7 +26,7 @@ stages:
       name: AzurePipelines-EO
       image: $(WindowsPoolImage1ESPT)
       os: windows
-    timeoutInMinutes: 360
+    timeoutInMinutes: 240
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

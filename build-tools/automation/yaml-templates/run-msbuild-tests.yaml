@@ -15,11 +15,16 @@ jobs:
     parallel: ${{ parameters.agentCount }}
   displayName: ${{ parameters.jobDisplayName }}
   ${{ if eq(parameters.testOS, 'Windows') }}:
-    pool: $(1ESWindowsPool)
+    pool:
+      name: AzurePipelines-EO
+      image: $(WindowsPoolImage1ESPT)
+      os: windows
   ${{ if eq(parameters.testOS, 'macOS') }}:
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
-  timeoutInMinutes: 180
+      os: macOS
+  timeoutInMinutes: 240
   cancelTimeoutInMinutes: 5
   steps:
   - ${{ if eq(parameters.testOS, 'Windows') }}:

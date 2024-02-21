@@ -1,0 +1,395 @@
+{
+  "hydrated": false,
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/suppressions",
+    "hydrationStatus": "This file does not contain identifying data. It is safe to check into your repo. To hydrate this file with identifying data, run `guardian hydrate --help` and follow the guidance."
+  },
+  "version": "1.0.0",
+  "suppressionSets": {
+    "default": {
+      "name": "default",
+      "createdDate": "2023-02-22 23:55:29Z",
+      "lastUpdatedDate": "2024-02-21 20:58:02Z"
+    }
+  },
+  "results": {
+    "97699b24b70c14e4857a1744533bacead40c1d999f4500d859f5d46d6799f953": {
+      "signature": "97699b24b70c14e4857a1744533bacead40c1d999f4500d859f5d46d6799f953",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "f03baf4c9d82f32a33f1c6124f648e4ebfcd92f2db349e28e98d1363e9d171b2": {
+      "signature": "f03baf4c9d82f32a33f1c6124f648e4ebfcd92f2db349e28e98d1363e9d171b2",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "42ec4c4af1860770023359ca62028bd2b090f78c5272ec226c4d91aa552fa2df": {
+      "signature": "42ec4c4af1860770023359ca62028bd2b090f78c5272ec226c4d91aa552fa2df",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "bf2d49450b2d6a960fa4092ef4431ccb88dc2b49fbf11c5241210d2690a26e94": {
+      "signature": "bf2d49450b2d6a960fa4092ef4431ccb88dc2b49fbf11c5241210d2690a26e94",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "5e87237daa293a5a8fb787852eec77320bf175950973cda2f3d254792594cf89": {
+      "signature": "5e87237daa293a5a8fb787852eec77320bf175950973cda2f3d254792594cf89",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "69fc8b0dd9a9068feec650279c5b10f01b52a09300d93792e64199864992cc0a": {
+      "signature": "69fc8b0dd9a9068feec650279c5b10f01b52a09300d93792e64199864992cc0a",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "5440d292f0e20c316e8279265dd14ba16492d3f438c2652b78bfe42b56f3ebe1": {
+      "signature": "5440d292f0e20c316e8279265dd14ba16492d3f438c2652b78bfe42b56f3ebe1",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "4093b2ad3dec514395d2f2de413b890b02098b67656c02c610c8d447918b9e3c": {
+      "signature": "4093b2ad3dec514395d2f2de413b890b02098b67656c02c610c8d447918b9e3c",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "cdf0c9dfadcc6b8dc6f52439eedc5bad9cb96b0814749eb139d65acfd5fc7cda": {
+      "signature": "cdf0c9dfadcc6b8dc6f52439eedc5bad9cb96b0814749eb139d65acfd5fc7cda",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "bb1319f066c1fef6722134892543eaef862800d15ada0fbc3ea16ccf7e412fff": {
+      "signature": "bb1319f066c1fef6722134892543eaef862800d15ada0fbc3ea16ccf7e412fff",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "1a1fc34f0b4f480cad2e9e39e27dec9cbcd5bc2d49c2785ac2a016fa75fcaee0": {
+      "signature": "1a1fc34f0b4f480cad2e9e39e27dec9cbcd5bc2d49c2785ac2a016fa75fcaee0",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "fa26064b5b8bc8af4e359c62f6b2a21d58c46ef8b5dcff6bf4ebf609d3d6004f": {
+      "signature": "fa26064b5b8bc8af4e359c62f6b2a21d58c46ef8b5dcff6bf4ebf609d3d6004f",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "3160f73c36ac035609563087313b44bb1e47bd811e55db4ae6f72541263fd315": {
+      "signature": "3160f73c36ac035609563087313b44bb1e47bd811e55db4ae6f72541263fd315",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "d9b3620b9eb0e0ba436abc25ca81845d6df2d7284015c2b139e0c584bea3d470": {
+      "signature": "d9b3620b9eb0e0ba436abc25ca81845d6df2d7284015c2b139e0c584bea3d470",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "61adc9c3537513142847443779d278efec47594468a219fff28342768744d94b": {
+      "signature": "61adc9c3537513142847443779d278efec47594468a219fff28342768744d94b",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "faf422860921d179b62d537fc81b1d99f4ff4b75243939dc153e78f21a9b8211": {
+      "signature": "faf422860921d179b62d537fc81b1d99f4ff4b75243939dc153e78f21a9b8211",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "a7e7ea7c2ae0b67e14969a5ff466fc27450988d81f8a21ef958798a46b53c0bd": {
+      "signature": "a7e7ea7c2ae0b67e14969a5ff466fc27450988d81f8a21ef958798a46b53c0bd",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Ionic.Zip API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "fa16145869148c36ac91a535ab4acb35d5442377f46b1c84f2970dee354208fb": {
+      "signature": "fa16145869148c36ac91a535ab4acb35d5442377f46b1c84f2970dee354208fb",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Dummy UnitTest.keystore file used for testing.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "2fa9a7d39500379442bc21bc0ee41b9ba9a6316bbb0bf87478a8abf6d9b52ded": {
+      "signature": "2fa9a7d39500379442bc21bc0ee41b9ba9a6316bbb0bf87478a8abf6d9b52ded",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Dummy test.keystore file used for testing.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "bc654b0dca486b80c22e3e0ca2a8246bbad14d7be3db71fbaaa8ba0f2c194f73": {
+      "signature": "bc654b0dca486b80c22e3e0ca2a8246bbad14d7be3db71fbaaa8ba0f2c194f73",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Dummy test.keystore file used for testing.",
+      "createdDate": "2024-02-21 20:57:50Z"
+    },
+    "5a0a8690d8a06dfdbf6002c67fa64a60a94f3fc77a594034cce20382e88002aa": {
+      "signature": "5a0a8690d8a06dfdbf6002c67fa64a60a94f3fc77a594034cce20382e88002aa",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an external source file.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "1b319055b8e507b220d0dab341e67e20f49632fd1844a08a4fcc6d4493930ac5": {
+      "signature": "1b319055b8e507b220d0dab341e67e20f49632fd1844a08a4fcc6d4493930ac5",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an external source file.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "6789cab1bdc97b0cc3ad057b7fdd21d63cdf8bc2679391923803fa240ef81292": {
+      "signature": "6789cab1bdc97b0cc3ad057b7fdd21d63cdf8bc2679391923803fa240ef81292",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an ISCII term.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "bbaf5f946cb72748567e41f0df5f1bae05550f4ba7381e21ec6b26d6c3ecec9f": {
+      "signature": "bbaf5f946cb72748567e41f0df5f1bae05550f4ba7381e21ec6b26d6c3ecec9f",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an ISCII term.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "db8916a0f0cdca4082c540921dd362e09a9ff413862ab826308411b76ee35789": {
+      "signature": "db8916a0f0cdca4082c540921dd362e09a9ff413862ab826308411b76ee35789",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "6d1fb3a483eb491710d6a09ed0b4bab47f13942d0c6fc744e6683614a66604ab": {
+      "signature": "6d1fb3a483eb491710d6a09ed0b4bab47f13942d0c6fc744e6683614a66604ab",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "b07e75fc8a506b94690dbd06877da06c1228e40e7deda3967f6b882b842f726d": {
+      "signature": "b07e75fc8a506b94690dbd06877da06c1228e40e7deda3967f6b882b842f726d",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "87d8313310c2dd42021844b95bdcb9121bf10036fea5b212b945e0732a456e5a": {
+      "signature": "87d8313310c2dd42021844b95bdcb9121bf10036fea5b212b945e0732a456e5a",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "8e5400e0233c8d887ad48bd8a48e8a7be5a579f9eefad521419b6df0828bbfac": {
+      "signature": "8e5400e0233c8d887ad48bd8a48e8a7be5a579f9eefad521419b6df0828bbfac",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "1b38e026fae90da4ae2fe9151c9c1ebd73c8b3c2c5f072ceae390a3ceec2fb97": {
+      "signature": "1b38e026fae90da4ae2fe9151c9c1ebd73c8b3c2c5f072ceae390a3ceec2fb97",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an Android logging function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "a2b4d032c59a9d1211d218c3cd550cf8febb369941d70284d07d03ebee855bc0": {
+      "signature": "a2b4d032c59a9d1211d218c3cd550cf8febb369941d70284d07d03ebee855bc0",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to find first set bit function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "1c87b45a6044d205dc3f3562f349c238f7cabe22b4609da762df9dc44151e9fb": {
+      "signature": "1c87b45a6044d205dc3f3562f349c238f7cabe22b4609da762df9dc44151e9fb",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to find first set bit function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "a6639098c4785509a4215c9e2fc10f82c06fce461915dc11a00227ddec558845": {
+      "signature": "a6639098c4785509a4215c9e2fc10f82c06fce461915dc11a00227ddec558845",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to find first set bit function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "d6b3df0b1d35cb4acec6a954acc145c9ec22041cd463b94ff080682c65a9bd62": {
+      "signature": "d6b3df0b1d35cb4acec6a954acc145c9ec22041cd463b94ff080682c65a9bd62",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to find first set bit function.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "b34b42aa41018376a31460c142f2ae910704725d9e9a4470f92b587df682369b": {
+      "signature": "b34b42aa41018376a31460c142f2ae910704725d9e9a4470f92b587df682369b",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to output from an external tool.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "75474fa652dbbf8f96826100a5fe37ba686a032ca07d61ef68a79c8e4412c150": {
+      "signature": "75474fa652dbbf8f96826100a5fe37ba686a032ca07d61ef68a79c8e4412c150",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to an external source file.",
+      "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e": {
+      "signature": "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Reference to a proper name.",
+      "createdDate": "2023-10-26 21:20:54Z"
+    },
+    "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274": {
+      "signature": "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "FillEventHistory+Event API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e": {
+      "signature": "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Android.Service.Autofill.FillEventHistory+Event API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d": {
+      "signature": "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Javax.Crypto.ISecretKey API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4": {
+      "signature": "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Javax.Security.Auth.Callback.PasswordCallback API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee": {
+      "signature": "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Dummy test.keystore file used for testing.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    }
+  }
+}
