@@ -108,7 +108,7 @@ namespace Xamarin.Android.Tasks
 				var klass = EnsureType<MarshalMethodsManagedClass> (data);
 
 				if (String.Compare ("token", fieldName, StringComparison.Ordinal) == 0) {
-					return $" token 0x{klass.token:x}; class name: {klass.ClassName}";
+					return $" class name: {klass.ClassName}";
 				}
 
 				return String.Empty;
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof(MarshalMethodsManagedClassDataProvider))]
 		sealed class MarshalMethodsManagedClass
 		{
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint       token;
 
 			[NativePointer (IsNull = true)]
@@ -982,10 +982,10 @@ namespace Xamarin.Android.Tasks
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
 				string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
-				ulong hashFull32 = GetXxHash (name, is64Bit: false);
-				ulong hashClipped32 = GetXxHash (clippedName, is64Bit: false);
-				ulong hashFull64 = GetXxHash (name, is64Bit: true);
-				ulong hashClipped64 = GetXxHash (clippedName, is64Bit: true);
+				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);
+				ulong hashClipped32 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: false);
+				ulong hashFull64 = MonoAndroidHelper.GetXxHash (name, is64Bit: true);
+				ulong hashClipped64 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: true);
 
 				//
 				// If the number of name forms changes, xamarin-app.hh MUST be updated to set value of the
@@ -1021,6 +1021,7 @@ namespace Xamarin.Android.Tasks
 				BeforeWriteCallbackCallerState = acs,
 				GetArrayItemCommentCallback = GetAssemblyImageCacheItemComment,
 				GetArrayItemCommentCallbackCallerState = acs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			module.Add (assembly_image_cache_hashes);
 
@@ -1047,7 +1048,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
-			gv.OverrideValueAndType (type, value);
+			gv.OverrideTypeAndValue (type, value);
 		}
 
 		string? GetAssemblyImageCacheItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
@@ -1081,7 +1082,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			LlvmIrGlobalVariable gv = EnsureGlobalVariable (variable);
-			gv.OverrideValueAndType (variable.Type, value);
+			gv.OverrideTypeAndValue (variable.Type, value);
 		}
 
 		AssemblyCacheState EnsureAssemblyCacheState (object? callerState)

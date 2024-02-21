@@ -29,7 +29,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
@@ -49,7 +49,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public string HashedName;
 
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
 			public bool ignore;
 
@@ -93,11 +93,11 @@ namespace Xamarin.Android.Tasks
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
 		sealed class AssemblyStoreRuntimeData
 		{
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public byte data_start;
 			public uint assembly_count;
 
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public AssemblyStoreAssemblyDescriptor assemblies;
 		}
 
@@ -299,7 +299,7 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 				}
 
-				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
