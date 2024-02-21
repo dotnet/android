@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO.Hashing;
-using System.Text;
 
 using Microsoft.Build.Utilities;
 

@@ -167,7 +167,7 @@ partial class MonoAndroidHelper
 		var parts = new List<string> ();
 		if (!String.IsNullOrEmpty (part1)) {
 			parts.Add (part1.TrimEnd (ZipPathTrimmedChars));
-		                                   };
+		};
 
 		if (pathParts != null && pathParts.Count > 0) {
 			foreach (string p in pathParts) {

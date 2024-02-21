@@ -6,7 +6,6 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
