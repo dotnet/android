@@ -48,7 +48,7 @@ parameters:
 
 # Global variables
 variables:
-- template: yaml-templates/variables.yaml
+- template: yaml-templates/variables.yaml@self
 - template: templates/common/vs-release-vars.yml@sdk-insertions
 - ${{ if eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - group: AzureDevOps-Artifact-Feeds-Pats
@@ -74,7 +74,6 @@ variables:
     value: ''
   - name: DisablePipelineConfigDetector
     value: true
-
 
 extends:
   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
