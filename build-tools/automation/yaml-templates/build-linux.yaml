@@ -83,7 +83,7 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 
-    - task: PublishPipelineArtifact@1
+    - task: 1ES.PublishPipelineArtifact@1
       displayName: upload linux sdk
       inputs:
         artifactName: ${{ parameters.nugetArtifactName }}
