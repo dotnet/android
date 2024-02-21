@@ -14,6 +14,23 @@ ms.date: 07/26/2022
 Build items control how a Xamarin.Android application
 or library project is built.
 
+## AndroidAdditionalJavaManifest
+
+`<AndroidAdditionalJavaManifest>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify additional POM files that will be needed to verify dependencies.
+These are often parent or imported POM files referenced by a Java library's POM file.
+
+```xml
+<ItemGroup>
+  <AndroidAdditionalJavaManifest Include="mylib-parent.pom" JavaArtifact="com.example.mylib-parent" JavaVersion="1.0.0" />
+</ItemGroup>
+```
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
+
 ## AndroidAsset
 
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
@@ -114,6 +131,25 @@ files).
 Files with a Build action of `AndroidJavaLibrary` are Java
 Archives ( `.jar` files) that will be included in the final Android
 package.
+
+## AndroidIgnoredJavaDependency
+
+`<AndroidIgnoredJavaDependency>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify a Java dependency that should be ignored. This can be
+used if a dependency will be fulfilled in a way that Java dependency resolution
+cannot detect.
+
+```xml
+<!-- Include format is {GroupId}:{ArtifactId} -->
+<ItemGroup>
+  <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations" Version="2.15.0" />
+</ItemGroup>
+```
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
 
 ## AndroidJavaSource
 
