@@ -464,6 +464,16 @@ namespace Xamarin.Android.Tasks
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
 
+			var reader_options = new CallableWrapperReaderOptions {
+				DefaultApplicationJavaClass         = ApplicationJavaClass,
+				DefaultGenerateOnCreateOverrides    = generateOnCreateOverrides,
+				DefaultMonoRuntimeInitialization    = monoInit,
+				MethodClassifier                    = classifier,
+			};
+			var writer_options = new CallableWrapperWriterOptions {
+				CodeGenerationTarget    = JavaPeerStyle.XAJavaInterop1
+			};
+
 			bool ok = true;
 			foreach (JavaType jt in newJavaTypes) {
 				TypeDefinition t = jt.Type; // JCW generator doesn't care about ABI-specific types or token ids
@@ -474,19 +484,8 @@ namespace Xamarin.Android.Tasks
 
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						var reader_options = new CallableWrapperReaderOptions {
-							DefaultApplicationJavaClass = ApplicationJavaClass,
-							DefaultGenerateOnCreateOverrides = generateOnCreateOverrides,
-							DefaultMonoRuntimeInitialization = monoInit,
-							MethodClassifier = classifier,
-						};
-
 						var jcw_type = CecilImporter.CreateType (t, cache, reader_options);
 						
-						var writer_options = new CallableWrapperWriterOptions {
-							CodeGenerationTarget = JavaPeerStyle.XAJavaInterop1
-						};
-
 						jcw_type.Generate (writer, writer_options);
 
 						if (useMarshalMethods) {
