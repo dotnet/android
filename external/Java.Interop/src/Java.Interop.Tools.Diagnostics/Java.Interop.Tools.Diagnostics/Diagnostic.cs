@@ -3,7 +3,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-
+using System.Diagnostics.CodeAnalysis;
 using Mono.Cecil.Cil;
 
 namespace Java.Interop.Tools.Diagnostics {
@@ -148,6 +148,7 @@ namespace Java.Interop.Tools.Diagnostics {
 	//
 
 	public static class Diagnostic {
+		[DoesNotReturn]
 		public static void Error (int code, SequencePoint? location, string message, params object[] args)
 		{
 			throw new XamarinAndroidException (code, message, args) {
@@ -156,11 +157,13 @@ namespace Java.Interop.Tools.Diagnostics {
 		}
 
 
+		[DoesNotReturn]
 		public static void Error (int code, string message, params object[] args)
 		{
 			throw new XamarinAndroidException (code, message, args);
 		}
 
+		[DoesNotReturn]
 		public static void Error (int code, Exception innerException, string message, params object[] args)
 		{
 			throw new XamarinAndroidException (code, innerException, message, args);

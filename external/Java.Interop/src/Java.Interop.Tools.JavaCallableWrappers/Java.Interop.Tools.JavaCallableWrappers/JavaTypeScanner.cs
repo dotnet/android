@@ -8,6 +8,7 @@ using Mono.Cecil;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.TypeNameMappings;
+using Java.Interop.Tools.JavaCallableWrappers.Utilities;
 
 namespace Java.Interop.Tools.JavaCallableWrappers
 {
@@ -95,7 +96,7 @@ namespace Java.Interop.Tools.JavaCallableWrappers
 			if (JavaNativeTypeManager.IsNonStaticInnerClass (type, resolver))
 				return true;
 
-			foreach (var c in JavaCallableWrapperGenerator.GetTypeRegistrationAttributes (type)) {
+			foreach (var c in CecilExtensions.GetTypeRegistrationAttributes (type)) {
 				if (c.DoNotGenerateAcw) {
 					return true;
 				}

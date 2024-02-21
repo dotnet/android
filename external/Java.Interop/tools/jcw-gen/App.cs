@@ -9,6 +9,7 @@ using Java.Interop.Tools.Diagnostics;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Mono.Cecil;
 using Mono.Options;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
 namespace Java.Interop.Tools
 {
@@ -91,10 +92,13 @@ namespace Java.Interop.Tools
 				return;
 			}
 
-			var generator = new JavaCallableWrapperGenerator (type, log: Console.WriteLine, cache) {
-				CodeGenerationTarget    = style,
+			var t = CecilImporter.CreateType (type, cache);
+
+			var options = new CallableWrapperWriterOptions {
+				CodeGenerationTarget = style,
 			};
-			generator.Generate (outputPath);
+
+			t.Generate (outputPath, options);
 		}
 	}
 }

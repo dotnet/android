@@ -12,6 +12,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Remove="jcw-gen.slnf" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="Mono.Options" />
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
   </ItemGroup>

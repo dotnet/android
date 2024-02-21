@@ -13,6 +13,8 @@ using Java.Interop.Tools.JavaCallableWrappersTests;
 using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.ToolsTests;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
+using Java.Interop.Tools.Cecil;
 
 namespace Java.Interop.Tools.JavaCallableWrappersTests
 {
@@ -26,7 +28,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// structs aren't supported
 			var td  = SupportDeclarations.GetTypeDefinition (typeof (int));
-			var e   = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
+			var e   = Assert.Throws<XamarinAndroidException> (() => CecilImporter.CreateType (td, new TypeDefinitionCache ()));
 			Assert.AreEqual (4200, e.Code);
 		}
 
@@ -37,7 +39,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// Contains invalid [Register] name of "foo-impl"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidImplRegisterName));
-			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
+			var e = Assert.Throws<XamarinAndroidException> (() => CecilImporter.CreateType (td, new TypeDefinitionCache ()));
 			Assert.AreEqual (4217, e.Code);
 		}
 
@@ -48,7 +50,7 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 
 			// Contains invalid [Register] name of "foo-f8k2a13"
 			var td = SupportDeclarations.GetTypeDefinition (typeof (KotlinInvalidHashRegisterName));
-			var e = Assert.Throws<XamarinAndroidException> (() => new JavaCallableWrapperGenerator (td, logger, cache: null));
+			var e = Assert.Throws<XamarinAndroidException> (() => CecilImporter.CreateType (td, new TypeDefinitionCache ()));
 			Assert.AreEqual (4217, e.Code);
 		}
 
@@ -104,17 +106,24 @@ public class Name
 
 		static string Generate (Type type, string applicationJavaClass = null, string monoRuntimeInit = null, JavaPeerStyle style = JavaPeerStyle.XAJavaInterop1)
 		{
-			var td  = SupportDeclarations.GetTypeDefinition (type);
-			var g   = new JavaCallableWrapperGenerator (td, log: null, cache: null) {
-				ApplicationJavaClass        = applicationJavaClass,
-				GenerateOnCreateOverrides   = true,
-				MonoRuntimeInitialization   = monoRuntimeInit,
-				CodeGenerationTarget        = style,
+			var reader_options = new CallableWrapperReaderOptions {
+				DefaultApplicationJavaClass = applicationJavaClass,
+				DefaultGenerateOnCreateOverrides = true,
+				DefaultMonoRuntimeInitialization = monoRuntimeInit,
 			};
+
+			var td  = SupportDeclarations.GetTypeDefinition (type);
+			var g = CecilImporter.CreateType (td, new TypeDefinitionCache (), reader_options);
+
 			var o   = new StringWriter ();
 			var dir = Path.GetDirectoryName (typeof (JavaCallableWrapperGeneratorTests).Assembly.Location);
-			g.Generate (Path.Combine (dir, "__o"));
-			g.Generate (o);
+			var options = new CallableWrapperWriterOptions {
+				CodeGenerationTarget        = style,
+			};
+
+			g.Generate (Path.Combine (dir, "__o"), options);
+			g.Generate (o, options);
+
 			return o.ToString ();
 		}
 
@@ -145,7 +154,6 @@ public class IndirectApplication
 	{
 		mono.MonoPackageManager.setContext (this);
 	}
-
 
 	public void onCreate ()
 	{
@@ -199,9 +207,7 @@ public class ExportsMembers
 		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsMembers, Java.Interop.Tools.JavaCallableWrappers-Tests"", ExportsMembers.class, __md_methods);
 	}
 
-
 	public static crc64197ae30a36756915.ExportsMembers STATIC_INSTANCE = GetInstance ();
-
 
 	public java.lang.String VALUE = GetValue ();
 
@@ -219,14 +225,12 @@ public class ExportsMembers
 
 	private native java.lang.String n_GetValue ();
 
-
 	public static void staticMethodNotMangled ()
 	{
 		n_staticMethodNotMangled ();
 	}
 
 	private static native void n_staticMethodNotMangled ();
-
 
 	public void methodNamesNotMangled ()
 	{
@@ -235,7 +239,6 @@ public class ExportsMembers
 
 	private native void n_methodNamesNotMangled ();
 
-
 	public java.lang.String attributeOverridesNames (java.lang.String p0, int p1)
 	{
 		return n_CompletelyDifferentName (p0, p1);
@@ -243,14 +246,12 @@ public class ExportsMembers
 
 	private native java.lang.String n_CompletelyDifferentName (java.lang.String p0, int p1);
 
-
 	public void methodThatThrows () throws java.lang.Throwable
 	{
 		n_methodThatThrows ();
 	}
 
 	private native void n_methodThatThrows ();
-
 
 	public void methodThatThrowsEmptyArray ()
 	{
@@ -436,7 +437,6 @@ public class ExportsConstructors
 		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ExportsConstructors.class, __md_methods);
 	}
 
-
 	public ExportsConstructors ()
 	{
 		super ();
@@ -444,7 +444,6 @@ public class ExportsConstructors
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", """", this, new java.lang.Object[] {  });
 		}
 	}
-
 
 	public ExportsConstructors (int p0)
 	{
@@ -492,7 +491,6 @@ public class ExportsThrowsConstructors
 		mono.android.Runtime.register (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ExportsThrowsConstructors.class, __md_methods);
 	}
 
-
 	public ExportsThrowsConstructors () throws java.lang.Throwable
 	{
 		super ();
@@ -501,7 +499,6 @@ public class ExportsThrowsConstructors
 		}
 	}
 
-
 	public ExportsThrowsConstructors (int p0) throws java.lang.Throwable
 	{
 		super (p0);
@@ -509,7 +506,6 @@ public class ExportsThrowsConstructors
 			mono.android.TypeManager.Activate (""Xamarin.Android.ToolsTests.ExportsThrowsConstructors, Java.Interop.Tools.JavaCallableWrappers-Tests"", ""System.Int32, System.Private.CoreLib"", this, new java.lang.Object[] { p0 });
 		}
 	}
-
 
 	public ExportsThrowsConstructors (java.lang.String p0)
 	{
@@ -644,7 +640,6 @@ public class JavaInteropExample
 		net.dot.jni.ManagedPeer.registerNativeMembers (JavaInteropExample.class, __md_methods);
 	}
 
-
 	public JavaInteropExample (int p0, int p1)
 	{
 		super ();
@@ -652,7 +647,6 @@ public class JavaInteropExample
 			net.dot.jni.ManagedPeer.construct (this, ""(II)V"", new java.lang.Object[] { p0, p1 });
 		}
 	}
-
 
 	public void example ()
 	{
