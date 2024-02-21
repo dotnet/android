@@ -78,7 +78,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (sourceBytes.Length));
-				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, checked((int)fi.Length), destBytes, 0, destBytes.Length, LZ4Level.L09_HC);
+				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, checked((int)fi.Length), destBytes, 0, destBytes.Length, LZ4Level.L12_MAX);
 				if (encodedLength < 0)
 					return CompressionResult.EncodingFailed;
 

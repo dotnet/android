@@ -44,6 +44,12 @@
           "port": 10000,
           "preLaunchTask": "run-sample-under-dotnet",
         },
+        {
+          "name": "Attach to Process",
+          "type": "coreclr",
+          "request": "attach",
+          "processId": "${input:processid}"
+        }
     ],
     "inputs": [
       {
@@ -52,6 +58,12 @@
         "default": "Debug",
         "description": "The Build Configuration",
         "options": [ "Debug", "Release"]
-      }
+      },
+      {
+        "id": "processid",
+        "type": "promptString",
+        "default": "0",
+        "description": "Enter dotnet build process id reported when setting the env var MSBUILDDEBUGONSTART=2",
+      },
     ]
 }

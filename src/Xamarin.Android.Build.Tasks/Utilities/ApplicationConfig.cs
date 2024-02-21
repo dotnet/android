@@ -42,11 +42,19 @@ namespace Xamarin.Android.Tasks
 		public uint   bundled_assembly_name_width;
 		public uint   number_of_assembly_store_files;
 		public uint   number_of_dso_cache_entries;
+
+		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint   android_runtime_jnienv_class_token;
+
+		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint   jnienv_initialize_method_token;
+
+		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint   jnienv_registerjninatives_method_token;
 		public uint   jni_remapping_replacement_type_count;
 		public uint   jni_remapping_replacement_method_index_entry_count;
+
+		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
 		public uint   mono_components_mask;
 		public string android_package_name = String.Empty;
 	}

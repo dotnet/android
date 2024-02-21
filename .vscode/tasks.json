@@ -127,8 +127,8 @@
           "label": "build-sample-under-dotnet",
           "type": "shell",
           "windows": { "command": "dotnet-local.cmd build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog", },
-          "linux": { "command": "./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
-          "osx": { "command": "./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
+          "linux": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
+          "osx": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
           "group": {
               "kind": "build",
               "isDefault": true
@@ -141,8 +141,8 @@
           "label": "run-sample-under-dotnet",
           "type": "shell",
           "windows": { "command": "dotnet-local.cmd build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog", },
-          "linux": { "command": "./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
-          "osx": { "command": "./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
+          "linux": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
+          "osx": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
           "group": {
               "kind": "build",
               "isDefault": true
@@ -218,6 +218,16 @@
             "Build",
             "Pack",
             "Everything",
+        ]
+      },
+      {
+        "id": "debugbuildtasks",
+        "type": "pickString",
+        "default": "",
+        "description": "Debug Build Tasks?",
+        "options": [
+            "",
+            "MSBUILDDEBUGONSTART=2"
         ]
       },
     ]
