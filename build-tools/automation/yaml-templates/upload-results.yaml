@@ -6,7 +6,7 @@ parameters:
   condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
 
 steps:
-- template: run-xaprepare.yaml@self
+- template: build-tools/automation/yaml-templates/run-xaprepare.yaml@self
   parameters:
     configuration: ${{ parameters.configuration }}
     arguments: --s=CopyExtraResultFilesForCI --verbosity v
@@ -15,7 +15,7 @@ steps:
     condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.includeBuildResults, false) }}:
-  - template: publish-artifact.yaml@self
+  - template: build-tools/automation/yaml-templates/publish-artifact.yaml@self
     parameters:
       displayName: upload test results
       artifactName: ${{ parameters.artifactName }}
@@ -30,7 +30,7 @@ steps:
       targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/Build${{ parameters.configuration }}
     condition: ${{ parameters.condition }}
 
-  - template: publish-artifact.yaml@self
+  - template: build-tools/automation/yaml-templates/publish-artifact.yaml@self
     parameters:
       displayName: upload build and test results
       artifactName: ${{ parameters.artifactName }}

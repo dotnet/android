@@ -23,7 +23,7 @@ steps:
   timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
-- template: kill-processes.yaml@self
+- template: build-tools/automation/yaml-templates/kill-processes.yaml@self
 
 - task: PublishTestResults@2
   inputs:
