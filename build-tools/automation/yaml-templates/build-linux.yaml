@@ -23,7 +23,7 @@ stages:
     displayName: ${{ parameters.jobDisplayName }}
     pool:
       name: AzurePipelines-EO
-      vmImage: $(LinuxPoolImage1ESPT)
+      image: $(LinuxPoolImage1ESPT)
       os: linux
     timeoutInMinutes: 180
     workspace:

@@ -265,7 +265,9 @@ extends:
       - job: linux_tests_smoke
         displayName: Linux > Tests > MSBuild
         pool:
-          name: android-devdiv-ubuntu-vmss-pr
+          name: AzurePipelines-EO
+          image: $(LinuxPoolImage1ESPT)
+          os: linux
         timeoutInMinutes: 180
         workspace:
           clean: all
