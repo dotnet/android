@@ -29,11 +29,6 @@ resources:
     type: github
     name: xamarin/monodroid
     endpoint: xamarin
-  - repository: release_scripts
-    type: github
-    name: xamarin/release-scripts
-    ref: refs/heads/sign-and-notarized
-    endpoint: xamarin
   - repository: maui
     type: github
     name: dotnet/maui
@@ -476,6 +471,7 @@ extends:
           signType: $(MicroBuildSignType)
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
+          use1ESTemplate: true
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v2.yml@yaml-templates
