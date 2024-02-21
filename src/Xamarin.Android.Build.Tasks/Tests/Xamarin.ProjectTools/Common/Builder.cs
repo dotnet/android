@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
+using Xamarin.Android.Tools.VSWhere;
 
 namespace Xamarin.ProjectTools
 {
@@ -142,6 +143,8 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 		}
 
+		public bool UseMSBuildExe { get; set; }
+
 		public void Dispose ()
 		{
 			Dispose (true);
@@ -173,9 +176,16 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
+			var psi   = new ProcessStartInfo ();
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
-			args.Append ("build ");
+			if (UseMSBuildExe) {
+				psi.FileName = MSBuildLocator.QueryLatest ().MSBuildPath;
+				args.Append ("/restore ");
+				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
+			} else {
+				psi.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+				args.Append ("build ");
+			}
 
 			if (TestEnvironment.UseLocalBuildOutput) {
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
