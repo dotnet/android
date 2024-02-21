@@ -28,6 +28,7 @@ resources:
   - repository: monodroid
     type: github
     name: xamarin/monodroid
+    ref: refs/heads/dev/pjc/1estemp
     endpoint: xamarin
   - repository: maui
     type: github
