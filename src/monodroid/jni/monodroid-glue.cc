@@ -188,16 +188,15 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 			fullpath.append (SharedConstants::DLL_EXTENSION);
 		}
 
-		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
+		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
 		if (utils.file_exists (fullpath.get ())) {
-			log_info (LOG_ASSEMBLY, "open_from_update_dir: assembly file exists");
 			MonoImageOpenStatus status{};
 			result = mono_assembly_open_full (fullpath.get (), &status, 0);
 			if (result == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
 				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", fullpath.get (), mono_image_strerror (status));
 			}
 		} else {
-			log_info (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST");
+			log_warn (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST");
 		}
 		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
@@ -252,7 +251,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			// TODO: temporary hack for the location of typemaps, to be fixed
 			dynamic_local_string<SENSIBLE_PATH_MAX> above { od };
 			above.append ("/..");
-			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
+			log_debug (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
 			embeddedAssemblies.try_load_typemaps_from_directory (above.get());
 		}
 	}
@@ -728,21 +727,19 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
-	size_t blob_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
-	}
-
-	log_info (LOG_ASSEMBLY, "grendel: create_domain, runtime config present? %s", embeddedAssemblies.have_runtime_config_blob () ? "yes" : "no");
 	if (embeddedAssemblies.have_runtime_config_blob ()) {
+		size_t blob_time_index;
+		if (FastTiming::enabled ()) [[unlikely]] {
+			blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
+		}
+
 		runtime_config_args.kind = 1;
-		log_info (LOG_ASSEMBLY, "grendel: registering runtime config blob");
 		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
-	}
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (blob_time_index);
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing->end_event (blob_time_index);
+		}
 	}
 
 	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
@@ -1042,7 +1039,6 @@ MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, con
 		delete[] full_name;
 	}
 
-	log_debug (LOG_ASSEMBLY, "DSO '%s' loaded", full_name);
 	return handle;
 }
 
@@ -1119,8 +1115,6 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 				apk_entry++;
 				continue;
 			}
-
-			log_debug (LOG_ASSEMBLY, "Loading DSO '%s' from apk: offset == %u; fd == %d", dso->name, apk_entry->offset, apk_entry->fd);
 
 			android_dlextinfo dli;
 			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;

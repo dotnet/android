@@ -157,9 +157,6 @@ template<bool LogMapping>
 force_inline void
 EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
 {
-	log_debug (LOG_ASSEMBLY, __PRETTY_FUNCTION__);
-	log_debug (LOG_ASSEMBLY, "  file.name == '%s'; file.file_name == '%s' (%p)", file.name, file.file_name, file.file_name);
-
 	int fd;
 	bool close_fd;
 	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
@@ -1328,7 +1325,6 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 		}
 #endif // def DEBUG
 
-		log_warn (LOG_ASSEMBLY, "  grendel: fs entry '%s'", cur->d_name);
 		// ...and we can handle the runtime config entry
 		if (!runtime_config_blob_found && std::strncmp (cur->d_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME.data (), SharedConstants::RUNTIME_CONFIG_BLOB_NAME.size ()) == 0) {
 			log_debug (LOG_ASSEMBLY, "Mapping runtime config blob from '%s'", cur->d_name);
@@ -1361,7 +1357,6 @@ size_t
 EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
 {
 	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
-	log_debug (LOG_ASSEMBLY, "  runtime config blob name: %s", SharedConstants::RUNTIME_CONFIG_BLOB_NAME.data ());
 	constexpr bool LookForMangledNames = true;
 	size_t assembly_count = register_from_filesystem (
 		androidSystem.app_lib_directories[0],

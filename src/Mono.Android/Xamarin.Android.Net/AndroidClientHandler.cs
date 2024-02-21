@@ -29,7 +29,7 @@ namespace Xamarin.Android.Net
 	/// <remarks>
 	/// <para>Instance of this class is used to configure <see cref="System.Net.Http.HttpClient"/> instance
 	/// in the following way:
-	///
+	/// 
 	/// <example>
 	/// var handler = new AndroidClientHandler {
 	///    UseCookies = true,
@@ -44,10 +44,10 @@ namespace Xamarin.Android.Net
 	/// is made and no authentication credentials are provided in the <see cref="PreAuthenticationData"/> property (which is usually the case on the first
 	/// request), the <see cref="RequestNeedsAuthorization"/> property will return <c>true</c> and the <see cref="RequestedAuthentication"/> property will
 	/// contain all the authentication information gathered from the server. The application must then fill in the blanks (i.e. the credentials) and re-send
-	/// the request configured to perform pre-authentication. The reason for this manual process is that the underlying Java HTTP client API supports only a
+	/// the request configured to perform pre-authentication. The reason for this manual process is that the underlying Java HTTP client API supports only a 
 	/// single, VM-wide, authentication handler which cannot be configured to handle credentials for several requests. AndroidClientHandler, therefore, implements
 	/// the authentication in managed .NET code. Message handler supports both Basic and Digest authentication. If an authentication scheme that's not supported
-	/// by AndroidClientHandler is requested by the server, the application can provide its own authentication module (<see cref="AuthenticationData"/>,
+	/// by AndroidClientHandler is requested by the server, the application can provide its own authentication module (<see cref="AuthenticationData"/>, 
 	/// <see cref="PreAuthenticationData"/>) to handle the protocol authorization.</para>
 	/// <para>AndroidClientHandler also supports requests to servers with "invalid" (e.g. self-signed) SSL certificates. Since this process is a bit convoluted using
 	/// the Java APIs, AndroidClientHandler defines a way to handle the situation. It can store the necessary certificates (either CA or server certificates)
@@ -67,11 +67,8 @@ namespace Xamarin.Android.Net
 
 		public AndroidClientHandler ()
 		{
-			object? handler = GetUnderlyingHandler ();
-			_underlyingHander = handler as AndroidMessageHandler ?? throw new InvalidOperationException ($"Unknown underlying handler '{GetHandlerTypeName (handler)}'.  Only AndroidMessageHandler is supported for AndroidClientHandler");
+			_underlyingHander = GetUnderlyingHandler () as AndroidMessageHandler ?? throw new InvalidOperationException ("Unknown underlying handler.  Only AndroidMessageHandler is supported for AndroidClientHandler");
 		}
-
-		static string GetHandlerTypeName (object? handler) => handler?.GetType()?.FullName ?? "<null>";
 
 		/// <summary>
 		/// <para>
@@ -88,15 +85,15 @@ namespace Xamarin.Android.Net
 		/// <value>The pre authentication data.</value>
 		public AuthenticationData? PreAuthenticationData
 		{
-			get { return _underlyingHander.PreAuthenticationData; }
+			get { return _underlyingHander.PreAuthenticationData; } 
 			set { _underlyingHander.PreAuthenticationData = value; }
 		}
-
+		
 		/// <summary>
 		/// If the website requires authentication, this property will contain data about each scheme supported
 		/// by the server after the response. Note that unauthorized request will return a valid response - you
 		/// need to check the status code and and (re)configure AndroidClientHandler instance accordingly by providing
-		/// both the credentials and the authentication scheme by setting the <see cref="PreAuthenticationData"/>
+		/// both the credentials and the authentication scheme by setting the <see cref="PreAuthenticationData"/> 
 		/// property. If AndroidClientHandler is not able to detect the kind of authentication scheme it will store an
 		/// instance of <see cref="AuthenticationData"/> with its <see cref="AuthenticationData.Scheme"/> property
 		/// set to <c>AuthenticationScheme.Unsupported</c> and the application will be responsible for providing an
@@ -105,7 +102,7 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		public IList <AuthenticationData>? RequestedAuthentication
 		{
-			get { return _underlyingHander.RequestedAuthentication; }
+			get { return _underlyingHander.RequestedAuthentication; } 
 		}
 
 		/// <summary>
@@ -130,10 +127,10 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// <para>
 		/// If the request is to the server protected with a self-signed (or otherwise untrusted) SSL certificate, the request will
-		/// fail security chain verification unless the application provides either the CA certificate of the entity which issued the
+		/// fail security chain verification unless the application provides either the CA certificate of the entity which issued the 
 		/// server's certificate or, alternatively, provides the server public key. Whichever the case, the certificate(s) must be stored
 		/// in this property in order for AndroidClientHandler to configure the request to accept the server certificate.</para>
-		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection.
+		/// <para>AndroidClientHandler uses a custom <see cref="KeyStore"/> and <see cref="TrustManagerFactory"/> to configure the connection. 
 		/// If, however, the application requires finer control over the SSL configuration (e.g. it implements its own TrustManager) then
 		/// it should derive a custom class from <see cref="Xamarin.Android.Net.AndroidMessageHandler"/> instead of using AndroidClientHandler.</para>
 		/// </summary>
@@ -239,7 +236,7 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// Configure the <see cref="HttpURLConnection"/> before the request is sent. This method is meant to be overriden
 		/// by applications which need to perform some extra configuration steps on the connection. It is called with all
-		/// the request headers set, pre-authentication performed (if applicable) but before the request body is set
+		/// the request headers set, pre-authentication performed (if applicable) but before the request body is set 
 		/// (e.g. for POST requests). The default implementation in AndroidClientHandler does nothing.
 		/// </summary>
 		/// <param name="request">Request data</param>
@@ -282,9 +279,9 @@ namespace Xamarin.Android.Net
 		/// <summary>
 		/// Create and configure an instance of <see cref="TrustManagerFactory"/>. The <paramref name="keyStore"/> parameter is set to the
 		/// return value of the <see cref="ConfigureKeyStore"/> method, so it might be null if the application overrode the method and provided
-		/// no key store. It will not be <c>null</c> when the default implementation is used. The application can return <c>null</c> from this
+		/// no key store. It will not be <c>null</c> when the default implementation is used. The application can return <c>null</c> from this 
 		/// method in which case AndroidClientHandler will create its own instance of the trust manager factory provided that the <see cref="TrustCerts"/>
-		/// list contains at least one valid certificate. If there are no valid certificates and this method returns <c>null</c>, no custom
+		/// list contains at least one valid certificate. If there are no valid certificates and this method returns <c>null</c>, no custom 
 		/// trust manager will be created since that would make all the HTTPS requests fail.
 		/// </summary>
 		/// <returns>The trust manager factory.</returns>
@@ -315,26 +312,20 @@ namespace Xamarin.Android.Net
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
 		object? GetUnderlyingHandler ()
 		{
-			Logger.Log (LogLevel.Info, LOG_APP, "grendel: GetUnderlyingHandler()");
 			var fieldName = "_nativeHandler";
 			FieldInfo? field = null;
 
 			for (var type = GetType (); type != null; type = type.BaseType) {
-				Logger.Log (LogLevel.Info, LOG_APP, $"grendel: checking in type '{type.FullName}'");
 				field = type.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-				if (field != null) {
-					Logger.Log (LogLevel.Info, LOG_APP, "grendel: found");
+				if (field != null)
 					break;
-				}
 			}
 
 			if (field == null) {
 				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{GetType ()}'.");
 			}
 
-			object? ret = field.GetValue (this);
-			Logger.Log (LogLevel.Info, LOG_APP, $"grendel: field '{fieldName}' value == '{ret}'");
-			return ret;
+			return field.GetValue (this);
 		}
 	}
 }

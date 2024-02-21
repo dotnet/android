@@ -49,9 +49,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		log_info (LOG_ASSEMBLY, "grendel: checking if entry '%s' is a blob", entry_name.get ());
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-			log_info (LOG_ASSEMBLY, "grendel: yes, it is");
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
