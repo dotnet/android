@@ -33,7 +33,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ApkOutputPath { get; set; }
 
-		[Required]
 		public string AppSharedLibrariesDir { get; set; }
 
 		[Required]
