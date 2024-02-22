@@ -7,6 +7,8 @@ using System.Text;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Diagnostics;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
+using Java.Interop.Tools.JavaCallableWrappers.CallableWrapperMembers;
 using Java.Interop.Tools.JavaCallableWrappers;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -104,7 +106,7 @@ class JCWGenerator
 				continue;
 			}
 
-			JavaCallableWrapperGenerator generator = CreateGenerator (type, classifier, monoInit, hasExportReference, applicationJavaClass);
+			CallableWrapperType generator = CreateGenerator (type, classifier, monoInit, hasExportReference, applicationJavaClass);
 			if (!generateCode) {
 				continue;
 			}
@@ -117,13 +119,16 @@ class JCWGenerator
 		return ok;
 	}
 
-	bool GenerateCode (JavaCallableWrapperGenerator generator, TypeDefinition type, string outputPath, bool hasExportReference, MarshalMethodsClassifier? classifier)
+	bool GenerateCode (CallableWrapperType generator, TypeDefinition type, string outputPath, bool hasExportReference, MarshalMethodsClassifier? classifier)
 	{
 		bool ok = true;
 		using var writer = MemoryStreamPool.Shared.CreateStreamWriter ();
+		var writer_options = new CallableWrapperWriterOptions {
+			CodeGenerationTarget    = JavaPeerStyle.XAJavaInterop1
+		};
 
 		try {
-			generator.Generate (writer);
+			generator.Generate (writer, writer_options);
 			if (context.UseMarshalMethods) {
 				if (classifier.FoundDynamicallyRegisteredMethods (type)) {
 					log.LogWarning ($"Type '{type.GetAssemblyQualifiedName (context.TypeDefinitionCache)}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
@@ -165,13 +170,16 @@ class JCWGenerator
 		return ok;
 	}
 
-	JavaCallableWrapperGenerator CreateGenerator (TypeDefinition type, MarshalMethodsClassifier? classifier, string monoInit, bool hasExportReference, string? applicationJavaClass)
+	CallableWrapperType CreateGenerator (TypeDefinition type, MarshalMethodsClassifier? classifier, string monoInit, bool hasExportReference, string? applicationJavaClass)
 	{
-		return new JavaCallableWrapperGenerator (type, log.LogWarning, context.TypeDefinitionCache, classifier) {
-			GenerateOnCreateOverrides = false, // this was used only when targetting Android API <= 10, which is no longer supported
-			ApplicationJavaClass = applicationJavaClass,
-			MonoRuntimeInitialization = monoInit,
+		var reader_options = new CallableWrapperReaderOptions {
+			DefaultApplicationJavaClass         = applicationJavaClass,
+			DefaultGenerateOnCreateOverrides    = false, // this was used only when targetting Android API <= 10, which is no longer supported
+			DefaultMonoRuntimeInitialization    = monoInit,
+			MethodClassifier                    = classifier,
 		};
+
+		return CecilImporter.CreateType (type, context.TypeDefinitionCache, reader_options);
 	}
 
 	static string GetMonoInitSource (string androidSdkPlatform)
