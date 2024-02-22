@@ -98,6 +98,8 @@ extends:
     # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+      parameters:
+        use1ESTemplate: true
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 

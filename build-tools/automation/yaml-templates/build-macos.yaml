@@ -14,6 +14,7 @@ parameters:
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: false
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -39,6 +40,28 @@ stages:
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
+        outputs:
+        - output: pipelineArtifact
+          displayName: upload nupkgs
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        - output: pipelineArtifact
+          displayName: upload Windows toolchain pdb files
+          artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+        - output: pipelineArtifact
+          displayName: upload test assemblies
+          artifactName: ${{ parameters.testAssembliesArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+          sbomEnabled: false
+        - output: pipelineArtifact
+          displayName: upload build tools inventory
+          artifactName: AndroidBuildToolsInventory
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+          sbomEnabled: false
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -53,6 +76,7 @@ stages:
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:

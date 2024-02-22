@@ -5,6 +5,7 @@ parameters:
   nugetArtifactName: $(NuGetArtifactName)
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: false
 
 steps:
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
@@ -129,18 +130,6 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: upload nupkgs
-  inputs:
-    artifactName: ${{ parameters.nugetArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
-
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: upload test assemblies
-  inputs:
-    artifactName: ${{ parameters.testAssembliesArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
-
 - script: >
     mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
     cd ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
@@ -148,14 +137,27 @@ steps:
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: zip Windows toolchain pdb files
 
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: upload Windows toolchain pdb files
-  inputs:
-    artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - task: PublishPipelineArtifact@1
+    displayName: upload nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
 
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: upload build tools inventory
-  inputs:
-    artifactName: AndroidBuildToolsInventory
-    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+  - task: PublishPipelineArtifact@1
+    displayName: upload test assemblies
+    inputs:
+      artifactName: ${{ parameters.testAssembliesArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload Windows toolchain pdb files
+    inputs:
+      artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload build tools inventory
+    inputs:
+      artifactName: AndroidBuildToolsInventory
+      targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
