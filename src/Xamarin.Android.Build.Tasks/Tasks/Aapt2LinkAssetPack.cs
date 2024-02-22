@@ -45,6 +45,8 @@ namespace Xamarin.Android.Tasks {
 				using (var zip = new ZipArchiveEx (OutputArchive.ItemSpec, File.Exists (OutputArchive.ItemSpec) ? FileMode.Open : FileMode.Create)) {
 					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
 					zip.Archive.DeleteEntry ("resources.pb");
+					// Fix up aapt2 not dealing with '\' in subdirectories for assets.
+					zip.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				}
 			}
 		}
