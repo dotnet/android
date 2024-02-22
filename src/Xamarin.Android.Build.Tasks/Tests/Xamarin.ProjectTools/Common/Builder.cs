@@ -181,6 +181,7 @@ namespace Xamarin.ProjectTools
 			if (UseMSBuildExe) {
 				psi.FileName = MSBuildLocator.QueryLatest ().MSBuildPath;
 				args.Append ("/restore ");
+				psi.SetEnvironmentVariable ("MSBUILDLOGALLENVIRONMENTVARIABLES", "1");
 				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 			} else {
 				psi.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
