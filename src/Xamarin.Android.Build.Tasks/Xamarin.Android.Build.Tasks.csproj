@@ -14,7 +14,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24;ANDROID_26;ANDROID_31</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;INTERNAL_NULLABLE_ATTRIBUTES;ANDROID_24;ANDROID_26;ANDROID_31</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
     <SignAssembly>false</SignAssembly>
@@ -163,6 +163,9 @@
       <Link>Utilities\%(Filename)%(Extension)</Link>
     </Compile>
     <Compile Include="..\..\src-ThirdParty\StrongNameSigner\SigningHelper.cs">
+      <Link>Utilities\%(Filename)%(Extension)</Link>
+    </Compile>
+    <Compile Include="..\..\src-ThirdParty\System.Diagnostics.CodeAnalysis\NullableAttributes.cs">
       <Link>Utilities\%(Filename)%(Extension)</Link>
     </Compile>
   </ItemGroup>
