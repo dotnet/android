@@ -95,7 +95,7 @@ public class JavaDependencyVerification : AndroidTask
 		return !Log.HasLoggedErrors;
 	}
 
-	static bool TryResolveProject (Artifact artifact, IPomResolver resolver, [NotNullWhen (true)]out ResolvedProject? project)
+	static bool TryResolveProject (Artifact artifact, IProjectResolver resolver, [NotNullWhen (true)]out ResolvedProject? project)
 	{
 		// ResolvedProject.FromArtifact will throw if a POM cannot be resolved, but our MSBuildLoggingPomResolver
 		// has already logged the failure as an MSBuild error.  We don't want to log it again as an unhandled exception.
@@ -135,7 +135,7 @@ class DependencyResolver
 			return true;
 
 		var suggestion = packages.GetNuGetPackage ($"{dependency.GroupId}:{dependency.ArtifactId}");
-		var artifact_spec = dependency.ToArtifactString (dependency.Version.HasValue ());
+		var artifact_spec = dependency.Version.HasValue () ? dependency.VersionedArtifactString : dependency.ArtifactString;
 
 		if (suggestion is string nuget)
 			log.LogCodedError ("XA4242", Properties.Resources.XA4242, artifact_spec, nuget);
@@ -157,7 +157,7 @@ class DependencyResolver
 
 			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from AndroidLibrary '{3}'", art.GroupId, art.Id, art.Version, task.ItemSpec);
-				artifacts.Add (art.ToGroupAndArtifactId (), art);
+				artifacts.Add (art.ArtifactString, art);
 			}
 		}
 	}
@@ -168,7 +168,7 @@ class DependencyResolver
 
 			// See if JavaArtifact/JavaVersion overrides were used
 			if (task.TryParseJavaArtifactAndJavaVersion ("PackageReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact.ToGroupAndArtifactId (), explicit_artifact);
+				artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
 				continue;
 			}
 
@@ -181,7 +181,7 @@ class DependencyResolver
 
 			if (artifact != null) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from PackageReference '{3}'", artifact.GroupId, artifact.Id, artifact.Version, task.ItemSpec);
-				artifacts.Add (artifact.ToGroupAndArtifactId (), artifact);
+				artifacts.Add (artifact.ArtifactString, artifact);
 
 				continue;
 			}
@@ -195,7 +195,7 @@ class DependencyResolver
 		foreach (var task in tasks.OrEmpty ()) {
 			// See if JavaArtifact/JavaVersion overrides were used
 			if (task.TryParseJavaArtifactAndJavaVersion ("ProjectReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact.ToGroupAndArtifactId (), explicit_artifact);
+				artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
 				continue;
 			}
 
@@ -219,7 +219,7 @@ class DependencyResolver
 
 			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
 				log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
-				artifacts.Add (art.ToGroupAndArtifactId (), art);
+				artifacts.Add (art.ArtifactString, art);
 			}
 		}
 	}
@@ -227,18 +227,18 @@ class DependencyResolver
 	bool TrySatisfyDependency (ResolvedDependency dependency)
 	{
 		if (!dependency.Version.HasValue ())
-			return artifacts.ContainsKey (dependency.ToGroupAndArtifactId ());
+			return artifacts.ContainsKey (dependency.ArtifactString);
 
 		var dep_versions = MavenVersionRange.Parse (dependency.Version);
 
-		if (artifacts.TryGetValue (dependency.ToGroupAndArtifactId (), out var artifact))
+		if (artifacts.TryGetValue (dependency.ArtifactString, out var artifact))
 			return dep_versions.Any (r => r.ContainsVersion (MavenVersion.Parse (artifact.Version)));
 
 		return false;
 	}
 }
 
-class MSBuildLoggingPomResolver : IPomResolver
+class MSBuildLoggingPomResolver : IProjectResolver
 {
 	readonly TaskLoggingHelper logger;
 	readonly Dictionary<string, Project> poms = new ();
@@ -272,8 +272,8 @@ class MSBuildLoggingPomResolver : IPomResolver
 
 		try {
 			using (var file = File.OpenRead (filename)) {
-				var project = Project.Parse (file);
-				var registered_artifact = Artifact.Parse (project.ToString ());
+				var project = Project.Load (file);
+				var registered_artifact = Artifact.Parse (project.VersionedArtifactString);
 
 				// Return the registered artifact, preferring any overrides specified in the task item
 				var final_artifact = new Artifact (
@@ -283,7 +283,7 @@ class MSBuildLoggingPomResolver : IPomResolver
 				);
 
 				// Use index instead of Add to handle duplicates
-				poms [final_artifact.ToString ()] = project;
+				poms [final_artifact.VersionedArtifactString] = project;
 
 				logger.LogDebugMessage ("Registered POM for artifact '{0}' from '{1}'", final_artifact, filename);
 
@@ -295,9 +295,9 @@ class MSBuildLoggingPomResolver : IPomResolver
 		}
 	}
 
-	public Project ResolveRawProject (Artifact artifact)
+	public Project Resolve (Artifact artifact)
 	{
-		if (poms.TryGetValue (artifact.ToString (), out var project))
+		if (poms.TryGetValue (artifact.VersionedArtifactString, out var project))
 			return project;
 
 		logger.LogCodedError ("XA4247", Properties.Resources.XA4247, artifact);

@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.Json;
 using System.Xml;
 using Java.Interop.Tools.Maven.Models;
@@ -386,7 +387,7 @@ class PomBuilder
 
 	public string Build ()
 	{
-		using var sw = new StringWriter ();
+		using var sw = new Utf8StringWriter ();
 		using var xw = XmlWriter.Create (sw);
 
 		xw.WriteStartDocument ();
@@ -487,4 +488,10 @@ class PomBuilder
 	}
 
 	public TemporaryFile BuildTemporary () => new TemporaryFile (Build ());
+
+	// Trying to write XML to a StringWriter defaults to UTF-16, but we want UTF-8
+	class Utf8StringWriter : StringWriter
+	{
+		public override Encoding Encoding => Encoding.UTF8;
+	}
 }

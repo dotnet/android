@@ -110,13 +110,13 @@ public class MavenDownload : AndroidAsyncTask
 			var project = ResolvedProject.FromArtifact (artifact, resolver);
 
 			// Set the POM file path for _this_ artifact
-			var primary_pom = resolver.ResolvedPoms [artifact.ToString ()];
+			var primary_pom = resolver.ResolvedPoms [artifact.VersionedArtifactString];
 			result.SetMetadata ("Manifest", primary_pom);
 
 			Log.LogMessage ("Found POM file '{0}' for Java artifact '{1}'.", primary_pom, artifact);
 
 			// Create TaskItems for any other POMs we resolved
-			foreach (var kv in resolver.ResolvedPoms.Where (k => k.Key != artifact.ToString ())) {
+			foreach (var kv in resolver.ResolvedPoms.Where (k => k.Key != artifact.VersionedArtifactString)) {
 
 				var pom_item = new TaskItem (kv.Value);
 				var pom_artifact = Artifact.Parse (kv.Key);
@@ -163,7 +163,7 @@ public class MavenDownload : AndroidAsyncTask
 
 // This wrapper around CachedMavenRepository is used to log the POMs that are resolved.
 // We need these on-disk file locations so we can pass them as <AndroidAdditionalJavaManifest> items.
-class LoggingPomResolver : IPomResolver
+class LoggingPomResolver : IProjectResolver
 {
 	readonly CachedMavenRepository repository;
 
@@ -174,14 +174,14 @@ class LoggingPomResolver : IPomResolver
 		this.repository = repository;
 	}
 
-	public Project ResolveRawProject (Artifact artifact)
+	public Project Resolve (Artifact artifact)
 	{
 		if (repository.TryGetFilePath (artifact, $"{artifact.Id}-{artifact.Version}.pom", out var path)) {
 			using (var stream = File.OpenRead (path)) {
-				var pom = Project.Parse (stream) ?? throw new InvalidOperationException ($"Could not deserialize POM for {artifact}");
+				var pom = Project.Load (stream) ?? throw new InvalidOperationException ($"Could not deserialize POM for {artifact}");
 
 				// Use index instead of Add to handle duplicates
-				ResolvedPoms [artifact.ToString ()] = path;
+				ResolvedPoms [artifact.VersionedArtifactString] = path;
 
 				return pom;
 			}

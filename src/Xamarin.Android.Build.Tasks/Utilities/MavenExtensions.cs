@@ -154,8 +154,4 @@ static class MavenExtensions
 	public static bool IsRuntimeDependency (this ResolvedDependency dependency) => dependency?.Scope != null && dependency.Scope.IndexOf ("runtime", StringComparison.OrdinalIgnoreCase) != -1;
 
 	public static bool IsOptional (this ResolvedDependency dependency) => dependency?.Optional != null && dependency.Optional.IndexOf ("true", StringComparison.OrdinalIgnoreCase) != -1;
-
-	public static string ToGroupAndArtifactId (this Artifact artifact) => $"{artifact.GroupId}:{artifact.Id}";
-
-	public static string ToGroupAndArtifactId (this ResolvedDependency dependency) => $"{dependency.GroupId}:{dependency.ArtifactId}";
 }
