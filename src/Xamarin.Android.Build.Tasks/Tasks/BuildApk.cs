@@ -34,6 +34,9 @@ namespace Xamarin.Android.Tasks
 		public string ApkOutputPath { get; set; }
 
 		[Required]
+		public string AppSharedLibrariesDir { get; set; }
+
+		[Required]
 		public ITaskItem[] ResolvedUserAssemblies { get; set; }
 
 		[Required]
