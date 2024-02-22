@@ -317,7 +317,7 @@ stages:
 - stage: maui_tests
   displayName: MAUI Tests
   dependsOn: mac_build
-  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['System.PullRequest.TargetBranch'], 'main'))
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['RunMAUITestJob'], 'true'))
   jobs:
   # Check - "Xamarin.Android (MAUI Tests MAUI Integration)"
   - job: maui_tests_integration
