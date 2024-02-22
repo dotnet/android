@@ -15,6 +15,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
 namespace Xamarin.Android.Tasks
 {
