@@ -2,6 +2,7 @@ parameters:
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
@@ -72,6 +73,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml@self
       parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
@@ -80,7 +82,7 @@ stages:
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
