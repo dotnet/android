@@ -111,16 +111,16 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase ("テスト", false, false, true)]
-		[TestCase ("テスト", true, true, false)]
-		[TestCase ("テスト", true, false, true)]
-		[TestCase ("随机生成器", false, false, true)]
-		[TestCase ("随机生成器", true, true, false)]
-		[TestCase ("随机生成器", true, false, true)]
-		[TestCase ("中国", false, false, true)]
-		[TestCase ("中国", true, true, false)]
-		[TestCase ("中国", true, false, true)]
-		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot, bool expectedResult)
+		[TestCase ("テスト", false, false)]
+		[TestCase ("テスト", true, true)]
+		[TestCase ("テスト", true, false)]
+		[TestCase ("随机生成器", false, false)]
+		[TestCase ("随机生成器", true, true)]
+		[TestCase ("随机生成器", true, false)]
+		[TestCase ("中国", false, false)]
+		[TestCase ("中国", true, true)]
+		[TestCase ("中国", true, false)]
+		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot)
 		{
 			if (!IsWindows)
 				expectedResult = true;
@@ -132,13 +132,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a",  "arm64-v8a", "x86", "x86_64");
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
-				builder.ThrowOnBuildFailure = false;
-				Assert.AreEqual (expectedResult, builder.Build (proj), "Build should have succeeded.");
-				if (!expectedResult) {
-					var aotFailed = builder.LastBuildOutput.ContainsText ("Precompiling failed");
-					var aapt2Failed = builder.LastBuildOutput.ContainsText ("APT2265");
-					Assert.IsTrue (aotFailed || aapt2Failed, "Error APT2265 or an AOT error should have been raised.");
-				}
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
 		}
 
