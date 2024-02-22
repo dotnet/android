@@ -629,3 +629,27 @@ extends:
             xaSourcePath: $(System.DefaultWorkingDirectory)
             artifactName: Prepare Release - Push Internal
             includeBuildResults: true
+
+    # Check - "Xamarin.Android (PoliCheck)"
+    - template: security/policheck/v3.yml@yaml-templates
+      parameters:
+        windowsImageOverride: $(WindowsPoolImage1ESPT)
+        stageDependsOn: []
+        sourceGdnSuppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+        tsaConfigFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
+        policheckLocScanEnabled: true
+        policheckExclusionFilesFolder: $(Build.SourcesDirectory)\.gdn
+        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\.gdn
+        policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
+        policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
+        policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
+        policheckDeuScanFolder: $(Build.SourcesDirectory)\Localize\loc\de
+        policheckEsnScanFolder: $(Build.SourcesDirectory)\Localize\loc\es
+        policheckFraScanFolder: $(Build.SourcesDirectory)\Localize\loc\fr
+        policheckItaScanFolder: $(Build.SourcesDirectory)\Localize\loc\it
+        policheckJpnScanFolder: $(Build.SourcesDirectory)\Localize\loc\ja
+        policheckKorScanFolder: $(Build.SourcesDirectory)\Localize\loc\ko
+        policheckPlkScanFolder: $(Build.SourcesDirectory)\Localize\loc\pl
+        policheckPtbScanFolder: $(Build.SourcesDirectory)\Localize\loc\pt-BR
+        policheckRusScanFolder: $(Build.SourcesDirectory)\Localize\loc\ru
+        policheckTrkScanFolder: $(Build.SourcesDirectory)\Localize\loc\tr
