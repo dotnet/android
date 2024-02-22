@@ -167,7 +167,6 @@ stages:
           testRunTitle: SystemApplicationTests On Device - macOS
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
           dotNetTestExtraArgs: --filter "Name=SystemApplicationTests"
-          testResultsFile: TestResult-SystemApplicationTests-$(XA.Build.Configuration).xml
 
 
 # TimeZoneInfo test jobs

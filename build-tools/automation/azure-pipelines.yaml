@@ -37,6 +37,8 @@ resources:
     endpoint: xamarin
 
 parameters:
+- name: pushXAPackagesToMaestro
+  default: true
 - name: macTestAgentsUseCleanImages   # Test agents we do not need to clean up when finished because they are not reused
   default: true
 - name: Skip1ESComplianceTasks
@@ -72,11 +74,10 @@ variables:
     value: true
 
 extends:
-  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
-  #${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-  #  template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
-  #${{ else }}:
-  #  template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
+  ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+    template: v1/1ES.Official.PipelineTemplate.yml@1esPipelines
+  ${{ else }}:
+    template: v1/1ES.Unofficial.PipelineTemplate.yml@1esPipelines
   parameters:
     sdl:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
@@ -235,7 +236,6 @@ extends:
           parameters:
             testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Tools.Aidl-Tests.dll
-            testResultsFile: TestResult-Aidl-Tests-macOS-$(XA.Build.Configuration).xml
 
         - task: ShellScript@2
           displayName: Test dotnet-local.sh
@@ -288,28 +288,24 @@ extends:
             testRunTitle: Xamarin.Android.Build.Tests - Linux BuildTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = BuildTest"
-            testResultsFile: TestResult-BuildTest-Linux-$(XA.Build.Configuration).xml
 
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux PackagingTest
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = PackagingTest"
-            testResultsFile: TestResult-PackagingTest-Linux-$(XA.Build.Configuration).xml
 
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux XASdkTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = XASdkTests & Name != XamarinLegacySdk"
-            testResultsFile: TestResult-XASdkTests-Linux-$(XA.Build.Configuration).xml
 
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Build.Tests - Linux AndroidDependenciesTests
             testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
             dotNetTestExtraArgs: --filter "Name = AndroidDependenciesTests"
-            testResultsFile: TestResult-AndroidDependenciesTests-Linux-$(XA.Build.Configuration).xml
 
         - task: ShellScript@2
           displayName: Test dotnet-local.sh
@@ -543,7 +539,7 @@ extends:
         templateContext:
           outputs:
           - output: nuget
-            condition: and(succeeded(), eq(variables['PushXAPackages'], 'true'))
+            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
             useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
             packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
             packageParentPath: $(Build.StagingDirectory)\nuget-signed
@@ -617,7 +613,7 @@ extends:
             $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
             -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
           displayName: generate and publish BAR manifest
-          condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - powershell: |
             $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
@@ -626,7 +622,7 @@ extends:
             & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
             & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
           displayName: add build to default darc channel
-          condition: and(succeeded(), eq(variables['PushXAPackageInfoToMaestro'], 'true'))
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - template: build-tools\automation\yaml-templates\upload-results.yaml@self
           parameters:

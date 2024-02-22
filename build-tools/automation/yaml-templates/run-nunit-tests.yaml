@@ -1,11 +1,10 @@
 parameters:
   testRunTitle: Xamarin Android Tests
   testAssembly: ''
-  testResultsFile: TestResult.xml
   dotNetTestExtraArgs: ''
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
-  timeoutInMinutes: 0
+  timeoutInMinutes: 180
   retryCountOnTaskFailure: 0
 
 steps:
@@ -24,10 +23,3 @@ steps:
   retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - template: /build-tools/automation/yaml-templates/kill-processes.yaml@self
-
-- task: PublishTestResults@2
-  inputs:
-    testResultsFormat: $(TestResultsFormat)
-    testResultsFiles: ${{ parameters.testResultsFile }}
-    testRunTitle: ${{ parameters.testRunTitle }}
-  condition: and(${{ parameters.condition }}, or(ne('${{ parameters.useDotNet }}', 'true'), eq('${{ parameters.useDotNetPreview }}', 'true')))
