@@ -14,7 +14,7 @@ parameters:
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
-  use1ESTemplate: false
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -83,3 +83,4 @@ stages:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}

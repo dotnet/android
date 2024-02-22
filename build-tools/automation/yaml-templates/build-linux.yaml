@@ -11,6 +11,7 @@ parameters:
   repositoryAlias: self
   stageName: linux_build
   stageDisplayName: Linux
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -31,6 +32,13 @@ stages:
     variables:
       CXX: g++-10
       CC: gcc-10
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: upload linux sdk
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -42,8 +50,6 @@ stages:
     # Always checkout a second resource to ensure we are using multi-repo checkout behavior
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
-
-    - template: /build-tools/automation/yaml-templates/setup-ubuntu.yaml@self
 
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
@@ -83,16 +89,18 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 
-    - task: 1ES.PublishPipelineArtifact@1
-      displayName: upload linux sdk
-      inputs:
-        artifactName: ${{ parameters.nugetArtifactName }}
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+    - ${{ if ne(parameters.use1ESTemplate, true) }}:
+      - task: PublishPipelineArtifact@1
+        displayName: upload linux sdk
+        inputs:
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self

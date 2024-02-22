@@ -6,6 +6,7 @@ parameters:
   jobTimeout: 360
   jdkTestFolder: $(JAVA_HOME_17_X64)
   testSteps: []
+  use1ESTemplate: true
 
 jobs:
   - job: mac_${{ parameters.jobName }}_tests
@@ -44,5 +45,6 @@ jobs:
     - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
         artifactName: Test Results - ${{ parameters.jobName }} With Emulator - macOS
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self

@@ -4,6 +4,7 @@ parameters:
   artifactName: results
   includeBuildResults: false
   condition: or(ne(variables['Agent.JobStatus'], 'Succeeded'), eq(variables['XA.PublishAllLogs'], 'true'))
+  use1ESTemplate: true
 
 steps:
 - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
@@ -21,6 +22,7 @@ steps:
       artifactName: ${{ parameters.artifactName }}
       targetPath: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
       condition: ${{ parameters.condition }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
 # Copy Build$(Configuration) folder into test result root and upload single artifact
 - ${{ if eq(parameters.includeBuildResults, true) }}:
@@ -36,3 +38,4 @@ steps:
       artifactName: ${{ parameters.artifactName }}
       targetPath: $(Build.StagingDirectory)/Test${{ parameters.configuration }}
       condition: ${{ parameters.condition }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}

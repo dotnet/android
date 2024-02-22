@@ -3,6 +3,7 @@ parameters:
   artifactName: artifact
   targetPath: $(Build.ArtifactStagingDirectory)
   condition: always()
+  use1ESTemplate: true
 
 steps:
 # Add the "(Attempt X)" for retries, but leave the initial run blank
@@ -12,9 +13,17 @@ steps:
   displayName: Set upload artifact name
   condition: ${{ parameters.condition }}
 
-- task: 1ES.PublishPipelineArtifact@1
-  displayName: ${{ parameters.displayName }}
-  inputs:
-    artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
-    targetPath: ${{ parameters.targetPath }}
-  condition: ${{ parameters.condition }}
+- ${{ if eq(parameters.use1ESTemplate, true) }}:
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
+      targetPath: ${{ parameters.targetPath }}
+    condition: ${{ parameters.condition }}
+- ${{ else }}:
+  - task: PublishPipelineArtifact@1
+    displayName: ${{ parameters.displayName }}
+    inputs:
+      artifactName: ${{ parameters.artifactName }} $(UploadAttemptSuffix)
+      targetPath: ${{ parameters.targetPath }}
+    condition: ${{ parameters.condition }}
