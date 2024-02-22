@@ -374,7 +374,10 @@ namespace Java.Interop
 				[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
 				[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = makeGenericTypeMessage)]
 				[return: DynamicallyAccessedMembers (Constructors)]
-				static Type MakeGenericType (Type type, Type [] arguments) =>
+				static Type MakeGenericType (
+						[DynamicallyAccessedMembers (Constructors)]
+						Type type,
+						Type [] arguments) =>
 					type.MakeGenericType (arguments);
 
 				Type[] arguments = type.GetGenericArguments ();

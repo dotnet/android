@@ -32,6 +32,7 @@
     <LangVersion Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">9.0</LangVersion>
     <LangVersion Condition=" '$(LangVersion)' == '' ">8.0</LangVersion>
     <Version>$(JICoreLibVersion)</Version>
+    <Standalone Condition=" '$(Standalone)' == '' ">true</Standalone>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Standalone)' == 'True' ">
     <DefineConstants Condition=" '$(JIBuildingForNetCoreApp)' == 'True' ">FEATURE_JNIENVIRONMENT_JI_FUNCTION_POINTERS;$(DefineConstants)</DefineConstants>

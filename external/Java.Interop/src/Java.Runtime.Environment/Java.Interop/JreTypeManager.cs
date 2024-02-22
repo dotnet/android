@@ -23,6 +23,10 @@ namespace Java.Interop {
 				return;
 			}
 
+			if (!Runtime.UseMarshalMemberBuilder) {
+				throw new NotSupportedException ("JniRuntime.MarshalMemberBuilder is required and not present.");
+			}
+
 			var toRegister  = new JniMethodMap ();
 
 			AddInterfaceMethods (toRegister, type);

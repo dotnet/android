@@ -22,7 +22,7 @@ namespace Java.Interop {
 		public override void CollectPeers ()
 		{
 			if (RegisteredInstances == null)
-				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+				throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 			var peers = new List<IJavaPeerable> ();
 
@@ -51,7 +51,7 @@ namespace Java.Interop {
 		public override void AddPeer (IJavaPeerable value)
 		{
 			if (RegisteredInstances == null)
-				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+				throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 			var r = value.PeerReference;
 			if (!r.IsValid)
@@ -116,7 +116,7 @@ namespace Java.Interop {
 		public override IJavaPeerable? PeekPeer (JniObjectReference reference)
 		{
 			if (RegisteredInstances == null)
-				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+				throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 			if (!reference.IsValid)
 				return null;
@@ -142,7 +142,7 @@ namespace Java.Interop {
 		public override void RemovePeer (IJavaPeerable value)
 		{
 			if (RegisteredInstances == null)
-				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+				throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 			if (value == null)
 				throw new ArgumentNullException (nameof (value));
@@ -204,8 +204,11 @@ namespace Java.Interop {
 			var runtime = JniEnvironment.Runtime;
 
 			try {
-				var f = runtime.MarshalMemberBuilder.CreateConstructActivationPeerFunc (cinfo);
-				f (cinfo, reference, argumentValues);
+				if (runtime.UseMarshalMemberBuilder) {
+					ActivateViaMarshalMemberBuilder (runtime.MarshalMemberBuilder, reference, cinfo, argumentValues);
+					return;
+				}
+				ActivateViaReflection (reference, cinfo, argumentValues);
 			} catch (Exception e) {
 				var m = string.Format ("Could not activate {{ PeerReference={0} IdentityHashCode=0x{1} Java.Type={2} }} for managed type '{3}'.",
 						reference,
@@ -218,10 +221,28 @@ namespace Java.Interop {
 			}
 		}
 
+		void ActivateViaMarshalMemberBuilder (JniRuntime.JniMarshalMemberBuilder builder, JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
+		{
+			var f = builder.CreateConstructActivationPeerFunc (cinfo);
+			f (cinfo, reference, argumentValues);
+		}
+
+		void ActivateViaReflection (JniObjectReference reference, ConstructorInfo cinfo, object?[]? argumentValues)
+		{
+			var declType  = cinfo.DeclaringType ?? throw new NotSupportedException ("Do not know the type to create!");
+
+#pragma warning disable IL2072
+			var self      = (IJavaPeerable) System.Runtime.CompilerServices.RuntimeHelpers.GetUninitializedObject (declType);
+#pragma warning restore IL2072
+			self.SetPeerReference (reference);
+
+			cinfo.Invoke (self, argumentValues);
+		}
+
 		public override List<JniSurfacedPeerInfo> GetSurfacedPeers ()
 		{
 			if (RegisteredInstances == null)
-				throw new ObjectDisposedException (nameof (MonoRuntimeValueManager));
+				throw new ObjectDisposedException (nameof (ManagedValueManager));
 
 			lock (RegisteredInstances) {
 				var peers = new List<JniSurfacedPeerInfo> (RegisteredInstances.Count);

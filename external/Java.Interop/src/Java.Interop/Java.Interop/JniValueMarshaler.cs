@@ -172,9 +172,12 @@ namespace Java.Interop {
 		{
 			var self = Expression.Variable (GetType (), sourceValue.Name + "_marshaler");
 			context.LocalVariables.Add (self);
-			context.CreationStatements.Add (Expression.Assign (self, Expression.New (GetType ())));
+			context.CreationStatements.Add (Expression.Assign (self, Expression.New (_GetType ())));
 			return self;
 		}
+
+		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
+		Type _GetType () => GetType ();
 
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public  virtual     Expression              CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)

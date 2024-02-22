@@ -2,6 +2,7 @@ parameters:
   condition: succeeded()
   runNativeTests: false
   platformName:
+  nativeAotRid:
 
 steps:
 - task: DotNetCoreCLI@2
@@ -171,6 +172,19 @@ steps:
   inputs:
     command: build
     arguments: -c $(Build.Configuration) tools/java-source-utils/java-source-utils.csproj -t:RunTests
+  continueOnError: true
+
+- powershell: >
+    dotnet publish -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
+    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
+  displayName: 'Tests: publish Hello-NativeAOTFromJNI'
+  continueOnError: true
+
+- powershell: >
+    dotnet build -c $(Build.Configuration) -r ${{ parameters.nativeAotRid }}
+    -t:RunJavaSample
+    samples/Hello-NativeAOTFromJNI/Hello-NativeAOTFromJNI.csproj
+  displayName: 'Tests: run Hello-NativeAOTFromJNI'
   continueOnError: true
 
 - task: PublishTestResults@2

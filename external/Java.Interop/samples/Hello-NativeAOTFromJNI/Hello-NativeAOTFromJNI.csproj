@@ -1,0 +1,52 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Hello_NativeAOTFromJNI</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NativeLib>Shared</NativeLib>
+    <!-- Needed for cross-compilation, e.g. build osx-x64 from osx-arm64 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
+    <ProjectReference Include="..\..\src\Java.Base\Java.Base.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
+    <ProjectReference
+        Include="..\..\tools\jcw-gen\jcw-gen.csproj"
+        ReferenceOutputAssembly="false"
+    />
+    <ProjectReference
+        Include="..\..\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj"
+        ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
+
+  <ItemGroup>
+    <TrimmerRootAssembly Include="Hello-NativeAOTFromJNI" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="$(OutputPath)hello-from-java.jar" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <HelloNativeAOTFromJNIJar Include="$(MSBuildThisFileDirectory)java\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" $([MSBuild]::IsOSPlatform('linux')) Or $([MSBuild]::IsOSPlatform('FreeBSD')) Or $([MSBuild]::IsOSPlatform('Android')) ">
+    <CustomLinkerArg Include="-Wl,-soname,lib$(NativeBinary)$(NativeBinaryExt)" />
+  </ItemGroup>
+
+  <Import Project="Hello-NativeAOTFromJNI.targets" />
+</Project>

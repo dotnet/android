@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -103,7 +104,7 @@ namespace Java.Interop {
 			builder.LibraryHandler.LoadJvmLibrary (builder.JvmLibraryPath!);
 
 			if (!builder.ClassPath.Any (p => p.EndsWith ("java-interop.jar", StringComparison.OrdinalIgnoreCase))) {
-				var loc = typeof (JreRuntimeOptions).Assembly.Location;
+				var loc = GetAssemblyLocation (typeof (JreRuntimeOptions).Assembly);
 				var dir = string.IsNullOrEmpty (loc) ? null : Path.GetDirectoryName (loc);
 				var jij = string.IsNullOrEmpty (dir) ? null : Path.Combine (dir, "java-interop.jar");
 				if (!File.Exists (jij)) {
@@ -144,6 +145,15 @@ namespace Java.Interop {
 				for (int i = 0; i < options.Length; ++i)
 					Marshal.FreeHGlobal (options [i].optionString);
 			}
+		}
+
+		[UnconditionalSuppressMessage ("Trimming", "IL3000", Justification = "We check for a null Assembly.Location value!")]
+		internal static string? GetAssemblyLocation (Assembly assembly)
+		{
+			var location = assembly.Location;
+			if (!string.IsNullOrEmpty (location))
+				return location;
+			return null;
 		}
 
 		JvmLibraryHandler LibraryHandler;
@@ -189,11 +199,15 @@ namespace Java.Interop {
 		{
 			var handler = Environment.GetEnvironmentVariable ("JI_LOADER_TYPE");
 			switch (handler?.ToLowerInvariant ()) {
+#if !NET
 			case "":
 			case null:
+#endif  // NET
 			case "java-interop":
 				return new JavaInteropLibJvmLibraryHandler ();
 #if NET
+			case "":
+			case null:
 			case "native-library":
 				return new NativeLibraryJvmLibraryHandler ();
 #endif  // NET
@@ -281,10 +295,10 @@ namespace Java.Interop {
 		public override void LoadJvmLibrary (string path)
 		{
 			IntPtr errorPtr = IntPtr.Zero;
-			int r = NativeMethods.java_interop_jvm_load_with_error_message (path, out errorPtr);
+			int r = JreNativeMethods.java_interop_jvm_load_with_error_message (path, out errorPtr);
 			if (r != 0) {
 				string? error = Marshal.PtrToStringAnsi (errorPtr);
-				NativeMethods.java_interop_free (errorPtr);
+				JreNativeMethods.java_interop_free (errorPtr);
 				if (r == JAVA_INTEROP_JVM_FAILED_ALREADY_LOADED) {
 					return;
 				}
@@ -294,17 +308,17 @@ namespace Java.Interop {
 
 		public override int CreateJavaVM (out IntPtr javavm, out IntPtr jnienv, ref JavaVMInitArgs args)
 		{
-			return NativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
+			return JreNativeMethods.java_interop_jvm_create (out javavm, out jnienv, ref args);
 		}
 
 		public override IEnumerable<IntPtr> GetAvailableInvocationPointers ()
 		{
 			int nVMs;
-			int r = NativeMethods.java_interop_jvm_list (null, 0, out nVMs);
+			int r = JreNativeMethods.java_interop_jvm_list (null, 0, out nVMs);
 			if (r != 0)
 				throw new NotSupportedException ("JNI_GetCreatedJavaVMs() returned: " + r.ToString ());
 			var handles = new IntPtr [nVMs];
-			r = NativeMethods.java_interop_jvm_list (handles, handles.Length, out nVMs);
+			r = JreNativeMethods.java_interop_jvm_list (handles, handles.Length, out nVMs);
 			if (r != 0)
 				throw new InvalidOperationException ("JNI_GetCreatedJavaVMs() [take 2!] returned: " + r.ToString ());
 			return handles;
@@ -315,14 +329,15 @@ namespace Java.Interop {
 		}
 	}
 
-	partial class NativeMethods {
+	partial class JreNativeMethods {
 
-		static NativeMethods ()
+		static JreNativeMethods ()
 		{
 			if (Environment.OSVersion.Platform == PlatformID.Win32NT) {
-				var baseDir = Path.GetDirectoryName (typeof (JreRuntime).Assembly.Location) ?? throw new NotSupportedException ();
+				var loc     = JreRuntime.GetAssemblyLocation (typeof (JreRuntime).Assembly) ?? throw new NotSupportedException ();
+				var baseDir = Path.GetDirectoryName (loc) ?? throw new NotSupportedException ();
 				var newDir  = Path.Combine (baseDir, Environment.Is64BitProcess ? "win-x64" : "win-x86");
-				NativeMethods.AddDllDirectory (newDir);
+				JreNativeMethods.AddDllDirectory (newDir);
 			}
 		}
 

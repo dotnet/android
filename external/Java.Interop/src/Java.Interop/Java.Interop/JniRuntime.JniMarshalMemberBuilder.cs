@@ -27,6 +27,8 @@ namespace Java.Interop {
 			}
 		}
 
+		internal    bool                       UseMarshalMemberBuilder  => marshalMemberBuilder != null;
+
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, "Java.Interop.MarshalMemberBuilder", "Java.Interop.Export")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2035", Justification = "Java.Interop.Export.dll is not always present.")]
 		partial void SetMarshalMemberBuilder (CreationOptions options)

@@ -27,32 +27,32 @@ namespace Java.Interop {
 		{
 			base.OnSetRuntime (runtime);
 
-			bridge  = NativeMethods.java_interop_gc_bridge_get_current ();
+			bridge  = JreNativeMethods.java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero)
 				return;
 
-			bridge  = NativeMethods.java_interop_gc_bridge_new (runtime.InvocationPointer);
+			bridge  = JreNativeMethods.java_interop_gc_bridge_new (runtime.InvocationPointer);
 			if (bridge == IntPtr.Zero)
 				throw new NotSupportedException ("Could not initialize JNI::Mono GC Bridge!");
 
 			try {
-				if (NativeMethods.java_interop_gc_bridge_set_bridge_processing_field (bridge, typeof (MonoRuntimeValueManager).TypeHandle, nameof (GCBridgeProcessingIsActive)) < 0)
+				if (JreNativeMethods.java_interop_gc_bridge_set_bridge_processing_field (bridge, typeof (MonoRuntimeValueManager).TypeHandle, nameof (GCBridgeProcessingIsActive)) < 0)
 					throw new NotSupportedException ("Could not set bridge processing field!");
 				foreach (var t in new[]{typeof (JavaObject), typeof (JavaException)}) {
-					if (NativeMethods.java_interop_gc_bridge_register_bridgeable_type (bridge, t.TypeHandle) < 0)
+					if (JreNativeMethods.java_interop_gc_bridge_register_bridgeable_type (bridge, t.TypeHandle) < 0)
 						throw new NotSupportedException ("Could not register type " + t.FullName + "!");
 				}
-				if (NativeMethods.java_interop_gc_bridge_add_current_app_domain (bridge) < 0)
+				if (JreNativeMethods.java_interop_gc_bridge_add_current_app_domain (bridge) < 0)
 					throw new NotSupportedException ("Could not register current AppDomain!");
-				if (NativeMethods.java_interop_gc_bridge_set_current_once (bridge) < 0)
+				if (JreNativeMethods.java_interop_gc_bridge_set_current_once (bridge) < 0)
 					throw new NotSupportedException ("Could not set GC Bridge instance!");
 			}
 			catch (Exception) {
-				NativeMethods.java_interop_gc_bridge_free (bridge);
+				JreNativeMethods.java_interop_gc_bridge_free (bridge);
 				bridge  = IntPtr.Zero;
 				throw;
 			}
-			if (NativeMethods.java_interop_gc_bridge_register_hooks (bridge, GCBridgeUseWeakReferenceKind.Jni) < 0)
+			if (JreNativeMethods.java_interop_gc_bridge_register_hooks (bridge, GCBridgeUseWeakReferenceKind.Jni) < 0)
 				throw new NotSupportedException ("Could not register GC Bridge with Mono!");
 		}
 
@@ -60,7 +60,7 @@ namespace Java.Interop {
 		{
 			if (!GCBridgeProcessingIsActive)
 				return;
-			NativeMethods.java_interop_gc_bridge_wait_for_bridge_processing (bridge);
+			JreNativeMethods.java_interop_gc_bridge_wait_for_bridge_processing (bridge);
 		}
 
 		public override void CollectPeers ()
@@ -92,7 +92,7 @@ namespace Java.Interop {
 			}
 
 			if (bridge != IntPtr.Zero) {
-				NativeMethods.java_interop_gc_bridge_remove_current_app_domain (bridge);
+				JreNativeMethods.java_interop_gc_bridge_remove_current_app_domain (bridge);
 				bridge  = IntPtr.Zero;
 			}
 		}
@@ -382,7 +382,7 @@ namespace Java.Interop {
 		}
 	}
 
-	partial class NativeMethods {
+	partial class JreNativeMethods {
 
 		const   string JavaInteropLib = "java-interop";
 

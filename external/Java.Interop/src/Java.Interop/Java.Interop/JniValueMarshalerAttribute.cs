@@ -29,8 +29,8 @@ namespace Java.Interop {
 			MarshalerType   = marshalerType;
 		}
 
+		[DynamicallyAccessedMembers (ParameterlessConstructorsInterfaces)]
 		public  Type    MarshalerType   {
-			[return: DynamicallyAccessedMembers (ParameterlessConstructorsInterfaces)]
 			get;
 		}
 	}

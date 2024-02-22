@@ -13,19 +13,19 @@ namespace Java.Interop {
 		public override void OnSetRuntime (JniRuntime runtime)
 		{
 			base.OnSetRuntime (runtime);
-			bridge  = NativeMethods.java_interop_gc_bridge_get_current ();
+			bridge  = JreNativeMethods.java_interop_gc_bridge_get_current ();
 			if (bridge != IntPtr.Zero) {
-				logLocalRefs    = NativeMethods.java_interop_gc_bridge_lref_get_log_file (bridge) != IntPtr.Zero;
-				logGlobalRefs   = NativeMethods.java_interop_gc_bridge_gref_get_log_file (bridge) != IntPtr.Zero;
+				logLocalRefs    = JreNativeMethods.java_interop_gc_bridge_lref_get_log_file (bridge) != IntPtr.Zero;
+				logGlobalRefs   = JreNativeMethods.java_interop_gc_bridge_gref_get_log_file (bridge) != IntPtr.Zero;
 			}
 		}
 
 		public override int GlobalReferenceCount {
-			get {return NativeMethods.java_interop_gc_bridge_get_gref_count (bridge);}
+			get {return JreNativeMethods.java_interop_gc_bridge_get_gref_count (bridge);}
 		}
 
 		public override int WeakGlobalReferenceCount {
-			get {return NativeMethods.java_interop_gc_bridge_get_weak_gref_count (bridge);}
+			get {return JreNativeMethods.java_interop_gc_bridge_get_weak_gref_count (bridge);}
 		}
 
 		public override bool LogLocalReferenceMessages {
@@ -36,8 +36,8 @@ namespace Java.Interop {
 		{
 			if (!LogLocalReferenceMessages)
 				return;
-			NativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, string.Format (format, args));
-			NativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, "\n");
+			JreNativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, string.Format (format, args));
+			JreNativeMethods.java_interop_gc_bridge_lref_log_message (bridge, 0, "\n");
 		}
 
 		public override JniObjectReference CreateLocalReference (JniObjectReference reference, ref int localReferenceCount)
@@ -46,7 +46,7 @@ namespace Java.Interop {
 				return reference;
 
 			var r = base.CreateLocalReference (reference, ref localReferenceCount);
-			NativeMethods.java_interop_gc_bridge_lref_log_new (bridge,
+			JreNativeMethods.java_interop_gc_bridge_lref_log_new (bridge,
 					localReferenceCount,
 					reference.Handle,
 					ToByte (reference.Type),
@@ -76,7 +76,7 @@ namespace Java.Interop {
 		{
 			if (!reference.IsValid)
 				return;
-			NativeMethods.java_interop_gc_bridge_lref_log_delete (bridge,
+			JreNativeMethods.java_interop_gc_bridge_lref_log_delete (bridge,
 					localReferenceCount,
 					reference.Handle,
 					ToByte (reference.Type),
@@ -91,7 +91,7 @@ namespace Java.Interop {
 			if (!reference.IsValid)
 				return;
 			base.CreatedLocalReference (reference, ref localReferenceCount);
-			NativeMethods.java_interop_gc_bridge_lref_log_new (bridge,
+			JreNativeMethods.java_interop_gc_bridge_lref_log_new (bridge,
 					localReferenceCount,
 					reference.Handle,
 					ToByte (reference.Type),
@@ -106,7 +106,7 @@ namespace Java.Interop {
 		{
 			if (!reference.IsValid)
 				return IntPtr.Zero;
-			NativeMethods.java_interop_gc_bridge_lref_log_delete (bridge,
+			JreNativeMethods.java_interop_gc_bridge_lref_log_delete (bridge,
 					localReferenceCount,
 					reference.Handle,
 					ToByte (reference.Type),
@@ -124,8 +124,8 @@ namespace Java.Interop {
 		{
 			if (!LogGlobalReferenceMessages)
 				return;
-			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, string.Format (format, args!));
-			NativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, "\n");
+			JreNativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, string.Format (format, args!));
+			JreNativeMethods.java_interop_gc_bridge_gref_log_message (bridge, 0, "\n");
 		}
 
 		public override JniObjectReference CreateGlobalReference (JniObjectReference reference)
@@ -133,7 +133,7 @@ namespace Java.Interop {
 			if (!reference.IsValid)
 				return reference;
 			var n   = base.CreateGlobalReference (reference);
-			NativeMethods.java_interop_gc_bridge_gref_log_new (bridge,
+			JreNativeMethods.java_interop_gc_bridge_gref_log_new (bridge,
 					reference.Handle,
 					ToByte (reference.Type),
 					n.Handle,
@@ -148,7 +148,7 @@ namespace Java.Interop {
 		{
 			if (!reference.IsValid)
 				return;
-			NativeMethods.java_interop_gc_bridge_gref_log_delete (bridge,
+			JreNativeMethods.java_interop_gc_bridge_gref_log_delete (bridge,
 					reference.Handle,
 					ToByte (reference.Type),
 					GetCurrentManagedThreadName (LogGlobalReferenceMessages),
@@ -162,7 +162,7 @@ namespace Java.Interop {
 			if (!reference.IsValid)
 				return reference;
 			var n   = base.CreateWeakGlobalReference (reference);
-			NativeMethods.java_interop_gc_bridge_weak_gref_log_new (bridge,
+			JreNativeMethods.java_interop_gc_bridge_weak_gref_log_new (bridge,
 					reference.Handle,
 					ToByte (reference.Type),
 					n.Handle,
@@ -177,7 +177,7 @@ namespace Java.Interop {
 		{
 			if (!reference.IsValid)
 				return;
-			NativeMethods.java_interop_gc_bridge_weak_gref_log_delete (bridge,
+			JreNativeMethods.java_interop_gc_bridge_weak_gref_log_delete (bridge,
 					reference.Handle,
 					ToByte (reference.Type),
 					GetCurrentManagedThreadName (LogGlobalReferenceMessages),
@@ -202,7 +202,7 @@ namespace Java.Interop {
 		}
 	}
 
-	partial class NativeMethods {
+	partial class JreNativeMethods {
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_gc_bridge_get_gref_count        (IntPtr bridge);

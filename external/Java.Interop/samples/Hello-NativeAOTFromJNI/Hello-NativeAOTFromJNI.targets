@@ -1,0 +1,106 @@
+<Project>
+
+  <PropertyGroup>
+    <DotnetToolPath>"$(DOTNET_HOST_PATH)"</DotnetToolPath>
+  </PropertyGroup>
+
+  <Target Name="_CreateJavaCallableWrappers"
+      Condition=" '$(TargetPath)' != '' "
+      BeforeTargets="BuildNativeAOTFromJNIJar"
+      Inputs="$(TargetPath)"
+      Outputs="$(IntermediateOutputPath)java\.stamp">
+    <RemoveDir Directories="$(IntermediateOutputPath)java" />
+    <MakeDir Directories="$(IntermediateOutputPath)java" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_JcwGenRefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(IntermediateOutputPath)/java"</_Output>
+      <_Libpath>@(_JcwGenRefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(IntermediateOutputPath)java\.stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_AddMarshalMethods"
+      Condition=" '$(TargetPath)' != '' "
+      Inputs="$(TargetPath)"
+      Outputs="$(IntermediateOutputPath).added-marshal-methods"
+      AfterTargets="_CreateJavaCallableWrappers">
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_JnimmRefAsmDirs Include="@(RuntimePackAsset->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JnimarshalmethodGen>"$(UtilityOutputFullPath)/jnimarshalmethod-gen.dll"</_JnimarshalmethodGen>
+      <_Verbosity>-v -v --keeptemp</_Verbosity>
+      <_Libpath>-L "$(TargetDir)" @(_JnimmRefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+      <!-- <_Output>-o "$(IntermediateOutputPath)/jonp"</_Output> -->
+    </PropertyGroup>
+
+    <Exec Command="$(DotnetToolPath) $(_JnimarshalmethodGen) &quot;$(TargetPath)&quot; $(_Verbosity) $(_Libpath)" />
+
+    <!-- the IlcCompile target uses files from `$(IntermediateOutputPath)`, not `$(TargetPath)`, so… update both? -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(IntermediateOutputPath)" />
+
+    <Touch Files="$(IntermediateOutputPath).added-marshal-methods" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="BuildNativeAOTFromJNIJar"
+      AfterTargets="Build"
+      Inputs="@(HelloNativeAOTFromJNIJar)"
+      Outputs="$(OutputPath)hello-from-java.jar">
+    <MakeDir Directories="$(IntermediateOutputPath)h-classes" />
+    <ItemGroup>
+      <_JcwSource Include="$(IntermediateOutputPath)java\**\*.java" />
+    </ItemGroup>
+    <ItemGroup>
+      <_Source Include="@(_JcwSource->Replace('%5c', '/'))" />
+      <_Source Include="@(HelloNativeAOTFromJNIJar->Replace('%5c', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(IntermediateOutputPath)_java_sources.txt"
+        Lines="@(_Source)"
+        Overwrite="True"
+    />
+    <ItemGroup>
+      <_JavacOpt Include="$(_JavacSourceOptions)" />
+      <_JavacOpt Include="-d &quot;$(IntermediateOutputPath)h-classes&quot; " />
+      <_JavacOpt Include="-classpath &quot;$(OutputPath)java-interop.jar&quot; " />
+      <_JavacOpt Include="&quot;@$(IntermediateOutputPath)_java_sources.txt&quot;" />
+      <_JavacOpt Include="-h &quot;$(IntermediateOutputPath)h-classes&quot; " />
+    </ItemGroup>
+    <Exec Command="&quot;$(JavaCPath)&quot; @(_JavacOpt, ' ')" />
+    <Delete Files="$(IntermediateOutputPath)_java_sources.txt" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(OutputPath)hello-from-java.jar&quot; -C &quot;$(IntermediateOutputPath)h-classes&quot; ." />
+  </Target>
+
+  <Target Name="_NativeLibRequiresLibPrefix"
+      AfterTargets="Publish">
+    <Copy
+        Condition=" '$(OS)' != 'Windows_NT' "
+        SourceFiles="$(PublishDir)$(AssemblyName).dylib"
+        DestinationFiles="$(PublishDir)lib$(AssemblyName).dylib"
+    />
+    <Copy SourceFiles="$(OutputPath)hello-from-java.jar" DestinationFolder="$(PublishDir)" />
+  </Target>
+
+  <Target Name="RunJavaSample">
+    <ItemGroup>
+      <_Classpath Include="hello-from-java.jar" />
+      <_Classpath Include="java-interop.jar" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_CPSep Condition=" '$(OS)' == 'Windows_NT' ">;</_CPSep>
+      <_CPSep Condition=" '$(_CPSep)' == '' ">:</_CPSep>
+      <_CP>@(_Classpath, '$(_CPSep)')</_CP>
+    </PropertyGroup>
+    <Exec
+        Command="&quot;$(JavaPath)&quot; -classpath &quot;$(_CP)&quot; net/dot/jni/hello/App"
+        WorkingDirectory="$(MSBuildThisFileDirectory)$(PublishDir)"
+    />
+  </Target>
+</Project>
