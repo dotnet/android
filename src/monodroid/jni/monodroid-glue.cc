@@ -514,113 +514,120 @@ MonodroidRuntime::set_debug_options (void)
 void
 MonodroidRuntime::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
 {
-       size_t seq = internal_timing->start_event (TimingEventKind::MonoAssemblyLoad);
-       // This unfortunately has some overhead
-       timing_profiler_state->add_sequence (assembly, seq);
+	size_t seq = internal_timing->start_event (TimingEventKind::MonoAssemblyLoad);
+	// This unfortunately has some overhead
+	timing_profiler_state->add_sequence (assembly, seq);
 }
 
 void
 MonodroidRuntime::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
 {
-       // This unfortunately has some overhead
-       size_t seq = timing_profiler_state->get_sequence (assembly);
-       internal_timing->end_event (seq, true /* uses_more_info */);
-       internal_timing->add_more_info (seq, utils.strdup_new (mono_assembly_name_get_name (mono_assembly_get_name (assembly))));
+	// This unfortunately has some overhead
+	size_t seq = timing_profiler_state->get_sequence (assembly);
+	internal_timing->end_event (seq, true /* uses_more_info */);
+	internal_timing->add_more_info (seq, mono_assembly_name_get_name (mono_assembly_get_name (assembly)));
 }
 
 void
 MonodroidRuntime::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
 {
-       size_t seq = internal_timing->start_event (TimingEventKind::MonoImageLoad);
-       // This unfortunately has some overhead
-       timing_profiler_state->add_sequence (image, seq);
+	size_t seq = internal_timing->start_event (TimingEventKind::MonoImageLoad);
+	// This unfortunately has some overhead
+	timing_profiler_state->add_sequence (image, seq);
 }
 
 void
 MonodroidRuntime::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
 {
-       // This unfortunately has some overhead
-       size_t seq = timing_profiler_state->get_sequence (image);
-       internal_timing->end_event (seq, true /* uses_more_info */);
-       internal_timing->add_more_info (seq, utils.strdup_new (mono_image_get_name (image)));
+	// This unfortunately has some overhead
+	size_t seq = timing_profiler_state->get_sequence (image);
+	internal_timing->end_event (seq, true /* uses_more_info */);
+	internal_timing->add_more_info (seq, mono_image_get_name (image));
 }
 
 void
 MonodroidRuntime::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
 {
-       size_t seq = internal_timing->start_event (TimingEventKind::MonoClassLoad);
-       // This unfortunately has some overhead
-       timing_profiler_state->add_sequence (klass, seq);
+	size_t seq = internal_timing->start_event (TimingEventKind::MonoClassLoad);
+	// This unfortunately has some overhead
+	timing_profiler_state->add_sequence (klass, seq);
 }
 
 void
 MonodroidRuntime::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
 {
-       // This unfortunately has some overhead
-       size_t seq = timing_profiler_state->get_sequence (klass);
-       internal_timing->end_event (seq, true /* uses_more_info */);
-       internal_timing->add_more_info (seq, utils.strdup_new (mono_class_get_name (klass)));
+	// This unfortunately has some overhead
+	size_t seq = timing_profiler_state->get_sequence (klass);
+	internal_timing->end_event (seq, true /* uses_more_info */);
+
+	dynamic_local_string<SENSIBLE_TYPE_NAME_LENGTH> info;
+	info.append (mono_class_get_namespace (klass));
+	if (info.length () > 0) {
+		info.append (".");
+	}
+	info.append (mono_class_get_name (klass));
+	internal_timing->add_more_info (seq, info);
 }
 
 force_inline
 void
 MonodroidRuntime::timing_ensure_state () noexcept
 {
-       if (timing_profiler_state != nullptr) {
-               return;
-       }
+	if (timing_profiler_state != nullptr) {
+		return;
+	}
 
-       timing_profiler_state = new TimingProfilerState;
+	timing_profiler_state = new TimingProfilerState;
 }
 force_inline void
 MonodroidRuntime::timing_init_extended () noexcept
 {
-       timing_ensure_state ();
+	timing_ensure_state ();
 
-       mono_profiler_set_assembly_loading_callback (profiler_handle, prof_assembly_loading);
-       mono_profiler_set_assembly_loaded_callback (profiler_handle, prof_assembly_loaded);
-       mono_profiler_set_image_loading_callback (profiler_handle, prof_image_loading);
-       mono_profiler_set_image_loaded_callback (profiler_handle, prof_image_loaded);
+	mono_profiler_set_assembly_loading_callback (profiler_handle, prof_assembly_loading);
+	mono_profiler_set_assembly_loaded_callback (profiler_handle, prof_assembly_loaded);
+	mono_profiler_set_image_loading_callback (profiler_handle, prof_image_loading);
+	mono_profiler_set_image_loaded_callback (profiler_handle, prof_image_loaded);
 }
 
 force_inline void
 MonodroidRuntime::timing_init_verbose () noexcept
 {
-       timing_ensure_state ();
+	timing_ensure_state ();
 
-       std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.override_dirs[0], "methods.txt")};
-       jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
-       utils.set_world_accessable (jit_log_path.get ());
-       jit_time.mark_start ();
-       mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
-       mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
-       mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
+	std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.override_dirs[0], "methods.txt")};
+	jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
+	utils.set_world_accessable (jit_log_path.get ());
+	jit_time.mark_start ();
+	mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
+	mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
+	mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
 
-       mono_profiler_set_class_loading_callback (profiler_handle, prof_class_loading);
-       mono_profiler_set_class_loaded_callback (profiler_handle, prof_class_loaded);
+	mono_profiler_set_class_loading_callback (profiler_handle, prof_class_loading);
+	mono_profiler_set_class_loaded_callback (profiler_handle, prof_class_loaded);
 }
 
 force_inline void
 MonodroidRuntime::timing_init () noexcept
 {
-       if (!FastTiming::enabled () || FastTiming::mode () == TimingMode::Bare) {
-               return;
-       }
+	if (!FastTiming::enabled () || FastTiming::mode () == TimingMode::Bare) {
+		return;
+	}
 
-       // TODO: time this, so that we can subtract it from the cumulative results
-       switch (FastTiming::mode ()) {
-               case TimingMode::Verbose:
-                       timing_init_verbose ();
-                       [[fallthrough]];
+	// TODO: time this, so that we can subtract it from the cumulative results
+	switch (FastTiming::mode ()) {
+		case TimingMode::Verbose:
+			timing_init_verbose ();
+			[[fallthrough]];
 
-               case TimingMode::Extended:
-                       timing_init_extended ();
-                       break;
+		case TimingMode::Extended:
+			timing_init_extended ();
+			break;
 
-               default:
-                       // ignored
-                       break;
-       }
+		default:
+			// ignored
+			break;
+	}
 }
 
 void
