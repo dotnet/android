@@ -49,6 +49,7 @@ namespace Xamarin.Android.Tasks {
 					zip.FixupWindowsPathSeparators ((a, b) => Log.LogDebugMessage ($"Fixing up malformed entry `{a}` -> `{b}`"));
 				}
 			}
+			await System.Threading.Tasks.Task.CompletedTask;
 		}
 
 		protected string[] GenerateCommandLineCommands (ITaskItem manifest, ITaskItem output)
