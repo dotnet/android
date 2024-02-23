@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading;
@@ -27,6 +28,11 @@ namespace Android.Runtime {
 
 		public static Delegate CreateDelegate (Delegate dlg)
 		{
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "NativeAOT is not yet supported.")]
+			static DynamicMethod CreateDynamicMethod (Type ret_type, Type [] param_types) =>
+				new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
+
 			if (dlg == null)
 				throw new ArgumentNullException ();
 			if (dlg.Target != null)
@@ -52,7 +58,7 @@ namespace Android.Runtime {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
+			var dynamic = CreateDynamicMethod(ret_type, param_types);
 			var ig = dynamic.GetILGenerator ();
 
 			LocalBuilder? retval = null;

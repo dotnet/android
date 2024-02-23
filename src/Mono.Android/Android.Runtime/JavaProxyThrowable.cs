@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using StackTraceElement = Java.Lang.StackTraceElement;
@@ -38,6 +39,10 @@ namespace Android.Runtime {
 
 		void TranslateStackTrace ()
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "StackFrame.GetMethod() is \"best attempt\", we handle null & exceptions")]
+			static MethodBase? StackFrameGetMethod (StackFrame frame) =>
+				frame.GetMethod ();
+
 			var trace = new StackTrace (InnerException, fNeedFileInfo: true);
 			if (trace.FrameCount <= 0) {
 				return;
@@ -59,7 +64,7 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < frames.Length; i++) {
 				StackFrame managedFrame = frames[i];
-				MethodBase? managedMethod = managedFrame.GetMethod ();
+				MethodBase? managedMethod = StackFrameGetMethod (managedFrame);
 
 				var throwableFrame = new StackTraceElement (
 					declaringClass: managedMethod?.DeclaringType?.FullName,
