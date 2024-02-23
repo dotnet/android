@@ -30,8 +30,7 @@ namespace Xamarin.Android.Tasks
 		{
 			Dictionary<string, ITaskItem> assetPacks = new Dictionary<string, ITaskItem> ();
 			Dictionary<string, List<string>> files = new Dictionary<string, List<string>> ();
-			foreach (var asset in Assets)
-			{
+			foreach (var asset in Assets) {
 				var assetPack = asset.GetMetadata ("AssetPack");
 				if (string.IsNullOrEmpty (assetPack) || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
 					continue;
