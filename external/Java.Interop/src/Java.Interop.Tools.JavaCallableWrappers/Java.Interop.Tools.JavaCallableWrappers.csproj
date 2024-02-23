@@ -1,13 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <XAConfigPath>..\..\bin\Build$(Configuration)\XAConfig.props</XAConfigPath>
-  </PropertyGroup>
-  <Import Condition="Exists ('$(XAConfigPath)')" Project="$(XAConfigPath)" />
-
-  <PropertyGroup>
     <TargetFrameworks>netstandard2.0;$(DotNetTargetFramework)</TargetFrameworks>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <LangVersion>11.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -19,7 +13,8 @@
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
-  <PropertyGroup>
+  <!-- Only use $(ToolOutputFullPath) for netstandard2.0 -->
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <OutputPath>$(ToolOutputFullPath)</OutputPath>
   </PropertyGroup>
 
