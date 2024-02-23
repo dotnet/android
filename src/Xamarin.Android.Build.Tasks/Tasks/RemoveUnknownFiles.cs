@@ -54,7 +54,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				var files = System.IO.Directory.GetFiles (absDir, "*", SearchOption.AllDirectories);
-				foreach (string f in files)
+				foreach (string f in files) {
 					if (!knownFiles.Contains (f)) {
 						Log.LogDebugMessage ("Deleting File {0}", f);
 						var item = new TaskItem (f.Replace (absDir, root + Path.DirectorySeparatorChar));
@@ -62,18 +62,20 @@ namespace Xamarin.Android.Tasks
 						Microsoft.Android.Build.Tasks.Files.SetWriteable (f);
 						File.Delete (f);
 					}
+				}
 				
 				if (RemoveDirectories) {
 					var knownDirs = new HashSet<string> (knownFiles.Select (d => Path.GetDirectoryName (d)));
 					var dirs = System.IO.Directory.GetDirectories (absDir, "*", SearchOption.AllDirectories);
 
-					foreach (string d in dirs.OrderByDescending (s => s.Length))
+					foreach (string d in dirs.OrderByDescending (s => s.Length)) {
 						if (!knownDirs.Contains (d) && IsDirectoryEmpty (d)) {
 							Log.LogDebugMessage ("Deleting Directory {0}", d);
 							removedDirectories.Add (new TaskItem(d));
 							Microsoft.Android.Build.Tasks.Files.SetDirectoryWriteable (d);
 							System.IO.Directory.Delete (d);
 						}
+					}
 				}
 			}
 
