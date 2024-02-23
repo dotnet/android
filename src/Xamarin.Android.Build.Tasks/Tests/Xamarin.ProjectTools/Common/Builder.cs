@@ -196,6 +196,7 @@ namespace Xamarin.ProjectTools
 				psi.FileName = MSBuildLocator.QueryLatest ().MSBuildPath;
 				args.Append ("/restore ");
 				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs"));
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk-manifests"));
 				psi.SetEnvironmentVariable ("MSBUILDLOGALLENVIRONMENTVARIABLES", "1");
 				psi.SetEnvironmentVariable ("MSBuildSDKsPath", MSBuildSdksPath);
 				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
