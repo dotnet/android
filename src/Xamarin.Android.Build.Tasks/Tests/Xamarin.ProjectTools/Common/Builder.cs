@@ -143,7 +143,21 @@ namespace Xamarin.ProjectTools
 			BuildLogFile = "build.log";
 		}
 
+		/// <summary>
+		/// Build with MSBuild.exe from Visual Studio, only works on Windows
+		/// </summary>
 		public bool UseMSBuildExe { get; set; }
+
+		/// <summary>
+		/// Value for %MSBuildSdksPath%, points to bin\Release\dotnet\sdk\*\Sdks
+		/// </summary>
+		public string MSBuildSdksPath {
+			get {
+				var sdk = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "sdk");
+				var sdk_version = Directory.EnumerateDirectories (sdk).OrderByDescending (x => x).First ();
+				return Path.Combine (sdk_version, "Sdks");
+			}
+		}
 
 		public void Dispose ()
 		{
@@ -182,6 +196,7 @@ namespace Xamarin.ProjectTools
 				psi.FileName = MSBuildLocator.QueryLatest ().MSBuildPath;
 				args.Append ("/restore ");
 				psi.SetEnvironmentVariable ("MSBUILDLOGALLENVIRONMENTVARIABLES", "1");
+				psi.SetEnvironmentVariable ("MSBuildSDKsPath", MSBuildSdksPath);
 				psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 			} else {
 				psi.FileName = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
