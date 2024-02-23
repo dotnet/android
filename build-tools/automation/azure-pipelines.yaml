@@ -85,7 +85,7 @@ extends:
       codeql:
         runSourceLanguagesInSourceAnalysis: true
       suppression:
-        suppressionFile: $(Build.SourcesDirectory)\.gdn\source.gdnsuppress
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
       sourceAnalysisPool:
         name: AzurePipelines-EO
         image: $(WindowsPoolImage1ESPT)
@@ -637,8 +637,8 @@ extends:
         stageDependsOn: []
         tsaConfigFile: $(Build.SourcesDirectory)\.gdn\tsaoptions-v2.json
         policheckLocScanEnabled: true
-        policheckExclusionFilesFolder: $(Build.SourcesDirectory)\.gdn
-        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\.gdn
+        policheckExclusionFilesFolder: $(Build.SourcesDirectory)\.gdn\policheck
+        policheckGdnSuppressionFilesFolder: $(Build.SourcesDirectory)\.gdn\policheck
         policheckChsScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hans
         policheckChtScanFolder: $(Build.SourcesDirectory)\Localize\loc\zh-Hant
         policheckCsyScanFolder: $(Build.SourcesDirectory)\Localize\loc\cs
