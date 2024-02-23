@@ -122,8 +122,6 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("中国", true, false)]
 		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot)
 		{
-			if (!IsWindows)
-				expectedResult = true;
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = testName,
