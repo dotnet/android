@@ -144,7 +144,7 @@ namespace Xamarin.Android.Net
 		// uncompressing the gzip content encoding UNLESS you set the Accept-Encoding header to ANY
 		// value. So if we set it to 'gzip' below we WILL get gzipped stream but HttpURLClient will NOT
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
-		bool decompress_here;
+		bool decompress_here => _acceptEncoding is not null && _acceptEncoding != IDENTITY_ENCODING;
 		string? _acceptEncoding;
 
 		public bool SupportsAutomaticDecompression => true;
@@ -160,24 +160,20 @@ namespace Xamarin.Android.Net
 
 				_decompressionMethods = value;
 				_acceptEncoding = null;
-				decompress_here = false;
 
 				if (value == DecompressionMethods.None) {
 					_acceptEncoding = IDENTITY_ENCODING;
 				} else {
 					if ((value & DecompressionMethods.GZip) != 0) {
 						_acceptEncoding = GZIP_ENCODING;
-						decompress_here = true;
 					}
 
 					if ((value & DecompressionMethods.Deflate) != 0) {
 						_acceptEncoding = _acceptEncoding is null ? DEFLATE_ENCODING : $"{_acceptEncoding}, {DEFLATE_ENCODING}";
-						decompress_here = true;
 					}
 
 					if ((value & DecompressionMethods.Brotli) != 0) {
 						_acceptEncoding = _acceptEncoding is null ? BROTLI_ENCODING : $"{_acceptEncoding}, {BROTLI_ENCODING}";
-						decompress_here = true;
 					}
 				}
 			}
