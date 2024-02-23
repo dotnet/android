@@ -148,7 +148,7 @@ namespace System.Drawing {
 			return true;
 		}
 
-		[RequiresUnreferencedCode("The Type of value cannot be statically discovered.")]
+		[RequiresUnreferencedCode ("The Type of value cannot be statically discovered.")]
 		public override PropertyDescriptorCollection? GetProperties (
 							ITypeDescriptorContext context,
 							object value, Attribute[] attributes)
