@@ -1,5 +1,6 @@
 namespace Android.Hardware;
 
+[System.Flags]
 [global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android26.0")]
 public enum HardwareBufferUsage : long
 {
