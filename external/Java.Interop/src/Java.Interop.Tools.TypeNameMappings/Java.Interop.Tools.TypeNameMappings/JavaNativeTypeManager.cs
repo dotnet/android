@@ -196,9 +196,9 @@ namespace Java.Interop.Tools.TypeNameMappings
 		// Trimming warnings are not enabled for netstandard2.0 in this project.
 		static bool ShouldCheckSpecialExportJniType (Type type) =>
 #if NETSTANDARD2_0
-			type.GetInterfaces ().Any (t => t.FullName == "Java.Interop.IJavaPeerable");
+			!type.GetInterfaces ().Any (t => t.FullName == "Java.Interop.IJavaPeerable");
 #else
-			IJavaPeerableType.Value.IsAssignableFrom (type);
+			!IJavaPeerableType.Value.IsAssignableFrom (type);
 #endif
 
 		public static string ToJniName (string jniType, int rank)

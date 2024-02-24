@@ -55,5 +55,14 @@ namespace Java.Interop.Tools.JavaCallableWrappersTests
 			Assert.AreEqual ("assembly_mscorlib.system", JavaNativeTypeManager.GetPackageName (typeof (string)));
 #endif  // !NET
 		}
+
+		[Test]
+		[TestCase (typeof (string), "java/lang/String")]
+		[TestCase (typeof (Type),   "java/lang/Object")]
+		public void ToJniName (Type type, string expected)
+		{
+			string actual = JavaNativeTypeManager.ToJniName (type);
+			Assert.AreEqual (expected, actual);
+		}
 	}
 }
