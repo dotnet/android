@@ -6,6 +6,7 @@ using System.Linq;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+using Irony;
 
 namespace Xamarin.Android.Tasks
 {
@@ -59,7 +60,11 @@ namespace Xamarin.Android.Tasks
 					foreach (var file in files [kvp.Key]) {
 						sw.WriteLine ($"{file}:{File.GetLastWriteTimeUtc (file)}");
 					}
-					sw.WriteLine (item.GetMetadata ("DeliveryType") ?? "InstallTime");
+					var deliveryType = item.GetMetadata ("DeliveryType") ?? "InstallTime";
+					if (!IsDeliveryTypeValid (item, deliveryType)) {
+						Log.LogCodedError ("XA1039", Properties.Resources.XA1039, item.ItemSpec, deliveryType);
+					}
+					sw.WriteLine (deliveryType);
 					sw.Flush (); 
 					Files.CopyIfStreamChanged (sw.BaseStream, cacheFile); 
 				}
@@ -67,6 +72,16 @@ namespace Xamarin.Android.Tasks
 
 			AssetPacks = assetPacks.Values.ToArray();
 
+			return true;
+		}
+
+		bool IsDeliveryTypeValid (ITaskItem item, string deliveryType)
+		{
+			if (string.Compare (deliveryType, "installtime", StringComparison.OrdinalIgnoreCase) == 0 &&
+				string.Compare (deliveryType, "ondemand", StringComparison.OrdinalIgnoreCase) == 0 &&
+				string.Compare (deliveryType, "fastfollow", StringComparison.OrdinalIgnoreCase) == 0) {
+					return false;
+				}
 			return true;
 		}
 	}

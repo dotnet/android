@@ -61,7 +61,8 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void GenerateFeatureManifest (XDocument doc) {
+		void GenerateFeatureManifest (XDocument doc)
+		{
 			XAttribute featureTitleResource = null;
 			if (!string.IsNullOrEmpty (FeatureTitleResource))
 				featureTitleResource = new XAttribute (distNS + "title", FeatureTitleResource);
@@ -71,9 +72,9 @@ namespace Xamarin.Android.Tasks
 			if (!string.IsNullOrEmpty (MinSdkVersion))
 				usesSdk.Add (new XAttribute (androidNS + "targetSdkVersion", TargetSdkVersion));
 			doc.Add (new XElement ("manifest",
-					new XAttribute(XNamespace.Xmlns + "android", androidNS),
-					new XAttribute(XNamespace.Xmlns + "tools", toolsNS),
-					new XAttribute(XNamespace.Xmlns + "dist", distNS),
+					new XAttribute (XNamespace.Xmlns + "android", androidNS),
+					new XAttribute (XNamespace.Xmlns + "tools", toolsNS),
+					new XAttribute (XNamespace.Xmlns + "dist", distNS),
 					new XAttribute (androidNS + "versionCode", "1"),
 					new XAttribute (androidNS + "versionName", "1.0"),
 					new XAttribute ("package", PackageName),
@@ -98,7 +99,8 @@ namespace Xamarin.Android.Tasks
 			);
 		}
 
-		void GenerateAssetPackManifest (XDocument doc) {
+		void GenerateAssetPackManifest (XDocument doc)
+		{
 			doc.Add (new XElement ("manifest",
 					new XAttribute (XNamespace.Xmlns + "android", androidNS),
 					new XAttribute (XNamespace.Xmlns + "tools", toolsNS),
@@ -121,15 +123,15 @@ namespace Xamarin.Android.Tasks
 		XElement GetDistribution ()
 		{
 			XElement distribution;
-			switch (FeatureDeliveryType)
+			switch (FeatureDeliveryType.ToLowerInvariant ())
 			{
-				case "OnDemand":
+				case "ondemand":
 					distribution = new XElement (distNS + "on-demand");
 					break;
-				case "FastFollow":
+				case "fastfollow":
 					distribution = new XElement (distNS + "fast-follow");
 					break;
-				case "InstallTime":
+				case "installtime":
 				default:
 					distribution = new XElement (distNS + "install-time");
 					break;

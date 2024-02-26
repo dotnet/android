@@ -19,8 +19,7 @@ or library project is built.
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
 files that would be included in the `assets` folder in a Java Android project.
 
-The `AndroidAsset` ItemGroup also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). Adding the `AssetPack` attribute to and `AndroidAsset` will automatically generate an asset pack of that name. This feature is only supported when using the `.aab`
-`AndroidPackageFormat`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
+Starting with .NET 9 the `AndroidAsset` ItemGroup also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). Adding the `AssetPack` attribute to and `AndroidAsset` will automatically generate an asset pack of that name. This feature is only supported when the [`$(AndroidPackageFormat)`](#androidpackageformat) is set to `.aab`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
 
 ```xml
 <ItemGroup>

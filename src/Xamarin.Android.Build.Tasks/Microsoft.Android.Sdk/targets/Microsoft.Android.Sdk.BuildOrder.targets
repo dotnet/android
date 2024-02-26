@@ -76,7 +76,7 @@ properties that determine build ordering.
       _LintChecks;
       _IncludeNativeSystemLibraries;
       _CheckGoogleSdkRequirements;
-      _BuildAssetPacks;
+      BuildAndroidAssetPacks;
     </_PrepareBuildApkDependsOnTargets>
   </PropertyGroup>
 

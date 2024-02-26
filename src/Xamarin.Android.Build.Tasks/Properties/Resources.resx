@@ -330,8 +330,13 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
 {0} - The file name of a deprecated symbol file</comment>
   </data>
   <data name="XA0138" xml:space="preserve">
-    <value>@(AndroidAsset) build action does not support 'AssetPack' or 'DeliveryType' Metadata in Library Projects.</value>
+    <value>%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.</value>
     <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
   </data>
   <data name="XA1000" xml:space="preserve">
     <value>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</value>

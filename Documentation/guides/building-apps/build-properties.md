@@ -1689,7 +1689,7 @@ Extra options to pass to `aprofutil`.
 ## BeforeBuildAndroidAssetPacks
 
 MSBuild Targets listed in this
-property will run directly before `_BuildAssetPacks`.
+property will run directly before the `AssetPack` items are built.
 
 Added in .NET 9
 

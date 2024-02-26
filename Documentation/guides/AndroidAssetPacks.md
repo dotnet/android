@@ -15,8 +15,8 @@ various constraints .NET Android cannot support `Feature` packs.
 
 The second type of `pack` is the `Asset` pack. This type of pack ONLY
 contains `AndroidAsset` items. It CANNOT contain any code or other
-resources. This type of `feature` pack can be installed at install-time,
-fast-follow or ondemand. It is most useful for apps which contain allot
+resources. This type of `pack` can be installed at install-time,
+fast-follow or ondemand. It is most useful for apps which contain a lot
 of `Assets`, such as Games or Multi Media applications.
 See the [documentation](https://developer.android.com/guide/playcore/asset-delivery) for details on how this all works.
 .NET Android does not have any official support for this type of pack.
@@ -31,16 +31,7 @@ final app as an additional feature.
 ## Asset Pack Specification
 
 We want to provide our users the ability to use `Asset` packs without
-having to implement the hack provided by @infinitespace-studios. Using
-a separate project like in the hack is one way to go. It does have some
-issues though.
-
-1. It is a `special` type of project. It requires a `global.json` which imports the
-   `NoTargets` sdk.
-2. There is no IDE support for building this type of project.
-
-Having the user go through a number of hoops to implement this for
-.NET Android or .net Maui is not ideal. We need a simpler method.
+having rely on hacks provided by the community.
 
 The new idea is to make use of additional metadata on `AndroidAsset`
 Items to allow the build system to split up the assets into packs
@@ -56,12 +47,12 @@ like this
 ```
 
 In this case the additional `AssetPack` attribute is used to tell the
-build system which pack to place this asset in. Since auto import of items
-is common now we need a way for a user to add this additional attribute
-to auto included items. Fortunately we are able to use the following.
+build system which pack to place this asset in. If the `AssetPack` attribute is not present, the default behavior will be to include the asset in the main application package.
+Since auto import of items is common now we need a way for a user to add this additional attribute to auto included items. Fortunately we are able to use the following.
 
 ```xml
 <ItemGroup>
+   <AndroidAsset Update="Asset/movie1.mp4" />
    <AndroidAsset Update="Asset/movie.mp4" AssetPack="assets1" />
    <AndroidAsset Update="Asset/movie2.mp4" AssetPack="assets1" />
    <AndroidAsset Update="Asset/movie3.mp4" AssetPack="assets2" />
@@ -76,22 +67,23 @@ end up in the main feature in the aab.
 Additional attributes can be used to control what type of asset pack is
 produced. The only extra one supported at this time is `DeliveryType`,
 this can have a value of `InstallTime`, `FastFollow` or `OnDemand`.
-Additional attributes do not need to be included on ALL items. Any one
-will do, only the `AssetPack` attribute will be needed.
-See Google's [documentation](https://developer.android.com/guide/playcore/asset-delivery#asset-updates) for details on what each item does.
+The `DeliveryType` attribute will be picked up from the first item which has it
+for a specified `AssetPack`. For example the `DeliveryType` attribute in the
+code below will be applied to the items for `AssetPack` `assets1`, it will not be applied
+to the other `packs` or the `base` pack.
 
 ```xml
 <ItemGroup>
-   <AndroidAsset Update="Asset/movie.mp4" AssetPack="assets1" DeliveryType="InstallTime" />
-   <AndroidAsset Update="Asset/movie2.mp4" AssetPack="assets1" />
-   <AndroidAsset Update="Asset/movie3.mp4" AssetPack="assets2" />
+   <AndroidAsset Update="Asset/movie1.mp4" />
+   <AndroidAsset Update="Asset/movie2.mp4" AssetPack="assets1" DeliveryType="InstallTime" />
+   <AndroidAsset Update="Asset/movie3.mp4" AssetPack="assets1" />
+   <AndroidAsset Update="Asset/movie4.mp4" AssetPack="assets2" />
 </ItemGroup>
 ```
 
-If the `AssetPack` attribute is not present, the default behavior will
-be to include the asset in the main application package.
+See Google's [documentation](https://developer.android.com/guide/playcore/asset-delivery#asset-updates) for details on what each of the `DeliveryType` values do.
 
-If however you have a large number of assets it might be more efficient to make use of the `base` asset pack setting. In this scenario you update ALL assets to be in a single asset pack then use the `AssetPack="base"` metadata to declare which specific assets end up in the base aab file. With this you can use wildcards to move most assets into the asset pack.
+If however you have a large number of assets it might be cleaner in the csproj to make use of the `base` value for the `AssetPack` attribute. In this scenario you update ALL assets to be in a single asset pack then use the `AssetPack="base"` metadata to declare which specific assets end up in the base aab file. With this you can use wildcards to move most assets into the asset pack.
 
 ```xml
 <ItemGroup>
@@ -101,8 +93,9 @@ If however you have a large number of assets it might be more efficient to make 
 </ItemGroup>
 ```
 
-In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, but ALL the other assets
-will end up in the `assets1` asset pack.
+In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, but ALL the other assets will end up in the `assets1` asset pack.
+
+At this time @(AndroidAsset) build action does not support 'AssetPack' or 'DeliveryType' Metadata in Library Projects.
 
 ## Implementation Details
 
@@ -120,10 +113,10 @@ user wants to include.
 assetpacks/
     assets1/
         assets/
-            movie1.mp4
-    feature2/
+            movie2.mp4
+    assets2/
         assets/
-             movie2.mp4
+             movie3.mp4
 ```
 
 All the building of the `pack` zip file would take place in these subfolders.
@@ -151,11 +144,11 @@ assetpacks/
     assets1/
         AndroidManifest.xml
         assets/
-            movie1.mp4
-    feature2/
+            movie2.mp4
+    assets2/
         AndroidManifest.xml
         assets/
-             movie2.mp4
+             movie3.mp4
 ```
 
 We can then call `aapt2` to build these packs into `.zip` files. A new
@@ -174,3 +167,15 @@ Once the zip files have been created they are then added to the
 `AndroidAppBundleModules` ItemGroup. This will ensure that when the
 final `.aab` file is generated they are included as asset packs.
 
+## Alternative Methods
+
+to implement the hack provided by @infinitespace-studios. Using
+a separate project like in the hack is one way to go. It does have some
+issues though.
+
+1. It is a `special` type of project. It requires a `global.json` which imports the
+   `NoTargets` sdk.
+2. There is no IDE support for building this type of project.
+
+Having the user go through a number of hoops to implement this for
+.NET Android or .net Maui is not ideal. We need a simpler method.
