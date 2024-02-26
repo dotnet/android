@@ -82,10 +82,16 @@ extends:
     sdl:
       ${{ if eq('${{ parameters.Skip1ESComplianceTasks }}', 'true') }}:
         enableAllTools: false
+      binskim:
+        scanOutputDirectoryOnly: true
       codeql:
         runSourceLanguagesInSourceAnalysis: true
-      suppression:
-        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+      policheck:
+        enabled: false
+        justification: Built in task does not support multi-language scanning
+      spotBugs:
+        enabled: false
+        justification: 'Failing with "Could not successfully find the java tool launcher"'
       sourceAnalysisPool:
         name: AzurePipelines-EO
         image: $(WindowsPoolImage1ESPT)
@@ -96,6 +102,8 @@ extends:
         exclude:
         - repository: yaml-templates
         - repository: maui
+      suppression:
+        suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
     # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
