@@ -28,11 +28,6 @@ namespace Android.Runtime {
 
 		public static Delegate CreateDelegate (Delegate dlg)
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
-			[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = "NativeAOT is not yet supported.")]
-			static DynamicMethod CreateDynamicMethod (Type ret_type, Type [] param_types) =>
-				new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
-
 			if (dlg == null)
 				throw new ArgumentNullException ();
 			if (dlg.Target != null)
@@ -58,7 +53,11 @@ namespace Android.Runtime {
 				param_types [i] = parameters [i].ParameterType;
 			}
 
-			var dynamic = CreateDynamicMethod(ret_type, param_types);
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
+			#pragma warning disable IL3050
+			var dynamic = new DynamicMethod (DynamicMethodNameCounter.GetUniqueName (), ret_type, param_types, typeof (DynamicMethodNameCounter), true);
+			#pragma warning restore IL3050
 			var ig = dynamic.GetILGenerator ();
 
 			LocalBuilder? retval = null;

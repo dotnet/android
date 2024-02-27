@@ -146,11 +146,14 @@ namespace Java.Interop {
 				assembly.GetType (typeName);
 
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
 			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = InvokerTypes)]
 			[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = InvokerTypes)]
-			[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = InvokerTypes)]
 			[return: DynamicallyAccessedMembers (Constructors)]
-			static Type MakeGenericType (Type type, params Type [] typeArguments) => type.MakeGenericType (typeArguments);
+			static Type MakeGenericType (Type type, params Type [] typeArguments) =>
+				#pragma warning disable IL3050
+				type.MakeGenericType (typeArguments);
+				#pragma warning restore IL3050
 
 			const string suffix = "Invoker";
 			
