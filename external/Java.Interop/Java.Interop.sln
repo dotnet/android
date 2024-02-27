@@ -115,6 +115,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.Expressi
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Hello-NativeAOTFromJNI", "samples\Hello-NativeAOTFromJNI\Hello-NativeAOTFromJNI.csproj", "{8DB3842B-73D7-491C-96F9-EBC863E2C917}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{40B3CE2F-B8DE-45CD-A43A-0F1A89BDB803}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Java.Interop.Tools.TypeNameMappings", "src\Java.Interop.Tools.TypeNameMappings\Java.Interop.Tools.TypeNameMappings.csproj", "{C2AF6ACF-04F6-4B41-95EA-97A372C075F9}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		src\Java.Interop.NamingCustomAttributes\Java.Interop.NamingCustomAttributes.projitems*{58b564a1-570d-4da2-b02d-25bddb1a9f4f}*SharedItemsImports = 5
@@ -326,6 +330,10 @@ Global
 		{8DB3842B-73D7-491C-96F9-EBC863E2C917}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8DB3842B-73D7-491C-96F9-EBC863E2C917}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8DB3842B-73D7-491C-96F9-EBC863E2C917}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C2AF6ACF-04F6-4B41-95EA-97A372C075F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C2AF6ACF-04F6-4B41-95EA-97A372C075F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C2AF6ACF-04F6-4B41-95EA-97A372C075F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C2AF6ACF-04F6-4B41-95EA-97A372C075F9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -381,6 +389,7 @@ Global
 		{1A0262FE-3CDB-4AF2-AAD8-65C59524FE8A} = {0998E45F-8BCE-4791-A944-962CD54E2D80}
 		{211BAA88-66B1-41B2-88B2-530DBD8DF702} = {271C9F30-F679-4793-942B-0D9527CB3E2F}
 		{8DB3842B-73D7-491C-96F9-EBC863E2C917} = {D5A93398-AEB1-49F3-89DC-3904A47DB0C7}
+		{C2AF6ACF-04F6-4B41-95EA-97A372C075F9} = {40B3CE2F-B8DE-45CD-A43A-0F1A89BDB803}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {29204E0C-382A-49A0-A814-AD7FBF9774A5}
