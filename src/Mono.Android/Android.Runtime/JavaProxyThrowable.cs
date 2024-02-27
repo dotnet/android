@@ -39,6 +39,10 @@ namespace Android.Runtime {
 
 		void TranslateStackTrace ()
 		{
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// StackFrame.GetMethod() will return null under NativeAOT;
+			// However, you can still get useful information from StackFrame.ToString():
+			// MainActivity.OnCreate() + 0x37 at offset 55 in file:line:column <filename unknown>:0:0
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "StackFrame.GetMethod() is \"best attempt\", we handle null & exceptions")]
 			static MethodBase? StackFrameGetMethod (StackFrame frame) =>
 				frame.GetMethod ();
