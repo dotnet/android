@@ -12,6 +12,7 @@
 #include "cpp-util.hh"
 #include "xxhash.hh"
 
+#include <mono/metadata/class.h>
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
 
@@ -239,6 +240,7 @@ namespace xamarin::android::internal
 		void timing_ensure_state () noexcept;
 		void timing_init_extended () noexcept;
 		void timing_init_verbose () noexcept;
+		void timing_init_extreme () noexcept;
 		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 
@@ -278,6 +280,24 @@ namespace xamarin::android::internal
 		static void prof_image_loaded (MonoProfiler *prof, MonoImage *assembly) noexcept;
 		static void prof_class_loading (MonoProfiler *prof, MonoClass *klass) noexcept;
 		static void prof_class_loaded (MonoProfiler *prof, MonoClass *klass) noexcept;
+		static void prof_vtable_loading (MonoProfiler *prof, MonoVTable *vtable) noexcept;
+		static void prof_vtable_loaded (MonoProfiler *prof, MonoVTable *vtable) noexcept;
+		static void prof_method_enter (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
+		static void prof_method_leave (MonoProfiler *prof, MonoMethod *method, MonoProfilerCallContext *context) noexcept;
+		static void prof_method_begin_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
+		static void prof_method_end_invoke (MonoProfiler *prof, MonoMethod *method) noexcept;
+		static void prof_monitor_contention (MonoProfiler *prof, MonoObject *object) noexcept;
+		static void prof_monitor_acquired (MonoProfiler *prof, MonoObject *object) noexcept;
+
+		template<size_t MaxStackSpace>
+		static void get_full_class_name (MonoClass *klass, internal::dynamic_local_string<MaxStackSpace>& info) noexcept
+		{
+			info.append (mono_class_get_namespace (klass));
+			if (info.length () > 0) {
+				info.append (".");
+			}
+			info.append (mono_class_get_name (klass));
+		}
 
 #if !defined (RELEASE)
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;

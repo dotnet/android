@@ -4,6 +4,7 @@
 #include <atomic>
 #include <concepts>
 #include <ctime>
+#include <string_view>
 #include <vector>
 
 #include "logger.hh"
@@ -42,6 +43,8 @@ namespace xamarin::android::internal
 		MonoAssemblyLoad          = 15,
 		MonoMethodDuration        = 16,
 		MonoMethodInvoke          = 17,
+		MonoVTableLoad            = 18,
+		LockContention            = 19,
 		Unspecified               = std::numeric_limits<std::underlying_type_t<TimingEventKind>>::max (),
 	};
 
@@ -50,6 +53,7 @@ namespace xamarin::android::internal
 		Bare,
 		Extended,
 		Verbose,
+		Extreme,
 	};
 
 	struct TimingEventPoint
@@ -72,6 +76,7 @@ namespace xamarin::android::internal
 		TimingEventPoint end;
 		TimingEventKind  kind;
 		const char*      more_info;
+		size_t           more_info_length;
 	};
 
 	template<typename T>
@@ -113,6 +118,7 @@ namespace xamarin::android::internal
 		static constexpr std::string_view OPT_MODE_BARE     { "bare" };
 		static constexpr std::string_view OPT_MODE_EXTENDED { "extended" };
 		static constexpr std::string_view OPT_MODE_VERBOSE  { "verbose" };
+		static constexpr std::string_view OPT_MODE_EXTREME  { "extreme" };
 		static constexpr std::string_view OPT_TO_FILE       { "to-file" };
 
 		// Results dump stage log markers
@@ -241,7 +247,9 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info = utils.strdup_new (str.get (), str.length ());
+			size_t len = str.length ();
+			events[event_index].more_info_length = len;
+			events[event_index].more_info = utils.strdup_new (str.get (), len);
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -251,7 +259,9 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info = utils.strdup_new (str, strlen (str));
+			size_t len = strlen (str);
+			events[event_index].more_info_length = len;
+			events[event_index].more_info = utils.strdup_new (str, len);
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -329,73 +339,73 @@ namespace xamarin::android::internal
 		{
 			switch (kind) {
 				case TimingEventKind::AssemblyDecompression: {
-					constexpr char desc[] = "LZ4 decompression time for ";
+					constexpr std::string_view desc { "LZ4 decompression time for " };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::AssemblyLoad: {
-					constexpr char desc[] = "Assembly load";
+					constexpr std::string_view desc { "Assembly load" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::AssemblyPreload: {
-					constexpr char desc[] = "Finished preloading, number of loaded assemblies: ";
+					constexpr std::string_view desc { "Finished preloading, number of loaded assemblies: " };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::DebugStart: {
-					constexpr char desc[] = "Debug::start_debugging_and_profiling: end";
+					constexpr std::string_view desc { "Debug::start_debugging_and_profiling: end" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::Init: {
-					constexpr char desc[] = "XATiming: init time";
+					constexpr std::string_view desc { "XATiming: init time" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::JavaToManaged: {
-					constexpr char desc[] = "Typemap.java_to_managed: end, total time";
+					constexpr std::string_view desc { "Typemap.java_to_managed: end, total time" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::ManagedToJava: {
-					constexpr char desc[] = "Typemap.managed_to_java: end, total time";
+					constexpr std::string_view desc { "Typemap.managed_to_java: end, total time" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::MonoRuntimeInit: {
-					constexpr char desc[] = "Runtime.init: Mono runtime init";
+					constexpr std::string_view desc { "Runtime.init: Mono runtime init" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::NativeToManagedTransition: {
-					constexpr char desc[] = "Runtime.init: end native-to-managed transition";
+					constexpr std::string_view desc = { "Runtime.init: end native-to-managed transition" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::RuntimeConfigBlob: {
-					constexpr char desc[] = "Register runtimeconfig binary blob";
+					constexpr std::string_view desc = { "Register runtimeconfig binary blob" };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::RuntimeRegister: {
-					constexpr char desc[] = "Runtime.register: end time. Registered type: ";
+					constexpr std::string_view desc = { "Runtime.register: end time. Registered type: " };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::TotalRuntimeInit: {
-					constexpr char desc[] = "Runtime.init: end, total time";
+					constexpr std::string_view desc = { "Runtime.init: end, total time" };
 					message.append (desc);
 					return;
 				}
@@ -436,8 +446,20 @@ namespace xamarin::android::internal
 					return;
 				}
 
+				case TimingEventKind::MonoVTableLoad: {
+					constexpr std::string_view desc { "MonoVM vtable load duration: " };
+					message.append (desc);
+					return;
+				}
+
+				case TimingEventKind::LockContention: {
+					constexpr std::string_view desc { "MonoVM lock contention duration: " };
+					message.append (desc);
+					return;
+				}
+
 				default: {
-					constexpr char desc[] = "Unknown timing event";
+					constexpr std::string_view desc = {  "Unknown timing event" };
 					message.append (desc);
 					return;
 				}
@@ -462,9 +484,9 @@ namespace xamarin::android::internal
 		template<size_t BufferSize>
 		force_inline static void format_and_log (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
 		{
-			constexpr char INDENT[] = "  ";
-			constexpr char NATIVE_INIT_TAG[] = "[0/";
-			constexpr char MANAGED_TAG[] = "[1/";
+			constexpr std::string_view INDENT { "  " };
+			constexpr std::string_view NATIVE_INIT_TAG { "[0/" };
+			constexpr std::string_view MANAGED_TAG { "[1/" };
 
 			message.clear ();
 			if (indent) {
@@ -482,13 +504,14 @@ namespace xamarin::android::internal
 
 			append_event_kind_description (event.kind, message);
 			if (event.more_info != nullptr && *event.more_info != '\0') {
-				message.append (event.more_info, strlen (event.more_info));
+				message.append (event.more_info, event.more_info_length);
 			}
 
-			constexpr char COLON[] = ":";
-			constexpr char TWO_COLONS[] = "::";
+			constexpr std::string_view COLON { ":" };
+			constexpr std::string_view TWO_COLONS { "::" };
+			constexpr std::string_view ELAPSED { "; elapsed: " };
 
-			message.append ("; elapsed: ");
+			message.append (ELAPSED);
 			message.append (static_cast<uint32_t>(interval.sec));
 			message.append (COLON);
 			message.append (interval.ms);

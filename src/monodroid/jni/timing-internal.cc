@@ -60,6 +60,11 @@ FastTiming::parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const
 				timing_mode = TimingMode::Verbose;
 				continue;
 			}
+
+			if (param.equal (OPT_MODE.length (), OPT_MODE_EXTREME)) {
+				timing_mode = TimingMode::Extreme;
+				continue;
+			}
 			continue;
 		}
 
@@ -193,6 +198,5 @@ FastTiming::dump () noexcept
 		dump_to_file (entries);
 	} else {
 		dump_to_logcat (entries);
-
 	}
 }
