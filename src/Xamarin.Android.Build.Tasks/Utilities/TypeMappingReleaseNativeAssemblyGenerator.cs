@@ -71,6 +71,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public TypeMapJava JavaTypeMapEntry;
 
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_map_index;
 		}
@@ -128,6 +129,8 @@ namespace Xamarin.Android.Tasks
 			public ulong JavaNameHash64;
 
 			public uint module_index;
+
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_name_index;
 		}
@@ -261,7 +264,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: construction state expected but not found");
 			}
 
-			return $" {index}: 0x{value:x} => {cs.JavaMap[(int)index].Instance.JavaName}";
+			return $" {index}: {cs.JavaMap[(int)index].Instance.JavaName}";
 		}
 
 		void GenerateAndSortJavaHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
@@ -290,7 +293,7 @@ namespace Xamarin.Android.Tasks
 				hashes = list;
 			}
 
-			gv.OverrideValueAndType (listType, hashes);
+			gv.OverrideTypeAndValue (listType, hashes);
 		}
 
 		ConstructionState EnsureConstructionState (object? callerState)

@@ -15,7 +15,7 @@ repositories {
 }
 
 dependencies {
-    implementation 'com.android.tools:r8:8.2.42'
+    implementation 'com.android.tools:r8:8.2.47'
 }
 
 jar {

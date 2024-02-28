@@ -99,6 +99,31 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
+		public async Task DoesNotDisposeContentStream()
+		{
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ("http://+:47663/");
+			listener.Start ();
+			listener.BeginGetContext (ar => {
+				var ctx = listener.EndGetContext (ar);
+				ctx.Response.StatusCode = 204;
+				ctx.Response.ContentLength64 = 0;
+				ctx.Response.Close ();
+			}, null);
+
+			var jsonContent = new StringContent ("hello");
+			var request = new HttpRequestMessage (HttpMethod.Post, "http://localhost:47663/") { Content = jsonContent };
+
+			var response = await new HttpClient (new AndroidMessageHandler ()).SendAsync (request);
+			Assert.True (response.IsSuccessStatusCode);
+
+			var contentValue = await jsonContent.ReadAsStringAsync ();
+			Assert.AreEqual ("hello", contentValue);
+
+			listener.Close ();
+		}
+
+		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
 		{
 			bool callbackHasBeenCalled = false;

@@ -52,3 +52,5 @@ variables:
   value: 34
 - name: ExcludedNightlyNUnitCategories
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
+- name: RunMAUITestJob
+  value: true
