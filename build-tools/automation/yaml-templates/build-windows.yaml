@@ -46,6 +46,15 @@ stages:
       parameters:
         remove_dotnet: true
 
+    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
+      parameters:
+        toolName: boots
+        version: $(BootsToolVersion)
+        continueOnError: false
+    - pwsh: boots --stable Xamarin.Android
+      displayName: install Xamarin.Android stable
+
+
     - task: DotNetCoreCLI@2
       displayName: Prepare Solution
       inputs:
@@ -62,7 +71,7 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
+    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
       parameters:
         toolName: apkdiff
         version: $(ApkDiffToolVersion)

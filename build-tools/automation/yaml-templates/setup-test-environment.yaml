@@ -60,7 +60,7 @@ steps:
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: boots
       version: $(BootsToolVersion)
@@ -98,13 +98,13 @@ steps:
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-global-tool.yaml@self
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: dotnet-test-slicer
       version: $(TestSlicerToolVersion)
