@@ -16,8 +16,7 @@ jobs:
   displayName: ${{ parameters.jobDisplayName }}
   ${{ if eq(parameters.testOS, 'Windows') }}:
     pool:
-      name: AzurePipelines-EO
-      image: $(WindowsPoolImage1ESPT)
+      name: $(WindowsPoolNameMaui1ESPT)
       os: windows
   ${{ if eq(parameters.testOS, 'macOS') }}:
     pool:

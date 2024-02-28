@@ -343,8 +343,7 @@ extends:
       - job: maui_tests_integration
         displayName: MAUI Integration
         pool:
-          name: AzurePipelines-EO
-          image: $(WindowsPoolImage1ESPT)
+          name: $(WindowsPoolNameMaui1ESPT)
           os: windows
         timeoutInMinutes: 180
         workspace:
