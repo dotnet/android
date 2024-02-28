@@ -18,6 +18,6 @@ steps:
     command: custom
     custom: tool
     arguments: >-
-      update ${{ parameters.toolName }} -g
+      update ${{ parameters.toolName }} -g -v:diag
       --version ${{ parameters.version }}
       --add-source "https://api.nuget.org/v3/index.json"
