@@ -36,7 +36,7 @@ variables:
 - name: 1ESWindowsPool
   value: android-win-2022
 - name: WindowsPoolImage1ESPT
-  value: 1ESPT-Windows2022
+  value: MAUI-1ESPT-Windows2022
 - name: LinuxPoolImage1ESPT
   value: 1ESPT-Ubuntu22.04
 - name: VSEngMicroBuildPool

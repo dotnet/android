@@ -32,7 +32,7 @@ stages:
       testOS: Windows
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
-      agentCount: 12
+      agentCount: 6
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
