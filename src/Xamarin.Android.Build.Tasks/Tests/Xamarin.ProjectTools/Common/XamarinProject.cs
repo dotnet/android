@@ -395,7 +395,6 @@ $@"<Project>
 
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
-		/// If target framework is not the latest or default, sources are added for previous releases
 		/// </summary>
 		protected void AddNuGetConfigSources (string nugetConfigPath)
 		{
@@ -413,12 +412,6 @@ $@"<Project>
 
 			if (ExtraNuGetConfigSources == null) {
 				ExtraNuGetConfigSources = new List<string> ();
-			}
-
-			if (TargetFramework?.IndexOf ("net8.0", StringComparison.OrdinalIgnoreCase) != -1
-				|| TargetFrameworks?.IndexOf ("net8.0", StringComparison.OrdinalIgnoreCase) != -1) {
-				ExtraNuGetConfigSources.Add ("https://api.nuget.org/v3/index.json");
-				ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json");
 			}
 
 			int sourceIndex = 0;
