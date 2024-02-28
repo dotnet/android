@@ -51,7 +51,7 @@ stages:
         toolName: boots
         version: $(BootsToolVersion)
         continueOnError: false
-    - pwsh: boots --stable Xamarin.Android
+    - pwsh: $(Agent.ToolsDirectory)/android-tools/boots --stable Xamarin.Android
       displayName: install Xamarin.Android stable
 
 
