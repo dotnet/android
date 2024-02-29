@@ -587,7 +587,7 @@ MonodroidRuntime::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof,
 }
 
 void
-MonodroidRuntime::prof_method_end_invoke (MonoProfiler *prof, MonoMethod *method) noexcept
+MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
 {
 	size_t seq = timing_profiler_state->get_sequence (method);
 	internal_timing->end_event (seq, true /* uses_more_info */);

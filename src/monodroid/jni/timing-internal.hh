@@ -441,19 +441,19 @@ namespace xamarin::android::internal
 				}
 
 				case TimingEventKind::MonoMethodDuration: {
-					constexpr std::string_view desc { "MonoVM method self duration: " };
+					constexpr std::string_view desc { "MonoVM method self: " };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::MonoVTableLoad: {
-					constexpr std::string_view desc { "MonoVM vtable load duration: " };
+					constexpr std::string_view desc { "MonoVM vtable load: " };
 					message.append (desc);
 					return;
 				}
 
 				case TimingEventKind::LockContention: {
-					constexpr std::string_view desc { "MonoVM lock contention duration: " };
+					constexpr std::string_view desc { "MonoVM lock contention: " };
 					message.append (desc);
 					return;
 				}
