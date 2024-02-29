@@ -34,7 +34,7 @@ namespace Android.Runtime
 		[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 		static Type? GetResourceTypeFromAssembly (Assembly assembly)
 		{
-			const string rootAssembly = "Types in Resource.designer.cs are preserved, because it is the @(TrimmerRootAssembly).";
+			const string rootAssembly = "Resources.UpdateIdValues() methods are trimmed away by the LinkResourceDesigner trimmer step. This codepath is not called unless $(AndroidUseDesignerAssembly) is disabled.";
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = rootAssembly)]
 			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = rootAssembly)]
