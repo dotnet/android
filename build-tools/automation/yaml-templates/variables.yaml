@@ -33,8 +33,6 @@ variables:
   value: macOS-13
 - name: HostedWinImage
   value: windows-2022
-- name: WindowsPoolNameMaui1ESPT
-  value: MAUI-DevDiv
 - name: WindowsPoolImage1ESPT
   value: 1ESPT-Windows2022
 - name: LinuxPoolImage1ESPT

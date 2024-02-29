@@ -23,7 +23,7 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: AzurePipelines-EO
+      name: Maui-1ESPT
       image: $(LinuxPoolImage1ESPT)
       os: linux
     timeoutInMinutes: 240

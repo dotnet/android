@@ -23,7 +23,8 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: $(WindowsPoolNameMaui1ESPT)
+      name: Maui-1ESPT
+      image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
     steps:
