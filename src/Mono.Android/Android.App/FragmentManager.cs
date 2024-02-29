@@ -10,7 +10,8 @@ namespace Android.App {
 		public T? FindFragmentById<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
-		> (int id) where T : Fragment
+		> (int id)
+			where T : Fragment
 		{
 			return FindFragmentById (id).JavaCast<T> ();
 		}
@@ -18,7 +19,8 @@ namespace Android.App {
 		public T? FindFragmentByTag<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
-		> (string tag) where T : Fragment
+		> (string tag)
+			where T : Fragment
 		{
 			return FindFragmentByTag (tag).JavaCast<T> ();
 		}
@@ -26,7 +28,8 @@ namespace Android.App {
 		public T? GetFragment<
 				[DynamicallyAccessedMembers (Constructors)]
 				T
-		> (Bundle bundle, string key) where T : Fragment
+		> (Bundle bundle, string key)
+			where T : Fragment
 		{
 			return GetFragment (bundle, key).JavaCast<T> ();
 		}
