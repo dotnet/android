@@ -28,7 +28,7 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+      ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
         name: Azure Pipelines
         vmImage: $(HostedMacImage)
       ${{ else }}:
