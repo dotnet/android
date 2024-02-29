@@ -19,9 +19,9 @@ steps:
     custom: tool
     arguments: >-
       update ${{ parameters.toolName }} -v:diag
-      --tool-path $(Agent.ToolsDirectory)/android-tools
+      --tool-path $(Agent.ToolsDirectory)
       --version ${{ parameters.version }}
       --add-source "https://api.nuget.org/v3/index.json"
 
-- script: echo "##vso[task.prependpath]$(Agent.ToolsDirectory)/android-tools"
-  displayName: add $(Agent.ToolsDirectory)/android-tools to path
+- script: echo "##vso[task.prependpath]$(Agent.ToolsDirectory)"
+  displayName: add $(Agent.ToolsDirectory) to path

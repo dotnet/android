@@ -65,7 +65,7 @@ steps:
       toolName: boots
       version: $(BootsToolVersion)
       continueOnError: false
-  - pwsh: $(Agent.ToolsDirectory)/android-tools/boots --stable Xamarin.Android
+  - pwsh: $(Agent.ToolsDirectory)/boots --stable Xamarin.Android
     displayName: install Xamarin.Android stable
 
 - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self

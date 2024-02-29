@@ -20,10 +20,11 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
+  # Check - "Xamarin.Android (Linux Linux > Build)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: Maui-1ESPT
+      name: MAUI-1ESPT
       image: $(LinuxPoolImage1ESPT)
       os: linux
     timeoutInMinutes: 240

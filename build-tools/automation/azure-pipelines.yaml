@@ -93,20 +93,18 @@ extends:
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
-    # Stage and Job "display names" are shortened because they are combined to form the name of the corresponding GitHub check.
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 
-    # Check - "Xamarin.Android (Linux > Build)"
     - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
 
     - stage: smoke_tests
       displayName: Package Tests
       dependsOn: mac_build
       jobs:
-    # Check - "Xamarin.Android (macOS > Tests > APKs .NET)"
+    # Check - "Xamarin.Android (Package Tests macOS > Tests > APKs .NET)"
       - job: mac_apk_tests_net
         displayName: macOS > Tests > APKs .NET
         pool:
@@ -262,11 +260,11 @@ extends:
       - mac_build
       - linux_build
       jobs:
-      # Check - "Xamarin.Android (Linux > Tests > MSBuild)"
+      # Check - "Xamarin.Android (Linux Tests Linux > Tests > MSBuild)"
       - job: linux_tests_smoke
         displayName: Linux > Tests > MSBuild
         pool:
-          name: Maui-1ESPT
+          name: MAUI-1ESPT
           image: $(LinuxPoolImage1ESPT)
           os: linux
         timeoutInMinutes: 180
@@ -332,7 +330,7 @@ extends:
       - job: maui_tests_integration
         displayName: MAUI Integration
         pool:
-          name: Maui-1ESPT
+          name: AzurePipelines-EO
           image: $(WindowsPoolImage1ESPT)
           os: windows
         timeoutInMinutes: 180
@@ -627,7 +625,7 @@ extends:
             artifactName: Prepare Release - Push Internal
             includeBuildResults: true
 
-    # Check - "Xamarin.Android (PoliCheck)"
+    # Check - "Xamarin.Android (PoliCheck PoliCheck $(Language))"
     - template: security/policheck/v3.yml@yaml-templates
       parameters:
         windowsImageOverride: $(WindowsPoolImage1ESPT)

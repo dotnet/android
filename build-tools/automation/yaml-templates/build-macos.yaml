@@ -24,7 +24,7 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
-  # Check - "Xamarin.Android (macOS > Build)"
+  # Check - "Xamarin.Android (Mac macOS > Build)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:

@@ -8,7 +8,7 @@ parameters:
 steps:
 - ${{if parameters.testFilter}}:
   - pwsh: >-
-      $(Agent.ToolsDirectory)/android-tools/dotnet-test-slicer slice
+      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --test-filter="${{ parameters.testFilter }}"
       --slice-number=$(System.JobPositionInPhase)
@@ -18,7 +18,7 @@ steps:
     failOnStderr: true
 - ${{ else }}:
   - pwsh: >-
-      $(Agent.ToolsDirectory)/android-tools/dotnet-test-slicer slice
+      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --slice-number=$(System.JobPositionInPhase)
       --total-slices=$(System.TotalJobsInPhase)
@@ -49,7 +49,7 @@ steps:
     workingDirectory: ${{ parameters.xaSourcePath }}
 
   - pwsh: |
-      $(Agent.ToolsDirectory)/android-tools/dotnet-test-slicer `
+      $(Agent.ToolsDirectory)/dotnet-test-slicer `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"

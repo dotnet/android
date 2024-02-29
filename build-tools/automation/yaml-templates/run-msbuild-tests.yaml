@@ -16,7 +16,7 @@ jobs:
   displayName: ${{ parameters.jobDisplayName }}
   ${{ if eq(parameters.testOS, 'Windows') }}:
     pool:
-      name: Maui-1ESPT
+      name: MAUI-1ESPT
       image: $(WindowsPoolImage1ESPT)
       os: windows
   ${{ if eq(parameters.testOS, 'macOS') }}:

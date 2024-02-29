@@ -19,11 +19,11 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
-  # Check - "Xamarin.Android (Windows > Build & Smoke Test)"
+  # Check - "Xamarin.Android (Windows Windows > Build & Smoke Test)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: Maui-1ESPT
+      name: MAUI-1ESPT
       image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
