@@ -495,7 +495,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void IncrementalFastDeployment ()
 		{
-			Assert.Ignore ("https://github.com/NuGet/Home/issues/13269");
 			AssertCommercialBuild ();
 
 			var class1src = new BuildItem.Source ("Class1.cs") {
