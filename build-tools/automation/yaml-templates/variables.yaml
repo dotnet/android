@@ -34,7 +34,7 @@ variables:
 - name: HostedWinImage
   value: windows-2022
 - name: WindowsPoolNameMaui1ESPT
-  value: MAUI-1ESPT-Windows2022
+  value: MAUI-DevDiv
 - name: WindowsPoolImage1ESPT
   value: 1ESPT-Windows2022
 - name: LinuxPoolImage1ESPT
