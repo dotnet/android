@@ -793,6 +793,20 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
+		public void InvalidTargetPlatformVersion ([Values ("android33", "android99.0")] string platformVersion)
+		{
+			const string targetFramework = "net9.0";
+			var project = new XamarinAndroidApplicationProject {
+				TargetFramework = $"{targetFramework}-{platformVersion}",
+			};
+			using var builder = CreateApkBuilder ();
+			builder.ThrowOnBuildFailure = false;
+			Assert.IsFalse (builder.Build (project), "build should fail");
+
+			Assert.IsTrue (builder.LastBuildOutput.ContainsText ("error NETSDK1140:"), "NETSDK1140 should have been raised.");
+		}
+
+		[Test]
 		public void XA4212 ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
