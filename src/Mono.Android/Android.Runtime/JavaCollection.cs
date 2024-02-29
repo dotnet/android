@@ -14,6 +14,8 @@ namespace Android.Runtime {
 	// java.util.Collection allows null values
 	public class JavaCollection : Java.Lang.Object, System.Collections.ICollection {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		internal static IntPtr collection_class = JNIEnv.FindClass ("java/util/Collection");
 
 		internal static IntPtr id_add;
@@ -148,6 +150,11 @@ namespace Android.Runtime {
 		//
 		public void CopyTo (Array array, int array_index)
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaCollection<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
+			[return: DynamicallyAccessedMembers (Constructors)]
+			static Type GetElementType (Array array) =>
+				array.GetType ().GetElementType ();
+
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -164,7 +171,7 @@ namespace Android.Runtime {
 						JavaConvert.FromJniHandle (
 							JNIEnv.GetObjectArrayElement (lrefArray, i),
 							JniHandleOwnership.TransferLocalRef,
-							array.GetType ().GetElementType ()),
+							GetElementType (array)),
 						array_index + i);
 			JNIEnv.DeleteLocalRef (lrefArray);
 		}
@@ -202,8 +209,13 @@ namespace Android.Runtime {
 		}
 	}
 
+	// Preserve FromJniHandle
+	[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 	[Register ("java/util/Collection", DoNotGenerateAcw=true)]
-	public sealed class JavaCollection<T> : JavaCollection, ICollection<T> {
+	public sealed class JavaCollection<
+			[DynamicallyAccessedMembers (Constructors)]
+			T
+	> : JavaCollection, ICollection<T> {
 
 		public JavaCollection (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

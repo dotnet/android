@@ -10,6 +10,7 @@ using Android.Runtime;
 namespace Java.Interop {
 
 	static class JavaConvert {
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 
 		static Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>> JniHandleConverters = new Dictionary<Type, Func<IntPtr, JniHandleOwnership, object>>() {
 			{ typeof (bool), (handle, transfer) => {
@@ -56,6 +57,17 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
+			const string justification = "JavaDictionary<,>, JavaList<>, and JavaCollection<> use DynamicallyAccessedMembers for PublicMethods to preserve FromJniHandle().";
+			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = justification)]
+			[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = justification)]
+			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+			static Type MakeGenericType (Type type, params Type [] typeArguments) =>
+				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
+				#pragma warning disable IL3050
+				type.MakeGenericType (typeArguments);
+				#pragma warning restore IL3050
+
 			if (target == null)
 				return null;
 
@@ -64,19 +76,19 @@ namespace Java.Interop {
 			if (target.IsArray)
 				return (h, t) => JNIEnv.GetArray (h, t, target.GetElementType ());
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IDictionary<,>)) {
-				Type t = typeof (JavaDictionary<,>).MakeGenericType (target.GetGenericArguments ());
+				Type t = MakeGenericType (typeof (JavaDictionary<,>), target.GetGenericArguments ());
 				return GetJniHandleConverterForType (t);
 			}
 			if (typeof (IDictionary).IsAssignableFrom (target))
 				return (h, t) => JavaDictionary.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (IList<>)) {
-				Type t = typeof (JavaList<>).MakeGenericType (target.GetGenericArguments ());
+				Type t = MakeGenericType (typeof (JavaList<>), target.GetGenericArguments ());
 				return GetJniHandleConverterForType (t);
 			}
 			if (typeof (IList).IsAssignableFrom (target))
 				return (h, t) => JavaList.FromJniHandle (h, t);
 			if (target.IsGenericType && target.GetGenericTypeDefinition() == typeof (ICollection<>)) {
-				Type t = typeof (JavaCollection<>).MakeGenericType (target.GetGenericArguments ());
+				Type t = MakeGenericType (typeof (JavaCollection<>), target.GetGenericArguments ());
 				return GetJniHandleConverterForType (t);
 			}
 			if (typeof (ICollection).IsAssignableFrom (target))
@@ -92,13 +104,19 @@ namespace Java.Interop {
 					typeof (Func<IntPtr, JniHandleOwnership, object>), m);
 		}
 
-		public static T? FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer)
+		public static T? FromJniHandle<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		>(IntPtr handle, JniHandleOwnership transfer)
 		{
 			bool set;
 			return FromJniHandle<T>(handle, transfer, out set);
 		}
 
-		public static T? FromJniHandle<T>(IntPtr handle, JniHandleOwnership transfer, out bool set)
+		public static T? FromJniHandle<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		>(IntPtr handle, JniHandleOwnership transfer, out bool set)
 		{
 			if (handle == IntPtr.Zero) {
 				set = false;
@@ -133,7 +151,11 @@ namespace Java.Interop {
 			return (T?) Convert.ChangeType (v, typeof (T), CultureInfo.InvariantCulture);
 		}
 
-		public static object? FromJniHandle (IntPtr handle, JniHandleOwnership transfer, Type? targetType = null)
+		public static object? FromJniHandle (
+				IntPtr handle,
+				JniHandleOwnership transfer,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? targetType = null)
 		{
 			if (handle == IntPtr.Zero) {
 				return null;
@@ -206,13 +228,19 @@ namespace Java.Interop {
 			return null;
 		}
 
-		public static T? FromJavaObject<T>(IJavaObject? value)
+		public static T? FromJavaObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		>(IJavaObject? value)
 		{
 			bool set;
 			return FromJavaObject<T>(value, out set);
 		}
 
-		public static T? FromJavaObject<T>(IJavaObject? value, out bool set)
+		public static T? FromJavaObject<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		>(IJavaObject? value, out bool set)
 		{
 			if (value == null) {
 				set = false;
@@ -245,7 +273,10 @@ namespace Java.Interop {
 			return (T) Convert.ChangeType (value, typeof (T), CultureInfo.InvariantCulture);
 		}
 
-		public static object? FromJavaObject (IJavaObject value, Type? targetType = null)
+		public static object? FromJavaObject (
+				IJavaObject value,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? targetType = null)
 		{
 			if (value == null)
 				return null;
