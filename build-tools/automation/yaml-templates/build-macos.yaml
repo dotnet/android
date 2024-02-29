@@ -28,15 +28,13 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: Azure Pipelines
-      vmImage: $(HostedMacImage)
+      ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      ${{ else }}:
+        name: VSEng-Xamarin-RedmondMac-Android-Untrusted
+        demands: macOS.Name -equals Monterey
       os: macOS
-    #pool:
-    #  name: $(MacBuildPoolName)
-    #  vmImage: $(MacBuildPoolImage)
-    #  os: macOS
-    #  ${{ if ne(variables['MicroBuildSignType'], 'Real') }}:
-    #    demands: macOS.Name -equals Monterey
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:

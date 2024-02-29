@@ -56,22 +56,11 @@ variables:
 - ${{ if ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private') }}:
   - name: DotNetFeedCredential
     value: dnceng-dotnet9
-- ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
-  - name: MicroBuildSignType
+- name: MicroBuildSignType
+  ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
     value: Real
-  - name: MacBuildPoolName
-    value: Azure Pipelines
-  - name: MacBuildPoolImage
-    value: macOS-13
-- ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
-  - name: MicroBuildSignType
+  ${{ else }}:
     value: Test
-  - name: MacBuildPoolName
-    value: VSEng-Xamarin-RedmondMac-Android-Untrusted
-  - name: MacBuildPoolImage
-    value: ''
-  - name: DisablePipelineConfigDetector
-    value: true
 
 extends:
   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
