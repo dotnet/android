@@ -415,7 +415,7 @@ $@"<Project>
 			}
 
 			int sourceIndex = 0;
-			foreach (var source in ExtraNuGetConfigSources) {
+			foreach (var source in ExtraNuGetConfigSources.Distinct ()) {
 				var sourceElement = new XElement ("add");
 				sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
 				sourceElement.SetAttributeValue ("value", source);
