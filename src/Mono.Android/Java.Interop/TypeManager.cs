@@ -237,6 +237,10 @@ namespace Java.Interop {
 
 		internal static Type? TypeRegistrationFallback (string class_name)
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
+			static Type? TypeGetType (string name) =>
+				Type.GetType (name, throwOnError: false);
+
 			__TypeRegistrations.RegisterPackages ();
 
 			Type? type = null;
@@ -250,7 +254,7 @@ namespace Java.Interop {
 					return type;
 				}
 			}
-			if ((type = Type.GetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
+			if ((type = TypeGetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
 				return type;
 			}
 			return null;

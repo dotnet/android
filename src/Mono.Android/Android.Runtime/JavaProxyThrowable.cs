@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 using StackTraceElement = Java.Lang.StackTraceElement;
@@ -38,6 +39,14 @@ namespace Android.Runtime {
 
 		void TranslateStackTrace ()
 		{
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// StackFrame.GetMethod() will return null under NativeAOT;
+			// However, you can still get useful information from StackFrame.ToString():
+			// MainActivity.OnCreate() + 0x37 at offset 55 in file:line:column <filename unknown>:0:0
+			[UnconditionalSuppressMessage ("Trimming", "IL2026", Justification = "StackFrame.GetMethod() is \"best attempt\", we handle null & exceptions")]
+			static MethodBase? StackFrameGetMethod (StackFrame frame) =>
+				frame.GetMethod ();
+
 			var trace = new StackTrace (InnerException, fNeedFileInfo: true);
 			if (trace.FrameCount <= 0) {
 				return;
@@ -59,7 +68,7 @@ namespace Android.Runtime {
 
 			for (int i = 0; i < frames.Length; i++) {
 				StackFrame managedFrame = frames[i];
-				MethodBase? managedMethod = managedFrame.GetMethod ();
+				MethodBase? managedMethod = StackFrameGetMethod (managedFrame);
 
 				var throwableFrame = new StackTraceElement (
 					declaringClass: managedMethod?.DeclaringType?.FullName,
