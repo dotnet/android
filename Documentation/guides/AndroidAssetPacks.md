@@ -1,4 +1,4 @@
-# Android Asset Packs
+g# Android Asset Packs
 
 Google Android began supporting splitting up the app package into multiple
 packs with the introduction of the `aab` package format. This format allows
@@ -19,14 +19,6 @@ resources. This type of `pack` can be installed at install-time,
 fast-follow or ondemand. It is most useful for apps which contain a lot
 of `Assets`, such as Games or Multi Media applications.
 See the [documentation](https://developer.android.com/guide/playcore/asset-delivery) for details on how this all works.
-.NET Android does not have any official support for this type of pack.
-However a hack is available via the excellent @infinitespace-studios on
-[github](https://github.com/infinitespace-studios/MauiAndroidAssetPackExample).
-This hack allows developers to place additional assets in a special
-`NoTargets` project. This project is built just after the final `aab` is
-produced. It builds a zip file which is then added to the `@(Modules)`
-ItemGroup in the main application. This zip is then included into the
-final app as an additional feature.
 
 ## Asset Pack Specification
 
@@ -169,8 +161,14 @@ final `.aab` file is generated they are included as asset packs.
 
 ## Alternative Methods
 
-to implement the hack provided by @infinitespace-studios. Using
-a separate project like in the hack is one way to go. It does have some
+An alternative method is available on [github](https://github.com/infinitespace-studios/MauiAndroidAssetPackExample).
+This method allows developers to place additional assets in a special
+[NoTargets](https://github.com/microsoft/MSBuildSdks/blob/main/src/NoTargets/README.md) project. This project is built just after the final `aab` is
+produced. It builds a zip file which is then added to the `@(Modules)`
+ItemGroup in the main application. This zip is then included into the
+final app as an additional feature.
+
+Using a separate project like in the hack is one way to go. It does have some
 issues though.
 
 1. It is a `special` type of project. It requires a `global.json` which imports the
@@ -178,4 +176,4 @@ issues though.
 2. There is no IDE support for building this type of project.
 
 Having the user go through a number of hoops to implement this for
-.NET Android or .net Maui is not ideal. We need a simpler method.
+.NET Android or .net Maui is not ideal.
