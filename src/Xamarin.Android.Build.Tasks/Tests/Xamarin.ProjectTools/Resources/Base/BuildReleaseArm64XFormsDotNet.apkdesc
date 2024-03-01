@@ -14,10 +14,10 @@
       "Size": 72360
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 456314
+      "Size": 456313
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5147
+      "Size": 5145
     },
     "assemblies/mscorlib.dll": {
       "Size": 3992
@@ -239,7 +239,7 @@
       "Size": 87352
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 393784
+      "Size": 449192
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3210968
@@ -407,7 +407,7 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 97490
@@ -2477,5 +2477,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10909987
+  "PackageSize": 10918179
 }
