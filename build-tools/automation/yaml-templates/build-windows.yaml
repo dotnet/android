@@ -28,6 +28,13 @@ stages:
       os: windows
     timeoutInMinutes: 240
     steps:
+    - script: |
+        where.exe powershell
+        where.exe pwsh
+      displayName: test powershell
+
+
+
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
         resource: ${{ parameters.repositoryAlias }}
