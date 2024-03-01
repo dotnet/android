@@ -28,12 +28,12 @@ stages:
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
-        name: Azure Pipelines
-        vmImage: $(HostedMacImage)
-      ${{ else }}:
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
         name: VSEng-Xamarin-RedmondMac-Android-Untrusted
         demands: macOS.Name -equals Monterey
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
       os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
