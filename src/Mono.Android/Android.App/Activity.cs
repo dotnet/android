@@ -1,19 +1,27 @@
 using System;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.Runtime;
 
 namespace Android.App {
 
 	partial class Activity {
 
-		public T? FindViewById<T> (int id)
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
+		public T? FindViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			return this.FindViewById (id)!.JavaCast<T> ();
 		}
 
 		// See: https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/app/Activity.java;l=3430
-		public T RequireViewById<T> (int id)
+		public T RequireViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			var view = FindViewById<T> (id);

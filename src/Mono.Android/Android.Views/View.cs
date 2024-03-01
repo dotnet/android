@@ -14,6 +14,8 @@ namespace Android.Views {
 
 	public partial class View {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 #if ANDROID_16
 		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
 		public bool PerformAccessibilityAction (GlobalAction action, Bundle arguments)
@@ -22,14 +24,20 @@ namespace Android.Views {
 		}
 #endif
 
-		public T? FindViewById<T> (int id)
+		public T? FindViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			return this.FindViewById (id).JavaCast<T> ();
 		}
 
 		// See: https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/view/View.java;l=25322
-		public T RequireViewById<T> (int id)
+		public T RequireViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			var view = FindViewById<T> (id);
