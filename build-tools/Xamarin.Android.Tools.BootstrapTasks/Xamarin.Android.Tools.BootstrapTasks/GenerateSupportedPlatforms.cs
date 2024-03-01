@@ -78,6 +78,9 @@ Specifies the supported Android platform versions for this SDK.
 						.OrderBy (v => v)) {
 					writer.WriteStartElement ("AndroidSdkSupportedTargetPlatformVersion");
 					writer.WriteAttributeString ("Include", apiLevel.ToString ("0.0", CultureInfo.InvariantCulture));
+					if (apiLevel < TargetApiLevel) {
+						writer.WriteAttributeString ("DefineConstantsOnly", "true");
+					}
 					writer.WriteEndElement (); // </AndroidSdkSupportedTargetPlatformVersion>
 				}
 				writer.WriteStartElement ("SdkSupportedTargetPlatformVersion");
