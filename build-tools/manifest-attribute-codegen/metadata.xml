@@ -1,0 +1,296 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<metadata>
+  <!-- Manifest elements to generate -->
+  <!-- Note: when adding new types, ensure you add the output to the relevant projects. -->
+  <type name="activity" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ActivityAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" />
+  <type name="application" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ApplicationAttribute.cs" usage="AttributeTargets.Assembly | AttributeTargets.Class" jniNameProvider="true" />
+  <type name="instrumentation" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\InstrumentationAttribute.cs" usage="AttributeTargets.Assembly | AttributeTargets.Class" allowMultiple="true" jniNameProvider="true" />
+  <type name="layout" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\LayoutAttribute.cs" usage="AttributeTargets.Class" />
+  <type name="service" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ServiceAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" />
+  <type name="receiver" managedName="BroadcastReceiverAttribute" namespace="Android.Content" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.Content\BroadcastReceiverAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" sealed="false" />
+  <type name="provider" managedName="ContentProviderAttribute" namespace="Android.Content" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.Content\ContentProviderAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" defaultConstructor="false" sealed="false" />
+
+  <type name="intent-filter" namespace="Android.App" outputFile="src\Mono.Android\Android.App\IntentFilterAttribute.cs" usage="AttributeTargets.Class" allowMultiple="true" defaultConstructor="false" />
+  <type name="meta-data" namespace="Android.App" outputFile="src\Mono.Android\Android.App\MetaDataAttribute.cs" usage="AttributeTargets.Assembly | AttributeTargets.Class" allowMultiple="true" defaultConstructor="false" />
+  <type name="grant-uri-permission" namespace="Android.Content" outputFile="src\Mono.Android\Android.Content\GrantUriPermissionAttribute.cs" usage="AttributeTargets.Class" allowMultiple="true" sealed="false" />
+  <type name="uses-library" namespace="Android.App" outputFile="src\Mono.Android\Android.App\UsesLibraryAttribute.cs" usage="AttributeTargets.Assembly | AttributeTargets.Class" allowMultiple="true" />
+  <type name="permission" namespace="Android.App" outputFile="src\Mono.Android\Android.App\PermissionAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
+  <type name="permission-group" namespace="Android.App" outputFile="src\Mono.Android\Android.App\PermissionGroupAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
+  <type name="permission-tree" namespace="Android.App" outputFile="src\Mono.Android\Android.App\PermissionTreeAttribute.cs" usage="AttributeTargets.Assembly" />
+  <type name="uses-configuration" namespace="Android.App" outputFile="src\Mono.Android\Android.App\UsesConfigurationAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
+  <type name="uses-feature" namespace="Android.App" outputFile="src\Mono.Android\Android.App\UsesFeatureAttribute.cs" usage="AttributeTargets.Assembly" allowMultiple="true" />
+
+  <!-- Manifest elements we are ignoring -->
+  <type name="action" ignore="true" />
+  <type name="activity-alias" ignore="true" />
+  <type name="additional-certificate" ignore="true" />
+  <type name="allow-permission" ignore="true" />
+  <type name="apex-system-service" ignore="true" />
+  <type name="attribution" ignore="true" />
+  <type name="attribution-inherit-from" ignore="true" />
+  <type name="category" ignore="true" />
+  <type name="compatible-screens-screen" ignore="true" />
+  <type name="data" ignore="true" />
+  <type name="deny-permission" ignore="true" />
+  <type name="extension-sdk" ignore="true" />
+  <type name="extra" ignore="true" />
+  <type name="feature-group" ignore="true" />
+  <type name="install-constraints" ignore="true" />
+  <type name="install-constraints-fingerprint-prefix" ignore="true" />
+  <type name="intent" ignore="true" />
+  <type name="intent-category" ignore="true" />
+  <type name="key-set" ignore="true" />
+  <type name="library" ignore="true" />
+  <type name="manifest" ignore="true" />
+  <type name="original-package" ignore="true" />
+  <type name="package-verifier" ignore="true" />
+  <type name="path-permission" ignore="true" />
+  <type name="process" ignore="true" />
+  <type name="processes" ignore="true" />
+  <type name="profileable" ignore="true" />
+  <type name="property" ignore="true" />
+  <type name="protected-broadcast" ignore="true" />
+  <type name="public-key" ignore="true" />
+  <type name="queries" ignore="true" />
+  <type name="queries-intent" ignore="true" />
+  <type name="queries-package" ignore="true" />
+  <type name="queries-provider" ignore="true" />
+  <type name="required-feature" ignore="true" />
+  <type name="required-not-feature" ignore="true" />
+  <type name="resource-overlay" ignore="true" />
+  <type name="restrict-update" ignore="true" />
+  <type name="sdk-library" ignore="true" />
+  <type name="static-library" ignore="true" />
+  <type name="supports-input-input-type" ignore="true" />
+  <type name="supports-screens" ignore="true" />
+  <type name="upgrade-key-set" ignore="true" />
+  <type name="uses-native-library" ignore="true" />
+  <type name="uses-package" ignore="true" />
+  <type name="uses-permission" ignore="true" />
+  <type name="uses-sdk" ignore="true" />
+  <type name="uses-sdk-library" ignore="true" />
+  <type name="uses-split" ignore="true" />
+  <type name="uses-static-library" ignore="true" />
+  
+  <!-- <activity> -->
+  <element path="activity.allowEmbedded" type="bool" />
+  <element path="activity.allowTaskReparenting" type="bool" />
+  <element path="activity.allowUntrustedActivityEmbedding" visible="false" />
+  <element path="activity.alwaysFocusable" visible="false" />
+  <element path="activity.alwaysRetainTaskState" type="bool" />
+  <element path="activity.attributionTags" visible="false" />
+  <element path="activity.autoRemoveFromRecents" type="bool" />
+  <element path="activity.canDisplayOnRemoteDevices" visible="false" />
+  <element path="activity.clearTaskOnLaunch" type="bool" />
+  <element path="activity.configChanges" name="ConfigurationChanges" type="Android.Content.PM.ConfigChanges" />
+  <element path="activity.directBootAware" type="bool" />
+  <element path="activity.documentLaunchMode" type="Android.Content.PM.DocumentLaunchMode" />
+  <element path="activity.enabled" type="bool" />
+  <element path="activity.enableOnBackInvokedCallback" visible="false" />
+  <element path="activity.excludeFromRecents" type="bool" />
+  <element path="activity.exported" type="bool" />
+  <element path="activity.finishOnCloseSystemDialogs" type="bool" />
+  <element path="activity.finishOnTaskLaunch" type="bool" />
+  <element path="activity.forceQueryable" visible="false" />
+  <element path="activity.hardwareAccelerated" type="bool" />
+  <element path="activity.immersive" type="bool" />
+  <element path="activity.inheritShowWhenLocked" visible="false" />
+  <element path="activity.knownActivityEmbeddingCerts" visible="false" />
+  <element path="activity.launchMode" type="Android.Content.PM.LaunchMode" />
+  <element path="activity.maxAspectRatio" type="float" />
+  <element path="activity.maxRecents" type="int" />
+  <element path="activity.minAspectRatio" visible="false" />
+  <element path="activity.multiprocess" name="MultiProcess" type="bool" />
+  <element path="activity.noHistory" type="bool" />
+  <element path="activity.parentActivityName" name="ParentActivity" type="Type?" />
+  <element path="activity.persistableMode" type="Android.Content.PM.ActivityPersistableMode" />
+  <element path="activity.playHomeTransitionSound" visible="false" />
+  <element path="activity.preferMinimalPostProcessing" visible="false" />
+  <element path="activity.primaryUserOnly" visible="false" />
+  <element path="activity.requiredDisplayCategory" visible="false" />
+  <element path="activity.recreateOnConfigChanges" type="Android.Content.PM.ConfigChanges" />
+  <element path="activity.relinquishTaskIdentity" type="bool" />
+  <element path="activity.resizeableActivity" type="bool" />
+  <element path="activity.resumeWhilePausing" type="bool" />
+  <element path="activity.rotationAnimation" type="Android.Views.WindowRotationAnimation" />
+  <element path="activity.showForAllUsers" type="bool" />
+  <element path="activity.showOnLockScreen" type="bool" obsolete="Please use ShowForAllUsers instead." />
+  <element path="activity.splitName" visible="false" />
+  <element path="activity.supportsPictureInPicture" type="bool" />
+  <element path="activity.screenOrientation" type="Android.Content.PM.ScreenOrientation" />
+  <element path="activity.showWhenLocked" type="bool" />
+  <element path="activity.singleUser" type="bool" />
+  <element path="activity.stateNotNeeded" type="bool" />
+  <element path="activity.systemUserOnly" visible="false" />
+  <element path="activity.turnScreenOn" type="bool" />
+  <element path="activity.uiOptions" type="Android.Content.PM.UiOptions" />
+  <element path="activity.visibleToInstantApps" type="bool" />
+  <element path="activity.windowSoftInputMode" type="Android.Views.SoftInput" />
+
+  <!-- <application> -->
+  <element path="application.allowAudioPlaybackCapture" visible="false" />
+  <element path="application.allowAutoRevokePermissionsExemption" visible="false" />
+  <element path="application.allowBackup" type="bool" />
+  <element path="application.allowClearUserData" type="bool" />
+  <element path="application.allowClearUserDataOnFailedRestore" visible="false" />
+  <element path="application.allowNativeHeapPointerTagging" visible="false" />
+  <element path="application.allowTaskReparenting" type="bool" />
+  <element path="application.appCategory" visible="false" />
+  <element path="application.appComponentFactory" visible="false" />
+  <element path="application.attributionsAreUserVisible" visible="false" />
+  <element path="application.autoRevokePermissions" visible="false" />
+  <element path="application.cantSaveState" visible="false" />
+  <element path="application.backupAgent" type="Type?" />
+  <element path="application.backupInForeground" type="bool" />
+  <element path="application.classLoader" visible="false" />
+  <element path="application.crossProfile" visible="false" />
+  <element path="application.dataExtractionRules" visible="false" />
+  <element path="application.debuggable" type="bool" />
+  <element path="application.defaultToDeviceProtectedStorage" visible="false" />
+  <element path="application.directBootAware" type="bool" />
+  <element path="application.enabled" type="bool" />
+  <element path="application.enableOnBackInvokedCallback" visible="false" />
+  <element path="application.extractNativeLibs" type="bool" />
+  <element path="application.forceQueryable" visible="false" />
+  <element path="application.fullBackupContent" type="bool" />
+  <element path="application.fullBackupOnly" type="bool" />
+  <element path="application.gwpAsanMode" visible="false" />
+  <element path="application.hardwareAccelerated" type="bool" />
+  <element path="application.hasFragileUserData" visible="false" />
+  <element path="application.isGame" visible="false" />
+  <element path="application.killAfterRestore" type="bool" />
+  <element path="application.knownActivityEmbeddingCerts" visible="false" />
+  <element path="application.localeConfig" visible="false" />
+  <element path="application.manageSpaceActivity" type="Type?" />
+  <element path="application.maxAspectRatio" visible="false" />
+  <element path="application.memtagMode" visible="false" />
+  <element path="application.minAspectRatio" visible="false" />
+  <element path="application.multiArch" visible="false" />
+  <element path="application.nativeHeapZeroInitialized" visible="false" />
+  <element path="application.neverEncrypt" visible="false" />
+  <element path="application.persistent" type="bool" />
+  <element path="application.persistentWhenFeatureAvailable" visible="false" />
+  <element path="application.preserveLegacyExternalStorage" visible="false" />
+  <element path="application.restoreAnyVersion" type="bool" />
+  <element path="application.requestForegroundServiceExemption" visible="false" />
+  <element path="application.requestLegacyExternalStorage" visible="false" />
+  <element path="application.requestRawExternalStorageAccess" visible="false" />
+  <element path="application.requiredForAllUsers" visible="false" />
+  <element path="application.resetEnabledSettingsOnAppDataCleared" visible="false" />
+  <element path="application.resizeableActivity" type="bool" />
+  <element path="application.restoreNeedsApplication" visible="false" />
+  <element path="application.rollbackDataPolicy" visible="false" />
+  <element path="application.testOnly" visible="false" />
+  <element path="application.uiOptions" type="Android.Content.PM.UiOptions" />
+  <element path="application.useEmbeddedDex" visible="false" />
+  <element path="application.usesCleartextTraffic" type="bool" />
+  <element path="application.usesNonSdkApi" visible="false" />
+  <element path="application.vmSafeMode" name="VMSafeMode" type="bool" />
+  <element path="application.zygotePreloadName" visible="false" />
+
+  <!-- <grant-uri-permission> -->
+  <element path="grant-uri-permission.pathAdvancedPattern" visible="false" />
+  <element path="grant-uri-permission.pathSuffix" visible="false" />
+
+  <!-- <instrumentation> -->
+  <element path="instrumentation.banner" visible="false" />
+  <element path="instrumentation.logo" visible="false" />
+  <element path="instrumentation.functionalTest" type="bool" />
+  <element path="instrumentation.handleProfiling" type="bool" />
+
+  <!-- <intent-filter> -->
+  <element path="intent-filter.banner" visible="false" />
+  <element path="intent-filter.logo" visible="false" />
+  <element path="intent-filter.order" visible="false" />
+  <element path="intent-filter.autoVerify" type="bool" />
+  <element path="intent-filter.priority" type="int" />
+
+  <!-- <layout> -->
+  <element path="layout.minimalHeight" visible="false" />
+  <element path="layout.minimalWidth" visible="false" />
+  <element path="layout.windowLayoutAffinity" visible="false" />
+
+  <!-- <meta-data> -->
+  <element path="meta-data.name" type="string" readonly="true" />
+
+  <!-- <permission> -->
+  <element path="permission.backgroundPermission" visible="false" />
+  <element path="permission.banner" visible="false" />
+  <element path="permission.knownCerts" visible="false" />
+  <element path="permission.logo" visible="false" />
+  <element path="permission.maxSdkVersion" visible="false" />
+  <element path="permission.permissionFlags" visible="false" />
+  <element path="permission.protectionLevel" type="Android.Content.PM.Protection" />
+  <element path="permission.request" visible="false" />
+
+  <!-- <permission-group> -->
+  <element path="permission-group.backgroundRequest" visible="false" />
+  <element path="permission-group.backgroundRequestDetail" visible="false" />
+  <element path="permission-group.banner" visible="false" />
+  <element path="permission-group.logo" visible="false" />
+  <element path="permission-group.permissionGroupFlags" visible="false" />
+  <element path="permission-group.priority" visible="false" />
+  <element path="permission-group.request" visible="false" />
+  <element path="permission-group.requestDetail" visible="false" />
+
+  <!-- <permission-tree> -->
+  <element path="permission-tree.banner" visible="false" />
+  <element path="permission-tree.logo" visible="false" />
+
+  <!-- <provider> -->
+  <element path="provider.attributionTags" visible="false" />
+  <element path="provider.authorities" type="string[]" readonly="true" />
+  <element path="provider.banner" visible="false" />
+  <element path="provider.description" visible="false" />
+  <element path="provider.directBootAware" type="bool" />
+  <element path="provider.enabled" type="bool" />
+  <element path="provider.exported" type="bool" />
+  <element path="provider.forceUriPermissions" visible="false" />
+  <element path="provider.grantUriPermissions" type="bool" />
+  <element path="provider.initOrder" type="int" />
+  <element path="provider.logo" visible="false" />
+  <element path="provider.multiprocess" name="MultiProcess" type="bool" />
+  <element path="provider.singleUser" visible="false" />
+  <element path="provider.splitName" visible="false" />
+  <element path="provider.syncable" type="bool" />
+  <element path="provider.visibleToInstantApps" visible="false" />
+
+  <!-- <receiver> -->
+  <element path="receiver.attributionTags" visible="false" />
+  <element path="receiver.banner" visible="false" />
+  <element path="receiver.logo" visible="false" />
+  <element path="receiver.singleUser" visible="false" />
+  <element path="receiver.directBootAware" type="bool" />
+  <element path="receiver.enabled" type="bool" />
+  <element path="receiver.exported" type="bool" />
+
+  <!-- <service> -->
+  <element path="service.allowSharedIsolatedProcess" visible="false" />
+  <element path="service.attributionTags" visible="false" />
+  <element path="service.banner" visible="false" />
+  <element path="service.description" visible="false" />
+  <element path="service.directBootAware" type="bool" />
+  <element path="service.enabled" type="bool" />
+  <element path="service.exported" type="bool" />
+  <element path="service.externalService" visible="false" />
+  <element path="service.foregroundServiceType" type="Android.Content.PM.ForegroundService" />
+  <element path="service.logo" visible="false" />
+  <element path="service.singleUser" visible="false" />
+  <element path="service.splitName" visible="false" />
+  <element path="service.stopWithTask" visible="false" />
+  <element path="service.useAppZygote" visible="false" />
+  <element path="service.visibleToInstantApps" visible="false" />
+
+  <!-- <uses-configuration> -->
+  <element path="uses-configuration.reqFiveWayNav" type="bool" />
+  <element path="uses-configuration.reqHardKeyboard" type="bool" />
+
+  <!-- <uses-feature> -->
+  <element path="uses-feature.glEsVersion" name="GLESVersion" />
+  <element path="uses-feature.name" readonly="true" />
+  <element path="uses-feature.version" readonly="true" />
+
+  <!-- <uses-library> -->
+  <element path="uses-library.required" type="bool" />
+
+</metadata>

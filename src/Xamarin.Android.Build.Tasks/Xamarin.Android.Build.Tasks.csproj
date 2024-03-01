@@ -85,8 +85,14 @@
     <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.cs">
       <Link>Mono.Android\IntentFilterAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\IntentFilterAttribute.Partial.cs">
+      <Link>Mono.Android\IntentFilterAttribute.Partial.cs</Link>
+    </Compile>
     <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.cs">
       <Link>Mono.Android\MetaDataAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\MetaDataAttribute.Partial.cs">
+      <Link>Mono.Android\MetaDataAttribute.Partial.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.Content\GrantUriPermissionAttribute.cs">
       <Link>Mono.Android\GrantUriPermissionAttribute.cs</Link>
@@ -106,6 +112,9 @@
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
     </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.Partial.cs">
+      <Link>Mono.Android\UsesLibraryAttribute.Partial.cs</Link>
+    </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.cs">
       <Link>Mono.Android\UsesPermissionAttribute.cs</Link>
     </Compile>
@@ -123,6 +132,9 @@
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.cs">
       <Link>Mono.Android\UsesFeatureAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesFeatureAttribute.Partial.cs">
+      <Link>Mono.Android\UsesFeatureAttribute.Partial.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\SupportsGLTextureAttribute.cs">
       <Link>Mono.Android\SupportsGLTextureAttribute.cs</Link>
