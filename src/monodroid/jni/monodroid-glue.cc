@@ -669,6 +669,7 @@ MonodroidRuntime::timing_init_verbose () noexcept
 {
 	timing_ensure_state ();
 
+	utils.create_directory (AndroidSystem::override_dirs [0], 0755);
 	std::unique_ptr<char> jit_log_path {utils.path_combine (androidSystem.override_dirs[0], "methods.txt")};
 	jit_log = utils.monodroid_fopen (jit_log_path.get (), "a");
 	utils.set_world_accessable (jit_log_path.get ());

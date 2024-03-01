@@ -34,7 +34,10 @@ void
 BasicUtilities::create_public_directory (const char *dir)
 {
 	mode_t m = umask (0);
-	mkdir (dir, 0777);
+	int ret = mkdir (dir, 0777);
+	if (ret < 0) {
+		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
+	}
 	umask (m);
 }
 
@@ -83,6 +86,26 @@ BasicUtilities::set_world_accessable ([[maybe_unused]] const char *path)
 	if (r == -1) {
 		log_error (LOG_DEFAULT, "chmod(\"%s\", 0664) failed: %s", path, strerror (errno));
 	}
+}
+
+bool
+BasicUtilities::set_world_accessible (int fd) noexcept
+{
+	if (fd < 0) {
+		return false;
+	}
+
+	int r;
+	do {
+		r = fchmod (fd, 0664);
+	} while (r == -1 && errno == EINTR);
+
+	if (r == -1) {
+		log_error (LOG_DEFAULT, "fchmod(%d, 0664) failed: %s", fd, strerror (errno));
+		return false;
+	}
+
+	return true;
 }
 
 void

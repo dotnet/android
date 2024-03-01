@@ -4,6 +4,7 @@
 #include <atomic>
 #include <concepts>
 #include <ctime>
+#include <string>
 #include <string_view>
 #include <vector>
 
@@ -319,6 +320,13 @@ namespace xamarin::android::internal
 		void dump_to_logcat (size_t entries) noexcept;
 		void dump_to_file (size_t entries) noexcept;
 
+		template<
+			size_t BufferSize,
+			void(line_writer)(dynamic_local_string<BufferSize, char> const& buffer),
+			void(event_writer)(TimingEvent const& event, dynamic_local_string<BufferSize, char>& buffer, uint64_t& total_ns, bool indent)
+		>
+		void dump (size_t entries, bool indent) noexcept;
+
 		force_inline static void mark (TimingEventPoint &point) noexcept
 		{
 			get_time (point.sec, point.ns);
@@ -482,11 +490,11 @@ namespace xamarin::android::internal
 		// having to be kept in sync with the actual wording used for the event message.
 		//
 		template<size_t BufferSize>
-		force_inline static void format_and_log (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
+		force_inline static void format_message (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
 		{
-			constexpr std::string_view INDENT { "  " };
+			constexpr std::string_view INDENT          { "  " };
 			constexpr std::string_view NATIVE_INIT_TAG { "[0/" };
-			constexpr std::string_view MANAGED_TAG { "[1/" };
+			constexpr std::string_view MANAGED_TAG     { "[1/" };
 
 			message.clear ();
 			if (indent) {
@@ -507,9 +515,9 @@ namespace xamarin::android::internal
 				message.append (event.more_info, event.more_info_length);
 			}
 
-			constexpr std::string_view COLON { ":" };
+			constexpr std::string_view COLON      { ":" };
 			constexpr std::string_view TWO_COLONS { "::" };
-			constexpr std::string_view ELAPSED { "; elapsed: " };
+			constexpr std::string_view ELAPSED    { "; elapsed: " };
 
 			message.append (ELAPSED);
 			message.append (static_cast<uint32_t>(interval.sec));
@@ -517,7 +525,20 @@ namespace xamarin::android::internal
 			message.append (interval.ms);
 			message.append (TWO_COLONS);
 			message.append (interval.ns);
+		}
 
+		template<size_t BufferSize>
+		force_inline static void format_message (TimingEvent const& event, dynamic_local_string<BufferSize, char>& message, uint64_t& total_ns, bool indent = false) noexcept
+		{
+			TimingInterval interval;
+			calculate_interval (event.start, event.end, interval, total_ns);
+			format_message (event, interval, message, indent);
+		}
+
+		template<size_t BufferSize>
+		force_inline static void format_and_log (TimingEvent const& event, TimingInterval const& interval, dynamic_local_string<BufferSize, char>& message, bool indent = false) noexcept
+		{
+			format_message (event, interval, message, indent);
 			log_write (LOG_TIMING, LogLevel::Info, message.get ());
 		}
 
@@ -580,7 +601,7 @@ namespace xamarin::android::internal
 		static inline TimingMode timing_mode = default_timing_mode;
 		static inline bool log_to_file = default_log_to_file;
 		static inline size_t duration_ms = default_duration_milliseconds;
-		static inline char* output_file_name = nullptr;
+		static inline std::string* output_file_name = nullptr;
 	};
 
 	extern FastTiming *internal_timing;
