@@ -87,12 +87,15 @@ extends:
         os: windows
       sourceRepositoriesToScan:
         include:
-        - repository: monodroid
+        - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+          - repository: monodroid
         exclude:
         - repository: yaml-templates
         - repository: maui
       suppression:
         suppressionFile: $(Build.SourcesDirectory)\.gdn\.gdnsuppress
+    settings:
+      skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
