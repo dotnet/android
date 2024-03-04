@@ -8,7 +8,7 @@ parameters:
 steps:
 - ${{if parameters.testFilter}}:
   - pwsh: >-
-      dotnet-test-slicer slice
+      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --test-filter="${{ parameters.testFilter }}"
       --slice-number=$(System.JobPositionInPhase)
@@ -18,7 +18,7 @@ steps:
     failOnStderr: true
 - ${{ else }}:
   - pwsh: >-
-      dotnet-test-slicer slice
+      $(Agent.ToolsDirectory)/dotnet-test-slicer slice
       --test-assembly="${{ parameters.testAssembly }}"
       --slice-number=$(System.JobPositionInPhase)
       --total-slices=$(System.TotalJobsInPhase)
@@ -28,7 +28,7 @@ steps:
 
 - ${{ if eq(parameters.retryFailedTests, 'false') }}:
   # If we aren't using auto-retry logic, then this is just a simple template call
-  - template: run-nunit-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase)
       testAssembly: ${{ parameters.testAssembly }}
@@ -49,7 +49,7 @@ steps:
     workingDirectory: ${{ parameters.xaSourcePath }}
 
   - pwsh: |
-      dotnet-test-slicer `
+      $(Agent.ToolsDirectory)/dotnet-test-slicer `
         retry `
         --trx="$(Agent.TempDirectory)" `
         --outfile="${{ parameters.testAssembly }}.runsettings"
@@ -70,7 +70,7 @@ steps:
       custom: build-server
       arguments: shutdown
 
-  - template: run-nunit-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
     parameters:
       testRunTitle: ${{ parameters.testRunTitle }}-$(System.JobPositionInPhase) (Auto-Retry)
       testAssembly: ${{ parameters.testAssembly }}

@@ -1,9 +1,8 @@
 parameters:
-  buildPoolName: $(MacBuildPoolName)
-  buildPoolImage: $(MacBuildPoolImage)
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
@@ -16,6 +15,7 @@ parameters:
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -24,18 +24,43 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
-  # Check - "Xamarin.Android (macOS > Build)"
+  # Check - "Xamarin.Android (Mac macOS > Build)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: ${{ parameters.buildPoolName }}
-      vmImage: ${{ parameters.buildPoolImage }}
-      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private'), ne(variables['Build.DefinitionName'], 'xamarin.megapipeline')), eq(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
+        name: VSEng-Xamarin-RedmondMac-Android-Untrusted
         demands: macOS.Name -equals Monterey
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
+        outputs:
+        - output: pipelineArtifact
+          displayName: upload nupkgs
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        - output: pipelineArtifact
+          displayName: upload Windows toolchain pdb files
+          artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+        - output: pipelineArtifact
+          displayName: upload test assemblies
+          artifactName: ${{ parameters.testAssembliesArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+          sbomEnabled: false
+        - output: pipelineArtifact
+          displayName: upload build tools inventory
+          artifactName: AndroidBuildToolsInventory
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+          sbomEnabled: false
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -44,50 +69,18 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: commercial-build.yaml
+    - template: /build-tools/automation/yaml-templates/commercial-build.yaml@self
       parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
+        windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - powershell: |
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
-      displayName: create SBOM directories
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: generate components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        BuildDropPath: $(Build.StagingDirectory)/empty
-        BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
-        ManifestDirPath: $(Build.StagingDirectory)/sbom-components
-        PackageName: .NET Android
-        Verbosity: Verbose
-
-    - task: PublishBuildArtifacts@1
-      displayName: publish components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        artifactName: sbom-components-macos
-        pathToPublish: $(Build.StagingDirectory)/sbom-components
-
-    - script: >
-        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-        cd $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
-        zip -r $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: zip Windows toolchain pdb files
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload Windows toolchain pdb files
-      inputs:
-        artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
-
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
       parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}

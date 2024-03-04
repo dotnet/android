@@ -8,7 +8,6 @@ parameters:
   retryCountOnTaskFailure: 3
 
 steps:
-
   - pwsh: |
       $ErrorActionPreference = 'Stop'
       $ProgressPreference = 'SilentlyContinue'
