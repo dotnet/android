@@ -510,7 +510,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true",
-				"\"NoWarn=CS0414;CA1416;CS1591;XA1005;XA4225\"" //CA1422
+				"\"NoWarn=CS0414;CA1416;CS1591;XA1005;XA4225\""
 			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");
