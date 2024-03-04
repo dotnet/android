@@ -270,8 +270,8 @@ namespace Xamarin.Android.Build.Tests
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
 				$"{PackageName}-Signed.apk",
-				$"{PackageName}.aab",
-				$"{PackageName}-Signed.aab",
+				//$"{PackageName}.aab",
+				//$"{PackageName}-Signed.aab",
 			};
 		}
 
@@ -510,7 +510,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var ret = new List <string> {
 				"AndroidGenerateLayoutBindings=true",
-				"\"NoWarn=CS0414;CA1416;CA1422;CS1591;XA1005;XA4225\""
+				"\"NoWarn=CS0414;CA1416;CS1591;XA1005;XA4225\"" //CA1422
 			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");

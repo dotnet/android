@@ -24,6 +24,8 @@ namespace Xamarin.Android.Tests.CodeBehindBuildTests
 
 #if NOT_CONFLICTING_FRAGMENT
 			CommonSampleLibrary.LogFragment log2 = secondary_log_fragment;
+#elif __HAVE_ANDROIDX__
+			global::AndroidX.Fragment.App.Fragment log2 = secondary_log_fragment;
 #else
 			global::Android.App.Fragment log2 = secondary_log_fragment;
 #endif

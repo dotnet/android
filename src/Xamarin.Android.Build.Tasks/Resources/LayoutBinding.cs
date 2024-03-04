@@ -73,7 +73,7 @@ namespace Xamarin.Android.Design
 			cachedField = ret;
 			return ret;
 		}
-#if __ANDROID_11__
+#if __ANDROID_11__ && !__ANDROID_28__
 		protected T FindFragment<T> (int resourceId, global::Android.App.Fragment __ignoreMe, ref T cachedField) where T: global::Android.App.Fragment
 		{
 			return __FindFragment<T> (resourceId, (activity) => activity.FragmentManager.FindFragmentById<T> (resourceId), ref cachedField);
