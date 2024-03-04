@@ -30,11 +30,11 @@ jobs:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-    - template: /build-tools/automation/yaml-templates/kill-processes.yaml@self
+    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
-    - template: /build-tools/automation/yaml-templates/clean.yaml@self
+    - template: /build-tools/automation/yaml-templates/clean.yaml
 
-  - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+  - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
     parameters:
       installTestSlicer: true
       installLegacyXamarinAndroid: true
@@ -47,7 +47,7 @@ jobs:
       artifactName: $(TestAssembliesArtifactName)
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-  - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml@self
+  - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
       testFilter: ${{ parameters.testFilter }}
@@ -55,11 +55,11 @@ jobs:
       retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
-  - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+  - template: /build-tools/automation/yaml-templates/upload-results.yaml
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
-  - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+  - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
     parameters:
       condition: ${{ parameters.shouldFailOnIssue }}
