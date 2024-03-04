@@ -13,6 +13,7 @@ parameters:
   usesCleanImages: true
   shouldFailOnIssue: true
   emulatorStartContinueOnError: false
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -70,6 +71,7 @@ stages:
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
       parameters:
@@ -141,6 +143,7 @@ stages:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
     - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
       parameters:
