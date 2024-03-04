@@ -7,7 +7,7 @@ parameters:
   use1ESTemplate: true
 
 steps:
-- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
+- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
   parameters:
     configuration: ${{ parameters.configuration }}
     arguments: --s=CopyExtraResultFilesForCI --verbosity v
@@ -16,7 +16,7 @@ steps:
     condition: ${{ parameters.condition }}
 
 - ${{ if eq(parameters.includeBuildResults, false) }}:
-  - template: /build-tools/automation/yaml-templates/publish-artifact.yaml@self
+  - template: /build-tools/automation/yaml-templates/publish-artifact.yaml
     parameters:
       displayName: upload test results
       artifactName: ${{ parameters.artifactName }}
@@ -32,7 +32,7 @@ steps:
       targetFolder: $(Build.StagingDirectory)/Test${{ parameters.configuration }}/Build${{ parameters.configuration }}
     condition: ${{ parameters.condition }}
 
-  - template: /build-tools/automation/yaml-templates/publish-artifact.yaml@self
+  - template: /build-tools/automation/yaml-templates/publish-artifact.yaml
     parameters:
       displayName: upload build and test results
       artifactName: ${{ parameters.artifactName }}
