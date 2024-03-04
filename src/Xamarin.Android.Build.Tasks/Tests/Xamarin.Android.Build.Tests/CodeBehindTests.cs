@@ -270,8 +270,8 @@ namespace Xamarin.Android.Build.Tests
 				$"{ProjectName}.dll",
 				"CommonSampleLibrary.dll",
 				$"{PackageName}-Signed.apk",
-				//$"{PackageName}.aab",
-				//$"{PackageName}-Signed.aab",
+				$"{PackageName}.aab",
+				$"{PackageName}-Signed.aab",
 			};
 		}
 
