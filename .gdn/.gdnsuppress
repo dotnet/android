@@ -1,0 +1,62 @@
+{
+  "hydrated": false,
+  "properties": {
+    "helpUri": "https://eng.ms/docs/microsoft-security/security/azure-security/cloudai-security-fundamentals-engineering/security-integration/guardian-wiki/microsoft-guardian/general/suppressions",
+    "hydrationStatus": "This file does not contain identifying data. It is safe to check into your repo. To hydrate this file with identifying data, run `guardian hydrate --help` and follow the guidance."
+  },
+  "version": "1.0.0",
+  "suppressionSets": {
+    "default": {
+      "name": "default",
+      "createdDate": "2024-02-21 20:58:02Z",
+      "lastUpdatedDate": "2024-02-22 21:40:38Z"
+    }
+  },
+  "results": {
+    "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274": {
+      "signature": "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "FillEventHistory+Event API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e": {
+      "signature": "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Android.Service.Autofill.FillEventHistory+Event API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d": {
+      "signature": "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Javax.Crypto.ISecretKey API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4": {
+      "signature": "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Javax.Security.Auth.Callback.PasswordCallback API documentation with generic example password.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee": {
+      "signature": "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Dummy test.keystore file used for testing.",
+      "createdDate": "2024-02-21 20:58:02Z"
+    }
+  }
+}

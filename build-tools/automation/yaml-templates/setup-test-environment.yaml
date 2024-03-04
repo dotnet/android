@@ -5,17 +5,15 @@ parameters:
   remove_dotnet: false
   installTestSlicer: false
   installApkDiff: true
-  installLegacyDotNet: true
+  installLegacyDotNet: false
   installLegacyXamarinAndroid: false
-  restoreNUnitConsole: true
-  updateMono: true
+  updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
   commit: ''
   xaprepareScenario: AndroidTestDependencies        # Use 'EmulatorTestDependencies' for agents that need the emulator installed
 
 steps:
-
 - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
   parameters:
     resource: ${{ parameters.repositoryAlias }}
@@ -37,14 +35,14 @@ steps:
 
 # Install .NET 6 for legacy tests
 - ${{ if eq(parameters.installLegacyDotNet, true) }}:
-  - template: use-dot-net.yaml
+  - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
     parameters:
       version: 6.0
       quality: GA
       remove_dotnet: ${{ parameters.remove_dotnet }}
 
 # Install latest .NET
-- template: use-dot-net.yaml
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
@@ -54,7 +52,7 @@ steps:
     arguments: shutdown
 
 - ${{ if eq(parameters.updateMono, true) }}:
-  - template: run-xaprepare.yaml
+  - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
     parameters:
       displayName: run xaprepare-UpdateMono
       arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
@@ -62,28 +60,18 @@ steps:
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
 - ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
-  - template: install-global-tool.yaml
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: boots
       version: $(BootsToolVersion)
       continueOnError: false
-  - powershell: boots --stable Xamarin.Android
+  - pwsh: $(Agent.ToolsDirectory)/boots --stable Xamarin.Android
     displayName: install Xamarin.Android stable
 
-- template: run-xaprepare.yaml
+- template: /build-tools/automation/yaml-templates/run-xaprepare.yaml@self
   parameters:
     arguments: --s=${{ parameters.xaprepareScenario }}  --android-sdk-platforms="${{ parameters.androidSdkPlatforms }}"
     xaSourcePath: ${{ parameters.xaSourcePath }}
-
-- ${{ if eq(parameters.restoreNUnitConsole, true) }}:
-  - task: DotNetCoreCLI@2
-    displayName: restore NUnit.Console
-    inputs:
-      command: restore
-      projects: ${{ parameters.xaSourcePath }}/src/Xamarin.Android.Build.Tasks/Tests/Xamarin.ProjectTools/Xamarin.ProjectTools.csproj
-      restoreArguments: -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/restore-Xamarin.ProjectTools.binlog
-      nugetConfigPath: ${{ parameters.xaSourcePath }}/NuGet.config
-      feedsToUse: config
 
 - task: DotNetCoreCLI@2
   displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
@@ -110,13 +98,13 @@ steps:
     arguments: -t:ExtractWorkloadPacks -c ${{ parameters.configuration }} -v:n -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/extract-workloads.binlog
 
 - ${{ if eq(parameters.installApkDiff, true) }}:
-  - template: install-global-tool.yaml
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: apkdiff
       version: $(ApkDiffToolVersion)
 
 - ${{ if eq(parameters.installTestSlicer, true) }}:
-  - template: install-global-tool.yaml
+  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
     parameters:
       toolName: dotnet-test-slicer
       version: $(TestSlicerToolVersion)
