@@ -69,7 +69,7 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: /build-tools/automation/yaml-templates/commercial-build.yaml@self
+    - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         installerArtifactName: ${{ parameters.installerArtifactName }}
@@ -78,7 +78,7 @@ stages:
         windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         artifactName: ${{ parameters.buildResultArtifactName }}
