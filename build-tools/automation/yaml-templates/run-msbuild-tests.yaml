@@ -8,6 +8,7 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
+  use1ESTemplate: true
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -59,6 +60,7 @@ jobs:
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
   - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
     parameters:
