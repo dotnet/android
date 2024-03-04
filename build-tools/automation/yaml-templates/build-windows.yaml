@@ -35,15 +35,15 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: /build-tools/automation/yaml-templates/kill-processes.yaml@self
+    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
-    - template: /build-tools/automation/yaml-templates/clean.yaml@self
+    - template: /build-tools/automation/yaml-templates/clean.yaml
 
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
       displayName: set JI_JAVA_HOME to $(JAVA_HOME_17_X64)
 
-    - template: /build-tools/automation/yaml-templates/use-dot-net.yaml@self
+    - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:
         remove_dotnet: true
 
@@ -79,7 +79,7 @@ stages:
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
-    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
@@ -88,12 +88,12 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
-    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml@self
+    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
       parameters:
         toolName: apkdiff
         version: $(ApkDiffToolVersion)
 
-    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
@@ -105,9 +105,9 @@ stages:
         filename: dotnet-local.cmd
         arguments: build samples\HelloWorld\HelloWorld\HelloWorld.DotNet.csproj
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
-    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

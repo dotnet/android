@@ -26,7 +26,7 @@ jobs:
         echo "##vso[task.setvariable variable=JAVA_HOME]${{ parameters.jdkTestFolder }}"
       displayName: set JAVA_HOME to ${{ parameters.jdkTestFolder }}
 
-    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: ${{ parameters.jdkTestFolder }}
@@ -36,15 +36,15 @@ jobs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml@self
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         emulatorMSBuildArgs: ${{ parameters.emulatorMSBuildArgs }}
 
     - ${{ parameters.testSteps }}
 
-    - template: /build-tools/automation/yaml-templates/upload-results.yaml@self
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - ${{ parameters.jobName }} With Emulator - macOS
         use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml@self
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

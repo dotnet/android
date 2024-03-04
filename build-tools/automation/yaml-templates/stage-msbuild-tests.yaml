@@ -17,7 +17,7 @@ stages:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
   jobs:
-  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml@self
+  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: macOS
       jobName: mac_msbuild_tests
@@ -29,7 +29,7 @@ stages:
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
       use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml@self
+  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: Windows
       jobName: win_msbuild_tests
