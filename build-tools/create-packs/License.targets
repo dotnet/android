@@ -1,12 +1,12 @@
-<!-- Ownership and LICENSE settings for .nupkg's -->
+<!-- Ownership and LICENSE.TXT settings for .nupkg's -->
 <Project>
   <PropertyGroup>
     <Authors>Microsoft</Authors>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <PackageProjectUrl>https://github.com/xamarin/xamarin-android</PackageProjectUrl>
     <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
-    <NuGetLicense Condition=" '$(NuGetLicense)' == '' ">$(XamarinAndroidSourcePath)LICENSE</NuGetLicense>
-    <PackageLicenseFile>LICENSE</PackageLicenseFile>
+    <NuGetLicense Condition=" '$(NuGetLicense)' == '' or '$(PackageId)' != 'Microsoft.Android.Sdk.$(HostOS)' ">$(XamarinAndroidSourcePath)LICENSE.TXT</NuGetLicense>
+    <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
     <BeforePack>_GetLicense;$(BeforePack)</BeforePack>
   </PropertyGroup>
   <Target Name="_GetLicense">

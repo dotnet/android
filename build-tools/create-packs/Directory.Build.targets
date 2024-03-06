@@ -47,7 +47,6 @@
   <Target Name="_SetGlobalProperties">
     <ItemGroup>
       <_GlobalProperties Include="-p:Configuration=$(Configuration)" />
-      <_GlobalProperties Include="-p:NuGetLicense=$(NuGetLicense)" />
       <_GlobalProperties Include="-p:IncludeSymbols=False" />
     </ItemGroup>
   </Target>
@@ -103,7 +102,7 @@
     />
     <!-- The .nupkg contains the files under /data/, so we need to move them -->
     <ItemGroup>
-      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE" />
+      <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
     <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
