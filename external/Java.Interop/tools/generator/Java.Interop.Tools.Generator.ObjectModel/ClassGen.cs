@@ -11,7 +11,6 @@ namespace MonoDroid.Generation
 	public class ClassGen : GenBase
 	{
 		bool fill_explicit_implementation_started;
-		HashSet<string> skipped_invoker_methods;
 
 		public List<Ctor> Ctors { get; private set; } = new List<Ctor> ();
 
@@ -355,8 +354,6 @@ namespace MonoDroid.Generation
 			validated = false;
 			base.ResetValidation ();
 		}
-
-		public HashSet<string> SkippedInvokerMethods => skipped_invoker_methods ??= new HashSet<string> ();
 
 		public override string ToNative (CodeGenerationOptions opt, string varname, Dictionary<string, string> mappings = null)
 		{

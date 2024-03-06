@@ -854,6 +854,8 @@ namespace MonoDroid.Generation
 
 		public bool ShouldGenerateAnnotationAttribute => IsAnnotation;
 
+		public HashSet<string> SkippedInvokerMethods => support.SkippedInvokerMethods;
+
 		public void StripNonBindables (CodeGenerationOptions opt)
 		{
 			// Strip out default interface methods if not desired

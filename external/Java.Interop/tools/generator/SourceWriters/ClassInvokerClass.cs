@@ -103,7 +103,7 @@ namespace generator.SourceWriters
 		void AddMethodInvokers (ClassGen klass, IEnumerable<Method> methods, HashSet<string> members, HashSet<string> skipInvokers, InterfaceGen gen, CodeGenerationOptions opt)
 		{
 			foreach (var m in methods) {
-				if (skipInvokers.Contains ($"{m.DeclaringType.RawJniName}.{m.JavaName}{m.JniSignature}"))
+				if (skipInvokers.Contains (m.GetSkipInvokerSignature ()))
 					continue;
 
 				var sig = m.GetSignature ();

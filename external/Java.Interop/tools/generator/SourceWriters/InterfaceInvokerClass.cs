@@ -69,7 +69,7 @@ namespace generator.SourceWriters
 
 			Constructors.Add (new InterfaceInvokerConstructor (opt, iface, context));
 
-			AddMemberInvokers (iface, new HashSet<string> (), opt, context);
+			AddMemberInvokers (iface, new HashSet<string> (), iface.SkippedInvokerMethods, opt, context);
 		}
 
 		static HashSet<InterfaceGen> GetCompleteImplementedInterfaces (HashSet<InterfaceGen> ifaces, InterfaceGen toplevel)
@@ -81,15 +81,15 @@ namespace generator.SourceWriters
 			return ifaces;
 		}
 
-		void AddMemberInvokers (InterfaceGen iface, HashSet<string> members, CodeGenerationOptions opt, CodeGeneratorContext context)
+		void AddMemberInvokers (InterfaceGen iface, HashSet<string> members, HashSet<string> skipInvokers, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			AddPropertyInvokers (iface, iface.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), members, opt, context);
-			AddMethodInvokers (iface, iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod), members, opt, context);
+			AddMethodInvokers (iface, iface.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod), members, skipInvokers, opt, context);
 			AddCharSequenceEnumerators (iface);
 
 			foreach (var i in iface.GetAllDerivedInterfaces ()) {
 				AddPropertyInvokers (iface, i.Properties.Where (p => !p.Getter.IsStatic && !p.Getter.IsInterfaceDefaultMethod), members, opt, context);
-				AddMethodInvokers (iface, i.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !iface.IsCovariantMethod (m) && !(i.FullName.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && m.Name.EndsWith ("Formatted", StringComparison.Ordinal))), members, opt, context);
+				AddMethodInvokers (iface, i.Methods.Where (m => !m.IsStatic && !m.IsInterfaceDefaultMethod && !iface.IsCovariantMethod (m) && !(i.FullName.StartsWith ("Java.Lang.ICharSequence", StringComparison.Ordinal) && m.Name.EndsWith ("Formatted", StringComparison.Ordinal))), members, skipInvokers, opt, context);
 				AddCharSequenceEnumerators (i);
 			}
 		}
@@ -113,10 +113,13 @@ namespace generator.SourceWriters
 				Properties.Add (new InterfaceInvokerProperty (iface, prop, opt, context));
 			}
 		}
-
-		void AddMethodInvokers (InterfaceGen iface, IEnumerable<Method> methods, HashSet<string> members, CodeGenerationOptions opt, CodeGeneratorContext context)
+		
+		void AddMethodInvokers (InterfaceGen iface, IEnumerable<Method> methods, HashSet<string> members, HashSet<string> skipInvokers, CodeGenerationOptions opt, CodeGeneratorContext context)
 		{
 			foreach (var m in methods) {
+				if (skipInvokers.Contains (m.GetSkipInvokerSignature ()))
+					continue;
+
 				var sig = m.GetSignature ();
 
 				if (members.Contains (sig))

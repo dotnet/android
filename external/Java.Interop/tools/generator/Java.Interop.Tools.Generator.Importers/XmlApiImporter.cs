@@ -117,10 +117,6 @@ namespace MonoDroid.Generation
 					 !options.SupportNestedInterfaceTypes
 			};
 
-			if (elem.Attribute ("skipInvokerMethods")?.Value is string skip)
-				foreach (var m in skip.Split (new char [] { ',', ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
-					klass.SkippedInvokerMethods.Add (m);
-
 			FillApiSince (klass, pkg, elem);
 			SetLineInfo (klass, elem, options);
 
@@ -263,6 +259,10 @@ namespace MonoDroid.Generation
 				PackageName = pkg.XGetAttribute ("name"),
 				Visibility = elem.XGetAttribute ("visibility")
 			};
+
+			if (elem.Attribute ("skipInvokerMethods")?.Value is string skip)
+				foreach (var m in skip.Split (new char [] { ',', ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+					support.SkippedInvokerMethods.Add (m);
 
 			if (support.IsDeprecated) {
 				support.DeprecatedComment = elem.XGetAttribute ("deprecated");

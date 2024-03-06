@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 
 namespace MonoDroid.Generation
 {
 	public class GenBaseSupport
 	{
+		HashSet<string> skipped_invoker_methods;
+
 		public string AnnotatedVisibility { get; set; }
 		public bool IsAcw { get; set; }
 		public bool IsDeprecated { get; set; }
@@ -20,6 +23,8 @@ namespace MonoDroid.Generation
 		public string TypeNamePrefix { get; set; } = string.Empty;
 		public string Visibility { get; set; }
 		public GenericParameterDefinitionList TypeParameters { get; set; }
+
+		public HashSet<string> SkippedInvokerMethods => skipped_invoker_methods ??= new HashSet<string> ();
 
 		public virtual bool OnValidate (CodeGenerationOptions opt)
 		{

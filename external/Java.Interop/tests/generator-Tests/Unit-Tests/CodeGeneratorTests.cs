@@ -353,6 +353,32 @@ namespace generatortests
 		}
 
 		[Test]
+		public void SkipInterfaceInvokerMethodsMetadata ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyInterface;' skipInvokerMethods='com/xamarin/android/MyInterface.countAffectedRows()I'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </interface>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var iface = gens.Single (g => g.Name == "IMyInterface");
+
+			generator.Context.ContextTypes.Push (iface);
+			generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// Ensure the invoker for 'countAffectedRows' isn't generated
+			Assert.False (writer.ToString ().Contains ("static Delegate cb_countAffectedRows;"), $"was: `{writer}`");
+			Assert.False (writer.ToString ().Contains ("InvokeAbstractInt32Method"), $"was: `{writer}`");
+		}
+
+		[Test]
 		public void CompatVirtualMethod_Class ()
 		{
 			var xml = @"<api>

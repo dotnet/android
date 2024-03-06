@@ -193,6 +193,8 @@ namespace MonoDroid.Generation
 
 		public string GetSignature () => $"n_{JavaName}:{JniSignature}:{ConnectorName}";
 
+		public string GetSkipInvokerSignature () => $"{DeclaringType.RawJniName}.{JavaName}{JniSignature}";
+
 		public bool IsEventHandlerWithHandledProperty => RetVal.JavaName == "boolean" && EventName != "";
 
 		public override bool IsGeneric => base.IsGeneric || RetVal.IsGeneric;
