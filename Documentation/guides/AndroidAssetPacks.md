@@ -89,6 +89,26 @@ In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, 
 
 At this time @(AndroidAsset) build action does not support 'AssetPack' or 'DeliveryType' Metadata in Library Projects.
 
+NOTE: `AssetPacks` are only used when the `AndroidPackageFormat` is set to `aab` (the default for Release). When using the `apk` setting the assets will be placed inside the `apk`.
+
+## Testing and Debugging
+
+In order to test your asset packs in the `Debug` configuration, you will need to make some changes to your `.csproj`. Firstly we need to change the `AndroidPackageFormat` to `aab`. It will be `aab` by default for `Release` builds, but will default to `apk` for `Debug` builds. Setting the `AndroidPackageFormat` to `aab` will disable
+fast deployment, so it is advised that you only do this when you need to test your `AssetPacks`.
+
+To test your asset packs add the following to the first `PropertyGroup` in your `.csproj`. 
+
+```xml
+<AndroidPackageFormat>aab</AndroidPackageFormat>
+<AndroidBundleToolExtraArgs Condition=" '$(Configuration)' == 'Debug' ">--local-testing $(AndroidBundleToolExtraArgs)</AndroidBundleToolExtraArgs>
+```
+
+The `--local-testing` argument tells the `bundletool` application to install ALL the asset packs in a local cache on the device. `InstallTime` packs will be installed during the app installation process.
+
+`FastFollow` packs behave like `OnDemand` packs. They will not automatically installed when the game is sideloaded. You will need to request them manually when the game starts.
+
+For more details see [https://developer.android.com/guide/playcore/asset-delivery/test](https://developer.android.com/guide/playcore/asset-delivery/test).
+
 ## Implementation Details
 
 There are a few changes we need to make in order to support this feature.
