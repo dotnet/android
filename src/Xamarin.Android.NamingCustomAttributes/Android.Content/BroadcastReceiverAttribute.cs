@@ -40,4 +40,75 @@ public partial class BroadcastReceiverAttribute : Attribute, Java.Interop.IJniNa
 
 	public string? RoundIcon { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<BroadcastReceiverAttribute> mapping = new ("receiver");
+
+	static BroadcastReceiverAttribute ()
+	{
+		mapping.Add (
+			member: "Description",
+			attributeName: "description",
+			getter: self => self.Description,
+			setter: (self, value) => self.Description = (string?) value
+		);
+		mapping.Add (
+			member: "DirectBootAware",
+			attributeName: "directBootAware",
+			getter: self => self.DirectBootAware,
+			setter: (self, value) => self.DirectBootAware = (bool) value
+		);
+		mapping.Add (
+			member: "Enabled",
+			attributeName: "enabled",
+			getter: self => self.Enabled,
+			setter: (self, value) => self.Enabled = (bool) value
+		);
+		mapping.Add (
+			member: "Exported",
+			attributeName: "exported",
+			getter: self => self.Exported,
+			setter: (self, value) => self.Exported = (bool) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "Permission",
+			attributeName: "permission",
+			getter: self => self.Permission,
+			setter: (self, value) => self.Permission = (string?) value
+		);
+		mapping.Add (
+			member: "Process",
+			attributeName: "process",
+			getter: self => self.Process,
+			setter: (self, value) => self.Process = (string?) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

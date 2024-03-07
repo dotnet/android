@@ -30,4 +30,45 @@ public sealed partial class LayoutAttribute : Attribute {
 
 	public string? MinWidth { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<LayoutAttribute> mapping = new ("layout");
+
+	static LayoutAttribute ()
+	{
+		mapping.Add (
+			member: "DefaultHeight",
+			attributeName: "defaultHeight",
+			getter: self => self.DefaultHeight,
+			setter: (self, value) => self.DefaultHeight = (string?) value
+		);
+		mapping.Add (
+			member: "DefaultWidth",
+			attributeName: "defaultWidth",
+			getter: self => self.DefaultWidth,
+			setter: (self, value) => self.DefaultWidth = (string?) value
+		);
+		mapping.Add (
+			member: "Gravity",
+			attributeName: "gravity",
+			getter: self => self.Gravity,
+			setter: (self, value) => self.Gravity = (string?) value
+		);
+		mapping.Add (
+			member: "MinHeight",
+			attributeName: "minHeight",
+			getter: self => self.MinHeight,
+			setter: (self, value) => self.MinHeight = (string?) value
+		);
+		mapping.Add (
+			member: "MinWidth",
+			attributeName: "minWidth",
+			getter: self => self.MinWidth,
+			setter: (self, value) => self.MinWidth = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

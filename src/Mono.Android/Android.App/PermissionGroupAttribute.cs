@@ -30,4 +30,45 @@ public sealed partial class PermissionGroupAttribute : Attribute {
 
 	public string? RoundIcon { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<PermissionGroupAttribute> mapping = new ("permission-group");
+
+	static PermissionGroupAttribute ()
+	{
+		mapping.Add (
+			member: "Description",
+			attributeName: "description",
+			getter: self => self.Description,
+			setter: (self, value) => self.Description = (string?) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

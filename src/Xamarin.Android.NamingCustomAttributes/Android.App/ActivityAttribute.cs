@@ -125,4 +125,321 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 
 	public Android.Views.SoftInput WindowSoftInputMode { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<ActivityAttribute> mapping = new ("activity");
+
+	static ActivityAttribute ()
+	{
+		mapping.Add (
+			member: "AllowEmbedded",
+			attributeName: "allowEmbedded",
+			getter: self => self.AllowEmbedded,
+			setter: (self, value) => self.AllowEmbedded = (bool) value
+		);
+		mapping.Add (
+			member: "AllowTaskReparenting",
+			attributeName: "allowTaskReparenting",
+			getter: self => self.AllowTaskReparenting,
+			setter: (self, value) => self.AllowTaskReparenting = (bool) value
+		);
+		mapping.Add (
+			member: "AlwaysRetainTaskState",
+			attributeName: "alwaysRetainTaskState",
+			getter: self => self.AlwaysRetainTaskState,
+			setter: (self, value) => self.AlwaysRetainTaskState = (bool) value
+		);
+		mapping.Add (
+			member: "AutoRemoveFromRecents",
+			attributeName: "autoRemoveFromRecents",
+			getter: self => self.AutoRemoveFromRecents,
+			setter: (self, value) => self.AutoRemoveFromRecents = (bool) value
+		);
+		mapping.Add (
+			member: "Banner",
+			attributeName: "banner",
+			getter: self => self.Banner,
+			setter: (self, value) => self.Banner = (string?) value
+		);
+		mapping.Add (
+			member: "ClearTaskOnLaunch",
+			attributeName: "clearTaskOnLaunch",
+			getter: self => self.ClearTaskOnLaunch,
+			setter: (self, value) => self.ClearTaskOnLaunch = (bool) value
+		);
+		mapping.Add (
+			member: "ColorMode",
+			attributeName: "colorMode",
+			getter: self => self.ColorMode,
+			setter: (self, value) => self.ColorMode = (string?) value
+		);
+		mapping.Add (
+			member: "ConfigurationChanges",
+			attributeName: "configChanges",
+			getter: self => self.ConfigurationChanges,
+			setter: (self, value) => self.ConfigurationChanges = (Android.Content.PM.ConfigChanges) value
+		);
+		mapping.Add (
+			member: "Description",
+			attributeName: "description",
+			getter: self => self.Description,
+			setter: (self, value) => self.Description = (string?) value
+		);
+		mapping.Add (
+			member: "DirectBootAware",
+			attributeName: "directBootAware",
+			getter: self => self.DirectBootAware,
+			setter: (self, value) => self.DirectBootAware = (bool) value
+		);
+		mapping.Add (
+			member: "DocumentLaunchMode",
+			attributeName: "documentLaunchMode",
+			getter: self => self.DocumentLaunchMode,
+			setter: (self, value) => self.DocumentLaunchMode = (Android.Content.PM.DocumentLaunchMode) value
+		);
+		mapping.Add (
+			member: "Enabled",
+			attributeName: "enabled",
+			getter: self => self.Enabled,
+			setter: (self, value) => self.Enabled = (bool) value
+		);
+		mapping.Add (
+			member: "EnableVrMode",
+			attributeName: "enableVrMode",
+			getter: self => self.EnableVrMode,
+			setter: (self, value) => self.EnableVrMode = (string?) value
+		);
+		mapping.Add (
+			member: "ExcludeFromRecents",
+			attributeName: "excludeFromRecents",
+			getter: self => self.ExcludeFromRecents,
+			setter: (self, value) => self.ExcludeFromRecents = (bool) value
+		);
+		mapping.Add (
+			member: "Exported",
+			attributeName: "exported",
+			getter: self => self.Exported,
+			setter: (self, value) => self.Exported = (bool) value
+		);
+		mapping.Add (
+			member: "FinishOnCloseSystemDialogs",
+			attributeName: "finishOnCloseSystemDialogs",
+			getter: self => self.FinishOnCloseSystemDialogs,
+			setter: (self, value) => self.FinishOnCloseSystemDialogs = (bool) value
+		);
+		mapping.Add (
+			member: "FinishOnTaskLaunch",
+			attributeName: "finishOnTaskLaunch",
+			getter: self => self.FinishOnTaskLaunch,
+			setter: (self, value) => self.FinishOnTaskLaunch = (bool) value
+		);
+		mapping.Add (
+			member: "HardwareAccelerated",
+			attributeName: "hardwareAccelerated",
+			getter: self => self.HardwareAccelerated,
+			setter: (self, value) => self.HardwareAccelerated = (bool) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "Immersive",
+			attributeName: "immersive",
+			getter: self => self.Immersive,
+			setter: (self, value) => self.Immersive = (bool) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "LaunchMode",
+			attributeName: "launchMode",
+			getter: self => self.LaunchMode,
+			setter: (self, value) => self.LaunchMode = (Android.Content.PM.LaunchMode) value
+		);
+		mapping.Add (
+			member: "LockTaskMode",
+			attributeName: "lockTaskMode",
+			getter: self => self.LockTaskMode,
+			setter: (self, value) => self.LockTaskMode = (string?) value
+		);
+		mapping.Add (
+			member: "Logo",
+			attributeName: "logo",
+			getter: self => self.Logo,
+			setter: (self, value) => self.Logo = (string?) value
+		);
+		mapping.Add (
+			member: "MaxAspectRatio",
+			attributeName: "maxAspectRatio",
+			getter: self => self.MaxAspectRatio,
+			setter: (self, value) => self.MaxAspectRatio = (float) value
+		);
+		mapping.Add (
+			member: "MaxRecents",
+			attributeName: "maxRecents",
+			getter: self => self.MaxRecents,
+			setter: (self, value) => self.MaxRecents = (int) value
+		);
+		mapping.Add (
+			member: "MultiProcess",
+			attributeName: "multiprocess",
+			getter: self => self.MultiProcess,
+			setter: (self, value) => self.MultiProcess = (bool) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "NoHistory",
+			attributeName: "noHistory",
+			getter: self => self.NoHistory,
+			setter: (self, value) => self.NoHistory = (bool) value
+		);
+		mapping.Add (
+			member: "Permission",
+			attributeName: "permission",
+			getter: self => self.Permission,
+			setter: (self, value) => self.Permission = (string?) value
+		);
+		mapping.Add (
+			member: "PersistableMode",
+			attributeName: "persistableMode",
+			getter: self => self.PersistableMode,
+			setter: (self, value) => self.PersistableMode = (Android.Content.PM.ActivityPersistableMode) value
+		);
+		mapping.Add (
+			member: "Process",
+			attributeName: "process",
+			getter: self => self.Process,
+			setter: (self, value) => self.Process = (string?) value
+		);
+		mapping.Add (
+			member: "RecreateOnConfigChanges",
+			attributeName: "recreateOnConfigChanges",
+			getter: self => self.RecreateOnConfigChanges,
+			setter: (self, value) => self.RecreateOnConfigChanges = (Android.Content.PM.ConfigChanges) value
+		);
+		mapping.Add (
+			member: "RelinquishTaskIdentity",
+			attributeName: "relinquishTaskIdentity",
+			getter: self => self.RelinquishTaskIdentity,
+			setter: (self, value) => self.RelinquishTaskIdentity = (bool) value
+		);
+		mapping.Add (
+			member: "ResizeableActivity",
+			attributeName: "resizeableActivity",
+			getter: self => self.ResizeableActivity,
+			setter: (self, value) => self.ResizeableActivity = (bool) value
+		);
+		mapping.Add (
+			member: "ResumeWhilePausing",
+			attributeName: "resumeWhilePausing",
+			getter: self => self.ResumeWhilePausing,
+			setter: (self, value) => self.ResumeWhilePausing = (bool) value
+		);
+		mapping.Add (
+			member: "RotationAnimation",
+			attributeName: "rotationAnimation",
+			getter: self => self.RotationAnimation,
+			setter: (self, value) => self.RotationAnimation = (Android.Views.WindowRotationAnimation) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+		mapping.Add (
+			member: "ScreenOrientation",
+			attributeName: "screenOrientation",
+			getter: self => self.ScreenOrientation,
+			setter: (self, value) => self.ScreenOrientation = (Android.Content.PM.ScreenOrientation) value
+		);
+		mapping.Add (
+			member: "ShowForAllUsers",
+			attributeName: "showForAllUsers",
+			getter: self => self.ShowForAllUsers,
+			setter: (self, value) => self.ShowForAllUsers = (bool) value
+		);
+		mapping.Add (
+			member: "ShowOnLockScreen",
+			attributeName: "showOnLockScreen",
+			getter: self => self.ShowOnLockScreen,
+			setter: (self, value) => self.ShowOnLockScreen = (bool) value
+		);
+		mapping.Add (
+			member: "ShowWhenLocked",
+			attributeName: "showWhenLocked",
+			getter: self => self.ShowWhenLocked,
+			setter: (self, value) => self.ShowWhenLocked = (bool) value
+		);
+		mapping.Add (
+			member: "SingleUser",
+			attributeName: "singleUser",
+			getter: self => self.SingleUser,
+			setter: (self, value) => self.SingleUser = (bool) value
+		);
+		mapping.Add (
+			member: "StateNotNeeded",
+			attributeName: "stateNotNeeded",
+			getter: self => self.StateNotNeeded,
+			setter: (self, value) => self.StateNotNeeded = (bool) value
+		);
+		mapping.Add (
+			member: "SupportsPictureInPicture",
+			attributeName: "supportsPictureInPicture",
+			getter: self => self.SupportsPictureInPicture,
+			setter: (self, value) => self.SupportsPictureInPicture = (bool) value
+		);
+		mapping.Add (
+			member: "TaskAffinity",
+			attributeName: "taskAffinity",
+			getter: self => self.TaskAffinity,
+			setter: (self, value) => self.TaskAffinity = (string?) value
+		);
+		mapping.Add (
+			member: "Theme",
+			attributeName: "theme",
+			getter: self => self.Theme,
+			setter: (self, value) => self.Theme = (string?) value
+		);
+		mapping.Add (
+			member: "TurnScreenOn",
+			attributeName: "turnScreenOn",
+			getter: self => self.TurnScreenOn,
+			setter: (self, value) => self.TurnScreenOn = (bool) value
+		);
+		mapping.Add (
+			member: "UiOptions",
+			attributeName: "uiOptions",
+			getter: self => self.UiOptions,
+			setter: (self, value) => self.UiOptions = (Android.Content.PM.UiOptions) value
+		);
+		mapping.Add (
+			member: "VisibleToInstantApps",
+			attributeName: "visibleToInstantApps",
+			getter: self => self.VisibleToInstantApps,
+			setter: (self, value) => self.VisibleToInstantApps = (bool) value
+		);
+		mapping.Add (
+			member: "WindowSoftInputMode",
+			attributeName: "windowSoftInputMode",
+			getter: self => self.WindowSoftInputMode,
+			setter: (self, value) => self.WindowSoftInputMode = (Android.Views.SoftInput) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

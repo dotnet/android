@@ -17,6 +17,16 @@ class AttributeDefinition
 		Format = format;
 	}
 
+	public string GetAttributeType ()
+	{
+		return Format switch {
+			"boolean" => "bool",
+			"integer" => "int",
+			"string" => "string?",
+			_ => "string?",
+		};
+	}
+
 	public static AttributeDefinition FromElement (string api, XElement e)
 	{
 		var name = e.GetAttributeStringOrEmpty ("name");

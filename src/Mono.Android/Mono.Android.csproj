@@ -83,6 +83,7 @@
     <Compile Include="Android.App\MetaDataAttribute.Partial.cs" />
     <Compile Include="Android.App\UsesFeatureAttribute.Partial.cs" />
     <Compile Include="Android.App\UsesLibraryAttribute.Partial.cs" />
+    <Compile Include="Android.App\UsesPermissionAttribute.Partial.cs" />
     <Compile Include="Android.Content.PM\PackageManager.cs" />
     <Compile Include="Android.Graphics\PathIterator.cs" />
     <Compile Include="Android.Hardware\HardwareBuffer.cs" />

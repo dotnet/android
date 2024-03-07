@@ -34,4 +34,57 @@ public sealed partial class PermissionAttribute : Attribute {
 
 	public string? RoundIcon { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<PermissionAttribute> mapping = new ("permission");
+
+	static PermissionAttribute ()
+	{
+		mapping.Add (
+			member: "Description",
+			attributeName: "description",
+			getter: self => self.Description,
+			setter: (self, value) => self.Description = (string?) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "PermissionGroup",
+			attributeName: "permissionGroup",
+			getter: self => self.PermissionGroup,
+			setter: (self, value) => self.PermissionGroup = (string?) value
+		);
+		mapping.Add (
+			member: "ProtectionLevel",
+			attributeName: "protectionLevel",
+			getter: self => self.ProtectionLevel,
+			setter: (self, value) => self.ProtectionLevel = (Android.Content.PM.Protection) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

@@ -36,4 +36,63 @@ public sealed partial class InstrumentationAttribute : Attribute, Java.Interop.I
 
 	public string? TargetProcesses { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<InstrumentationAttribute> mapping = new ("instrumentation");
+
+	static InstrumentationAttribute ()
+	{
+		mapping.Add (
+			member: "FunctionalTest",
+			attributeName: "functionalTest",
+			getter: self => self.FunctionalTest,
+			setter: (self, value) => self.FunctionalTest = (bool) value
+		);
+		mapping.Add (
+			member: "HandleProfiling",
+			attributeName: "handleProfiling",
+			getter: self => self.HandleProfiling,
+			setter: (self, value) => self.HandleProfiling = (bool) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+		mapping.Add (
+			member: "TargetPackage",
+			attributeName: "targetPackage",
+			getter: self => self.TargetPackage,
+			setter: (self, value) => self.TargetPackage = (string?) value
+		);
+		mapping.Add (
+			member: "TargetProcesses",
+			attributeName: "targetProcesses",
+			getter: self => self.TargetProcesses,
+			setter: (self, value) => self.TargetProcesses = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

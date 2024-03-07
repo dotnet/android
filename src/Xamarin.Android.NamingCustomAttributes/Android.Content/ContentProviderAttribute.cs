@@ -48,4 +48,105 @@ public partial class ContentProviderAttribute : Attribute, Java.Interop.IJniName
 
 	public string? WritePermission { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<ContentProviderAttribute> mapping = new ("provider");
+
+	static ContentProviderAttribute ()
+	{
+		mapping.Add (
+			member: "DirectBootAware",
+			attributeName: "directBootAware",
+			getter: self => self.DirectBootAware,
+			setter: (self, value) => self.DirectBootAware = (bool) value
+		);
+		mapping.Add (
+			member: "Enabled",
+			attributeName: "enabled",
+			getter: self => self.Enabled,
+			setter: (self, value) => self.Enabled = (bool) value
+		);
+		mapping.Add (
+			member: "Exported",
+			attributeName: "exported",
+			getter: self => self.Exported,
+			setter: (self, value) => self.Exported = (bool) value
+		);
+		mapping.Add (
+			member: "GrantUriPermissions",
+			attributeName: "grantUriPermissions",
+			getter: self => self.GrantUriPermissions,
+			setter: (self, value) => self.GrantUriPermissions = (bool) value
+		);
+		mapping.Add (
+			member: "Icon",
+			attributeName: "icon",
+			getter: self => self.Icon,
+			setter: (self, value) => self.Icon = (string?) value
+		);
+		mapping.Add (
+			member: "InitOrder",
+			attributeName: "initOrder",
+			getter: self => self.InitOrder,
+			setter: (self, value) => self.InitOrder = (int) value
+		);
+		mapping.Add (
+			member: "Label",
+			attributeName: "label",
+			getter: self => self.Label,
+			setter: (self, value) => self.Label = (string?) value
+		);
+		mapping.Add (
+			member: "MultiProcess",
+			attributeName: "multiprocess",
+			getter: self => self.MultiProcess,
+			setter: (self, value) => self.MultiProcess = (bool) value
+		);
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "Permission",
+			attributeName: "permission",
+			getter: self => self.Permission,
+			setter: (self, value) => self.Permission = (string?) value
+		);
+		mapping.Add (
+			member: "Process",
+			attributeName: "process",
+			getter: self => self.Process,
+			setter: (self, value) => self.Process = (string?) value
+		);
+		mapping.Add (
+			member: "ReadPermission",
+			attributeName: "readPermission",
+			getter: self => self.ReadPermission,
+			setter: (self, value) => self.ReadPermission = (string?) value
+		);
+		mapping.Add (
+			member: "RoundIcon",
+			attributeName: "roundIcon",
+			getter: self => self.RoundIcon,
+			setter: (self, value) => self.RoundIcon = (string?) value
+		);
+		mapping.Add (
+			member: "Syncable",
+			attributeName: "syncable",
+			getter: self => self.Syncable,
+			setter: (self, value) => self.Syncable = (bool) value
+		);
+		mapping.Add (
+			member: "WritePermission",
+			attributeName: "writePermission",
+			getter: self => self.WritePermission,
+			setter: (self, value) => self.WritePermission = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

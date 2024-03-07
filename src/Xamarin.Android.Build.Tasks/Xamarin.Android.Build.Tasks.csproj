@@ -14,7 +14,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24;ANDROID_26;ANDROID_31;INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;XABT_MANIFEST_EXTENSIONS</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
     <SignAssembly>false</SignAssembly>
@@ -117,6 +117,9 @@
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.cs">
       <Link>Mono.Android\UsesPermissionAttribute.cs</Link>
+    </Compile>
+    <Compile Include="..\Mono.Android\\Android.App\UsesPermissionAttribute.Partial.cs">
+      <Link>Mono.Android\UsesPermissionAttribute.Partial.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\PermissionAttribute.cs">
       <Link>Mono.Android\PermissionAttribute.cs</Link>

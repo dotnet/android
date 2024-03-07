@@ -24,4 +24,27 @@ public sealed partial class UsesLibraryAttribute : Attribute {
 
 	public bool Required { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<UsesLibraryAttribute> mapping = new ("uses-library");
+
+	static UsesLibraryAttribute ()
+	{
+		mapping.Add (
+			member: "Name",
+			attributeName: "name",
+			getter: self => self.Name,
+			setter: (self, value) => self.Name = (string?) value
+		);
+		mapping.Add (
+			member: "Required",
+			attributeName: "required",
+			getter: self => self.Required,
+			setter: (self, value) => self.Required = (bool) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

@@ -1,3 +1,4 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Text;
 using System.Xml.Linq;
 using Xamarin.SourceWriter;
@@ -39,19 +40,6 @@ static class StringExtensions
 
 		var ret = (s.StartsWith (prefix, StringComparison.Ordinal) ? s.Substring (prefix.Length) : s).Hyphenate ();
 		return ret.Length == 0 ? "manifest" : ret;
-	}
-
-	public static bool? GetAsBoolOrNull (this XElement element, string attribute)
-	{
-		var value = element.Attribute (attribute)?.Value;
-
-		if (value is null)
-			return null;
-
-		if (bool.TryParse (value, out var ret))
-			return ret;
-
-		return null;
 	}
 
 	public static bool GetAttributeBoolOrDefault (this XElement element, string attribute, bool defaultValue)
@@ -116,5 +104,39 @@ static class StringExtensions
 		sw.WriteLine ("//------------------------------------------------------------------------------");
 		sw.WriteLine ();
 		sw.WriteLine ("#nullable enable"); // Roslyn turns off NRT for generated files by default, re-enable it
+	}
+
+	/// <summary>
+	/// Returns the first subset of a delimited string. ("127.0.0.1" -> "127")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? FirstSubset (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.IndexOf (separator);
+
+		if (index < 0)
+			return s;
+
+		return s.Substring (0, index);
+	}
+
+	/// <summary>
+	/// Returns the final subset of a delimited string. ("127.0.0.1" -> "1")
+	/// </summary>
+	[return: NotNullIfNotNull (nameof (s))]
+	public static string? LastSubset (this string? s, char separator)
+	{
+		if (!s.HasValue ())
+			return s;
+
+		var index = s.LastIndexOf (separator);
+
+		if (index < 0)
+			return s;
+
+		return s.Substring (index + 1);
 	}
 }

@@ -30,4 +30,45 @@ public sealed partial class UsesConfigurationAttribute : Attribute {
 
 	public string? ReqTouchScreen { get; set; }
 
+#if XABT_MANIFEST_EXTENSIONS
+	static Xamarin.Android.Manifest.ManifestDocumentElement<UsesConfigurationAttribute> mapping = new ("uses-configuration");
+
+	static UsesConfigurationAttribute ()
+	{
+		mapping.Add (
+			member: "ReqFiveWayNav",
+			attributeName: "reqFiveWayNav",
+			getter: self => self.ReqFiveWayNav,
+			setter: (self, value) => self.ReqFiveWayNav = (bool) value
+		);
+		mapping.Add (
+			member: "ReqHardKeyboard",
+			attributeName: "reqHardKeyboard",
+			getter: self => self.ReqHardKeyboard,
+			setter: (self, value) => self.ReqHardKeyboard = (bool) value
+		);
+		mapping.Add (
+			member: "ReqKeyboardType",
+			attributeName: "reqKeyboardType",
+			getter: self => self.ReqKeyboardType,
+			setter: (self, value) => self.ReqKeyboardType = (string?) value
+		);
+		mapping.Add (
+			member: "ReqNavigation",
+			attributeName: "reqNavigation",
+			getter: self => self.ReqNavigation,
+			setter: (self, value) => self.ReqNavigation = (string?) value
+		);
+		mapping.Add (
+			member: "ReqTouchScreen",
+			attributeName: "reqTouchScreen",
+			getter: self => self.ReqTouchScreen,
+			setter: (self, value) => self.ReqTouchScreen = (string?) value
+		);
+
+		AddManualMapping ();
+	}
+
+	static partial void AddManualMapping ();
+#endif
 }

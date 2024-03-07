@@ -74,6 +74,13 @@ public class Program
 		// Read metadata file
 		var metadata = new MetadataSource (metadata_file);
 
+		// Ensure everything in the Android SDK is accounted for.
+		// This forces us to handle anything new that's been added to the SDK.
+		metadata.EnsureAllElementsAccountedFor (merged.Elements);
+
+		// Ensure there are no unused elements in the metadata file
+		metadata.EnsureAllMetadataElementsExistInManifest (merged.Elements);
+
 		// Generate manifest attributes C# code
 		foreach (var type in metadata.Types.Values.Where (t => !t.Ignore)) {
 			using var w = new StreamWriter (Path.Combine (base_dir, type.OutputFile));
@@ -82,13 +89,6 @@ public class Program
 			var writer = AttributeDataClass.Create (element, metadata, type);
 			writer.Write (cw);
 		}
-
-		// Ensure everything we found in the Android SDK is accounted for.
-		// This forces us to handle anything new that's been added to the SDK.
-		// metadata.EnsureAllTypesExist (merged.Elements);
-		metadata.EnsureAllTypesAccountedFor (merged.Elements);
-		metadata.EnsureMetadataTypesConsumed ();
-		metadata.EnsureMetadataElementsConsumed ();
 
 		return 0;
 	}
