@@ -66,15 +66,28 @@ namespace Android.Runtime {
 			int nElements = frames.Length + (javaTrace?.Length ?? 0);
 			StackTraceElement[] elements = new StackTraceElement[nElements];
 
+			const string Unknown = "Unknown";
 			for (int i = 0; i < frames.Length; i++) {
 				StackFrame managedFrame = frames[i];
 				MethodBase? managedMethod = StackFrameGetMethod (managedFrame);
 
+				// https://developer.android.com/reference/java/lang/StackTraceElement?hl=en#StackTraceElement(java.lang.String,%20java.lang.String,%20java.lang.String,%20int)
+				int lineNumber;
+				if (managedFrame != null) {
+					lineNumber = managedFrame.GetFileLineNumber ();
+					if (lineNumber == 0) {
+						// -2 means it's a native frame
+						lineNumber = managedFrame.HasNativeImage () ? -2 : -1;
+					}
+				} else {
+					lineNumber = -1;
+				}
+
 				var throwableFrame = new StackTraceElement (
-					declaringClass: managedMethod?.DeclaringType?.FullName,
-					methodName: managedMethod?.Name,
+					declaringClass: managedMethod?.DeclaringType?.FullName ?? Unknown,
+					methodName: managedMethod?.Name ?? Unknown,
 					fileName: managedFrame?.GetFileName (),
-					lineNumber: managedFrame?.GetFileLineNumber () ?? -1
+					lineNumber: lineNumber
 				);
 
 				elements[i] = throwableFrame;
