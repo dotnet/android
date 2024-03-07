@@ -93,13 +93,13 @@ NOTE: `AssetPacks` are only used when the `AndroidPackageFormat` is set to `aab`
 
 ## Release Configuration
 
-In order for the application to function correctly we need to inform the `R8` linker which java classes we need to keep. To do this we need to add the following lines to a `Proguard.cfg` file which is in the root of our project folder.
+In order for the application to function correctly we need to inform the `R8` linker which java classes we need to keep. To do this we need to add the following lines to a `ProGuard.cfg` file which is in the root of our project folder.
 
 ```
 -keep com.google.android.play.*
 ```
 
-Alternatively you can create a file called `Proguard.cfg` and use the `ProguardConfiguration` built action.
+Alternatively you can create a file called `ProGuard.cfg` and use the [@(ProguardConfiguration)](~/android/deploy-test/building-apps/build-items.md#proguardconfiguration) built action.
 Adding these lines will ensure that all the required java components are not linked away during the Release build.
 
 ## Testing and Debugging
