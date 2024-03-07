@@ -91,6 +91,17 @@ At this time @(AndroidAsset) build action does not support 'AssetPack' or 'Deliv
 
 NOTE: `AssetPacks` are only used when the `AndroidPackageFormat` is set to `aab` (the default for Release). When using the `apk` setting the assets will be placed inside the `apk`.
 
+## Release Configuration
+
+In order for the application to function correctly we need to inform the `R8` linker which java classes we need to keep. To do this we need to add the following lines to a `Proguard.cfg` file which is in the root of our project folder.
+
+```
+-keep com.google.android.play.*
+```
+
+Alternatively you can create a file called `Proguard.cfg` and use the `ProguardConfiguration` built action.
+Adding these lines will ensure that all the required java components are not linked away during the Release build.
+
 ## Testing and Debugging
 
 In order to test your asset packs in the `Debug` configuration, you will need to make some changes to your `.csproj`. Firstly we need to change the `AndroidPackageFormat` to `aab`. It will be `aab` by default for `Release` builds, but will default to `apk` for `Debug` builds. Setting the `AndroidPackageFormat` to `aab` will disable
