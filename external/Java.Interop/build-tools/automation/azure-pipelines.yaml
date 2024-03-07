@@ -2,14 +2,14 @@
 
 trigger:
   - main
-  - d16-*
+  - release/*
   - d17-*
 
 pr:
   branches:
     include:
     - main
-    - d16-*
+    - release/*
     - d17-*
   paths:
     exclude:
