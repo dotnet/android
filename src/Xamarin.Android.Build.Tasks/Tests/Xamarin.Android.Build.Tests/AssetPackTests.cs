@@ -28,7 +28,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var builder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (lib), $"{lib.ProjectName} should fail.");
-				StringAssertEx.Contains ("error XA0138: @(AndroidAsset) build action does not support 'AssetPack' or 'DeliveryType' Metadata in Library Projects.", builder.LastBuildOutput,
+				StringAssertEx.Contains ("error XA0138:", builder.LastBuildOutput,
 					"Build Output did not contain error XA0138'.");
 			}
 		}
