@@ -218,6 +218,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			foreach (LlvmIrGlobalVariable gv in context.Module.GlobalVariables) {
 				context.NumberFormat = gv.NumberFormat;
+
 				if (gv is LlvmIrGroupDelimiterVariable groupDelimiter) {
 					if (!context.InVariableGroup && !String.IsNullOrEmpty (groupDelimiter.Comment)) {
 						context.Output.WriteLine ();
@@ -336,7 +337,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					if (globalVariable.ArrayDataProvider != null) {
 						return globalVariable.ArrayDataProvider.GetTotalDataSize (context.Target);
 					}
-
 					return globalVariable.ArrayItemCount;
 				}
 				return 0;

@@ -39,6 +39,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrGenerator generator = LlvmIrGenerator.Create (arch, fileName);
 			generator.Generate (output, module);
 			output.Flush ();
+
 			CleanupAfterGeneration (arch);
 		}
 
@@ -51,6 +52,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			if (gv == null) {
 				throw new InvalidOperationException ("Internal error: global variable expected");
 			}
+
 			return gv;
 		}
 	}
