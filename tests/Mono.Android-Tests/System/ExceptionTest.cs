@@ -39,13 +39,13 @@ namespace Xamarin.Android.RuntimeTests {
 				ex = e;
 			}
 
-			using (Java.Lang.Throwable proxy = CreateJavaProxyThrowable (ex))
-			using (var source = new Java.Lang.Throwable ("detailMessage", proxy))
-			using (var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer)) {
-				CompareStackTraces (ex, proxy);
-				Assert.AreEqual ("detailMessage", alias.Message);
-				Assert.AreSame (ex, alias.InnerException);
-			}
+			using Java.Lang.Throwable proxy = CreateJavaProxyThrowable (ex);
+			using var source = new Java.Lang.Throwable ("detailMessage", proxy);
+			using var alias  = new Java.Lang.Throwable (source.Handle, JniHandleOwnership.DoNotTransfer);
+
+			CompareStackTraces (ex, proxy);
+			Assert.AreEqual ("detailMessage", alias.Message);
+			Assert.AreSame (ex, alias.InnerException);
 		}
 
 		void CompareStackTraces (Exception ex, Java.Lang.Throwable throwable)
@@ -61,10 +61,16 @@ namespace Xamarin.Android.RuntimeTests {
 				var mf = managedFrames[i];
 				var jf = javaFrames[i];
 
+				// Unknown line locations are -1 on the Java side
+				int managedLine = mf.GetFileLineNumber ();
+				if (managedLine == 0) {
+					managedLine = -1;
+				}
+
 				Assert.AreEqual (mf.GetMethod ()?.Name,                   jf.MethodName, $"Frame {i}: method names differ");
 				Assert.AreEqual (mf.GetMethod ()?.DeclaringType.FullName, jf.ClassName,  $"Frame {i}: class names differ");
 				Assert.AreEqual (mf.GetFileName (),                       jf.FileName,   $"Frame {i}: file names differ");
-				Assert.AreEqual (mf.GetFileLineNumber (),                 jf.LineNumber, $"Frame {i}: line numbers differ");
+				Assert.AreEqual (managedLine,                             jf.LineNumber, $"Frame {i}: line numbers differ");
 			}
 		}
 	}
