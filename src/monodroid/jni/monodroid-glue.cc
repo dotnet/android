@@ -682,7 +682,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
 #endif
 
-#if defined (RELEASE)
 	if (application_config.marshal_methods_enabled) {
 		xamarin_app_init (env, get_function_pointer_at_startup);
 	}
@@ -1765,6 +1764,14 @@ MonodroidRuntime::Java_mono_android_Runtime_register (JNIEnv *env, jstring manag
 
 	env->ReleaseStringChars (methods, methods_ptr);
 	env->ReleaseStringChars (managedType, managedType_ptr);
+
+	const char *tmp = env->GetStringUTFChars (managedType, nullptr);
+	log_warn (LOG_ASSEMBLY, "Blazor: registering type %s", tmp);
+	env->ReleaseStringUTFChars (managedType, tmp);
+
+	tmp = env->GetStringUTFChars (methods, nullptr);
+	log_warn (LOG_ASSEMBLY, "Blazor: methods: %s", tmp);
+	env->ReleaseStringUTFChars (methods, tmp);
 
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);

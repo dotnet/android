@@ -522,7 +522,29 @@ namespace Xamarin.Android.Tasks
 		}
 #endif // MSBUILD
 
+		public static MarshalMethodsTracingMode ParseMarshalMethodsTracingMode (string input)
+		{
+			if (String.IsNullOrEmpty (input) || String.Compare ("none", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.None;
+			}
 
+			if (String.Compare ("basic", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.Basic;
+			}
+
+			if (String.Compare ("full", input, StringComparison.InvariantCultureIgnoreCase) == 0) {
+				return MarshalMethodsTracingMode.Full;
+			}
+
+			throw new InvalidOperationException ($"Unsupported marshal methods tracing mode '{input}'");
+		}
+
+		public static string? CultureInvariantToString (object? obj)
+		{
+			if (obj == null) {
+				return null;
+			}
+		}
 
 		/// <summary>
 		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).

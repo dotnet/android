@@ -102,6 +102,16 @@ if(NOT DEFINED XA_LIB_TOP_DIR)
   message(FATAL_ERROR "Please set the XA_LIB_TOP_DIR variable on command line (-DXA_LIB_TOP_DIR=path)")
 endif()
 
+if(NOT DEFINED LIBUNWIND_SOURCE_DIR)
+  message(FATAL_ERROR "Please set the LIBUNWIND_SOURCE_DIR on command line (-DLIBUNWIND_SOURCE_DIR=path)")
+endif()
+
+if(ANDROID AND ENABLE_NET)
+  if(NOT DEFINED LIBUNWIND_HEADERS_DIR)
+    message(FATAL_ERROR "Please set the LIBUNWIND_HEADERS_DIR on command line (-DLIBUNWIND_HEADERS_DIR=path)")
+  endif()
+endif()
+
 if(NOT ANDROID)
   if (NOT DEFINED JDK_INCLUDE)
     message(FATAL_ERROR "Please set the JDK_INCLUDE variable on command line (-DJDK_INCLUDE)")
@@ -493,6 +503,8 @@ endif()
 set(XAMARIN_INTERNAL_API_LIB xa-internal-api${CHECKED_BUILD_INFIX})
 set(XAMARIN_DEBUG_APP_HELPER_LIB xamarin-debug-app-helper${CHECKED_BUILD_INFIX})
 set(XAMARIN_APP_STUB_LIB xamarin-app)
+set(XAMARIN_NATIVE_TRACING_LIB xamarin-native-tracing)
+set(XAMARIN_MARSHAL_METHODS_TRACING_LIB marshal-methods-tracing)
 
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
@@ -559,7 +571,25 @@ if(UNIX)
 endif()
 
 if(ANDROID)
+  set(NATIVE_TRACING_SOURCES
+    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+    ${SOURCES_DIR}/helpers.cc
+    ${SOURCES_DIR}/native-tracing.cc
+    ${SOURCES_DIR}/new_delete.cc
+  )
+
+  set(MARSHAL_METHODS_TRACING_SOURCES
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+    ${SOURCES_DIR}/helpers.cc
+    ${SOURCES_DIR}/marshal-methods-tracing.cc
+    ${SOURCES_DIR}/new_delete.cc
+  )
+
   list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/monodroid-tracing.cc
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
@@ -695,6 +725,77 @@ add_library(
   )
 
 if(ANDROID)
+  if(ENABLE_NET AND NOT DEBUG_BUILD)
+    set(CPP_ABI_PATH ${CMAKE_SYSROOT}/usr/lib/${SYSROOT_ABI_LIB_DIR}/libc++abi.a)
+
+    add_library(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      SHARED ${NATIVE_TRACING_SOURCES}
+    )
+
+    target_include_directories(
+      ${XAMARIN_NATIVE_TRACING_LIB} BEFORE
+      PRIVATE
+      ${LIBUNWIND_SOURCE_DIR}/include
+      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+      ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
+    )
+
+    target_compile_options(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
+      -Wno-deprecated-dynamic-exception-spec
+      ${XA_DEFAULT_SYMBOL_VISIBILITY}
+      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+      -fno-asynchronous-unwind-tables
+    )
+
+    target_link_options(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
+    )
+
+    target_link_libraries(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      -llog
+      ${CPP_ABI_PATH}
+      ${XA_LIBRARY_OUTPUT_DIRECTORY}/libunwind_xamarin.a
+    )
+
+    target_compile_definitions(
+      ${XAMARIN_NATIVE_TRACING_LIB}
+      PRIVATE
+      XAMARIN_TRACING
+    )
+
+    add_library(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
+    )
+
+    target_include_directories(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
+      PRIVATE
+      ${LIBUNWIND_SOURCE_DIR}/include
+      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+    )
+
+    target_compile_definitions(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      PRIVATE
+      XAMARIN_TRACING
+    )
+
+    target_compile_options(
+      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+      PRIVATE
+      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+      -fno-asynchronous-unwind-tables
+    )
+  endif()
+
   # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
   set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
 endif()
@@ -703,6 +804,13 @@ target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY} "${LZ4_VISIBILITY_OPTS}"
   )
+
+target_include_directories(
+  ${XAMARIN_MONO_ANDROID_LIB} BEFORE
+  PRIVATE
+  ${LIBUNWIND_SOURCE_DIR}/include
+  ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+)
 
 if(APPLE)
   set_target_properties(

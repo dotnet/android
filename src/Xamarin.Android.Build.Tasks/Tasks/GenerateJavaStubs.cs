@@ -229,7 +229,7 @@ namespace Xamarin.Android.Tasks
 
 			MarshalMethodsClassifier classifier = null;
 			if (useMarshalMethods) {
-				classifier = new MarshalMethodsClassifier (cache, res, Log);
+				classifier = new MarshalMethodsClassifier (cache, res, Log, IntermediateOutputDirectory);
 			}
 
 			// Step 2 - Generate Java stub code
@@ -374,9 +374,9 @@ namespace Xamarin.Android.Tasks
 			foreach (JavaType jt in javaTypes) {
 				TypeDefinition type = jt.Type;
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
-					if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
-						continue;
-					}
+					// if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
+					// 	continue;
+					// }
 
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 					regCallsWriter.WriteLine ("\t\tmono.android.Runtime.register (\"{0}\", {1}.class, {1}.__md_methods);",
@@ -392,6 +392,7 @@ namespace Xamarin.Android.Tasks
 
 			if (useMarshalMethods) {
 				classifier.AddSpecialCaseMethods ();
+				classifier.FlushAndCloseOutputs ();
 
 				Log.LogDebugMessage ($"Number of generated marshal methods: {classifier.MarshalMethods.Count}");
 
@@ -485,7 +486,7 @@ namespace Xamarin.Android.Tasks
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
 						var jcw_type = CecilImporter.CreateType (t, cache, reader_options);
-						
+
 						jcw_type.Generate (writer, writer_options);
 
 						if (useMarshalMethods) {

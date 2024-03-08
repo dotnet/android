@@ -7,6 +7,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -298,7 +299,6 @@ namespace Xamarin.Android.Tasks
 				if (entry == null) {
 					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 				}
-
 				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
 			}
 

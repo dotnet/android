@@ -254,7 +254,7 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, MarshalMethodsTracingMode tracingMode)
 			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
@@ -262,7 +262,8 @@ namespace Xamarin.Android.Tasks
 			this.marshalMethods = marshalMethods;
 
 			generateEmptyCode = false;
-			defaultCallMarker = LlvmIrCallMarker.Tail;
+			this.tracingMode = tracingMode;
+			defaultCallMarker = tracingMode != MarshalMethodsTracingMode.None ? LlvmIrCallMarker.None : LlvmIrCallMarker.Tail;
 		}
 
 		void Init ()
@@ -591,6 +592,10 @@ namespace Xamarin.Android.Tasks
 			MapStructures (module);
 
 			Init ();
+			if (tracingMode != MarshalMethodsTracingMode.None) {
+				InitTracing (module);
+			}
+
 			AddAssemblyImageCache (module, out AssemblyCacheState acs);
 
 			// class cache
@@ -680,6 +685,8 @@ namespace Xamarin.Android.Tasks
 
 			void WriteBody (LlvmIrFunctionBody body)
 			{
+				WriteTracingAtFunctionTop (module, method, body, func, writeState);
+
 				LlvmIrLocalVariable cb1 = func.CreateLocalVariable (typeof(IntPtr), "cb1");
 				body.Load (backingField, cb1, tbaa: module.TbaaAnyPointer);
 

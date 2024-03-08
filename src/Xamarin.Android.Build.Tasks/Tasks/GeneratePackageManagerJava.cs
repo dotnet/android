@@ -23,6 +23,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "GPM";
 
 		Guid buildId = Guid.NewGuid ();
+		MarshalMethodsTracingMode mmTracingMode;
 
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
@@ -66,6 +67,7 @@ namespace Xamarin.Android.Tasks
 		public bool InstantRunEnabled { get; set; }
 
 		public bool EnableMarshalMethods { get; set; }
+		public string MarshalMethodsTracingMode { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
 
@@ -91,6 +93,8 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
+			mmTracingMode = MonoAndroidHelper.ParseMarshalMethodsTracingMode (MarshalMethodsTracingMode);
+
 			BuildId = buildId.ToString ();
 			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);
 
@@ -389,7 +393,8 @@ namespace Xamarin.Android.Tasks
 					Log,
 					assemblyCount,
 					uniqueAssemblyNames,
-					marshalMethodsState?.MarshalMethods
+					marshalMethodsState?.MarshalMethods,
+					mmTracingMode
 				);
 			} else {
 				marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (Log, assemblyCount, uniqueAssemblyNames);
