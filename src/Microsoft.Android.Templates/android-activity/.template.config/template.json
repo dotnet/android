@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/template",
   "author": "Microsoft",
   "classifications": [ "Android", "Mobile" ],
-  "name": "Android Activity template",
+  "name": "Android Activity",
   "description": "An Android Activity class",
   "tags": {
     "language": "C#",
