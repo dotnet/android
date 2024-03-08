@@ -2,7 +2,7 @@
   "$schema": "http://json.schemastore.org/template",
   "author": "Microsoft",
   "classifications": [ "Android", "Mobile" ],
-  "name": "Android Layout template",
+  "name": "Android Layout",
   "description": "An Android layout (XML) file",
   "tags": {
     "language": "C#",
