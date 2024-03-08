@@ -79,14 +79,14 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static ServiceAttribute FromTypeDefinition (TypeDefinition type)
+		public static ServiceAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = type.GetCustomAttributes ("Android.App.ServiceAttribute")
 				.SingleOrDefault ();
 			if (attr == null)
 				return null;
 			ServiceAttribute self = new ServiceAttribute ();
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			return self;
 		}
 

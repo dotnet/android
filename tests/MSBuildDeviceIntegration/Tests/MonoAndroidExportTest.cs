@@ -104,12 +104,11 @@ namespace UnnamedProject
 			}
 		}
 	}";
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				string apiLevel;
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion (out apiLevel);
+				b.LatestTargetFrameworkVersion (out string apiLevel);
 				proj.SupportedOSPlatformVersion = "24.0";
 				proj.AndroidManifest = $@"<?xml version=""1.0"" encoding=""utf-8""?>
 <manifest xmlns:android=""http://schemas.android.com/apk/res/android"" android:versionCode=""1"" android:versionName=""1.0"" package=""${proj.PackageName}"">

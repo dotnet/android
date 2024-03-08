@@ -48,10 +48,13 @@ namespace Xamarin.Android.Tasks
 
 		public string LangVersion { get; set; }
 
+		public bool EmitLegacyInterfaceInvokers { get; set; }
+
 		public bool EnableBindingStaticAndDefaultInterfaceMethods { get; set; }
 		public bool EnableBindingNestedInterfaceTypes { get; set; }
 		public bool EnableBindingInterfaceConstants { get; set; }
 		public string EnableRestrictToAttributes { get; set; }
+		public bool EnableObsoleteOverrideInheritance { get; set; }
 		public string Nullable { get; set; }
 
 		public ITaskItem[] TransformFiles { get; set; }
@@ -208,6 +211,10 @@ namespace Xamarin.Android.Tasks
 				if (SupportsCSharp8) {
 					var features = new List<string> ();
 
+					if (EmitLegacyInterfaceInvokers) {
+						features.Add ("emit-legacy-interface-invokers");
+					}
+
 					if (EnableBindingInterfaceConstants)
 						features.Add ("interface-constants");
 
@@ -216,6 +223,9 @@ namespace Xamarin.Android.Tasks
 
 					if (EnableBindingStaticAndDefaultInterfaceMethods)
 						features.Add ("default-interface-methods");
+
+					if (!EnableObsoleteOverrideInheritance)
+						features.Add ("do-not-fix-obsolete-overrides");
 
 					if (string.Equals (EnableRestrictToAttributes, "obsolete", StringComparison.OrdinalIgnoreCase))
 						features.Add ("restrict-to-attributes");

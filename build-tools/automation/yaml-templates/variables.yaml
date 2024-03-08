@@ -13,38 +13,46 @@ variables:
   value: test-assemblies
 - name: WindowsToolchainPdbArtifactName
   value: windows-toolchain-pdb
+- name: ApkDiffToolVersion
+  value: 0.0.15
+- name: TestSlicerToolVersion
+  value: 0.1.0-alpha7
+- name: BootsToolVersion
+  value: 1.1.0.36
 - name: NUnitConsoleVersion
   value: 3.16.3
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 7.0
+  value: 8.0
 - name: DotNetSdkQuality
   value: GA
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
-  value: macOS-12
+  value: macOS-13
 - name: HostedWinImage
   value: windows-2022
-- name: 1ESWindowsPool
-  value: android-win-2022
+- name: WindowsPoolImage1ESPT
+  value: 1ESPT-Windows2022
+- name: LinuxPoolImage1ESPT
+  value: 1ESPT-Ubuntu22.04
 - name: VSEngMicroBuildPool
   value: VSEngSS-MicroBuild2022-1ES
 - name: TeamName
   value: XamarinAndroid
 - name: DotNetTargetFramework
-  value: net8.0
+  value: net9.0
 - name: DotNetStableTargetFramework
-  value: net7.0
+  value: net8.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false
 - name: IsRelOrTargetingRel
   value: $[or(startsWith(variables['Build.SourceBranch'], 'refs/heads/release/'), startsWith(variables['System.PullRequest.TargetBranch'], 'release/'))]
-- name: DotNetNUnitCategories
-  value: '& TestCategory != DotNetIgnore & TestCategory != HybridAOT & TestCategory != MkBundle & TestCategory != MonoSymbolicate & TestCategory != StaticProject & TestCategory != SystemApplication'
 - name: DefaultTestSdkPlatforms  # Comma-separated SDK Platform(s) to install on test agents (no spaces)
-  value: 33,34
-- name: ExcludedNUnitCategories
-  value: '& cat != DotNetIgnore & cat != HybridAOT & cat != MkBundle & cat != MonoSymbolicate & cat != StaticProject & cat != SystemApplication'
+  value: 34
+- name: ExcludedNightlyNUnitCategories
+  value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
+- name: RunMAUITestJob
+  value: true

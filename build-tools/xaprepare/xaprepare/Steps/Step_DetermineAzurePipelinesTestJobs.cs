@@ -148,11 +148,6 @@ namespace Xamarin.Android.Prepare
 				if (file.Contains ("tests/msbuild-times-reference")) {
 					testAreas.Add ("MSBuildDevice");
 				}
-
-				if (file.Contains ("tools/xabuild")) {
-					testAreas.Add ("MSBuild");
-					testAreas.Add ("MSBuildDevice");
-				}
 			}
 
 			Log.MessageLine ($"##vso[task.setvariable variable=TestAreas;isOutput=true]{string.Join (",", testAreas)}");

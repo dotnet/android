@@ -25,21 +25,6 @@
     <File Path="api-34.xml.in" Level="34" />
   </Inputs>
   <Outputs>
-    <File Path="api-19.xml" LastLevel="19" />
-    <File Path="api-20.xml" LastLevel="20" />
-    <File Path="api-21.xml" LastLevel="21" />
-    <File Path="api-22.xml" LastLevel="22" />
-    <File Path="api-23.xml" LastLevel="23" />
-    <File Path="api-24.xml" LastLevel="24" />
-    <File Path="api-25.xml" LastLevel="25" />
-    <File Path="api-26.xml" LastLevel="26" />
-    <File Path="api-27.xml" LastLevel="27" />
-    <File Path="api-28.xml" LastLevel="28" />
-    <File Path="api-29.xml" LastLevel="29" />
-    <File Path="api-30.xml" LastLevel="30" />
-    <File Path="api-31.xml" LastLevel="31" />
-    <File Path="api-32.xml" LastLevel="32" />
-    <File Path="api-33.xml" LastLevel="33" />
     <File Path="api-34.xml" LastLevel="34" />
   </Outputs>
 </Configuration>

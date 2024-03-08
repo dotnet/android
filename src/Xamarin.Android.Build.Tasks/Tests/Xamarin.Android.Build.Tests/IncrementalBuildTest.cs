@@ -71,14 +71,12 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex, [Values (true, false)] bool useAapt2)
+		public void CheckNothingIsDeletedByIncrementalClean ([Values (true, false)] bool enableMultiDex)
 		{
-			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				ProjectName = "App1",
 				IsRelease = true,
-				AndroidUseAapt2 = useAapt2,
 			};
 			if (enableMultiDex)
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
@@ -201,22 +199,10 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateDllBuilder ()) {
 				Assert.IsTrue (b.Build (lib), "first build should have succeeded.");
 				var aarPath = Path.Combine (Root, b.ProjectDirectory, lib.OutputPath, $"{lib.ProjectName}.aar");
-				if (Builder.UseDotNet) {
-					FileAssert.Exists (aarPath);
-				} else {
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
-						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
-						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
-				}
+				FileAssert.Exists (aarPath);
 				lib.Touch ("Class1.cs");
 				Assert.IsTrue (b.Build (lib), "second build should have succeeded.");
-				if (Builder.UseDotNet) {
-					FileAssert.Exists (aarPath);
-				} else {
-					Assert.IsTrue (b.LastBuildOutput.ContainsText ("LogicalName=__AndroidLibraryProjects__.zip") ||
-						b.LastBuildOutput.ContainsText ("Lib.obj.Debug.__AndroidLibraryProjects__.zip,__AndroidLibraryProjects__.zip"),
-						"The LogicalName for __AndroidLibraryProjects__.zip should be set.");
-				}
+				FileAssert.Exists (aarPath);
 			}
 		}
 
@@ -402,11 +388,6 @@ namespace Lib2
 
 						Assert.IsNotNull (libfoo, "libfoo.so should exist in the .apk");
 
-						if (!Builder.UseDotNet) {
-							Assert.AreEqual (so.TextContent ().Length, new FileInfo (Path.Combine (Root, libbuilder.ProjectDirectory, lib.IntermediateOutputPath,
-								"nl", "armeabi-v7a", "libfoo.so")).Length,
-								"intermediate size mismatch");
-						}
 						libfoo = ZipHelper.ReadFileFromZip (Path.Combine (Root, builder.ProjectDirectory, app.OutputPath, app.PackageName + "-Signed.apk"),
 							"lib/armeabi-v7a/libfoo.so");
 						Assert.AreEqual (so.TextContent ().Length, libfoo.Length, "compressed size mismatch");
@@ -429,9 +410,7 @@ namespace Lib2
 				"_ResolveLibraryProjectImports",
 				"_CleanIntermediateIfNeeded",
 			};
-			if (!Builder.UseDotNet) {
-				targets.Add ("_CopyConfigFiles");
-			}
+
 			var proj = new XamarinFormsAndroidApplicationProject {
 				OtherBuildItems = {
 					new BuildItem.NoActionResource ("UnnamedProject.dll.config") {
@@ -485,14 +464,10 @@ namespace Lib2
 		[Test]
 		public void LibraryProjectTargetsDoNotBreak ()
 		{
-			var targets = Builder.UseDotNet ?
-				new [] {
-					"_CreateAar"
-				} :
-				new [] {
-					"_CreateNativeLibraryArchive",
-					"_CreateManagedLibraryResourceArchive",
-				};
+			var targets = new [] {
+				"_CreateAar",
+			};
+
 			var proj = new XamarinAndroidLibraryProject {
 				Sources = {
 					new BuildItem.Source ("Class1.cs") {
@@ -694,6 +669,8 @@ namespace Lib2
 		[Test]
 		public void CSProjUserFileChanges ()
 		{
+			AssertCommercialBuild ();
+
 			var proj = new XamarinAndroidApplicationProject ();
 			var selectedDevice = "foo";
 			var csproj_user_file = $"{proj.ProjectName}.csproj.user";
@@ -716,15 +693,13 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable] // /restore can fail on Mac in parallel
-		public void ConvertCustomView ([Values (true, false)] bool useAapt2)
+		public void ConvertCustomView ()
 		{
-			AssertAaptSupported (useAapt2);
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 				//NOTE: so _BuildApkEmbed runs in commercial tests
 				EmbedAssembliesIntoApk = true,
-				AndroidUseAapt2 = useAapt2,
 				Sources = {
 					new BuildItem.Source ("Foo.cs") {
 						TextContent = () => "public class Foo : Bar { }"
@@ -771,14 +746,12 @@ namespace Lib2
 				appBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (appBuilder.Build (app), "first app build should have succeeded.");
 
-				if (useAapt2) {
-					var aapt2TargetsShouldRun = new [] {
-						"_FixupCustomViewsForAapt2",
-						"_CompileResources"
-					};
-					foreach (var target in aapt2TargetsShouldRun) {
-						Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"{target} should run!");
-					}
+				var aapt2TargetsShouldRun = new [] {
+					"_FixupCustomViewsForAapt2",
+					"_CompileResources"
+				};
+				foreach (var target in aapt2TargetsShouldRun) {
+					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"{target} should run!");
 				}
 
 				lib.Touch ("Bar.cs");
@@ -809,24 +782,20 @@ namespace Lib2
 					Assert.IsFalse (appBuilder.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
 
-				if (useAapt2) {
-					var aapt2TargetsShouldBeSkipped = new [] {
-						"_FixupCustomViewsForAapt2",
-						"_CompileResources"
-					};
-					foreach (var target in aapt2TargetsShouldBeSkipped) {
-						Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"{target} should be skipped!");
-					}
+				var aapt2TargetsShouldBeSkipped = new [] {
+					"_FixupCustomViewsForAapt2",
+					"_CompileResources"
+				};
+				foreach (var target in aapt2TargetsShouldBeSkipped) {
+					Assert.IsTrue (appBuilder.Output.IsTargetSkipped (target), $"{target} should be skipped!");
 				}
 			}
 		}
 
 		[Test]
-		public void ResolveLibraryProjectImports ([Values (true, false)] bool useAapt2)
+		public void ResolveLibraryProjectImports ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
@@ -850,10 +819,10 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
-				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
-					expected.Jars.Select (j => j.ItemSpec));
-				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec),
-					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec));
+				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j));
+				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j));
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -883,10 +852,8 @@ namespace Lib2
 					"_UpdateAndroidResgen",
 					"_CompileJava",
 					"_CreateBaseApk",
+					"_ConvertResourcesCases",
 				};
-				if (useAapt2) {
-					targets.Add ("_ConvertResourcesCases");
-				}
 				foreach (var targetName in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
 				}
@@ -905,15 +872,13 @@ namespace Lib2
 
 		[Test]
 		[NonParallelizable]
-		public void InvalidAndroidResource ([Values (true, false)] bool useAapt2)
+		public void InvalidAndroidResource ()
 		{
-			AssertAaptSupported (useAapt2);
 			var invalidXml = new AndroidItem.AndroidResource (@"Resources\values\ids.xml") {
 				TextContent = () => "<?xml version=\"1.0\" encoding=\"utf-8\" ?><resources><item/></resources>"
 			};
 
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				var projectFile = Path.Combine (Root, b.ProjectDirectory, proj.ProjectFilePath);
 				b.ThrowOnBuildFailure = false;
@@ -1043,30 +1008,6 @@ namespace Lib2
 				/* aotAssemblies */   false,
 				/* expectedResult */  true,
 			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Full", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   true,
-				/* expectedResult */  true,
-			},
-			new object[] {
-				/* supportedAbis */   "arm64-v8a",
-				/* androidAotMode */  "Hybrid", // None, Normal, Hybrid, Full
-				/* aotAssemblies */   false,
-				/* expectedResult */  true,
-			},
 		};
 #pragma warning restore 414
 
@@ -1075,17 +1016,38 @@ namespace Lib2
 		[TestCaseSource (nameof (AotChecks))]
 		public void BuildIncrementalAot (string supportedAbis, string androidAotMode, bool aotAssemblies, bool expectedResult)
 		{
-			AssertAotModeSupported (androidAotMode);
+			// Setup dependencies App A -> Lib B
+			var path = Path.Combine ("temp", TestName);
+
+			var libB = new XamarinAndroidLibraryProject {
+				ProjectName = "LibraryB",
+				IsRelease = true,
+				EnableDefaultItems = true,
+			};
+			libB.Sources.Clear ();
+			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
+				TextContent = () => "public class Foo { }",
+			});
+
+			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
+			Assert.IsTrue (libBBuilder.Build(libB), $"{libB.ProjectName} should build");
 
 			var targets = new List<string> {
 				"_RemoveRegisterAttribute",
 				"_BuildApkEmbed",
 			};
-			var path = Path.Combine ("temp", $"BuildAotApplication_{supportedAbis}_{androidAotMode}_{aotAssemblies}_{expectedResult}");
-			var proj = new XamarinAndroidApplicationProject () {
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "AppA",
 				IsRelease = true,
 				AotAssemblies = aotAssemblies,
+				EnableDefaultItems = true,
+				Sources = {
+					new BuildItem.Source ("Bar.cs") {
+						TextContent = () => "public class Bar : Foo { }",
+					}
+				}
 			};
+			proj.AddReference (libB);
 			if (aotAssemblies) {
 				targets.Add ("_AndroidAot");
 			}
@@ -1196,6 +1158,36 @@ namespace Lib2
 		}
 
 		[Test]
+		public void DesignTimeBuildSignAndroidPackage ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				EnableDefaultItems = true,
+			};
+			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
+			var builder = CreateApkBuilder ();
+			var parameters = new [] { "BuildingInsideVisualStudio=true"};
+			builder.BuildLogFile = "update.log";
+			Assert.IsTrue (builder.RunTarget (proj, "Compile", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 1);
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateRtxt");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerIntermediateClass");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceDesignerAssembly", occurrence: 1);
+			parameters = new [] { "BuildingInsideVisualStudio=true" };
+			builder.BuildLogFile = "build1.log";
+			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 1);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 1);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly", occurrence: 2);
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.RunTarget (proj, "SignAndroidPackage", parameters: parameters), $"{proj.ProjectName} should succeed 2");
+			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 3);
+			builder.Output.AssertTargetIsSkipped ("_GenerateRtxt", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerIntermediateClass", occurrence: 2);
+			builder.Output.AssertTargetIsSkipped ("_GenerateResourceDesignerAssembly");
+		}
+
+		[Test]
 		public void ChangePackageNamingPolicy ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
@@ -1267,9 +1259,8 @@ namespace Lib2
 		}
 
 		[Test]
-		public void AaptError ([Values (true, false)] bool useAapt2)
+		public void AaptError ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject {
 				Sources = {
 					new BuildItem.Source ("TestActivity.cs") {
@@ -1277,7 +1268,6 @@ namespace Lib2
 					}
 				}
 			};
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				builder.ThrowOnBuildFailure = false;
 				Assert.IsFalse (builder.Build (proj), "Build should *not* have succeeded on the first build.");
@@ -1374,57 +1364,19 @@ namespace Lib2
 		}
 
 		[Test]
-		[NonParallelizable]
-		public void AndroidXMigrationBug ()
-		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
-
-			string source = "class Foo { }";
-			proj.Sources.Add (new BuildItem.Source ("Foo.cs") { TextContent = () => source });
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				source = source.Replace ("Foo", "Bar");
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				var targets = new [] {
-					"_CompileResources",
-					"_UpdateAndroidResgen",
-					"_GenerateAndroidResourceDir",
-				};
-				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
-				}
-			}
-		}
-
-		[Test]
 		public void ChangeSupportedAbis ()
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			using (var b = CreateApkBuilder ()) {
 				b.Build (proj);
-
-				var parameters = Builder.UseDotNet ?
-					new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" } :
-					new [] { $"{KnownProperties.AndroidSupportedAbis}=x86" };
-				b.Build (proj, parameters: parameters, doNotCleanupOnUpdate: true);
+				b.Build (proj, parameters: new [] { $"{KnownProperties.RuntimeIdentifier}=android-x86" }, doNotCleanupOnUpdate: true);
 			}
 		}
 
 		[Test]
-		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ([Values (true, false)] bool useAapt2)
+		public void BuildPropsBreaksConvertResourcesCasesOnSecondBuild ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidResources = {
 					new AndroidItem.AndroidResource (() => "Resources\\drawable\\IMALLCAPS.png") {
@@ -1437,7 +1389,6 @@ namespace Lib2
 					}
 				}
 			};
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, "UnnamedProject.dll");

@@ -50,10 +50,8 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 
-			if (Builder.UseDotNet) {
-				//TODO: there is currently a slight performance regression in .NET 6
-				expected += 500;
-			}
+			//TODO: Update baselines in MSBuildDeviceIntegration.csv, there is currently a slight performance regression in .NET 6
+			expected += 500;
 
 			action (builder);
 			var actual = GetDurationFromBinLog (builder);
@@ -325,7 +323,8 @@ namespace Xamarin.Android.Build.Tests
 			app.Sources.Add (new BuildItem.Source ("Foo.cs") {
 				TextContent = () => "public class Foo : Bar { }"
 			});
-			app.PackageReferences.Add (KnownPackages.XamarinForms_4_0_0_425677);
+			app.PackageReferences.Add (KnownPackages.XamarinForms);
+			app.PackageReferences.Add (KnownPackages.AndroidXBrowser); // Guava.ListenableFuture: https://github.com/xamarin/AndroidX/issues/535
 			//NOTE: this will skip a 382ms <VerifyVersionsTask/> from the support library
 			app.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 
@@ -343,7 +342,7 @@ namespace Xamarin.Android.Build.Tests
 					}
 				},
 				PackageReferences = {
-					KnownPackages.XamarinForms_4_0_0_425677
+					KnownPackages.XamarinForms,
 				}
 			};
 			lib.SetProperty ("ProduceReferenceAssembly", produceReferenceAssembly.ToString ());

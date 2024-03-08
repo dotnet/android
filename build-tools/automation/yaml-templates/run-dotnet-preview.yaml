@@ -13,9 +13,13 @@ parameters:
 steps:
 - powershell: |
     if ([Environment]::OSVersion.Platform -eq "Unix") {
-        $dotnetPath = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet/dotnet"
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}/bin/${{ parameters.configuration }}/dotnet"
+        $env:PATH = "${DOTNET_ROOT}:$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}/dotnet"
     } else {
-        $dotnetPath = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet\dotnet.exe"
+        $DOTNET_ROOT = "${{ parameters.xaSourcePath }}\bin\${{ parameters.configuration }}\dotnet"
+        $env:PATH = "${DOTNET_ROOT};$env:PATH"
+        $dotnetPath = "${DOTNET_ROOT}\dotnet.exe"
     }
     & $dotnetPath ${{ parameters.command }} ${{ parameters.project }} ${{ parameters.arguments }}
     if ([System.Convert]::ToBoolean("${{ parameters.useExitCodeForErrors }}") -and $LASTEXITCODE -ne 0) {

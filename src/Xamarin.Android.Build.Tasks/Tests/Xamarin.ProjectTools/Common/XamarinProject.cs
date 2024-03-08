@@ -27,7 +27,6 @@ namespace Xamarin.ProjectTools
 		public IList<Property> CommonProperties { get; private set; }
 		public IList<IList<BuildItem>> ItemGroupList { get; private set; }
 		public IList<PropertyGroup> PropertyGroups { get; private set; }
-		public IList<Package> Packages { get; private set; }
 		public IList<BuildItem> References { get; private set; }
 		public IList<Package> PackageReferences { get; private set; }
 		public string GlobalPackagesFolder { get; set; } = FileSystemUtils.FindNugetGlobalPackageFolder ();
@@ -51,10 +50,7 @@ namespace Xamarin.ProjectTools
 			get => isRelease;
 			set {
 				isRelease = value;
-
-				if (Builder.UseDotNet) {
-					Touch ("Directory.Build.props");
-				}
+				Touch ("Directory.Build.props");
 			}
 		}
 
@@ -73,34 +69,23 @@ namespace Xamarin.ProjectTools
 			common = new PropertyGroup (null, CommonProperties);
 			DebugProperties = new List<Property> ();
 			ReleaseProperties = new List<Property> ();
-			if (Builder.UseDotNet) {
-				debug = new PropertyGroup ($"'$(Configuration)' == '{debugConfigurationName}'", DebugProperties);
-				release = new PropertyGroup ($"'$(Configuration)' == '{releaseConfigurationName}'", ReleaseProperties);
-			} else {
-				debug = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{debugConfigurationName}|AnyCPU'", DebugProperties);
-				release = new PropertyGroup ($"'$(Configuration)|$(Platform)' == '{releaseConfigurationName}|AnyCPU'", ReleaseProperties);
-			}
-
+			debug = new PropertyGroup ($"'$(Configuration)' == '{debugConfigurationName}'", DebugProperties);
+			release = new PropertyGroup ($"'$(Configuration)' == '{releaseConfigurationName}'", ReleaseProperties);
 			PropertyGroups.Add (common);
 			PropertyGroups.Add (debug);
 			PropertyGroups.Add (release);
-
-			Packages = new List<Package> ();
 			Imports = new List<Import> ();
 
-			if (Builder.UseDotNet) {
-				//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
-				Imports.Add (new Import ("Directory.Build.props") {
-					TextContent = () =>
+			//NOTE: for SDK-style projects, we need $(Configuration) set before Microsoft.NET.Sdk.targets
+			Imports.Add (new Import ("Directory.Build.props") {
+				TextContent = () =>
 $@"<Project>
 	<PropertyGroup>
 		<Configuration>{Configuration}</Configuration>
+		<DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
 	</PropertyGroup>
 </Project>"
-				});
-			} else {
-				SetProperty (KnownProperties.Configuration, () => Configuration);
-			}
+			});
 		}
 
 		/// <summary>
@@ -227,7 +212,6 @@ $@"<Project>
 		}
 
 		ProjectResource project;
-		string packages_config_contents;
 
 		public virtual List<ProjectResource> Save (bool saveProject = true)
 		{
@@ -246,19 +230,6 @@ $@"<Project>
 					project.Content = contents;
 				}
 				list.Add (project);
-			}
-
-			if (Packages.Any ()) {
-				var contents = "<packages>\n" + string.Concat (Packages.Select (p => string.Format ("  <package id='{0}' version='{1}' targetFramework='{2}' />\n",
-					p.Id, p.Version, p.TargetFramework))) + "</packages>";
-				var timestamp = contents != packages_config_contents ? default (DateTimeOffset?) : DateTimeOffset.MinValue;
-				list.Add (new ProjectResource () {
-					Timestamp = timestamp,
-					Path = "packages.config",
-					Content = packages_config_contents = contents,
-				});
-			} else {
-				packages_config_contents = null;
 			}
 
 			foreach (var ig in ItemGroupList)
@@ -381,34 +352,6 @@ $@"<Project>
 
 		}
 
-		public virtual void NuGetRestore (string directory, string packagesDirectory = null)
-		{
-			if (!Packages.Any ())
-				return;
-
-			var isWindows = Environment.OSVersion.Platform == PlatformID.Win32NT;
-			var nuget = Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "nuget", "NuGet.exe");
-			var psi = new ProcessStartInfo (isWindows ? nuget : "mono") {
-				Arguments = $"{(isWindows ? "" : "\"" + nuget + "\"")} restore -Verbosity Detailed -PackagesDirectory \"{Path.Combine (Root, directory, "..", "packages")}\" \"{Path.Combine (Root, directory, "packages.config")}\"",
-				CreateNoWindow = true,
-				UseShellExecute = false,
-				WindowStyle = ProcessWindowStyle.Hidden,
-				RedirectStandardError = true,
-				RedirectStandardOutput = true,
-			};
-			Console.WriteLine ($"{psi.FileName} {psi.Arguments}");
-			using (var process = new Process {
-				StartInfo = psi,
-			}) {
-				process.OutputDataReceived += (sender, e) => Console.WriteLine (e.Data);
-				process.ErrorDataReceived += (sender, e) => Console.Error.WriteLine (e.Data);
-				process.Start ();
-				process.BeginOutputReadLine ();
-				process.BeginErrorReadLine ();
-				process.WaitForExit ();
-			}
-		}
-
 		public virtual string ProcessSourceTemplate (string source)
 		{
 			return source.Replace ("${ROOT_NAMESPACE}", RootNamespace ?? ProjectName).Replace ("${PROJECT_NAME}", ProjectName);
@@ -452,7 +395,6 @@ $@"<Project>
 
 		/// <summary>
 		/// Updates a NuGet.config based on sources in ExtraNuGetConfigSources
-		/// If target framework is not the latest or default, sources are added for previous releases
 		/// </summary>
 		protected void AddNuGetConfigSources (string nugetConfigPath)
 		{
@@ -472,14 +414,8 @@ $@"<Project>
 				ExtraNuGetConfigSources = new List<string> ();
 			}
 
-			if (TargetFramework?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1
-				|| TargetFrameworks?.IndexOf ("net7.0", StringComparison.OrdinalIgnoreCase) != -1) {
-				ExtraNuGetConfigSources.Add ("https://api.nuget.org/v3/index.json");
-				ExtraNuGetConfigSources.Add ("https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json");
-			}
-
 			int sourceIndex = 0;
-			foreach (var source in ExtraNuGetConfigSources) {
+			foreach (var source in ExtraNuGetConfigSources.Distinct ()) {
 				var sourceElement = new XElement ("add");
 				sourceElement.SetAttributeValue ("key", $"testsource{++sourceIndex}");
 				sourceElement.SetAttributeValue ("value", source);

@@ -1,9 +1,12 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Text;
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Mono.Linker;
+using Mono.Tuner;
 using MonoDroid.Tuner;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
@@ -171,15 +174,10 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void PreserveCustomHttpClientHandlers ()
 		{
-			if (Builder.UseDotNet) {
-				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
-					"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
-				PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
-					"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
-			} else {
-				PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidClientHandler", "",
-					"temp/PreserveAndroidHttpClientHandler", "android/assets/Mono.Android.dll");
-			}
+			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
+				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
+			PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
+				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
 		}
 
 		[Test]
@@ -213,8 +211,8 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (appBuilder.Build (app), "app build should have succeeded.");
 
 			// NOTE: in .NET 6, we only emit IL6200 for Release builds
-			if (!Builder.UseDotNet || isRelease) {
-				string code = Builder.UseDotNet ? "IL6200" : "XA2000";
+			if (isRelease) {
+				string code = "IL6200";
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, "1 Warning(s)"), "MSBuild should count 1 warnings.");
 				Assert.IsTrue (StringAssertEx.ContainsText (appBuilder.LastBuildOutput, $"warning {code}: Use of AppDomain.CreateDomain()"), $"Should warn {code} about creating AppDomain.");
 			}
@@ -257,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void LinkDescription ([Values (true, false)] bool useAssemblyStore)
 		{
-			string assembly_name = Builder.UseDotNet ? "System.Console" : "mscorlib";
+			string assembly_name = "System.Console";
 			string linker_xml = "<linker/>";
 
 			var proj = new XamarinAndroidApplicationProject {
@@ -425,7 +423,7 @@ namespace UnnamedProject {
 				Assert.IsTrue (b.Build (proj), "Building a project should have succeded.");
 
 				var assemblyFile = "UnnamedProject.dll";
-				var assemblyPath = (Builder.UseDotNet && (!isRelease || setLinkModeNone)) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
+				var assemblyPath = (!isRelease || setLinkModeNone) ? b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", assemblyFile)) : BuildTest.GetLinkedPath (b,  true, assemblyFile);
 				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
 					Assert.IsTrue (assembly != null);
 
@@ -458,9 +456,6 @@ namespace UnnamedProject {
 		[Test]
 		public void TypeRegistrationsFallback ([Values (true, false)] bool enabled)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET 6");
-
 			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
 			if (enabled)
 				proj.SetProperty (proj.ActiveConfigurationProperties, "VSAndroidDesigner", "true");
@@ -481,9 +476,6 @@ namespace UnnamedProject {
 		[Test]
 		public void AndroidUseNegotiateAuthentication ([Values (true, false, null)] bool? useNegotiateAuthentication)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET");
-
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
 			proj.AddReferences ("System.Net.Http");
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
@@ -514,24 +506,66 @@ namespace UnnamedProject {
 		}
 
 		[Test]
-		public void DoNotErrorOnPerArchJavaTypeDuplicates ()
+		public void PreserveIX509TrustManagerSubclasses ([Values(true, false)] bool hasServerCertificateCustomValidationCallback)
 		{
-			if (!Builder.UseDotNet)
-				Assert.Ignore ("Test only valid on .NET");
+			var proj = new XamarinAndroidApplicationProject { IsRelease = true };
+			proj.AddReferences ("System.Net.Http");
+			proj.MainActivity = proj.DefaultMainActivity.Replace (
+				"base.OnCreate (bundle);",
+				"base.OnCreate (bundle);\n" +
+				(hasServerCertificateCustomValidationCallback
+					? "var handler = new Xamarin.Android.Net.AndroidMessageHandler { ServerCertificateCustomValidationCallback = (message, certificate, chain, errors) => true };\n"
+					: "var handler = new Xamarin.Android.Net.AndroidMessageHandler();\n") +
+				"var client = new System.Net.Http.HttpClient (handler);\n" +
+				"client.GetAsync (\"https://microsoft.com\").GetAwaiter ().GetResult ();");
 
+			using (var b = CreateApkBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				var assemblyPath = BuildTest.GetLinkedPath (b, true, "Mono.Android.dll");
+
+				using (var assembly = AssemblyDefinition.ReadAssembly (assemblyPath)) {
+					Assert.IsTrue (assembly != null);
+
+					var types = new[] { "Javax.Net.Ssl.X509ExtendedTrustManager", "Javax.Net.Ssl.IX509TrustManagerInvoker" };
+					foreach (var typeName in types) {
+						var td = assembly.MainModule.GetType (typeName);
+						if (hasServerCertificateCustomValidationCallback) {
+							Assert.IsNotNull (td, $"{typeName} shouldn't have been linked out");
+						} else {
+							Assert.IsNull (td, $"{typeName} should have been linked out");
+						}
+					}
+				}
+			}
+		}
+
+		[Test]
+		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
+		{
 			var path = Path.Combine (Root, "temp", TestName);
 			var lib = new XamarinAndroidLibraryProject { IsRelease = true, ProjectName = "Lib1" };
 			lib.SetProperty ("IsTrimmable", "true");
 			lib.Sources.Add (new BuildItem.Source ("Library1.cs") {
 				TextContent = () => @"
 namespace Lib1;
-public class Library1 : Java.Lang.Object {
+public class Library1 : Com.Example.Androidlib.MyRunner {
 	private static bool Is64Bits = IntPtr.Size >= 8;
 
 	public static bool Is64 () {
 		return Is64Bits;
 	}
+
+	public override void Run () => Console.WriteLine (Is64Bits);
 }",
+			});
+			lib.Sources.Add (new BuildItem ("AndroidJavaSource", "MyRunner.java") {
+				Encoding = new UTF8Encoding (encoderShouldEmitUTF8Identifier: false),
+				TextContent = () => @"
+package com.example.androidlib;
+
+public abstract class MyRunner {
+	public abstract void run();
+}"
 			});
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
 			proj.References.Add(new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
@@ -539,12 +573,48 @@ public class Library1 : Java.Lang.Object {
 				"base.OnCreate (bundle);",
 				"base.OnCreate (bundle);\n" +
 				"if (Lib1.Library1.Is64 ()) Console.WriteLine (\"Hello World!\");");
+			proj.SetProperty ("AndroidEnableMarshalMethods", enableMarshalMethods.ToString ());
 
 
 			using var lb = CreateDllBuilder (Path.Combine (path, "Lib1"));
 			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
 			Assert.IsTrue (lb.Build (lib), "build should have succeeded.");
 			Assert.IsTrue (b.Build (proj), "build should have succeeded.");
+
+			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
+			var dll = $"{lib.ProjectName}.dll";
+			Assert64Bit ("android-arm", expected64: false);
+			Assert64Bit ("android-arm64", expected64: true);
+			Assert64Bit ("android-x86", expected64: false);
+			Assert64Bit ("android-x64", expected64: true);
+
+			void Assert64Bit(string rid, bool expected64)
+			{
+				var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (intermediate, rid, "linked", "shrunk", dll));
+				var type = assembly.MainModule.FindType ("Lib1.Library1");
+				Assert.NotNull (type, "Should find Lib1.Library1!");
+				var cctor = type.GetTypeConstructor ();
+				Assert.NotNull (type, "Should find Lib1.Library1.cctor!");
+				Assert.AreNotEqual (0, cctor.Body.Instructions.Count);
+
+				/*
+				 * IL snippet
+				 * .method private hidebysig specialname rtspecialname static 
+				 * void .cctor () cil managed 
+				 * {
+				 *   // Is64Bits = 4 >= 8;
+				 *   IL_0000: ldc.i4 4
+				 *   IL_0005: ldc.i4.8
+				 *   ...
+				 */
+				var instruction = cctor.Body.Instructions [0];
+				Assert.AreEqual (OpCodes.Ldc_I4, instruction.OpCode);
+				if (expected64) {
+					Assert.AreEqual (8, instruction.Operand, $"Expected 64-bit: {expected64}");
+				} else {
+					Assert.AreEqual (4, instruction.Operand, $"Expected 64-bit: {expected64}");
+				}
+			}
 		}
 	}
 }

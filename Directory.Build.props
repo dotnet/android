@@ -1,11 +1,12 @@
 <Project>
 
   <PropertyGroup>
-    <DotNetTargetFrameworkVersion>8.0</DotNetTargetFrameworkVersion>
+    <DirectoryBuildPropsImported>true</DirectoryBuildPropsImported>
+    <DotNetTargetFrameworkVersion>9.0</DotNetTargetFrameworkVersion>
     <DotNetTargetFramework>net$(DotNetTargetFrameworkVersion)</DotNetTargetFramework>
     <DotNetAndroidTargetFramework>$(DotNetTargetFramework)-android</DotNetAndroidTargetFramework>
     <!-- Used for bootstrap, command-line tooling, and desktop NUnit projects -->
-    <DotNetStableTargetFramework>net7.0</DotNetStableTargetFramework>
+    <DotNetStableTargetFramework>net8.0</DotNetStableTargetFramework>
     <TargetFrameworkNETStandard>netstandard2.0</TargetFrameworkNETStandard>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <BuildOutputDirectory>$(MSBuildThisFileDirectory)bin\$(Configuration)\</BuildOutputDirectory>
@@ -34,13 +35,13 @@
          * Major/Minor match Android stable API level, such as 30.0 for API 30.
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
-    <AndroidPackVersion>34.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
+    <AndroidPackVersion>34.99.0</AndroidPackVersion>
+    <AndroidPackVersionSuffix>preview.3</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
   <PropertyGroup>
-    <LibZipSharpVersion>3.0.0</LibZipSharpVersion>
+    <LibZipSharpVersion>3.1.1</LibZipSharpVersion>
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
     <MonoCecilVersion>0.11.4</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.1</NewtonsoftJsonPackageVersion>
@@ -51,7 +52,7 @@
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
-    <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.8.9.2</MdocPackageVersion>
+    <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.2.4</MdocPackageVersion>
   </PropertyGroup>
 
 </Project>

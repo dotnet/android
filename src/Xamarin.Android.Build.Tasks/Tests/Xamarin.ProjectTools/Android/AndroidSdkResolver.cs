@@ -49,11 +49,11 @@ namespace Xamarin.ProjectTools
 		{
 			var javaSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
 			if (string.IsNullOrEmpty (javaSdkPath))
-				javaSdkPath = JavaSdkPath ??= RunPathsTargets ("GetJavaSdkDirectory");
-			if (string.IsNullOrEmpty (javaSdkPath))
 				javaSdkPath = JavaSdkPath ??= Environment.GetEnvironmentVariable ("JI_JAVA_HOME");
 			if (string.IsNullOrEmpty (javaSdkPath))
 				javaSdkPath = JavaSdkPath ??= Environment.GetEnvironmentVariable ("JAVA_HOME");
+			if (string.IsNullOrEmpty (javaSdkPath))
+				javaSdkPath = JavaSdkPath ??= RunPathsTargets ("GetJavaSdkDirectory");
 			if (string.IsNullOrEmpty (javaSdkPath))
 				javaSdkPath = JavaSdkPath ??= GetPathFromRegistry ("JavaSdkDirectory");
 			if (string.IsNullOrEmpty (javaSdkPath))
@@ -88,17 +88,18 @@ namespace Xamarin.ProjectTools
 		static string RunPathsTargets (string target)
 		{
 			var targets = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "scripts", "Paths.targets");
-			var msbuild = TestEnvironment.IsWindows ? TestEnvironment.GetVisualStudioInstance ().MSBuildPath : "msbuild";
-			var args = $"/nologo /v:minimal /t:{target} \"{targets}\"";
-			var psi = new ProcessStartInfo (msbuild, args) {
+			var dotnet = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
+			var args = $"build /nologo /v:minimal /t:{target} \"{targets}\"";
+			var psi = new ProcessStartInfo (dotnet, args) {
 				CreateNoWindow = true,
 				RedirectStandardOutput = true,
 				WindowStyle = ProcessWindowStyle.Hidden,
 				UseShellExecute = false,
+				WorkingDirectory = XABuildPaths.TestAssemblyOutputDirectory,
 			};
 			using (var p = Process.Start (psi)) {
 				p.WaitForExit ();
-				string path = p.StandardOutput.ReadToEnd ().Trim ();
+				string path = p.StandardOutput.ReadLine ().Trim ();
 				return Directory.Exists (path) ? path : null;
 			}
 		}

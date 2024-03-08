@@ -23,60 +23,9 @@ namespace Xamarin.Android.Build.Tests
 		public static ConcurrentDictionary<string, string> TestOutputDirectories = new ConcurrentDictionary<string, string> ();
 		public static ConcurrentDictionary<string, string> TestPackageNames = new ConcurrentDictionary<string, string> ();
 
-		[SetUpFixture]
-		public class SetUp
-		{
-			public static string TestDirectoryRoot {
-				get;
-				private set;
-			}
-
-			[OneTimeSetUp]
-			public void BeforeAllTests ()
-			{
-				TestDirectoryRoot = XABuildPaths.TestOutputDirectory;
-			}
-
-			[OneTimeTearDown]
-			public void AfterAllTests ()
-			{
-				if (System.Diagnostics.Debugger.IsAttached)
-					return;
-
-				//NOTE: adb.exe can cause a couple issues on Windows
-				//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
-				//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
-
-				try {
-					RunAdbCommand ("kill-server", true);
-				} catch (Exception ex) {
-					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
-				}
-
-				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
-				foreach (var p in Process.GetProcessesByName ("adb.exe"))
-					p.Kill ();
-			}
-
-		}
-
 		protected bool IsWindows => TestEnvironment.IsWindows;
 
-		protected bool IsMacOS => TestEnvironment.IsMacOS;
-
-		protected bool IsLinux => TestEnvironment.IsLinux;
-
-		public string StagingPath {
-			get { return Environment.GetFolderPath (Environment.SpecialFolder.MyDocuments); }
-		}
-
-		public string Root {
-			get {
-				return Path.GetFullPath (SetUp.TestDirectoryRoot);
-			}
-		}
-
-		public static bool CommercialBuildAvailable => TestEnvironment.CommercialBuildAvailable;
+		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 
 		/// <summary>
 		/// Checks if a commercial Xamarin.Android is available
@@ -84,8 +33,8 @@ namespace Xamarin.Android.Build.Tests
 		/// </summary>
 		public void AssertCommercialBuild (bool fail = false)
 		{
-			if (!CommercialBuildAvailable) {
-				var message = "This test requires a commercial build of Xamarin.Android.";
+			if (!TestEnvironment.CommercialBuildAvailable) {
+				var message = $"'{TestName}' requires a commercial build of Xamarin.Android.";
 				if (fail) {
 					Assert.Fail (message);
 				} else {
@@ -94,7 +43,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=' };
+		char [] invalidChars = { '{', '}', '(', ')', '$', ':', ';', '\"', '\'', ',', '=', '|' };
 
 		public string TestName {
 			get {
@@ -123,21 +72,6 @@ namespace Xamarin.Android.Build.Tests
 		/// See: https://docs.microsoft.com/en-us/windows/win32/fileio/naming-a-file#maximum-path-length-limitation
 		/// </summary>
 		public const int MaxFileName = 255;
-
-		protected static void AssertAaptSupported (bool useAapt2)
-		{
-			if (Builder.UseDotNet && !useAapt2) {
-				Assert.Ignore ("aapt(1) is not supported in .NET 5+");
-			}
-		}
-
-		protected static void AssertAotModeSupported (string aotMode)
-		{
-			if (Builder.UseDotNet && !string.IsNullOrEmpty (aotMode) &&
-					!string.Equals (aotMode, "Normal", StringComparison.OrdinalIgnoreCase)) {
-				Assert.Ignore ($"AotMode={aotMode} is not yet supported in .NET 6+");
-			}
-		}
 
 		protected static void WaitFor(int milliseconds)
 		{
@@ -174,10 +108,16 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				return RunProcessWithExitCode ("apkdiff" + ext, args);
 			} catch (System.ComponentModel.Win32Exception) {
-				// apkdiff's location might not be in the $PATH, try known location
+				// apkdiff's location might not be in the $PATH, try known locations
 				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-
-				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
+				var apkdiffPath = Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext);
+				if (!File.Exists (apkdiffPath)) {
+					var agentToolsDir = Environment.GetEnvironmentVariable ("AGENT_TOOLSDIRECTORY");
+					if (Directory.Exists (agentToolsDir)) {
+						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
+					}
+				}
+				return RunProcessWithExitCode (apkdiffPath, args);
 			}
 		}
 
@@ -511,36 +451,28 @@ namespace Xamarin.Android.Build.Tests
 
 		protected string GetResourceDesignerPath (ProjectBuilder builder, XamarinAndroidProject project)
 		{
-			string path;
-			if (Builder.UseDotNet) {
-				path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
-				}
-			} else {
-				path = Path.Combine (Root, builder.ProjectDirectory, "Resources");
+			string path = Path.Combine (Root, builder.ProjectDirectory, project.IntermediateOutputPath);
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				return Path.Combine (path, "_Microsoft.Android.Resource.Designer.dll");
 			}
 			return Path.Combine (path, "Resource.designer" + project.Language.DefaultDesignerExtension);
 		}
 
 		protected string GetResourceDesignerText (XamarinAndroidProject project, string path)
 		{
-			if (Builder.UseDotNet) {
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-					return decompiler.DecompileWholeModuleAsString ();
-				}
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+				return decompiler.DecompileWholeModuleAsString ();
 			}
+
 			return File.ReadAllText (path);
 		}
 
 		protected string[] GetResourceDesignerLines (XamarinAndroidProject project, string path)
 		{
-			if (Builder.UseDotNet) {
-				if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "True", ignoreCase: true) == 0) {
-					var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
-					return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
-				}
+			if (string.Compare (project.GetProperty ("AndroidUseDesignerAssembly"), "False", ignoreCase: true) != 0) {
+				var decompiler = new CSharpDecompiler (path, new DecompilerSettings () { });
+				return decompiler.DecompileWholeModuleAsString ().Split (Environment.NewLine[0]);
 			}
 			return File.ReadAllLines (path);
 		}
@@ -562,11 +494,92 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		protected bool RunCommand (string command, string arguments)
+		{
+			var psi = new ProcessStartInfo () {
+				FileName		= command,
+				Arguments		= arguments,
+				UseShellExecute		= false,
+				RedirectStandardInput	= false,
+				RedirectStandardOutput	= true,
+				RedirectStandardError	= true,
+				CreateNoWindow		= true,
+				WindowStyle		= ProcessWindowStyle.Hidden,
+			};
+
+			var stderr_completed = new ManualResetEvent (false);
+			var stdout_completed = new ManualResetEvent (false);
+
+			var p = new Process () {
+				StartInfo   = psi,
+			};
+
+			p.ErrorDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stderr_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			p.OutputDataReceived += (sender, e) => {
+				if (e.Data == null)
+					stdout_completed.Set ();
+				else
+					Console.WriteLine (e.Data);
+			};
+
+			using (p) {
+				p.StartInfo = psi;
+				p.Start ();
+				p.BeginOutputReadLine ();
+				p.BeginErrorReadLine ();
+
+				bool success = p.WaitForExit (60000);
+
+				// We need to call the parameter-less WaitForExit only if any of the standard
+				// streams have been redirected (see
+				// https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.process.waitforexit?view=netframework-4.7.2#System_Diagnostics_Process_WaitForExit)
+				//
+				p.WaitForExit ();
+				stderr_completed.WaitOne (TimeSpan.FromSeconds (60));
+				stdout_completed.WaitOne (TimeSpan.FromSeconds (60));
+
+				if (!success || p.ExitCode != 0) {
+					Console.Error.WriteLine ($"Process `{command} {arguments}` exited with value {p.ExitCode}.");
+					return false;
+				}
+
+				return true;
+			}
+		}
+
 		[SetUp]
 		public void TestSetup ()
 		{
 			TestContext.Out.WriteLine ($"[TESTLOG] Test {TestName} Starting");
 			TestContext.Out.Flush ();
+		}
+
+		[OneTimeTearDown]
+		protected virtual void AfterAllTests ()
+		{
+			if (System.Diagnostics.Debugger.IsAttached)
+				return;
+
+			//NOTE: adb.exe can cause a couple issues on Windows
+			//	1) it holds a lock on ~/android-toolchain, so a future build that needs to delete/recreate would fail
+			//	2) the MSBuild <Exec /> task *can* hang until adb.exe exits
+			if (IsWindows) {
+				try {
+					RunAdbCommand ("kill-server", true);
+				} catch (Exception ex) {
+					Console.Error.WriteLine ("Failed to run adb kill-server: " + ex);
+				}
+
+				//NOTE: in case `adb kill-server` fails, kill the process as a last resort
+				foreach (var p in Process.GetProcessesByName ("adb.exe"))
+					p.Kill ();
+			}
 		}
 
 		[TearDown]

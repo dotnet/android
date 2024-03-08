@@ -29,6 +29,8 @@
         NetworkInterfaces excluded: https://github.com/dotnet/runtime/issues/75155
     -->
     <ExcludeCategories>DotNetIgnore</ExcludeCategories>
+    <!-- FIXME: LLVMIgnore https://github.com/dotnet/runtime/issues/89190 -->
+    <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):LLVMIgnore</ExcludeCategories>
     <ExcludeCategories Condition=" '$(EnableLLVM)' == 'true' ">$(ExcludeCategories):InetAccess:NetworkInterfaces</ExcludeCategories>
   </PropertyGroup>
 

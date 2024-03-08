@@ -12,7 +12,7 @@
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.StartAndroidEmulator" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.KillProcess" />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.WaitForAndroidEmulator" />
-  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.Sleep" />
+  <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessLogcatTiming" />
   <UsingTask AssemblyFile="$(PrepTasksAssembly)" TaskName="Xamarin.Android.BuildTools.PrepTasks.ProcessApkSizes" />
 
@@ -160,7 +160,7 @@
         ContinueOnError="WarnAndContinue"
         Command="kill -HUP $(_EmuPid)"
     />
-    <Sleep
+    <XASleepInternal
         Condition=" '$(HostOS)' != 'Windows' And '$(_EmuTarget)' != '' "
         Milliseconds="5000"
     />
@@ -371,28 +371,25 @@
     <!-- SDK component installation can be frail, try a few times. -->
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
     </Exec>
-    <Sleep
+    <XASleepInternal
         Milliseconds="5000"
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />
     </Exec>
-    <Sleep
+    <XASleepInternal
         Milliseconds="10000"
         Condition=" '$(_SdkManagerExitCode)' != '0' "
     />
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory)"
         ContinueOnError="true"
         Condition=" '$(_SdkManagerExitCode)' != '0' ">
       <Output TaskParameter="ExitCode" PropertyName="_SdkManagerExitCode" />

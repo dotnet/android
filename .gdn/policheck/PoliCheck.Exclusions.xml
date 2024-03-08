@@ -1,0 +1,11 @@
+<PoliCheckExclusions>
+  <!-- Reminder: you are only allowed one exclusion element of each type, to have multiple values you must pipe separate them in a single element -->
+  <!-- Each of these exclusions is a folder name - if \[name]\ exists in the file path, it will be skipped -->
+  <Exclusion Type="FolderPathFull">LICENSE-DATA|LOCALIZE</Exclusion>
+  <!-- Each of these exclusions is a folder name - if any folder or file starts with "\[name]", it will be skipped -->
+  <Exclusion Type="FolderPathStart">src\Mono.Android\Profiles|src\Mono.Android\PublicAPI</Exclusion>
+  <!-- Each of these file types will be completely skipped for the entire scan -->
+  <!--<Exclusion Type="FileType">.ABC|.XYZ</Exclusion>-->
+  <!-- The specified file names will be skipped during the scan regardless which folder they are in -->
+  <Exclusion Type="FileName">REMAINING-INT-CONSTS.TXT|TAIWANCALENDAR.XML|XAMARIN-ANDROID-SDK-9.XML|SQLITE3.C|MAP.CSV|METHODMAP.EXT.CSV|EXTERNALWHITELIST.CSV|SYMBOLARCHIVEWHITELIST.CSV|POLICHECK.EXCLUSIONS.xml</Exclusion>
+</PoliCheckExclusions>

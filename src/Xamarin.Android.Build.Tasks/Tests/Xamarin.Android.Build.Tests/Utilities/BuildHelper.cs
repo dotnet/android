@@ -93,6 +93,15 @@ namespace Xamarin.Android.Build.Tests
 			}
 			return found == count;
 		}
+
+		// Checks if two string are equal after normalizing string line endings
+		public static void AreMultiLineEqual (string expected, string actual)
+		{
+			expected = expected.ReplaceLineEndings ();
+			actual = actual.ReplaceLineEndings ();
+
+			Assert.AreEqual (expected, actual);
+		}
 	}
 }
 

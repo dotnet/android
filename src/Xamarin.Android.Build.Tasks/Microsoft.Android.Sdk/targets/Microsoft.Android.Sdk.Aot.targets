@@ -123,11 +123,26 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         LLVMPath="$(_LLVMPath)"
         LdName="$(_LdName)"
         LdFlags="$(_LdFlags)"
+        CollectTrimmingEligibleMethods="$(AndroidStripILAfterAOT)"
+        TrimmingEligibleMethodsOutputDirectory="$(IntermediateOutputPath)tokens"
         WorkingDirectory="$(MSBuildProjectDirectory)"
         AotArguments="$(AndroidAotAdditionalArguments)">
       <Output TaskParameter="CompiledAssemblies" ItemName="_MonoAOTCompiledAssemblies" />
       <Output TaskParameter="FileWrites"         ItemName="FileWrites" />
     </MonoAOTCompiler>
+    <ILStrip
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' "
+        TrimIndividualMethods="true"
+        Assemblies="@(_MonoAOTCompiledAssemblies)"
+        IntermediateOutputPath="$(IntermediateOutputPath)"
+        DisableParallelStripping="$(_DisableParallelAot)">
+      <Output TaskParameter="UpdatedAssemblies" ItemName="_ILStripUpdatedAssemblies" />
+    </ILStrip>
+    <Copy
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_ILStripUpdatedAssemblies.ILStripped)' == 'true' and '%(_ILStripUpdatedAssemblies.UntrimmedAssemblyFilePath)' != '' "
+        SourceFiles="@(_ILStripUpdatedAssemblies)"
+        DestinationFiles="@(_ILStripUpdatedAssemblies->'%(UntrimmedAssemblyFilePath)')"
+    />
     <WriteLinesToFile
         File="$(_AndroidStampDirectory)_AndroidAot.stamp"
         Lines="@(_MonoAOTCompiledAssemblies->'%(LibraryFile)')"

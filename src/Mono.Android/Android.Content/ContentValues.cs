@@ -119,6 +119,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Boolean_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Boolean;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, bool value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Boolean_ == IntPtr.Zero)
@@ -134,6 +135,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Byte_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Byte;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, sbyte value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Byte_ == IntPtr.Zero)
@@ -149,6 +151,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Short_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Short;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, short value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Short_ == IntPtr.Zero)
@@ -164,6 +167,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Integer_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Integer;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, int value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Integer_ == IntPtr.Zero)
@@ -179,6 +183,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Long_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Long;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, long value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Long_ == IntPtr.Zero)
@@ -194,6 +199,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Float_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Float;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, float value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Float_ == IntPtr.Zero)
@@ -209,6 +215,7 @@ namespace Android.Content {
 
 		static IntPtr id_put_Ljava_lang_String_Ljava_lang_Double_;
 		[Register ("put", "(Ljava/lang/String;Ljava/lang/Double;)V", "")]
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public void Put (string key, double value)
 		{
 			if (id_put_Ljava_lang_String_Ljava_lang_Double_ == IntPtr.Zero)

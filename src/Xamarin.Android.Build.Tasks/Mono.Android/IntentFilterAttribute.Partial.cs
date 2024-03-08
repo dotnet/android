@@ -27,6 +27,8 @@ namespace Android.App {
 			{ "DataPort",         "port" },
 			{ "DataScheme",       "scheme" },
 			{ "AutoVerify",       "autoVerify" },
+			{ "DataPathSuffix",   "pathSuffix" },
+			{ "DataPathAdvancedPattern", "pathAdvancedPattern" },
 		};
 
 		static readonly Dictionary<string, Action<IntentFilterAttribute, object>> setters = new Dictionary<string, Action<IntentFilterAttribute, object>> () {
@@ -50,6 +52,10 @@ namespace Android.App {
 			{ "DataSchemes",      (self, value) => self.DataSchemes     = ToStringArray (value) },
 			{ "AutoVerify",       (self, value) => self._AutoVerify     = (bool) value },
 			{ "RoundIcon",        (self, value) => self._RoundIcon      = (string) value },
+			{ "DataPathSuffix",   (self, value) => self.DataPathSuffix  = (string) value },
+			{ "DataPathSuffixes", (self, value) => self.DataPathSuffixes  = ToStringArray (value) },
+			{ "DataPathAdvancedPattern",   (self, value) => self.DataPathAdvancedPattern        = (string) value },
+			{ "DataPathAdvancedPatterns",  (self, value) => self.DataPathAdvancedPatterns       = ToStringArray (value) },
 		};
 
 		static string[] ToStringArray (object value)
@@ -60,7 +66,7 @@ namespace Android.App {
 
 		HashSet<string> specified = new HashSet<string> ();
 
-		public static IEnumerable<IntentFilterAttribute> FromTypeDefinition (TypeDefinition type)
+		public static IEnumerable<IntentFilterAttribute> FromTypeDefinition (TypeDefinition type, IMetadataResolver cache)
 		{
 			IEnumerable<CustomAttribute> attrs = type.GetCustomAttributes ("Android.App.IntentFilterAttribute");
 			if (!attrs.Any ())
@@ -69,7 +75,7 @@ namespace Android.App {
 				var self = new IntentFilterAttribute (ToStringArray (attr.ConstructorArguments [0].Value));
 				foreach (var e in attr.Properties) {
 					self.specified.Add (e.Name);
-					setters [e.Name] (self, e.Argument.GetSettableValue ());
+					setters [e.Name] (self, e.Argument.GetSettableValue (cache));
 				}
 				yield return self;
 			}
@@ -126,6 +132,8 @@ namespace Android.App {
 			Func<string,XAttribute> toPathPrefix  = v => ToAttribute ("DataPathPrefix",  ReplacePackage (v, packageName));
 			Func<string,XAttribute> toPort        = v => ToAttribute ("DataPort",        ReplacePackage (v, packageName));
 			Func<string,XAttribute> toScheme      = v => ToAttribute ("DataScheme",      ReplacePackage (v, packageName));
+			Func<string,XAttribute> toPathSuffix      = v => ToAttribute ("DataPathSuffix",			  ReplacePackage (v, packageName));
+			Func<string,XAttribute> toPathAdvancedPattern = v => ToAttribute ("DataPathAdvancedPattern",      ReplacePackage (v, packageName));
 			Func<Func<string,XAttribute>, string, XElement> toData = (f, s) => string.IsNullOrEmpty (s) ? null : new XElement ("data", f (s));
 			var empty = Array.Empty<string> ();
 			var dataList = Enumerable.Empty<XElement> ()
@@ -135,11 +143,13 @@ namespace Android.App {
 				.Concat ((DataPathPatterns ?? empty).Select (p => toData (toPathPattern, p)))
 				.Concat ((DataPathPrefixes ?? empty).Select (p => toData (toPathPrefix, p)))
 				.Concat ((DataPorts ?? empty).Select (p => toData (toPort, p)))
-				.Concat ((DataSchemes ?? empty).Select (p => toData (toScheme, p)));
+				.Concat ((DataSchemes ?? empty).Select (p => toData (toScheme, p)))
+				.Concat ((DataPathSuffixes ?? empty).Select (p => toData (toPathSuffix, p)))
+				.Concat ((DataPathAdvancedPatterns ?? empty).Select (p => toData (toPathAdvancedPattern, p)));
 			if (string.IsNullOrEmpty (DataHost) && string.IsNullOrEmpty (DataMimeType) &&
 					string.IsNullOrEmpty (DataPath) && string.IsNullOrEmpty (DataPathPattern) && string.IsNullOrEmpty (DataPathPrefix) &&
-					string.IsNullOrEmpty (DataPort) && string.IsNullOrEmpty (DataScheme) &&
-					!dataList.Any ())
+					string.IsNullOrEmpty (DataPort) && string.IsNullOrEmpty (DataScheme) && string.IsNullOrEmpty (DataPathSuffix) &&
+					string.IsNullOrEmpty (DataPathAdvancedPattern) && !dataList.Any ())
 				return null;
 			return new XElement [] {
 					toData (toHost, DataHost),
@@ -148,7 +158,9 @@ namespace Android.App {
 					toData (toPathPattern, DataPathPattern),
 					toData (toPathPrefix, DataPathPrefix),
 					toData (toPort, DataPort),
-					toData (toScheme, DataScheme) }
+					toData (toScheme, DataScheme),
+					toData (toPathSuffix, DataPathSuffix),
+					toData (toPathAdvancedPattern, DataPathAdvancedPattern)}
 				.Concat (dataList).Where (x => x != null);
 		}
 	}

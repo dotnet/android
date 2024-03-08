@@ -3,6 +3,5 @@
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\DotNet.targets" />
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\ImportExportDocs.targets" />
   <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\PrepareWindows.targets" Condition=" '$(OS)' == 'Windows_NT' " />
-  <Import Project="$(MSBuildThisFileDirectory)build-tools\scripts\RunTests.targets" />
   <Import Project="$(MSBuildThisFileDirectory)tests\api-compatibility\api-compatibility.targets" />
 </Project>

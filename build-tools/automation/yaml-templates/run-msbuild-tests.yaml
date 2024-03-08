@@ -1,13 +1,14 @@
 parameters:
-  testOS:                 # 'macOS' or 'Windows'
-  jobName:                # Name of the job
-  jobDisplayName:         # Display name of the job
-  agentCount:             # Number of build agents to run in parallel
-  testFilter:             # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
+  testOS: ''              # 'macOS' or 'Windows'
+  jobName: ''             # Name of the job
+  jobDisplayName: ''      # Display name of the job
+  agentCount: 1           # Number of build agents to run in parallel
+  testFilter: ''          # Filter used to select tests (NUnit test selection language, not dotnet test filter language)
   xaSourcePath: $(System.DefaultWorkingDirectory)
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
+  use1ESTemplate: true
 
 jobs:
 - job: ${{ parameters.jobName }}
@@ -15,26 +16,29 @@ jobs:
     parallel: ${{ parameters.agentCount }}
   displayName: ${{ parameters.jobDisplayName }}
   ${{ if eq(parameters.testOS, 'Windows') }}:
-    pool: $(1ESWindowsPool)
+    pool:
+      name: MAUI-1ESPT
+      image: $(WindowsPoolImage1ESPT)
+      os: windows
   ${{ if eq(parameters.testOS, 'macOS') }}:
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
-  timeoutInMinutes: 180
+      os: macOS
+  timeoutInMinutes: 240
   cancelTimeoutInMinutes: 5
   steps:
   - ${{ if eq(parameters.testOS, 'Windows') }}:
     - script: netsh int ipv4 set global sourceroutingbehavior=drop
 
-    - template: kill-processes.yaml
+    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
-    - template: clean.yaml
+    - template: /build-tools/automation/yaml-templates/clean.yaml
 
-  - template: setup-test-environment.yaml
+  - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
     parameters:
       installTestSlicer: true
-      installLegacyDotNet: false
-      restoreNUnitConsole: false
-      updateMono: false
+      installLegacyXamarinAndroid: true
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
@@ -44,19 +48,20 @@ jobs:
       artifactName: $(TestAssembliesArtifactName)
       downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-  - template: run-sliced-nunit-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
     parameters:
       testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/$(DotNetStableTargetFramework)/Xamarin.Android.Build.Tests.dll
-      testFilter: ${{ parameters.testFilter }} $(ExcludedNUnitCategories)
+      testFilter: ${{ parameters.testFilter }}
       testRunTitle: Xamarin.Android.Build.Tests - ${{ parameters.testOS }}
       retryFailedTests: false
       xaSourcePath: ${{ parameters.xaSourcePath }}
 
-  - template: upload-results.yaml
+  - template: /build-tools/automation/yaml-templates/upload-results.yaml
     parameters:
       artifactName: Test Results - MSBuild - ${{ parameters.testOS }}-$(System.JobPositionInPhase)
       xaSourcePath: ${{ parameters.xaSourcePath }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-  - template: fail-on-issue.yaml
+  - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
     parameters:
       condition: ${{ parameters.shouldFailOnIssue }}

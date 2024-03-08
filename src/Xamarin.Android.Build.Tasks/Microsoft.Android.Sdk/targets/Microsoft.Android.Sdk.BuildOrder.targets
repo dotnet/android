@@ -82,6 +82,7 @@ properties that determine build ordering.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       _ValidateLinkMode;
+      _CheckNonIdealBindingConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       _CategorizeAndroidLibraries;
@@ -118,6 +119,7 @@ properties that determine build ordering.
       _BuildResourceDesigner;
       UpdateAndroidInterfaceProxies;
       _SetAndroidGenerateManagedBindings;
+      _ClearGeneratedManagedBindings;
       AddBindingsToCompile;
       _CheckForInvalidDesignerConfig;
     </ResolveReferencesDependsOn>
@@ -178,7 +180,6 @@ properties that determine build ordering.
       _BeforeGetAndroidDependencies;
       _SetLatestTargetFrameworkVersion;
       _ResolveSdks;
-      _ResolveMonoAndroidSdks;
       _ResolveAndroidTooling;
       $(GetAndroidDependenciesDependsOn);
     </GetAndroidDependenciesDependsOn>
@@ -187,6 +188,7 @@ properties that determine build ordering.
     </_ResolveLibraryProjectsDependsOn>
     <_CompileBindingJavaDependsOnTargets>
       _AdjustJavacVersionArguments;
+      _GetLibraryImports;
       _DetermineBindingJavaLibrariesToCompile;
       _GetJavaPlatformJar;
     </_CompileBindingJavaDependsOnTargets>

@@ -31,6 +31,7 @@ ms.date: 01/24/2020
 + APT0003: Invalid file name: It must contain only \[^a-zA-Z0-9_.\]+.
 + APT0004: Invalid file name: It must start with either A-Z or a-z or an underscore.
 + [APT2264](apt2264.md): The system cannot find the file specified. (2).
++ [APT2265](apt2265.md): The system cannot find the file specified. (2).
 
 ## JAVAxxxx: Java Tool
 
@@ -137,6 +138,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA1035](xa1035.md): The 'BundleAssemblies' property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the 'AndroidUseAssemblyStore' and 'AndroidEnableAssemblyCompression' properties.
 + [XA1036](xa1036.md): AndroidManifest.xml //uses-sdk/@android:minSdkVersion '29' does not match the $(SupportedOSPlatformVersion) value '21' in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
 Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn't already exist).
++ [XA1037](xa1037.md): The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.
 
 ## XA2xxx: Linker
 

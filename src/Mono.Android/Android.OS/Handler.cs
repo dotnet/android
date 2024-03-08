@@ -5,6 +5,7 @@ namespace Android.OS {
 
 	public partial class Handler {
 
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 		public Handler (Action<Message> handler)
 			: this (new ActionHandlerCallback (handler))
 		{

@@ -51,9 +51,7 @@ namespace Android.Runtime
 
 		static AndroidRuntime? androidRuntime;
 
-#if NETCOREAPP
 		[UnmanagedCallersOnly]
-#endif
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
 		{
 			string typeName = new string ((char*) typeName_ptr, 0, typeName_len);
@@ -75,9 +73,7 @@ namespace Android.Runtime
 			((AndroidTypeManager)androidRuntime!.TypeManager).RegisterNativeMembers (jniType, type, methods);
 		}
 
-#if NETCOREAPP
 		[UnmanagedCallersOnly]
-#endif
 		internal static unsafe void Initialize (JnienvInitializeArgs* args)
 		{
 #if NETCOREAPP
@@ -91,18 +87,12 @@ namespace Android.Runtime
 			gref_gc_threshold = args->grefGcThreshold;
 
 			jniRemappingInUse = args->jniRemappingInUse;
-#if NETCOREAPP
 			MarshalMethodsEnabled = args->marshalMethodsEnabled;
-#endif
 			java_class_loader = args->grefLoader;
 
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
 			LocalRefsAreIndirect = args->localRefsAreIndirect == 1;
-
-#if MONOANDROID1_0
-			Mono.SystemDependencyProvider.Initialize ();
-#endif
 
 			bool androidNewerThan10 = args->androidSdkVersion > 10;
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
@@ -124,16 +114,12 @@ namespace Android.Runtime
 				}
 			}
 
-#if !MONOANDROID1_0
 			SetSynchronizationContext ();
-#endif
 		}
 
-#if !MONOANDROID1_0
 		// NOTE: prevents Android.App.Application static ctor from running
 		[MethodImpl (MethodImplOptions.NoInlining)]
 		static void SetSynchronizationContext () =>
 			SynchronizationContext.SetSynchronizationContext (Android.App.Application.SynchronizationContext);
-#endif
 	}
 }

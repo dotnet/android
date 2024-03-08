@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using NUnit.Framework;
 using NUnit.Framework.Interfaces;
 using Xamarin.ProjectTools;
@@ -13,11 +14,15 @@ namespace Xamarin.Android.Build.Tests
 	[NonParallelizable]
 	public class TimeZoneInfoTests : DeviceTest
 	{
-		static ProjectBuilder builder;
+		ProjectBuilder builder;
+		XamarinAndroidApplicationProject proj;
+		string tzFileSuffix;
 
 		[OneTimeSetUp]
 		public void BeforeAllTests ()
 		{
+			AssertHasDevices ();
+
 			string debuggable = RunAdbCommand ("shell getprop ro.debuggable");
 			if (debuggable != "1") {
 				Assert.Fail ("TimeZoneInfoTests need to use `su root` and this device does not support that feature. Try using an emulator.");
@@ -25,15 +30,23 @@ namespace Xamarin.Android.Build.Tests
 			// Disable auto timezone
 			RunAdbCommand ("shell settings put global auto_time_zone 0");
 
+			proj = new XamarinAndroidApplicationProject (packageName: "TimeZoneInfoTests");
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""TimeZoneInfo={TimeZoneInfo.Local.Id}"";
+			Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
+			Console.WriteLine ($""TimeZoneInfoTests.TimeZoneInfo={TimeZoneInfo.Local.Id}"");
+");
+
 			builder = CreateApkBuilder (Path.Combine ("temp", "TimeZoneInfoTests"));
+			builder.BuildLogFile = "onetimesetup-install.log";
+			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 		}
 
 		[SetUp]
 		public override void SetupTest ()
 		{
-			if (!IsDeviceAttached (refreshCachedValue: true)) {
-				RestartDevice ();
-				AssertHasDevices ();
+			var tzParam = TestContext.CurrentContext.Test.Arguments[0] as string;
+			if (!string.IsNullOrEmpty (tzParam)) {
+				tzFileSuffix = tzParam.Replace ("/", "-");
 			}
 		}
 
@@ -44,40 +57,33 @@ namespace Xamarin.Android.Build.Tests
 		[TearDown]
 		protected override void CleanupTest ()
 		{
-			var tzParam = TestContext.CurrentContext.Test.Arguments[0] as string;
-			if (!string.IsNullOrEmpty (tzParam)) {
-				tzParam = tzParam.Replace ("/", "-");
-			}
-
 			string output = Path.Combine (Root, builder?.ProjectDirectory);
 			if (TestContext.CurrentContext.Result.Outcome.Status == TestStatus.Failed && Directory.Exists (output)) {
-				foreach (var testFile in Directory.GetFiles (output, $"*{tzParam}*log", SearchOption.AllDirectories)) {
+				foreach (var setupFile in Directory.GetFiles (output, $"*onetimesetup*log", SearchOption.AllDirectories)) {
+					TestContext.AddTestAttachment (setupFile, Path.GetFileNameWithoutExtension (setupFile));
+				}
+				foreach (var testFile in Directory.GetFiles (output, $"*{tzFileSuffix}*log", SearchOption.AllDirectories)) {
 					TestContext.AddTestAttachment (testFile, Path.GetFileNameWithoutExtension (testFile));
 				}
 			}
 		}
 
-		[OneTimeTearDown]
-		public void AfterAllTests ()
+		protected override void DeviceTearDown ()
 		{
-			string output = Path.Combine (Root, builder?.ProjectDirectory);
-			if (TestContext.CurrentContext.Result.FailCount == 0 && Directory.Exists (output)) {
-				try {
-					Directory.Delete (output, recursive: true);
-				} catch (IOException ex) {
-					// This happens on CI occasionally, let's not fail the test
-					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
-				}
-			}
+		}
+
+		[OneTimeTearDown]
+		protected override void AfterAllTests ()
+		{
 		}
 
 
 		const int TIMEZONE_NODE_COUNT = 15;
 		const int TIMEZONE_RETRY_COUNT = 3;
 
-		static object [] GetTimeZoneTestCases (int node)
+		static List<string> GetTimeZoneTestInfo ()
 		{
-			List<object> tests = new List<object> ();
+			var tests = new List<string> ();
 			var ignore = new string [] {
 				"Asia/Qostanay",
 				"US/Pacific-New"
@@ -88,10 +94,14 @@ namespace Xamarin.Android.Build.Tests
 					TestContext.WriteLine ($"Ignoring {tz} TimeZone Test");
 					continue;
 				}
-				tests.Add (new object [] {
-					tz,
-				});
+				tests.Add (tz);
 			}
+			return tests;
+		}
+
+		static object [] GetTimeZoneTestCases (int node)
+		{
+			var tests = GetTimeZoneTestInfo ();
 			return tests.Where (p => tests.IndexOf (p) % TIMEZONE_NODE_COUNT == node).ToArray ();
 		}
 
@@ -170,44 +180,46 @@ namespace Xamarin.Android.Build.Tests
 		[TestCaseSource (nameof (GetTimeZoneTestCases), new object [] { 14 })]
 		public void CheckTimeZoneInfoIsCorrectNode15 (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
 
+		[Test]
+		[Retry (TIMEZONE_RETRY_COUNT)]
+		[TestCaseSource (nameof (GetTimeZoneTestInfo))]
+		public void CheckTimeZoneInfoIsCorrectWithSlicer (string timeZone) => CheckTimeZoneInfoIsCorrect (timeZone);
+
 
 		public void CheckTimeZoneInfoIsCorrect (string timeZone)
 		{
-			var proj = new XamarinAndroidApplicationProject (packageName: "TimeZoneInfoTests");
-			if (Builder.UseDotNet) {
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""TimeZoneInfo={TimeZoneInfo.Local.Id}"";
-				Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
-				Console.WriteLine ($""TimeZoneInfoTests.TimeZoneInfo={TimeZoneInfo.Local.Id}"");
-");
-			} else {
-				proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"button.Text = $""TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"";
-				Console.WriteLine ($""TimeZoneInfoNative={Java.Util.TimeZone.Default.ID}"");
-				Console.WriteLine ($""TimeZoneInfoTests.TimeZoneInfo={TimeZoneInfo.Local.DisplayName}"");
-");
+			AssertHasDevices ();
+
+			// Attempt to reinstall the app that was installed during fixture setup if it is missing
+			var packageOutput = RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim ();
+			var expectedPackageOutput = $"package:{proj.PackageName}";
+			if (packageOutput != expectedPackageOutput) {
+				builder.BuildLogFile = $"setup-install-{tzFileSuffix}.log";
+				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			}
 
-			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log");
-			string deviceTz = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+			RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
+			RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
 
-			if (deviceTz != timeZone) {
-				for (int attempt = 0; attempt < 5; attempt++) {
-					TestContext.Out.WriteLine ($"{nameof (CheckTimeZoneInfoIsCorrect)}: Setting TimeZone to {timeZone}, attempt {attempt}...");
-					ClearAdbLogcat ();
-					RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
-					deviceTz = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
-					if (deviceTz == timeZone) {
-						break;
-					}
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, $"startup-logcat-{timeZone.Replace ("/", "-")}.log");
+			RunAdbCommand ($"shell su root setprop persist.sys.timezone \"America/New_York\"");
+			string deviceTz = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+			TestContext.Out.WriteLine ($"test value:{timeZone}, prop value:{deviceTz}");
+
+			for (int attempt = 0; attempt < 5; attempt++) {
+				TestContext.Out.WriteLine ($"{nameof (CheckTimeZoneInfoIsCorrect)}: Setting TimeZone to {timeZone}, attempt {attempt}...");
+				ClearAdbLogcat ();
+				RunAdbCommand ($"shell su root setprop persist.sys.timezone \"{timeZone}\"");
+				deviceTz = RunAdbCommand ("shell getprop persist.sys.timezone")?.Trim ();
+				if (deviceTz == timeZone) {
+					break;
 				}
 			}
 
 			Assert.AreEqual (timeZone, deviceTz, $"The command to set the device timezone to {timeZone} failed. Current device timezone is {deviceTz}");
-			builder.BuildLogFile = $"install-{timeZone.Replace ("/", "-")}.log";
-			Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 			ClearAdbLogcat ();
-			RunAdbCommand ($"shell am force-stop --user all {proj.PackageName}");
-			RunAdbCommand ($"shell am kill --user all {proj.PackageName}");
-			RunProjectAndAssert (proj, builder, logName: $"run-{timeZone.Replace ("/", "-")}.log");
+			Thread.Sleep (1000);
+			StartActivityAndAssert (proj);
 
 			string logcatSearchString = "TimeZoneInfoTests.TimeZoneInfo=";
 			string expectedLogcatOutput = $"{logcatSearchString}{timeZone}";

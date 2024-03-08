@@ -9,7 +9,7 @@
 // designer on desktop.
 const uint64_t format_tag = FORMAT_TAG;
 
-#if defined (DEBUG) || !defined (ANDROID)
+#if defined (DEBUG)
 static TypeMapEntry java_to_managed[] = {};
 
 static TypeMapEntry managed_to_java[] = {};
@@ -214,7 +214,7 @@ DSOCacheEntry dso_cache[] = {
 //
 // Support for marshal methods
 //
-#if defined (RELEASE) && defined (ANDROID) && defined (NET)
+#if defined (RELEASE)
 MonoImage* assembly_image_cache[] = {
 	nullptr,
 	nullptr,
@@ -271,7 +271,7 @@ void xamarin_app_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] get_functi
 {
 	// Dummy
 }
-#endif // def RELEASE && def ANDROID && def NET
+#endif // def RELEASE
 
 static const JniRemappingIndexMethodEntry some_java_type_one_methods[] = {
 	{

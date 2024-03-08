@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\Configuration.props" />
+  <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props'))" Condition=" '$(DirectoryBuildPropsImported)' != 'true' " />
+  <Import Project="..\..\Configuration.props" Condition=" '$(ConfigurationPropsImported)' != 'true' " />
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.Zip" />
   <Target Name="UpdateMonoAndroidContract">
     <Error
@@ -9,7 +10,6 @@
     />
     <PropertyGroup>
       <_GenAPI>"$(XAPackagesDir)\microsoft.dotnet.genapi\$(MicrosoftDotNetApiCompatPackageVersion)\tools\net472\Microsoft.DotNet.GenAPI.exe"</_GenAPI>
-      <_CilStrip>"$(XAInstallPrefix)\xbuild\Xamarin\Android\cil-strip.exe"</_CilStrip>
       <_ContractRefDll>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll</_ContractRefDll>
       <_ContractRefSrc>$(MSBuildThisFileDirectory)\reference\Mono.Android.dll.cs</_ContractRefSrc>
     </PropertyGroup>
@@ -19,9 +19,6 @@
     />
     <Exec
         Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_GenAPI) &quot;$(_ContractRefDll)&quot; > &quot;$(_ContractRefSrc)&quot;"
-    />
-    <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_CilStrip) &quot;$(_ContractRefDll)&quot;"
     />
     <ItemGroup>
       <_ZipEntry Include="$(_ContractRefDll)" />

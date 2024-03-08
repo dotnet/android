@@ -87,6 +87,17 @@ namespace Xamarin.Android.AssemblyStore
 			ProcessStores ();
 		}
 
+		public AssemblyStoreExplorer (ZipArchive archive, string basePathInArchive, Action<AssemblyStoreExplorerLogLevel, string>? customLogger = null, bool keepStoreInMemory = false)
+		{
+			logger = customLogger;
+			this.keepStoreInMemory = keepStoreInMemory;
+			StorePath = "<in-memory-archive>";
+			StoreSetName = StorePath;
+			ReadStoreSetFromArchive (archive, basePathInArchive);
+
+			ProcessStores ();
+		}
+
 		void Logger (AssemblyStoreExplorerLogLevel level, string message)
 		{
 			if (level == AssemblyStoreExplorerLogLevel.Error) {

@@ -11,11 +11,7 @@ namespace Xamarin.Android.Net
 {
 	sealed class AuthModuleDigest : IAndroidAuthenticationModule
 	{
-#if MONOANDROID1_0
-		const string LOG_APP = AndroidClientHandler.LOG_APP + "-digest-auth";
-#else
 		const string LOG_APP = AndroidMessageHandler.LOG_APP + "-digest-auth";
-#endif
 
 		static readonly object cache_lock = new object ();
 		static readonly Dictionary <int, AuthDigestSession> cache = new Dictionary <int, AuthDigestSession> ();

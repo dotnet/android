@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -190,10 +192,12 @@ namespace Xamarin.Android.Tasks
 
 		public int ReplacementMethodIndexEntryCount { get; private set; } = 0;
 
-		public JniRemappingAssemblyGenerator ()
+		public JniRemappingAssemblyGenerator (TaskLoggingHelper log)
+			: base (log)
 		{}
 
-		public JniRemappingAssemblyGenerator (List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+		public JniRemappingAssemblyGenerator (TaskLoggingHelper log, List<JniRemappingTypeReplacement> typeReplacements, List<JniRemappingMethodReplacement> methodReplacements)
+			: base (log)
 		{
 			this.typeReplacementsInput = typeReplacements ?? throw new ArgumentNullException (nameof (typeReplacements));
 			this.methodReplacementsInput = methodReplacements ?? throw new ArgumentNullException (nameof (methodReplacements));
@@ -207,6 +211,7 @@ namespace Xamarin.Android.Tasks
 
 			var typeReplacements = new List<StructureInstance<JniRemappingTypeReplacementEntry>> ();
 			Console.WriteLine ($"Type replacement input count: {typeReplacementsInput.Count}");
+
 			foreach (JniRemappingTypeReplacement mtr in typeReplacementsInput) {
 				var entry = new JniRemappingTypeReplacementEntry {
 					name = MakeJniRemappingString (mtr.From),

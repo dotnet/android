@@ -60,12 +60,12 @@ implication, estoppel or otherwise."			}
 #pragma warning disable CS1998
 		protected override async Task<bool> Execute (Context context)
 		{
-			GenerateThirdPartyNotices (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "ThirdPartyNotices.txt"),
+			GenerateThirdPartyNotices (Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "THIRD-PARTY-NOTICES.TXT"),
 			                           ThirdPartyLicenseType.Foundation,
 			                           includeExternalDeps: false,
 			                           includeBuildDeps: true);
 			Log.StatusLine ();
-			GenerateThirdPartyNotices (Path.Combine (context.XAInstallPrefix, "ThirdPartyNotices.txt"),
+			GenerateThirdPartyNotices (Path.Combine (context.XAInstallPrefix, "THIRD-PARTY-NOTICES.TXT"),
 			                           ThirdPartyLicenseType.MicrosoftOSS,
 			                           includeExternalDeps: true,
 			                           includeBuildDeps: false);
@@ -172,7 +172,7 @@ implication, estoppel or otherwise."			}
 			Log.StatusLine ($"  {Context.Instance.Characters.Bullet} Processing: ", tpn.Name, ConsoleColor.Gray, ConsoleColor.White);
 
 			if (licenses.ContainsKey (tpn.Name)) {
-				Log.WarningLine ($"Duplicate Third Party Notice '{tpn.Name}' (old class: {licenses [tpn.Name]}; new class: {tpn})");
+				Log.InfoLine ($"Duplicate Third Party Notice '{tpn.Name}' (old class: {licenses [tpn.Name]}; new class: {tpn})");
 				return;
 			}
 

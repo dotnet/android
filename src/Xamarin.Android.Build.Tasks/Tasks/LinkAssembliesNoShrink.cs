@@ -34,13 +34,16 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string TargetName { get; set; } = "";
 
-		public bool UsingAndroidNETSdk { get; set; }
-
 		public bool AddKeepAlives { get; set; }
 
 		public bool UseDesignerAssembly { get; set; }
 
 		public bool Deterministic { get; set; }
+
+		/// <summary>
+		/// Defaults to false, enables Mono.Cecil to load symbols
+		/// </summary>
+		public bool ReadSymbols { get; set; }
 
 		public override bool RunTask ()
 		{
@@ -48,13 +51,13 @@ namespace Xamarin.Android.Tasks
 				throw new ArgumentException ("source and destination count mismatch");
 
 			var readerParameters = new ReaderParameters {
-				ReadSymbols = true,
+				ReadSymbols = ReadSymbols,
 			};
 			var writerParameters = new WriterParameters {
 				DeterministicMvid = Deterministic,
 			};
 
-			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParameters)) {
+			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: ReadSymbols, loadReaderParameters: readerParameters)) {
 				// Add SearchDirectories with ResolvedAssemblies
 				foreach (var assembly in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (assembly.ItemSpec));
@@ -65,15 +68,15 @@ namespace Xamarin.Android.Tasks
 				// Set up the FixAbstractMethodsStep and AddKeepAlivesStep
 				var cache = new TypeDefinitionCache ();
 				var fixAbstractMethodsStep = new FixAbstractMethodsStep (resolver, cache, Log);
-				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log, UsingAndroidNETSdk);
-				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, Log);
+				var addKeepAliveStep = new AddKeepAlivesStep (resolver, cache, Log);
+				var fixLegacyResourceDesignerStep = new FixLegacyResourceDesignerStep (resolver, cache, Log);
 				for (int i = 0; i < SourceFiles.Length; i++) {
 					var source = SourceFiles [i];
 					var destination = DestinationFiles [i];
 					var assemblyName = Path.GetFileNameWithoutExtension (source.ItemSpec);
 
 					// In .NET 6+, we can skip the main assembly
-					if (UsingAndroidNETSdk && !AddKeepAlives && assemblyName == TargetName) {
+					if (!AddKeepAlives && assemblyName == TargetName) {
 						CopyIfChanged (source, destination);
 						continue;
 					}
@@ -82,17 +85,9 @@ namespace Xamarin.Android.Tasks
 						continue;
 					}
 
-					// Check AppDomain usage on any non-Product or Sdk assembly
-					AssemblyDefinition? assemblyDefinition = null;
-					if (!UsingAndroidNETSdk) {
-						assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
-						fixAbstractMethodsStep.CheckAppDomainUsage (assemblyDefinition, (string msg) => Log.LogCodedWarning ("XA2000", msg));
-					}
-
 					// Only run the step on "MonoAndroid" assemblies
 					if (MonoAndroidHelper.IsMonoAndroidAssembly (source) && !MonoAndroidHelper.IsSharedRuntimeAssembly (source.ItemSpec)) {
-						if (assemblyDefinition == null)
-							assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
+						var assemblyDefinition = resolver.GetAssembly (source.ItemSpec);
 
 						bool save = fixAbstractMethodsStep.FixAbstractMethods (assemblyDefinition);
 						if (UseDesignerAssembly)
@@ -131,7 +126,8 @@ namespace Xamarin.Android.Tasks
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
 
-			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TaskLoggingHelper logger)
+			public FixLegacyResourceDesignerStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
+				: base(cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
@@ -180,19 +176,17 @@ namespace Xamarin.Android.Tasks
 		{
 			readonly DirectoryAssemblyResolver resolver;
 			readonly TaskLoggingHelper logger;
-			readonly bool hasSystemPrivateCoreLib;
 
-			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger, bool hasSystemPrivateCoreLib)
+			public AddKeepAlivesStep (DirectoryAssemblyResolver resolver, TypeDefinitionCache cache, TaskLoggingHelper logger)
 				: base (cache)
 			{
 				this.resolver = resolver;
 				this.logger = logger;
-				this.hasSystemPrivateCoreLib = hasSystemPrivateCoreLib;
 			}
 
 			protected override AssemblyDefinition GetCorlibAssembly ()
 			{
-				return resolver.GetAssembly (hasSystemPrivateCoreLib ? "System.Private.CoreLib.dll" : "mscorlib.dll");
+				return resolver.GetAssembly ("System.Private.CoreLib.dll");
 			}
 
 			public override void LogMessage (string message)

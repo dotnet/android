@@ -8,23 +8,21 @@ IF ERRORLEVEL 1 CALL:FAILED_CASE
 IF ERRORLEVEL 1 CALL :DEFAULT_CASE
 
 :Prepare_CASE
-    dotnet build Xamarin.Android.sln -t:Prepare -nr:false
+    dotnet msbuild Xamarin.Android.sln -t:Prepare -nodeReuse:false
     GOTO END_CASE
 :PrepareExternal_CASE
-    dotnet build Xamarin.Android.sln -t:PrepareExternal -nr:false
+    dotnet build Xamarin.Android.sln -t:PrepareExternal -nodeReuse:false
     GOTO END_CASE
 :Build_CASE
-    dotnet-local.cmd build Xamarin.Android.sln  -nr:false
-    dotnet-local.cmd build tools/xabuild/xabuild.csproj -nr:false
+    dotnet-local.cmd build Xamarin.Android.sln  -nodeReuse:false
     GOTO END_CASE
 :Pack_CASE
-    dotnet-local.cmd build  Xamarin.Android.sln -t:PackDotNet -nr:false
+    dotnet-local.cmd build  Xamarin.Android.sln -t:PackDotNet -nodeReuse:false
     GOTO END_CASE
 :DEFAULT_CASE
-    dotnet build Xamarin.Android.sln -t:Prepare -nr:false
-    dotnet-local.cmd build Xamarin.Android.sln -nr:false
-    dotnet-local.cmd build tools/xabuild/xabuild.csproj -nr:false
-    dotnet-local.cmd build Xamarin.Android.sln -t:PackDotNet -nr:false
+    dotnet msbuild Xamarin.Android.sln -t:Prepare -nodeReuse:false
+    dotnet-local.cmd build Xamarin.Android.sln -nodeReuse:false
+    dotnet-local.cmd build Xamarin.Android.sln -t:PackDotNet -nodeReuse:false
     GOTO END_CASE
 :FAILED_CASE
     echo "Failed to find an instance of Visual Studio. Please check it is correctly installed."

@@ -10,15 +10,14 @@ using Xamarin.ProjectTools;
 
 namespace Xamarin.Android.Build.Tests
 {
-	[Category ("Node-2"), Category ("Commercial")]
+	[Category ("Node-2")]
 	[TestFixture, NonParallelizable]
 	public class DebuggingTasksTests : BaseTest
 	{
 		[OneTimeSetUp]
 		public void SetUp ()
 		{
-			if (!CommercialBuildAvailable)
-				Assert.Ignore ("DebuggingTasksTests require Xamarin.Android.Build.Debugging.Tasks.");
+			AssertCommercialBuild ();
 		}
 
 		// https://github.com/xamarin/monodroid/blob/63bbeb076d809c74811a8001d38bf2e9e8672627/tests/msbuild/nunit/Xamarin.Android.Build.Tests/Xamarin.Android.Build.Tests/ResolveXamarinAndroidToolsTests.cs
@@ -34,7 +33,9 @@ namespace Xamarin.Android.Build.Tests
 				Directory.Delete (Path.Combine (Root, path), recursive: true);
 
 			var engine = new MockBuildEngine (TestContext.Out, errors: errors, messages: messages);
-			var frameworksPath = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, "v1.0");
+			var frameworksRoot = Path.Combine (TestEnvironment.DotNetPreviewDirectory, "packs", "Microsoft.NETCore.App.Ref");
+			var mscorlibDll = Directory.GetFiles (frameworksRoot, "mscorlib.dll", SearchOption.AllDirectories).LastOrDefault ();
+			var frameworksPath = Path.GetDirectoryName (mscorlibDll);
 			var androidSdk = CreateFauxAndroidSdkDirectory (Path.Combine (path, "Sdk"), "24.0.1", new[]
 			{
 				new ApiInfo { Id = "23", Level = 23, Name = "Marshmallow", FrameworkVersion = "v6.0", Stable = true },
@@ -52,6 +53,7 @@ namespace Xamarin.Android.Build.Tests
 				MonoAndroidToolsPath = TestEnvironment.AndroidMSBuildDirectory,
 				ReferenceAssemblyPaths = new string[] {
 					frameworksPath,
+					TestEnvironment.MonoAndroidFrameworkDirectory,
 				},
 			};
 			Assert.True (task.Execute (), "Task should have completed successfully.");

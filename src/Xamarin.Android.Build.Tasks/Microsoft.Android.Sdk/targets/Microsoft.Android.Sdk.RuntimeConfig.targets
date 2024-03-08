@@ -38,7 +38,17 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Trim="true" />
     <!-- https://github.com/dotnet/runtime/blob/211cdd011f19a51b7092d8365e11e774a8280afb/src/libraries/System.Private.CoreLib/src/System/LocalAppContextSwitches.cs#L52 -->
     <RuntimeHostConfigurationOption Include="Switch.System.Reflection.ForceInterpretedInvoke"
-        Value="$(_SystemReflectionForceInterpretedInvoke)"
+        Value="$(AndroidAvoidEmitForPerformance)"
+        Trim="true"
+    />
+    <!-- https://github.com/dotnet/runtime/commit/fecf3eeffd3650566555e15292f9df0d3abcdfc6 -->
+    <RuntimeHostConfigurationOption Include="Microsoft.Extensions.DependencyInjection.DisableDynamicEngine"
+        Value="$(AndroidAvoidEmitForPerformance)"
+        Trim="true"
+    />
+    <!-- https://github.com/dotnet/runtime/commit/3aeefbdd5e975e287effaa8670422837dc661d68 -->
+    <RuntimeHostConfigurationOption Include="System.Diagnostics.Metrics.Meter.IsSupported"
+        Value="$(_SystemDiagnosticsMetricsMeterIsSupported)"
         Trim="true"
     />
   </ItemGroup>

@@ -2,7 +2,7 @@ steps:
 - powershell: |
     $ErrorActionPreference = 'SilentlyContinue'
     Get-Process
-    $procsToKill = @("nunit3-console", "xabuild", "MSBuild", "adb")
+    $procsToKill = @("nunit3-console", "MSBuild", "adb")
     Write-Host "Attempting to kill stray processes: $procsToKill ..."
     Stop-Process -Name $procsToKill -PassThru
     Write-Host "Running processes that should have been killed:"

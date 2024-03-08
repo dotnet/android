@@ -6,6 +6,8 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -28,7 +30,7 @@ namespace Xamarin.Android.Tasks
 			{
 				var dso_entry = EnsureType<DSOCacheEntry> (data);
 				if (String.Compare ("hash", fieldName, StringComparison.Ordinal) == 0) {
-					return $" hash 0x{dso_entry.hash:x}, from name: {dso_entry.HashedName}";
+					return $" from name: {dso_entry.HashedName}";
 				}
 
 				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
@@ -48,7 +50,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public string HashedName;
 
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
 			public bool ignore;
 
@@ -92,11 +94,11 @@ namespace Xamarin.Android.Tasks
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreRuntimeData structure
 		sealed class AssemblyStoreRuntimeData
 		{
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public byte data_start;
 			public uint assembly_count;
 
-			[NativePointer]
+			[NativePointer (IsNull = true)]
 			public AssemblyStoreAssemblyDescriptor assemblies;
 		}
 
@@ -131,11 +133,10 @@ namespace Xamarin.Android.Tasks
 		}
 
 		// Keep in sync with FORMAT_TAG in src/monodroid/jni/xamarin-app.hh
-		const ulong FORMAT_TAG = 0x015E6972616D58;
+		const ulong FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
 
 		SortedDictionary <string, string>? environmentVariables;
 		SortedDictionary <string, string>? systemProperties;
-		TaskLoggingHelper log;
 		StructureInstance? application_config;
 		List<StructureInstance<DSOCacheEntry>>? dsoCache;
 		List<StructureInstance<XamarinAndroidBundledAssembly>>? xamarinAndroidBundledAssemblies;
@@ -172,6 +173,7 @@ namespace Xamarin.Android.Tasks
 		public bool MarshalMethodsEnabled { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
+			: base (log)
 		{
 			if (environmentVariables != null) {
 				this.environmentVariables = new SortedDictionary<string, string> (environmentVariables, StringComparer.Ordinal);
@@ -180,8 +182,6 @@ namespace Xamarin.Android.Tasks
 			if (systemProperties != null) {
 				this.systemProperties = new SortedDictionary<string, string> (systemProperties, StringComparer.Ordinal);
 			}
-
-			this.log = log;
 		}
 
 		protected override void Construct (LlvmIrModule module)
@@ -299,8 +299,7 @@ namespace Xamarin.Android.Tasks
 				if (entry == null) {
 					throw new InvalidOperationException ($"Internal error: DSO cache entry has unexpected type {instance.Obj.GetType ()}");
 				}
-
-				entry.hash = GetXxHash (entry.HashedName, is64Bit);
+				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
@@ -322,7 +321,7 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (log, item.ItemSpec)));
+				dsos.Add ((name, $"dsoName{dsos.Count.ToString (CultureInfo.InvariantCulture)}", ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)));
 			}
 
 			var dsoCache = new List<StructureInstance<DSOCacheEntry>> ();

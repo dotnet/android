@@ -30,7 +30,7 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static IEnumerable<UsesPermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static IEnumerable<UsesPermissionAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			var attrs = provider.GetCustomAttributes ("Android.App.UsesPermissionAttribute");
 			foreach (var attr in attrs) {
@@ -45,7 +45,7 @@ namespace Android.App {
 					extra = Array.Empty<string> ();
 				}
 
-				self.specified = mapping.Load (self, attr);
+				self.specified = mapping.Load (self, attr, cache);
 
 				foreach (var e in extra)
 					self.specified.Add (e);

@@ -5,6 +5,7 @@ namespace Android.Runtime {
 	[Register ("mono/android/runtime/JavaObject")]
 	internal sealed class JavaObject : Java.Lang.Object {
 
+		[System.Diagnostics.CodeAnalysis.SuppressMessage ("Interoperability", "CA1422:Validate platform compatibility", Justification = "Suggested replacement uses instance sharing")]
 		public static IntPtr GetHandle (object obj)
 		{
 			if (obj == null)

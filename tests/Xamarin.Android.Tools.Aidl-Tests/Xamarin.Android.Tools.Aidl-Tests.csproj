@@ -22,8 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Reference Include="Xamarin.Android.Cecil">
-      <HintPath>..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\Xamarin.Android.Cecil.dll</HintPath>
-    </Reference>
+    <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" />
   </ItemGroup>
 </Project>

@@ -22,7 +22,7 @@ namespace Xamarin.Android.Prepare
 			dotnetPath = dotnetPath.TrimEnd (new char [] { Path.DirectorySeparatorChar });
 
 			if (!await InstallDotNetAsync (context, dotnetPath, BuildToolVersion)) {
-				Log.ErrorLine ($"Installation of dotnet SDK {BuildToolVersion} failed.");
+				Log.ErrorLine ($"Installation of dotnet SDK '{BuildToolVersion}' failed.");
 				return false;
 			}
 
@@ -47,21 +47,23 @@ namespace Xamarin.Android.Prepare
 				ProcessRunner.QuoteArgument ($"-bl:{logPath}"),
 			};
 			if (!Utilities.RunCommand (Configurables.Paths.DotNetPreviewTool, restoreArgs)) {
-				Log.ErrorLine ($"dotnet restore {packageDownloadProj} failed.");
+				Log.ErrorLine ($"Failed to restore runtime packs using '{packageDownloadProj}'.");
 				return false;
 			}
 
 			var sdk_manifests = Path.Combine (dotnetPath, "sdk-manifests");
 
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
-			var dotnets = new [] { "net6", "net7", "current" };
+			var dotnets = new [] { "net6", "net7", "net8", "current" };
 			foreach (var dotnet in dotnets) {
 				var destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand), $"microsoft.net.workload.mono.toolchain.{dotnet}");
-				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "WorkloadManifest.*")) {
+				Utilities.DeleteDirectory (destination, recurse: true);
+				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
 				destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand), $"microsoft.net.workload.emscripten.{dotnet}");
-				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "WorkloadManifest.*")) {
+				Utilities.DeleteDirectory (destination, recurse: true);
+				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
 			}
@@ -74,44 +76,38 @@ namespace Xamarin.Android.Prepare
 			string tempDotnetScriptPath = dotnetScriptPath + "-tmp";
 			Utilities.DeleteFile (tempDotnetScriptPath);
 
-			Log.StatusLine ("Downloading dotnet-install...");
+			Log.StatusLine ("Downloading dotnet-install script...");
 
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
 			if (!success) {
-				string message;
 				if (status == HttpStatusCode.NotFound) {
-					message = "dotnet-install URL not found";
+					Log.WarningLine ($"dotnet-install URL '{dotnetScriptUrl}' not found.");
 				} else {
-					message = $"Failed to obtain dotnet-install size. HTTP status code: {status} ({(int)status})";
+					Log.WarningLine ($"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int) status})");
 				}
 
-				return ReportAndCheckCached (message, quietOnError: true);
+				if (File.Exists (dotnetScriptPath)) {
+					Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+					return true;
+				}
 			}
 
 			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
 			await Download (context, dotnetScriptUrl, tempDotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
 
-			if (!File.Exists (tempDotnetScriptPath)) {
-				return ReportAndCheckCached ($"Download of dotnet-install from {dotnetScriptUrl} failed");
+			if (File.Exists (tempDotnetScriptPath)) {
+				Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
+				Utilities.DeleteFile (tempDotnetScriptPath);
+				return true;
 			}
 
-			Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
-			Utilities.DeleteFile (tempDotnetScriptPath);
-			return true;
-
-			bool ReportAndCheckCached (string message, bool quietOnError = false)
-			{
-				if (File.Exists (dotnetScriptPath)) {
-					Log.WarningLine (message);
-					Log.WarningLine ($"Using cached installation script found in {dotnetScriptPath}");
-					return true;
-				}
-
-				if (!quietOnError) {
-					Log.ErrorLine (message);
-					Log.ErrorLine ($"Cached installation script not found in {dotnetScriptPath}");
-				}
+			if (File.Exists (dotnetScriptPath)) {
+				Log.WarningLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
+				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				return true;
+			} else {
+				Log.ErrorLine ($"Download of dotnet-install from '{dotnetScriptUrl}' failed");
 				return false;
 			}
 		}
@@ -123,7 +119,7 @@ namespace Xamarin.Android.Prepare
 			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (archiveUrl);
 			if (!success) {
 				if (status == HttpStatusCode.NotFound) {
-					Log.WarningLine ($"dotnet archive URL {archiveUrl} not found");
+					Log.InfoLine ($"dotnet archive URL {archiveUrl} not found");
 					return false;
 				} else {
 					Log.WarningLine ($"Failed to obtain dotnet archive size. HTTP status code: {status} ({(int)status})");

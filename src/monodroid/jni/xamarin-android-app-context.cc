@@ -1,5 +1,7 @@
+#include <mono/metadata/appdomain.h>
 #include <mono/metadata/class.h>
 #include <mono/metadata/debug-helpers.h>
+#include <mono/metadata/threads.h>
 
 #include "monodroid-glue-internal.hh"
 #include "mono-image-loader.hh"
@@ -27,7 +29,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		MarshalMethodsUtilities::get_class_name (class_index), class_index
 	);
 
-	if (XA_UNLIKELY (class_index >= marshal_methods_number_of_classes)) {
+	if (class_index >= marshal_methods_number_of_classes) [[unlikely]] {
 		log_fatal (LOG_DEFAULT,
 		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
 		           marshal_methods_number_of_classes - 1,
@@ -49,7 +51,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	MonoError error;
 	void *ret = method != nullptr ? mono_method_get_unmanaged_callers_only_ftnptr (method, &error) : nullptr;
 
-	if (XA_LIKELY (ret != nullptr)) {
+	if (ret != nullptr) [[likely]] {
 		if constexpr (NeedsLocking) {
 			__atomic_store_n (&target_ptr, ret, __ATOMIC_RELEASE);
 		} else {

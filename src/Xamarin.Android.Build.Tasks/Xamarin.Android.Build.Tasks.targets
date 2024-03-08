@@ -22,11 +22,13 @@
       _GenerateBundledVersions;
       _CopyNetSdkTargets;
       _CopyVSExtensionTargets;
+      _WriteVersionFiles;
     </BuildDependsOn>
     <_AndroidSdkLocation Condition="'$(_AndroidSdkLocation)'==''">$(AndroidSdkDirectory)</_AndroidSdkLocation>
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt</_SupportLicense>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt</_SupportLicense>
+    <_ILRepackEnabled Condition=" '$(_ILRepackEnabled)' == '' ">true</_ILRepackEnabled>
   </PropertyGroup>
   <ItemGroup>
     <None
@@ -53,6 +55,11 @@
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JarToXml.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.JarToXml.targets</Link>
+    </None>
+    <None
+        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Maven.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Bindings.Maven.targets</Link>
     </None>
     <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets">
@@ -143,9 +150,6 @@
     <None Include="Xamarin.Android.VisualBasic.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Xamarin.Android.SkipCases.projitems">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <ItemGroup>
     <None Include="ManifestOverlays\Timing.xml">
@@ -181,7 +185,7 @@
     <ReplaceFileContents
         SourceFile="Xamarin.Android.BuildInfo.txt.in"
         DestinationFile="Xamarin.Android.BuildInfo.txt"
-        Replacements="@MONO_COMMIT@=$(_BuildInfo_MonoCommit);@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
+        Replacements="@JAVA_INTEROP_COMMIT@=$(_BuildInfo_JavaInteropCommit);@SQLITE_COMMIT@=$(_BuildInfo_SqliteCommit);@XAMARIN_ANDROID_TOOLS_COMMIT@=$(_BuildInfo_XamarinAndroidToolsCommit);">
     </ReplaceFileContents>
     <ReplaceFileContents
         SourceFile="Xamarin.Android.Common.props.in"
@@ -268,6 +272,7 @@
   </ItemGroup>
 
   <Target Name="ILRepacker"
+      Condition=" '$(_ILRepackEnabled)' == 'true' "
       BeforeTargets="CopyFilesToOutputDirectory"
       Inputs="$(MSBuildAllProjects);@(IntermediateAssembly);@(InputAssemblies)"
       Outputs="$(IntermediateOutputPath)ILRepacker.stamp" >
@@ -301,8 +306,14 @@
     <_ExtraPackageTarget Include="$(OutputPath)\libZipSharp.pdb" />
     <_ExtraPackageSource Include="$(PkgXamarin_Build_AsyncTask)\lib\$(TargetFrameworkNETStandard)\Xamarin.Build.AsyncTask.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Xamarin.Build.AsyncTask.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.pdb" />
+    <_ExtraPackageSource Include="$(PkgMono_Cecil)\lib\$(TargetFrameworkNETStandard)\Mono.Cecil.Mdb.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
+    <_ExtraPackageSource Include="$(PkgMavenNet)\lib\netstandard2.0\MavenNet.pdb" />
+    <_ExtraPackageTarget Include="$(OutputPath)\MavenNet.pdb" />
 
     <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />
@@ -382,25 +393,22 @@
     />
   </Target>
 
-  <!-- XABuild will call this to copy required output to the legacy SDK location -->
-  <Target Name="CopyToLegacySdkOutDir"
-      DependsOnTargets="ConstructInstallerItems;_CopyVSExtensionTargets" >
-    <Copy
-        SourceFiles="@(MSBuildItemsWin)"
-        DestinationFiles="@(MSBuildItemsWin->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' == 'Windows' "
+  <Target Name="_WriteVersionFiles"
+      DependsOnTargets="GetXAVersionInfo" >
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version"
+        Lines="$(ProductVersion)"
+        Overwrite="True"
     />
-    <Copy
-        SourceFiles="@(MSBuildItemsUnix)"
-        DestinationFiles="@(MSBuildItemsUnix->'$(XAInstallPrefix)xbuild\Xamarin\Android\%(RelativePath)')"
-        SkipUnchangedFiles="true"
-        Condition=" '$(HostOS)' != 'Windows' "
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.commit"
+        Lines="$(XARepositoryName)/$(XAVersionBranch)/$(XAVersionHash)"
+        Overwrite="True"
     />
-    <Copy
-        SourceFiles="@(VersionFiles)"
-        DestinationFolder="$(XAInstallPrefix)xbuild\Xamarin\Android"
-        SkipUnchangedFiles="true"
+    <WriteLinesToFile
+        File="$(MicrosoftAndroidSdkOutDir)Version.rev"
+        Lines="$(XAVersionCommitCount)"
+        Overwrite="True"
     />
   </Target>
 </Project>

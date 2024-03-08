@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System.IO.Hashing;
 using System.Text;
 
+using Microsoft.Build.Utilities;
+
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -69,6 +71,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public TypeMapJava JavaTypeMapEntry;
 
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_map_index;
 		}
@@ -126,6 +129,8 @@ namespace Xamarin.Android.Tasks
 			public ulong JavaNameHash64;
 
 			public uint module_index;
+
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public uint type_token_id;
 			public uint java_name_index;
 		}
@@ -176,7 +181,8 @@ namespace Xamarin.Android.Tasks
 
 		ulong moduleCounter = 0;
 
-		public TypeMappingReleaseNativeAssemblyGenerator (NativeTypeMappingData mappingData)
+		public TypeMappingReleaseNativeAssemblyGenerator (TaskLoggingHelper log, NativeTypeMappingData mappingData)
+			: base (log)
 		{
 			this.mappingData = mappingData ?? throw new ArgumentNullException (nameof (mappingData));
 			javaNameHash32Comparer = new JavaNameHash32Comparer ();
@@ -258,7 +264,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: construction state expected but not found");
 			}
 
-			return $" {index}: 0x{value:x} => {cs.JavaMap[(int)index].Instance.JavaName}";
+			return $" {index}: {cs.JavaMap[(int)index].Instance.JavaName}";
 		}
 
 		void GenerateAndSortJavaHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
@@ -287,7 +293,7 @@ namespace Xamarin.Android.Tasks
 				hashes = list;
 			}
 
-			gv.OverrideValueAndType (listType, hashes);
+			gv.OverrideTypeAndValue (listType, hashes);
 		}
 
 		ConstructionState EnsureConstructionState (object? callerState)
@@ -400,31 +406,11 @@ namespace Xamarin.Android.Tasks
 				TypeMapJava entry = cs.JavaMap[i].Instance;
 
 				// The cast is safe, xxHash will return a 32-bit value which (for convenience) was upcast to 64-bit
-				entry.JavaNameHash32 = (uint)HashName (entry.JavaName, is64Bit: false);
+				entry.JavaNameHash32 = (uint)TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: false);
 				hashes32.Add (entry.JavaNameHash32);
 
-				entry.JavaNameHash64 = HashName (entry.JavaName, is64Bit: true);
+				entry.JavaNameHash64 = TypeMapHelper.HashJavaName (entry.JavaName, is64Bit: true);
 				hashes64.Add (entry.JavaNameHash64);
-			}
-
-			ulong HashName (string name, bool is64Bit)
-			{
-				if (name.Length == 0) {
-					return UInt64.MaxValue;
-				}
-
-				// Native code (EmbeddedAssemblies::typemap_java_to_managed in embedded-assemblies.cc) will operate on wchar_t cast to a byte array, we need to do
-				// the same
-				return HashBytes (Encoding.Unicode.GetBytes (name), is64Bit);
-			}
-
-			ulong HashBytes (byte[] bytes, bool is64Bit)
-			{
-				if (is64Bit) {
-					return XxHash64.HashToUInt64 (bytes);
-				}
-
-				return (ulong)XxHash32.HashToUInt32 (bytes);
 			}
 		}
 	}

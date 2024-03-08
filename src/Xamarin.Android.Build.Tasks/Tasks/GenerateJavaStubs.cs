@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.IO.MemoryMappedFiles;
 using System.Linq;
 using System.Reflection;
 using System.Text;
@@ -19,6 +20,7 @@ using Java.Interop.Tools.TypeNameMappings;
 
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using Java.Interop.Tools.JavaCallableWrappers.Adapters;
 
 namespace Xamarin.Android.Tasks
 {
@@ -103,7 +105,7 @@ namespace Xamarin.Android.Tasks
 				bool useMarshalMethods = !Debug && EnableMarshalMethods;
 				// We're going to do 3 steps here instead of separate tasks so
 				// we can share the list of JLO TypeDefinitions between them
-				using (DirectoryAssemblyResolver res = MakeResolver (useMarshalMethods)) {
+				using (XAAssemblyResolver res = MakeResolver (useMarshalMethods)) {
 					Run (res, useMarshalMethods);
 				}
 			} catch (XamarinAndroidException e) {
@@ -122,7 +124,7 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		DirectoryAssemblyResolver MakeResolver (bool useMarshalMethods)
+		XAAssemblyResolver MakeResolver (bool useMarshalMethods)
 		{
 			var readerParams = new ReaderParameters();
 			if (useMarshalMethods) {
@@ -130,31 +132,32 @@ namespace Xamarin.Android.Tasks
 				readerParams.InMemory = true;
 			}
 
-			var res = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: true, loadReaderParameters: readerParams);
+			var res = new XAAssemblyResolver (Log, loadDebugSymbols: true, loadReaderParameters: readerParams);
 			foreach (var dir in FrameworkDirectories) {
 				if (Directory.Exists (dir.ItemSpec)) {
-					res.SearchDirectories.Add (dir.ItemSpec);
+					res.FrameworkSearchDirectories.Add (dir.ItemSpec);
 				}
 			}
 
 			return res;
 		}
 
-		void Run (DirectoryAssemblyResolver res, bool useMarshalMethods)
+		void Run (XAAssemblyResolver res, bool useMarshalMethods)
 		{
 			PackageNamingPolicy pnp;
 			JavaNativeTypeManager.PackageNamingPolicy = Enum.TryParse (PackageNamingPolicy, out pnp) ? pnp : PackageNamingPolicyEnum.LowercaseCrc64;
 
-			Dictionary<string, HashSet<string>> marshalMethodsAssemblyPaths = null;
+			Dictionary<string, List<ITaskItem>>? abiSpecificAssembliesByPath = null;
 			if (useMarshalMethods) {
-				marshalMethodsAssemblyPaths = new Dictionary<string, HashSet<string>> (StringComparer.Ordinal);
+				abiSpecificAssembliesByPath = new Dictionary<string, List<ITaskItem>> (StringComparer.Ordinal);
 			}
 
 			// Put every assembly we'll need in the resolver
 			bool hasExportReference = false;
 			bool haveMonoAndroid = false;
-			var allTypemapAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			var allTypemapAssemblies = new Dictionary<string, ITaskItem> (StringComparer.OrdinalIgnoreCase);
 			var userAssemblies = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase);
+
 			foreach (var assembly in ResolvedAssemblies) {
 				bool value;
 				if (bool.TryParse (assembly.GetMetadata (AndroidSkipJavaStubGeneration), out value) && value) {
@@ -180,13 +183,13 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (addAssembly) {
-					allTypemapAssemblies.Add (assembly.ItemSpec);
+					MaybeAddAbiSpecifcAssembly (assembly, fileName);
+					if (!allTypemapAssemblies.ContainsKey (assembly.ItemSpec)) {
+						allTypemapAssemblies.Add (assembly.ItemSpec, assembly);
+					}
 				}
 
-				res.Load (assembly.ItemSpec);
-				if (useMarshalMethods) {
-					StoreMarshalAssemblyPath (Path.GetFileNameWithoutExtension (assembly.ItemSpec), assembly);
-				}
+				res.Load (MonoAndroidHelper.GetTargetArch (assembly), assembly.ItemSpec);
 			}
 
 			// However we only want to look for JLO types in user code for Java stub code generation
@@ -195,31 +198,33 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Skipping Java Stub Generation for {asm.ItemSpec}");
 					continue;
 				}
-				if (!allTypemapAssemblies.Contains (asm.ItemSpec))
-					allTypemapAssemblies.Add (asm.ItemSpec);
+				res.Load (MonoAndroidHelper.GetTargetArch (asm), asm.ItemSpec);
+				MaybeAddAbiSpecifcAssembly (asm, Path.GetFileName (asm.ItemSpec));
+				if (!allTypemapAssemblies.ContainsKey (asm.ItemSpec)) {
+					allTypemapAssemblies.Add (asm.ItemSpec, asm);
+				}
+
 				string name = Path.GetFileNameWithoutExtension (asm.ItemSpec);
 				if (!userAssemblies.ContainsKey (name))
 					userAssemblies.Add (name, asm.ItemSpec);
-				StoreMarshalAssemblyPath (name, asm);
 			}
 
 			// Step 1 - Find all the JLO types
 			var cache = new TypeDefinitionCache ();
-			var scanner = new JavaTypeScanner (this.CreateTaskLogger (), cache) {
+			var scanner = new XAJavaTypeScanner (Log, cache) {
 				ErrorOnCustomJavaObject     = ErrorOnCustomJavaObject,
 			};
+			List<JavaType> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies.Values, res);
+			var javaTypes = new List<JavaType> ();
 
-			List<TypeDefinition> allJavaTypes = scanner.GetJavaTypes (allTypemapAssemblies, res);
-
-			var javaTypes = new List<TypeDefinition> ();
-			foreach (TypeDefinition td in allJavaTypes) {
+			foreach (JavaType jt in allJavaTypes) {
 				// Whem marshal methods are in use we do not want to skip non-user assemblies (such as Mono.Android) - we need to generate JCWs for them during
 				// application build, unlike in Debug configuration or when marshal methods are disabled, in which case we use JCWs generated during Xamarin.Android
 				// build and stored in a jar file.
-				if ((!useMarshalMethods && !userAssemblies.ContainsKey (td.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (td, cache)) {
+				if ((!useMarshalMethods && !userAssemblies.ContainsKey (jt.Type.Module.Assembly.Name.Name)) || JavaTypeScanner.ShouldSkipJavaCallableWrapperGeneration (jt.Type, cache)) {
 					continue;
 				}
-				javaTypes.Add (td);
+				javaTypes.Add (jt);
 			}
 
 			MarshalMethodsClassifier classifier = null;
@@ -237,27 +242,11 @@ namespace Xamarin.Android.Tasks
 				// in order to properly generate wrapper methods in the marshal methods assembly rewriter.
 				// We don't care about those generated by us, since they won't contain the `XA_BROKEN_EXCEPTION_TRANSITIONS` variable we look for.
 				var environmentParser = new EnvironmentFilesParser ();
-				var targetPaths = new List<string> ();
 
-				if (!LinkingEnabled) {
-					targetPaths.Add (Path.GetDirectoryName (ResolvedAssemblies[0].ItemSpec));
-				} else {
-					if (String.IsNullOrEmpty (IntermediateOutputDirectory)) {
-						throw new InvalidOperationException ($"Internal error: marshal methods require the `IntermediateOutputDirectory` property of the `GenerateJavaStubs` task to have a value");
-					}
+				Dictionary<AssemblyDefinition, string> assemblyPaths = AddMethodsFromAbiSpecificAssemblies (classifier, res, abiSpecificAssembliesByPath);
 
-					// If the <ResourceIdentifiers> property is set then, even if we have just one RID, the linked assemblies path will include the RID
-					if (!HaveMultipleRIDs && SupportedAbis.Length == 1) {
-						targetPaths.Add (Path.Combine (IntermediateOutputDirectory, "linked"));
-					} else {
-						foreach (string abi in SupportedAbis) {
-							targetPaths.Add (Path.Combine (IntermediateOutputDirectory, MonoAndroidHelper.AbiToRid (abi), "linked"));
-						}
-					}
-				}
-
-				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, marshalMethodsAssemblyPaths, Log);
-				rewriter.Rewrite (res, targetPaths, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
+				var rewriter = new MarshalMethodsAssemblyRewriter (classifier.MarshalMethods, classifier.Assemblies, assemblyPaths, Log);
+				rewriter.Rewrite (res, environmentParser.AreBrokenExceptionTransitionsEnabled (Environments));
 			}
 
 			// Step 3 - Generate type maps
@@ -272,7 +261,8 @@ namespace Xamarin.Android.Tasks
 			var javaConflicts    = new Dictionary<string, List<string>> (0, StringComparer.Ordinal);
 
 			using (var acw_map = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-				foreach (TypeDefinition type in javaTypes) {
+				foreach (JavaType jt in javaTypes) {
+					TypeDefinition type = jt.Type;
 					string managedKey = type.FullName.Replace ('/', '.');
 					string javaKey = JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.');
 
@@ -381,7 +371,8 @@ namespace Xamarin.Android.Tasks
 			// Create additional application java sources.
 			StringWriter regCallsWriter = new StringWriter ();
 			regCallsWriter.WriteLine ("\t\t// Application and Instrumentation ACWs must be registered first.");
-			foreach (var type in javaTypes) {
+			foreach (JavaType jt in javaTypes) {
+				TypeDefinition type = jt.Type;
 				if (JavaNativeTypeManager.IsApplication (type, cache) || JavaNativeTypeManager.IsInstrumentation (type, cache)) {
 					// if (classifier != null && !classifier.FoundDynamicallyRegisteredMethods (type)) {
 					// 	continue;
@@ -415,23 +406,55 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			void StoreMarshalAssemblyPath (string name, ITaskItem asm)
+			void MaybeAddAbiSpecifcAssembly (ITaskItem assembly, string fileName)
 			{
-				if (!useMarshalMethods) {
+				if (abiSpecificAssembliesByPath == null) {
 					return;
 				}
 
-				// TODO: we need to keep paths to ALL the assemblies, we need to rewrite them for all RIDs eventually. Right now we rewrite them just for one RID
-				if (!marshalMethodsAssemblyPaths.TryGetValue (name, out HashSet<string> assemblyPaths)) {
-					assemblyPaths = new HashSet<string> ();
-					marshalMethodsAssemblyPaths.Add (name, assemblyPaths);
-				}
+				string? abi = assembly.GetMetadata ("Abi");
+				if (!String.IsNullOrEmpty (abi)) {
+					if (!abiSpecificAssembliesByPath.TryGetValue (fileName, out List<ITaskItem>? items)) {
+						items = new List<ITaskItem> ();
+						abiSpecificAssembliesByPath.Add (fileName, items);
+					}
 
-				assemblyPaths.Add (asm.ItemSpec);
+					items.Add (assembly);
+				}
 			}
 		}
 
-		bool CreateJavaSources (IEnumerable<TypeDefinition> javaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
+		AssemblyDefinition LoadAssembly (string path, XAAssemblyResolver? resolver = null)
+		{
+			string pdbPath = Path.ChangeExtension (path, ".pdb");
+			var readerParameters = new ReaderParameters {
+				AssemblyResolver                = resolver,
+				InMemory                        = false,
+				ReadingMode                     = ReadingMode.Immediate,
+				ReadSymbols                     = File.Exists (pdbPath),
+				ReadWrite                       = false,
+			};
+
+			MemoryMappedViewStream? viewStream = null;
+			try {
+				// Create stream because CreateFromFile(string, ...) uses FileShare.None which is too strict
+				using var fileStream = new FileStream (path, FileMode.Open, FileAccess.Read, FileShare.Read, 4096, false);
+				using var mappedFile = MemoryMappedFile.CreateFromFile (
+					fileStream, null, fileStream.Length, MemoryMappedFileAccess.Read, HandleInheritability.None, true);
+				viewStream = mappedFile.CreateViewStream (0, 0, MemoryMappedFileAccess.Read);
+
+				AssemblyDefinition result = ModuleDefinition.ReadModule (viewStream, readerParameters).Assembly;
+
+				// We transferred the ownership of the viewStream to the collection.
+				viewStream = null;
+
+				return result;
+			} finally {
+				viewStream?.Dispose ();
+			}
+		}
+
+		bool CreateJavaSources (IEnumerable<JavaType> newJavaTypes, TypeDefinitionCache cache, MarshalMethodsClassifier classifier, bool useMarshalMethods)
 		{
 			if (useMarshalMethods && classifier == null) {
 				throw new ArgumentNullException (nameof (classifier));
@@ -442,8 +465,19 @@ namespace Xamarin.Android.Tasks
 			bool hasExportReference = ResolvedAssemblies.Any (assembly => Path.GetFileName (assembly.ItemSpec) == "Mono.Android.Export.dll");
 			bool generateOnCreateOverrides = int.Parse (AndroidSdkPlatform) <= 10;
 
+			var reader_options = new CallableWrapperReaderOptions {
+				DefaultApplicationJavaClass         = ApplicationJavaClass,
+				DefaultGenerateOnCreateOverrides    = generateOnCreateOverrides,
+				DefaultMonoRuntimeInitialization    = monoInit,
+				MethodClassifier                    = classifier,
+			};
+			var writer_options = new CallableWrapperWriterOptions {
+				CodeGenerationTarget    = JavaPeerStyle.XAJavaInterop1
+			};
+
 			bool ok = true;
-			foreach (var t in javaTypes) {
+			foreach (JavaType jt in newJavaTypes) {
+				TypeDefinition t = jt.Type; // JCW generator doesn't care about ABI-specific types or token ids
 				if (t.IsInterface) {
 					// Interfaces are in typemap but they shouldn't have JCW generated for them
 					continue;
@@ -451,23 +485,21 @@ namespace Xamarin.Android.Tasks
 
 				using (var writer = MemoryStreamPool.Shared.CreateStreamWriter ()) {
 					try {
-						var jti = new JavaCallableWrapperGenerator (t, Log.LogWarning, cache, classifier) {
-							GenerateOnCreateOverrides = generateOnCreateOverrides,
-							ApplicationJavaClass = ApplicationJavaClass,
-							MonoRuntimeInitialization = monoInit,
-						};
+						var jcw_type = CecilImporter.CreateType (t, cache, reader_options);
 
-						jti.Generate (writer);
+						jcw_type.Generate (writer, writer_options);
+
 						if (useMarshalMethods) {
 							if (classifier.FoundDynamicallyRegisteredMethods (t)) {
 								Log.LogWarning ($"Type '{t.GetAssemblyQualifiedName (cache)}' will register some of its Java override methods dynamically. This may adversely affect runtime performance. See preceding warnings for names of dynamically registered methods.");
 							}
 						}
+
 						writer.Flush ();
 
-						var path = jti.GetDestinationPath (outputPath);
+						var path = jcw_type.GetDestinationPath (outputPath);
 						Files.CopyIfStreamChanged (writer.BaseStream, path);
-						if (jti.HasExport && !hasExportReference)
+						if (jcw_type.HasExport && !hasExportReference)
 							Diagnostic.Error (4210, Properties.Resources.XA4210);
 					} catch (XamarinAndroidException xae) {
 						ok = false;
@@ -546,13 +578,146 @@ namespace Xamarin.Android.Tasks
 			Files.CopyIfStringChanged (template, Path.Combine (destDir, filename));
 		}
 
-		void WriteTypeMappings (List<TypeDefinition> types, TypeDefinitionCache cache)
+		void WriteTypeMappings (List<JavaType> types, TypeDefinitionCache cache)
 		{
-			var tmg = new TypeMapGenerator ((string message) => Log.LogDebugMessage (message), SupportedAbis);
-			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState))
+			var tmg = new TypeMapGenerator (Log, SupportedAbis);
+			if (!tmg.Generate (Debug, SkipJniAddNativeMethodRegistrationAttributeScan, types, cache, TypemapOutputDirectory, GenerateNativeAssembly, out ApplicationConfigTaskState appConfState)) {
 				throw new XamarinAndroidException (4308, Properties.Resources.XA4308);
+			}
 			GeneratedBinaryTypeMaps = tmg.GeneratedBinaryTypeMaps.ToArray ();
 			BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (ApplicationConfigTaskState.RegisterTaskObjectKey), appConfState, RegisteredTaskObjectLifetime.Build);
+		}
+
+		/// <summary>
+		/// <para>
+		/// Classifier will see only unique assemblies, since that's what's processed by the JI type scanner - even though some assemblies may have
+		/// abi-specific features (e.g. inlined `IntPtr.Size` or processor-specific intrinsics), the **types** and **methods** will all be the same and, thus,
+		/// there's no point in scanning all of the additional copies of the same assembly.
+		/// </para>
+		/// <para>
+		/// This, however, doesn't work for the rewriter which needs to rewrite all of the copies so that they all have the same generated wrappers.  In
+		/// order to do that, we need to go over the list of assemblies found by the classifier, see if they are abi-specific ones and then add all the
+		/// marshal methods from the abi-specific assembly copies, so that the rewriter can easily rewrite them all.
+		/// </para>
+		/// <para>
+		/// This method returns a dictionary matching `AssemblyDefinition` instances to the path on disk to the assembly file they were loaded from.  It is necessary
+		/// because <see cref="LoadAssembly"/> uses a stream to load the data, in order to avoid later sharing violation issues when writing the assemblies.  Path
+		/// information is required by <see cref="MarshalMethodsAssemblyRewriter"/> to be available for each <see cref="MarshalMethodEntry"/>
+		/// </para>
+		/// </summary>
+		Dictionary<AssemblyDefinition, string> AddMethodsFromAbiSpecificAssemblies (MarshalMethodsClassifier classifier, XAAssemblyResolver resolver, Dictionary<string, List<ITaskItem>> abiSpecificAssemblies)
+		{
+			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = classifier.MarshalMethods;
+			ICollection<AssemblyDefinition> assemblies = classifier.Assemblies;
+			var newAssemblies = new List<AssemblyDefinition> ();
+			var assemblyPaths = new Dictionary<AssemblyDefinition, string> ();
+
+			foreach (AssemblyDefinition asmdef in assemblies) {
+				string fileName = Path.GetFileName (asmdef.MainModule.FileName);
+				if (!abiSpecificAssemblies.TryGetValue (fileName, out List<ITaskItem>? abiAssemblyItems)) {
+					continue;
+				}
+
+				List<MarshalMethodEntry> assemblyMarshalMethods = FindMarshalMethodsForAssembly (marshalMethods, asmdef);;
+				Log.LogDebugMessage ($"Assembly {fileName} is ABI-specific");
+				foreach (ITaskItem abiAssemblyItem in abiAssemblyItems) {
+					if (String.Compare (abiAssemblyItem.ItemSpec, asmdef.MainModule.FileName, StringComparison.Ordinal) == 0) {
+						continue;
+					}
+
+					Log.LogDebugMessage ($"Looking for matching mashal methods in {abiAssemblyItem.ItemSpec}");
+					FindMatchingMethodsInAssembly (abiAssemblyItem, classifier, assemblyMarshalMethods, resolver, newAssemblies, assemblyPaths);
+				}
+			}
+
+			if (newAssemblies.Count > 0) {
+				foreach (AssemblyDefinition asmdef in newAssemblies) {
+					assemblies.Add (asmdef);
+				}
+			}
+
+			return assemblyPaths;
+		}
+
+		List<MarshalMethodEntry> FindMarshalMethodsForAssembly (IDictionary<string, IList<MarshalMethodEntry>> marshalMethods, AssemblyDefinition asm)
+		{
+			var seenNativeCallbacks = new HashSet<MethodDefinition> ();
+			var assemblyMarshalMethods = new List<MarshalMethodEntry> ();
+
+			foreach (var kvp in marshalMethods) {
+				foreach (MarshalMethodEntry method in kvp.Value) {
+					if (method.NativeCallback.Module.Assembly != asm) {
+						continue;
+					}
+
+					// More than one overriden method can use the same native callback method, we're interested only in unique native
+					// callbacks, since that's what gets rewritten.
+					if (seenNativeCallbacks.Contains (method.NativeCallback)) {
+						continue;
+					}
+
+					seenNativeCallbacks.Add (method.NativeCallback);
+					assemblyMarshalMethods.Add (method);
+				}
+			}
+
+			return assemblyMarshalMethods;
+		}
+
+		void FindMatchingMethodsInAssembly (ITaskItem assemblyItem, MarshalMethodsClassifier classifier, List<MarshalMethodEntry> assemblyMarshalMethods, XAAssemblyResolver resolver, List<AssemblyDefinition> newAssemblies, Dictionary<AssemblyDefinition, string> assemblyPaths)
+		{
+			AssemblyDefinition asm = LoadAssembly (assemblyItem.ItemSpec, resolver);
+			newAssemblies.Add (asm);
+			assemblyPaths.Add (asm, assemblyItem.ItemSpec);
+
+			foreach (MarshalMethodEntry methodEntry in assemblyMarshalMethods) {
+				TypeDefinition wantedType = methodEntry.NativeCallback.DeclaringType;
+				TypeDefinition? type = asm.MainModule.FindType (wantedType.FullName);
+				if (type == null) {
+					throw new InvalidOperationException ($"Internal error: type '{wantedType.FullName}' not found in assembly '{assemblyItem.ItemSpec}', a linker error?");
+				}
+
+				if (type.MetadataToken != wantedType.MetadataToken) {
+					throw new InvalidOperationException ($"Internal error: type '{type.FullName}' in assembly '{assemblyItem.ItemSpec}' has a different token ID than the original type");
+				}
+
+				FindMatchingMethodInType (methodEntry, type, classifier);
+			}
+		}
+
+		void FindMatchingMethodInType (MarshalMethodEntry methodEntry, TypeDefinition type, MarshalMethodsClassifier classifier)
+		{
+			string callbackName = methodEntry.NativeCallback.FullName;
+
+			foreach (MethodDefinition typeNativeCallbackMethod in type.Methods) {
+				if (String.Compare (typeNativeCallbackMethod.FullName, callbackName, StringComparison.Ordinal) != 0) {
+					continue;
+				}
+
+				if (typeNativeCallbackMethod.Parameters.Count != methodEntry.NativeCallback.Parameters.Count) {
+					continue;
+				}
+
+				if (typeNativeCallbackMethod.MetadataToken != methodEntry.NativeCallback.MetadataToken) {
+					throw new InvalidOperationException ($"Internal error: tokens don't match for '{typeNativeCallbackMethod.FullName}'");
+				}
+
+				bool allMatch = true;
+				for (int i = 0; i < typeNativeCallbackMethod.Parameters.Count; i++) {
+					if (String.Compare (typeNativeCallbackMethod.Parameters[i].ParameterType.FullName, methodEntry.NativeCallback.Parameters[i].ParameterType.FullName, StringComparison.Ordinal) != 0) {
+						allMatch = false;
+						break;
+					}
+				}
+
+				if (!allMatch) {
+					continue;
+				}
+
+				Log.LogDebugMessage ($"Found match for '{typeNativeCallbackMethod.FullName}' in {type.Module.FileName}");
+				string methodKey = classifier.GetStoreMethodKey (methodEntry);
+				classifier.MarshalMethods[methodKey].Add (new MarshalMethodEntry (methodEntry, typeNativeCallbackMethod));
+			}
 		}
 	}
 }

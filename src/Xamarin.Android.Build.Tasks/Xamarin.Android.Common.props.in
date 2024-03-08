@@ -2,14 +2,13 @@
 	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the xamarin-android-tools repo. -->
 	<Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Tools.Versions.props" />
 	<PropertyGroup>
-		<XamarinAndroidVersion Condition=" '$(UsingAndroidNETSdk)' != 'true' ">@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 		<Debugger Condition=" '$(Debugger)' == '' ">Xamarin</Debugger>
 		<DependsOnSystemRuntime Condition=" '$(DependsOnSystemRuntime)' == '' ">true</DependsOnSystemRuntime>
 		<ImplicitlyExpandNETStandardFacades>false</ImplicitlyExpandNETStandardFacades>
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
-		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">11.0.99</LatestSupportedJavaVersion>
+		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">17.0.99</LatestSupportedJavaVersion>
 		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>

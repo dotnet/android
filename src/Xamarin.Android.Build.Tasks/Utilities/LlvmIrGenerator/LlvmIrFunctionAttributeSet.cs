@@ -53,23 +53,6 @@ class LlvmIrFunctionAttributeSet : IEnumerable<LlvmIrFunctionAttribute>, IEquata
 		}
 	}
 
-	/// <summary>
-	/// Add architecture-specific attributes, private to the module generator (as opposed to arch-specific attributes which are common
-	/// between all attribute sets.
-	/// </summary>
-	public void Add (AndroidTargetArch targetArch, LlvmIrFunctionAttribute attr)
-	{
-		if (privateTargetSpecificAttributes == null) {
-			privateTargetSpecificAttributes = new Dictionary<AndroidTargetArch, List<LlvmIrFunctionAttribute>> ();
-		}
-
-		if (!privateTargetSpecificAttributes.TryGetValue (targetArch, out List<LlvmIrFunctionAttribute> list)) {
-			list = new List<LlvmIrFunctionAttribute> ();
-		}
-
-		list.Add (attr);
-	}
-
 	public string Render ()
 	{
 		List<LlvmIrFunctionAttribute> list = attributes.ToList ();

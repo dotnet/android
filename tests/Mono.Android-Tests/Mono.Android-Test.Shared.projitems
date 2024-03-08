@@ -45,6 +45,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)System.Net\NetworkInterfaces.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.Runtime.InteropServices\DllImportTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.Text\EncodingTests.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System.Text.Json\JsonSerializerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System.Threading\InterlockedTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Interop\JavaObjectExtensionsTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Android.Net\AndroidClientHandlerTests.cs" />

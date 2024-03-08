@@ -21,6 +21,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 			public Func<string> ArgumentsGenerator   { get; set; }
 			public bool         MergeStdoutAndStderr { get; set; } = true;
 			public bool         IgnoreExitCode       { get; set; }
+			public bool         LogIgnoredExitCodeAsWarning { get; set; } = true;
 			public string       StdoutFilePath       { get; set; }
 			public bool         StdoutAppend         { get; set; }
 			public string       StderrFilePath       { get; set; }
@@ -88,7 +89,11 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 						Log.LogError (message);
 						break;
 					}
-					Log.LogWarning (message);
+
+					if (info.LogIgnoredExitCodeAsWarning)
+						Log.LogWarning (message);
+					else
+						Log.LogMessage (MessageImportance.Normal, message);
 				} catch {
 					throw;
 				} finally {

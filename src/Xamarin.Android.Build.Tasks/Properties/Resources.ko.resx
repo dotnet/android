@@ -416,7 +416,7 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
   <data name="XA1019" xml:space="preserve">
     <value>`LibraryProjectProperties` 파일 `{0}`이(가) 바인딩 프로젝트의 중간 출력 디렉터리의 부모 디렉터리에 있습니다. 경로를 조정하여 Android 라이브러리 프로젝트 디렉터리에서 바로 원본 `project.properties` 파일을 사용하세요.</value>
     <comment>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
-In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a Xamarin.Android project written in C# or F#.
+In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</comment>
   </data>
   <data name="XA1020" xml:space="preserve">
@@ -438,8 +438,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
-    <value>구성 파일 '{0}'을(를) 무시합니다. .Net 6 이상을 대상으로 Xamarin.Android 프로젝트에서 .NET 구성 파일은 지원되지 않습니다.</value>
-    <comment>The following are literal names and should not be translated: .NET, Xamarin.Android.
+    <value>구성 파일 '{0}'을(를) 무시합니다. .Net 6 이상을 대상으로 .NET Android 프로젝트에서 .NET 구성 파일은 지원되지 않습니다.</value>
+    <comment>The following are literal names and should not be translated: .NET, .NET Android.
 {0} - The file name such as 'Foo.dll.config'</comment>
   </data>
   <data name="XA1025" xml:space="preserve">
@@ -451,7 +451,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>AAPT는 .NET 6 이상을 대상으로 하는 Xamarin.Android 프로젝트에서 사용할 수 없습니다. Visual Studio 프로젝트 속성 페이지에서 '증분 Android 패키징 시스템(aapt2) 사용'을 사용하도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidUseAapt2' MSBuild 속성을 'true'로 설정하세요.</value>
+    <value>AAPT는 .NET 6 이상을 대상으로 하는 .NET Android 프로젝트에서 사용할 수 없습니다. Visual Studio 프로젝트 속성 페이지에서 '증분 Android 패키징 시스템(aapt2) 사용'을 사용하도록 설정하거나 텍스트 편집기에서 프로젝트 파일을 편집하고 'AndroidUseAapt2' MSBuild 속성을 'true'로 설정하세요.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
@@ -476,6 +476,12 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType',
 {0} - The value of the property.
 {1} - A type from which the AndroidHttpClientHandlerType should derive .</comment>
+  </data>
+  <data name="XA1031_HCH" xml:space="preserve">
+    <value>'AndroidHttpClientHandlerType' 속성 값 '{0}'은(는) 'System.Net.Htt.HttpClientHandler'에서 파생되어서는 안됩니다.
+값을 'System.Net.Http.Http.HttpMessageHandler'에서 상속하는 어셈블리 형식 이름으로 변경하거나 속성을 완전히 제거하세요.</value>
+    <comment>The following are literal names and should not be translated: 'AndroidHttpClientHandlerType', 'System.Net.Htt.HttpClientHandler', 'System.Net.Http.HttpMessageHandler',
+{0} - The value of the property.</comment>
   </data>
   <data name="XA1032" xml:space="preserve">
     <value>'{1}'에서 '{0}'을(를) 확인하지 못했습니다. `AndroidHttpClientHandlerType` 설정을 확인하세요.</value>
@@ -505,7 +511,7 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>어셈블리에서 AppDomain.CreateDomain()의 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 Xamarin.Android에서 더 이상 사용할 수 없습니다.</value>
+    <value>어셈블리에서 AppDomain.CreateDomain() 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 .NET Android에서 더 이상 사용할 수 없습니다.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
@@ -543,6 +549,10 @@ AndroidManifest.xml의 값을 $(SupportedOSPlatformVersion) 값에 맞도록 변
   </data>
   <data name="APT2264" xml:space="preserve">
     <value>프로젝트가 Windows 최대 경로 길이 제한을 초과하여 이러한 상황이 발생했을 수 있습니다. 자세한 내용은 https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264를 참조하세요.</value>
+    <comment>The following are literal names and should not be translated:</comment>
+  </data>
+  <data name="APT2265" xml:space="preserve">
+    <value>프로젝트의 파일 이름 또는 경로에 ASCII가 아닌 문자가 있기 때문에 이러한 문제가 발생할 수 있습니다. 자세한 내용은 https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265를 참조하세요.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
@@ -700,12 +710,12 @@ In this message, "root element" refers to the root element of an XML file.
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4231" xml:space="preserve">
-    <value>Android 클래스 파서 값 '{0}'은(는) 사용되지 않으며 Xamarin.Android의 이후 버전에서 제거됩니다. 'class-parse'를 사용하도록 프로젝트 속성을 업데이트하세요.</value>
+    <value>Android 클래스 파서 값 '{0}'은(는) 사용되지 않으며 .NET Android의 이후 버전에서 제거됩니다. 'class-parse'를 사용하도록 프로젝트 속성을 업데이트하세요.</value>
     <comment>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>Android 코드 생성 대상 '{0}'은(는) 사용되지 않으며 Xamarin.Android의 이후 버전에서 제거됩니다. 'XAJavaInterop1'을 사용하도록 프로젝트 속성을 업데이트하세요.</value>
+    <value>Android 코드 생성 대상 '{0}'은(는) 사용되지 않으며 .NET Android의 이후 버전에서 제거됩니다. 'XAJavaInterop1'을 사용하도록 프로젝트 속성을 업데이트하세요.</value>
     <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -786,7 +796,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA4312" xml:space="preserve">
-    <value>Android 애플리케이션 프로젝트에서 Android Wear 애플리케이션 프로젝트 '{0}'을(를) 참조하는 기능은 사용되지 않으며 Xamarin.Android의 이후 버전에서 더 이상 지원되지 않습니다. Android 애플리케이션 프로젝트에서 Android Wear 애플리케이션 프로젝트 참조를 제거하고 대신 Wear 애플리케이션을 독립 실행형 애플리케이션으로 배포하세요.</value>
+    <value>Android 애플리케이션 프로젝트에서 Android Wear 애플리케이션 프로젝트 '{0}'을(를) 참조하는 기능은 사용되지 않으며 .NET Android의 이후 버전에서 더 이상 지원되지 않습니다. Android 애플리케이션 프로젝트에서 Android Wear 애플리케이션 프로젝트 참조를 제거하고 대신 Wear 애플리케이션을 독립 실행형 애플리케이션으로 배포하세요.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
@@ -857,19 +867,23 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 {0} - The missing tool name</comment>
   </data>
   <data name="XA5207" xml:space="preserve">
-    <value>API 레벨 {0}의 android.jar을 찾을 수 없습니다. API 레벨 {0}의 Android SDK 플랫폼이 설치되어 있지 않습니다. Android SDK 관리자({2})에서 설치하거나, 설치된 API 버전을 대상으로 하도록 Xamarin.Android 프로젝트를 변경하세요.({1}이(가) 없습니다.)</value>
+    <value>API 수준 {0}에 대해 android.jar을 찾을 수 없습니다. 즉, API 수준 {0}에 대한 Android SDK 플랫폼이 설치되어 있지 않습니다. '{1}'에 있어야 합니다.
+{2}
+자세한 내용은 https://aka.ms/xa5207을 참조하세요.</value>
     <comment>The following are literal names and should not be translated: android.jar
 {0} - The API level name
 {1} - The expected path of the android.jar file
-{2} - The menu location in Visual Studio that can be used to launch the Android SDK Manager</comment>
-  </data>
-  <data name="XA5207_SDK_Manager_macOS" xml:space="preserve">
-    <value>도구 &gt; Android SDK 관리자 열기...</value>
-    <comment>This string is the location of a menu command in Visual Studio for Mac.</comment>
+{2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>도구 &gt; Android &gt; Android SDK 관리자...</value>
-    <comment>This string is the location of a menu command in Visual Studio.</comment>
+    <value>Android SDK 관리자에 설치하거나(도구 &gt; Android &gt; Android SDK 관리자...) 설치된 API 버전을 대상으로 하도록 .NET Android 프로젝트를 변경합니다.</value>
+    <comment>This string is the instrucitons to install the component</comment>
+  </data>
+  <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
+    <value>`dotnet build -t:InstallAndroidDependencies -f {0} "-p:AndroidSdkDirectory={1}"`을 실행하여 누락된 API 레벨을 설치하거나 설치된 API 버전을 대상으로 하는 프로젝트를 변경할 수 있습니다.</value>
+    <comment>This string is the instrucitons to install the component
+{0} - The TargetFramework the app is targeting.
+{1} - The current AndroidSdkDirectory path.</comment>
   </data>
   <data name="XA5211" xml:space="preserve">
     <value>포함된 Wear 앱 패키지 이름이 핸드헬드 앱 패키지 이름과 다릅니다({0} != {1}).</value>
@@ -938,5 +952,62 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>
 {0} - An Android Resource Identifier.
     </comment>
+  </data>
+  <data name="XA4234" xml:space="preserve">
+    <value>'&lt;{0}&gt;' 항목 '{1}'에 필수 메타데이터 '{2}'이(가) 없습니다.</value>
+    <comment>{0} - The MSBuild ItemGroup Item name
+{1} - The MSBuild Item ItemSpec
+{2} - The omitted MSBuild Item metadata attribute</comment>
+  </data>
+  <data name="XA4235" xml:space="preserve">
+    <value>Maven 아티팩트 사양 '{0}'이(가) 잘못되었습니다. 올바른 형식은 'group_id:artifact_id'입니다.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
+  <data name="XA4236" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'을(를) 다운로드할 수 없습니다.
+- {2}: {3}
+- {4}: {5}</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .jar filename we tried to download
+{3} - The HttpClient reported download exception message
+{4} - The .aar filename we tried to download
+{5} - The HttpClient provided download exception message</comment>
+  </data>
+  <data name="XA4237" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'에 대한 POM 파일 다운로드할 수 없습니다.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message
+</comment>
+  </data>
+  <data name="XA4238" xml:space="preserve">
+    <value>Maven 아티팩트 '{0}:{1}'에 대한 부모 POM 파일을 다운로드할 수 없습니다.
+- {2}: {3}</value>
+    <comment>The following are literal names and should not be translated: POM, Maven
+{0} - Maven artifact group id
+{1} - Maven artifact id
+{2} - The .pom filename we tried to download
+{3} - The HttpClient reported download exception message</comment>
+  </data>
+  <data name="XA4239" xml:space="preserve">
+    <value>알 수 없는 Maven 리포지토리: '{0}'.</value>
+    <comment>The following are literal names and should not be translated: Maven
+{0} - User supplied Maven repository type</comment>
+  </data>
+  <data name="XA1037" xml:space="preserve">
+    <value>'{0}' MSBuild 속성은 더 이상 사용되지 않으며 .NET {1}에서 제거됩니다. 자세한 내용은 https://aka.ms/net-android-deprecations을 참조하세요.</value>
+    <comment>The following are literal names and should not be translated: MSBuild, .NET.
+{0} - The deprecated MSBuild property name
+{1} - The numeric version of .NET</comment>
+  </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Android 지원 라이브러리는 .NET 9 이상에서 지원되지 않습니다. AndroidX로 마이그레이션하세요. 자세한 내용은 https://aka.ms/xamarin/androidx 페이지를 참조하세요.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
 </root>

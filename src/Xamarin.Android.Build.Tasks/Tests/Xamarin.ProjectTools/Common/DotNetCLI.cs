@@ -47,14 +47,10 @@ namespace Xamarin.ProjectTools
 				p.StartInfo.RedirectStandardOutput = true;
 				p.StartInfo.RedirectStandardError = true;
 				p.StartInfo.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+				p.StartInfo.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 				if (TestEnvironment.UseLocalBuildOutput) {
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
 					p.StartInfo.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
-				}
-
-				// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
-				if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-					p.StartInfo.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
 				}
 
 				p.ErrorDataReceived += (sender, e) => {
@@ -151,17 +147,17 @@ namespace Xamarin.ProjectTools
 				$"/flp1:LogFile=\"{BuildLogFile}\";Encoding=UTF-8;Verbosity={Verbosity}",
 				$"/bl:\"{Path.Combine (testDir, $"{(string.IsNullOrEmpty (target) ? "msbuild" : target)}.binlog")}\"",
 				"-m:1",
-				"-nr:false",
+				"-nodeReuse:false",
 				"/p:_DisableParallelAot=true",
 			};
 			if (!string.IsNullOrEmpty (target)) {
 				arguments.Add ($"/t:{target}");
 			}
 			if (Directory.Exists (AndroidSdkPath)) {
-				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath}\"");
+				arguments.Add ($"/p:AndroidSdkDirectory=\"{AndroidSdkPath.TrimEnd('\\')}\"");
 			}
 			if (Directory.Exists (JavaSdkPath)) {
-				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath}\"");
+				arguments.Add ($"/p:JavaSdkDirectory=\"{JavaSdkPath.TrimEnd ('\\')}\"");
 			}
 			if (parameters != null) {
 				foreach (var parameter in parameters) {

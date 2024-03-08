@@ -3657,8 +3657,8 @@
 34,android.health.connect.changelog,ChangeLogsResponse,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.health.connect.changelog,ChangeLogTokenRequest,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.health.connect.changelog,ChangeLogTokenResponse,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-34,android.health.connect.datatypes,BasalBodyTemperatureRecord,getMeasurementLocation,return,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocation
-34,android.health.connect.datatypes,BasalBodyTemperatureRecord.Builder,ctor,measurementLocation,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocation
+34,android.health.connect.datatypes,BasalBodyTemperatureRecord,getMeasurementLocation,return,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocationType
+34,android.health.connect.datatypes,BasalBodyTemperatureRecord.Builder,ctor,measurementLocation,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocationType
 34,android.health.connect.datatypes,BloodGlucoseRecord,getMealType,return,Android.Health.Connect.DataTypes.HealthMealType
 34,android.health.connect.datatypes,BloodGlucoseRecord,getRelationToMeal,return,Android.Health.Connect.DataTypes.BloodGlucoseRelationToMeal
 34,android.health.connect.datatypes,BloodGlucoseRecord,getSpecimenSource,return,Android.Health.Connect.DataTypes.BloodGlucoseSpecimenSource
@@ -3669,8 +3669,8 @@
 34,android.health.connect.datatypes,BloodPressureRecord,getMeasurementLocation,return,Android.Health.Connect.DataTypes.BloodPressureMeasurementLocationType
 34,android.health.connect.datatypes,BloodPressureRecord.Builder,ctor,bodyPosition,Android.Health.Connect.DataTypes.BloodPressureBodyPosition
 34,android.health.connect.datatypes,BloodPressureRecord.Builder,ctor,measurementLocation,Android.Health.Connect.DataTypes.BloodPressureMeasurementLocationType
-34,android.health.connect.datatypes,BodyTemperatureRecord,getMeasurementLocation,return,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocation
-34,android.health.connect.datatypes,BodyTemperatureRecord.Builder,ctor,measurementLocation,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocation
+34,android.health.connect.datatypes,BodyTemperatureRecord,getMeasurementLocation,return,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocationType
+34,android.health.connect.datatypes,BodyTemperatureRecord.Builder,ctor,measurementLocation,Android.Health.Connect.DataTypes.BodyTemperatureMeasurementLocationType
 34,android.health.connect.datatypes,CervicalMucusRecord,getAppearance,return,Android.Health.Connect.DataTypes.CervicalMucusAppearanceType
 34,android.health.connect.datatypes,CervicalMucusRecord,getSensation,return,Android.Health.Connect.DataTypes.CervicalMucusSensationType
 34,android.health.connect.datatypes,CervicalMucusRecord.Builder,ctor,appearance,Android.Health.Connect.DataTypes.CervicalMucusAppearanceType
@@ -3679,10 +3679,10 @@
 34,android.health.connect.datatypes,Device.Builder,setType,type,Android.Health.Connect.DataTypes.HealthDeviceType
 34,android.health.connect.datatypes,ExerciseRoute,writeToParcel,flags,Android.OS.ParcelableWriteFlags
 34,android.health.connect.datatypes,ExerciseRoute.Location,writeToParcel,flags,Android.OS.ParcelableWriteFlags
-34,android.health.connect.datatypes,ExerciseSegment,getSegmentType,return,Android.Health.Connect.DataTypes.ExerciseSegmentType
-34,android.health.connect.datatypes,ExerciseSegment.Builder,ctor,segmentType,Android.Health.Connect.DataTypes.ExerciseSegmentType
-34,android.health.connect.datatypes,ExerciseSessionRecord,getExerciseType,return,Android.Health.Connect.DataTypes.ExerciseSessionType
-34,android.health.connect.datatypes,ExerciseSessionRecord.Builder,ctor,exerciseType,Android.Health.Connect.DataTypes.ExerciseSessionType
+34,android.health.connect.datatypes,ExerciseSegment,getSegmentType,return,Android.Health.Connect.DataTypes.ExerciseSegmentTypeEnum
+34,android.health.connect.datatypes,ExerciseSegment.Builder,ctor,segmentType,Android.Health.Connect.DataTypes.ExerciseSegmentTypeEnum
+34,android.health.connect.datatypes,ExerciseSessionRecord,getExerciseType,return,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
+34,android.health.connect.datatypes,ExerciseSessionRecord.Builder,ctor,exerciseType,Android.Health.Connect.DataTypes.ExerciseSessionTypeEnum
 34,android.health.connect.datatypes,MenstruationFlowRecord,getFlow,return,Android.Health.Connect.DataTypes.MenstruationFlowTypeValue
 34,android.health.connect.datatypes,MenstruationFlowRecord.Builder,ctor,flow,Android.Health.Connect.DataTypes.MenstruationFlowTypeValue
 34,android.health.connect.datatypes,Metadata,getRecordingMethod,return,Android.Health.Connect.DataTypes.HealthRecordingMethod

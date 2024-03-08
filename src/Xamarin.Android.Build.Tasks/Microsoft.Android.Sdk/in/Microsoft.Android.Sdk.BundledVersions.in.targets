@@ -10,12 +10,16 @@ WARNING:  DO NOT MODIFY this file unless you are knowledgeable about MSBuild and
   <PropertyGroup>
     <AndroidNETSdkVersion>@ANDROID_PACK_VERSION_LONG@</AndroidNETSdkVersion>
     <XamarinAndroidVersion>@ANDROID_PACK_VERSION_LONG@</XamarinAndroidVersion>
+    <_AndroidLatestStableApiLevel>@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidLatestStableApiLevel>
   </PropertyGroup>
   <PropertyGroup>
     <_AndroidTargetingPackId Condition="$(TargetPlatformVersion.EndsWith('.0'))">$(TargetPlatformVersion.Substring(0, $(TargetPlatformVersion.LastIndexOf('.0'))))</_AndroidTargetingPackId>
     <_AndroidTargetingPackId Condition="'$(_AndroidTargetingPackId)' == ''">$(TargetPlatformVersion)</_AndroidTargetingPackId>
-    <_AndroidRuntimePackId Condition=" '$(_AndroidTargetingPackId)' &lt; '@ANDROID_LATEST_STABLE_API_LEVEL@' ">@ANDROID_LATEST_STABLE_API_LEVEL@</_AndroidRuntimePackId>
+    <!-- NOTE: adjust if a TargetFramework supports multiple API levels -->
+    <_AndroidErrorOnTargetPlatformVersion Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' ">$(_AndroidTargetingPackId)</_AndroidErrorOnTargetPlatformVersion>
+    <_AndroidTargetingPackId Condition=" '$(_AndroidTargetingPackId)' != '$(_AndroidLatestStableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidTargetingPackId>
     <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' == '' ">$(_AndroidTargetingPackId)</_AndroidRuntimePackId>
+    <_AndroidRuntimePackId Condition=" '$(_AndroidRuntimePackId)' != '$(_AndroidLatestStableApiLevel)' ">$(_AndroidLatestStableApiLevel)</_AndroidRuntimePackId>
   </PropertyGroup>
   <ItemGroup>
     <KnownFrameworkReference

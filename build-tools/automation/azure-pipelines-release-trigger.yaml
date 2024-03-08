@@ -12,6 +12,10 @@ resources:
     trigger:
       stages:
       - post_build
+      branches:
+        exclude:
+        - main
+        - release/*
 
 jobs:
 - job: release_trigger

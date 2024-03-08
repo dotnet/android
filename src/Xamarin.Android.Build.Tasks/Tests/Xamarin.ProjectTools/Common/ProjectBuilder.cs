@@ -5,6 +5,7 @@ using System.Linq;
 using System.Diagnostics;
 using Microsoft.Build.Framework;
 using System.Xml.Linq;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.ProjectTools
 {
@@ -20,7 +21,6 @@ namespace Xamarin.ProjectTools
 
 		public bool CleanupOnDispose { get; set; }
 		public bool CleanupAfterSuccessfulBuild { get; set; }
-		public string PackagesDirectory { get; set; }
 		public string ProjectDirectory { get; set; }
 		public string Target { get; set; }
 
@@ -48,9 +48,6 @@ namespace Xamarin.ProjectTools
 						FileSystemUtils.SetDirectoryWriteable (ProjectDirectory);
 						Directory.Delete (ProjectDirectory, true);
 					}
-					if (Directory.Exists (PackagesDirectory)) {
-						Directory.Delete (PackagesDirectory, true);
-					}
 					project.Populate (ProjectDirectory, files);
 				}
 
@@ -65,10 +62,6 @@ namespace Xamarin.ProjectTools
 			Save (project, doNotCleanupOnUpdate, saveProject);
 
 			Output = project.CreateBuildOutput (this);
-
-			if (AutomaticNuGetRestore) {
-				project.NuGetRestore (Path.Combine (XABuildPaths.TestOutputDirectory, ProjectDirectory), PackagesDirectory);
-			}
 
 			bool result = BuildInternal (Path.Combine (ProjectDirectory, project.ProjectFilePath), Target, parameters, environmentVariables, restore: project.ShouldRestorePackageReferences, binlogName: Path.GetFileNameWithoutExtension (BuildLogFile));
 			built_before = true;
@@ -154,21 +147,29 @@ namespace Xamarin.ProjectTools
 		public RuntimeInfo [] GetSupportedRuntimes ()
 		{
 			var runtimeInfo = new List<RuntimeInfo> ();
-			foreach (var file in Directory.EnumerateFiles (Path.Combine (TestEnvironment.AndroidMSBuildDirectory, "lib"), "libmono-android.*.so", SearchOption.AllDirectories)) {
-				string fullFilePath = Path.GetFullPath (file);
-				DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
-				if (parentDir == null)
-					continue;
-				string[] items = Path.GetFileName (fullFilePath).Split ('.' );
-				if (items.Length != 3)
-					continue;
-				var fi = new FileInfo (fullFilePath);
-				runtimeInfo.Add (new RuntimeInfo () {
-					Name = "libmonodroid.so",
-					Runtime = items [1], // release|debug
-					Abi = parentDir.Name, // armaebi|x86|arm64-v8a
-					Size = (int)fi.Length, // int
-				});
+			var runtimeDirs = new HashSet<string> ();
+			var rootRuntimeDirs = Directory.GetDirectories (TestEnvironment.DotNetPreviewPacksDirectory, $"Microsoft.Android.Runtime.{XABuildConfig.AndroidDefaultTargetDotnetApiLevel}.*");
+			foreach (var dir in rootRuntimeDirs) {
+				runtimeDirs.Add (Directory.GetDirectories (dir).LastOrDefault ());
+			}
+
+			foreach (var runtimeDir in runtimeDirs) {
+				foreach (var file in Directory.EnumerateFiles (runtimeDir, "libmono-android.*.so", SearchOption.AllDirectories)) {
+					string fullFilePath = Path.GetFullPath (file);
+					DirectoryInfo parentDir = Directory.GetParent (fullFilePath);
+					if (parentDir == null)
+						continue;
+					string[] items = Path.GetFileName (fullFilePath).Split ('.' );
+					if (items.Length != 3)
+						continue;
+					var fi = new FileInfo (fullFilePath);
+					runtimeInfo.Add (new RuntimeInfo () {
+						Name = "libmonodroid.so",
+						Runtime = items [1], // release|debug
+						Abi = parentDir.Name, // armaebi|x86|arm64-v8a
+						Size = (int)fi.Length, // int
+					});
+				}
 			}
 			return runtimeInfo.ToArray ();
 		}

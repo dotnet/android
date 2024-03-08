@@ -237,6 +237,7 @@ namespace Android.Runtime {
 		//
 		//  Rationale
 		//     No longer called by the indicated caller, however we keep it for backward compatibility.
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android31.0")]
 		static void GetDisplayDPI (out float x_dpi, out float y_dpi)
 		{
 			var wm = Application.Context.GetSystemService (Context.WindowService).JavaCast <IWindowManager> ();
@@ -331,9 +332,7 @@ namespace Android.Runtime {
 		// This is invoked by
 		// System.Net.Http.dll!System.Net.Http.HttpClient.cctor
 		// DO NOT REMOVE
-#if !MONOANDROID1_0
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
-#endif
 		static object GetHttpMessageHandler ()
 		{
 			if (httpMessageHandlerType is null) {
@@ -356,14 +355,12 @@ namespace Android.Runtime {
 
 		static bool IsAcceptableHttpMessageHandlerType (Type handlerType)
 		{
-#if !MONOANDROID1_0
 			if (Extends (handlerType, "System.Net.Http.HttpClientHandler, System.Net.Http")) {
 				// It's not possible to construct HttpClientHandler in this method because it would cause infinite recursion
 				// as HttpClientHandler's constructor calls the GetHttpMessageHandler function
 				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} cannot be used as the native HTTP handler because it is derived from System.Net.Htt.HttpClientHandler. Use a type that extends System.Net.Http.HttpMessageHandler instead.");
 				return false;
 			}
-#endif
 			if (!Extends (handlerType, "System.Net.Http.HttpMessageHandler, System.Net.Http")) {
 				Logger.Log (LogLevel.Warn, "MonoAndroid", $"The type {handlerType.AssemblyQualifiedName} set as the default HTTP handler is invalid. Use a type that extends System.Net.Http.HttpMessageHandler.");
 				return false;

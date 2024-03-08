@@ -31,16 +31,7 @@ namespace Xamarin.Android.Build.Tests
 					},
 				},
 			};
-			var proj = new XamarinAndroidApplicationProject () {
-				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-				},
+			var proj = new XamarinFormsAndroidApplicationProject () {
 				References = { new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj") },
 				Imports = {
 				new Import ("foo.targets") {
@@ -152,8 +143,7 @@ namespace UnnamedProject
 				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
 				FileAssert.Exists (resourcepathscache);
 				var doc = XDocument.Load (resourcepathscache);
-				var expected = Builder.UseDotNet ? 37 : 40;
-				Assert.AreEqual (expected, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
+				Assert.AreEqual (54, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
 			}
 		}
 
@@ -213,17 +203,7 @@ namespace UnnamedProject
 		public void GetExtraLibraryLocationsForDesigner ()
 		{
 			var target = "GetExtraLibraryLocationsForDesigner";
-			var proj = new XamarinAndroidApplicationProject () {
-				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-				},
-			};
+			var proj = new XamarinFormsAndroidApplicationProject ();
 			string jar = "gson-2.7.jar";
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidJavaLibrary", jar) {
 				WebContent = $"https://repo1.maven.org/maven2/com/google/code/gson/gson/2.7/{jar}"
@@ -232,7 +212,7 @@ namespace UnnamedProject
 				WebContent = "https://repo1.maven.org/maven2/com/soundcloud/android/android-crop/1.0.1/android-crop-1.0.1.aar"
 			});
 			// Each NuGet package and AAR file are in libraryprojectimports.cache, AndroidJavaSource is not
-			int libraryProjectImportsJars = 14;
+			const int libraryProjectImportsJars = 55;
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName), false, false)) {
 				// GetExtraLibraryLocationsForDesigner on new project
 				Assert.IsTrue (b.RunTarget (proj, target, parameters: DesignerParameters), $"build should have succeeded for target `{target}` 1");
@@ -326,9 +306,6 @@ namespace UnnamedProject
 
 				var packageManagerPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "mono", "MonoPackageManager_Resources.java");
 				var before = GetAssembliesFromPackageManager (packageManagerPath);
-				if (!Builder.UseDotNet) {
-					Assert.AreEqual ("\"App1.dll\",", before, $"After first `{appb.Target}`, assemblies list should only have main App dll.");
-				}
 
 				// NuGet restore, either with /t:Restore in a separate MSBuild call or /restore in a single call
 				if (restoreInSingleCall) {
@@ -341,9 +318,6 @@ namespace UnnamedProject
 				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), "second build should have succeeded");
 
 				var after = GetAssembliesFromPackageManager (packageManagerPath);
-				if (!Builder.UseDotNet) {
-					Assert.AreNotEqual (before, after, $"After second `{appb.Target}`, assemblies list should *not* be empty.");
-				}
 				foreach (var assembly in new [] { "Xamarin.Forms.Core.dll", "Xamarin.Forms.Platform.Android.dll" }) {
 					StringAssert.Contains (assembly, after);
 				}

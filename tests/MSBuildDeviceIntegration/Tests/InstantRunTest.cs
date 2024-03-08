@@ -7,7 +7,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("Commercial"), Category ("UsesDevice")]
+	[Category ("UsesDevice")]
 	public class InstantRunTest : DeviceTest
 	{
 		[Test]
@@ -17,7 +17,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinFormsAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
@@ -51,7 +50,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
@@ -127,7 +125,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
@@ -143,12 +140,10 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": Android.Support.V7.App.AppCompatActivity");
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
@@ -160,8 +155,14 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded.");
 			Assert.IsFalse (b.Output.IsApkInstalled, "app apk was installed");
 			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("UnnamedProject.dll") && l.Contains ("NotifySync CopyFile")), "app dll not uploaded");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Xamarin.Android.Support.v4.dll") && l.Contains ("NotifySync SkipCopyFile")), "v4 should be skipped, but no relevant log line");
-			Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains ("Xamarin.Android.Support.v7.AppCompat.dll") && l.Contains ("NotifySync SkipCopyFile")), "v7 should be skipped, but no relevant log line");
+
+			var assemblies = new[] {
+				"Xamarin.AndroidX.AppCompat.dll",
+				"Xamarin.AndroidX.Core.dll",
+			};
+			foreach (var assembly in assemblies) {
+				Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")), $"{assembly} should be skipped, but no relevant log line");
+			}
 
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
 			b.Dispose ();
@@ -170,7 +171,7 @@ namespace Xamarin.Android.Build.Tests
 		#pragma warning disable 414
 		static object [] SkipFastDevAlreadyInstalledResourcesSource = new object [] {
 			new object[] { Array.Empty<Package> (), null },
-			new object[] { new Package [] { KnownPackages.AndroidSupportV4_27_0_2_1, KnownPackages.SupportV7AppCompat_27_0_2_1}, "Android.Support.V7.App.AppCompatActivity" },
+			new object[] { new Package [] { KnownPackages.AndroidXAppCompat }, "AndroidX.AppCompat.App.AppCompatActivity" },
 		};
 		#pragma warning restore 414
 
@@ -182,7 +183,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			foreach (var pkg in packages)
@@ -212,7 +212,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -244,7 +243,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -273,15 +271,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 				OtherBuildItems = {
 					nativeLib,
 				},
 			};
-			if (Builder.UseDotNet) {
-				//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
-				proj.SetAndroidSupportedAbis (DeviceAbi);
-			}
+			//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
@@ -311,7 +306,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				AndroidFastDeploymentType = "Assemblies:Dexes",
-				UseLatestPlatformSdk = true,
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");

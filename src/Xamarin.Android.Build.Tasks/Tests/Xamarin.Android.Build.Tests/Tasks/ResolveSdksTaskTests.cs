@@ -436,17 +436,5 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.Delete (Path.Combine (Root, path), recursive: true);
 		}
 
-		[Test]
-		public void LatestTFV_OldTargetSdkVersion ()
-		{
-			var proj = new XamarinAndroidApplicationProject {
-				UseLatestPlatformSdk = false,
-			};
-			proj.TargetSdkVersion = "19";
-			using (var b = CreateApkBuilder ()) {
-				proj.TargetFrameworkVersion = b.LatestTargetFrameworkVersion ();
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
 	}
 }

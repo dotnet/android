@@ -26,6 +26,11 @@ namespace Xamarin.Android.Build.Tests
 		protected static bool IsDeviceAttached (bool refreshCachedValue = false)
 		{
 			if (string.IsNullOrEmpty (_shellEchoOutput) || refreshCachedValue) {
+				// run this twice as sometimes the first time returns the
+				// device as "offline".
+				RunAdbCommand ("devices");
+				var devices = RunAdbCommand ("devices");
+				TestContext.Out.WriteLine ($"LOG adb devices: {devices}");
 				_shellEchoOutput = RunAdbCommand ("shell echo OK", timeout: 15);
 			}
 			return _shellEchoOutput.Contains ("OK");
@@ -58,11 +63,14 @@ namespace Xamarin.Android.Build.Tests
 							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abilist64").Trim ();
 
 						if (string.IsNullOrEmpty (DeviceAbi))
-							DeviceAbi = RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2");
+							DeviceAbi = (RunAdbCommand ("shell getprop ro.product.cpu.abi") ?? RunAdbCommand ("shell getprop ro.product.cpu.abi2")) ?? "x86_64";
 
 						if (DeviceAbi.Contains (",")) {
 							DeviceAbi = DeviceAbi.Split (',')[0];
 						}
+					} else {
+						TestContext.Out.WriteLine ($"LOG GetSdkVersion: {DeviceSdkVersion}");
+						DeviceAbi = "x86_64";
 					}
 				} catch (Exception ex) {
 					Console.Error.WriteLine ("Failed to determine whether there is Android target emulator or not: " + ex);
@@ -73,7 +81,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[OneTimeTearDown]
-		public void DeviceTearDown ()
+		protected virtual void DeviceTearDown ()
 		{
 			if (IsDeviceAttached ()) {
 				// make sure we are not on a guest user anymore.
@@ -182,7 +190,12 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static string ClearDebugProperty ()
 		{
-			return RunAdbCommand ("shell setprop debug.mono.extra \"\"");
+			return ClearShellProp ("debug.mono.extra");
+		}
+
+		protected static string ClearShellProp (string propName)
+		{
+			return RunAdbCommand ($"shell setprop {propName} \"''\"");
 		}
 
 		protected static string AdbStartActivity (string activity)
@@ -192,16 +205,14 @@ namespace Xamarin.Android.Build.Tests
 
 		protected static void RunProjectAndAssert (XamarinAndroidApplicationProject proj, ProjectBuilder builder, string logName = "run.log", bool doNotCleanupOnUpdate = false, string [] parameters = null)
 		{
-			if (Builder.UseDotNet) {
-				builder.BuildLogFile = logName;
-				Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
-			} else if (CommercialBuildAvailable) {
-				builder.BuildLogFile = logName;
-				Assert.True (builder.RunTarget (proj, "_Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
-			} else {
-				var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
-				Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
-			}
+			builder.BuildLogFile = logName;
+			Assert.True (builder.RunTarget (proj, "Run", doNotCleanupOnUpdate: doNotCleanupOnUpdate, parameters: parameters), "Project should have run.");
+		}
+
+		protected static void StartActivityAndAssert (XamarinAndroidApplicationProject proj)
+		{
+			var result = AdbStartActivity ($"{proj.PackageName}/{proj.JavaPackageName}.MainActivity");
+			Assert.IsTrue (result.Contains ("Starting: Intent { cmp="), $"Attempt to start activity failed with:\n{result}");
 		}
 
 		protected TimeSpan ProfileFor (Func<bool> func, TimeSpan? timeout = null)

@@ -4,37 +4,47 @@ parameters:
   emulatorMSBuildArgs: ''
   jobName: CheckTimeZoneInfoIsCorrectNode1
   jobTimeout: 360
+  jdkTestFolder: $(JAVA_HOME_17_X64)
   testSteps: []
+  use1ESTemplate: true
 
 jobs:
   - job: mac_${{ parameters.jobName }}_tests
     displayName: ${{ parameters.jobName }} Emulator Tests
     pool:
-      vmImage: $(HostedMacImage)
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: ${{ parameters.jobTimeout }}
     workspace:
       clean: all
     steps:
-    - template: setup-test-environment.yaml
+    - template: agent-cleanser/v1.yml@yaml-templates
+
+    - script: |
+        echo "##vso[task.setvariable variable=JAVA_HOME]${{ parameters.jdkTestFolder }}"
+      displayName: set JAVA_HOME to ${{ parameters.jdkTestFolder }}
+
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
+        jdkTestFolder: ${{ parameters.jdkTestFolder }}
 
     - task: DownloadPipelineArtifact@2
       inputs:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         emulatorMSBuildArgs: ${{ parameters.emulatorMSBuildArgs }}
 
     - ${{ parameters.testSteps }}
 
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - ${{ parameters.jobName }} With Emulator - macOS
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

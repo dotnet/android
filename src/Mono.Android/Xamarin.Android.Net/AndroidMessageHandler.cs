@@ -40,6 +40,7 @@ namespace Xamarin.Android.Net
 	///
 	/// var httpClient = new HttpClient (handler);
 	/// var response = httpClient.GetAsync ("http://example.com")?.Result as AndroidHttpResponseMessage;
+	/// </example></para>
 	/// <para>
 	/// The class supports pre-authentication of requests albeit in a slightly "manual" way. Namely, whenever a request to a server requiring authentication
 	/// is made and no authentication credentials are provided in the <see cref="PreAuthenticationData"/> property (which is usually the case on the first
@@ -137,12 +138,14 @@ namespace Xamarin.Android.Net
 		DecompressionMethods _decompressionMethods;
 
 		bool disposed;
+		bool started;
 
 		// Now all hail Java developers! Get this... HttpURLClient defaults to accepting AND
 		// uncompressing the gzip content encoding UNLESS you set the Accept-Encoding header to ANY
 		// value. So if we set it to 'gzip' below we WILL get gzipped stream but HttpURLClient will NOT
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
-		bool decompress_here;
+		bool decompress_here => _acceptEncoding is not null && _acceptEncoding != IDENTITY_ENCODING;
+		string? _acceptEncoding;
 
 		public bool SupportsAutomaticDecompression => true;
 		public bool SupportsProxy => true;
@@ -151,7 +154,29 @@ namespace Xamarin.Android.Net
 		public DecompressionMethods AutomaticDecompression
 		{
 			get => _decompressionMethods;
-			set => _decompressionMethods = value;
+			set
+			{
+				CheckDisposedOrStarted ();
+
+				_decompressionMethods = value;
+				_acceptEncoding = null;
+
+				if (value == DecompressionMethods.None) {
+					_acceptEncoding = IDENTITY_ENCODING;
+				} else {
+					if ((value & DecompressionMethods.GZip) != 0) {
+						_acceptEncoding = GZIP_ENCODING;
+					}
+
+					if ((value & DecompressionMethods.Deflate) != 0) {
+						_acceptEncoding = _acceptEncoding is null ? DEFLATE_ENCODING : $"{_acceptEncoding}, {DEFLATE_ENCODING}";
+					}
+
+					if ((value & DecompressionMethods.Brotli) != 0) {
+						_acceptEncoding = _acceptEncoding is null ? BROTLI_ENCODING : $"{_acceptEncoding}, {BROTLI_ENCODING}";
+					}
+				}
+			}
 		}
 
 		public CookieContainer CookieContainer
@@ -269,9 +294,7 @@ namespace Xamarin.Android.Net
 		/// If <c>true</c> then the server requested authorization and the application must use information
 		/// found in <see cref="RequestedAuthentication"/> to set the value of <see cref="PreAuthenticationData"/>
 		/// </summary>
-#if NETCOREAPP
 		[MemberNotNullWhen(true, nameof(RequestedAuthentication))]
-#endif
 		public bool RequestNeedsAuthorization {
 			get { return RequestedAuthentication?.Count > 0; }
 		}
@@ -309,7 +332,6 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		public TimeSpan ReadTimeout { get; set; } = TimeSpan.FromHours (24);
 
-#if !MONOANDROID1_0
 		/// <summary>
 		/// A feature switch that determines whether the message handler should attempt to authenticate the user
 		/// using the NTLM/Negotiate authentication method. Enable the feature by adding
@@ -317,7 +339,6 @@ namespace Xamarin.Android.Net
 		/// </summary>
 		static bool NegotiateAuthenticationIsEnabled =>
 			AppContext.TryGetSwitch ("Xamarin.Android.Net.UseNegotiateAuthentication", out bool isEnabled) && isEnabled;
-#endif
 
 		/// <summary>
 		/// <para>
@@ -337,7 +358,7 @@ namespace Xamarin.Android.Net
 
 		protected override void Dispose (bool disposing)
 		{
-			disposed  = true;
+			disposed = true;
 
 			base.Dispose (disposing);
 		}
@@ -347,6 +368,14 @@ namespace Xamarin.Android.Net
 			if (!disposed)
 				return;
 			throw new ObjectDisposedException (nameof (AndroidMessageHandler));
+		}
+
+		void CheckDisposedOrStarted ()
+		{
+			AssertSelf ();
+			if (started) {
+				throw new InvalidOperationException ("The handler has already started sending requests");
+			}
 		}
 
 		string EncodeUrl (Uri url)
@@ -388,16 +417,13 @@ namespace Xamarin.Android.Net
 		/// <param name="cancellationToken">Cancellation token.</param>
 		protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
-#if !MONOANDROID1_0
 			if (NegotiateAuthenticationIsEnabled) {
 				return SendWithNegotiateAuthenticationAsync (request, cancellationToken);
 			}
-#endif
 
 			return DoSendAsync (request, cancellationToken);
 		}
 
-#if !MONOANDROID1_0
 		async Task <HttpResponseMessage> SendWithNegotiateAuthenticationAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
 			var response = await DoSendAsync (request, cancellationToken).ConfigureAwait (false);
@@ -410,10 +436,10 @@ namespace Xamarin.Android.Net
 
 			return response;
 		}
-#endif
 
 		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
+			started = true;
 			AssertSelf ();
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
@@ -543,30 +569,29 @@ namespace Xamarin.Android.Net
 			if (request.Content is null)
 				return;
 
-			using (var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false)) {
-				await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
+			var stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
+			await stream.CopyToAsync(httpConnection.OutputStream!, 4096, cancellationToken).ConfigureAwait(false);
 
-				//
-				// Rewind the stream to beginning in case the HttpContent implementation
-				// will be accessed again (e.g. after redirect) and it keeps its stream
-				// open behind the scenes instead of recreating it on the next call to
-				// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
-				// call above will throw an exception as we'd be attempting to read an
-				// already "closed" stream (that is one whose Position is set to its
-				// end).
-				//
-				// This is not a perfect solution since the HttpContent may do weird
-				// things in its implementation, but it's better than copying the
-				// content into a buffer since we have no way of knowing how the data is
-				// read or generated and also we don't want to keep potentially large
-				// amounts of data in memory (which would happen if we read the content
-				// into a byte[] buffer and kept it cached for re-use on redirect).
-				//
-				// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
-				//
-				if (stream.CanSeek)
-					stream.Seek (0, SeekOrigin.Begin);
-			}
+			//
+			// Rewind the stream to beginning in case the HttpContent implementation
+			// will be accessed again (e.g. after redirect) and it keeps its stream
+			// open behind the scenes instead of recreating it on the next call to
+			// ReadAsStreamAsync. If we don't rewind it, the ReadAsStreamAsync
+			// call above will throw an exception as we'd be attempting to read an
+			// already "closed" stream (that is one whose Position is set to its
+			// end).
+			//
+			// This is not a perfect solution since the HttpContent may do weird
+			// things in its implementation, but it's better than copying the
+			// content into a buffer since we have no way of knowing how the data is
+			// read or generated and also we don't want to keep potentially large
+			// amounts of data in memory (which would happen if we read the content
+			// into a byte[] buffer and kept it cached for re-use on redirect).
+			//
+			// See https://bugzilla.xamarin.com/show_bug.cgi?id=55477
+			//
+			if (stream.CanSeek)
+				stream.Seek (0, SeekOrigin.Begin);
 		}
 
 		internal Task WriteRequestContentToOutputInternal (HttpRequestMessage request, HttpURLConnection httpConnection, CancellationToken cancellationToken)
@@ -750,13 +775,11 @@ namespace Xamarin.Android.Net
 			} else if (encodings.Contains (DEFLATE_ENCODING)) {
 				supportedEncoding = DEFLATE_ENCODING;
 				ret = new DeflateStream (inputStream, CompressionMode.Decompress);
-			}
-#if NETCOREAPP
-			else if (encodings.Contains (BROTLI_ENCODING)) {
+			} else if (encodings.Contains (BROTLI_ENCODING)) {
 				supportedEncoding = BROTLI_ENCODING;
 				ret = new BrotliStream (inputStream, CompressionMode.Decompress);
 			}
-#endif
+
 			if (!String.IsNullOrEmpty (supportedEncoding)) {
 				contentState.RemoveContentLengthHeader = true;
 
@@ -1060,15 +1083,6 @@ namespace Xamarin.Android.Net
 		internal TrustManagerFactory? ConfigureTrustManagerFactoryInternal (KeyStore? keyStore)
 			=> ConfigureTrustManagerFactory (keyStore);
 
-		void AppendEncoding (string encoding, ref List <string>? list)
-		{
-			if (list == null)
-				list = new List <string> ();
-			if (list.Contains (encoding))
-				return;
-			list.Add (encoding);
-		}
-
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
 			if (conn == null)
@@ -1090,31 +1104,8 @@ namespace Xamarin.Android.Net
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
 
-			List <string>? accept_encoding = null;
-
-			decompress_here = false;
-			if (AutomaticDecompression == DecompressionMethods.None) {
-				AppendEncoding (IDENTITY_ENCODING, ref accept_encoding); // Turns off compression for the Java client
-			} else {
-				if ((AutomaticDecompression & DecompressionMethods.GZip) != 0) {
-					AppendEncoding (GZIP_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-
-				if ((AutomaticDecompression & DecompressionMethods.Deflate) != 0) {
-					AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-#if NETCOREAPP
-				if ((AutomaticDecompression & DecompressionMethods.Brotli) != 0) {
-					AppendEncoding (BROTLI_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-#endif
-			}
-
-			if (accept_encoding?.Count > 0)
-				httpConnection.SetRequestProperty ("Accept-Encoding", String.Join (",", accept_encoding));
+			if (_acceptEncoding is not null)
+				httpConnection.SetRequestProperty ("Accept-Encoding", _acceptEncoding);
 
 			if (UseCookies && CookieContainer != null && request.RequestUri is not null) {
 				string cookieHeaderValue = CookieContainer.GetCookieHeader (request.RequestUri);
@@ -1158,15 +1149,6 @@ namespace Xamarin.Android.Net
 				httpsConnection.SSLSocketFactory = socketFactory;
 				return;
 			}
-
-#if MONOANDROID1_0
-			// Context: https://github.com/xamarin/xamarin-android/issues/1615
-			int apiLevel = (int)Build.VERSION.SdkInt;
-			if (apiLevel >= 16 && apiLevel <= 20) {
-				httpsConnection.SSLSocketFactory = new OldAndroidSSLSocketFactory ();
-				return;
-			}
-#endif
 
 			var keyStore = InitializeKeyStore (out bool gotCerts);
 			keyStore = ConfigureKeyStore (keyStore);

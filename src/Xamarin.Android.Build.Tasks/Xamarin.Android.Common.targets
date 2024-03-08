@@ -134,9 +134,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props"
-	Condition=" '$(UsingAndroidNETSdk)' != 'True' And Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.props')" />
-
 <Import Project="Xamarin.Android.AvailableItems.targets" />
 
 <!--
@@ -209,8 +206,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<!-- Obsolete build property: should be removed in the future releases -->
 	<AndroidMultiDexSupportJar></AndroidMultiDexSupportJar>
 
-	<AndroidSupportedAbis Condition=" '$(AndroidSupportedAbis)' == '' And '$(UsingAndroidNETSdk)' != 'True' ">armeabi-v7a;arm64-v8a</AndroidSupportedAbis>
-
 	<!--- Default Lint Enabled and Disabled Checks -->
 	<AndroidLintEnabledIssues Condition=" '$(AndroidLintEnabledIssues)' == '' "></AndroidLintEnabledIssues>
 	<AndroidLintDisabledIssues Condition=" '$(AndroidLintDisabledIssues)' == ''"></AndroidLintDisabledIssues>
@@ -275,7 +270,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidCreatePackagePerAbi Condition=" '$(AndroidCreatePackagePerAbi)' == 'aab' ">False</AndroidCreatePackagePerAbi>
 	<AndroidApkSigningAlgorithm Condition=" '$(AndroidApkSigningAlgorithm)' == '' ">SHA256withRSA</AndroidApkSigningAlgorithm>
 	<AndroidApkDigestAlgorithm  Condition=" '$(AndroidApkDigestAlgorithm)' == '' ">SHA-256</AndroidApkDigestAlgorithm>
-	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">legacy</AndroidManifestMerger>
+	<AndroidManifestMerger      Condition=" '$(AndroidManifestMerger)' == '' ">manifestmerger.jar</AndroidManifestMerger>
 
 	<!-- Default Java heap size to 1GB (-Xmx1G) if not specified-->
 	<JavaMaximumHeapSize Condition=" '$(JavaMaximumHeapSize)' == '' ">1G</JavaMaximumHeapSize>
@@ -299,8 +294,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<AndroidMakeBundleKeepTemporaryFiles Condition=" '$(AndroidMakeBundleKeepTemporaryFiles)' == '' ">False</AndroidMakeBundleKeepTemporaryFiles>
 
 	<!-- If true it will cause all the assemblies in the apk to be preloaded on startup time -->
-	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' == 'true' ">False</_AndroidEnablePreloadAssembliesDefault>
-	<_AndroidEnablePreloadAssembliesDefault Condition=" '$(UsingAndroidNETSdk)' != 'true' ">True</_AndroidEnablePreloadAssembliesDefault>
+	<_AndroidEnablePreloadAssembliesDefault>False</_AndroidEnablePreloadAssembliesDefault>
 	<AndroidEnablePreloadAssemblies Condition=" '$(AndroidEnablePreloadAssemblies)' == '' ">$(_AndroidEnablePreloadAssembliesDefault)</AndroidEnablePreloadAssemblies>
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
@@ -337,8 +331,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
 
   <!-- TODO: disable for Blazor apps, use https://github.com/dotnet/maui/blob/f939049fa0bf950aeaf9271ca13ee73870c8ce93/src/Workload/Microsoft.Maui.Sdk/Sdk/BundledVersions.in.targets#L51 -->
-  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' == 'True' And '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(UsingAndroidNETSdk)' != 'True' ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -360,10 +353,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	</AllowedReferenceRelatedFileExtensions>
 </PropertyGroup>
 
-<ItemGroup>
-	<AndroidPackagingOptionsExclude Include="DebugProbesKt.bin" />
-	<AndroidPackagingOptionsExclude Include="$([MSBuild]::Escape('*.kotlin_*'))" />
-</ItemGroup>
+<!-- Assets build properties -->
+<PropertyGroup>
+	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
+	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
+</PropertyGroup>
 
 <!--
 *******************************************
@@ -377,7 +371,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Resource.Designer.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.SkipCases.projitems" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Tooling.targets" />
 
 <Target Name="_WriteLockFile" Condition=" '$(_AndroidDetectParallelBuilds)' == 'True' ">
@@ -389,22 +382,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     <_AppExtensionReference Condition=" '%(ProjectReference.IsAppExtension)' == 'True' " Include="@(ProjectReference)" />
     <ProjectReference Remove="@(_AppExtensionReference)" />
   </ItemGroup>
-  <PropertyGroup>
-    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' == 'true' ">ErrorAndStop</_AppExtensionContinueOnError>
-    <_AppExtensionContinueOnError Condition=" '$(UsingAndroidNETSdk)' != 'true' ">WarnAndContinue</_AppExtensionContinueOnError>
-  </PropertyGroup>
   <AndroidError
       Code="XA4312"
       ResourceName="XA4312"
       FormatArguments="%(_AppExtensionReference.FullPath)"
-      ContinueOnError="$(_AppExtensionContinueOnError)"
       Condition=" '%(FullPath)' != '' "
   />
 </Target>
-
-<ItemGroup>
-	<AndroidCustomMetaDataForReferences Include="@(_AndroidAssemblySkipCases)" />
-</ItemGroup>
 
 <Target Name="_AddAndroidCustomMetaData">
   <AppendCustomMetadataToItemGroup
@@ -441,7 +425,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(MonoAndroidAssetsDirIntermediate)xa-internal/xa-mam-mapping.xml">
   <MakeDir
       Condition=" '@(_AndroidMamMappingFile->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MamJsonToXml
       MappingFiles="@(_AndroidMamMappingFile)"
@@ -466,7 +450,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
     Outputs="$(_XARemapMembersFilePath)">
   <MakeDir
       Condition=" '@(_AndroidRemapMembers->Count())' != '0' "
-      Directories="$(MonoAndroidAssetsDirIntermediate)/xa-internal"
+      Directories="$(MonoAndroidAssetsDirIntermediate)xa-internal"
   />
   <MergeRemapXml
       InputRemapXmlFiles="@(_AndroidRemapMembers)"
@@ -482,16 +466,25 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 </Target>
 
 <Target Name="_CheckAndroidHttpClientHandlerType"
-    Condition=" '$(AndroidHttpClientHandlerType)' != '' And  '$(AndroidApplication)' == 'True' ">
-  <PropertyGroup>
-    <ValidAndroidHttpClientHandlerBaseType Condition="'$(UsingAndroidNETSdk)' != 'true'">System.Net.Http.HttpClientHandler, System.Net.Http</ValidAndroidHttpClientHandlerBaseType>
-    <ValidAndroidHttpClientHandlerBaseType Condition="'$(UsingAndroidNETSdk)' == 'true'">System.Net.Http.HttpMessageHandler, System.Net.Http</ValidAndroidHttpClientHandlerBaseType>
-  </PropertyGroup>
+    Condition=" '$(AndroidHttpClientHandlerType)' != '' And '$(AndroidHttpClientHandlerType)' != 'Xamarin.Android.Net.AndroidMessageHandler' And '$(AndroidApplication)' == 'True' ">
   <CheckClientHandlerType
     ClientHandlerType="$(AndroidHttpClientHandlerType)"
-    ValidHandlerType="$(ValidAndroidHttpClientHandlerBaseType)"
-    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     ResolvedAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+  />
+</Target>
+
+<Target Name="_CheckUnsupportedPackages" AfterTargets="ResolvePackageAssets">
+  <ItemGroup>
+    <_AndroidUnsupportedPackages
+        Include="%(ResolvedCompileFileDefinitions.NuGetPackageId)"
+        Condition=" '%(ResolvedCompileFileDefinitions.NuGetPackageId)' != '' and
+            ( $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Arch.')) or
+              $([System.String]::Copy(%(ResolvedCompileFileDefinitions.NuGetPackageId)).StartsWith ('Xamarin.Android.Support.')) )"
+    />
+  </ItemGroup>
+  <AndroidError Code="XA1039"
+      ResourceName="XA1039"
+      Condition=" '@(_AndroidUnsupportedPackages->Count())' != '0' "
   />
 </Target>
 
@@ -540,17 +533,13 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1023"
       Condition="  '$(AndroidDexTool)' == 'dx' "
   />
-  <AndroidWarning Code="XA1026"
-      ResourceName="XA1026"
-      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' != 'true' "
-  />
   <AndroidError Code="XA1026"
       ResourceName="XA1026_dotnet"
-      Condition=" '$(AndroidUseAapt2)' != 'true' and '$(UsingAndroidNETSdk)' == 'true' "
+      Condition=" '$(AndroidUseAapt2)' != 'true' "
   />
   <AndroidWarning Code="XA1035"
       ResourceName="XA1035"
-      Condition=" '$(BundleAssemblies)' == 'true' and '$(UsingAndroidNETSdk)' == 'true' "
+      Condition=" '$(BundleAssemblies)' == 'true' "
   />
 </Target>
 
@@ -840,31 +829,32 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CheckForObsoleteFrameworkAssemblies">
-  <PropertyGroup>
-    <_TreatErrorAsWarning Condition="'$(UsingAndroidNETSdk)' != 'true' " >True</_TreatErrorAsWarning>
-    <_TreatErrorAsWarning Condition=" '$(_TreatErrorAsWarning)' == ''">False</_TreatErrorAsWarning>
-  </PropertyGroup>
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'OpenTK-1.0' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="OpenTK-1.0;Xamarin.Legacy.OpenTK"
-    ContinueOnError="$(_TreatErrorAsWarning)"
   />
   <AndroidError
     Condition=" '%(Reference.Identity)' == 'Xamarin.Android.NUnitLite' "
     Code="XA4313"
     ResourceName="XA4313"
     FormatArguments="Xamarin.Android.NUnitLite;Xamarin.Legacy.NUnitLite"
-    ContinueOnError="$(_TreatErrorAsWarning)"
   />
 </Target>
 
 <Target Name="_CheckDuplicateJavaLibraries" DependsOnTargets="_GetLibraryImports">
+  <ItemGroup>
+    <_AndroidExcludedDuplicateJavaLibraries Include="classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="r-classes.jar" />
+    <_AndroidExcludedDuplicateJavaLibraries Include="repackaged.jar" />
+  </ItemGroup>
   <CheckDuplicateJavaLibraries
     JavaSourceFiles="@(AndroidJavaSource)"
     JavaLibraries="@(AndroidJavaLibrary)"
-    LibraryProjectJars="@(ExtractedJarImports)" />
+    LibraryProjectJars="@(ExtractedJarImports)"
+    ExcludedFiles="@(_AndroidExcludedDuplicateJavaLibraries)"
+  />
 </Target>
 
 <Target Name="_LintChecks" Condition=" '$(AndroidLintEnabled)' == 'True' ">
@@ -881,12 +871,6 @@ because xbuild doesn't support framework reference assemblies.
 		JavaSdkPath="$(_JavaSdkDirectory)"
 	/>
 </Target>
-
-<!-- Assets build properties -->
-<PropertyGroup>
-	<MonoAndroidAssetsDirIntermediate>$(IntermediateOutputPath)assets\</MonoAndroidAssetsDirIntermediate>
-	<MonoAndroidAssetsPrefix Condition="'$(MonoAndroidAssetsPrefix)' == ''">Assets</MonoAndroidAssetsPrefix>
-</PropertyGroup>
 
 <!-- Assets Build -->
 
@@ -919,7 +903,7 @@ because xbuild doesn't support framework reference assemblies.
 	<MonoAndroidResourcePrefix Condition="'$(MonoAndroidResourcePrefix)' == ''">Resources</MonoAndroidResourcePrefix>
 	<!-- NOTE: Kept for compatibility, prefer to use $(IntermediateOutputPath) instead -->
 	<MonoAndroidIntermediate>$(IntermediateOutputPath)</MonoAndroidIntermediate>
-	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)generated</MonoAndroidCodeBehindDir>
+	<MonoAndroidCodeBehindDir>$(IntermediateOutputPath)codebehind</MonoAndroidCodeBehindDir>
 	<MonoAndroidIntermediateResourceCache>$(IntermediateOutputPath)resourcecache</MonoAndroidIntermediateResourceCache>
 	<_AndroidIntermediateJavaSourceDirectory>$(IntermediateOutputPath)android\src\</_AndroidIntermediateJavaSourceDirectory>
 	<_AndroidIntermediateDexOutputDirectory>$(IntermediateOutputPath)android\bin\</_AndroidIntermediateDexOutputDirectory>
@@ -974,8 +958,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidNdkPath=$(_AndroidNdkDirectory)" />
 		<_PropertyCacheItems Include="JavaSdkPath=$(_JavaSdkDirectory)" />
 		<_PropertyCacheItems Include="AndroidSequencePointsMode=$(_AndroidSequencePointsMode)" />
-		<_PropertyCacheItems Include="XamarinAndroidVersion=$(XamarinAndroidVersion)" Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
-		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)"   Condition=" '$(UsingAndroidNETSdk)' == 'true' " />
+		<_PropertyCacheItems Include="AndroidNETSdkVersion=$(AndroidNETSdkVersion)" />
 		<_PropertyCacheItems Include="MonoSymbolArchive=$(MonoSymbolArchive)" />
 		<_PropertyCacheItems Include="AndroidUseLatestPlatformSdk=$(AndroidUseLatestPlatformSdk)" />
 		<_PropertyCacheItems Include="TargetFrameworkVersion=$(TargetFrameworkVersion)" />
@@ -986,7 +969,6 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
 		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
 		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
-		<_PropertyCacheItems Include="AndroidSupportedAbis=$(AndroidSupportedAbis)" />
 		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
 		<_PropertyCacheItems Include="AndroidUseDesignerAssembly=$(AndroidUseDesignerAssembly)" />
@@ -1377,18 +1359,14 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CollectRuntimeJarFilenames">
   <PropertyGroup>
-    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.jar</_RuntimeJar>
-    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(MSBuildThisFileDirectory)\java_runtime.dex</_RuntimeDex>
-
-    <_RuntimeJar Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
-    <_RuntimeDex Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
+    <_RuntimeJar>$(MSBuildThisFileDirectory)\java_runtime_net6.jar</_RuntimeJar>
+    <_RuntimeDex>$(MSBuildThisFileDirectory)\java_runtime_net6.dex</_RuntimeDex>
   </PropertyGroup>
 </Target>
 
 <Target Name="_GetMonoPlatformJarPath">
   <PropertyGroup>
-    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' != 'True' ">$(TargetFrameworkDirectory)</_AndroidJarAndDexDirectory>
-    <_AndroidJarAndDexDirectory Condition=" '$(UsingAndroidNETSdk)' == 'True' ">$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
+    <_AndroidJarAndDexDirectory>$(_XATargetFrameworkDirectories)</_AndroidJarAndDexDirectory>
   </PropertyGroup>
   <GetMonoPlatformJar Condition=" '$(_AndroidUseMarshalMethods)' != 'True' " TargetFrameworkDirectory="$(_AndroidJarAndDexDirectory)">
     <Output TaskParameter="MonoPlatformJarPath" PropertyName="MonoPlatformJarPath" />
@@ -1402,13 +1380,7 @@ because xbuild doesn't support framework reference assemblies.
 		DependsOnTargets="_CollectRuntimeJarFilenames;$(_BeforeAddStaticResources);_GetMonoPlatformJarPath">
 	<CopyResource ResourceName="machine.config" OutputPath="$(MonoAndroidIntermediateAssemblyDir)machine.config" />
   <CopyResource
-      Condition=" '$(_AndroidApiLevel)' &gt;= '21' "
       ResourceName="MonoRuntimeProvider.Bundled.java"
-      OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
-  />
-  <CopyResource
-      Condition=" '$(_AndroidApiLevel)' &lt; '21' "
-      ResourceName="MonoRuntimeProvider.Bundled.20.java"
       OutputPath="$(_AndroidIntermediateJavaSourceDirectory)mono\MonoRuntimeProvider.java"
   />
   <CreateTypeManagerJava
@@ -1467,7 +1439,7 @@ because xbuild doesn't support framework reference assemblies.
       AddKeepAlives="$(AndroidAddKeepAlives)"
       UseDesignerAssembly="$(AndroidUseDesignerAssembly)"
       Deterministic="$(Deterministic)"
-      UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
+      ReadSymbols="$(_AndroidLinkAssembliesReadSymbols)"
   />
   <ItemGroup>
     <FileWrites Include="$(MonoAndroidIntermediateAssemblyDir)**" />
@@ -1552,6 +1524,10 @@ because xbuild doesn't support framework reference assemblies.
       Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
     <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
+
+  <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
+    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\*" />
+  </ItemGroup>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
@@ -1654,7 +1630,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="__XA_PACKAGE_NAMING_POLICY__=$(AndroidPackageNamingPolicy)" />
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
-    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(UsingAndroidNETSdk)' == 'true' and '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
+    <_GeneratedAndroidEnvironment Include="DOTNET_MODIFIABLE_ASSEMBLIES=Debug" Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' and '$(AndroidUseInterpreter)' == 'true' " />
   </ItemGroup>
   <WriteLinesToFile
       File="$(IntermediateOutputPath)__environment__.txt"
@@ -1772,7 +1748,6 @@ because xbuild doesn't support framework reference assemblies.
     BoundExceptionType="$(AndroidBoundExceptionType)"
     InstantRunEnabled="$(_InstantRunEnabled)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    UsingAndroidNETSdk="$(UsingAndroidNETSdk)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     MarshalMethodsTracingMode="$(_AndroidMarshalMethodsTracingMode)"
@@ -1945,7 +1920,7 @@ because xbuild doesn't support framework reference assemblies.
     <_ProguardConfiguration Include="$(ProguardConfigFiles)" />
   </ItemGroup>
   <ItemGroup Condition=" '$(ProguardConfigFiles)' == '' ">
-    <_ProguardConfiguration Include="$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt" />
+    <_ProguardConfiguration Include="$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt"     Condition=" Exists ('$(_AndroidSdkDirectory)tools\proguard\proguard-android.txt') " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_xamarin.cfg"         Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(_ProguardProjectConfiguration)"                               Condition=" '$(AndroidLinkTool)' != '' " />
     <_ProguardConfiguration Include="$(IntermediateOutputPath)proguard\proguard_project_primary.cfg" Condition=" '$(AndroidLinkTool)' != '' " />
@@ -1978,7 +1953,7 @@ because xbuild doesn't support framework reference assemblies.
 
   <!-- Shrink Mono.Android.dll by removing attribute only needed for GenerateJavaStubs -->
   <RemoveRegisterAttribute
-    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true'"
+    Condition="'$(AndroidLinkMode)' != 'None' AND '$(AndroidIncludeDebugSymbols)' != 'true' AND '$(AndroidStripILAfterAOT)' != 'true'"
     ShrunkFrameworkAssemblies="@(_ShrunkAssemblies)" />
 
   <MakeDir Directories="$(MonoAndroidIntermediateAssemblyDir)shrunk" />
@@ -2148,6 +2123,7 @@ because xbuild doesn't support framework reference assemblies.
     CheckedBuild="$(_AndroidCheckedBuild)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+    IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
@@ -2183,6 +2159,7 @@ because xbuild doesn't support framework reference assemblies.
       CheckedBuild="$(_AndroidCheckedBuild)"
       RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
@@ -2556,6 +2533,8 @@ because xbuild doesn't support framework reference assemblies.
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)generated" Condition="Exists ('$(IntermediateOutputPath)generated')" />
+	<RemoveDirFixed Directories="$(IntermediateOutputPath)codebehind" Condition="Exists ('$(IntermediateOutputPath)codebehind')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)res" Condition="Exists ('$(IntermediateOutputPath)res')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)aidl" Condition="Exists ('$(IntermediateOutputPath)aidl')" />
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)bundles" Condition="Exists ('$(IntermediateOutputPath)bundles')" />
@@ -2738,10 +2717,11 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_BeforeGetAndroidDependencies">
   <PropertyGroup>
     <_AndroidAllowMissingSdkTooling>True</_AndroidAllowMissingSdkTooling>
+    <AndroidInstallJavaDependencies Condition=" '$(AndroidInstallJavaDependencies)' == '' ">false</AndroidInstallJavaDependencies>
   </PropertyGroup>
 </Target>
 
-<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency)">
+<Target Name="GetAndroidDependencies" DependsOnTargets="$(GetAndroidDependenciesDependsOn)" Returns="@(AndroidDependency);@(JavaDependency)">
   <PropertyGroup>
     <_ProjectAndroidManifest>$(ProjectDir)$(AndroidManifest)</_ProjectAndroidManifest>
     <_NdkRequired Condition="'$(EnableLLVM)' == 'True'">true</_NdkRequired>
@@ -2757,8 +2737,11 @@ because xbuild doesn't support framework reference assemblies.
     PlatformToolsVersion="$(AndroidSdkPlatformToolsVersion)"
     NdkVersion="$(AndroidNdkVersion)"
     NdkRequired="$(_NdkRequired)"
+    GetJavaDependencies="$(AndroidInstallJavaDependencies)"
+    JdkVersion="$(JavaSdkVersion)"
   >
     <Output TaskParameter="Dependencies" ItemName="AndroidDependency" />
+    <Output TaskParameter="JavaDependencies" ItemName="JavaDependency" />
   </CalculateProjectDependencies>
 </Target>
 
@@ -2767,8 +2750,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.PCLSupport.targets"
-        Condition=" '$(UsingAndroidNETSdk)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"

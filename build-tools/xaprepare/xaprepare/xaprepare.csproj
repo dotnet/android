@@ -1,20 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../../../Configuration.props" />
 
   <PropertyGroup>
     <TargetFramework>$(DotNetStableTargetFramework)</TargetFramework>
     <OutputType>Exe</OutputType>
-    <LangVersion>8.0</LangVersion>
+    <LangVersion>$(LangVersion)</LangVersion>
     <RootNamespace>Xamarin.Android.Prepare</RootNamespace>
     <AssemblyName>xaprepare</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <Import Project="../../../Configuration.props" />
-
-  <ItemGroup>
-    <Compile Remove="Steps\Step_PrepareBundle.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <Compile Include="$(IntermediateOutputPath)/BuildInfo.Generated.cs" />
@@ -42,6 +37,10 @@
   <ItemGroup Condition=" '$(HostOS)' == 'Windows' ">
     <Compile Include="../../../tools/vswhere/MSBuildLocator.cs" />
     <Compile Include="../../../tools/vswhere/VisualStudioInstance.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="../../../src/Xamarin.Android.Build.Tasks/Utilities/PathUtil.cs" />
   </ItemGroup>
 
   <ItemGroup>

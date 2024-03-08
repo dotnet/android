@@ -5,10 +5,10 @@ namespace Xamarin.Android.Prepare
 {
 	class BuildAndroidPlatforms
 	{
-		public const string AndroidNdkVersion = "25c";
-		public const string AndroidNdkPkgRevision = "25.2.9519653";
+		public const string AndroidNdkVersion = "26c";
+		public const string AndroidNdkPkgRevision = "26.2.11394342";
 		public const int NdkMinimumAPI = 21;
-		public const int NdkMinimumAPILegacy32 = 19;
+		public const int NdkMinimumAPILegacy32 = 21;
 
 		public static readonly List<AndroidPlatform> AllPlatforms = new List<AndroidPlatform> {
 			new AndroidPlatform (apiName: "",                       apiLevel: 1,  platformID: "1"),
@@ -45,13 +45,6 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Sv2",                    apiLevel: 32, platformID: "32",  include: "v12.1"),
 			new AndroidPlatform (apiName: "Tiramisu",               apiLevel: 33, platformID: "33",  include: "v13.0",   framework: "v13.0"),
 			new AndroidPlatform (apiName: "UpsideDownCake",         apiLevel: 34, platformID: "34",  include: "v14.0",   framework: "v14.0"),
-		};
-
-		public static readonly Dictionary<string, uint> NdkMinimumAPIMap = new Dictionary<string, uint> {
-			{ AbiNames.TargetJit.AndroidArmV7a, NdkMinimumAPILegacy32 },
-			{ AbiNames.TargetJit.AndroidArmV8a, NdkMinimumAPI },
-			{ AbiNames.TargetJit.AndroidX86,    NdkMinimumAPILegacy32 },
-			{ AbiNames.TargetJit.AndroidX86_64, NdkMinimumAPI },
 		};
 
 	}

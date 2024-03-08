@@ -56,9 +56,21 @@
       </Item>
       <Item ItemId=";APT2264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Dies ist wahrscheinlich darauf zurückzuführen, dass das Projekt die Beschränkung der maximalen Pfadlänge von Windows überschreitet. Weitere Informationen finden Sie unter https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+            <Val><![CDATA[Dies ist möglicherweise darauf zurückzuführen, dass das Projekt die Windows-Beschränkung der maximalen Pfadlänge überschreitet. Weitere Informationen finden Sie unter https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";APT2265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Dies kann daran liegen, dass der Dateiname oder der Pfad des Projekts Nicht-ASCII-Zeichen enthält. Weitere Informationen finden Sie unter https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -605,10 +617,13 @@
       </Item>
       <Item ItemId=";XA1024" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.]]></Val>
+          <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET Android projects that target .NET 6 or higher.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Die Konfigurationsdatei "{0}" wird ignoriert. .NET-Konfigurationsdateien werden in Xamarin.Android-Projekten für .NET 6 oder höher nicht unterstützt.]]></Val>
+            <Val><![CDATA[Die Konfigurationsdatei "{0}" wird ignoriert. .NET-Konfigurationsdateien werden in .NET Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -632,10 +647,13 @@
       </Item>
       <Item ItemId=";XA1026_dotnet" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Using AAPT is not supported in Xamarin.Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
+          <Val><![CDATA[Using AAPT is not supported in .NET Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Die Verwendung von AAPT wird in Xamarin.Android-Projekten für .NET 6 oder höher nicht unterstützt. Aktivieren Sie "Inkrementelles Android-Paketierungssystem (aapt2) verwenden" in den Visual Studio-Projekteigenschaftenseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidUseAapt2" auf TRUE fest.]]></Val>
+            <Val><![CDATA[Die Verwendung von AAPT wird in .NET Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt. Aktivieren Sie "Inkrementelles Android-Paketierungssystem (aapt2) verwenden" in den Visual Studio-Projekteigenschaftsseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidUseAapt2" auf WAHR fest.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Using AAPT is not supported in Xamarin.Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -680,6 +698,15 @@
           <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Der „AndroidHttpClientHandlerType“-Eigenschaftswert „{0}“ muss von „{1}“ abgeleitet werden.]D;]A;Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von „{1}“ erbt, oder entfernen Sie die Eigenschaft vollständig.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1031_HCH" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.]D;]A;Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der AndroidHttpClientHandlerType-Eigenschaftswert "{0}" muss nicht von "System.Net.Htt.HttpClientHandler" abgeleitet werden.]D;]A;Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System.Net.Http.HttpMessageHandler" erbt, oder entfernen Sie die Eigenschaft vollständig.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -729,12 +756,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA1037" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die MSBuild-Eigenschaft "{0}" ist veraltet und wird in .NET {1} entfernt. Weitere Informationen finden Sie unter https://aka.ms/net-android-deprecations.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1039" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Android-Unterstützungsbibliotheken werden in .NET 9 und höher nicht unterstützt. Migrieren Sie zu AndroidX. Weitere Informationen finden Sie https://aka.ms/xamarin/androidx.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+          <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[In der Assembly "{0}" wurde die Verwendung von "AppDomain.CreateDomain()" festgestellt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach dem Release von .NET 6 nicht mehr in Xamarin.Android verfügbar ist.]]></Val>
+            <Val><![CDATA[Die Verwendung von AppDomain.CreateDomain() wurde in der Assembly {0} erkannt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach der Veröffentlichung von .NET 6 nicht mehr in .NET Android verfügbar ist.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1082,19 +1130,25 @@
       </Item>
       <Item ItemId=";XA4231" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.]]></Val>
+          <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'class-parse'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Der Wert "{0}" des Android-Klassenparsers ist veraltet und wird in einer zukünftigen Version von Xamarin.Android entfernt. Aktualisieren Sie die Projekteigenschaften auf die Verwendung von "class-parse".]]></Val>
+            <Val><![CDATA[Der Android-Klassenparserwert "{0}" ist veraltet und wird in einer zukünftigen Version von .NET Android entfernt. Aktualisieren Sie die Projekteigenschaften, um "class-parse" zu verwenden.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA4232" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+          <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Das Ziel "{0}" für die Android-Codegenerierung ist veraltet und wird in einer zukünftigen Version von Xamarin.Android entfernt. Aktualisieren Sie die Projekteigenschaften auf die Verwendung von "XAJavaInterop1".]]></Val>
+            <Val><![CDATA[Das Android-Codegenerierungsziel "{0}" ist veraltet und wird in einer zukünftigen Version von .NET Android entfernt. Aktualisieren Sie die Projekteigenschaften, um "XAJavaInterop1" zu verwenden.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1103,6 +1157,60 @@
           <Val><![CDATA[The <AndroidNamespaceReplacement> for '{0}' does not specify a 'Replacement' attribute.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[In der <AndroidNamespaceReplacement> für '{0}' ist kein Ersetzungsattribut angegeben.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4234" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA['<{0}>' item '{1}' is missing required metadata '{2}']]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Für das "<{0}>"-Element "{1}" fehlen die erforderlichen Metadaten "{2}"]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4235" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die Maven-Artefaktspezifikation "{0}" ist ungültig. Das richtige Format ist "group_id:artifact_id".]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4236" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Cannot download Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]D;]A;- {4}: {5}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Das Maven-Artefakt "{0}:{1}" kann nicht heruntergeladen werden.]D;]A;– {2}: {3}]D;]A;– {4}: {5}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4237" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Cannot download POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Der POM-Datei für das Maven-Artefakt "{0}:{1}" kann nicht heruntergeladen werden.]D;]A;– {2}: {3}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4238" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Cannot download parent POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Die übergeordnete POM-Datei für das Maven-Artefakt "{0}:{1}" kann nicht heruntergeladen werden.]D;]A;– {2}: {3}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4239" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Unknown Maven repository: '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Unbekanntes Maven-Repository: "{0}".]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
@@ -1253,10 +1361,13 @@
       </Item>
       <Item ItemId=";XA4312" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
+          <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of .NET Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Verweise von einem Android-Anwendungsprojekt auf das Android Wear-Anwendungsprojekt "{0}" ist veraltet und wird in zukünftigen Versionen von Xamarin.Android nicht mehr unterstützt. Entfernen Sie den Verweis auf das Android Wear-Anwendungsprojekt aus dem Android-Anwendungsprojekt, und verteilen Sie die Wear-Anwendung stattdessen als eigenständige Anwendung.]]></Val>
+            <Val><![CDATA[Das Verweisen auf das Android Wear-Anwendungsprojekt "{0}" aus einem Android-Anwendungsprojekt ist veraltet und wird in einer zukünftigen Version von .NET Android nicht mehr unterstützt. Entfernen Sie den Verweis auf das Android Wear-Anwendungsprojekt aus dem Android-Anwendungsprojekt, und verteilen Sie die Wear-Anwendung stattdessen als eigenständige Anwendung.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1370,28 +1481,34 @@
       </Item>
       <Item ItemId=";XA5207" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)]]></Val>
+          <Val><![CDATA[Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed; it was expected to be in `{1}`.]D;]A;{2}]D;]A;See https://aka.ms/xa5207 for more details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA["android.jar" wurde für API-Ebene {0} nicht gefunden. Dies bedeutet, dass die Android SDK-Plattform für API-Ebene {0} nicht installiert ist. Führen Sie die Installation entweder im Android-SDK-Manager ({2}) durch, oder ändern Sie das Xamarin.Android-Projekt, um eine installierte API-Version als Ziel zu verwenden ("{1}" fehlt.)]]></Val>
+            <Val><![CDATA[android.jar für API-Ebene {0} wurde nicht gefunden. Dies bedeutet, dass die Android SDK-Plattform für die API-Ebene {0} nicht installiert ist. Es wurde erwartet, dass sie sich in "{1}" befindet.]D;]A;{2}]D;]A;Weitere Informationen finden Sie unter https://aka.ms/xa5207.]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.)]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA5207_SDK_Manager_CLI" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[You can install the missing API level by running `dotnet build -t:InstallAndroidDependencies -f {0} "-p:AndroidSdkDirectory={1}"`, or change the project to target an API version that is installed.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Sie können die fehlende API-Ebene installieren, indem Sie "dotnet build -t:InstallAndroidDependencies -f" {0} "-p:AndroidSdkDirectory={1}" ausführen oder das Projekt so ändern, dass es auf eine installierte API-Version ausgerichtet wird.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";XA5207_SDK_Manager_Windows" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Tools > Android > Android SDK Manager...]]></Val>
+          <Val><![CDATA[Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...), or change the .NET Android project to target an API version that is installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Extras > Android > Android-SDK-Manager...]]></Val>
+            <Val><![CDATA[Installieren Sie es entweder im Android SDK-Manager (Tools > Android > Android SDK-Manager...), oder ändern Sie das .NET Android-Projekt so, dass es auf eine installierte API-Version abzielt.]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA5207_SDK_Manager_macOS" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Tools > Open Android SDK Manager...]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Extras > Android-SDK-Manager öffnen...]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Tools > Android > Android SDK Manager...]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

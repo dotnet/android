@@ -8,7 +8,6 @@ using Mono.Cecil;
 
 using Monodroid;
 using MonoDroid.Tuner;
-using MonoDroid.Utils;
 
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.TypeNameMappings;
@@ -113,7 +112,7 @@ namespace Xamarin.Android.Manifest {
 			});
 		}
 
-		public ICollection<string> Load (T value, CustomAttribute attribute)
+		public ICollection<string> Load (T value, CustomAttribute attribute, TypeDefinitionCache cache)
 		{
 			if (attribute == null)
 				return null;
@@ -124,7 +123,7 @@ namespace Xamarin.Android.Manifest {
 				specified.Add (e.Name);
 				var s = Mappings [e.Name].Setter;
 				if (s != null)
-					s (value, e.Argument.GetSettableValue ());
+					s (value, e.Argument.GetSettableValue (cache));
 			}
 
 			return specified;
@@ -383,12 +382,26 @@ namespace Xamarin.Android.Manifest {
 				values.Add ("mediaProjection");
 			if (value.HasFlag (ForegroundService.TypePhoneCall))
 				values.Add ("phoneCall");
-
-			// These can be changed to enum members when API-R is the stable binding.
-			if (value.HasFlag ((ForegroundService)64))
+			if (value.HasFlag (ForegroundService.TypeCamera))
 				values.Add ("camera");
-			if (value.HasFlag ((ForegroundService)128))
+			if (value.HasFlag (ForegroundService.TypeMicrophone))
 				values.Add ("microphone");
+			if (value.HasFlag (ForegroundService.TypeHealth))
+				values.Add ("health");
+			if (value.HasFlag (ForegroundService.TypeRemoteMessaging))
+				values.Add ("remoteMessaging");
+			if (value.HasFlag (ForegroundService.TypeSystemExempted))
+				values.Add ("systemExempted");
+			if (value.HasFlag (ForegroundService.TypeShortService))
+				values.Add ("shortService");
+			if (value.HasFlag (ForegroundService.TypeSpecialUse))
+				values.Add ("specialUse");
+
+			// When including a non-stable value you can cast the integer value
+			// to ForegroundService. We need to do this because the Build.Tasks
+			// only build against the latest STABLE api.
+			//if (value.HasFlag ((ForegroundService)128))
+			//	values.Add ("newValue");
 
 			return string.Join ("|", values.ToArray ());
 		}

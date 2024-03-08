@@ -1,9 +1,8 @@
 parameters:
-  buildPoolName: $(MacBuildPoolName)
-  buildPoolImage: $(MacBuildPoolImage)
   buildResultArtifactName: Build Results - macOS
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
+  xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   checkoutPersistCredentials: false
   dependsOn: ''
   dependsOnResult: ''
@@ -11,12 +10,12 @@ parameters:
   jobName: mac_build_create_installers
   jobDisplayName: macOS > Build
   nugetArtifactName: $(NuGetArtifactName)
-  provisionatorChannel: latest
   repositoryAlias: self
   stageName: mac_build
   stageDisplayName: Mac
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -25,18 +24,43 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
-  # Check - "Xamarin.Android (macOS > Build)"
+  # Check - "Xamarin.Android (Mac macOS > Build)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: ${{ parameters.buildPoolName }}
-      vmImage: ${{ parameters.buildPoolImage }}
-      ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private'), ne(variables['Build.DefinitionName'], 'xamarin.megapipeline')), eq(variables['Build.Reason'], 'PullRequest')) }}:
+      ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
+        name: VSEng-Xamarin-RedmondMac-Android-Untrusted
         demands: macOS.Name -equals Monterey
+      ${{ else }}:
+        name: Azure Pipelines
+        vmImage: $(HostedMacImage)
+      os: macOS
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
+        outputs:
+        - output: pipelineArtifact
+          displayName: upload nupkgs
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+        - output: pipelineArtifact
+          displayName: upload Windows toolchain pdb files
+          artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+        - output: pipelineArtifact
+          displayName: upload test assemblies
+          artifactName: ${{ parameters.testAssembliesArtifactName }}
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+          sbomEnabled: false
+        - output: pipelineArtifact
+          displayName: upload build tools inventory
+          artifactName: AndroidBuildToolsInventory
+          targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+          sbomEnabled: false
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -45,36 +69,18 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: install-microbuild-tooling.yaml
+    - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
-        condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - template: commercial-build.yaml
-      parameters:
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         installerArtifactName: ${{ parameters.installerArtifactName }}
         nugetArtifactName: ${{ parameters.nugetArtifactName }}
-        provisionatorChannel: ${{ parameters.provisionatorChannel }}
         testAssembliesArtifactName: ${{ parameters.testAssembliesArtifactName }}
+        windowsToolchainPdbArtifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: remove-microbuild-tooling.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
-        condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - script: >
-        mkdir -p $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
-        cd $(System.DefaultWorkingDirectory)/xamarin-android/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
-        zip -r $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
-      workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-      displayName: zip Windows toolchain pdb files
-
-    - task: PublishPipelineArtifact@1
-      displayName: upload Windows toolchain pdb files
-      inputs:
-        artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
-
-    - template: upload-results.yaml
-      parameters:
-        xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
+        xaSourcePath: ${{ parameters.xaSourcePath }}
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}

@@ -17,11 +17,11 @@
       Condition="Exists('$(MSBuildThisFileDirectory)Configuration.Override.props')"
   />
   <PropertyGroup>
+    <ConfigurationPropsImported>true</ConfigurationPropsImported>
     <!-- TFV for all projects, try v4.7.2 but fallback if needed -->
     <_StandardLibraryPath Condition=" '$(TargetFrameworkVersion)' == '' ">$([Microsoft.Build.Utilities.ToolLocationHelper]::GetPathToStandardLibraries('.NETFramework', 'v4.7.2', ''))</_StandardLibraryPath>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' And '$(_StandardLibraryPath)' != '' ">v4.7.2</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition=" '$(TargetFrameworkVersion)' == '' And '$(UsingMicrosoftNETSdk)' != 'true' ">v4.7.1</TargetFrameworkVersion>
-    <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">26</AndroidJavaRuntimeApiLevel>
     <!-- The min API level supported by Microsoft.Android.Sdk -->
     <AndroidMinimumDotNetApiLevel Condition="'$(AndroidMinimumDotNetApiLevel)' == ''">21</AndroidMinimumDotNetApiLevel>
     <!-- *Latest* *stable* API level binding that we support; used when building src/Xamarin.Android.Build.Tasks -->
@@ -39,10 +39,11 @@
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
     <AndroidFrameworkVersion Condition=" '$(AndroidFrameworkVersion)' == '' ">$(AndroidLatestStableFrameworkVersion)</AndroidFrameworkVersion>
     <AndroidUseLatestPlatformSdk Condition=" '$(AndroidFrameworkVersion)' == '' ">True</AndroidUseLatestPlatformSdk>
+    <AndroidJavaRuntimeApiLevel Condition="'$(AndroidJavaRuntimeApiLevel)' == ''">$(AndroidLatestStableApiLevel)</AndroidJavaRuntimeApiLevel>
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNet7Version Condition=" '$(AndroidNet7Version)' == '' ">33.0.68</AndroidNet7Version>
+    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.79</AndroidNetPreviousVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
@@ -69,15 +70,6 @@
     <MicrosoftAndroidx64PackDir>$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidApiLevel).android-x64\$(AndroidPackVersion)\runtimes\android-x64\</MicrosoftAndroidx64PackDir>
     <MicrosoftAndroidSdkPackDir>$(BuildOutputDirectory)lib\packs\$(MicrosoftAndroidSdkPackName)\$(AndroidPackVersion)\</MicrosoftAndroidSdkPackDir>
     <MicrosoftAndroidSdkOutDir>$(MicrosoftAndroidSdkPackDir)\tools\</MicrosoftAndroidSdkOutDir>
-    <MingwDependenciesRootDirectory Condition=" '$(MingwDependenciesRootDirectory)' == '' ">$(MSBuildThisFileDirectory)\bin\Build$(Configuration)\mingw-deps</MingwDependenciesRootDirectory>
-    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc64)</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx64)</HostCxx>
-    <HostCc Condition=" '$(HostCc)' == '' ">$(HostCc32)</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">$(HostCxx32)</HostCxx>
-    <HostCc Condition=" '$(HostCc)' == '' ">cc</HostCc>
-    <HostCxx Condition=" '$(HostCxx)' == '' ">c++</HostCxx>
-    <HostCcName Condition=" '$(HostCcName)' == '' ">cc</HostCcName>
-    <HostCxxName Condition=" '$(HostCxxName)' == '' ">c++</HostCxxName>
     <MakeConcurrency Condition=" '$(MakeConcurrency)' == '' And '$(HostCpuCount)' != '' ">-j$(HostCpuCount)</MakeConcurrency>
     <ManagedRuntime Condition=" '$(ManagedRuntime)' == '' And '$(OS)' != 'Windows_NT' ">mono</ManagedRuntime>
     <ManagedRuntimeArgs Condition=" '$(ManagedRuntimeArgs)' == '' And '$(ManagedRuntime)' == 'mono' ">--debug=casts</ManagedRuntimeArgs>
@@ -85,8 +77,6 @@
     <AndroidPreviousFrameworkVersion Condition=" '$(AndroidPreviousFrameworkVersion)' == '' ">v1.0</AndroidPreviousFrameworkVersion>
     <AndroidToolchainCacheDirectory Condition=" '$(AndroidToolchainCacheDirectory)' == '' ">$(HOME)\android-archives</AndroidToolchainCacheDirectory>
     <AndroidToolchainDirectory Condition=" '$(AndroidToolchainDirectory)' == '' ">$(HOME)\android-toolchain</AndroidToolchainDirectory>
-    <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Linux' ">\usr</AndroidMxeInstallPrefix>
-    <AndroidMxeInstallPrefix Condition=" '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)</AndroidMxeInstallPrefix>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' And Exists($(ANDROID_SDK_ROOT)) ">$(ANDROID_SDK_ROOT)</AndroidSdkDirectory>
     <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(AndroidToolchainDirectory)\sdk</AndroidSdkDirectory>
     <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' And Exists($(ANDROID_NDK_LATEST_HOME)) ">$(ANDROID_NDK_LATEST_HOME)</AndroidNdkDirectory>
@@ -102,7 +92,6 @@
     <GradleHome Condition=" '$(GradleHome)' == '' ">$(MSBuildThisFileDirectory)build-tools\gradle</GradleHome>
     <GradleWPath Condition=" '$(GradleWPath)' == '' ">$(GradleHome)\gradlew</GradleWPath>
     <GradleArgs Condition=" '$(GradleArgs)' == '' ">--stacktrace --no-daemon</GradleArgs>
-    <AndroidSupportedHostJitAbis Condition=" '$(AndroidSupportedHostJitAbis)' == '' ">$(HostOS)</AndroidSupportedHostJitAbis>
     <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == ''  And '$(HostOS)' == 'Windows' ">armeabi-v7a:arm64:x86:x86_64:win-armeabi-v7a:win-arm64:win-x86:win-x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetAotAbis Condition=" '$(AndroidSupportedTargetAotAbis)' == '' ">armeabi-v7a:arm64:x86:x86_64</AndroidSupportedTargetAotAbis>
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
@@ -113,13 +102,7 @@
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
-    <LinkerSourceDirectory>$(MSBuildThisFileDirectory)external\mono\sdks\out\android-sources\external\linker\src</LinkerSourceDirectory>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
-    <MingwZlibRootDirectory Condition=" '$(ZlibRootDirectory)' == '' And '$(HostOS)' == 'Linux' ">\usr</MingwZlibRootDirectory>
-    <MingwZlibRootDirectory Condition=" '$(ZlibRootDirectory)' == '' And '$(HostOS)' == 'Darwin' ">$(HostHomebrewPrefix)\opt\mingw-zlib\usr</MingwZlibRootDirectory>
-    <MingwZlibRootDirectory32>$(MingwZlibRootDirectory)\i686-w64-mingw32</MingwZlibRootDirectory32>
-    <MingwZlibRootDirectory64>$(MingwZlibRootDirectory)\x86_64-w64-mingw32</MingwZlibRootDirectory64>
-    <MingwZlibLibraryName>libz.a</MingwZlibLibraryName>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
     <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
     <LibUnwindGeneratedHeadersDirectory Condition=" '$(LibUnwindGeneratedHeadersDirectory)' == '' ">$(BootstrapOutputDirectory)\libunwind</LibUnwindGeneratedHeadersDirectory>
@@ -139,17 +122,8 @@
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
     <XABuildToolsVersion>34</XABuildToolsVersion>
     <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">34.0.0</XABuildToolsFolder>
-    <!-- build-tools 30, for DX tests -->
-    <XABuildTools30PackagePrefixMacOS>f6d24b187cc6bd534c6c37604205171784ac5621.</XABuildTools30PackagePrefixMacOS>
-    <XABuildTools30PackagePrefixWindows>91936d4ee3ccc839f0addd53c9ebf087b1e39251.</XABuildTools30PackagePrefixWindows>
-    <XABuildTools30PackagePrefixLinux></XABuildTools30PackagePrefixLinux>
-    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildTools30PackagePrefixMacOS)</XABuildTools30PackagePrefix>
-    <XABuildTools30PackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildTools30PackagePrefixWindows)</XABuildTools30PackagePrefix>
-    <XABuildTools30Version>30.0.3</XABuildTools30Version>
-    <XABuildTools30Folder Condition="'$(XABuildTools30Folder)' == ''">30.0.3</XABuildTools30Folder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
-    <XAPlatformToolsVersion>34.0.1</XAPlatformToolsVersion>
-    <XAIncludeProprietaryBits Condition="'$(XAIncludeProprietaryBits)' == ''">False</XAIncludeProprietaryBits>
+    <XAPlatformToolsVersion>34.0.5</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.15.1</XABundleToolVersion>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(NUGET_PACKAGES)' != ''">$(NUGET_PACKAGES)</XAPackagesDir>
     <XAPackagesDir Condition=" '$(XAPackagesDir)' == '' And '$(HostOS)' == 'Windows'">$(userprofile)\.nuget\packages</XAPackagesDir>
@@ -160,10 +134,6 @@
     <TestsFlavor>$(_TestsProfiledAotName)$(_TestsAotName)</TestsFlavor>
   </PropertyGroup>
   <PropertyGroup>
-    <MingwCommandPrefix32>i686-w64-mingw32</MingwCommandPrefix32>
-    <MingwCommandPrefix64>x86_64-w64-mingw32</MingwCommandPrefix64>
-  </PropertyGroup>
-  <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
@@ -171,33 +141,34 @@
     <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>
   <PropertyGroup>
-    <AndroidMxeFullPath Condition=" '$(AndroidMxeInstallPrefix)' != '' ">$([System.IO.Path]::GetFullPath ('$(AndroidMxeInstallPrefix)'))</AndroidMxeFullPath>
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
     <AndroidSdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidSdkDirectory)'))</AndroidSdkFullPath>
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
-    <LinkerSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LinkerSourceDirectory)'))</LinkerSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
     <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
     <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
+    <JavaInteropTargetFrameworkVersion>net8.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup>
     <AdbToolPath Condition=" '$(AdbToolPath)' == '' ">$(AndroidSdkFullPath)\platform-tools\</AdbToolPath>
-    <AdbToolExe Condition=" '$(AdbToolExe)' == '' ">adb</AdbToolExe>
+    <AdbToolExe Condition=" '$(AdbToolExe)' == '' and '$(HostOS)' != 'Windows' ">adb</AdbToolExe>
+    <AdbToolExe Condition=" '$(AdbToolExe)' == '' and '$(HostOS)' == 'Windows' ">adb.exe</AdbToolExe>
     <AvdManagerHome Condition=" '$(AvdManagerHome)' == '' ">$(AndroidToolchainDirectory)</AvdManagerHome>
-    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' ">avdmanager</AvdManagerToolExe>
+    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' != 'Windows' ">avdmanager</AvdManagerToolExe>
+    <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <AndroidToolExe Condition=" '$(AndroidToolExe)' == '' ">android</AndroidToolExe>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">7.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">8512546_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">11.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">10406996_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
     <EmulatorPkgRevision Condition=" '$(EmulatorPkgRevision)' == '' ">32.1.9</EmulatorPkgRevision>
     <EmulatorToolPath Condition=" '$(EmulatorToolPath)' == '' ">$(AndroidSdkFullPath)\emulator</EmulatorToolPath>
-    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' ">emulator</EmulatorToolExe>
+    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' != 'Windows'  ">emulator</EmulatorToolExe>
+    <EmulatorToolExe Condition=" '$(EmulatorToolExe)' == '' and '$(HostOS)' == 'Windows'  ">emulator.exe</EmulatorToolExe>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' != 'Windows' ">$(AndroidNdkDirectory)\ndk-build</NdkBuildPath>
     <NdkBuildPath Condition=" '$(NdkBuildPath)' == '' And '$(HostOS)' == 'Windows' ">$(AndroidNdkDirectory)\ndk-build.cmd</NdkBuildPath>
     <BundleToolJarPath Condition=" '$(BundleToolJarPath)' == '' ">$(MicrosoftAndroidSdkOutDir)bundletool.jar</BundleToolJarPath>
@@ -205,19 +176,6 @@
   <PropertyGroup>
     <SourceLink Condition=" Exists('$(MSBuildThisFileDirectory)bin/Build$(Configuration)/SourceLink.json') ">$(MSBuildThisFileDirectory)bin/Build$(Configuration)/SourceLink.json</SourceLink>
   </PropertyGroup>
-  <!--
-    "Fixup" $(AndroidSupportedHostJitAbis) so that Condition attributes elsewhere
-    can use `:ABI-NAME:`, to avoid substring mismatches.
-    -->
-  <PropertyGroup>
-    <AndroidSupportedHostJitAbisForConditionalChecks>$(AndroidSupportedHostJitAbis)</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedHostJitAbisForConditionalChecks):</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisForConditionalChecks Condition=" !$(AndroidSupportedHostJitAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedHostJitAbisForConditionalChecks)</AndroidSupportedHostJitAbisForConditionalChecks>
-    <AndroidSupportedHostJitAbisSplit>$(AndroidSupportedHostJitAbis.Split(':'))</AndroidSupportedHostJitAbisSplit>
-  </PropertyGroup>
-  <ItemGroup>
-    <AndroidSupportedHostJitAbi Include="$(AndroidSupportedHostJitAbisSplit)" />
-  </ItemGroup>
   <!--
     "Fixup" $(AndroidSupportedTargetJitAbis) so that Condition attributes elsewhere
     can use `:ABI-NAME:`, to avoid substring mismatches.
@@ -234,10 +192,6 @@
     <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.EndsWith (':')) "   >$(AndroidSupportedTargetAotAbisForConditionalChecks):</AndroidSupportedTargetAotAbisForConditionalChecks>
     <AndroidSupportedTargetAotAbisForConditionalChecks Condition=" !$(AndroidSupportedTargetAotAbisForConditionalChecks.StartsWith (':')) " >:$(AndroidSupportedTargetAotAbisForConditionalChecks)</AndroidSupportedTargetAotAbisForConditionalChecks>
     <AndroidSupportedTargetAotAbisSplit>$(AndroidSupportedTargetAotAbis.Split(':'))</AndroidSupportedTargetAotAbisSplit>
-  </PropertyGroup>
-  <PropertyGroup>
-    <RemapAssemblyRefToolExecutable>$(MSBuildThisFileDirectory)bin\Build$(Configuration)\remap-assembly-ref\remap-assembly-ref.dll</RemapAssemblyRefToolExecutable>
-    <RemapAssemblyRefTool>$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(RemapAssemblyRefToolExecutable)&quot;</RemapAssemblyRefTool>
   </PropertyGroup>
 
   <!-- Unit Test Properties -->

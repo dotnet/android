@@ -9,4 +9,8 @@
   <Import Project="..\..\Configuration.props" />
   <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
 
+  <ItemGroup>
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+  </ItemGroup>
+
 </Project>

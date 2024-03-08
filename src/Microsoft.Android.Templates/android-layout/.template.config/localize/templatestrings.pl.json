@@ -1,5 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Szablon Układ systemu Android",
-  "description": "Plik układu systemu Android (XML)"
+  "description": "Plik układu systemu Android (XML)",
+  "postActions/openInEditor/description": "Otwiera plik Layout1.xml w edytorze"
 }

@@ -46,7 +46,6 @@ else()
   set(ANALYZERS_ENABLED OFF)
 endif()
 
-option(ENABLE_NET "Enable compilation for .NET 6+" OFF)
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
@@ -194,29 +193,16 @@ endif()
 
 include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
-if(ENABLE_NET)
-  if(ANDROID)
-      if(ENABLE_NET)
-        set(NDK_CXX_SOURCES_PATH ${CMAKE_ANDROID_NDK}/sources/cxx-stl)
-        set(NDK_CXX_LIBCPPABI_SOURCE_PATH ${NDK_CXX_SOURCES_PATH}/llvm-libc++abi)
-      endif()
-  endif()
-
-  if(ANDROID_ABI MATCHES "^arm64-v8a")
-    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
-    set(SYSROOT_ABI_LIB_DIR "aarch64-linux-android")
-  elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
-    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
-    set(SYSROOT_ABI_LIB_DIR "arm-linux-androideabi")
-  elseif(ANDROID_ABI MATCHES "^x86_64")
-    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
-    set(SYSROOT_ABI_LIB_DIR "x86_64-linux-android")
-  elseif(ANDROID_ABI MATCHES "^x86")
-    set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
-    set(SYSROOT_ABI_LIB_DIR "i686-linux-android")
-  else()
-    message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
-  endif()
+if(ANDROID_ABI MATCHES "^arm64-v8a")
+  set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
+  set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
+elseif(ANDROID_ABI MATCHES "^x86_64")
+  set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+elseif(ANDROID_ABI MATCHES "^x86")
+  set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
+else()
+  message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
 endif()
 
 set(LZ4_SOURCES
@@ -266,12 +252,7 @@ if (WIN32)
   include_directories(BEFORE "jni/win32")
 endif()
 
-if(ENABLE_NET)
-  include_directories("${NET_RUNTIME_DIR}/native/include/mono-2.0")
-else()
-  include_directories("${XA_BIN_DIR}/include/mono-2.0")
-endif()
-
+include_directories("${NET_RUNTIME_DIR}/native/include/mono-2.0")
 include_directories("jni")
 include_directories("${XA_BIN_DIR}/include")
 include_directories("${XA_BIN_DIR}/include/${ANDROID_ABI}/eglib")
@@ -297,11 +278,8 @@ add_compile_definitions(HAVE_CONFIG_H)
 add_compile_definitions(_REENTRANT)
 add_compile_definitions(JI_DLL_EXPORT)
 add_compile_definitions(MONO_DLL_EXPORT)
-
-if(ENABLE_NET)
-  add_compile_definitions(NET)
-  add_compile_definitions(JI_NO_VISIBILITY)
-endif()
+add_compile_definitions(NET)
+add_compile_definitions(JI_NO_VISIBILITY)
 
 if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
   add_compile_definitions(DEBUG)
@@ -354,6 +332,16 @@ endif()
 # Compiler and linker flags
 set(LINK_LIBS "")
 
+#
+# -Wformat-nonliteral is disabled as it's not very practical, because we use proxy functions to
+# pass formats to the final Android logger functions. The Android functions have attributes that
+# cause warnings similar to:
+#
+#  warning G4FD2E6FD: format string is not a string literal [-Wformat-nonliteral]
+#
+# The warning is, in general, a good practice because the compiler can verify the printf format
+# at compile time, but in our case it's not very useful.
+#
 set(LOCAL_COMMON_COMPILER_ARGS
   -Wall
   -Wconversion
@@ -363,15 +351,36 @@ set(LOCAL_COMMON_COMPILER_ARGS
   -Werror=format-security
   -Werror=return-type
   -Wextra
-  -Wformat
   -Wformat-security
+  -Wformat=2
+  -Wno-format-nonliteral
+  -Wimplicit-fallthrough
   -Wmisleading-indentation
   -Wnull-dereference
   -Wpointer-arith
   -Wshadow
   -Wsign-compare
+  -Wtrampolines
   -Wuninitialized
+  -fstrict-flex-arrays=3
   )
+
+# Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
+# assisted by the hardware.
+if((CMAKE_ANDROID_ARCH_ABI STREQUAL "x86") OR (CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64"))
+  # -fcf-protection=full: Enable control flow protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on many x86 architectures
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fcf-protection=full
+  )
+endif()
+
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # -mbranch-protection=standard: Enable branch protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on AArch64
+  # In clang -mbranch-protection=standard is equivalent to -mbranch-protection=bti+pac-ret and invokes the AArch64 Branch Target Identification (BTI) and Pointer Authentication using key A (pac-ret)
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -mbranch-protection=standard
+  )
+endif()
 
 if(COMPILER_DIAG_COLOR)
   list(APPEND LOCAL_COMMON_COMPILER_ARGS
@@ -381,6 +390,10 @@ endif()
 
 set(LOCAL_COMMON_LINKER_ARGS "")
 if(ANDROID)
+  list(APPEND LOCAL_COMMON_LINKER_ARGS
+    -fstack-clash-protection
+  )
+
   if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
     list(APPEND LOCAL_COMMON_COMPILER_ARGS
       -fno-omit-frame-pointer
@@ -448,14 +461,9 @@ endif()
 
 # Library directories
 if(ANDROID)
-  if(ENABLE_NET)
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-    set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
-    link_directories("${NET_RUNTIME_DIR}/native")
-  else()
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_ABI}")
-    link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
-  endif()
+  set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
+  set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
+  link_directories("${NET_RUNTIME_DIR}/native")
 endif()
 
 if(WIN32 OR MINGW)
@@ -533,7 +541,7 @@ if(ANDROID)
     ${LZ4_SOURCES}
     )
 
-  if(NOT DEBUG_BUILD AND ENABLE_NET)
+  if(NOT DEBUG_BUILD)
     list(APPEND XAMARIN_MONODROID_SOURCES
       ${SOURCES_DIR}/xamarin-android-app-context.cc
       )
@@ -544,7 +552,6 @@ if(ANDROID)
       ${BIONIC_SOURCES_DIR}/cxa_guard.cc
       ${SOURCES_DIR}/cxx-abi/string.cc
       ${SOURCES_DIR}/cxx-abi/terminate.cc
-      ${SOURCES_DIR}/cxx-abi/vector.cc
       )
   endif()
 else()
@@ -563,7 +570,7 @@ if(UNIX)
     )
 endif()
 
-if(ANDROID AND ENABLE_NET)
+if(ANDROID)
   set(NATIVE_TRACING_SOURCES
     ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
     ${SOURCES_DIR}/cxx-abi/string.cc
@@ -585,7 +592,6 @@ if(ANDROID AND ENABLE_NET)
     ${SOURCES_DIR}/monodroid-tracing.cc
     ${SOURCES_DIR}/monovm-properties.cc
     ${SOURCES_DIR}/pinvoke-override-api.cc
-    ${SOURCES_DIR}/java_interop_api.c
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
     )
 else()
@@ -594,7 +600,6 @@ else()
     )
 
   set(XAMARIN_INTERNAL_API_SOURCES
-    ${SOURCES_DIR}/java_interop_api.c
     ${SOURCES_DIR}/internal-pinvoke-api.cc
     ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
     )
@@ -627,7 +632,7 @@ else()
   list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0)
 endif()
 
-if(NOT (ANDROID AND ENABLE_NET))
+if(NOT (ANDROID))
   add_library(
     ${XAMARIN_INTERNAL_API_LIB}
     SHARED
@@ -843,7 +848,7 @@ target_link_libraries(
   ${LINK_LIBS} xamarin-app
   )
 
-if(ANDROID AND ENABLE_NET AND (NOT ANALYZERS_ENABLED))
+if(ANDROID AND (NOT ANALYZERS_ENABLED))
   macro(xa_add_stub_library _libname)
     add_library(
       ${_libname}

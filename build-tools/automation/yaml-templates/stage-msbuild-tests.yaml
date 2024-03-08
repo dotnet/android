@@ -9,6 +9,7 @@ parameters:
   repositoryAlias: 'self'
   commit: ''
   shouldFailOnIssue: true
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -16,26 +17,26 @@ stages:
   dependsOn: ${{ parameters.dependsOn }}
   condition: ${{ parameters.stageCondition }}
   jobs:
-  - template: run-msbuild-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: macOS
       jobName: mac_msbuild_tests
       jobDisplayName: macOS > Tests > MSBuild
-      agentCount: 10
-      testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
+      agentCount: 8
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-  - template: run-msbuild-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-msbuild-tests.yaml
     parameters:
       testOS: Windows
       jobName: win_msbuild_tests
       jobDisplayName: Windows > Tests > MSBuild
       agentCount: 6
-      testFilter: cat != Dummy  # This is because $(ExcludedNUnitCategories) gets appended which starts with '&'
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
       shouldFailOnIssue: ${{ parameters.shouldFailOnIssue }}
+      use1ESTemplate: ${{ parameters.use1ESTemplate }}

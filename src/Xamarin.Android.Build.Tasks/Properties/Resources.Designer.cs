@@ -738,6 +738,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details..
+        /// </summary>
+        public static string XA1037 {
+            get {
+                return ResourceManager.GetString("XA1037", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {
@@ -815,6 +824,15 @@ namespace Xamarin.Android.Tasks.Properties {
         public static string APT2264 {
             get {
                 return ResourceManager.GetString("APT2264", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in it path.
+        /// </summary>
+        public static string APT2265 {
+            get {
+                return ResourceManager.GetString("APT2265", resourceCulture);
             }
         }
 
@@ -1114,7 +1132,65 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4233", resourceCulture);
             }
         }
-
+        
+        /// <summary>
+        ///   Looks up a localized string similar to &apos;&lt;{0}&gt;&apos; item &apos;{1}&apos; is missing required metadata &apos;{2}&apos;.
+        /// </summary>
+        public static string XA4234 {
+            get {
+                return ResourceManager.GetString("XA4234", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Maven artifact specification &apos;{0}&apos; is invalid. The correct format is &apos;group_id:artifact_id&apos;..
+        /// </summary>
+        public static string XA4235 {
+            get {
+                return ResourceManager.GetString("XA4235", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot download Maven artifact &apos;{0}:{1}&apos;.
+        ///- {2}: {3}
+        ///- {4}: {5}.
+        /// </summary>
+        public static string XA4236 {
+            get {
+                return ResourceManager.GetString("XA4236", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot download POM file for Maven artifact &apos;{0}:{1}&apos;.
+        ///- {2}: {3}.
+        /// </summary>
+        public static string XA4237 {
+            get {
+                return ResourceManager.GetString("XA4237", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Cannot download parent POM file for Maven artifact &apos;{0}:{1}&apos;.
+        ///- {2}: {3}.
+        /// </summary>
+        public static string XA4238 {
+            get {
+                return ResourceManager.GetString("XA4238", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
+        /// </summary>
+        public static string XA4239 {
+            get {
+                return ResourceManager.GetString("XA4239", resourceCulture);
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
@@ -1388,20 +1464,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
-        /// </summary>
-        public static string XA5207_SDK_Manager_macOS {
-            get {
-                return ResourceManager.GetString("XA5207_SDK_Manager_macOS", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Tools &gt; Android &gt; Android SDK Manager....
         /// </summary>
         public static string XA5207_SDK_Manager_Windows {
             get {
                 return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
+        /// </summary>
+        public static string XA5207_SDK_Manager_CLI {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_CLI", resourceCulture);
             }
         }
 
@@ -1469,11 +1545,22 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
+        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
+        ///Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.
         /// </summary>
         public static string XA1031 {
             get {
                 return ResourceManager.GetString("XA1031", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.
+        ///Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.
+        /// </summary>
+        public static string XA1031_HCH {
+            get {
+                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
             }
         }
 

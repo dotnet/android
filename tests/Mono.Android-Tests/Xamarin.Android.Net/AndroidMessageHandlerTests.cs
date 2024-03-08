@@ -36,7 +36,6 @@ namespace Xamarin.Android.NetTests
 			},
 		};
 
-#if NET
 		[Test]
 		[TestCaseSource (nameof (DecompressionSource))]
 		// Disabled because it doesn't exist in NUnitLite, uncomment when/if we switch to full NUnit
@@ -98,7 +97,31 @@ namespace Xamarin.Android.NetTests
 
 			return true;
 		}
-#endif
+
+		[Test]
+		public async Task DoesNotDisposeContentStream()
+		{
+			using var listener = new HttpListener ();
+			listener.Prefixes.Add ("http://+:47663/");
+			listener.Start ();
+			listener.BeginGetContext (ar => {
+				var ctx = listener.EndGetContext (ar);
+				ctx.Response.StatusCode = 204;
+				ctx.Response.ContentLength64 = 0;
+				ctx.Response.Close ();
+			}, null);
+
+			var jsonContent = new StringContent ("hello");
+			var request = new HttpRequestMessage (HttpMethod.Post, "http://localhost:47663/") { Content = jsonContent };
+
+			var response = await new HttpClient (new AndroidMessageHandler ()).SendAsync (request);
+			Assert.True (response.IsSuccessStatusCode);
+
+			var contentValue = await jsonContent.ReadAsStringAsync ();
+			Assert.AreEqual ("hello", contentValue);
+
+			listener.Close ();
+		}
 
 		[Test]
 		public async Task ServerCertificateCustomValidationCallback_ApproveRequest ()
@@ -219,14 +242,10 @@ namespace Xamarin.Android.NetTests
 				await makeRequest();
 				Assert.Fail ("The request wasn't rejected");
 			}
-#if NET
 			// While technically we should be throwing only HttpRequestException (as per HttpClient.SendAsync docs), in reality
 			// we need to consider legacy code that migrated to .NET and may still expect WebException.  Thus, we throw both
 			// of these and we need to catch both here
 			catch (System.Net.WebException) {}
-#else
-			catch (Java.IO.IOException) {}
-#endif
 			catch (System.Net.Http.HttpRequestException) {}
 		}
 	}

@@ -110,30 +110,6 @@
           ]
         },
         {
-          "label": "build-sample",
-          "type": "shell",
-          "command": "bin/${input:configuration}/bin/xabuild ${input:project} /t:${input:target} /p:Configuration=${input:configuration}",
-          "group": {
-              "kind": "build",
-              "isDefault": true
-          },
-          "problemMatcher": [
-              "$msCompile"
-          ]
-        },
-        {
-          "label": "run-sample",
-          "type": "shell",
-          "command": "bin/${input:configuration}/bin/xabuild ${input:project} /restore \"/t:Install;_Run\" /p:AndroidAttachDebugger=${input:attach} /p:Configuration=${input:configuration}",
-          "group": {
-              "kind": "build",
-              "isDefault": true
-          },
-          "problemMatcher": [
-              "$msCompile"
-          ]
-        },
-        {
           "label": "prepare-sample-under-dotnet",
           "type": "shell",
           "windows": { "command": "dotnet-local.cmd build --no-restore tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj -c ${input:configuration} -t:GenerateNuGetConfig -p:AndroidNETTestConfigOutputDir=${workspaceRoot}/samples", },
@@ -151,8 +127,8 @@
           "label": "build-sample-under-dotnet",
           "type": "shell",
           "windows": { "command": "dotnet-local.cmd build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog", },
-          "linux": { "command": "./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
-          "osx": { "command": "./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
+          "linux": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
+          "osx": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} -p:Configuration=${input:configuration} -t:${input:target} -bl:${input:target}.binlog",},
           "group": {
               "kind": "build",
               "isDefault": true
@@ -165,8 +141,8 @@
           "label": "run-sample-under-dotnet",
           "type": "shell",
           "windows": { "command": "dotnet-local.cmd build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog", },
-          "linux": { "command": "./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
-          "osx": { "command": "./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
+          "linux": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
+          "osx": { "command": "${input:debugbuildtasks} ./dotnet-local.sh build ${input:project} \"-t:Run\" --no-restore -p:TargetFramework=${input:targetframework} -p:Configuration=${input:configuration} -p:AndroidAttachDebugger=${input:attach} -bl:run.binlog",},
           "group": {
               "kind": "build",
               "isDefault": true
@@ -242,6 +218,16 @@
             "Build",
             "Pack",
             "Everything",
+        ]
+      },
+      {
+        "id": "debugbuildtasks",
+        "type": "pickString",
+        "default": "",
+        "description": "Debug Build Tasks?",
+        "options": [
+            "",
+            "MSBUILDDEBUGONSTART=2"
         ]
       },
     ]

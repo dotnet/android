@@ -22,6 +22,8 @@ namespace Xamarin.Android.Tasks {
 
 	public abstract class Aapt2 : AndroidAsyncTask {
 
+		private const int MAX_PATH = 260;
+		private const int ASCII_MAX_CHAR = 127;
 		private static readonly int DefaultMaxAapt2Daemons = 6;
 		protected Dictionary<string, string> _resource_name_case_map;
 
@@ -117,9 +119,10 @@ namespace Xamarin.Android.Tasks {
 				return true;
 
 			var match = AndroidRunToolTask.AndroidErrorRegex.Match (singleLine.Trim ());
+			string file = string.Empty;
 
 			if (match.Success) {
-				var file = match.Groups ["file"].Value;
+				file = match.Groups ["file"].Value;
 				int line = 0;
 				if (!string.IsNullOrEmpty (match.Groups ["line"]?.Value))
 					line = int.Parse (match.Groups ["line"].Value.Trim ()) + 1;
@@ -138,22 +141,8 @@ namespace Xamarin.Android.Tasks {
 					LogCodedError ("APT0001", Properties.Resources.APT0001, message.Substring ("unknown option '".Length).TrimEnd ('.', '\''));
 					return false;
 				}
-				if (message.Contains ("in APK") && message.Contains ("is compressed.")) {
-					LogMessage (singleLine, messageImportance);
+				if (LogNotesOrWarnings (message, singleLine, messageImportance))
 					return true;
-				}
-				if (message.Contains ("fakeLogOpen")) {
-					LogMessage (singleLine, messageImportance);
-					return true;
-				}
-				if (message.Contains ("note:")) {
-					LogMessage (singleLine, messageImportance);
-					return true;
-				}
-				if (message.Contains ("warn:")) {
-					LogCodedWarning (GetErrorCode (singleLine), singleLine);
-					return true;
-				}
 				if (level.Contains ("note")) {
 					LogMessage (message, messageImportance);
 					return true;
@@ -188,7 +177,7 @@ namespace Xamarin.Android.Tasks {
 					message = message.Substring ("error: ".Length);
 
 				if (level.Contains ("error") || (line != 0 && !string.IsNullOrEmpty (file))) {
-					var errorCode = GetErrorCode (message);
+					var errorCode = GetErrorCodeForFile (message, file);
 					if (manifestError)
 						LogCodedError (errorCode, string.Format (Xamarin.Android.Tasks.Properties.Resources.AAPTManifestError, message.TrimEnd('.')), AndroidManifestFile.ItemSpec, 0);
 					else
@@ -199,11 +188,53 @@ namespace Xamarin.Android.Tasks {
 
 			if (!apptResult) {
 				var message = string.Format ("{0} \"{1}\".", singleLine.Trim (), singleLine.Substring (singleLine.LastIndexOfAny (new char [] { '\\', '/' }) + 1));
-				var errorCode = GetErrorCode (message);
+				if (LogNotesOrWarnings (message, singleLine, messageImportance))
+					return true;
+				var errorCode = GetErrorCodeForFile (message, file);
 				LogCodedError (errorCode, AddAdditionalErrorText (errorCode, message), ToolName);
 			} else {
 				LogCodedWarning (GetErrorCode (singleLine), singleLine);
 			}
+			return true;
+		}
+
+		bool LogNotesOrWarnings (string message, string singleLine, MessageImportance messageImportance)
+		{
+			if (message.Contains ("in APK") && message.Contains ("is compressed.")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			else if (message.Contains ("fakeLogOpen")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			else if (message.Contains ("note:")) {
+				LogMessage (singleLine, messageImportance);
+				return true;
+			}
+			else if (message.Contains ("warn:")) {
+				LogCodedWarning (GetErrorCode (singleLine), singleLine);
+				return true;
+			}
+			return false;
+		}
+
+		static bool IsFilePathToLong (string filePath)
+		{
+			if (OS.IsWindows && filePath.Length > MAX_PATH) {
+				return true;
+			}
+			return false;
+		}
+
+		static bool IsPathOnlyASCII (string filePath)
+		{
+			if (!OS.IsWindows)
+				return true;
+
+			foreach (var c in filePath)
+				if (c > ASCII_MAX_CHAR) // cannot use Char.IsAscii cos we are .netstandard2.0
+					return false;
 			return true;
 		}
 
@@ -216,8 +247,24 @@ namespace Xamarin.Android.Tasks {
 				case "APT2264":
 					sb.AppendLine (Xamarin.Android.Tasks.Properties.Resources.APT2264);
 				break;
+				case "APT2265":
+					sb.AppendLine (Xamarin.Android.Tasks.Properties.Resources.APT2265);
+				break;
 			}
 			return sb.ToString ();
+		}
+
+		static string GetErrorCodeForFile (string message, string filePath)
+		{
+			var errorCode = GetErrorCode (message);
+			switch (errorCode)
+			{
+				case "APT2265":
+					if (IsPathOnlyASCII (filePath) && IsFilePathToLong (filePath))
+						errorCode = "APT2264";
+				break;
+			}
+			return errorCode;
 		}
 
 		static string GetErrorCode (string message)
@@ -493,7 +540,9 @@ namespace Xamarin.Android.Tasks {
 			Tuple.Create ("APT2261", "file failed to compile"),
 			Tuple.Create ("APT2262", "unexpected element <activity> found in <manifest>"),
 			Tuple.Create ("APT2263", "found in <manifest>"),  // unexpected element <xxxxx> found in <manifest>
-			Tuple.Create ("APT2264", "The system cannot find the file specified. (2).") // Windows Long Path error from aapt2
+			Tuple.Create ("APT2264", "The system cannot find the file specified. (2)"), // Windows Long Path error from aapt2
+			Tuple.Create ("APT2265", "The system cannot find the file specified. (2)"), // Windows non-ASCII characters error from aapt2
+			Tuple.Create ("APT2266", "in <data> tag has value of") //  error: attribute ‘android:path’ in <data> tag has value of ‘code/fooauth://com.foo.foo, it must start with a leading slash ‘/’.
 		};
 	}
 }

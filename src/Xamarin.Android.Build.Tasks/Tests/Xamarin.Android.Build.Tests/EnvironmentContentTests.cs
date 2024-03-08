@@ -43,10 +43,6 @@ namespace Xamarin.Android.Build.Tests
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
 				Assert.IsTrue (libb.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (appb.Build (app), "App should have succeeded.");
-				if (!Builder.UseDotNet) {
-					//TODO: $(AndroidLinkSkip) is not yet implemented
-					Assert.IsTrue (StringAssertEx.ContainsText (appb.LastBuildOutput, $"Save assembly: {linkSkip}"), $"{linkSkip} should be saved, and not linked!");
-				}
 
 				string intermediateOutputDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath);
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
@@ -141,58 +137,6 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[Category ("MonoSymbolicate")]
-		public void CheckBuildIdIsUnique ([Values ("apk", "aab")] string packageFormat)
-		{
-			const string supportedAbis = "armeabi-v7a;x86";
-
-			Dictionary<string, string> buildIds = new Dictionary<string, string> ();
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = true,
-			};
-			proj.SetProperty (proj.ReleaseProperties, "MonoSymbolArchive", "True");
-			proj.SetProperty (proj.ReleaseProperties, "DebugSymbols", "true");
-			proj.SetProperty (proj.ReleaseProperties, "DebugType", "Portable");
-			proj.SetProperty (proj.ReleaseProperties, KnownProperties.AndroidCreatePackagePerAbi, "true");
-			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", packageFormat);
-			proj.SetAndroidSupportedAbis (supportedAbis);
-			using (var b = CreateApkBuilder ()) {
-				b.ThrowOnBuildFailure = false;
-				Assert.IsTrue (b.Build (proj), "first build failed");
-				var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var archivePath = Path.Combine (outputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				var allFilesInArchive = Directory.GetFiles (archivePath, "*", SearchOption.AllDirectories);
-				string extension = "dll";
-				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-				extension = "pdb";
-				Assert.IsTrue (allFilesInArchive.Any (x => Path.GetFileName (x) == $"{proj.ProjectName}.{extension}"), $"{proj.ProjectName}.{extension} should exist in {archivePath}");
-
-				string intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, supportedAbis, true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.Count > 0, $"No environment variables defined");
-
-				string buildID;
-				Assert.IsTrue (envvars.TryGetValue ("XAMARIN_BUILD_ID", out buildID), "The environment should contain a XAMARIN_BUILD_ID");
-				buildIds.Add ("all", buildID);
-
-				var msymDirectory = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}.{packageFormat}.mSYM");
-				Assert.IsTrue (File.Exists (Path.Combine (msymDirectory, "manifest.xml")), "manifest.xml should exist in", msymDirectory);
-				var doc = XDocument.Load (Path.Combine (msymDirectory, "manifest.xml"));
-
-				Assert.IsTrue (doc.Element ("mono-debug")
-					.Elements ()
-					.Any (x => x.Name == "app-id" && x.Value == proj.PackageName), "app-id is has an incorrect value.");
-				var buildId = buildIds.First ().Value;
-				Assert.IsTrue (doc.Element ("mono-debug")
-					.Elements ()
-					.Any (x => x.Name == "build-id" && x.Value == buildId), "build-id is has an incorrect value.");
-
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
-			}
-		}
-
-		[Test]
 		public void CheckForInvalidHttpClientHandlerType ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -213,12 +157,8 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			var httpClientHandlerVarName = "XA_HTTP_CLIENT_HANDLER_TYPE";
-			var expectedDefaultValue = "System.Net.Http.HttpClientHandler, System.Net.Http";
-			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidClientHandler";
-			if (Builder.UseDotNet) {
-				expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
-				expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
-			}
+			var expectedDefaultValue = "System.Net.Http.SocketsHttpHandler, System.Net.Http";
+			var expectedUpdatedValue = "Xamarin.Android.Net.AndroidMessageHandler";
 
 			var supportedAbis = "armeabi-v7a;arm64-v8a";
 			proj.SetAndroidSupportedAbis (supportedAbis);
@@ -242,57 +182,5 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual (expectedUpdatedValue, envvars[httpClientHandlerVarName]);
 			}
 		}
-
-		static object [] TlsProviderTestCases =
-		{
-			// androidTlsProvider, isRelease, extpected
-			new object[] { "", true, true, },
-			new object[] { "default", true, true, },
-			new object[] { "legacy", true, true, },
-			new object[] { "btls", true, true, }
-		};
-
-		[Test]
-		[Category ("DotNetIgnore")] // .NET 5+ does not use these native libraries
-		[TestCaseSource (nameof (TlsProviderTestCases))]
-		public void BuildWithTlsProvider (string androidTlsProvider, bool isRelease, bool expected)
-		{
-			var proj = new XamarinAndroidApplicationProject () {
-				IsRelease = isRelease,
-			};
-			var supportedAbis = new string [] { "armeabi-v7a", "arm64-v8a" };
-			proj.SetAndroidSupportedAbis (supportedAbis);
-
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildWithTlsProvider_{androidTlsProvider}_{isRelease}_{expected}"))) {
-				proj.SetProperty ("AndroidTlsProvider", androidTlsProvider);
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var intermediateOutputDir = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var outpath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-				var apk = Path.Combine (outpath, $"{proj.PackageName}-Signed.apk");
-				using (var zipFile = ZipHelper.OpenZip (apk)) {
-					foreach (var abi in supportedAbis) {
-						if (expected) {
-							Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
-								$"lib/{abi}/libmono-btls-shared.so"),
-								$"lib/{abi}/libmono-btls-shared.so should exist in the apk.");
-						}
-						else {
-							Assert.IsNull (ZipHelper.ReadFileFromZip (zipFile,
-								$"lib/{abi}/libmono-btls-shared.so"),
-								$"lib/{abi}/libmono-btls-shared.so should not exist in the apk.");
-						}
-					}
-				}
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediateOutputDir, string.Join (";", supportedAbis), true);
-				Dictionary<string, string> envvars = EnvironmentHelper.ReadEnvironmentVariables (envFiles);
-				Assert.IsTrue (envvars.ContainsKey ("XA_TLS_PROVIDER"), "Environment should contain XA_TLS_PROVIDER.");
-				if (androidTlsProvider == string.Empty) {
-					Assert.AreEqual ("btls", envvars["XA_TLS_PROVIDER"], "'XA_TLS_PROVIDER' should have been 'btls' when provider is not set.");
-				} else {
-					Assert.AreEqual (androidTlsProvider, envvars["XA_TLS_PROVIDER"], $"'XA_TLS_PROVIDER' should have been '{androidTlsProvider}'.");
-				}
-			}
-		}
-
 	}
 }

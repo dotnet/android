@@ -9,7 +9,8 @@
     <RootNamespace>Android</RootNamespace>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
-    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767</NoWarn>
+    <NoWarn>0618;0809;0108;0114;0465;8609;8610;8614;8617;8613;8764;8765;8766;8767;RS0041</NoWarn>
+    <WarningsAsErrors>$(WarningsAsErrors);CS2002</WarningsAsErrors>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);JAVA_INTEROP</DefineConstants>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)$(Configuration)\$(TargetFramework)\android-$(AndroidPlatformId)\</IntermediateOutputPath>
@@ -27,18 +28,25 @@
   <PropertyGroup>
     <DefineConstants Condition=" '$(AndroidApiLevel)' &gt; '$(AndroidLatestStableApiLevel)' ">$(DefineConstants);ANDROID_UNSTABLE</DefineConstants>
     <OutputPath>$(_MonoAndroidNETDefaultOutDir)</OutputPath>
+
+    <!-- Allow PublicApiAnalyzers to be turned off -->
+    <RunAnalyzers Condition=" '$(DisableApiCompatibilityCheck)' == 'True' ">false</RunAnalyzers>
+
+    <!-- PublicApiAnalyzers warnings should be errors, but building in VS throws incorrect extra warnings -->
+    <WarningsAsErrors Condition=" '$(BuildingInsideVisualStudio)' != 'True' ">$(WarningsAsErrors);RS0016,RS0017</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(IncludeAndroidJavadoc)' == 'True' ">
-    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense+extraremarks</AndroidJavadocVerbosity>
+    <AndroidJavadocVerbosity Condition=" '$(AndroidJavadocVerbosity)' == '' ">full</AndroidJavadocVerbosity>
     <DocumentationFile>$(OutputPath)Mono.Android.xml</DocumentationFile>
     <NoWarn>$(NoWarn);CS1572;CS1573;CS1574;CS1584;CS1587;CS1591;CS1658;</NoWarn>
   </PropertyGroup>
 
-  <PropertyGroup Condition=" '$(_EnableCodeAnalyzerPlatformWarnings)' == '' ">
-    <NoWarn>$(NoWarn);CA1422;CA1416</NoWarn>
-  </PropertyGroup>
-
+  <ItemGroup>
+    <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Shipped.txt" />
+    <AdditionalFiles Include="PublicAPI\API-$(AndroidApiLevel)\PublicAPI.Unshipped.txt" />
+  </ItemGroup>
+  
   <PropertyGroup>
     <JavaCallableWrapperAbsAssembly>$([System.IO.Path]::GetFullPath ('$(OutputPath)$(AssemblyName).dll'))</JavaCallableWrapperAbsAssembly>
   </PropertyGroup>
@@ -70,6 +78,7 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
     </Compile>
+    <Compile Include="Android.Content.PM\PackageManager.cs" />
     <Compile Include="Android.Graphics\PathIterator.cs" />
     <Compile Include="Android.Icu\ListFormatter.cs" />
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
@@ -79,6 +88,10 @@
     <Compile Include="Android.Telecom\InCallService.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
+    <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
+    <Compile Include="Java.Time\ZonedDateTime.cs" />
+    <Compile Include="Java.Time\LocalDateTime.cs" />
+    <Compile Include="Java.Time\LocalDate.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />
@@ -339,11 +352,17 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.CodeAnalysis.PublicApiAnalyzers" Version="3.3.4">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\build-tools\create-android-api\create-android-api.csproj" ReferenceOutputAssembly="false" />
-    <!-- Explicitly pass the target framework of the project so we don't have conflicts with the multiple targets in this file. -->
-    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
-    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" SkipGetTargetFrameworkProperties="true" AdditionalProperties="TargetFramework=net7.0" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\generator\generator.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\jcw-gen\jcw-gen.csproj" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\java-source-utils\java-source-utils.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\..\src\java-runtime\java-runtime.csproj" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\r8\r8.csproj" ReferenceOutputAssembly="False" />
   </ItemGroup>
@@ -381,7 +400,7 @@
         SkipUnchangedFiles="true"
     />
     <Copy
-        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-net7.0\ref\Java.Interop.dll"
+        SourceFiles="$(OutputPath)ref\Mono.Android.dll;$(JavaInteropSourceDirectory)\bin\$(Configuration)-$(JavaInteropTargetFrameworkVersion)\ref\Java.Interop.dll"
         DestinationFolder="$(MicrosoftAndroidRefPackDir)"
         SkipUnchangedFiles="true"
     />

@@ -153,6 +153,32 @@ The `$(AndroidApplicationJavaClass)` property is generally set by
 
 Added in Xamarin.Android 6.1.
 
+## AndroidAvoidEmitForPerformance
+
+A boolean property that determines whether or not `System.Reflection.Emit` is
+"avoided" to improve startup performance. This property is `True` by default.
+
+Usage of `System.Reflection.Emit` has a noticeable impact on startup performance
+on Android. This behavior is disabled by default for the following feature
+switches:
+
+* `Switch.System.Reflection.ForceInterpretedInvoke`: after the second call to
+  `MethodInfo.Invoke()` or `ConstructorInfo.Invoke()`, code is emitted to
+  improve performance of repeated calls.
+
+* `Microsoft.Extensions.DependencyInjection.DisableDynamicEngine`: after the
+  second call to retrieve a service from a dependency injection container, code
+  is emitted to improve performance of repeated calls.
+
+It is desirable in most Android applications to disable this behavior.
+
+See the [Base Class Libraries Feature Switches documentation][feature-switches]
+for details about available feature switches.
+
+Added in .NET 8.
+
+[feature-switches]: https://github.com/dotnet/runtime/blob/main/docs/workflow/trimming/feature-switches.md
+
 ## AndroidBinUtilsPath
 
 A path to a directory containing
@@ -404,6 +430,7 @@ documentation on [D8 and R8][d8-r8].
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
 
+
 ## AndroidEnableDesugar
 
 A boolean property that
@@ -442,6 +469,15 @@ final `.apk`.
 Support for this property was added in Xamarin.Android 5.1.
 
 This property is `False` by default.
+
+## AndroidEnableObsoleteOverrideInheritance
+
+A boolean property that determines if bound methods automatically inherit `[Obsolete]`
+attributes from methods they override.
+
+Support for this property was added in .NET 8.
+
+This property is `True` by default.
 
 ## AndroidEnablePreloadAssemblies
 
@@ -796,6 +832,13 @@ APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
 + `x86_64`
 + `x86`
 
+## AndroidInstallJavaDependencies
+
+The default value is `true` for command line builds. When set to `true`, enables
+installation of the Java SDK when running the `<InstallAndroidDependencies/>` target.
+
+Support for this property was added in .NET 9.
+
 ## AndroidJavadocVerbosity
 
 Specifies how "verbose"
@@ -961,9 +1004,12 @@ merging *AndroidManifest.xml* files. This is an enum-style property
 where `legacy` selects the original C# implementation
 and `manifestmerger.jar` selects Google's Java implementation.
 
-The default value is currently `legacy`. This will change to
-`manifestmerger.jar` in a future release to align behavior with
-Android Studio.
+The default value is currently `manifestmerger.jar`. If you want to 
+use the old version add the following to your csproj
+
+```xml
+<AndroidManifestMerger>legacy</AndroidManifestMerger>
+```
 
 Google's merger enables support for `xmlns:tools="http://schemas.android.com/tools"`
 as described in the [Android documentation][manifest-merger].
@@ -1302,6 +1348,20 @@ Specifies the certificate file to use to sign the apk.
 This is only used when building `system` applications.
 
 Support for this property was added in Xamarin.Android 11.3.
+
+## AndroidStripILAfterAOT
+
+A bool property that specifies whether or not the *method bodies* of AOT compiled methods will be removed.
+
+The default value is `false`, and the method bodies of AOT compiled methods will *not* be removed.
+
+When set to `true`, [`$(AndroidEnableProfiledAot)`](#androidenableprofiledaot) is set to `false` by default.
+This means that in Release configuration builds -- in which
+[`$(RunAOTCompilation)`](#runaotcompilation) is `true` by default -- AOT is enabled for *everything*.
+This can result in increased app sizes. This behavior can be overridden by explicitly setting
+`$(AndroidEnableProfiledAot)` to `true` within your project file.
+
+Support for this property was added in .NET 8.
 
 ## AndroidSupportedAbis
 

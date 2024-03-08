@@ -28,11 +28,6 @@ namespace Xamarin.Android.Prepare
 			throw new NotImplementedException ();
 		}
 
-		protected override void DetectCompilers ()
-		{
-			throw new NotImplementedException ();
-		}
-
 		protected override void InitializeDependencies ()
 		{
 			throw new NotImplementedException ();

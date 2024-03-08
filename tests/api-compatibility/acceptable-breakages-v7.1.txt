@@ -1,3 +1,0 @@
-Compat issues with assembly Mono.Android:
-MembersMustExist : Member 'public System.Int32 Android.Telecom.RemoteConference.ConnectionProperties.get()' does not exist in the implementation but it does exist in the contract.
-InterfacesShouldHaveSameMembers : Interface member 'public System.Boolean Android.Views.InputMethods.IInputConnection.CommitContent(Android.Views.InputMethods.InputContentInfo, Android.Views.InputMethods.InputContentFlags, Android.OS.Bundle)' is present in the implementation but not in the contract.

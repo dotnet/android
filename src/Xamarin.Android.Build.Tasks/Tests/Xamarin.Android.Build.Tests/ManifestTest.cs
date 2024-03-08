@@ -10,6 +10,10 @@ using Xamarin.Tools.Zip;
 using System.Collections.Generic;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Android.App;
+using Mono.Cecil;
+using System.Reflection;
+using Java.Interop.Tools.Cecil;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -67,18 +71,15 @@ namespace Bug12935
 ";
 
 		[Test]
-		public void Bug12935 ([Values (true, false)] bool useAapt2)
+		public void Bug12935 ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.AndroidUseAapt2 = useAapt2;
-			var directory = $"temp/Bug12935_{useAapt2}";
+			var directory = $"temp/Bug12935";
 			using (var builder = CreateApkBuilder (directory)) {
 
-				proj.TargetFrameworkVersion = "v4.2";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "17");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 17 should have succeeded");
 				var manifestFile = Path.Combine (Root, builder.ProjectDirectory, proj.IntermediateOutputPath, "android", "AndroidManifest.xml");
@@ -100,7 +101,6 @@ namespace Bug12935
 				Assert.AreEqual ("sensorPortrait", screenOrientation.Value, "screenOrientation should have been sensorPortrait");
 
 				builder.Cleanup ();
-				proj.TargetFrameworkVersion = "v4.1";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "16");
 				Assert.IsTrue (builder.Build (proj), "Build for TargetFrameworkVersion 16 should have succeeded");
 
@@ -116,25 +116,22 @@ namespace Bug12935
 
 				builder.Cleanup ();
 				builder.ThrowOnBuildFailure = false;
-				proj.TargetFrameworkVersion = "v4.0.3";
 				proj.AndroidManifest = string.Format (TargetSdkManifest, "15");
 				Assert.IsFalse (builder.Build (proj), "Build for TargetFrameworkVersion 15 should have failed");
-				StringAssertEx.Contains (useAapt2 ? "APT2259: " : "APT1134: ", builder.LastBuildOutput);
-				StringAssertEx.Contains (useAapt2 ? "APT2067" : "", builder.LastBuildOutput);
+				StringAssertEx.Contains ("APT2259: ", builder.LastBuildOutput);
+				StringAssertEx.Contains ("APT2067", builder.LastBuildOutput);
 				StringAssertEx.Contains (Path.Combine ("Properties", "AndroidManifest.xml"), builder.LastBuildOutput);
-				StringAssertEx.Contains ($"{(useAapt2 ? "2" : "1")} Error(s)", builder.LastBuildOutput);
+				StringAssertEx.Contains ("2 Error(s)", builder.LastBuildOutput);
 			}
 		}
 
 		[Test]
-		public void CheckElementReOrdering ([Values (true, false)] bool useAapt2)
+		public void CheckElementReOrdering ()
 		{
-			AssertAaptSupported (useAapt2);
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 			};
 			proj.MainActivity = ScreenOrientationActivity;
-			proj.AndroidUseAapt2 = useAapt2;
 			using (var builder = CreateApkBuilder ()) {
 				proj.AndroidManifest = ElementOrderManifest;
 				Assert.IsTrue (builder.Build (proj), "first build should have succeeded");
@@ -302,7 +299,6 @@ namespace Bug12935
 		public void LayoutAttributeElement ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v7.0",
 				IsRelease = true,
 			};
 			string declHead = "public class MainActivity";
@@ -325,7 +321,6 @@ namespace Bug12935
 		public void DirectBootAwareAttribute ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
-				TargetFrameworkVersion = "v7.0",
 				IsRelease = true,
 			};
 			string attrHead = ", Activity (";
@@ -566,6 +561,32 @@ namespace Bug12935
 		}
 
 		[Test]
+		public void ManifestDataPathError ()
+		{
+			var proj = new XamarinAndroidApplicationProject () {
+				IsRelease = true,
+			};
+			var s = proj.AndroidManifest.Replace ("</application>", @"<activity android:name=""net.openid.appauth.RedirectUriReceiverActivity"" android:exported=""true"">
+			<intent-filter>
+				<action android:name=""android.intent.action.VIEW""/>
+				<category android:name=""android.intent.category.DEFAULT""/>
+				<category android:name=""android.intent.category.BROWSABLE""/>
+				<data android:path=""code/buildproauth://com.hyphensolutions.buildpro"" android:scheme=""msauth""/>
+				<data android:path=""callback"" android:scheme=""buildproauth""/>
+			</intent-filter>
+	</activity>
+</application>");
+			proj.AndroidManifest = s;
+			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (proj), "Build should have failed.");
+				var messages = builder.LastBuildOutput.SkipWhile (x => !x.StartsWith ("Build FAILED.", StringComparison.Ordinal));
+				string error = messages.FirstOrDefault (x => x.Contains ("error APT2266:"));
+				Assert.IsNotNull (error, "Warning should be APT2266");
+			}
+		}
+
+		[Test]
 		public void ManifestPlaceholders ([Values ("legacy", "manifestmerger.jar")] string manifestMerger)
 		{
 			var proj = new XamarinAndroidApplicationProject () {
@@ -743,15 +764,10 @@ namespace Bug12935
 					new BuildItem.ProjectReference ("..\\Binding1\\Binding1.csproj", lib.ProjectGuid)
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
+			proj.SetProperty ("AndroidManifestMerger", "legacy");
 			proj.Sources.Add (new BuildItem.Source ("TestActivity1.cs") {
 				TextContent = () => @"using System;
 using System.Collections.Generic;
@@ -764,7 +780,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 using Android.Util;
 [Activity (Label = ""TestActivity1"")]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
@@ -784,7 +800,7 @@ using Android.OS;
 using Android.Runtime;
 using Android.Views;
 using Android.Widget;
-using Android.Support.V4.App;
+using AndroidX.Fragment.App;
 using Android.Util;
 [Activity (Label = ""TestActivity2"")]
 [IntentFilter (new[]{Intent.ActionMain}, Categories = new[]{ ""com.xamarin.sample"" })]
@@ -805,8 +821,8 @@ public class TestActivity2 : FragmentActivity {
 						"${applicationId}.FacebookInitProvider was not replaced with com.xamarin.manifest.FacebookInitProvider");
 					Assert.IsTrue (manifest.Contains ("com.xamarin.test.internal.FacebookInitProvider"),
 						".internal.FacebookInitProvider was not replaced with com.xamarin.test.internal.FacebookInitProvider");
-					Assert.AreEqual (manifest.IndexOf ("meta-data", StringComparison.OrdinalIgnoreCase),
-					                 manifest.LastIndexOf ("meta-data", StringComparison.OrdinalIgnoreCase), "There should be only one meta-data element");
+					Assert.AreEqual (manifest.IndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase),
+					                 manifest.LastIndexOf ("android.support.VERSION", StringComparison.OrdinalIgnoreCase), "There should be only one android.support.VERSION meta-data element");
 
 					var doc = XDocument.Parse (manifest);
 					var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
@@ -901,6 +917,33 @@ class TestActivity : Activity { }"
 				XElement e = activities.FirstOrDefault (x => x.Attribute (ns.GetName ("label"))?.Value == "TestActivity");
 				Assert.IsNotNull (e, "Manifest should contain an activity labeled TestActivity");
 				Assert.AreEqual (expectedOutput, string.Join (" ", e.Attributes ()));
+			}
+		}
+
+		[Test]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeSpecialUse", "specialUse")]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeConnectedDevice", "connectedDevice")]
+		[TestCase ("Android.Content.PM.ForegroundService.TypeCamera|Android.Content.PM.ForegroundService.TypeMicrophone", "camera|microphone")]
+		public void AllForegroundServiceTypes (string serviceType, string expected)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+			};
+
+ 			proj.Sources.Add (new BuildItem.Source ("TestActivity.cs") {
+ 				TextContent = () => $@"using Android.App;
+ using Android.Content.PM;
+ using Android.Views;
+ [Service (ForegroundServiceType      = {serviceType})]
+ class TestService : Service {{ public override Android.OS.IBinder OnBind (Android.Content.Intent intent) {{ return null; }} }}"
+ 			});
+			using (ProjectBuilder builder = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+ 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
+				string manifest = builder.Output.GetIntermediaryAsText (Path.Combine ("android", "AndroidManifest.xml"));
+ 				var doc = XDocument.Parse (manifest);
+ 				var ns = XNamespace.Get ("http://schemas.android.com/apk/res/android");
+ 				IEnumerable<XElement> services = doc.Element ("manifest")?.Element ("application")?.Elements ("service");
+ 				XElement e = services.FirstOrDefault (x => x.Attribute (ns.GetName ("foregroundServiceType"))?.Value == expected);
+ 				Assert.IsNotNull (e, $"Manifest should contain an service with a foregroundServiceType of {expected}");
 			}
 		}
 
@@ -1118,5 +1161,55 @@ class TestActivity : Activity { }"
 			}
 		}
 
+		[IntentFilter (new [] { "singularAction" },
+		    DataPathSuffix = "singularSuffix",
+		    DataPathAdvancedPattern = "singularPattern")]
+		[IntentFilter (new [] { "pluralAction" },
+		    DataPathSuffixes = new [] { "pluralSuffix1", "pluralSuffix2" },
+		    DataPathAdvancedPatterns = new [] { "pluralPattern1", "pluralPattern2" })]
+
+		public class IntentFilterAttributeDataPathTestClass { }
+
+		[Test]
+		public void IntentFilterDataPathTest ()
+		{
+			var cache = new TypeDefinitionCache ();
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("singularAction"));
+			var xml = intent.ToElement ("dummy.packageid").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""singularAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""singularSuffix"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""singularPattern"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
+
+		[Test]
+		public void IntentFilterDataPathsTest ()
+		{
+			var cache = new TypeDefinitionCache ();
+			var asm = AssemblyDefinition.ReadAssembly (typeof (IntentFilterAttributeDataPathTestClass).Assembly.Location);
+			var type = asm.MainModule.GetType ("Xamarin.Android.Build.Tests.ManifestTest/IntentFilterAttributeDataPathTestClass");
+
+			var intent = IntentFilterAttribute.FromTypeDefinition (type, cache).Single (f => f.Actions.Contains ("pluralAction"));
+			var xml = intent.ToElement ("dummy.packageid").ToString ();
+
+			var expected =
+@"<intent-filter>
+  <action p2:name=""pluralAction"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""pluralSuffix1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathSuffix=""pluralSuffix2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""pluralPattern1"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+  <data p2:pathAdvancedPattern=""pluralPattern2"" xmlns:p2=""http://schemas.android.com/apk/res/android"" />
+</intent-filter>";
+
+			StringAssertEx.AreMultiLineEqual (expected, xml);
+		}
 	}
 }

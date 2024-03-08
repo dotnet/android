@@ -1,8 +1,11 @@
 using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+
+using Microsoft.Build.Utilities;
 
 using Java.Interop.Tools.Cecil;
 using Mono.Cecil;
@@ -89,7 +92,50 @@ namespace Xamarin.Android.Tasks
 			public byte[] ModuleNameBytes;
 		}
 
-		Action<string> logger;
+		sealed class ReleaseGenerationState
+		{
+			int assemblyId = 0;
+
+			public readonly Dictionary<string, int> KnownAssemblies;
+			public readonly Dictionary <Guid, byte[]> MvidCache;
+			public readonly IDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> TempModules;
+
+			// Just a convenient way to access one of the temp modules dictionaries, to be used when dealing with ABI-agnostic
+			// types in ProcessReleaseType.
+			public readonly Dictionary<byte[], ModuleReleaseData> TempModulesAbiAgnostic;
+
+			public ReleaseGenerationState (string[] supportedAbis)
+			{
+				KnownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
+				MvidCache = new Dictionary<Guid, byte[]> ();
+
+				var tempModules = new Dictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> ();
+				foreach (string abi in supportedAbis) {
+					var dict = new Dictionary<byte[], ModuleReleaseData> ();
+					if (TempModulesAbiAgnostic == null) {
+						TempModulesAbiAgnostic = dict;
+					}
+					tempModules.Add (MonoAndroidHelper.AbiToTargetArch (abi), dict);
+				}
+
+				TempModules = new ReadOnlyDictionary<AndroidTargetArch, Dictionary<byte[], ModuleReleaseData>> (tempModules);
+			}
+
+			public void AddKnownAssembly (TypeDefinition td)
+			{
+				string assemblyName = GetAssemblyName (td);
+
+				if (KnownAssemblies.ContainsKey (assemblyName)) {
+					return;
+				}
+
+				KnownAssemblies.Add (assemblyName, ++assemblyId);
+			}
+
+			public string GetAssemblyName (TypeDefinition td) => td.Module.Assembly.FullName;
+		}
+
+		TaskLoggingHelper log;
 		Encoding outputEncoding;
 		byte[] moduleMagicString;
 		byte[] typemapIndexMagicString;
@@ -97,9 +143,9 @@ namespace Xamarin.Android.Tasks
 
 		public IList<string> GeneratedBinaryTypeMaps { get; } = new List<string> ();
 
-		public TypeMapGenerator (Action<string> logger, string[] supportedAbis)
+		public TypeMapGenerator (TaskLoggingHelper log, string[] supportedAbis)
 		{
-			this.logger = logger ?? throw new ArgumentNullException (nameof (logger));
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			if (supportedAbis == null)
 				throw new ArgumentNullException (nameof (supportedAbis));
 			this.supportedAbis = supportedAbis;
@@ -124,7 +170,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		public bool Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
+		public bool Generate (bool debugBuild, bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, out ApplicationConfigTaskState appConfState)
 		{
 			if (String.IsNullOrEmpty (outputDirectory))
 				throw new ArgumentException ("must not be null or empty", nameof (outputDirectory));
@@ -145,21 +191,23 @@ namespace Xamarin.Android.Tasks
 			return GenerateRelease (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, typemapsOutputDirectory, appConfState);
 		}
 
-		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
+		bool GenerateDebug (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, bool generateNativeAssembly, ApplicationConfigTaskState appConfState)
 		{
-			if (generateNativeAssembly)
+			if (generateNativeAssembly) {
 				return GenerateDebugNativeAssembly (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, outputDirectory, appConfState);
+			}
 			return GenerateDebugFiles (skipJniAddNativeMethodRegistrationAttributeScan, javaTypes, cache, outputDirectory, appConfState);
 		}
 
-		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateDebugFiles (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			var modules = new Dictionary<string, ModuleDebugData> (StringComparer.Ordinal);
 			int maxModuleFileNameWidth = 0;
 			int maxModuleNameWidth = 0;
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (TypeDefinition td in javaTypes) {
+			foreach (JavaType jt in javaTypes) {
+				TypeDefinition td = jt.Type;
 				UpdateApplicationConfig (td, appConfState);
 				string moduleName = td.Module.Assembly.Name.Name;
 				ModuleDebugData module;
@@ -211,19 +259,20 @@ namespace Xamarin.Android.Tasks
 			}
 			GeneratedBinaryTypeMaps.Add (typeMapIndexPath);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (new ModuleDebugData ());
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, new ModuleDebugData ());
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
 		}
 
-		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		bool GenerateDebugNativeAssembly (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
 		{
 			var javaToManaged = new List<TypeMapDebugEntry> ();
 			var managedToJava = new List<TypeMapDebugEntry> ();
 
 			var javaDuplicates = new Dictionary<string, List<TypeMapDebugEntry>> (StringComparer.Ordinal);
-			foreach (TypeDefinition td in javaTypes) {
+			foreach (JavaType jt in javaTypes) {
+				TypeDefinition td = jt.Type;
 				UpdateApplicationConfig (td, appConfState);
 
 				TypeMapDebugEntry entry = GetDebugEntry (td, cache);
@@ -242,7 +291,7 @@ namespace Xamarin.Android.Tasks
 
 			PrepareDebugMaps (data);
 
-			var composer = new TypeMappingDebugNativeAssemblyGenerator (data);
+			var composer = new TypeMappingDebugNativeAssemblyGenerator (log, data);
 			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
 
 			return true;
@@ -328,92 +377,116 @@ namespace Xamarin.Android.Tasks
 			return $"{managedTypeName}, {td.Module.Assembly.Name.Name}";
 		}
 
-		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<TypeDefinition> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		void ProcessReleaseType (ReleaseGenerationState state, TypeDefinition td, AndroidTargetArch typeArch, ApplicationConfigTaskState appConfState, TypeDefinitionCache cache)
 		{
-			int assemblyId = 0;
-			var knownAssemblies = new Dictionary<string, int> (StringComparer.Ordinal);
-			var tempModules = new Dictionary<byte[], ModuleReleaseData> ();
-			Dictionary <AssemblyDefinition, int> moduleCounter = null;
-			var mvidCache = new Dictionary <Guid, byte[]> ();
+			UpdateApplicationConfig (td, appConfState);
 
-			foreach (TypeDefinition td in javaTypes) {
-				UpdateApplicationConfig (td, appConfState);
+			state.AddKnownAssembly (td);
 
-				string assemblyName = td.Module.Assembly.FullName;
-
-				if (!knownAssemblies.ContainsKey (assemblyName)) {
-					assemblyId++;
-					knownAssemblies.Add (assemblyName, assemblyId);
-				}
-
-				// We must NOT use Guid here! The reason is that Guid sort order is different than its corresponding
-				// byte array representation and on the runtime we need the latter in order to be able to binary search
-				// through the module array.
-				byte[] moduleUUID;
-				if (!mvidCache.TryGetValue (td.Module.Mvid, out moduleUUID)) {
-					moduleUUID = td.Module.Mvid.ToByteArray ();
-					mvidCache.Add (td.Module.Mvid, moduleUUID);
-				}
-
-				ModuleReleaseData moduleData;
-				if (!tempModules.TryGetValue (moduleUUID, out moduleData)) {
-					if (moduleCounter == null)
-						moduleCounter = new Dictionary <AssemblyDefinition, int> ();
-
-					moduleData = new ModuleReleaseData {
-						Mvid = td.Module.Mvid,
-						MvidBytes = moduleUUID,
-						Assembly = td.Module.Assembly,
-						AssemblyName = td.Module.Assembly.Name.Name,
-						TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
-						DuplicateTypes = new List<TypeMapReleaseEntry> (),
-					};
-					tempModules.Add (moduleUUID, moduleData);
-				}
-
-				string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache);
-				// We will ignore generic types and interfaces when generating the Java to Managed map, but we must not
-				// omit them from the table we output - we need the same number of entries in both java-to-managed and
-				// managed-to-java tables.  `SkipInJavaToManaged` set to `true` will cause the native assembly generator
-				// to output `0` as the token id for the type, thus effectively causing the runtime unable to match such
-				// a Java type name to a managed type. This fixes https://github.com/xamarin/xamarin-android/issues/4660
-				var entry = new TypeMapReleaseEntry {
-					JavaName = javaName,
-					ManagedTypeName = td.FullName,
-					Token = td.MetadataToken.ToUInt32 (),
-					AssemblyNameIndex = knownAssemblies [assemblyName],
-					SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
-				};
-
-				if (moduleData.TypesScratch.ContainsKey (entry.JavaName)) {
-					// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
-					// build) and has no value for the end user. The message is left here because it may be useful to us
-					// in our devloop at some point.
-					//logger ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
-					moduleData.DuplicateTypes.Add (entry);
-				} else
-					moduleData.TypesScratch.Add (entry.JavaName, entry);
+			// We must NOT use Guid here! The reason is that Guid sort order is different than its corresponding
+			// byte array representation and on the runtime we need the latter in order to be able to binary search
+			// through the module array.
+			byte[] moduleUUID;
+			if (!state.MvidCache.TryGetValue (td.Module.Mvid, out moduleUUID)) {
+				moduleUUID = td.Module.Mvid.ToByteArray ();
+				state.MvidCache.Add (td.Module.Mvid, moduleUUID);
 			}
 
-			var modules = tempModules.Values.ToArray ();
-			Array.Sort (modules, new ModuleUUIDArrayComparer ());
+			bool abiAgnosticType = typeArch == AndroidTargetArch.None;
+			Dictionary<byte[], ModuleReleaseData> tempModules;
+			if (abiAgnosticType) {
+				tempModules = state.TempModulesAbiAgnostic;
+			} else {
+				// It will throw if `typeArch` isn't in the dictionary. This is intentional, since we must have no TypeDefinition entries for architectures not
+				// mentioned in `supportedAbis`.
+				try {
+					tempModules = state.TempModules[typeArch];
+				} catch (KeyNotFoundException ex) {
+					throw new InvalidOperationException ($"Internal error: cannot process type specific to architecture '{typeArch}', since that architecture isn't mentioned in the set of supported ABIs", ex);
+				}
+			}
 
-			foreach (ModuleReleaseData module in modules) {
-				if (module.TypesScratch.Count == 0) {
-					module.Types = Array.Empty<TypeMapReleaseEntry> ();
+			if (!tempModules.TryGetValue (moduleUUID, out ModuleReleaseData moduleData)) {
+				moduleData = new ModuleReleaseData {
+					Mvid = td.Module.Mvid,
+					MvidBytes = moduleUUID,
+					Assembly = td.Module.Assembly,
+					AssemblyName = td.Module.Assembly.Name.Name,
+					TypesScratch = new Dictionary<string, TypeMapReleaseEntry> (StringComparer.Ordinal),
+					DuplicateTypes = new List<TypeMapReleaseEntry> (),
+				};
+
+				if (abiAgnosticType) {
+					// ABI-agnostic types must be added to all the ABIs
+					foreach (var kvp in state.TempModules) {
+						kvp.Value.Add (moduleUUID, moduleData);
+					}
+				} else {
+					// ABI-specific types are added only to their respective tempModules
+					tempModules.Add (moduleUUID, moduleData);
+				}
+			}
+
+			string javaName = Java.Interop.Tools.TypeNameMappings.JavaNativeTypeManager.ToJniName (td, cache);
+			// We will ignore generic types and interfaces when generating the Java to Managed map, but we must not
+			// omit them from the table we output - we need the same number of entries in both java-to-managed and
+			// managed-to-java tables.  `SkipInJavaToManaged` set to `true` will cause the native assembly generator
+			// to output `0` as the token id for the type, thus effectively causing the runtime unable to match such
+			// a Java type name to a managed type. This fixes https://github.com/xamarin/xamarin-android/issues/4660
+			var entry = new TypeMapReleaseEntry {
+				JavaName = javaName,
+				ManagedTypeName = td.FullName,
+				Token = td.MetadataToken.ToUInt32 (),
+				AssemblyNameIndex = state.KnownAssemblies [state.GetAssemblyName (td)],
+				SkipInJavaToManaged = ShouldSkipInJavaToManaged (td),
+			};
+
+			if (moduleData.TypesScratch.ContainsKey (entry.JavaName)) {
+				// This is disabled because it costs a lot of time (around 150ms per standard XF Integration app
+				// build) and has no value for the end user. The message is left here because it may be useful to us
+				// in our devloop at some point.
+				//log.LogDebugMessage ($"Warning: duplicate Java type name '{entry.JavaName}' in assembly '{moduleData.AssemblyName}' (new token: {entry.Token}).");
+				moduleData.DuplicateTypes.Add (entry);
+			} else {
+				moduleData.TypesScratch.Add (entry.JavaName, entry);
+			}
+		}
+
+		bool GenerateRelease (bool skipJniAddNativeMethodRegistrationAttributeScan, List<JavaType> javaTypes, TypeDefinitionCache cache, string outputDirectory, ApplicationConfigTaskState appConfState)
+		{
+			var state = new ReleaseGenerationState (supportedAbis);
+
+			foreach (JavaType jt in javaTypes) {
+				if (!jt.IsABiSpecific) {
+					ProcessReleaseType (state, jt.Type, AndroidTargetArch.None, appConfState, cache);
 					continue;
 				}
 
-				// No need to sort here, the LLVM IR generator will compute hashes and sort
-				// the array on write.
-				module.Types = module.TypesScratch.Values.ToArray ();
+				foreach (var kvp in jt.PerAbiTypes) {
+					ProcessReleaseType (state, kvp.Value, kvp.Key, appConfState, cache);
+				}
 			}
 
-			NativeTypeMappingData data;
-			data = new NativeTypeMappingData (logger, modules);
+			foreach (var kvp in state.TempModules) {
+				AndroidTargetArch arch = kvp.Key;
+				Dictionary<byte[], ModuleReleaseData> tempModules = kvp.Value;
+				ModuleReleaseData[] modules = tempModules.Values.ToArray ();
+				Array.Sort (modules, new ModuleUUIDArrayComparer ());
 
-			var composer = new TypeMappingReleaseNativeAssemblyGenerator (data);
-			GenerateNativeAssembly (composer, composer.Construct (), outputDirectory);
+				foreach (ModuleReleaseData module in modules) {
+					if (module.TypesScratch.Count == 0) {
+						module.Types = Array.Empty<TypeMapReleaseEntry> ();
+						continue;
+					}
+
+					// No need to sort here, the LLVM IR generator will compute hashes and sort
+					// the array on write.
+					module.Types = module.TypesScratch.Values.ToArray ();
+				}
+
+				var composer = new TypeMappingReleaseNativeAssemblyGenerator (log, new NativeTypeMappingData (log, modules));
+				GenerateNativeAssembly (arch, composer, composer.Construct (), outputDirectory);
+			}
 
 			return true;
 		}
@@ -423,24 +496,53 @@ namespace Xamarin.Android.Tasks
 			return td.IsInterface || td.HasGenericParameters;
 		}
 
+		string GetOutputFilePath (string baseFileName, string abi) => $"{baseFileName}.{abi}.ll";
+
+		void GenerateNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
+		{
+			WriteNativeAssembly (
+				arch,
+				composer,
+				typeMapModule,
+				GetOutputFilePath (baseFileName, ArchToAbi (arch))
+			);
+		}
+
 		void GenerateNativeAssembly (LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string baseFileName)
 		{
-			AndroidTargetArch arch;
 			foreach (string abi in supportedAbis) {
-				arch = GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi);
+				WriteNativeAssembly (
+					GeneratePackageManagerJava.GetAndroidTargetArchForAbi (abi),
+					composer,
+					typeMapModule,
+					GetOutputFilePath (baseFileName, abi)
+				);
+			}
+		}
 
-				string outputFile = $"{baseFileName}.{abi}.ll";
-				using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
-					try {
-						composer.Generate (typeMapModule, arch, sw, outputFile);
-					} catch {
-						throw;
-					} finally {
-						sw.Flush ();
-						Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
-					}
+		void WriteNativeAssembly (AndroidTargetArch arch, LLVMIR.LlvmIrComposer composer, LLVMIR.LlvmIrModule typeMapModule, string outputFile)
+		{
+			using (var sw = MemoryStreamPool.Shared.CreateStreamWriter ()) {
+				try {
+					composer.Generate (typeMapModule, arch, sw, outputFile);
+				} catch {
+					throw;
+				} finally {
+					sw.Flush ();
+					Files.CopyIfStreamChanged (sw.BaseStream, outputFile);
 				}
 			}
+		}
+
+		static string ArchToAbi (AndroidTargetArch arch)
+		{
+			return arch switch {
+				AndroidTargetArch.Arm    => "armeabi-v7a",
+				AndroidTargetArch.Arm64  => "arm64-v8a",
+				AndroidTargetArch.X86_64 => "x86_64",
+				AndroidTargetArch.X86    => "x86",
+				_                        => throw new InvalidOperationException ($"Unknown architecture {arch}")
+			};
 		}
 
 		// Binary index file format, all data is little-endian:

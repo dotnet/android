@@ -33,11 +33,9 @@ namespace Android.Runtime {
 					classLoader_loadClass,
 					jniAddNativeMethodRegistrationAttributePresent))
 		{
-#if NETCOREAPP
 			// This is not ideal, but we need to set this while the runtime is initializing but we can't do it directly from the `JNIEnvInit.Initialize` method, since
 			// it lives in an assembly that does not reference Mono.Android.  So we do it here, because this class is instantiated by JNIEnvInit.Initialize.
 			AndroidEnvironmentInternal.UnhandledExceptionHandler = AndroidEnvironment.UnhandledException;
-#endif
 		}
 
 		public override void FailFast (string? message)
@@ -79,7 +77,7 @@ namespace Android.Runtime {
 		{
 			var je  = pendingException as JavaProxyThrowable;
 			if (je == null) {
-				je  = new JavaProxyThrowable (pendingException);
+				je  = JavaProxyThrowable.Create (pendingException);
 			}
 			var r = new JniObjectReference (je.Handle);
 			JniEnvironment.Exceptions.Throw (r);
@@ -249,6 +247,9 @@ namespace Android.Runtime {
 
 		bool jniAddNativeMethodRegistrationAttributePresent;
 
+		const DynamicallyAccessedMemberTypes Methods = DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods;
+		const DynamicallyAccessedMemberTypes MethodsAndPrivateNested = Methods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes;
+
 		public AndroidTypeManager (bool jniAddNativeMethodRegistrationAttributePresent)
 		{
 			this.jniAddNativeMethodRegistrationAttributePresent = jniAddNativeMethodRegistrationAttributePresent;
@@ -268,11 +269,7 @@ namespace Android.Runtime {
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
 			if (j != null) {
-				return
-#if NET
-					GetReplacementTypeCore (j) ??
-#endif  // NET
-					j;
+				return GetReplacementTypeCore (j) ?? j;
 			}
 			if (JNIEnvInit.IsRunningOnDesktop) {
 				return JavaNativeTypeManager.ToJniName (type);
@@ -283,9 +280,8 @@ namespace Android.Runtime {
 		protected override IEnumerable<string> GetSimpleReferences (Type type)
 		{
 			string? j = JNIEnv.TypemapManagedToJava (type);
-#if NET
 			j   = GetReplacementTypeCore (j) ?? j;
-#endif  // NET
+
 			if (JNIEnvInit.IsRunningOnDesktop) {
 				string? d = JavaNativeTypeManager.ToJniName (type);
 				if (j != null && d != null) {
@@ -301,7 +297,6 @@ namespace Android.Runtime {
 			return Array.Empty<string> ();
 		}
 
-#if NET
 		protected override IReadOnlyList<string>? GetStaticMethodFallbackTypesCore (string jniSimpleReference)
 		{
 			ReadOnlySpan<char>  name    = jniSimpleReference;
@@ -383,7 +378,6 @@ namespace Android.Runtime {
 					TargetJniMethodInstanceToStatic = method.is_static,
 			};
 		}
-#endif  // NET
 
 		delegate Delegate GetCallbackHandler ();
 
@@ -482,7 +476,7 @@ namespace Android.Runtime {
 
 		public override void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)]
+				[DynamicallyAccessedMembers (MethodsAndPrivateNested)]
 				Type type,
 				string? methods) =>
 			RegisterNativeMembers (nativeClass, type, methods.AsSpan ());
@@ -492,7 +486,7 @@ namespace Android.Runtime {
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "Delegate.CreateDelegate() can never statically know the string value parsed from parameter 'methods'.")]
 		public void RegisterNativeMembers (
 				JniType nativeClass,
-				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods)] Type type,
+				[DynamicallyAccessedMembers (MethodsAndPrivateNested)] Type type,
 				ReadOnlySpan<char> methods)
 		{
 			try {
@@ -625,7 +619,11 @@ namespace Android.Runtime {
 			AndroidRuntimeInternal.WaitForBridgeProcessing ();
 		}
 
-		public override IJavaPeerable? CreatePeer (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override IJavaPeerable? CreatePeer (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+				Type? targetType)
 		{
 			if (!reference.IsValid)
 				return null;

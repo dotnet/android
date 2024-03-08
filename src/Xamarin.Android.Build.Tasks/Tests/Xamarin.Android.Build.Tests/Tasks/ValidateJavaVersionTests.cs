@@ -148,5 +148,57 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (validateJavaVersion.Execute (), "second Execute should succeed!");
 			Assert.IsFalse (messages.Any (m => m.Message.StartsWith ("Using cached value for", StringComparison.Ordinal)), "`java -version` should *not* be cached!");
 		}
+
+		[Test]
+		public void ReleaseFile_Valid ()
+		{
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
+			var releasePath = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
+			File.WriteAllText (releasePath,
+@"IMPLEMENTOR=""Microsoft""
+IMPLEMENTOR_VERSION=""Microsoft-7621296""
+JAVA_VERSION=""11.0.19""
+JAVA_VERSION_DATE=""2023-04-18""
+LIBC=""default""
+MODULES=""java.base java.compiler java.datatransfer java.xml java.prefs java.desktop java.instrument java.logging java.management java.security.sasl java.naming java.rmi java.management.rmi java.net.http java.scripting java.security.jgss java.transaction.xa java.sql java.sql.rowset java.xml.crypto java.se java.smartcardio jdk.accessibility jdk.internal.vm.ci jdk.management jdk.unsupported jdk.internal.vm.compiler jdk.aot jdk.internal.jvmstat jdk.attach jdk.charsets jdk.compiler jdk.crypto.ec jdk.crypto.cryptoki jdk.crypto.mscapi jdk.dynalink jdk.internal.ed jdk.editpad jdk.hotspot.agent jdk.httpserver jdk.internal.le jdk.internal.opt jdk.internal.vm.compiler.management jdk.jartool jdk.javadoc jdk.jcmd jdk.management.agent jdk.jconsole jdk.jdeps jdk.jdwp.agent jdk.jdi jdk.jfr jdk.jlink jdk.jshell jdk.jsobject jdk.jstatd jdk.localedata jdk.management.jfr jdk.naming.dns jdk.naming.ldap jdk.naming.rmi jdk.net jdk.pack jdk.rmic jdk.scripting.nashorn jdk.scripting.nashorn.shell jdk.sctp jdk.security.auth jdk.security.jgss jdk.unsupported.desktop jdk.xml.dom jdk.zipfs""
+OS_ARCH=""x86_64""
+OS_NAME=""Windows""
+SOURCE="".:git:6171c19d2c18""
+");
+
+			var validateJavaVersion = new Android.Tasks.ValidateJavaVersion {
+				BuildEngine = engine,
+				JavaSdkPath = javaPath,
+				JavaToolExe = javaExe,
+				JavacToolExe = javacExe,
+				LatestSupportedJavaVersion = "17.99.0",
+				MinimumSupportedJavaVersion = "11.0.0",
+				UseJavaExeVersion = false,
+			};
+			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("contains JAVA_VERSION")), "contains JAVA_VERSION should be found");
+		}
+
+		[Test]
+		public void ReleaseFile_Invalid ()
+		{
+			var javaPath = CreateFauxJavaSdkDirectory (Path.Combine (path, "jdk-1"), "11.0.9", out string javaExe, out string javacExe);
+			var releasePath = Path.Combine (Path.GetDirectoryName (javaExe), "..", "release");
+			File.WriteAllText (releasePath, "Just some random text");
+
+			var validateJavaVersion = new Android.Tasks.ValidateJavaVersion {
+				BuildEngine = engine,
+				JavaSdkPath = javaPath,
+				JavaToolExe = javaExe,
+				JavacToolExe = javacExe,
+				LatestSupportedJavaVersion = "17.99.0",
+				MinimumSupportedJavaVersion = "11.0.0",
+				UseJavaExeVersion = false,
+			};
+
+			// Will succeed due to fallback
+			Assert.IsTrue (validateJavaVersion.Execute (), "Execute should succeed!");
+			Assert.IsTrue (messages.Any (m => m.Message.Contains ("did not contain a valid JAVA_VERSION")), "valid JAVA_VERSION should *not* be found");
+		}
 	}
 }

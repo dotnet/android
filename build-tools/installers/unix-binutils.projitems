@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.15</_LlvmLibExtension>
+    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.17</_LlvmLibExtension>
     <_LlvmLibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</_LlvmLibExtension>
   </PropertyGroup>
 
@@ -52,8 +52,10 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMBitWriter.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMCFGuard.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMCodeGen.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMCodeGenTypes.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMCore.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMCoroutines.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDebugInfoBTF.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDebugInfoCodeView.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDebugInfoDWARF.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDebugInfoMSF.$(_LlvmLibExtension)" />
@@ -65,13 +67,14 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMInstCombine.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMInstrumentation.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMipo.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMIRPrinter.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMIRReader.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLibDriver.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLinker.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMLTO.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMC.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMCDisassembler.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMCParser.$(_LlvmLibExtension)" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMC.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMMIRParser.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMObjCARCOpts.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMObjCopy.$(_LlvmLibExtension)" />
@@ -84,9 +87,10 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSelectionDAG.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSupport.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMSymbolize.$(_LlvmLibExtension)" />
-    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGenGlobalISel.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGen.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTableGenGlobalISel.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTarget.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTargetParser.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTextAPI.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMTransformUtils.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMVectorize.$(_LlvmLibExtension)" />

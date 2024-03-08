@@ -58,11 +58,11 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinFormsAndroidApplicationProject () {
 				IsRelease = isRelease,
 			};
-			if (isRelease || !CommercialBuildAvailable) {
-				proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			if (isRelease || !TestEnvironment.CommercialBuildAvailable) {
+				proj.SetAndroidSupportedAbis (DeviceAbi);
 			}
 			proj.SetDefaultTargetDevice ();
-			if (Builder.UseDotNet && isRelease) {
+			if (isRelease) {
 				// bundle tool does NOT support embeddedDex files it seems.
 				useEmbeddedDex = false;
 			}
@@ -90,8 +90,8 @@ namespace Xamarin.Android.Build.Tests
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
 			};
-			if (!CommercialBuildAvailable) {
-				app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			if (!TestEnvironment.CommercialBuildAvailable) {
+				app.SetAndroidSupportedAbis (DeviceAbi);
 			}
 			app.SetDefaultTargetDevice ();
 			app.SetProperty ("AndroidEnablePreloadAssemblies", preloadAssemblies.ToString ());
@@ -192,7 +192,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = false,
 				AndroidFastDeploymentType = fastDevType,
 			};
-			proj.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			proj.SetDefaultTargetDevice ();
@@ -427,21 +427,21 @@ namespace ${ROOT_NAMESPACE} {
 				AndroidFastDeploymentType = fastDevType
 			};
 			if (!useLatestSdk) {
-				lib.TargetFramework = "net7.0-android";
-				app.TargetFramework = "net7.0-android";
+				lib.TargetFramework = "net8.0-android";
+				app.TargetFramework = "net8.0-android";
 			}
 
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis ("armeabi-v7a", "x86", "x86_64");
+			app.SetAndroidSupportedAbis (DeviceAbi);
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
-				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net7.0-android" ? 33 : null);
+				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net8.0-android" ? 34 : null);
 				Assert.True (appBuilder.Install (app, parameters: parameters.ToArray ()), "App should have installed.");
 
 				if (!embedAssemblies) {

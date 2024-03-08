@@ -253,7 +253,7 @@ namespace Java.Lang {
 			if (e is Throwable)
 				return (Throwable) e;
 
-			return new Android.Runtime.JavaProxyThrowable (e);
+			return Android.Runtime.JavaProxyThrowable.Create (e);
 		}
 
 		public static System.Exception ToException (Throwable e)

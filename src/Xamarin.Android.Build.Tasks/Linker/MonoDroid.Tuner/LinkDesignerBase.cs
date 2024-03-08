@@ -15,7 +15,19 @@ using Microsoft.Android.Sdk.ILLink;
 
 
 namespace MonoDroid.Tuner  {
-	public abstract class LinkDesignerBase : BaseStep {
+	public abstract class LinkDesignerBase : BaseStep
+	{
+#if ILLINK
+		protected IMetadataResolver Cache => Context;
+#else   // !ILLINK
+		public LinkDesignerBase (IMetadataResolver cache)
+		{
+			Cache = cache;
+		}
+
+		protected IMetadataResolver Cache { get; private set; }
+#endif  // !ILLINK
+
 		public virtual void LogMessage (string message)
 		{
 			Context.LogMessage (message);
@@ -60,6 +72,37 @@ namespace MonoDroid.Tuner  {
 
 				}
 			}
+
+			if (string.IsNullOrEmpty(designerFullName)) {
+				LogMessage ($"Inspecting member references for assembly: {assembly.FullName};");
+				var memberRefs = assembly.MainModule.GetMemberReferences ();
+				foreach (var memberRef in memberRefs) {
+					string declaringType = memberRef.DeclaringType?.ToString () ?? string.Empty;
+					if (!declaringType.Contains (".Resource/")) {
+						continue;
+					}
+					if (declaringType.Contains ("_Microsoft.Android.Resource.Designer")) {
+						continue;
+					}
+					var resolved = false;
+					try {
+						var def = memberRef.Resolve ();
+						if (resolved = def != null) {
+							LogMessage ($"Resolved member `{memberRef?.Name}`");
+						}
+					} catch (Exception ex) {
+						LogMessage ($"Exception resolving member `{memberRef?.Name}`: {ex}");
+						resolved = false;
+					}
+					if (!resolved) {
+						LogMessage ($"Adding _Linker.Generated.Resource to {assembly.Name.Name}. Could not resolve {memberRef?.Name} : {declaringType}");
+						designer = new TypeDefinition ("_Linker.Generated", "Resource", TypeAttributes.Public | TypeAttributes.AnsiClass);
+						designer.BaseType = new TypeDefinition ("System", "Object", TypeAttributes.Public | TypeAttributes.AnsiClass);
+						return true;
+					}
+				}
+			}
+
 			if (string.IsNullOrEmpty(designerFullName))
 				return false;
 

@@ -18,13 +18,6 @@ namespace Xamarin.ProjectTools
 		const string ConsoleLoggerError = "[ERROR] FATAL UNHANDLED EXCEPTION: System.ArgumentException: is negative";
 		const int DefaultBuildTimeOut = 30;
 
-		string Arm32AbiDir => UseDotNet ? "android-arm" : "armeabi-v7a";
-
-		/// <summary>
-		/// If true, use `dotnet build` and IShortFormProject throughout the tests
-		/// </summary>
-		public static bool UseDotNet => Environment.Version.Major >= 5;
-
 		string root;
 		string buildLogFullPath;
 		public bool IsUnix { get; set; }
@@ -52,18 +45,6 @@ namespace Xamarin.ProjectTools
 		/// True if NuGet restore occurs automatically (default)
 		/// </summary>
 		public bool AutomaticNuGetRestore { get; set; } = true;
-
-		public string BuildTool {
-			get {
-				if (UseDotNet)
-					return Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet");
-
-				string xabuild = IsUnix ? XABuildPaths.XABuildScript : XABuildPaths.XABuildExe;
-				if (File.Exists (xabuild) && TestEnvironment.UseLocalBuildOutput)
-					return xabuild;
-				return IsUnix ? "msbuild" : TestEnvironment.GetVisualStudioInstance ().MSBuildPath;
-			}
-		}
 
 		public bool CrossCompilerAvailable (string supportedAbis)
 		{
@@ -117,7 +98,7 @@ namespace Xamarin.ProjectTools
 			Version lastVersion     = null;
 			List<string> allTFVs    = new List<string> ();
 
-			var searchDir = UseDotNet ? Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data") : TestEnvironment.MonoAndroidFrameworkDirectory;
+			var searchDir = Path.Combine (TestEnvironment.DotNetPreviewAndroidSdkDirectory, "data");
 			foreach (var apiInfoFile in Directory.EnumerateFiles (searchDir, "AndroidApiInfo.xml", SearchOption.AllDirectories)) {
 				string frameworkVersion = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Version");
 				string apiLevel         = GetApiInfoElementValue (apiInfoFile, "/AndroidApiInfo/Level");
@@ -147,16 +128,6 @@ namespace Xamarin.ProjectTools
 			var doc = XDocument.Load (androidApiInfo);
 			return doc.XPathSelectElement (elementPath)?.Value;
 		}
-
-		public bool TargetFrameworkExists (string targetFramework)
-		{
-			var path = Path.Combine (TestEnvironment.MonoAndroidFrameworkDirectory, targetFramework);
-			if (!Directory.Exists (path)) {
-				return false;
-			}
-			return true;
-		}
-
 
 		public string Root {
 			get {
@@ -202,33 +173,26 @@ namespace Xamarin.ProjectTools
 
 			var start = DateTime.UtcNow;
 			var args  = new StringBuilder ();
-			var psi   = new ProcessStartInfo (BuildTool);
+			var psi   = new ProcessStartInfo (Path.Combine (TestEnvironment.DotNetPreviewDirectory, "dotnet"));
 			var responseFile = Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), "project.rsp");
-			if (UseDotNet) {
-				args.Append ("build ");
-				if (TestEnvironment.UseLocalBuildOutput) {
-					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
-					psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
-				}
+			args.Append ("build ");
+
+			if (TestEnvironment.UseLocalBuildOutput) {
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_MANIFEST_ROOTS", TestEnvironment.WorkloadManifestOverridePath);
+				psi.SetEnvironmentVariable ("DOTNETSDK_WORKLOAD_PACK_ROOTS", TestEnvironment.WorkloadPackOverridePath);
 			}
+
 			args.AppendFormat ("{0} /t:{1} {2}",
 					QuoteFileName (Path.Combine (XABuildPaths.TestOutputDirectory, projectOrSolution)), target, logger);
-			if (UseDotNet) {
-				if (!AutomaticNuGetRestore) {
-					args.Append (" --no-restore");
-				}
-			} else if (AutomaticNuGetRestore && restore) {
-				args.Append (" /restore");
+
+			if (!AutomaticNuGetRestore) {
+				args.Append (" --no-restore");
 			}
 
 			args.Append (" -nodeReuse:false"); // Disable the MSBuild daemon everywhere!
 
 			if (MaxCpuCount != null) {
-				if (!string.Equals (Path.GetFileNameWithoutExtension (psi.FileName), "xabuild", StringComparison.OrdinalIgnoreCase)) {
-					args.Append ($" /maxCpuCount:{MaxCpuCount}");
-				} else {
-					Console.WriteLine ($"Ignoring MaxCpuCount={MaxCpuCount}, running with xabuild.");
-				}
+				args.Append ($" /maxCpuCount:{MaxCpuCount}");
 			}
 			args.Append ($" @\"{responseFile}\"");
 			using (var sw = new StreamWriter (responseFile, append: false, encoding: Encoding.UTF8)) {
@@ -274,12 +238,8 @@ namespace Xamarin.ProjectTools
 			psi.SetEnvironmentVariable ("BUILD_SOURCEVERSIONMESSAGE", "");
 
 			// Ensure any variable alteration from DotNetXamarinProject.Construct is cleared.
-			if (!Builder.UseDotNet && !TestEnvironment.IsWindows) {
-				psi.SetEnvironmentVariable ("MSBUILD_EXE_PATH", null);
-			}
-			if (Builder.UseDotNet) {
-				psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
-			}
+			psi.SetEnvironmentVariable ("DOTNET_MULTILEVEL_LOOKUP", "0");
+			psi.SetEnvironmentVariable ("PATH", TestEnvironment.DotNetPreviewDirectory + Path.PathSeparator + Environment.GetEnvironmentVariable ("PATH"));
 
 			psi.Arguments = args.ToString ();
 

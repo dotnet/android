@@ -2,25 +2,33 @@
   <PropertyGroup>
     <_Root>$(MSBuildThisFileDirectory)..\..\</_Root>
     <_BinlogPathPrefix>$(_Root)bin/Build$(Configuration)/msbuild-$([System.DateTime]::Now.ToString("yyyyMMddTHHmmss"))</_BinlogPathPrefix>
+    <MauiUseLocalPacks Condition=" '$(MauiUseLocalPacks)' == '' ">false</MauiUseLocalPacks>
+    <MauiSourcePath Condition=" '$(MauiSourcePath)' == '' ">$(_Root)..\maui</MauiSourcePath>
+    <MauiPackagePath Condition=" '$(MauiPackagePath)' == '' ">$(MauiSourcePath)\artifacts</MauiPackagePath>
+    <MauiWorkloadToInstall Condition=" '$(MauiWorkloadToInstall)' == '' ">maui-android</MauiWorkloadToInstall>
   </PropertyGroup>
+
   <Target Name="BuildExternal">
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
+        Command="&quot;$(DotNetPreviewTool)&quot; build monodroid.proj -c $(Configuration) -p:XamarinAndroidSourcePath=$(_Root) -p:DebuggingToolsOutputDirectory=$(MicrosoftAndroidSdkOutDir) -p:CompatTargetsOutputDirectory=$(XAInstallPrefix)xbuild/Novell -bl:$(_BinlogPathPrefix)-build-monodroid.binlog"
         WorkingDirectory="$(_Root)external\monodroid"
     />
   </Target>
+
   <Target Name="PrepareJavaInterop">
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; build -t:Prepare Java.Interop.sln -c $(Configuration) -p:JdksRoot=$(JavaSdkDirectory) -p:DotnetToolPath=$(DotNetPreviewTool) -bl:$(_BinlogPathPrefix)-prepare-java-interop.binlog"
         WorkingDirectory="$(_Root)external\Java.Interop"
     />
   </Target>
+
   <Target Name="BuildDotNet"
       DependsOnTargets="PrepareJavaInterop">
     <MSBuild Projects="$(_Root)build-tools\xa-prep-tasks\xa-prep-tasks.csproj" />
     <MSBuild Projects="$(_Root)Xamarin.Android.sln" Properties="DisableApiCompatibilityCheck=true" />
     <MSBuild Projects="$(_Root)build-tools\create-packs\Microsoft.Android.Sdk.proj" Targets="ConfigureLocalWorkload" />
   </Target>
+
   <Target Name="PackDotNet">
     <!-- Build extra versions of Mono.Android.dll if necessary -->
     <MSBuild
@@ -42,43 +50,72 @@
     </ItemGroup>
     <RemoveDir Directories="@(_DirectoriesToRemove)" />
   </Target>
+
+  <Target Name="UpdateMauiWorkloadsProj">
+    <XmlPoke
+      XmlInputPath="$(MauiSourcePath)\src\DotNet\Dependencies\Workloads.csproj"
+      Value="Microsoft.NET.Sdk.Android.Manifest-$(DotNetSdkManifestsFolder)"
+      Query="/Project/ItemGroup/PackageDownload[contains(@Include,'Microsoft.NET.Sdk.Android.Manifest-')]/@Include" />
+  </Target>
+
   <Target Name="InstallMaui">
-    <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' " />
+    <Error Text="%24(MauiVersion) must be specified." Condition=" '$(MauiVersion)' == '' and '$(MauiUseLocalPacks)' != 'true' " />
     <PropertyGroup>
       <_TempDirectory>$(DotNetPreviewPath)..\.xa-workload-temp-$([System.IO.Path]::GetRandomFileName())</_TempDirectory>
       <MauiVersionBand Condition=" '$(MauiVersionBand)' == '' ">$(DotNetSdkManifestsFolder)</MauiVersionBand>
     </PropertyGroup>
     <MakeDir Directories="$(_TempDirectory)" />
+
+    <!-- Restore or extract WorkloadManifest.* files-->
     <Exec
+        Condition=" '$(MauiUseLocalPacks)' != 'true' "
         Command="&quot;$(DotNetPreviewTool)&quot; restore maui.proj -p:MauiVersion=$(MauiVersion) -p:MauiVersionBand=$(MauiVersionBand)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
         EnvironmentVariables="NUGET_PACKAGES=$(_TempDirectory);DOTNET_MULTILEVEL_LOOKUP=0"
     />
+    <ItemGroup>
+      <_WLManifestPack Include="$(MauiPackagePath)\Microsoft.NET.Sdk.Maui.Manifest-$(MauiVersionBand.Substring (0,3))*.nupkg" />
+    </ItemGroup>
+    <Unzip
+        Condition=" '$(MauiUseLocalPacks)' == 'true' "
+        SourceFiles="@(_WLManifestPack)"
+        DestinationFolder="$(_TempDirectory)"
+    />
 
     <!-- Copy WorkloadManifest.* files-->
     <ItemGroup>
-      <_WLManifest Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
+      <_WLManifest Condition=" '$(MauiUseLocalPacks)' != 'true' " Include="$(_TempDirectory)\microsoft.net.sdk.maui.manifest-$(MauiVersionBand)\$(MauiVersion)\data\WorkloadManifest.*" />
+      <_WLManifest Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(_TempDirectory)\data\*" />
     </ItemGroup>
     <Copy SourceFiles="@(_WLManifest)" DestinationFolder="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.maui" />
 
     <!-- Parse NuGet.config -->
     <XmlPeek
+        Condition=" '$(MauiUseLocalPacks)' != 'true' "
         XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
+        Query="/configuration/packageSources/add/@value">
+      <Output TaskParameter="Result" ItemName="_NuGetSources" />
+    </XmlPeek>
+    <XmlPeek
+        Condition=" '$(MauiUseLocalPacks)' == 'true' "
+        XmlInputPath="$(MauiSourcePath)\NuGet.config"
         Query="/configuration/packageSources/add/@value">
       <Output TaskParameter="Result" ItemName="_NuGetSources" />
     </XmlPeek>
 
     <!-- dotnet workload install maui-android -->
     <ItemGroup>
+      <_NuGetSources Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath.TrimEnd('\'))" />
       <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
       <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
       <_InstallArguments Include="--skip-manifest-update" />
+      <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; workload install maui-android @(_InstallArguments, ' ')"
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install $(MauiWorkloadToInstall) @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
         EnvironmentVariables="DOTNET_MULTILEVEL_LOOKUP=0"
     />

@@ -334,7 +334,7 @@ namespace Android.App {
 		TypeDefinition type;
 		ICollection<string> specified;
 
-		public static ActivityAttribute FromTypeDefinition (TypeDefinition type)
+		public static ActivityAttribute FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = type.GetCustomAttributes ("Android.App.ActivityAttribute")
 				.SingleOrDefault ();
@@ -343,7 +343,7 @@ namespace Android.App {
 			ActivityAttribute self = new ActivityAttribute () {
 				type = type,
 			};
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			return self;
 		}
 

@@ -14,6 +14,8 @@ namespace Android.Views {
 
 	public partial class View {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 #if ANDROID_16
 		[Obsolete ("This method uses wrong enum type. Please use PerformAccessibilityAction(Action) instead.")]
 		public bool PerformAccessibilityAction (GlobalAction action, Bundle arguments)
@@ -22,15 +24,20 @@ namespace Android.Views {
 		}
 #endif
 
-		public T? FindViewById<T> (int id)
+		public T? FindViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			return this.FindViewById (id).JavaCast<T> ();
 		}
 
-#if NET7_0_OR_GREATER || (NET6_0_OR_GREATER && ANDROID_33) || ANDROID_34
 		// See: https://cs.android.com/android/platform/superproject/+/master:frameworks/base/core/java/android/view/View.java;l=25322
-		public T RequireViewById<T> (int id)
+		public T RequireViewById<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (int id)
 			where T : Android.Views.View
 		{
 			var view = FindViewById<T> (id);
@@ -39,7 +46,6 @@ namespace Android.Views {
 			}
 			return view;
 		}
-#endif //NET7_0_OR_GREATER || (NET6_0_OR_GREATER && ANDROID_33) || ANDROID_34
 
 		public bool Post (Action action)
 		{
@@ -77,6 +83,7 @@ namespace Android.Views {
 
 #if ANDROID_11
 		[Obsolete ("Please Use DispatchSystemUiVisibilityChanged(SystemUiFlags)")]
+		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0")]
 		public void DispatchSystemUiVisibilityChanged (int visibility)
 		{
 			DispatchSystemUiVisibilityChanged ((SystemUiFlags) visibility);
@@ -90,7 +97,7 @@ namespace Android.Views {
 		}
 #endif
 
-#if NET && ANDROID_34
+#if ANDROID_34
 		[global::System.Runtime.Versioning.ObsoletedOSPlatform ("android30.0", "These flags are deprecated. Use WindowInsetsController instead.")]
 		public SystemUiFlags SystemUiFlags {
 			get => (SystemUiFlags) SystemUiVisibility;

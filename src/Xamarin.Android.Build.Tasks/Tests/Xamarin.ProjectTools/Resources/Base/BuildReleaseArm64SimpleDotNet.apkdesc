@@ -2,67 +2,67 @@
   "Comment": null,
   "Entries": {
     "AndroidManifest.xml": {
-      "Size": 3032
+      "Size": 3036
     },
     "assemblies/_Microsoft.Android.Resource.Designer.dll": {
-      "Size": 1024
+      "Size": 1028
     },
     "assemblies/Java.Interop.dll": {
-      "Size": 58703
+      "Size": 61587
     },
     "assemblies/Mono.Android.dll": {
-      "Size": 86588
+      "Size": 90798
     },
     "assemblies/Mono.Android.Runtime.dll": {
-      "Size": 5798
+      "Size": 5225
     },
     "assemblies/rc.bin": {
-      "Size": 1235
+      "Size": 1512
     },
     "assemblies/System.Console.dll": {
-      "Size": 6442
+      "Size": 6546
     },
     "assemblies/System.Linq.dll": {
-      "Size": 9123
+      "Size": 8553
     },
     "assemblies/System.Private.CoreLib.dll": {
-      "Size": 536436
+      "Size": 553721
     },
     "assemblies/System.Runtime.dll": {
-      "Size": 2623
+      "Size": 2550
     },
     "assemblies/System.Runtime.InteropServices.dll": {
-      "Size": 3752
+      "Size": 4026
     },
     "assemblies/UnnamedProject.dll": {
-      "Size": 3349
+      "Size": 2936
     },
     "classes.dex": {
-      "Size": 19748
+      "Size": 377856
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 93552
+      "Size": 87080
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 380832
+      "Size": 339864
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3160360
+      "Size": 3186504
     },
     "lib/arm64-v8a/libSystem.IO.Compression.Native.so": {
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94392
+      "Size": 94504
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 154904
+      "Size": 155560
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 16624
+      "Size": 11680
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1213
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3037
@@ -95,5 +95,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2685258
+  "PackageSize": 2783562
 }

@@ -464,7 +464,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					Register (kvp.Value);
 				}
 			} else if (typeof(ICollection<string>).IsAssignableFrom (variable.Type)) {
-				foreach (string s in (ICollection<string>)variable.Value) {
+				foreach (string s in (ICollection<string?>)variable.Value) {
 					Register (s);
 				}
 			}  else {
@@ -473,8 +473,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			AddStandardGlobalVariable (variable);
 
-			void Register (string value)
+			void Register (string? value)
 			{
+				if (value == null) {
+					return;
+				}
+
 				RegisterString (value, stringGroupName, stringGroupComment, symbolSuffix);
 			}
 		}
@@ -640,7 +644,6 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// </summary>
 		public StructureInfo MapStructure<T> ()
 		{
-			Console.WriteLine ($"Mapping structure: {typeof(T)}");
 			if (structures == null) {
 				structures = new Dictionary<Type, StructureInfo> ();
 			}

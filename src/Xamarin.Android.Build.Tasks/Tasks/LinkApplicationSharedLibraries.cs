@@ -121,8 +121,8 @@ namespace Xamarin.Android.Tasks
 
 		IEnumerable<Config> GetLinkerConfigs ()
 		{
-			string runtimeNativeLibsDir = Path.GetFullPath (Path.Combine (AndroidBinUtilsDirectory, "..", "..", "..", "lib"));
-			string runtimeNativeLibStubsDir = Path.GetFullPath (Path.Combine (runtimeNativeLibsDir, "..", "libstubs"));
+			string runtimeNativeLibsDir = MonoAndroidHelper.GetNativeLibsRootDirectoryPath (AndroidBinUtilsDirectory);
+			string runtimeNativeLibStubsDir = MonoAndroidHelper.GetLibstubsRootDirectoryPath (AndroidBinUtilsDirectory);
 			var abis = new Dictionary <string, InputFiles> (StringComparer.Ordinal);
 			ITaskItem[] dsos = ApplicationSharedLibraries;
 			foreach (ITaskItem item in dsos) {

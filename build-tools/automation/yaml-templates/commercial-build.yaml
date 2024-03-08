@@ -3,61 +3,59 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
   makeMSBuildArgs: ''
   nugetArtifactName: $(NuGetArtifactName)
-  provisionatorChannel: latest
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
+  windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
+  use1ESTemplate: true
 
 steps:
-- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-11"
+- script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
   displayName: set JI_JAVA_HOME
 
-- template: use-dot-net.yaml
+- template: /build-tools/automation/yaml-templates/use-dot-net.yaml
   parameters:
     remove_dotnet: true
 
-- task: NuGetAuthenticate@0
+- task: NuGetAuthenticate@1
   displayName: authenticate with azure artifacts
   inputs:
     forceReinstallCredentialProvider: true
-
-- task: provisionator@2
-  displayName: Install Xcode
-  inputs:
-    github_token: $(GitHub.Token)
-    provisioning_script: ${{ parameters.xaSourcePath }}/build-tools/provisioning/xcode.csx
-    provisioning_extra_args: '-v -v -v -v'
-  env:
-    PROVISIONATOR_CHANNEL: ${{ parameters.provisionatorChannel }}
 
 - script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make prepare-update-mono
 
-# Clone and prepare monodroid with submodules, but disregard the unused xamarin-android submodule.
-- checkout: monodroid
-  clean: true
-  submodules: recursive
-  path: s/xamarin-android/external/monodroid
-  persistCredentials: true
+# Always checkout a second resource to ensure we are using multi-repo checkout behavior
+#  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
+- checkout: maui
 
-- script: rm -rf external/monodroid/external/xamarin-android
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy xamarin-android submodule
+- ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
+  # Clone 'monodroid' without submodules
+  - checkout: monodroid
+    clean: true
+    path: s/xamarin-android/external/monodroid
 
-- script: rm -rf external/opentk
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy opentk submodule
+  # Tell git to ignore the 'xamarin-android' submodule, which is large and unneeded
+  - script: git config submodule."external/xamarin-android".update none
+    workingDirectory: xamarin-android/external/monodroid
+    displayName: Ignore XA submodule
 
-- script: rm -rf external/sqlite
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: delete legacy sqlite submodule
+  # Clone 'monodroid' with the rest of the submodules
+  - checkout: monodroid
+    submodules: recursive
+    path: s/xamarin-android/external/monodroid
+    persistCredentials: true
+
+  - script: rm -rf external/monodroid/external/xamarin-android
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: delete legacy xamarin-android submodule
+
+  - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
+    workingDirectory: ${{ parameters.xaSourcePath }}
+    displayName: make prepare-external-git-dependencies
 
 - task: CodeQL3000Init@0
   displayName: CodeQL 3000 Init
   condition: and(succeeded(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-
-- script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make prepare-external-git-dependencies
 
 # Prepare and Build everything
 - script: make jenkins CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1 MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
@@ -68,9 +66,14 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
+- template: /build-tools/automation/yaml-templates/install-microbuild-tooling.yaml
+  parameters:
+    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
+
 # Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: MSBuild@1
   displayName: msbuild /t:Restore sign-content.proj
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
@@ -78,6 +81,7 @@ steps:
 
 - task: MSBuild@1
   displayName: PKG signing - add entitlements and sign
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
@@ -89,6 +93,7 @@ steps:
 
 - task: MSBuild@1
   displayName: PKG signing - sign binutils libraries
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
@@ -100,6 +105,7 @@ steps:
 
 - task: MSBuild@1
   displayName: PKG signing - sign binutils executables
+  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     configuration: $(XA.Build.Configuration)
@@ -109,24 +115,42 @@ steps:
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-ex.binlog
 
+- template: /build-tools/automation/yaml-templates/remove-microbuild-tooling.yaml
+  parameters:
+    condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
+
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}
   displayName: make create-installers
 
-- task: PublishPipelineArtifact@1
-  displayName: upload nupkgs
-  inputs:
-    artifactName: ${{ parameters.nugetArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
+- script: >
+    mkdir -p ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb &&
+    cd ${{ parameters.xaSourcePath }}/bin/$(XA.Build.Configuration)/lib/packs/Microsoft.Android.Sdk.Darwin/*/tools/binutils/windows-toolchain-pdb &&
+    zip -r ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb/windows-toolchain-pdb.zip .
+  workingDirectory: ${{ parameters.xaSourcePath }}
+  displayName: zip Windows toolchain pdb files
 
-- task: PublishPipelineArtifact@1
-  displayName: upload test assemblies
-  inputs:
-    artifactName: ${{ parameters.testAssembliesArtifactName }}
-    targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+- ${{ if ne(parameters.use1ESTemplate, true) }}:
+  - task: PublishPipelineArtifact@1
+    displayName: upload nupkgs
+    inputs:
+      artifactName: ${{ parameters.nugetArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/nuget-unsigned
 
-- task: PublishPipelineArtifact@1
-  displayName: upload build tools inventory
-  inputs:
-    artifactName: AndroidBuildToolsInventory
-    targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
+  - task: PublishPipelineArtifact@1
+    displayName: upload test assemblies
+    inputs:
+      artifactName: ${{ parameters.testAssembliesArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload Windows toolchain pdb files
+    inputs:
+      artifactName: ${{ parameters.windowsToolchainPdbArtifactName }}
+      targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/windows-toolchain-pdb
+
+  - task: PublishPipelineArtifact@1
+    displayName: upload build tools inventory
+    inputs:
+      artifactName: AndroidBuildToolsInventory
+      targetPath:  ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
