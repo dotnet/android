@@ -271,14 +271,18 @@ namespace Java.Interop {
 			static  readonly    Type[]      EmptyTypeArray      = Array.Empty<Type> ();
 			const string NotUsedInAndroid = "This code path is not used in Android projects.";
 
-			// FIXME: https://github.com/xamarin/java.interop/issues/1192
-			[UnconditionalSuppressMessage ("AOT", "IL3050", Justification = NotUsedInAndroid)]
-			static Type MakeArrayType (Type type) => type.MakeArrayType ();
+			static Type MakeArrayType (Type type) =>
+				// FIXME: https://github.com/xamarin/java.interop/issues/1192
+				#pragma warning disable IL3050
+				type.MakeArrayType ();
+				#pragma warning restore IL3050
 
-			// FIXME: https://github.com/xamarin/java.interop/issues/1192
 			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = NotUsedInAndroid)]
-			[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = NotUsedInAndroid)]
-			static Type MakeGenericType (Type type, Type arrayType) => type.MakeGenericType (arrayType);
+			static Type MakeGenericType (Type type, Type arrayType) =>
+				// FIXME: https://github.com/xamarin/java.interop/issues/1192
+				#pragma warning disable IL3050
+				type.MakeGenericType (arrayType);
+				#pragma warning restore IL3050
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "Types returned here should be preserved via other means.")]
 			[return: DynamicallyAccessedMembers (MethodsConstructorsInterfaces)]

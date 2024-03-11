@@ -370,15 +370,16 @@ namespace Java.Interop
 				static Type? AssemblyGetType (Assembly assembly, string typeName) =>
 					assembly.GetType (typeName);
 
-				// FIXME: https://github.com/xamarin/java.interop/issues/1192
 				[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = makeGenericTypeMessage)]
-				[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = makeGenericTypeMessage)]
 				[return: DynamicallyAccessedMembers (Constructors)]
 				static Type MakeGenericType (
 						[DynamicallyAccessedMembers (Constructors)]
 						Type type,
 						Type [] arguments) =>
+					// FIXME: https://github.com/xamarin/java.interop/issues/1192
+					#pragma warning disable IL3050
 					type.MakeGenericType (arguments);
+					#pragma warning restore IL3050
 
 				Type[] arguments = type.GetGenericArguments ();
 				if (arguments.Length == 0)
@@ -657,11 +658,12 @@ namespace Java.Interop
 			{
 				const string makeGenericMethodMessage = "This code path is not used in Android projects.";
 
-				// FIXME: https://github.com/xamarin/java.interop/issues/1192
 				[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = makeGenericMethodMessage)]
-				[UnconditionalSuppressMessage ("AOT",      "IL3050", Justification = makeGenericMethodMessage)]
 				static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
+					// FIXME: https://github.com/xamarin/java.interop/issues/1192
+					#pragma warning disable IL3050
 					method.MakeGenericMethod (type);
+					#pragma warning restore IL3050
 
 				Func<JniValueMarshaler> indirect = GetObjectArrayMarshalerHelper<object>;
 				var reifiedMethodInfo = MakeGenericMethod (
