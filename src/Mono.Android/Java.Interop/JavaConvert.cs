@@ -57,11 +57,13 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			const string justification = "JavaDictionary<,>, JavaList<>, and JavaCollection<> use DynamicallyAccessedMembers for PublicMethods to preserve FromJniHandle().";
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = justification)]
-			[UnconditionalSuppressMessage ("Trimming", "IL2068", Justification = justification)]
+			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "JavaDictionary<,>, JavaList<>, and JavaCollection<> are preserved by the MarkJavaObjects linker step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
-			static Type MakeGenericType (Type type, params Type [] typeArguments) =>
+			static Type MakeGenericType (
+					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
+					Type type,
+					params Type [] typeArguments
+			) =>
 				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
 				// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
 				#pragma warning disable IL3050
