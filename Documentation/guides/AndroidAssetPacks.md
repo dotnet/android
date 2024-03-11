@@ -1,4 +1,4 @@
-g# Android Asset Packs
+# Android Asset Packs
 
 Google Android began supporting splitting up the app package into multiple
 packs with the introduction of the `aab` package format. This format allows
