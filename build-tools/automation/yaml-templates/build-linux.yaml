@@ -1,6 +1,4 @@
 parameters:
-  buildPoolName: $(LinuxBuildPoolName)
-  buildPoolImage: $(LinuxBuildPoolImage)
   buildResultArtifactName: Build Results - Linux
   checkoutCommit: ''
   checkoutPath: 's/xamarin-android'
@@ -13,6 +11,7 @@ parameters:
   repositoryAlias: self
   stageName: linux_build
   stageDisplayName: Linux
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -21,17 +20,26 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
+  # Check - "Xamarin.Android (Linux Linux > Build)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
     pool:
-      name: ${{ parameters.buildPoolName }}
-      vmImage: ${{ parameters.buildPoolImage }}
-    timeoutInMinutes: 180
+      name: MAUI-1ESPT
+      image: $(LinuxPoolImage1ESPT)
+      os: linux
+    timeoutInMinutes: 240
     workspace:
       clean: all
     variables:
       CXX: g++-10
       CC: gcc-10
+    ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
+        outputs:
+        - output: pipelineArtifact
+          displayName: upload linux sdk
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -43,8 +51,6 @@ stages:
     # Always checkout a second resource to ensure we are using multi-repo checkout behavior
     #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
     - checkout: maui
-
-    - template: setup-ubuntu.yaml
 
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
       - checkout: monodroid
@@ -84,39 +90,18 @@ stages:
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 
-    - task: PublishPipelineArtifact@1
-      displayName: upload linux sdk
-      inputs:
-        artifactName: ${{ parameters.nugetArtifactName }}
-        targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
+    - ${{ if ne(parameters.use1ESTemplate, true) }}:
+      - task: PublishPipelineArtifact@1
+        displayName: upload linux sdk
+        inputs:
+          artifactName: ${{ parameters.nugetArtifactName }}
+          targetPath: $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
 
-    - powershell: |
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/empty")
-        [IO.Directory]::CreateDirectory("$(Build.StagingDirectory)/sbom-components")
-      displayName: create SBOM directories
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-    - task: AzureArtifacts.manifest-generator-task.manifest-generator-task.ManifestGeneratorTask@0
-      displayName: generate components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        BuildDropPath: $(Build.StagingDirectory)/empty
-        BuildComponentPath: $(System.DefaultWorkingDirectory)/xamarin-android
-        ManifestDirPath: $(Build.StagingDirectory)/sbom-components
-        PackageName: .NET Android
-        Verbosity: Verbose
-
-    - task: PublishBuildArtifacts@1
-      displayName: publish components SBOM
-      condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-      inputs:
-        artifactName: sbom-components-linux
-        pathToPublish: $(Build.StagingDirectory)/sbom-components
-
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml

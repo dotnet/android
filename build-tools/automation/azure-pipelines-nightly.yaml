@@ -31,7 +31,7 @@ parameters:
 
 # Global variables
 variables:
-- template: yaml-templates/variables.yaml
+- template: /build-tools/automation/yaml-templates/variables.yaml
 
 stages:
 - stage: mac_build
@@ -56,16 +56,17 @@ stages:
     - checkout: self
       submodules: recursive
 
-    - template: yaml-templates/commercial-build.yaml
+    - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
         makeMSBuildArgs: /p:EnableNativeAnalyzers=true
+        use1ESTemplate: false
 
-    - template: yaml-templates/upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         xaSourcePath: $(System.DefaultWorkingDirectory)/xamarin-android
         artifactName: Build Results - Nightly macOS
         includeBuildResults: true
-
+        use1ESTemplate: false
 
 - stage: test_apk
   displayName: Test APKs
@@ -116,29 +117,26 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $(JAVA_HOME_11_X64)
 
-    - template: yaml-templates/run-dotnet-preview.yaml
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: -t:PrepareJavaInterop -c $(XA.Build.Configuration) -m:1 -v:n
         displayName: prepare java.interop $(XA.Build.Configuration)
         continueOnError: false
 
-    - template: yaml-templates/start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         specificImage: true
         avdApiLevel: $(avdApiLevel)
         avdAbi: $(avdAbi)
         avdType: $(avdType)
 
-    - template: yaml-templates/apk-instrumentation.yaml
+    - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         testName: Mono.Android.NET_Tests-$(XA.Build.Configuration)-$(avdApiLevel)
@@ -148,26 +146,27 @@ stages:
         artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Mono.Android.NET_Tests-Signed.aab
         artifactFolder: Mono.Android-$(XA.Build.Configuration)-$(avdApiLevel)
 
-    - template: yaml-templates/upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
+        use1ESTemplate: false
 
-    - template: yaml-templates/fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
-  - template: yaml-templates/run-emulator-tests.yaml
+  - template: /build-tools/automation/yaml-templates/run-emulator-tests.yaml
     parameters:
       emulatorMSBuildArgs: -p:TestAvdExtraBootArgs=-writable-system
       jobName: SystemApplicationTests
       jobTimeout: 120
       jdkTestFolder: $HOME/android-toolchain/jdk-17
+      use1ESTemplate: false
       testSteps:
       - template: run-nunit-tests.yaml
         parameters:
           testRunTitle: SystemApplicationTests On Device - macOS
           testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
           dotNetTestExtraArgs: --filter "Name=SystemApplicationTests"
-          testResultsFile: TestResult-SystemApplicationTests-$(XA.Build.Configuration).xml
 
 
 # TimeZoneInfo test jobs
@@ -197,12 +196,9 @@ stages:
         echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
       displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
 
-    - template: yaml-templates/setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $HOME/android-toolchain/jdk-17
 
@@ -211,21 +207,22 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: yaml-templates/start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
-    - template: yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: method == CheckTimeZoneInfoIsCorrectWithSlicer
         testRunTitle: CheckTimeZoneInfoIsCorrectNode On Device - macOS
 
-    - template: yaml-templates/upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - TimeZoneInfoTests With Emulator - macOS-$(System.JobPositionInPhase)
+        use1ESTemplate: false
 
-    - template: yaml-templates/fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
 
 # Localization test jobs
@@ -255,12 +252,9 @@ stages:
         echo "##vso[task.setvariable variable=JAVA_HOME]$HOME/android-toolchain/jdk-17"
       displayName: set JAVA_HOME to $HOME/android-toolchain/jdk-17
 
-    - template: yaml-templates/setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaprepareScenario: EmulatorTestDependencies
         jdkTestFolder: $HOME/android-toolchain/jdk-17
 
@@ -269,21 +263,22 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)
 
-    - template: yaml-templates/start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         emulatorMSBuildArgs: -p:TestAvdShowWindow=true
 
-    - template: yaml-templates/run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: $(System.DefaultWorkingDirectory)/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: method == CheckLocalizationIsCorrectWithSlicer
         testRunTitle: CheckLocalizationIsCorrect On Device - macOS
 
-    - template: yaml-templates/upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - Localization With Emulator - macOS-$(System.JobPositionInPhase)
+        use1ESTemplate: false
 
-    - template: yaml-templates/fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
 
 
 - stage: compliance_scan
@@ -300,12 +295,9 @@ stages:
     workspace:
       clean: all
     steps:
-    - template: yaml-templates/setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
 
     - task: DownloadPipelineArtifact@2
       displayName: Download binutils pdbs
