@@ -1,0 +1,42 @@
+<Project>
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ReplaceFileContents" />
+
+  <!-- This target generates the Project model from the Maven POM schema.
+       Prerequisites: 
+         - Install dotnet tool: 'dotnet tool install -g dotnet-xscgen'
+         - Download new schema to this directory (eg: https://maven.apache.org/xsd/maven-4.0.0.xsd)
+       Run 'dotnet build -t:UpdateProjectSchema -p:MavenXsd=maven-4.0.0.xsd' -->
+  <Target Name="UpdateProjectSchema">
+    
+    <PropertyGroup>
+      <MavenXsd Condition=" '$(MavenXsd)' == '' ">maven-4.0.0.xsd</MavenXsd>
+    </PropertyGroup>
+    
+    <ItemGroup>
+      <_XscgenOpt Include="$(MavenXsd)" />
+      <_XscgenOpt Include="--namespace http://maven.apache.org/POM/4.0.0=Java.Interop.Tools.Maven.Models" />
+      <_XscgenOpt Include="--typeNameSubstitute T:Model=Project" />
+      <_XscgenOpt Include="--nullable" />
+      <_XscgenOpt Include="--pcl" />
+      <_XscgenOpt Include="--netCore" />
+      <_XscgenOpt Include="--nullableReferenceAttributes" />
+      <_XscgenOpt Include="-o &quot;Models&quot;" />
+    </ItemGroup>
+    
+    <Exec Command="xscgen @(_XscgenOpt, ' ')" />
+
+    <!-- Remove the Namespace from eg: [System.Xml.Serialization.XmlRootAttribute("project", Namespace="http://maven.apache.org/POM/4.0.0")]
+         This allows us to import POM files that do not specify an XML namespace (xmlns).  -->
+    <ItemGroup>
+      <Replacements Include=', Namespace="http://maven.apache.org/POM/4.0.0"' Replacement="" />
+    </ItemGroup>
+    
+    <ReplaceFileContents
+        TemplateFile="Models/Java.Interop.Tools.Maven.Models.cs"
+        OutputFile="Models/Project.cs"
+        Replacements="@(Replacements)"
+    />
+
+    <Delete Files="Models/Java.Interop.Tools.Maven.Models.cs" />
+  </Target>
+</Project>

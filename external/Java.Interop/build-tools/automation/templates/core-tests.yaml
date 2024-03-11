@@ -78,6 +78,14 @@ steps:
   continueOnError: true
 
 - task: DotNetCoreCLI@2
+  displayName: 'Tests: Java.Interop.Tools.Maven'
+  inputs:
+    command: test
+    testRunTitle: Java.Interop.Tools.Maven (${{ parameters.platformName }})
+    arguments: bin/Test$(Build.Configuration)$(NetCoreTargetFrameworkPathSuffix)/Java.Interop.Tools.Maven-Tests.dll
+  continueOnError: true
+
+- task: DotNetCoreCLI@2
   displayName: 'Tests: Java.Interop'
   condition: or(eq('${{ parameters.runNativeDotnetTests }}', 'true'), eq('${{ parameters.runNativeTests }}', 'true'))
   inputs:
