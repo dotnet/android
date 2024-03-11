@@ -681,8 +681,6 @@ namespace Android.Runtime {
 		#endregion
 	}
 
-	// Preserve FromJniHandle
-	[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 	[Register ("java/util/ArrayList", DoNotGenerateAcw=true)]
 	public class JavaList<
 			[DynamicallyAccessedMembers (Constructors)]

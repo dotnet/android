@@ -397,8 +397,6 @@ namespace Android.Runtime {
 	//    instantiates a type we don't know at this time, so we have no information about the exceptions
 	//    it may throw.
 	//
-	// Preserve FromJniHandle
-	[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 	[Register ("java/util/HashMap", DoNotGenerateAcw=true)]
 	public class JavaDictionary<
 			[DynamicallyAccessedMembers (Constructors)]

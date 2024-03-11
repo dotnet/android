@@ -209,8 +209,6 @@ namespace Android.Runtime {
 		}
 	}
 
-	// Preserve FromJniHandle
-	[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 	[Register ("java/util/Collection", DoNotGenerateAcw=true)]
 	public sealed class JavaCollection<
 			[DynamicallyAccessedMembers (Constructors)]
