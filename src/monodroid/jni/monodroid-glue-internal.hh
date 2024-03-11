@@ -202,6 +202,7 @@ namespace xamarin::android::internal
 
 		void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException);
 		char*	get_java_class_name_for_TypeManager (jclass klass);
+		void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
 
 	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
@@ -290,6 +291,7 @@ namespace xamarin::android::internal
 		static void jit_done (MonoProfiler *prof, MonoMethod *method, MonoJitInfo* jinfo);
 		static void thread_start (MonoProfiler *prof, uintptr_t tid);
 		static void thread_end (MonoProfiler *prof, uintptr_t tid);
+
 #if !defined (RELEASE)
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;
 		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;

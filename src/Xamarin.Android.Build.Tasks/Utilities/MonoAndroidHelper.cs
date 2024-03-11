@@ -539,13 +539,6 @@ namespace Xamarin.Android.Tasks
 			throw new InvalidOperationException ($"Unsupported marshal methods tracing mode '{input}'");
 		}
 
-		public static string? CultureInvariantToString (object? obj)
-		{
-			if (obj == null) {
-				return null;
-			}
-		}
-
 		/// <summary>
 		/// Converts $(SupportedOSPlatformVersion) to an API level, as it can be a version (21.0), or an int (21).
 		/// </summary>

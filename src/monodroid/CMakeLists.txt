@@ -19,6 +19,8 @@ project(
   LANGUAGES CXX C
   )
 
+include("${CMAKE_ANDROID_NDK}/build/cmake/abis.cmake")
+
 option(COMPILER_DIAG_COLOR "Show compiler diagnostics/errors in color" ON)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -106,10 +108,8 @@ if(NOT DEFINED LIBUNWIND_SOURCE_DIR)
   message(FATAL_ERROR "Please set the LIBUNWIND_SOURCE_DIR on command line (-DLIBUNWIND_SOURCE_DIR=path)")
 endif()
 
-if(ANDROID AND ENABLE_NET)
-  if(NOT DEFINED LIBUNWIND_HEADERS_DIR)
-    message(FATAL_ERROR "Please set the LIBUNWIND_HEADERS_DIR on command line (-DLIBUNWIND_HEADERS_DIR=path)")
-  endif()
+if(NOT DEFINED LIBUNWIND_HEADERS_DIR)
+  message(FATAL_ERROR "Please set the LIBUNWIND_HEADERS_DIR on command line (-DLIBUNWIND_HEADERS_DIR=path)")
 endif()
 
 if(NOT ANDROID)
@@ -195,12 +195,16 @@ include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
 if(ANDROID_ABI MATCHES "^arm64-v8a")
   set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM64}")
+  set(TOOLCHAIN_TRIPLE "${NDK_ABI_arm64-v8a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^armeabi-v7a")
   set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_ARM}")
+  set(TOOLCHAIN_TRIPLE "${NDK_ABI_armeabi-v7a_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86_64")
   set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86_64}")
+  set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_64_TRIPLE}")
 elseif(ANDROID_ABI MATCHES "^x86")
   set(NET_RUNTIME_DIR "${NETCORE_APP_RUNTIME_DIR_X86}")
+  set(TOOLCHAIN_TRIPLE "${NDK_ABI_x86_TRIPLE}")
 else()
   message(FATAL "${ANDROID_ABI} is not supported for .NET 6+ builds")
 endif()
@@ -572,9 +576,8 @@ endif()
 
 if(ANDROID)
   set(NATIVE_TRACING_SOURCES
-    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/src/cxa_demangle.cpp
     ${SOURCES_DIR}/cxx-abi/string.cc
-    ${SOURCES_DIR}/cxx-abi/terminate.cc
+#    ${SOURCES_DIR}/cxx-abi/terminate.cc
     ${SOURCES_DIR}/helpers.cc
     ${SOURCES_DIR}/native-tracing.cc
     ${SOURCES_DIR}/new_delete.cc
@@ -724,81 +727,80 @@ add_library(
   SHARED ${XAMARIN_MONODROID_SOURCES}
   )
 
-if(ANDROID)
-  if(ENABLE_NET AND NOT DEBUG_BUILD)
-    set(CPP_ABI_PATH ${CMAKE_SYSROOT}/usr/lib/${SYSROOT_ABI_LIB_DIR}/libc++abi.a)
+if(NOT DEBUG_BUILD)
+  set(CPP_ABI_PATH ${CMAKE_SYSROOT}/usr/lib/${SYSROOT_ABI_LIB_DIR}/${TOOLCHAIN_TRIPLE}/libc++abi.a)
 
-    add_library(
-      ${XAMARIN_NATIVE_TRACING_LIB}
-      SHARED ${NATIVE_TRACING_SOURCES}
-    )
+  add_library(
+    ${XAMARIN_NATIVE_TRACING_LIB}
+    SHARED ${NATIVE_TRACING_SOURCES}
+  )
 
-    target_include_directories(
-      ${XAMARIN_NATIVE_TRACING_LIB} BEFORE
-      PRIVATE
-      ${LIBUNWIND_SOURCE_DIR}/include
-      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
-      ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
-    )
+  target_include_directories(
+    ${XAMARIN_NATIVE_TRACING_LIB} BEFORE
+    PRIVATE
+    ${LIBUNWIND_SOURCE_DIR}/include
+    ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+    ${NDK_CXX_LIBCPPABI_SOURCE_PATH}/include
+  )
 
-    target_compile_options(
-      ${XAMARIN_NATIVE_TRACING_LIB}
-      PRIVATE
-      # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
-      -Wno-deprecated-dynamic-exception-spec
-      ${XA_DEFAULT_SYMBOL_VISIBILITY}
-      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
-      -fno-asynchronous-unwind-tables
-    )
+  target_compile_options(
+    ${XAMARIN_NATIVE_TRACING_LIB}
+    PRIVATE
+    # Avoid the 'warning: dynamic exception specifications are deprecated' warning from libc++ headers
+    -Wno-deprecated-dynamic-exception-spec
+    ${XA_DEFAULT_SYMBOL_VISIBILITY}
+    # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+    -fno-asynchronous-unwind-tables
+  )
 
-    target_link_options(
-      ${XAMARIN_NATIVE_TRACING_LIB}
-      PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
-    )
+  target_link_options(
+    ${XAMARIN_NATIVE_TRACING_LIB}
+    PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
+  )
 
-    target_link_libraries(
-      ${XAMARIN_NATIVE_TRACING_LIB}
-      PRIVATE
-      -llog
-      ${CPP_ABI_PATH}
-      ${XA_LIBRARY_OUTPUT_DIRECTORY}/libunwind_xamarin.a
-    )
+  target_link_libraries(
+    ${XAMARIN_NATIVE_TRACING_LIB}
+    PRIVATE
+    -llog
+    ${CPP_ABI_PATH}
+    ${XA_LIBRARY_OUTPUT_DIRECTORY}/libunwind_xamarin.a
+  )
 
-    target_compile_definitions(
-      ${XAMARIN_NATIVE_TRACING_LIB}
-      PRIVATE
-      XAMARIN_TRACING
-    )
+  target_compile_definitions(
+    ${XAMARIN_NATIVE_TRACING_LIB}
+    PRIVATE
+    XAMARIN_TRACING
+  )
 
-    add_library(
-      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
-      STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
-    )
+  message(STATUS "Here")
+  add_library(
+    ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+    STATIC ${MARSHAL_METHODS_TRACING_SOURCES}
+  )
 
-    target_include_directories(
-      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
-      PRIVATE
-      ${LIBUNWIND_SOURCE_DIR}/include
-      ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
-    )
+  target_include_directories(
+    ${XAMARIN_MARSHAL_METHODS_TRACING_LIB} BEFORE
+    PRIVATE
+    ${LIBUNWIND_SOURCE_DIR}/include
+    ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+  )
 
-    target_compile_definitions(
-      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
-      PRIVATE
-      XAMARIN_TRACING
-    )
+  target_compile_definitions(
+    ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+    PRIVATE
+    XAMARIN_TRACING
+  )
 
-    target_compile_options(
-      ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
-      PRIVATE
-      # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
-      -fno-asynchronous-unwind-tables
-    )
-  endif()
-
-  # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
-  set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
+  target_compile_options(
+    ${XAMARIN_MARSHAL_METHODS_TRACING_LIB}
+    PRIVATE
+    # Prevent genration of the .eh_frame section (we don't use exceptions and don't need it)
+    -fno-asynchronous-unwind-tables
+  )
 endif()
+
+# Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
+set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
 
 target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}

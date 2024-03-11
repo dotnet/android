@@ -241,7 +241,7 @@ namespace Xamarin.Android.Tasks
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
 
-		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, DirectoryAssemblyResolver res, TaskLoggingHelper log, string intermediateOutputDirectory)
+		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, XAAssemblyResolver res, TaskLoggingHelper log, string intermediateOutputDirectory)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));

@@ -1,5 +1,5 @@
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="..\..\bin\Build$(Configuration)\cmake-config.props" Condition="Exists('..\..\bin\Build$(Configuration)\cmake-config.props')" />
+  <Import Project="..\..\build-tools\scripts\cmake-android.props"/>
 
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
 
@@ -17,7 +17,7 @@
       <_ConfigureLibUnwindCommands
           Include="@(AndroidSupportedTargetJitAbi)">
         <Command>$(CmakePath)</Command>
-        <Arguments>$(_CmakeAndroidFlags) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevel) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_BUILD_TYPE=$(Configuration) -DLIBUNWIND_SOURCE_DIR="$(LibUnwindSourceFullPath)" -DLIBUNWIND_LIBRARY_NAME="$(_LibUnwindBaseLibName)" -DLIBUNWIND_OUTPUT_DIR="@(AndroidSupportedTargetJitAbi->'$(OutputPath)/%(AndroidRID)')" -DLIBUNWIND_HEADERS_OUTPUT_DIR="$(_LibUnwindHeadersOutputDir)" $(MSBuildThisFileDirectory)</Arguments>
+        <Arguments>$(_CmakeAndroidFlags) -DANDROID_NATIVE_API_LEVEL=%(AndroidSupportedTargetJitAbi.ApiLevelNET) -DANDROID_PLATFORM=android-%(AndroidSupportedTargetJitAbi.ApiLevelNET) -DANDROID_ABI=%(AndroidSupportedTargetJitAbi.Identity) -DANDROID_RID=%(AndroidSupportedTargetJitAbi.AndroidRID) -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_LIBRARY_OUTPUT_DIRECTORY="$(OutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)" -DCMAKE_BUILD_TYPE=$(Configuration) -DLIBUNWIND_SOURCE_DIR="$(LibUnwindSourceFullPath)" -DLIBUNWIND_LIBRARY_NAME="$(_LibUnwindBaseLibName)" -DLIBUNWIND_OUTPUT_DIR="@(AndroidSupportedTargetJitAbi->'$(OutputPath)/%(AndroidRID)')" -DLIBUNWIND_HEADERS_OUTPUT_DIR="$(_LibUnwindHeadersOutputDir)" $(MSBuildThisFileDirectory)</Arguments>
         <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.Identity)-$(Configuration)</WorkingDirectory>
       </_ConfigureLibUnwindCommands>
     </ItemGroup>

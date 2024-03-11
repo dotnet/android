@@ -160,42 +160,48 @@ set(LIBUNWIND_XAMARIN_SOURCES
   ${SOURCES_DIR}/dwarf/Gfde.c
   ${SOURCES_DIR}/dwarf/Gfind_proc_info-lsb.c
   ${SOURCES_DIR}/dwarf/Gfind_unwind_table.c
+  ${SOURCES_DIR}/dwarf/Gget_proc_info_in_range.c
   ${SOURCES_DIR}/dwarf/Gparser.c
   ${SOURCES_DIR}/dwarf/Gpe.c
   ${SOURCES_DIR}/dwarf/Lexpr.c
   ${SOURCES_DIR}/dwarf/Lfde.c
   ${SOURCES_DIR}/dwarf/Lfind_proc_info-lsb.c
   ${SOURCES_DIR}/dwarf/Lfind_unwind_table.c
+  ${SOURCES_DIR}/dwarf/Lget_proc_info_in_range.c
   ${SOURCES_DIR}/dwarf/Lparser.c
   ${SOURCES_DIR}/dwarf/Lpe.c
   ${SOURCES_DIR}/dwarf/global.c
   ${SOURCES_DIR}/elfxx.c
+  ${SOURCES_DIR}/mi/Gaddress_validator.c
   ${SOURCES_DIR}/mi/Gdestroy_addr_space.c
   ${SOURCES_DIR}/mi/Gdyn-extract.c
+#  ${SOURCES_DIR}/mi/Gdyn-remote.c
   ${SOURCES_DIR}/mi/Gfind_dynamic_proc_info.c
+  ${SOURCES_DIR}/mi/Gget_elf_filename.c
   ${SOURCES_DIR}/mi/Gget_fpreg.c
   ${SOURCES_DIR}/mi/Gget_proc_info_by_ip.c
-  ${SOURCES_DIR}/mi/Gget_proc_info_in_range.c
   ${SOURCES_DIR}/mi/Gget_proc_name.c
   ${SOURCES_DIR}/mi/Gget_reg.c
   ${SOURCES_DIR}/mi/Gput_dynamic_unwind_info.c
   ${SOURCES_DIR}/mi/Gset_cache_size.c
   ${SOURCES_DIR}/mi/Gset_caching_policy.c
   ${SOURCES_DIR}/mi/Gset_fpreg.c
+  ${SOURCES_DIR}/mi/Gset_iterate_phdr_function.c
   ${SOURCES_DIR}/mi/Gset_reg.c
   ${SOURCES_DIR}/mi/Ldestroy_addr_space.c
   ${SOURCES_DIR}/mi/Ldyn-extract.c
   ${SOURCES_DIR}/mi/Lfind_dynamic_proc_info.c
   ${SOURCES_DIR}/mi/Lget_accessors.c
+  ${SOURCES_DIR}/mi/Lget_elf_filename.c
   ${SOURCES_DIR}/mi/Lget_fpreg.c
   ${SOURCES_DIR}/mi/Lget_proc_info_by_ip.c
-  ${SOURCES_DIR}/mi/Lget_proc_info_in_range.c
   ${SOURCES_DIR}/mi/Lget_proc_name.c
   ${SOURCES_DIR}/mi/Lget_reg.c
   ${SOURCES_DIR}/mi/Lput_dynamic_unwind_info.c
   ${SOURCES_DIR}/mi/Lset_cache_size.c
   ${SOURCES_DIR}/mi/Lset_caching_policy.c
   ${SOURCES_DIR}/mi/Lset_fpreg.c
+  ${SOURCES_DIR}/mi/Lset_iterate_phdr_function.c
   ${SOURCES_DIR}/mi/Lset_reg.c
   ${SOURCES_DIR}/mi/backtrace.c
   ${SOURCES_DIR}/mi/dyn-cancel.c
@@ -344,6 +350,12 @@ if(TARGET_AARCH64)
     ${SOURCES_DIR}/aarch64/Ginit_local.c
     ${SOURCES_DIR}/aarch64/Ginit_remote.c
     ${SOURCES_DIR}/aarch64/Gis_signal_frame.c
+
+    # Use local version with partial revert of https://github.com/libunwind/libunwind/pull/503
+    # until https://github.com/libunwind/libunwind/issues/702 is fixed
+    #    ${SOURCES_DIR}/aarch64/Gos-linux.c
+    fixes/aarch64/Gos-linux.c
+
     ${SOURCES_DIR}/aarch64/Greg_states_iterate.c
     ${SOURCES_DIR}/aarch64/Gregs.c
     ${SOURCES_DIR}/aarch64/Gresume.c

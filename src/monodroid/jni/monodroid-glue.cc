@@ -680,12 +680,11 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	embeddedAssemblies.install_preload_hooks_for_appdomains ();
 #ifndef RELEASE
 	mono_install_assembly_preload_hook (open_from_update_dir, nullptr);
-#endif
-
+#else // ndef RELEASE
 	if (application_config.marshal_methods_enabled) {
 		xamarin_app_init (env, get_function_pointer_at_startup);
 	}
-#endif // def RELEASE && def ANDROID && def NET
+#endif // def RELEASE
 }
 
 void
