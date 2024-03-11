@@ -41,6 +41,8 @@
       IL2120;IL2121;IL2122;IL2123;IL2124;
       IL2125;IL2126;IL2127;IL2128;IL2129;
     </WarningsAsErrors>
+    <!-- In NativeAOT app projects, tells Ilc to emit warnings as errors -->
+    <IlcTreatWarningsAsErrors>true</IlcTreatWarningsAsErrors>
     <!--
       NativeAOT warnings, codes listed here:
       * https://github.com/dotnet/docs/tree/9cb45cf9cd34f3b7259a023c3d92a124a87090d5/docs/core/deploying/native-aot/warnings
