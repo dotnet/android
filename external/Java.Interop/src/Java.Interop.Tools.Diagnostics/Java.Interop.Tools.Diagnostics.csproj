@@ -4,7 +4,6 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <LangVersion>8.0</LangVersion>
     <Nullable>enable</Nullable>
-    <DefineConstants>INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\product.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -16,10 +15,6 @@
   </PropertyGroup>
 
   <Import Project="..\..\build-tools\scripts\cecil.projitems" />
-
-  <ItemGroup>
-    <Compile Include="..\utils\NullableAttributes.cs" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" PrivateAssets="All" />
