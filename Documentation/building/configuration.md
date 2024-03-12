@@ -3,6 +3,8 @@
   - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
   - [Options suitable for local development](#options-suitable-for-local-development)
     - [Native runtime (`src/monodroid`)](#native-runtime-srcmonodroid)
+      - [Disable function inlining](#disable-function-inlining)
+      - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
 <!--toc:end-->
 
 # Build Configuration
@@ -153,20 +155,28 @@ on the very first build, but rebuilds may require forcing the entire runtime to 
 The simplest way to do it is to remove `src/monodroid/obj` and run the usual build from the
 repository's root directory.
 
-#### Disable function inlining (`XA_NO_INLINE`)
+#### Disable function inlining
 
 The native runtime by default builds with function inlining enabled, making heavy use of
 the feature in order to generate faster code.  However, when debugging a native crash inlining
 causes stack traces to point to unlikely locations, reporting the outer function as the crash
-location instead of the inlined function where crash actually happened.  In order to make such
-debugging easier, the `XA_NO_INLINE` environment property may be exported before building the
-repository.  This will force all normally inlined functions to be strictly preserved and kept
+location instead of the inlined function where crash actually happened.  There are two ways to
+enable this mode of operation:
+
+  1. Export the `XA_NO_INLINE` environment variable before building either the entire repository
+     or just `src/monodroid/`
+  2. Set the MSBuild property `DoNotInlineMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`
+
+Doing either will force all normally inlined functions to be strictly preserved and kept
 separate.  The generated code will be slower, but crash stack traces should be much more precise.
 
-#### Don't strip the runtime shared libraries (`XA_NO_STRIP`)
+#### Don't strip the runtime shared libraries
 
 Similar to the previous section, this option makes crash stack traces more informative.  In normal
 builds, all the debugging information is stripped from the runtime shared libraries, thus making
 stack traces rarely point to anything more than the surrounding function name (which may sometimes
-be misleading, too).  The `XA_NO_STRIP` environment variable can be exported before building the
-native runtime in order to leave the symbols in the resulting shared library.
+be misleading, too).  Just as for inlining, the no-strip mode can be enabled with one of two ways:
+
+  1. Export the `XA_NO_STRIP` environment variable before building either the entire repository
+     or just `src/monodroid/`
+  2. Set the MSBuild property `DoNotStripMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`
