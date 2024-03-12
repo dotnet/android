@@ -38,7 +38,9 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		return false;
 	}
 
-	if (entry_name.get ()[0] != state.prefix[0] || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+	if (entry_name.get ()[0] != state.prefix[0] || entry_name.length () < state.prefix_len || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+		// state.prefix and apk_lib_prefix can point to the same location, see get_assemblies_prefix_and_length()
+		// In such instance we short-circuit and avoid a couple of comparisons below.
 		if (state.prefix == apk_lib_prefix.data ()) {
 			return false;
 		}
@@ -186,7 +188,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid Xamarin.Android assembly store file", entry_name.get ());
+		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid .NET Android assembly store file", entry_name.get ());
 		Helpers::abort_application ();
 	}
 
