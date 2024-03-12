@@ -11,6 +11,13 @@
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);XA4218</MSBuildWarningsAsMessages>
   </PropertyGroup>
+  <!--
+    Enable full trimming in Release mode.
+    To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TrimMode>full</TrimMode>
+  </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Xamarin.AndroidX.Wear" Version="1.2.0.5" />
   </ItemGroup>

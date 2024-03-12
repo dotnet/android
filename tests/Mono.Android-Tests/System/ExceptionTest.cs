@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 
@@ -16,9 +17,7 @@ namespace Xamarin.Android.RuntimeTests {
 
 		static Java.Lang.Throwable CreateJavaProxyThrowable (Exception e)
 		{
-			var JavaProxyThrowable_type = typeof (Java.Lang.Object)
-				.Assembly
-				.GetType ("Android.Runtime.JavaProxyThrowable");
+			var JavaProxyThrowable_type = Type.GetType ("Android.Runtime.JavaProxyThrowable, Mono.Android");
 			MethodInfo? create = JavaProxyThrowable_type.GetMethod (
 				"Create",
 				BindingFlags.Static | BindingFlags.Public,
@@ -30,6 +29,7 @@ namespace Xamarin.Android.RuntimeTests {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void InnerExceptionIsSet ()
 		{
 			Exception ex;
@@ -48,6 +48,7 @@ namespace Xamarin.Android.RuntimeTests {
 			}
 		}
 
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		void CompareStackTraces (Exception ex, Java.Lang.Throwable throwable)
 		{
 			var managedTrace = new StackTrace (ex);

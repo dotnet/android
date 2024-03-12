@@ -9,4 +9,10 @@ namespace Xamarin.ProjectTools
 		SdkOnly,
 		Full,
 	}
+
+	public enum TrimMode
+	{
+		Partial,
+		Full,
+	}
 }
