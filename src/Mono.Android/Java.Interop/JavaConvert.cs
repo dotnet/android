@@ -57,7 +57,9 @@ namespace Java.Interop {
 
 		static Func<IntPtr, JniHandleOwnership, object?>? GetJniHandleConverter (Type? target)
 		{
-			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "JavaDictionary<,>, JavaList<>, and JavaCollection<> are preserved by the MarkJavaObjects linker step.")]
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// Might cause an issue in the future for NativeAOT
+			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = "We don't think the IDictionary, IList, or ICollection code paths occur if JavaDictionary<,>, JavaList<>, and JavaCollection<> do not exist.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
 			static Type MakeGenericType (
 					[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods)]
