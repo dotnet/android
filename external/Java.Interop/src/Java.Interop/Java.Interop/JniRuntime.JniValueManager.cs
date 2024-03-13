@@ -884,12 +884,16 @@ namespace Java.Interop
 
 		public override JniValueMarshalerState CreateGenericObjectReferenceArgumentState ([MaybeNull]object? value, ParameterAttributes synchronize)
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "This code path is not used in Android projects.")]
+			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.Interfaces)]
+			static Type GetType (object value) => value.GetType ();
+
 			if (value == null)
 				return new JniValueMarshalerState ();
 
 			var jvm     = JniEnvironment.Runtime;
 
-			var vm      = jvm.ValueManager.GetValueMarshaler (value.GetType ());
+			var vm      = jvm.ValueManager.GetValueMarshaler (GetType (value));
 			if (vm != Instance) {
 				var s   = vm.CreateObjectReferenceArgumentState (value, synchronize);
 				return new JniValueMarshalerState (s, vm);
