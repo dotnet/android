@@ -16,10 +16,26 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Android.Runtime {
 	public static partial class JNIEnv {
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		[ThreadStatic]
 		static byte[]? mvid_bytes;
 
 		public static IntPtr Handle => JniEnvironment.EnvironmentPointer;
+
+		static Array ArrayCreateInstance (Type elementType, int length) =>
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
+			#pragma warning disable IL3050
+			Array.CreateInstance (elementType, length);
+			#pragma warning restore IL3050
+
+		static Type MakeArrayType (Type type) =>
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+			// IL3050 disabled in source: if someone uses NativeAOT, they will get the warning.
+			#pragma warning disable IL3050
+			type.MakeArrayType ();
+			#pragma warning restore IL3050
 
 		internal static IntPtr IdentityHash (IntPtr v)
 		{
@@ -807,7 +823,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("dest");
 
 			if (elementType != null && elementType.IsValueType)
-				AssertCompatibleArrayTypes (src, elementType.MakeArrayType ());
+				AssertCompatibleArrayTypes (src, MakeArrayType (elementType));
 
 			if (elementType != null && elementType.IsArray) {
 				for (int i = 0; i < dest.Length; ++i) {
@@ -950,7 +966,7 @@ namespace Android.Runtime {
 				throw new ArgumentNullException ("elementType");
 
 			if (elementType.IsValueType)
-				AssertCompatibleArrayTypes (elementType.MakeArrayType (), dest);
+				AssertCompatibleArrayTypes (MakeArrayType (elementType), dest);
 
 			Action<Array, IntPtr> converter = GetConverter (CopyManagedToNativeArray, elementType, dest);
 
@@ -1057,12 +1073,12 @@ namespace Android.Runtime {
 					}
 				} },
 				{ typeof (IJavaObject), (type, source, len) => {
-					var r = Array.CreateInstance (type!, len);
+					var r = ArrayCreateInstance (type!, len);
 					CopyArray (source, r, type);
 					return r;
 				} },
 				{ typeof (Array), (type, source, len) => {
-					var r = Array.CreateInstance (type!, len);
+					var r = ArrayCreateInstance (type!, len);
 					CopyArray (source, r, type);
 					return r;
 				} },
@@ -1075,7 +1091,7 @@ namespace Android.Runtime {
 				return null;
 
 			if (element_type != null && element_type.IsValueType)
-				AssertCompatibleArrayTypes (array_ptr, element_type.MakeArrayType ());
+				AssertCompatibleArrayTypes (array_ptr, MakeArrayType (element_type));
 
 			int cnt = _GetArrayLength (array_ptr);
 
@@ -1130,7 +1146,10 @@ namespace Android.Runtime {
 			return ret;
 		}
 
-		public static T[]? GetArray<T> (Java.Lang.Object[] array)
+		public static T[]? GetArray<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (Java.Lang.Object[] array)
 		{
 			if (array == null)
 				return null;
@@ -1244,7 +1263,10 @@ namespace Android.Runtime {
 			return FindClass (elementType);
 		}
 
-		public static void CopyObjectArray<T>(IntPtr source, T[] destination)
+		public static void CopyObjectArray<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		>(IntPtr source, T[] destination)
 		{
 			if (source == IntPtr.Zero)
 				return;
