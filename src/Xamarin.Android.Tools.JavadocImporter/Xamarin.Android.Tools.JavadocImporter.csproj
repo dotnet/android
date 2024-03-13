@@ -6,6 +6,7 @@
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <NoWarn>$(NoWarn);CA1305</NoWarn>
+    <Nullable>annotations</Nullable>
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
@@ -26,9 +27,6 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
-    </Compile>
-    <Compile Include="..\..\external\Java.Interop\src\utils\NullableAttributes.cs">
-      <Link>NullableAttributes.cs</Link>
     </Compile>
   </ItemGroup>
 
