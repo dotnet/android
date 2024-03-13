@@ -8,7 +8,10 @@ using Java.Interop;
 namespace Android.Widget {
 
 	[Register ("android/widget/ArrayAdapter", DoNotGenerateAcw=true)]
-	public partial class ArrayAdapter<T> : ArrayAdapter {
+	public partial class ArrayAdapter<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+	> : ArrayAdapter {
 
 		public ArrayAdapter (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

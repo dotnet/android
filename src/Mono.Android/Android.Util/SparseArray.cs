@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 
 using Android.Runtime;
 
@@ -7,7 +8,10 @@ using Java.Interop;
 namespace Android.Util
 {
 	[Register ("android/util/SparseArray", DoNotGenerateAcw=true)]
-	public partial class SparseArray<E> : SparseArray
+	public partial class SparseArray<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			E
+	> : SparseArray
 	{
 		public SparseArray ()
 		{
