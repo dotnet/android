@@ -1,7 +1,9 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Reflection;
+using System.Text;
 
 using StackTraceElement = Java.Lang.StackTraceElement;
 
@@ -37,6 +39,81 @@ namespace Android.Runtime {
 			return proxy;
 		}
 
+		(int lineNumber, string? methodName, string? className) GetFrameInfo (StackFrame? managedFrame, MethodBase? managedMethod)
+		{
+			string? methodName = null;
+			string? className = null;
+
+			if (managedFrame == null) {
+				if (managedMethod != null) {
+					methodName = managedMethod.Name;
+					className = managedMethod.DeclaringType?.FullName;
+				}
+
+				return (-1, methodName, className);
+			}
+
+			int lineNumber = -1;
+			lineNumber = managedFrame.GetFileLineNumber ();
+			if (lineNumber == 0) {
+				// -2 means it's a native frame
+				lineNumber = managedFrame.HasNativeImage () ? -2 : -1;
+			}
+
+			if (managedMethod != null) {
+				// If we have no line number information and if it's a managed frame, add the
+				// IL offset.
+				if (lineNumber == -1 && managedFrame.HasILOffset ()) {
+					methodName = $"{managedMethod.Name} + 0x{managedFrame.HasILOffset:x}";
+				} else {
+					methodName = managedMethod.Name;
+				}
+
+				return (lineNumber, methodName, managedMethod.DeclaringType?.FullName);
+			}
+
+			string frameString = managedFrame.ToString ();
+			var sb = new StringBuilder ();
+
+			// We take the part of the returned string that stretches from the beginning to the first space character
+			// and treat it as the method name.
+			// https://github.com/dotnet/runtime/blob/18c3ad05c3fc127c3b7f37c49bc350bf7f8264a0/src/coreclr/nativeaot/System.Private.CoreLib/src/Internal/DeveloperExperience/DeveloperExperience.cs#L15-L55
+			int pos = frameString.IndexOf (' ');
+			string? fullName = null;
+			if (pos > 1) {
+				fullName = frameString.Substring (0, pos);
+			}
+
+			if (!String.IsNullOrEmpty (fullName) && (pos = fullName.LastIndexOf ('.')) >= 1) {
+				className = pos + 1 < fullName.Length ? fullName.Substring (pos + 1) : null;
+				fullName = fullName.Substring (0, pos);
+			}
+
+			if (!String.IsNullOrEmpty (fullName)) {
+				sb.Append (fullName);
+			} else if (managedFrame.HasNativeImage ()) {
+				// We have no name, so we'll put the native IP
+				nint nativeIP = managedFrame.GetNativeIP ();
+				sb.Append (CultureInfo.InvariantCulture, $"Native 0x{nativeIP:x}");
+			}
+
+			if (sb.Length > 0) {
+				// We will also append information native offset information, if available and only if we
+				// have recorded any previous information, since the offset without context is useless.
+				int nativeOffset = managedFrame.GetNativeOffset ();
+				if (nativeOffset != StackFrame.OFFSET_UNKNOWN) {
+					sb.Append (" + ");
+					sb.Append (CultureInfo.InvariantCulture, $"0x{nativeOffset:x}");
+				}
+			}
+
+			if (sb.Length > 0) {
+				methodName = sb.ToString ();
+			}
+
+			return (lineNumber, methodName, className);
+		}
+
 		void TranslateStackTrace ()
 		{
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
@@ -61,7 +138,6 @@ namespace Android.Runtime {
 				// ..but ignore
 			}
 
-
 			StackFrame[] frames = trace.GetFrames ();
 			int nElements = frames.Length + (javaTrace?.Length ?? 0);
 			StackTraceElement[] elements = new StackTraceElement[nElements];
@@ -72,20 +148,10 @@ namespace Android.Runtime {
 				MethodBase? managedMethod = StackFrameGetMethod (managedFrame);
 
 				// https://developer.android.com/reference/java/lang/StackTraceElement?hl=en#StackTraceElement(java.lang.String,%20java.lang.String,%20java.lang.String,%20int)
-				int lineNumber;
-				if (managedFrame != null) {
-					lineNumber = managedFrame.GetFileLineNumber ();
-					if (lineNumber == 0) {
-						// -2 means it's a native frame
-						lineNumber = managedFrame.HasNativeImage () ? -2 : -1;
-					}
-				} else {
-					lineNumber = -1;
-				}
-
+				(int lineNumber, string? methodName, string? declaringClass) = GetFrameInfo (managedFrame, managedMethod);
 				var throwableFrame = new StackTraceElement (
-					declaringClass: managedMethod?.DeclaringType?.FullName ?? Unknown,
-					methodName: managedMethod?.Name ?? Unknown,
+					declaringClass: declaringClass ?? Unknown,
+					methodName: methodName ?? Unknown,
 					fileName: managedFrame?.GetFileName (),
 					lineNumber: lineNumber
 				);
