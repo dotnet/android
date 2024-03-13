@@ -838,7 +838,7 @@ This property controls if an Asset Packs build automatically are auto
 included in the final `.aab` file. It will default to `true`.
 
 In certain cases the user might want to release an interim release. In
-these cases the user does not NEED to update the asset pack. Especially
+these cases the user does not need to update the asset pack. Especially
 if the contents of the asset pack have not changed. This property allows
 the user to skip the asset packs if they are not required.
 

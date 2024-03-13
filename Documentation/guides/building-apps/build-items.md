@@ -19,7 +19,7 @@ or library project is built.
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
 files that would be included in the `assets` folder in a Java Android project.
 
-Starting with .NET 9 the `AndroidAsset` ItemGroup also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). Adding the `AssetPack` attribute to and `AndroidAsset` will automatically generate an asset pack of that name. This feature is only supported when the [`$(AndroidPackageFormat)`](#androidpackageformat) is set to `.aab`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
+Starting with .NET 9 the `@(AndroidAsset)` build action also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). The `%(AndroidAsset.AssetPack)` metadata can be used to automatically generate an asset pack of that name. This feature is only supported when the [`$(AndroidPackageFormat)`](#androidpackageformat) is set to `.aab`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
 
 ```xml
 <ItemGroup>
@@ -45,7 +45,7 @@ assets into the asset pack.
 </ItemGroup>
 ```
 
-In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, but ALL the other assets
+In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, while all the other assets
 will end up in the `assets1` asset pack.
 
 The additional metadata is only supported on .NET Android 9 and above.
