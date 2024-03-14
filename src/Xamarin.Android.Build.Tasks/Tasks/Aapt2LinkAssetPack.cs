@@ -29,8 +29,6 @@ namespace Xamarin.Android.Tasks {
 		[Required]
 		public ITaskItem OutputArchive { get; set; }
 
-		public string OutputFormat { get; set; } = "proto";
-
 		protected override int GetRequiredDaemonInstances ()
 		{
 			return Math.Min (1, DaemonMaxInstanceCount);
@@ -40,7 +38,7 @@ namespace Xamarin.Android.Tasks {
 		{
 			RunAapt (GenerateCommandLineCommands (Manifest, OutputArchive), OutputArchive.ItemSpec);
 			ProcessOutput ();
-			if (OutputFormat == "proto" && File.Exists (OutputArchive.ItemSpec)) {
+			if (File.Exists (OutputArchive.ItemSpec)) {
 				// move the manifest to the right place.
 				using (var zip = new ZipArchiveEx (OutputArchive.ItemSpec, File.Exists (OutputArchive.ItemSpec) ? FileMode.Open : FileMode.Create)) {
 					zip.MoveEntry ("AndroidManifest.xml", "manifest/AndroidManifest.xml");
@@ -61,9 +59,7 @@ namespace Xamarin.Android.Tasks {
 				cmd.Add ("-v");
 			cmd.Add ("--manifest");
 			cmd.Add (GetFullPath (manifest.ItemSpec));
-			if (OutputFormat == "proto") {
-				cmd.Add ("--proto-format");
-			}
+			cmd.Add ("--proto-format");
 			cmd.Add ("--custom-package");
 			cmd.Add (PackageName);
 			foreach (var assetDirectory in AssetDirectories) {
