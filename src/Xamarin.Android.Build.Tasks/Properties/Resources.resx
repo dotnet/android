@@ -338,6 +338,11 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
     <comment>{0} - The file name
 {1} - The value of the attribute in the project file.</comment>
   </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}</value>
     <comment>{0} - The file name

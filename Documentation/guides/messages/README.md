@@ -102,6 +102,7 @@ Please file an issue with the exact error message using the 'Help->Send Feedback
 or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0138](xa0138.md): %(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.
 + [XA0139](xa0139.md): `@(AndroidAsset)` `{0}` has invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`
++ [XA0140](xa0140.md): 
 
 ## XA1xxx: Project related
 

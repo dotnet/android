@@ -7,6 +7,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 using Irony;
+using System.Text.RegularExpressions;
 
 namespace Xamarin.Android.Tasks
 {
@@ -14,6 +15,7 @@ namespace Xamarin.Android.Tasks
 	// ones that actually exist on disk.
 	public class GetAssetPacks : AndroidTask
 	{
+		readonly Regex validAssetPackName = new Regex ("^[A-Z0-9_]+$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
 		public override string TaskPrefix => "GAP";
 
 		[Required]
@@ -35,6 +37,10 @@ namespace Xamarin.Android.Tasks
 				var assetPack = asset.GetMetadata ("AssetPack");
 				if (string.IsNullOrEmpty (assetPack) || string.Compare (assetPack, "base", StringComparison.OrdinalIgnoreCase) == 0)
 					continue;
+				if (!IsAssetPackNameValid (assetPack)) {
+					Log.LogCodedError ("XA0140", $"The AssetPack value defined for {asset.ItemSpec} is invalid. '{assetPack}' should match the following Regex '[A-Za-z0-9_]'.");
+					continue;
+				}
 				if (!assetPacks.TryGetValue (assetPack, out ITaskItem item)) {
 					item = new TaskItem (assetPack);
 					item.SetMetadata ("AssetPack", assetPack);
@@ -72,7 +78,7 @@ namespace Xamarin.Android.Tasks
 
 			AssetPacks = assetPacks.Values.ToArray();
 
-			return true;
+			return !Log.HasLoggedErrors;
 		}
 
 		bool IsDeliveryTypeValid (ITaskItem item, string deliveryType)
@@ -83,6 +89,11 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 			return true;
+		}
+
+		bool IsAssetPackNameValid (string assetPackName)
+		{
+			return validAssetPackName.IsMatch (assetPackName);
 		}
 	}
 }

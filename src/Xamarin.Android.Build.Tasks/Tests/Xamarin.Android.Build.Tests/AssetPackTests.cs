@@ -35,6 +35,30 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[Category ("SmokeTests")]
+		public void BuildApplicationWithAssetPackThatHasInvalidName ([Values (true, false)] bool isRelease)
+		{
+			var path = Path.Combine ("temp", TestName);
+			var app = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+				OtherBuildItems = {
+					new AndroidItem.AndroidAsset ("Assets\\asset1.txt") {
+						TextContent = () => "Asset1",
+						Encoding = Encoding.ASCII,
+						MetadataValues="AssetPack=asset-pack1",
+					},
+				}
+			};
+			app.SetProperty ("AndroidPackageFormat", "aab");
+			using (var builder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				builder.ThrowOnBuildFailure = false;
+				Assert.IsFalse (builder.Build (app), $"{app.ProjectName} should fail.");
+				StringAssertEx.Contains ("error XA0140:", builder.LastBuildOutput,
+					"Build Output did not contain error XA0140'.");
+			}
+		}
+
+		[Test]
+		[Category ("SmokeTests")]
 		public void BuildApplicationWithAssetPackOutsideProjectDirectory ([Values (true, false)] bool isRelease)
 		{
 			var path = Path.Combine ("temp", TestName);

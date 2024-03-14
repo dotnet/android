@@ -49,8 +49,8 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			XDocument doc = new XDocument ();
-			switch (FeatureType) {
-				case "AssetPack":
+			switch (FeatureType.ToLowerInvariant ()) {
+				case "assetpack":
 					GenerateAssetPackManifest (doc);
 					break;
 				default:
