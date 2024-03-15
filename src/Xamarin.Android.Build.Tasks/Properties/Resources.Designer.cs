@@ -1600,5 +1600,15 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1036", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; does not match the $(SupportedOSPlatformVersion) value &apos;{1}&apos; in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+        ///Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn&apos;t already exist)..
+        /// </summary>
+        public static string XA1039 {
+            get {
+                return ResourceManager.GetString("XA1039", resourceCulture);
+            }
+        }
     }
 }
