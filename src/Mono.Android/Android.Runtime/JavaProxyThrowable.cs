@@ -64,7 +64,7 @@ namespace Android.Runtime {
 				// If we have no line number information and if it's a managed frame, add the
 				// IL offset.
 				if (lineNumber == -1 && managedFrame.HasILOffset ()) {
-					methodName = $"{managedMethod.Name} + 0x{managedFrame.HasILOffset:x}";
+					methodName = $"{managedMethod.Name} + 0x{managedFrame.GetILOffset():x}";
 				} else {
 					methodName = managedMethod.Name;
 				}

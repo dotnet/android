@@ -61,13 +61,18 @@ namespace Xamarin.Android.RuntimeTests {
 				var mf = managedFrames[i];
 				var jf = javaFrames[i];
 
-				// Unknown line locations are -1 on the Java side
+				// Unknown line locations are -1 on the Java side if they're managed, -2 if they're native
 				int managedLine = mf.GetFileLineNumber ();
 				if (managedLine == 0) {
-					managedLine = -1;
+					managedLine = mf.HasNativeImage () ? -2 :  -1;
 				}
 
-				Assert.AreEqual (mf.GetMethod ()?.Name,                   jf.MethodName, $"Frame {i}: method names differ");
+				if (managedLine > 0) {
+					Assert.AreEqual (mf.GetMethod ()?.Name,                   jf.MethodName, $"Frame {i}: method names differ");
+				} else {
+					string managedMethodName = mf.GetMethod ()?.Name ?? String.Empty;
+					Assert.IsTrue (jf.MethodName.StartsWith ($"{managedMethodName} + 0x"), $"Frame {i}: method name should start with: '{managedMethodName} + 0x'");
+				}
 				Assert.AreEqual (mf.GetMethod ()?.DeclaringType.FullName, jf.ClassName,  $"Frame {i}: class names differ");
 				Assert.AreEqual (mf.GetFileName (),                       jf.FileName,   $"Frame {i}: file names differ");
 				Assert.AreEqual (managedLine,                             jf.LineNumber, $"Frame {i}: line numbers differ");
