@@ -9,6 +9,8 @@ namespace System.Linq {
 
 	public static class Extensions {
 
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		static IntPtr id_next;
 
 		static Extensions ()
@@ -40,7 +42,10 @@ namespace System.Linq {
 				}
 		}
 
-		public static IEnumerable<T?> ToEnumerable<T> (this Java.Lang.IIterable source)
+		public static IEnumerable<T?> ToEnumerable<
+				[DynamicallyAccessedMembers (Constructors)] 
+				T
+		> (this Java.Lang.IIterable source)
 		{
 			if (source == null)
 				throw new ArgumentNullException ("source");
@@ -52,7 +57,10 @@ namespace System.Linq {
 				}
 		}
 
-		internal static IEnumerator<T> ToEnumerator_Dispose<T> (this Java.Util.IIterator source)
+		internal static IEnumerator<T> ToEnumerator_Dispose<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (this Java.Util.IIterator source)
 		{
 			using (source)
 				while (source.HasNext) {

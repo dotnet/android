@@ -3,6 +3,7 @@
 
   <Import Project="Sdk.props" Sdk="Microsoft.NET.Sdk" />
   <Import Project="..\..\Configuration.props" />
+  <Import Project="$(XamarinAndroidSourcePath)\build-tools\trim-analyzers\trim-analyzers.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(DotNetTargetFramework)</TargetFrameworks>
@@ -80,12 +81,16 @@
     </Compile>
     <Compile Include="Android.Content.PM\PackageManager.cs" />
     <Compile Include="Android.Graphics\PathIterator.cs" />
+    <Compile Include="Android.Hardware\HardwareBuffer.cs" />
+    <Compile Include="Android.Hardware\HardwareBufferUsage.cs" />
     <Compile Include="Android.Icu\ListFormatter.cs" />
     <Compile Include="Android.Icu\RelativeDateTimeFormatter.cs" />
     <Compile Include="Android.Icu\DateIntervalFormat.cs" />
     <Compile Include="Android.Runtime\DynamicMethodNameCounter.cs" />
     <Compile Include="Android.Runtime\IJavaObjectValueMarshaler.cs" />
     <Compile Include="Android.Telecom\InCallService.cs" />
+    <Compile Include="Android.Telephony.Mbms\StreamingService.cs" />
+    <Compile Include="Android.Telephony\MbmsDownloadSession.cs" />
     <Compile Include="Android.Views\WindowManagerLayoutParams.cs" />
     <Compile Include="Java.Lang.Invoke\MethodType.cs" />
     <Compile Include="Java.Time.Chrono\AbstractChronology.cs" />
