@@ -385,6 +385,7 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/mono-log-adapter.cc
   ${SOURCES_DIR}/monodroid-glue.cc
   ${SOURCES_DIR}/monodroid-networkinfo.cc
+  ${SOURCES_DIR}/monodroid-tracing.cc
   ${SOURCES_DIR}/monovm-properties.cc
   ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/osbridge.cc
@@ -404,10 +405,10 @@ endif()
 
 if(NOT USES_LIBSTDCPP)
   list(APPEND XAMARIN_MONODROID_SOURCES
-<<<<<<< HEAD
-    ${SOURCES_DIR}/monodroid-networkinfo.cc
-    ${SOURCES_DIR}/xamarin_getifaddrs.cc
-    )
+    ${BIONIC_SOURCES_DIR}/cxa_guard.cc
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+  )
 endif()
 
 set(NATIVE_TRACING_SOURCES
@@ -580,6 +581,13 @@ target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY} "${LZ4_VISIBILITY_OPTS}"
   )
+
+target_include_directories(
+  ${XAMARIN_MONO_ANDROID_LIB} BEFORE
+  PRIVATE
+  ${LIBUNWIND_SOURCE_DIR}/include
+  ${LIBUNWIND_HEADERS_DIR}/${CMAKE_ANDROID_ARCH_ABI}
+)
 
 set(DEBUG_HELPER_LINK_LIBS "-ldl")
 
