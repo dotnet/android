@@ -136,23 +136,38 @@ struct XamarinAndroidBundledAssembly
 //
 // Assembly store format
 //
-// The separate hash indices for 32 and 64-bit hashes are required because they will be sorted differently.
-// The 'index' field of each of the hashes{32,64} entry points not only into the `assemblies` array in the
-// store but also into the `uint8_t*` `assembly_store_bundled_assemblies*` arrays.
+// Each target ABI/architecture has a single assembly store file, composed of the following parts:
 //
-// This way the `assemblies` array in the store can remain read only, because we write the "mapped" assembly
-// pointer somewhere else. Otherwise we'd have to copy the `assemblies` array to a writable area of memory.
+// [HEADER]
+// [INDEX]
+// [ASSEMBLY_DESCRIPTORS]
+// [ASSEMBLY DATA]
 //
-// Each store has a unique ID assigned, which is an index into an array of pointers to arrays which store
-// individual assembly addresses. Only store with ID 0 comes with the hashes32 and hashes64 arrays. This is
-// done to make it possible to use a single sorted array to find assemblies insted of each store having its
-// own sorted array of hashes, which would require several binary searches instead of just one.
+// Formats of the sections above are as follows:
 //
-//   AssemblyStoreHeader header;
-//   AssemblyStoreAssemblyDescriptor assemblies[header.local_entry_count];
-//   AssemblyStoreHashEntry hashes32[header.global_entry_count]; // only in assembly store with ID 0
-//   AssemblyStoreHashEntry hashes64[header.global_entry_count]; // only in assembly store with ID 0
-//   [DATA]
+// HEADER (fixed size)
+//  [MAGIC]              uint; value: 0x41424158
+//  [FORMAT_VERSION]     uint; store format version number
+//  [ENTRY_COUNT]        uint; number of entries in the store
+//  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
+//  [INDEX_SIZE]         uint; index size in bytes
+//
+// INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
+//  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
+//  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
+//
+// ASSEMBLY_DESCRIPTORS (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
+//  [MAPPING_INDEX]      uint; index into a runtime array where assembly data pointers are stored
+//  [DATA_OFFSET]        uint; offset from the beginning of the store to the start of assembly data
+//  [DATA_SIZE]          uint; size of the stored assembly data
+//  [DEBUG_DATA_OFFSET]  uint; offset from the beginning of the store to the start of assembly PDB data, 0 if absent
+//  [DEBUG_DATA_SIZE]    uint; size of the stored assembly PDB data, 0 if absent
+//  [CONFIG_DATA_OFFSET] uint; offset from the beginning of the store to the start of assembly .config contents, 0 if absent
+//  [CONFIG_DATA_SIZE]   uint; size of the stored assembly .config contents, 0 if absent
+//
+// ASSEMBLY_NAMES (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
+//  [NAME_LENGTH]        uint: length of assembly name
+//  [NAME]               byte: UTF-8 bytes of assembly name, without the NUL terminator
 //
 
 //
