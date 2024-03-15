@@ -10,6 +10,7 @@ namespace Android.Runtime {
 	// java.util.ArrayList allows null values
 	public partial class JavaList : Java.Lang.Object, System.Collections.IList {
 
+		internal const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
 		internal static readonly JniPeerMembers list_members = new XAPeerMembers ("java/util/List", typeof (JavaList), isInterface: true);
 
 		//
@@ -23,7 +24,10 @@ namespace Android.Runtime {
 		//
 		//     https://developer.android.com/reference/java/util/List.html?hl=en#get(int)
 		//
-		internal unsafe object? InternalGet (int location, Type? targetType = null)
+		internal unsafe object? InternalGet (
+				int location,
+				[DynamicallyAccessedMembers (Constructors)]
+				Type? targetType = null)
 		{
 			const string id = "get.(I)Ljava/lang/Object;";
 			JniObjectReference obj;
@@ -266,6 +270,11 @@ namespace Android.Runtime {
 
 		public void CopyTo (Array array, int array_index)
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2073", Justification = "JavaList<T> constructors are preserved by the MarkJavaObjects trimmer step.")]
+			[return: DynamicallyAccessedMembers (Constructors)]
+			static Type GetElementType (Array array) =>
+				array.GetType ().GetElementType ();
+
 			if (array == null)
 				throw new ArgumentNullException ("array");
 			if (array_index < 0)
@@ -273,7 +282,7 @@ namespace Android.Runtime {
 			if (array.Length < array_index + Count)
 				throw new ArgumentException ("array");
 
-			var targetType = array.GetType ().GetElementType ();
+			var targetType = GetElementType (array);
 			int c = Count;
 			for (int i = 0; i < c; i++)
 				array.SetValue (InternalGet (i, targetType), array_index + i);
@@ -673,7 +682,10 @@ namespace Android.Runtime {
 	}
 
 	[Register ("java/util/ArrayList", DoNotGenerateAcw=true)]
-	public class JavaList<T> : JavaList, IList<T> {
+	public class JavaList<
+			[DynamicallyAccessedMembers (Constructors)]
+			T
+	> : JavaList, IList<T> {
 
 		//
 		// Exception audit:
