@@ -25,15 +25,9 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
-
-if(WIN32 AND NOT MINGW)
-  set(CCACHE_OPTION_DEFAULT OFF)
-else()
-  set(CCACHE_OPTION_DEFAULT ON)
-endif()
 
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
@@ -49,9 +43,9 @@ endif()
 option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
-option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ${CCACHE_OPTION_DEFAULT})
+option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ON)
 
-if((MINGW OR NOT WIN32) AND USE_CCACHE)
+if(USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
     message(STATUS "ccache: compiler already uses ccache")
   else()
@@ -70,12 +64,10 @@ else()
   set(DEBUG_BUILD False)
 endif()
 
-if(ANDROID)
-  if(ANDROID_STL STREQUAL none)
-    set(USES_LIBSTDCPP False)
-  else()
-    set(USES_LIBSTDCPP True)
-  endif()
+if(ANDROID_STL STREQUAL none)
+  set(USES_LIBSTDCPP False)
+else()
+  set(USES_LIBSTDCPP True)
 endif()
 
 # Environment checks
@@ -102,25 +94,6 @@ if(NOT DEFINED XA_LIB_TOP_DIR)
   message(FATAL_ERROR "Please set the XA_LIB_TOP_DIR variable on command line (-DXA_LIB_TOP_DIR=path)")
 endif()
 
-if(NOT ANDROID)
-  if (NOT DEFINED JDK_INCLUDE)
-    message(FATAL_ERROR "Please set the JDK_INCLUDE variable on command line (-DJDK_INCLUDE)")
-  endif()
-endif()
-
-if(MINGW AND NOT WIN32)
-  if(NOT DEFINED MINGW_DEPENDENCIES_ROOT_DIR)
-    message(FATAL_ERROR "Please set the MINGW_DEPENDENCIES_ROOT_DIR variable on command line (-DMINGW_DEPENDENCIES_ROOT_DIR=PATH)")
-  endif()
-
-  if(DEFINED MINGW_TARGET_32 AND DEFINED MINGW_TARGET_64)
-    message(FATAL_ERROR "Only one of the MINGW_TARGET_32 or MINGW_TARGET_64 variables can be defined")
-  endif()
-  if(NOT DEFINED MINGW_TARGET_32 AND NOT DEFINED MINGW_TARGET_64)
-    message(FATAL_ERROR "Either MINGW_TARGET_32 or MINGW_TARGET_64 variable must be defined")
-  endif()
-endif()
-
 # Needed modules
 
 include(CheckIncludeFile)
@@ -140,17 +113,6 @@ else()
   set(IS_MACOS False)
 endif()
 
-if(NOT ANDROID)
-  if(APPLE)
-    set(CMAKE_MACOSX_RPATH 1)
-    set(HOST_BUILD_NAME "host-Darwin")
-  endif()
-
-  if(IS_LINUX AND NOT MINGW)
-    set(HOST_BUILD_NAME "host-Linux")
-  endif()
-endif()
-
 # Paths
 
 set(EXTERNAL_DIR "../../external")
@@ -162,24 +124,6 @@ set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
 set(XA_BIN_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/${XA_BUILD_CONFIGURATION}")
 set(XA_BUILD_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../bin/Build${XA_BUILD_CONFIGURATION}")
 set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
-
-if(NOT ANDROID)
-  if(WIN32 OR MINGW)
-    if (MINGW_TARGET_32)
-      set(ANDROID_ABI "host-mxe-Win32")
-    endif()
-
-    if (MINGW_TARGET_64)
-      set(ANDROID_ABI "host-mxe-Win64")
-    endif()
-
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_ABI}")
-  endif()
-
-  if(DEFINED HOST_BUILD_NAME)
-    set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${HOST_BUILD_NAME}")
-  endif()
-endif()
 
 include("${XA_BUILD_DIR}/xa_build_configuration.cmake")
 
@@ -201,48 +145,13 @@ set(LZ4_SOURCES
 
 # Include directories
 include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include)
-include_directories(${ROBIN_MAP_DIR}/include)
 
-if(NOT ANDROID)
-  string(REPLACE " " ";" JDK_INCLUDE_LIST ${JDK_INCLUDE})
-  foreach(inc in ${JDK_INCLUDE_LIST})
-    include_directories(${inc})
-  endforeach()
-endif()
-
-if(ANDROID)
-  include_directories(${CMAKE_SYSROOT}/usr/include/c++/v1/)
-  include_directories(${LZ4_INCLUDE_DIR})
-endif()
-
-if(MINGW)
-  if(MINGW_TARGET_32)
-    include_directories("${MINGW_DEPENDENCIES_ROOT_DIR}/x86/include")
-    if(IS_MACOS)
-      include_directories("/usr/local/opt/mingw-zlib/usr/i686-w64-mingw32/include")
-    endif()
-  endif()
-
-  if (MINGW_TARGET_64)
-    include_directories("${MINGW_DEPENDENCIES_ROOT_DIR}/x86_64/include")
-    if(IS_MACOS)
-      include_directories("/usr/local/opt/mingw-zlib/usr/x86_64-w64-mingw32/include")
-    endif()
-  endif()
-endif()
-
-if(NOT ANDROID AND DEFINED HOST_BUILD_NAME)
-  include_directories("${XA_BIN_DIR}/include/${HOST_BUILD_NAME}")
-  include_directories("${XA_BIN_DIR}/include/${HOST_BUILD_NAME}/eglib")
-  include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}")
-  include_directories("../../bin/${CONFIGURATION}/include/${HOST_BUILD_NAME}/eglib")
-endif()
-
-if (WIN32)
-  include_directories(BEFORE "jni/win32")
-endif()
-
-include_directories("${NET_RUNTIME_DIR}/native/include/mono-2.0")
+# The SYSTEM which will make clang skip warnings for the headers there. Since we can't do
+# much about them, we can just as well avoid cluttered build output.
+include_directories(SYSTEM ${ROBIN_MAP_DIR}/include)
+include_directories(SYSTEM ${CMAKE_SYSROOT}/usr/include/c++/v1/)
+include_directories(SYSTEM ${LZ4_INCLUDE_DIR})
+include_directories(SYSTEM "${NET_RUNTIME_DIR}/native/include/mono-2.0")
 include_directories("jni")
 include_directories("${XA_BIN_DIR}/include")
 include_directories("${XA_BIN_DIR}/include/${ANDROID_ABI}/eglib")
@@ -251,7 +160,6 @@ include_directories("${XA_BIN_DIR}/include/${ANDROID_ABI}/eglib")
 include_directories("../../bin/${CONFIGURATION}/include")
 include_directories("../../bin/${CONFIGURATION}/include/${ANDROID_ABI}/eglib")
 include_directories("${MONO_PATH}/mono/eglib")
-include_directories("jni/zip")
 include_directories("${JAVA_INTEROP_SRC_PATH}")
 
 # Common preparation code
@@ -279,48 +187,22 @@ if (ENABLE_TIMING)
   add_compile_definitions(MONODROID_TIMING)
 endif()
 
-if(ANDROID)
-  add_compile_definitions(HAVE_LZ4)
-  add_compile_definitions(PLATFORM_ANDROID)
+add_compile_definitions(HAVE_LZ4)
+add_compile_definitions(PLATFORM_ANDROID)
 
-  if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
-    add_compile_definitions(ANDROID64)
-  endif()
-
-  if (ANDROID_NDK_MAJOR LESS 20)
-    add_compile_definitions(__ANDROID_API_Q__=29)
-  endif()
+if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
+  add_compile_definitions(ANDROID64)
 endif()
 
-if(NOT ANDROID)
-  set(CMAKE_REQUIRED_DEFINITIONS "-D__USE_GNU")
-  check_cxx_symbol_exists(gettid unistd.h HAVE_GETTID_IN_UNISTD_H)
-  if(HAVE_GETTID_IN_UNISTD_H)
-    add_compile_definitions(HAVE_GETTID_IN_UNISTD_H)
-  endif()
-
-  # MinGW needs it for {v,a}sprintf
-  add_compile_definitions(_GNU_SOURCE)
-
-  if(APPLE)
-    add_compile_definitions(APPLE_OS_X)
-  endif()
-
-  if(IS_LINUX)
-    if(NOT MINGW AND NOT WIN32)
-      if(EXISTS "/.flatpak-info")
-        add_compile_definitions(LINUX_FLATPAK)
-      endif()
-    endif()
-  endif()
-endif()
-
-if(WIN32 OR MINGW)
-  add_compile_definitions(WINDOWS NTDDI_VERSION=NTDDI_VISTA _WINDOWS _WIN32_WINNT=_WIN32_WINNT_VISTA)
+if (ANDROID_NDK_MAJOR LESS 20)
+  add_compile_definitions(__ANDROID_API_Q__=29)
 endif()
 
 # Compiler and linker flags
-set(LINK_LIBS "")
+set(LINK_LIBS
+  -lmonosgen-2.0
+  -llog
+)
 
 #
 # -Wformat-nonliteral is disabled as it's not very practical, because we use proxy functions to
@@ -375,49 +257,38 @@ endif()
 if(COMPILER_DIAG_COLOR)
   list(APPEND LOCAL_COMMON_COMPILER_ARGS
     -fdiagnostics-color=always
+    -fcolor-diagnostics
     )
 endif()
 
-set(LOCAL_COMMON_LINKER_ARGS "")
-if(ANDROID)
-  list(APPEND LOCAL_COMMON_LINKER_ARGS
-    -fstack-clash-protection
+set(LOCAL_COMMON_LINKER_ARGS
+  -shared
+  -fpic
+  -fstack-clash-protection
+)
+
+if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fno-omit-frame-pointer
+    -fno-optimize-sibling-calls
   )
-
-  if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-    list(APPEND LOCAL_COMMON_COMPILER_ARGS
-      -fno-omit-frame-pointer
-      -fno-optimize-sibling-calls
-      )
-  endif()
-
-  unset(SANITIZER_FLAGS)
-  if (ENABLE_CLANG_ASAN)
-    set(SANITIZER_FLAGS -fsanitize=address)
-    set(CHECKED_BUILD_INFIX "-checked+asan")
-  elseif(ENABLE_CLANG_UBSAN)
-    set(SANITIZER_FLAGS -fsanitize=undefined)
-    set(CHECKED_BUILD_INFIX "-checked+ubsan")
-  endif()
-
-  if(SANITIZER_FLAGS)
-    message(STATUS "Got sanitizer: ${SANITIZER_FLAGS}")
-
-    list(APPEND LOCAL_COMMON_COMPILER_ARGS ${SANITIZER_FLAGS})
-    list(APPEND LOCAL_COMMON_LINKER_ARGS ${SANITIZER_FLAGS})
-    list(APPEND CMAKE_REQUIRED_LINK_OPTIONS ${SANITIZER_FLAGS})
-  endif()
 endif()
 
-if(WIN32 OR MINGW)
-  message(STATUS "Win32 or MinGW")
-  add_compile_options(-fomit-frame-pointer)
-  list(APPEND LOCAL_COMMON_LINKER_ARGS -static -pthread -dynamic)
-  list(APPEND LINK_LIBS -lmman -lkernel32 -lmswsock -lwsock32 -lshlwapi -lpsapi -lwinmm)
+unset(SANITIZER_FLAGS)
+if (ENABLE_CLANG_ASAN)
+  set(SANITIZER_FLAGS -fsanitize=address)
+  set(CHECKED_BUILD_INFIX "-checked+asan")
+elseif(ENABLE_CLANG_UBSAN)
+  set(SANITIZER_FLAGS -fsanitize=undefined)
+  set(CHECKED_BUILD_INFIX "-checked+ubsan")
 endif()
 
-if(UNIX)
-  list(APPEND LOCAL_COMMON_LINKER_ARGS -shared -fpic)
+if(SANITIZER_FLAGS)
+  message(STATUS "Got sanitizer: ${SANITIZER_FLAGS}")
+
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS ${SANITIZER_FLAGS})
+  list(APPEND LOCAL_COMMON_LINKER_ARGS ${SANITIZER_FLAGS})
+  list(APPEND CMAKE_REQUIRED_LINK_OPTIONS ${SANITIZER_FLAGS})
 endif()
 
 if(STRIP_DEBUG)
@@ -441,40 +312,19 @@ if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
   # will force a -O0 on us and our "debug" build is not really for debugging of our native code but
   # rather for "debug" builds of user apps - it has extra code but it has to be as fast as possible.
-  if(ANDROID)
-    # This is specific to clang, enable only for Android builds
-    set(XA_COMPILER_FLAGS_DEBUG "-fno-limit-debug-info -O2")
-    set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
-    set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
-  endif()
+  set(XA_COMPILER_FLAGS_DEBUG "-fno-limit-debug-info -O2")
+  set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
+  set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 endif()
 
 # Library directories
-if(ANDROID)
-  set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
-  set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
-  link_directories("${NET_RUNTIME_DIR}/native")
-endif()
-
-if(WIN32 OR MINGW)
-  if(MINGW_TARGET_32)
-    link_directories("${MINGW_DEPENDENCIES_ROOT_DIR}/x86/lib")
-  endif()
-
-  if(MINGW_TARGET_64)
-    link_directories("${MINGW_DEPENDENCIES_ROOT_DIR}/x86_64/lib")
-  endif()
-
-  link_directories("${XA_LIBRARY_OUTPUT_DIRECTORY}")
-endif()
-
-if(NOT ANDROID AND DEFINED HOST_BUILD_NAME)
-  link_directories("${XA_LIB_TOP_DIR}/lib/${HOST_BUILD_NAME}")
-endif()
+set(XA_LIBRARY_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/lib/${ANDROID_RID}")
+set(XA_LIBRARY_STUBS_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/libstubs/${ANDROID_RID}")
+link_directories("${NET_RUNTIME_DIR}/native")
 
 # Header checks
 
-if(ANDROID AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+if(ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN)
   set(OLD_CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS}")
   set(CMAKE_REQUIRED_FLAGS "${CMAKE_REQUIRED_FLAGS} -llog")
   string(STRIP "${CMAKE_REQUIRED_FLAGS}" CMAKE_REQUIRED_FLAGS)
@@ -484,7 +334,7 @@ check_include_file("linux/netlink.h" HAVE_LINUX_NETLINK_H)
 check_include_file("linux/rtnetlink.h" HAVE_LINUX_RTNETLINK_H)
 check_include_file("linux/if_arp.h" HAVE_LINUX_IF_ARP_H)
 
-if(ANDROID AND (ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN))
+if(ENABLE_CLANG_UBSAN OR ENABLE_CLANG_ASAN)
   set(CMAKE_REQUIRED_FLAGS "${OLD_CMAKE_REQUIRED_FLAGS}")
 endif()
 
@@ -498,81 +348,50 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
 set(XAMARIN_MONODROID_SOURCES
-  ${SOURCES_DIR}/new_delete.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
+  ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
+  ${LZ4_SOURCES}
   ${SOURCES_DIR}/android-system.cc
   ${SOURCES_DIR}/basic-android-system.cc
   ${SOURCES_DIR}/basic-utilities.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
-  ${SOURCES_DIR}/debug.cc
   ${SOURCES_DIR}/debug-constants.cc
-  ${SOURCES_DIR}/embedded-assemblies.cc
+  ${SOURCES_DIR}/debug.cc
   ${SOURCES_DIR}/embedded-assemblies-zip.cc
+  ${SOURCES_DIR}/embedded-assemblies.cc
   ${SOURCES_DIR}/globals.cc
   ${SOURCES_DIR}/helpers.cc
-  ${SOURCES_DIR}/logger.cc
   ${SOURCES_DIR}/jni-remapping.cc
+  ${SOURCES_DIR}/logger.cc
+  ${SOURCES_DIR}/mono-log-adapter.cc
   ${SOURCES_DIR}/monodroid-glue.cc
+  ${SOURCES_DIR}/monodroid-networkinfo.cc
+  ${SOURCES_DIR}/monovm-properties.cc
+  ${SOURCES_DIR}/new_delete.cc
   ${SOURCES_DIR}/osbridge.cc
+  ${SOURCES_DIR}/pinvoke-override-api.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/timing-internal.cc
   ${SOURCES_DIR}/util.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
+  ${SOURCES_DIR}/xamarin_getifaddrs.cc
+)
+
+if(NOT DEBUG_BUILD)
+  list(APPEND XAMARIN_MONODROID_SOURCES
+    ${SOURCES_DIR}/xamarin-android-app-context.cc
   )
-
-if(ANDROID)
-  list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/mono-log-adapter.cc
-    ${LZ4_SOURCES}
-    )
-
-  if(NOT DEBUG_BUILD)
-    list(APPEND XAMARIN_MONODROID_SOURCES
-      ${SOURCES_DIR}/xamarin-android-app-context.cc
-      )
-  endif()
-
-  if(NOT USES_LIBSTDCPP)
-    list(APPEND XAMARIN_MONODROID_SOURCES
-      ${BIONIC_SOURCES_DIR}/cxa_guard.cc
-      ${SOURCES_DIR}/cxx-abi/string.cc
-      ${SOURCES_DIR}/cxx-abi/terminate.cc
-      )
-  endif()
-else()
-  list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/designer-assemblies.cc
-    ${SOURCES_DIR}/monodroid-glue-designer.cc
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-gc-bridge-mono.cc
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-jvm.cc
-    )
 endif()
 
-if(UNIX)
+if(NOT USES_LIBSTDCPP)
   list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/monodroid-networkinfo.cc
-    ${SOURCES_DIR}/xamarin_getifaddrs.cc
-    )
-endif()
-
-if(ANDROID)
-  list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/monovm-properties.cc
-    ${SOURCES_DIR}/pinvoke-override-api.cc
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-    )
-else()
-  list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/xa-internal-api.cc
-    )
-
-  set(XAMARIN_INTERNAL_API_SOURCES
-    ${SOURCES_DIR}/internal-pinvoke-api.cc
-    ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-    )
+    ${BIONIC_SOURCES_DIR}/cxa_guard.cc
+    ${SOURCES_DIR}/cxx-abi/string.cc
+    ${SOURCES_DIR}/cxx-abi/terminate.cc
+  )
 endif()
 
 set(XAMARIN_APP_STUB_SOURCES
@@ -596,139 +415,70 @@ set(XAMARIN_STUB_LIB_SOURCES
 # Build
 configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-if(MINGW OR WIN32)
-  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0.dll)
-else()
-  list(APPEND MONOSGEN_LIB_LINK -lmonosgen-2.0)
-endif()
-
-if(NOT (ANDROID))
-  add_library(
-    ${XAMARIN_INTERNAL_API_LIB}
-    SHARED
-    ${XAMARIN_INTERNAL_API_SOURCES}
-    )
-
-  target_compile_options(
-    ${XAMARIN_INTERNAL_API_LIB}
-    PRIVATE -fvisibility=default
-    )
-
-  target_link_options(
-    ${XAMARIN_INTERNAL_API_LIB}
-    PRIVATE -fvisibility=default
-    )
-endif()
-
 add_library(
   ${XAMARIN_APP_STUB_LIB}
   SHARED
   ${XAMARIN_APP_STUB_SOURCES}
-  )
+)
 
 target_link_options(
   ${XAMARIN_APP_STUB_LIB}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
-  )
+)
 
-if(ANDROID)
-  # Only Android builds need to go in separate directories, desktop builds have the same ABI
-  set_target_properties(
-    ${XAMARIN_APP_STUB_LIB}
-    PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}"
-    )
-elseif(APPLE)
-  set_target_properties(
-    ${XAMARIN_APP_STUB_LIB}
-    PROPERTIES
-    OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
-    )
-endif()
+set_target_properties(
+  ${XAMARIN_APP_STUB_LIB}
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_BUILD_TYPE}"
+)
 
-if(NOT WIN32 AND NOT MINGW AND DEBUG_BUILD)
+if(DEBUG_BUILD)
   add_library(
     ${XAMARIN_DEBUG_APP_HELPER_LIB}
     SHARED
     ${XAMARIN_DEBUG_APP_HELPER_SOURCES}
-    )
+  )
 
   target_link_options(
     ${XAMARIN_DEBUG_APP_HELPER_LIB}
     PRIVATE ${XA_SYMBOL_VISIBILITY}
-    )
+  )
 
   target_link_libraries(
     ${XAMARIN_DEBUG_APP_HELPER_LIB}
     -ldl
-    )
+  )
 
-  if(ANDROID)
-    target_link_libraries(
-      ${XAMARIN_DEBUG_APP_HELPER_LIB}
-      -llog
-      )
-  endif()
+  target_link_libraries(
+    ${XAMARIN_DEBUG_APP_HELPER_LIB}
+    -llog
+  )
 
   target_compile_options(
     ${XAMARIN_DEBUG_APP_HELPER_LIB}
     PRIVATE ${XA_SYMBOL_VISIBILITY}
-    )
+  )
 
   target_compile_definitions(
     ${XAMARIN_DEBUG_APP_HELPER_LIB}
     PUBLIC -DDEBUG_APP_HELPER
-    )
-
-  if(APPLE)
-    set_target_properties(
-      ${XAMARIN_DEBUG_APP_HELPER_LIB}
-      PROPERTIES
-      OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
-      )
-  endif()
+  )
 endif()
 
 add_library(
   ${XAMARIN_MONO_ANDROID_LIB}
   SHARED ${XAMARIN_MONODROID_SOURCES}
-  )
+)
 
-if(ANDROID)
-  # Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
-  set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
-endif()
+# Ugly, but this is the only way to change LZ4 symbols visibility without modifying lz4.h
+set(LZ4_VISIBILITY_OPTS "-DLZ4LIB_VISIBILITY=__attribute__ ((visibility (\"hidden\")))")
 
 target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY} "${LZ4_VISIBILITY_OPTS}"
   )
 
-if(APPLE)
-  set_target_properties(
-    ${XAMARIN_MONO_ANDROID_LIB}
-    PROPERTIES
-    OSX_ARCHITECTURES "${XA_OSX_ARCHITECTURES}"
-    )
-
-  add_custom_command(
-    TARGET ${XAMARIN_MONO_ANDROID_LIB}
-    POST_BUILD
-    COMMAND xcrun install_name_tool -change "@rpath/libxamarin-app.dylib" "@loader_path/libxamarin-app.dylib" $<TARGET_FILE:${XAMARIN_MONO_ANDROID_LIB}>
-    )
-endif()
-
-list(APPEND LINK_LIBS ${MONOSGEN_LIB_LINK})
-
-if(NOT MINGW AND NOT WIN32)
-  set(DEBUG_HELPER_LINK_LIBS "-ldl")
-endif()
-
-if(ANDROID)
-  list(APPEND LINK_LIBS -llog)
-elseif(NOT ANDROID AND NOT MINGW AND NOT WIN32)
-  list(APPEND LINK_LIBS -pthread -ldl)
-endif()
+set(DEBUG_HELPER_LINK_LIBS "-ldl")
 
 target_link_options(
   ${XAMARIN_MONO_ANDROID_LIB}
@@ -740,7 +490,7 @@ target_link_libraries(
   ${LINK_LIBS} xamarin-app
   )
 
-if(ANDROID AND (NOT ANALYZERS_ENABLED))
+if(NOT ANALYZERS_ENABLED)
   macro(xa_add_stub_library _libname)
     add_library(
       ${_libname}
