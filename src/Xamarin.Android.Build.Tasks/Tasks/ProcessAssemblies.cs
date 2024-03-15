@@ -26,6 +26,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string [] RuntimeIdentifiers { get; set; } = Array.Empty<string>();
 
+		public bool DesignTimeBuild { get; set; }
+
 		public bool AndroidIncludeDebugSymbols { get; set; }
 
 		public bool PublishTrimmed { get; set; }
@@ -57,15 +59,7 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			// We only need to "dedup" assemblies when there is more than one RID
-			if (RuntimeIdentifiers.Length > 1) {
-				Log.LogDebugMessage ("Deduplicating assemblies per RuntimeIdentifier");
-				DeduplicateAssemblies (output, symbols);
-			} else {
-				Log.LogDebugMessage ("Found a single RuntimeIdentifier");
-				SetMetadataForAssemblies (output, symbols);
-			}
-
+			SetMetadataForAssemblies (output, symbols);
 			OutputAssemblies = output.ToArray ();
 			ResolvedSymbols = symbols.Values.ToArray ();
 
@@ -99,92 +93,42 @@ namespace Xamarin.Android.Tasks
 			return !Log.HasLoggedErrors;
 		}
 
-		void SetAssemblyAbiMetadata (string abi, string assetType, ITaskItem assembly, ITaskItem? symbol, bool isDuplicate)
+		void SetAssemblyAbiMetadata (string abi, ITaskItem assembly, ITaskItem? symbol)
 		{
-			if (String.IsNullOrEmpty (abi) || (!isDuplicate && String.Compare ("native", assetType, StringComparison.OrdinalIgnoreCase) != 0)) {
-				return;
+			if (String.IsNullOrEmpty (abi)) {
+				throw new ArgumentException ("must not be null or empty", nameof (abi));
 			}
 
 			assembly.SetMetadata ("Abi", abi);
-			if (symbol != null) {
-				symbol.SetMetadata ("Abi", abi);
-			}
+			symbol?.SetMetadata ("Abi", abi);
 		}
 
-		void SetAssemblyAbiMetadata (ITaskItem assembly, ITaskItem? symbol, bool isDuplicate)
+		void SetAssemblyAbiMetadata (ITaskItem assembly, ITaskItem? symbol)
 		{
-			string assetType = assembly.GetMetadata ("AssetType");
 			string rid = assembly.GetMetadata ("RuntimeIdentifier");
-			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) || String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
-				// Satellite assemblies are abi-agnostic, they shouldn't have the Abi metadata set
-				return;
-			}
 
-			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assetType, assembly, symbol, isDuplicate);
+			SetAssemblyAbiMetadata (AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid), assembly, symbol);
 		}
 
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
-			foreach (var assembly in InputAssemblies) {
-				var symbol = GetOrCreateSymbolItem (symbols, assembly);
-				SetAssemblyAbiMetadata (assembly, symbol, isDuplicate: false);
-				symbol?.SetDestinationSubPath ();
-				assembly.SetDestinationSubPath ();
+			foreach (ITaskItem assembly in InputAssemblies) {
+				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
+					// Designer builds don't produce assemblies, so library and main application DLLs might not
+					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
+					continue;
+				}
+
+				ITaskItem? symbol = GetOrCreateSymbolItem (symbols, assembly);
+				SetAssemblyAbiMetadata (assembly, symbol);
+				SetDestinationSubDirectory (assembly, symbol);
 				assembly.SetMetadata ("FrameworkAssembly", IsFromAKnownRuntimePack (assembly).ToString ());
-				assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+
+				if (!DesignTimeBuild) {
+					// Designer builds don't produce assemblies, the HasMonoAndroidReference call would throw an exception in that case
+					assembly.SetMetadata ("HasMonoAndroidReference", MonoAndroidHelper.HasMonoAndroidReference (assembly).ToString ());
+				}
 				output.Add (assembly);
-			}
-		}
-
-		void DeduplicateAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
-		{
-			// Group by assembly file name
-			foreach (var group in InputAssemblies.Where (Filter).GroupBy (a => Path.GetFileName (a.ItemSpec))) {
-				// Get the unique list of MVIDs
-				var mvids = new HashSet<Guid> ();
-				bool? frameworkAssembly = null, hasMonoAndroidReference = null;
-				foreach (var assembly in group) {
-					using var pe = new PEReader (File.OpenRead (assembly.ItemSpec));
-					var reader = pe.GetMetadataReader ();
-					var module = reader.GetModuleDefinition ();
-					var mvid = reader.GetGuid (module.Mvid);
-					mvids.Add (mvid);
-
-					// Calculate %(FrameworkAssembly) and %(HasMonoAndroidReference) for the first
-					if (frameworkAssembly == null) {
-						frameworkAssembly = IsFromAKnownRuntimePack (assembly);
-					}
-					if (hasMonoAndroidReference == null) {
-						hasMonoAndroidReference = MonoAndroidHelper.IsMonoAndroidAssembly (assembly) ||
-							MonoAndroidHelper.HasMonoAndroidReference (reader);
-					}
-					assembly.SetMetadata ("FrameworkAssembly", frameworkAssembly.ToString ());
-					assembly.SetMetadata ("HasMonoAndroidReference", hasMonoAndroidReference.ToString ());
-				}
-				// If we end up with more than 1 unique mvid, we need *all* assemblies
-				if (mvids.Count > 1) {
-					foreach (var assembly in group) {
-						var symbol = GetOrCreateSymbolItem (symbols, assembly);
-						SetDestinationSubDirectory (assembly, group.Key, symbol, isDuplicate: true);
-						output.Add (assembly);
-					}
-				} else {
-					// Otherwise only include the first assembly
-					bool first = true;
-					foreach (var assembly in group) {
-						if (first) {
-							first = false;
-
-							var symbol = GetOrCreateSymbolItem (symbols, assembly);
-							symbol?.SetDestinationSubPath ();
-							assembly.SetDestinationSubPath ();
-							output.Add (assembly);
-							SetAssemblyAbiMetadata (assembly, symbol, false);
-						} else {
-							symbols.Remove (Path.ChangeExtension (assembly.ItemSpec, ".pdb"));
-						}
-					}
-				}
 			}
 		}
 
@@ -219,35 +163,30 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Sets %(DestinationSubDirectory) and %(DestinationSubPath) based on %(RuntimeIdentifier)
 		/// </summary>
-		void SetDestinationSubDirectory (ITaskItem assembly, string fileName, ITaskItem? symbol, bool isDuplicate)
+		void SetDestinationSubDirectory (ITaskItem assembly, ITaskItem? symbol)
 		{
-			var rid = assembly.GetMetadata ("RuntimeIdentifier");
-			string assetType = assembly.GetMetadata ("AssetType");
-
-			// Satellite assemblies have `RuntimeIdentifier` set, but they shouldn't - they aren't specific to any architecture, so they should have none of the
-			// abi-specific metadata set
-			//
-			if (!String.IsNullOrEmpty (assembly.GetMetadata ("Culture")) ||
-			    String.Compare ("resources", assetType, StringComparison.OrdinalIgnoreCase) == 0) {
-				rid = String.Empty;
+			string? rid = assembly.GetMetadata ("RuntimeIdentifier");
+			if (String.IsNullOrEmpty (rid)) {
+				throw new InvalidOperationException ($"Assembly '{assembly}' item is missing required ");
 			}
 
-			var abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
-			if (!string.IsNullOrEmpty (abi)) {
-				string destination = Path.Combine (assembly.GetMetadata ("DestinationSubDirectory"), abi);
-				assembly.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
-				assembly.SetMetadata ("DestinationSubPath", Path.Combine (destination, fileName));
-				if (symbol != null) {
-					destination = Path.Combine (symbol.GetMetadata ("DestinationSubDirectory"), abi);
-					symbol.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
-					symbol.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (symbol.ItemSpec)));
+			string? abi = AndroidRidAbiHelper.RuntimeIdentifierToAbi (rid);
+			if (string.IsNullOrEmpty (abi)) {
+				throw new InvalidOperationException ($"Unable to convert a runtime identifier '{rid}' to Android ABI for: {assembly.ItemSpec}");
+			}
+
+			SetIt (assembly);
+			SetIt (symbol);
+
+			void SetIt (ITaskItem? item)
+			{
+				if (item == null) {
+					return;
 				}
 
-				SetAssemblyAbiMetadata (abi, assetType, assembly, symbol, isDuplicate);
-			} else {
-				Log.LogDebugMessage ($"Android ABI not found for: {assembly.ItemSpec}");
-				assembly.SetDestinationSubPath ();
-				symbol?.SetDestinationSubPath ();
+				string destination = Path.Combine (abi, item.GetMetadata ("DestinationSubDirectory"));
+				item.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
+				item.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (item.ItemSpec)));
 			}
 		}
 	}
