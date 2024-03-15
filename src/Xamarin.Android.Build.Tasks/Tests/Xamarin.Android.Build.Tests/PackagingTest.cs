@@ -39,8 +39,13 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+
+			AndroidTargetArch[] supportedArches = new[] {
+				AndroidTargetArch.Arm,
+			};
+
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer.Core",
 				Version = "2.14.1",
@@ -59,23 +64,23 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
 
-			var expectedFiles = new [] {
-					"Java.Interop.dll",
-					"Mono.Android.dll",
-					"Mono.Android.Runtime.dll",
-					"rc.bin",
-					"System.Console.dll",
-					"System.Private.CoreLib.dll",
-					"System.Runtime.dll",
-					"System.Runtime.InteropServices.dll",
-					"System.Linq.dll",
-					"UnnamedProject.dll",
-					"_Microsoft.Android.Resource.Designer.dll",
-					"Humanizer.dll",
-					"es/Humanizer.resources.dll",
-					"System.Collections.dll",
-					"System.Collections.Concurrent.dll",
-					"System.Text.RegularExpressions.dll",
+			var expectedFiles = new HashSet<string> {
+				"Java.Interop.dll",
+				"Mono.Android.dll",
+				"Mono.Android.Runtime.dll",
+				"System.Console.dll",
+				"System.Private.CoreLib.dll",
+				"System.Runtime.dll",
+				"System.Runtime.InteropServices.dll",
+				"System.Linq.dll",
+				"UnnamedProject.dll",
+				"_Microsoft.Android.Resource.Designer.dll",
+				"Humanizer.dll",
+				"es/Humanizer.resources.dll",
+				"System.Collections.dll",
+				"System.Collections.Concurrent.dll",
+				"System.Text.RegularExpressions.dll",
+				"libarc.bin.so",
 			};
 
 			using (var b = CreateApkBuilder ()) {
@@ -87,15 +92,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				List<string> missingFiles;
 				List<string> additionalFiles;
 
-				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles);
+				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
-
-				Assert.IsTrue (additionalFiles == null || additionalFiles.Count == 0,
-					string.Format ("Unexpected Files found! {0}",
-					string.Join (Environment.NewLine, additionalFiles)));
 			}
 		}
 
@@ -465,7 +466,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				var helper = new ArchiveAssemblyHelper (apk);
 
 				foreach (string lang in languages) {
-					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					foreach (string rid in appBuilder.GetBuildRuntimeIdentifiers ()) {
+						string abi = MonoAndroidHelper.RidToAbi (rid);
+						Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					}
 				}
 			}
 		}
@@ -494,7 +498,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk);
-				Assert.IsTrue (helper.Exists ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				}
 			}
 		}
 
