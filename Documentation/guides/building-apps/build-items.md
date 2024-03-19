@@ -23,9 +23,16 @@ These are often parent or imported POM files referenced by a Java library's POM 
 
 ```xml
 <ItemGroup>
-  <AndroidAdditionalJavaManifest Include="mylib-parent.pom" JavaArtifact="com.example.mylib-parent" JavaVersion="1.0.0" />
+  <AndroidAdditionalJavaManifest Include="mylib-parent.pom" JavaArtifact="com.example:mylib-parent" JavaVersion="1.0.0" />
 </ItemGroup>
 ```
+
+The following MSBuild metadata are required:
+
+- `%(JavaArtifact)`: The group and artifact id of the Java library matching the specifed POM
+  file in the form `{GroupId}:{ArtifactId}`.
+- `%(JavaVersion)`: The version of the Java library matching the specified POM file.
+  
 See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
 for more details.
 
@@ -146,6 +153,11 @@ cannot detect.
   <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations" Version="2.15.0" />
 </ItemGroup>
 ```
+
+The following MSBuild metadata are required:
+
+- `%(Version)`: The version of the Java library matching the specified `%(Include)`.
+
 See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
 for more details.
 
@@ -254,6 +266,17 @@ hosted in Maven.
   <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp" Version="4.9.3" />
 </ItemGroup>
 ```
+
+The following MSBuild metadata are supported:
+
+- `%(Version)`: Required version of the Java library referenced by `%(Include)`.
+- `%(Repository)`: Optional Maven repository to use. Supported values are `Central` (default),
+   `Google`, or an `https` URL to a Maven repository.
+
+The `<AndroidMavenLibrary>` item is translated to an 
+[`<AndroidLibrary>`](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/building-apps/build-items.md#androidlibrary) 
+item, so any metadata supported by `<AndroidLibrary>` like `Bind` or `Pack` are also supported.
+
 See the [AndroidMavenLibrary documentation](../AndroidMavenLibrary.md)
 for more details.
 
