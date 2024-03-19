@@ -29,10 +29,13 @@
       </Item>
       <Item ItemId=";name" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Android Activity template]]></Val>
+          <Val><![CDATA[Android Activity]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Modèle d’activité Android]]></Val>
+            <Val><![CDATA[Activité Android]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Android Activity template]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
