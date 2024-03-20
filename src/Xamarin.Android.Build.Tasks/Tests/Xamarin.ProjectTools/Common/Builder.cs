@@ -10,6 +10,8 @@ using System.Threading;
 using System.Xml.XPath;
 using System.Xml.Linq;
 
+using Xamarin.Android.Tasks;
+
 namespace Xamarin.ProjectTools
 {
 	public class Builder : IDisposable
@@ -20,6 +22,8 @@ namespace Xamarin.ProjectTools
 
 		string root;
 		string buildLogFullPath;
+		IEnumerable<string>? lastBuildOutput;
+
 		public bool IsUnix { get; set; }
 		/// <summary>
 		/// This passes /p:BuildingInsideVisualStudio=True, command-line to MSBuild
@@ -32,10 +36,17 @@ namespace Xamarin.ProjectTools
 		public LoggerVerbosity Verbosity { get; set; } = LoggerVerbosity.Diagnostic;
 		public IEnumerable<string> LastBuildOutput {
 			get {
-				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
-					return File.ReadLines (buildLogFullPath, Encoding.UTF8);
+				if (lastBuildOutput != null) {
+					return lastBuildOutput;
 				}
-				return Enumerable.Empty<string> ();
+
+				if (!string.IsNullOrEmpty (buildLogFullPath) && File.Exists (buildLogFullPath)) {
+					lastBuildOutput = File.ReadLines (buildLogFullPath, Encoding.UTF8);
+				} else {
+					lastBuildOutput = Enumerable.Empty<string> ();
+				}
+
+				return lastBuildOutput;
 			}
 		}
 		public TimeSpan LastBuildTime { get; protected set; }
@@ -120,6 +131,39 @@ namespace Xamarin.ProjectTools
 			allFrameworkVersions = allTFVs.ToArray ();
 		}
 
+		public HashSet<string> GetBuildRuntimeIdentifiers ()
+		{
+			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			foreach (string l in LastBuildOutput) {
+				string line = l.Trim ();
+				if (line.Length == 0 || line[0] != 'R') {
+					continue;
+				}
+
+				// Here's hoping MSBuild doesn't change the property reporting format
+				if (!line.StartsWith ("RuntimeIdentifiers =", StringComparison.Ordinal)) {
+					continue;
+				}
+
+				foreach (string r in line.Split ('=')[1].Split (';')) {
+					ret.Add (r.Trim ());
+				}
+				break;
+			}
+
+			return ret;
+		}
+
+		public HashSet<string> GetBuildAbis ()
+		{
+			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			foreach (string rid in GetBuildRuntimeIdentifiers ()) {
+				ret.Add (MonoAndroidHelper.RidToAbi (rid));
+			}
+
+			return ret;
+		}
+
 		static string GetApiInfoElementValue (string androidApiInfo, string elementPath)
 		{
 			if (!File.Exists (androidApiInfo))
@@ -159,6 +203,7 @@ namespace Xamarin.ProjectTools
 
 		protected bool BuildInternal (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null, bool restore = true, string binlogName = "msbuild")
 		{
+			lastBuildOutput = null; // make sure we don't return the previous build's cached output
 			buildLogFullPath = (!string.IsNullOrEmpty (BuildLogFile))
 				? Path.GetFullPath (Path.Combine (XABuildPaths.TestOutputDirectory, Path.GetDirectoryName (projectOrSolution), BuildLogFile))
 				: null;
@@ -372,4 +417,3 @@ namespace Xamarin.ProjectTools
 
 	}
 }
-

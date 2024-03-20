@@ -2,7 +2,8 @@
 #ifndef __XAMARIN_ANDROID_TYPEMAP_H
 #define __XAMARIN_ANDROID_TYPEMAP_H
 
-#include <stdint.h>
+#include <cstdint>
+#include <string_view>
 
 #include <jni.h>
 #include <mono/metadata/image.h>
@@ -13,8 +14,28 @@
 static constexpr uint64_t FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
-static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 1; // Increase whenever an incompatible change is made to the
-															 // assembly store format
+
+// The highest bit of assembly store version is a 64-bit ABI flag
+#if INTPTR_MAX == INT64_MAX
+static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x80000000;
+#else
+static constexpr uint32_t ASSEMBLY_STORE_64BIT_FLAG = 0x00000000;
+#endif
+
+// The second-to-last byte denotes the actual ABI
+#if defined(__aarch64__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00010000;
+#elif defined(__arm__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00020000;
+#elif defined(__x86_64__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00030000;
+#elif defined(__i386__)
+static constexpr uint32_t ASSEMBLY_STORE_ABI = 0x00040000;
+#endif
+
+// Increase whenever an incompatible change is made to the assembly store format
+static constexpr uint32_t ASSEMBLY_STORE_FORMAT_VERSION = 2 | ASSEMBLY_STORE_64BIT_FLAG | ASSEMBLY_STORE_ABI;
+
 static constexpr uint32_t MODULE_MAGIC_NAMES = 0x53544158; // 'XATS', little-endian
 static constexpr uint32_t MODULE_INDEX_MAGIC = 0x49544158; // 'XATI', little-endian
 static constexpr uint8_t  MODULE_FORMAT_VERSION = 2;       // Keep in sync with the value in src/Xamarin.Android.Build.Tasks/Utilities/TypeMapGenerator.cs
@@ -101,9 +122,10 @@ struct CompressedAssemblies
 	CompressedAssemblyDescriptor *descriptors;
 };
 
-struct XamarinAndroidBundledAssembly final
+struct XamarinAndroidBundledAssembly
 {
-	int32_t  apk_fd;
+	int32_t  file_fd;
+	char    *file_name;
 	uint32_t data_offset;
 	uint32_t data_size;
 	uint8_t *data;
@@ -114,23 +136,38 @@ struct XamarinAndroidBundledAssembly final
 //
 // Assembly store format
 //
-// The separate hash indices for 32 and 64-bit hashes are required because they will be sorted differently.
-// The 'index' field of each of the hashes{32,64} entry points not only into the `assemblies` array in the
-// store but also into the `uint8_t*` `assembly_store_bundled_assemblies*` arrays.
+// Each target ABI/architecture has a single assembly store file, composed of the following parts:
 //
-// This way the `assemblies` array in the store can remain read only, because we write the "mapped" assembly
-// pointer somewhere else. Otherwise we'd have to copy the `assemblies` array to a writable area of memory.
+// [HEADER]
+// [INDEX]
+// [ASSEMBLY_DESCRIPTORS]
+// [ASSEMBLY DATA]
 //
-// Each store has a unique ID assigned, which is an index into an array of pointers to arrays which store
-// individual assembly addresses. Only store with ID 0 comes with the hashes32 and hashes64 arrays. This is
-// done to make it possible to use a single sorted array to find assemblies insted of each store having its
-// own sorted array of hashes, which would require several binary searches instead of just one.
+// Formats of the sections above are as follows:
 //
-//   AssemblyStoreHeader header;
-//   AssemblyStoreAssemblyDescriptor assemblies[header.local_entry_count];
-//   AssemblyStoreHashEntry hashes32[header.global_entry_count]; // only in assembly store with ID 0
-//   AssemblyStoreHashEntry hashes64[header.global_entry_count]; // only in assembly store with ID 0
-//   [DATA]
+// HEADER (fixed size)
+//  [MAGIC]              uint; value: 0x41424158
+//  [FORMAT_VERSION]     uint; store format version number
+//  [ENTRY_COUNT]        uint; number of entries in the store
+//  [INDEX_ENTRY_COUNT]  uint; number of entries in the index
+//  [INDEX_SIZE]         uint; index size in bytes
+//
+// INDEX (variable size, HEADER.ENTRY_COUNT*2 entries, for assembly names with and without the extension)
+//  [NAME_HASH]          uint on 32-bit platforms, ulong on 64-bit platforms; xxhash of the assembly name
+//  [DESCRIPTOR_INDEX]   uint; index into in-store assembly descriptor array
+//
+// ASSEMBLY_DESCRIPTORS (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
+//  [MAPPING_INDEX]      uint; index into a runtime array where assembly data pointers are stored
+//  [DATA_OFFSET]        uint; offset from the beginning of the store to the start of assembly data
+//  [DATA_SIZE]          uint; size of the stored assembly data
+//  [DEBUG_DATA_OFFSET]  uint; offset from the beginning of the store to the start of assembly PDB data, 0 if absent
+//  [DEBUG_DATA_SIZE]    uint; size of the stored assembly PDB data, 0 if absent
+//  [CONFIG_DATA_OFFSET] uint; offset from the beginning of the store to the start of assembly .config contents, 0 if absent
+//  [CONFIG_DATA_SIZE]   uint; size of the stored assembly .config contents, 0 if absent
+//
+// ASSEMBLY_NAMES (variable size, HEADER.ENTRY_COUNT entries), each entry formatted as follows:
+//  [NAME_LENGTH]        uint: length of assembly name
+//  [NAME]               byte: UTF-8 bytes of assembly name, without the NUL terminator
 //
 
 //
@@ -141,31 +178,21 @@ struct [[gnu::packed]] AssemblyStoreHeader final
 {
 	uint32_t magic;
 	uint32_t version;
-	uint32_t local_entry_count;
-	uint32_t global_entry_count;
-	uint32_t store_id;
+	uint32_t entry_count;
+	uint32_t index_entry_count;
+	uint32_t index_size; // index size in bytes
 };
 
-struct [[gnu::packed]] AssemblyStoreHashEntry final
+struct [[gnu::packed]] AssemblyStoreIndexEntry final
 {
-	union {
-		uint64_t hash64;
-		uint32_t hash32;
-	};
+	xamarin::android::hash_t name_hash;
+	uint32_t descriptor_index;
+};
 
-	// Index into the array with pointers to assembly data.
-	// It **must** be unique across all the stores from all the apks
+struct [[gnu::packed]] AssemblyStoreEntryDescriptor final
+{
 	uint32_t mapping_index;
 
-	// Index into the array with assembly descriptors inside a store
-	uint32_t local_store_index;
-
-	// Index into the array with assembly store mmap addresses
-	uint32_t store_id;
-};
-
-struct [[gnu::packed]] AssemblyStoreAssemblyDescriptor final
-{
 	uint32_t data_offset;
 	uint32_t data_size;
 
@@ -180,7 +207,8 @@ struct AssemblyStoreRuntimeData final
 {
 	uint8_t             *data_start;
 	uint32_t             assembly_count;
-	AssemblyStoreAssemblyDescriptor *assemblies;
+	uint32_t             index_entry_count;
+	AssemblyStoreEntryDescriptor *assemblies;
 };
 
 struct AssemblyStoreSingleAssemblyRuntimeData final
@@ -188,7 +216,7 @@ struct AssemblyStoreSingleAssemblyRuntimeData final
 	uint8_t             *image_data;
 	uint8_t             *debug_info_data;
 	uint8_t             *config_data;
-	AssemblyStoreAssemblyDescriptor *descriptor;
+	AssemblyStoreEntryDescriptor *descriptor;
 };
 
 enum class MonoComponent : uint32_t
@@ -217,8 +245,8 @@ struct ApplicationConfig
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
-	uint32_t number_of_assembly_store_files;
 	uint32_t number_of_dso_cache_entries;
+	uint32_t number_of_shared_libraries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
 	uint32_t jnienv_registerjninatives_method_token;
@@ -228,9 +256,17 @@ struct ApplicationConfig
 	const char *android_package_name;
 };
 
+struct DSOApkEntry
+{
+	uint64_t name_hash;
+	uint32_t offset; // offset into the APK
+	int32_t  fd; // apk file descriptor
+};
+
 struct DSOCacheEntry
 {
 	uint64_t       hash;
+	uint64_t       real_name_hash;
 	bool           ignore;
 	const char    *name;
 	void          *handle;
@@ -296,9 +332,10 @@ MONO_API MONO_API_EXPORT const char* const mono_aot_mode_name;
 
 MONO_API MONO_API_EXPORT XamarinAndroidBundledAssembly bundled_assemblies[];
 MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
-MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_stores[];
+MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_store;
 
 MONO_API MONO_API_EXPORT DSOCacheEntry dso_cache[];
+MONO_API MONO_API_EXPORT DSOApkEntry dso_apk_entries[];
 
 //
 // Support for marshal methods
@@ -313,7 +350,7 @@ struct MarshalMethodsManagedClass
 // Number of assembly name forms for which we generate hashes (essentially file name mutations. For instance
 // `HelloWorld.dll`, `HelloWorld`, `en-US/HelloWorld` etc). This is multiplied by the number of assemblies in the apk to
 // obtain number of entries in the `assembly_image_cache_hashes` and `assembly_image_cache_indices` entries
-constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 2;
+constexpr uint32_t number_of_assembly_name_forms_in_image_cache = 3;
 
 // These 3 arrays constitute the cache used to store pointers to loaded managed assemblies.
 // Three arrays are used so that we can have multiple hashes pointing to the same MonoImage*.

@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Szablon Aktywność systemu Android",
+  "name": "Android Activity",
   "description": "Klasa Aktywność systemu Android",
   "symbols/namespace/description": "przestrzeń nazw wygenerowanego kodu.",
   "postActions/openInEditor/description": "Otwiera plik Activity1.cs w edytorze"
