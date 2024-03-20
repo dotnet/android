@@ -240,6 +240,10 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
+			// Enable full trimming
+			if (!xamarinForms && isRelease) {
+				proj.TrimModeRelease = TrimMode.Full;
+			}
 			if (multidex) {
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			}

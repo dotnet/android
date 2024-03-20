@@ -1,5 +1,5 @@
 using System;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.App;
 using Android.Content.Res;
 using Android.Graphics;
@@ -25,6 +25,7 @@ namespace Android.GraphicsTests
 		};
 
 		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (NinePatchDrawable))]
 		public void DrawableFromRes_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
 			var d = Application.Context.Resources.GetDrawable (resId);
@@ -33,6 +34,7 @@ namespace Android.GraphicsTests
 		}
 
 		[Test, TestCaseSource (nameof (NinePatchDrawables))]
+		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (NinePatchDrawable))]
 		public void DrawableFromResStream_ShouldBeTypeNinePatchDrawable (int resId, string name)
 		{
 			var value = new Android.Util.TypedValue ();

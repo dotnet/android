@@ -1,6 +1,7 @@
 using System;
 using System.Reflection;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 
 using NUnit.Framework;
 
@@ -180,6 +181,7 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void JavaAbstractMethodTest ()
 		{
 			// Library is referencing APIv1, ICursor is from APIv2
@@ -198,7 +200,7 @@ namespace Xamarin.Android.JcwGenTests {
 					throw e;
 			}
 
-			var mi = ic.GetType ().GetMethod ("global::Test.Bindings.ICursor.MethodWithCursor", BindingFlags.Instance | BindingFlags.NonPublic);
+			var mi = typeof (Library.MyClrCursor).GetMethod ("global::Test.Bindings.ICursor.MethodWithCursor", BindingFlags.Instance | BindingFlags.NonPublic);
 			Assert.IsNotNull (mi, "ICursor.MethodWithCursor not found");
 			if (mi.GetMethodBody ()?.LocalVariables?.Count is not int x || x == 0)
 				throw new Exception ("FixAbstractMethodStep broken, MethodWithRT added, while it should not be");
