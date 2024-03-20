@@ -24,7 +24,7 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 7.0
+  value: 8.0
 - name: DotNetSdkQuality
   value: GA
 - name: GitHub.Token
