@@ -29,6 +29,12 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  set(DEBUG_BUILD True)
+else()
+  set(DEBUG_BUILD False)
+endif()
+
 set(XA_NO_INLINE "$ENV{XA_NO_INLINE}")
 if(XA_NO_INLINE)
   set(DONT_INLINE_DEFAULT ON)
@@ -37,7 +43,7 @@ else()
 endif()
 
 set(XA_NO_STRIP "$ENV{XA_NO_STRIP}")
-if(XA_NO_STRIP)
+if(XA_NO_STRIP OR DEBUG_BUILD)
   set(STRIP_DEBUG_DEFAULT OFF)
 endif()
 
@@ -74,11 +80,7 @@ if(USE_CCACHE)
   endif()
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(DEBUG_BUILD True)
-else()
-  set(DEBUG_BUILD False)
-endif()
+
 
 if(ANDROID_STL STREQUAL none)
   set(USES_LIBSTDCPP False)
