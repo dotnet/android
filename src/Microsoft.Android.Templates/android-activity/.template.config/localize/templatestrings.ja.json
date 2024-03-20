@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Activity",
+  "name": "Android アクティビティ",
   "description": "Android アクティビティ クラス",
   "symbols/namespace/description": "生成されたコードの名前空間",
   "postActions/openInEditor/description": "エディターで Activity1.cs を開きます"
