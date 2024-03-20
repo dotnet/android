@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
@@ -47,12 +48,19 @@ namespace Java.LangTests
 
 		static Func<IJavaObject, int> GetIJavaObjectToInt32 ()
 		{
-			var JavaConvert       = typeof (Java.Lang.Object).Assembly.GetType ("Java.Interop.JavaConvert");
+			[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = "")]
+			static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
+				// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
+				#pragma warning disable IL3050
+				method.MakeGenericMethod (type);
+				#pragma warning restore IL3050
+
+			var JavaConvert       = Type.GetType ("Java.Interop.JavaConvert, Mono.Android");
 			var FromJavaObject_T  = JavaConvert.GetMethods (BindingFlags.Public | BindingFlags.Static)
 				.First (m => m.Name == "FromJavaObject" && m.IsGenericMethod);
 			return (Func<IJavaObject, int>) Delegate.CreateDelegate (
 					typeof(Func<IJavaObject, int>),
-					FromJavaObject_T.MakeGenericMethod (typeof (int)));
+					MakeGenericMethod (FromJavaObject_T, typeof (int)));
 		}
 
 		[Test]

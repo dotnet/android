@@ -2,7 +2,6 @@
 #include <cerrno>
 #include <cctype>
 #include <vector>
-#include <type_traits>
 #include <libgen.h>
 
 #include <mono/metadata/assembly.h>
@@ -10,16 +9,11 @@
 #include "embedded-assemblies.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
+#include "xxhash.hh"
 
 using namespace xamarin::android::internal;
 
 using read_count_type = size_t;
-
-force_inline bool
-EmbeddedAssemblies::is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept
-{
-	return utils.ends_with (name, ".pdb");
-}
 
 force_inline bool
 EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
@@ -28,33 +22,38 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	bool result = zip_read_entry_info (buf, entry_name, state);
 
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "%s entry: %s", state.apk_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
-#endif
+	log_debug (LOG_ASSEMBLY, "%s entry: %s", state.file_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
 	if (!result || entry_name.empty ()) {
-		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", entry_index, state.apk_name);
+		log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory info for entry %u in APK file %s", entry_index, state.file_name);
 		Helpers::abort_application ();
 	}
 
-	if (!zip_adjust_data_offset (state.apk_fd, state)) {
-		log_fatal (LOG_ASSEMBLY, "Failed to adjust data start offset for entry %u in APK file %s", entry_index, state.apk_name);
+	if (!zip_adjust_data_offset (state.file_fd, state)) {
+		log_fatal (LOG_ASSEMBLY, "Failed to adjust data start offset for entry %u in APK file %s", entry_index, state.file_name);
 		Helpers::abort_application ();
 	}
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
-#endif
+
+	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
 	if (state.compression_method != 0) {
 		return false;
 	}
 
-	if (entry_name.get ()[0] != state.prefix[0] || strncmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
-		return false;
+	if (entry_name.get ()[0] != state.prefix[0] || entry_name.length () < state.prefix_len || memcmp (state.prefix, entry_name.get (), state.prefix_len) != 0) {
+		// state.prefix and apk_lib_prefix can point to the same location, see get_assemblies_prefix_and_length()
+		// In such instance we short-circuit and avoid a couple of comparisons below.
+		if (state.prefix == apk_lib_prefix.data ()) {
+			return false;
+		}
+
+		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix.data (), entry_name.get (), apk_lib_prefix.size () - 1) != 0) {
+			return false;
+		}
 	}
 
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
-			runtime_config_blob_mmap = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
+			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
 		}
 	}
@@ -62,19 +61,74 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	// assemblies must be 4-byte aligned, or Bad Things happen
 	if ((state.data_offset & 0x3) != 0) {
 		log_fatal (LOG_ASSEMBLY, "Assembly '%s' is located at bad offset %lu within the .apk\n", entry_name.get (), state.data_offset);
-		log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (state.apk_name, '/') + 1);
+		log_fatal (LOG_ASSEMBLY, "You MUST run `zipalign` on %s\n", strrchr (state.file_name, '/') + 1);
 		Helpers::abort_application ();
 	}
 
 	return true;
 }
 
+inline void
+EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
+{
+#if defined (DEBUG)
+	const char *last_slash = utils.find_last (entry_name, '/');
+	bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
+#else
+	constexpr bool entry_is_overridden = false;
+#endif
+
+	if (register_debug_symbols && !entry_is_overridden && utils.ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
+		if (bundled_debug_data == nullptr) {
+			bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
+			bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
+		}
+
+		bundled_debug_data->emplace_back ();
+		set_debug_entry_data (bundled_debug_data->back (), state, entry_name);
+		return;
+	}
+
+	if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
+		return;
+	}
+
+#if defined (DEBUG)
+	if (entry_is_overridden) {
+		return;
+	}
+#endif
+
+	if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || state.bundled_assemblies_slow_path) [[unlikely]] {
+		if (!state.bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
+			log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.", application_config.number_of_assemblies_in_apk);
+		}
+
+		if (extra_bundled_assemblies == nullptr) {
+			extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
+		}
+
+		extra_bundled_assemblies->emplace_back ();
+		// <true> means we need to allocate memory to store the entry name, only the entries pre-allocated during
+		// build have valid pointer to the name storage area
+		set_entry_data<true> (extra_bundled_assemblies->back (), state, entry_name);
+		return;
+	}
+
+	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index %zu", bundled_assembly_index);
+	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state, entry_name);
+	log_debug (LOG_ASSEMBLY, "[%zu] data set: name == '%s'; file_name == '%s'", bundled_assembly_index, bundled_assemblies [bundled_assembly_index].name, bundled_assemblies [bundled_assembly_index].file_name);
+	bundled_assembly_index++;
+	number_of_found_assemblies = bundled_assembly_index;
+	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
+}
+
 force_inline void
 EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
+	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
-	uint32_t max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
+	configure_state_for_individual_assembly_load (state);
 
 	// clang-tidy claims we have a leak in the loop:
 	//
@@ -90,116 +144,68 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 			continue;
 		}
 
-#if defined (DEBUG)
-		const char *last_slash = utils.find_last (entry_name, '/');
-		bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
-#else
-		constexpr bool entry_is_overridden = false;
-#endif
-
-		if (register_debug_symbols && !entry_is_overridden && is_debug_file (entry_name)) {
-			if (bundled_debug_data == nullptr) {
-				bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
-				bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
-			}
-
-			bundled_debug_data->emplace_back ();
-			set_debug_entry_data (bundled_debug_data->back (), state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-			continue;
+		if (entry_name[state.prefix_len + SharedConstants::REGULAR_ASSEMBLY_MARKER_INDEX] == SharedConstants::REGULAR_ASSEMBLY_MARKER_CHAR) {
+			unmangle_name<UnmangleRegularAssembly> (entry_name, state.prefix_len);
+		} else if (entry_name[state.prefix_len + SharedConstants::SATELLITE_ASSEMBLY_MARKER_INDEX] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
+			unmangle_name<UnmangleSatelliteAssembly> (entry_name, state.prefix_len);
+		} else {
+			continue; // Can't be an assembly, the name's not mangled
 		}
 
-		if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION))
-			continue;
-
-#if defined (DEBUG)
-		if (entry_is_overridden)
-			continue;
-#endif
-
-		if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || bundled_assemblies_slow_path) [[unlikely]] {
-			if (!bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
-				log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.");
-			}
-
-			if (extra_bundled_assemblies == nullptr) {
-				extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
-			}
-
-			extra_bundled_assemblies->emplace_back ();
-			// <true> means we need to allocate memory to store the entry name, only the entries pre-allocated during
-			// build have valid pointer to the name storage area
-			set_entry_data<true> (extra_bundled_assemblies->back (), state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-			continue;
-		}
-
-		set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state.apk_fd, state.data_offset, state.file_size, state.prefix_len, max_assembly_name_size, entry_name);
-		bundled_assembly_index++;
-		number_of_found_assemblies = bundled_assembly_index;
+		store_individual_assembly_data (entry_name, state, should_register);
 	}
-
-	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
-force_inline void
+inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
-	if (number_of_mapped_assembly_stores >= application_config.number_of_assembly_store_files) {
-		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", application_config.number_of_assembly_store_files);
+	if (number_of_mapped_assembly_stores > number_of_assembly_store_files) {
+		log_fatal (LOG_ASSEMBLY, "Too many assembly stores. Expected at most %u", number_of_assembly_store_files);
 		Helpers::abort_application ();
 	}
 
-	md_mmap_info assembly_store_map = md_mmap_apk_file (state.apk_fd, state.data_offset, state.file_size, entry_name.get ());
+	int fd;
+	bool close_fd;
+	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+		log_debug (LOG_ASSEMBLY, "Mapping assembly blob file from filesystem");
+		close_fd = true;
+
+		// state.file_fd refers to the directory where our files live
+		auto temp_fd = Util::open_file_ro_at (state.file_fd, entry_name.get ());
+		if (!temp_fd) {
+			return;
+		}
+		fd = temp_fd.value ();
+	} else {
+		fd = state.file_fd;
+		close_fd = false;
+	}
+
+	md_mmap_info assembly_store_map = md_mmap_apk_file (fd, state.data_offset, state.file_size, entry_name.get ());
+	if (close_fd) {
+		close (fd);
+	}
 	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid Xamarin.Android assembly store file", entry_name.get ());
+		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid .NET Android assembly store file", entry_name.get ());
 		Helpers::abort_application ();
 	}
 
-	if (header->version > ASSEMBLY_STORE_FORMAT_VERSION) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format v%u which is not understood by this version of Xamarin.Android", entry_name.get (), header->version);
-		Helpers::abort_application ();
-	}
-
-	if (header->store_id >= application_config.number_of_assembly_store_files) {
-		log_fatal (
-			LOG_ASSEMBLY,
-			"Assembly store '%s' index %u exceeds the number of stores known at application build time, %u",
-			entry_name.get (),
-			header->store_id,
-			application_config.number_of_assembly_store_files
-		);
-		Helpers::abort_application ();
-	}
-
-	AssemblyStoreRuntimeData &rd = assembly_stores[header->store_id];
-	if (rd.data_start != nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' has a duplicate ID (%u)", entry_name.get (), header->store_id);
+	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
+		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x", entry_name.get (), header->version, ASSEMBLY_STORE_FORMAT_VERSION);
 		Helpers::abort_application ();
 	}
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 
-	rd.data_start = static_cast<uint8_t*>(assembly_store_map.area);
-	rd.assembly_count = header->local_entry_count;
-	rd.assemblies = reinterpret_cast<AssemblyStoreAssemblyDescriptor*>(rd.data_start + header_size);
+	assembly_store.data_start = static_cast<uint8_t*>(assembly_store_map.area);
+	assembly_store.assembly_count = header->entry_count;
+	assembly_store.index_entry_count = header->index_entry_count;
+	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
 
-	number_of_found_assemblies += rd.assembly_count;
-
-	if (header->store_id == 0) {
-		constexpr size_t bundled_assembly_size = sizeof(AssemblyStoreAssemblyDescriptor);
-		constexpr size_t hash_entry_size = sizeof(AssemblyStoreHashEntry);
-
-		index_assembly_store_header = header;
-
-		size_t bytes_before_hashes = header_size + (bundled_assembly_size * header->local_entry_count);
-		if constexpr (std::is_same_v<hash_t, uint64_t>) {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes + (hash_entry_size * header->global_entry_count));
-		} else {
-			assembly_store_hashes = reinterpret_cast<AssemblyStoreHashEntry*>(rd.data_start + bytes_before_hashes);
-		}
-	}
-
+	number_of_found_assemblies += assembly_store.assembly_count;
 	number_of_mapped_assembly_stores++;
 	have_and_want_debug_symbols = register_debug_symbols;
 }
@@ -212,10 +218,9 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool common_assembly_store_found = false;
-	bool arch_assembly_store_found = false;
+	bool assembly_store_found = false;
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK (common: '%s'; arch-specific: '%s')", assembly_store_common_file_name.data (), assembly_store_arch_file_name.data ());
+	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_path.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -227,14 +232,30 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!common_assembly_store_found && utils.ends_with (entry_name, assembly_store_common_file_name)) {
-			common_assembly_store_found = true;
+		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_path)) {
+			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
+			continue;
 		}
 
-		if (!arch_assembly_store_found && utils.ends_with (entry_name, assembly_store_arch_file_name)) {
-			arch_assembly_store_found = true;
-			map_assembly_store (entry_name, state);
+		if (number_of_zip_dso_entries >= application_config.number_of_shared_libraries) {
+			continue;
+		}
+
+		// Since it's not an assembly store, it's a shared library most likely and it is long enough for us not to have
+		// to check the length
+		if (utils.ends_with (entry_name, dso_suffix)) {
+			constexpr size_t apk_lib_prefix_len = apk_lib_prefix.size () - 1;
+
+			const char *const name = entry_name.get () + apk_lib_prefix_len;
+			DSOApkEntry *apk_entry = reinterpret_cast<DSOApkEntry*>(reinterpret_cast<uint8_t*>(dso_apk_entries) + (sizeof(DSOApkEntry) * number_of_zip_dso_entries));
+
+			apk_entry->name_hash = xxhash::hash (name, entry_name.length () - apk_lib_prefix_len);
+			apk_entry->offset = state.data_offset;
+			apk_entry->fd = state.file_fd;
+
+			log_debug (LOG_ASSEMBLY, "Found a shared library entry %s (index: %u; name: %s; hash: 0x%zx; apk offset: %u)", entry_name.get (), number_of_zip_dso_entries, name, apk_entry->name_hash, apk_entry->offset);
+			number_of_zip_dso_entries++;
 		}
 	}
 }
@@ -262,11 +283,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	}
 
 	std::vector<uint8_t>  buf (cd_size);
+	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
-		.apk_fd              = fd,
-		.apk_name            = apk_name,
-		.prefix              = get_assemblies_prefix (),
-		.prefix_len          = get_assemblies_prefix_length (),
+		.file_fd             = fd,
+		.file_name           = apk_name,
+		.prefix              = prefix,
+		.prefix_len          = prefix_len,
 		.buf_offset          = 0,
 		.compression_method  = 0,
 		.local_header_offset = 0,
@@ -289,31 +311,43 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 
 template<bool NeedsNameAlloc>
 force_inline void
-EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
+EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
-	entry.apk_fd = apk_fd;
+	entry.file_fd = state.file_fd;
 	if constexpr (NeedsNameAlloc) {
-		entry.name = utils.strdup_new (entry_name.get () + prefix_len);
+		entry.name = utils.strdup_new (entry_name.get () + state.prefix_len);
+		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
+			entry.file_name = utils.strdup_new (state.file_name);
+		}
 	} else {
-		// entry.name is preallocated on build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
+		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
-		strncpy (entry.name, entry_name.get () + prefix_len, max_name_size);
+		strncpy (entry.name, entry_name.get () + state.prefix_len, state.max_assembly_name_size);
+		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
+			strncpy (entry.file_name, state.file_name, state.max_assembly_file_name_size);
+		}
 	}
-	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - prefix_len, max_name_size);
-	entry.data_offset = data_offset;
-	entry.data_size = data_size;
+	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - state.prefix_len, state.max_assembly_name_size);
+	entry.data_offset = state.data_offset;
+	entry.data_size = state.file_size;
+
+	log_debug (
+		LOG_ASSEMBLY,
+		"Set bundled assembly entry data. file name: '%s'; entry name: '%s'; data size: %u",
+		entry.file_name, entry.name, entry.data_size
+	);
 }
 
 force_inline void
-EmbeddedAssemblies::set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
+EmbeddedAssemblies::set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
-	set_entry_data<false> (entry, apk_fd, data_offset, data_size, prefix_len, max_name_size, entry_name);
+	set_entry_data<false> (entry, state, entry_name);
 }
 
 force_inline void
-EmbeddedAssemblies::set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
+EmbeddedAssemblies::set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
 {
-	set_entry_data<true> (entry, apk_fd, data_offset, data_size, prefix_len, max_name_size, entry_name);
+	set_entry_data<true> (entry, state, entry_name);
 }
 
 bool

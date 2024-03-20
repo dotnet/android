@@ -108,10 +108,16 @@ namespace Xamarin.Android.Build.Tests
 			try {
 				return RunProcessWithExitCode ("apkdiff" + ext, args);
 			} catch (System.ComponentModel.Win32Exception) {
-				// apkdiff's location might not be in the $PATH, try known location
+				// apkdiff's location might not be in the $PATH, try known locations
 				var profileDir = Environment.GetFolderPath (Environment.SpecialFolder.UserProfile);
-
-				return RunProcessWithExitCode (Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext), args);
+				var apkdiffPath = Path.Combine (profileDir, ".dotnet", "tools", "apkdiff" + ext);
+				if (!File.Exists (apkdiffPath)) {
+					var agentToolsDir = Environment.GetEnvironmentVariable ("AGENT_TOOLSDIRECTORY");
+					if (Directory.Exists (agentToolsDir)) {
+						apkdiffPath = Path.Combine (agentToolsDir, "apkdiff" + ext);
+					}
+				}
+				return RunProcessWithExitCode (apkdiffPath, args);
 			}
 		}
 

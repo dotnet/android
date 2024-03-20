@@ -30,6 +30,7 @@ using System;
 using System.Reflection;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
@@ -160,6 +161,7 @@ namespace Xamarin.Android.NetTests {
 			return Exceptions (e).Any (v => (v as WebException)?.Status == WebExceptionStatus.SecureChannelFailure);
 		}
 
+		[UnconditionalSuppressMessage ("Trimming", "IL2075", Justification = "Tests private fields are preserved by other means")]
 		static Type GetInnerHandlerType (HttpClient httpClient)
 		{
 			BindingFlags bflasgs = BindingFlags.Instance | BindingFlags.NonPublic;

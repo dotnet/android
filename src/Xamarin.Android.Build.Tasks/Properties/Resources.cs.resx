@@ -329,6 +329,20 @@ Pokud tento soubor pochází z balíčku NuGet, aktualizujte na novější verzi
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>Metadata položek %(AndroidAsset.AssetPack) a %(AndroidAsset.AssetPack) se podporují jenom v případě, že $(AndroidApplication) je true.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>@(AndroidAsset) {0} má neplatná metadata DeliveryType pro {1}. Podporované hodnoty jsou installtime, ondemand nebo fastfollow.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>Hodnota AssetPack definovaná pro {0} obsahuje neplatné znaky. Hodnota {1} by měla obsahovat pouze znaky A–Z, a–z, 0–9 nebo podtržítko.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>Při parsování {0} došlo k problému. Pravděpodobnou příčinou je neúplný nebo neplatný kód XML. Výjimka: {1}</value>
     <comment>{0} - The file name

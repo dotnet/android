@@ -329,6 +329,20 @@ When it appears in the middle of a sentence, "lint" is not capitalized.
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>仅当 `$(AndroidApplication)` 为 `true` 时，才支持 %(AndroidAsset.AssetPack)和 %(AndroidAsset.AssetPack)项元数据。</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>`@(AndroidAsset)` `{0}` 的 `DeliveryType` 元数据 `{1}` 无效。支持的值为 `installtime`、`ondemand` 或 `fastfollow`。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>为 `{0}` 定义的 AssetPack 值包含无效字符。`{1}` 应仅包含 A-z、a-z、0-9 或下划线。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>分析 {0} 时出现问题。这可能是由于 XML 不完整或无效。异常: {1}</value>
     <comment>{0} - The file name

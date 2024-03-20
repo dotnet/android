@@ -138,12 +138,14 @@ namespace Xamarin.Android.Net
 		DecompressionMethods _decompressionMethods;
 
 		bool disposed;
+		bool started;
 
 		// Now all hail Java developers! Get this... HttpURLClient defaults to accepting AND
 		// uncompressing the gzip content encoding UNLESS you set the Accept-Encoding header to ANY
 		// value. So if we set it to 'gzip' below we WILL get gzipped stream but HttpURLClient will NOT
 		// uncompress it any longer, doh. And they don't support 'deflate' so we need to handle it ourselves.
-		bool decompress_here;
+		bool decompress_here => _acceptEncoding is not null && _acceptEncoding != IDENTITY_ENCODING;
+		string? _acceptEncoding;
 
 		public bool SupportsAutomaticDecompression => true;
 		public bool SupportsProxy => true;
@@ -152,7 +154,29 @@ namespace Xamarin.Android.Net
 		public DecompressionMethods AutomaticDecompression
 		{
 			get => _decompressionMethods;
-			set => _decompressionMethods = value;
+			set
+			{
+				CheckDisposedOrStarted ();
+
+				_decompressionMethods = value;
+				_acceptEncoding = null;
+
+				if (value == DecompressionMethods.None) {
+					_acceptEncoding = IDENTITY_ENCODING;
+				} else {
+					if ((value & DecompressionMethods.GZip) != 0) {
+						_acceptEncoding = GZIP_ENCODING;
+					}
+
+					if ((value & DecompressionMethods.Deflate) != 0) {
+						_acceptEncoding = _acceptEncoding is null ? DEFLATE_ENCODING : $"{_acceptEncoding}, {DEFLATE_ENCODING}";
+					}
+
+					if ((value & DecompressionMethods.Brotli) != 0) {
+						_acceptEncoding = _acceptEncoding is null ? BROTLI_ENCODING : $"{_acceptEncoding}, {BROTLI_ENCODING}";
+					}
+				}
+			}
 		}
 
 		public CookieContainer CookieContainer
@@ -334,7 +358,7 @@ namespace Xamarin.Android.Net
 
 		protected override void Dispose (bool disposing)
 		{
-			disposed  = true;
+			disposed = true;
 
 			base.Dispose (disposing);
 		}
@@ -344,6 +368,14 @@ namespace Xamarin.Android.Net
 			if (!disposed)
 				return;
 			throw new ObjectDisposedException (nameof (AndroidMessageHandler));
+		}
+
+		void CheckDisposedOrStarted ()
+		{
+			AssertSelf ();
+			if (started) {
+				throw new InvalidOperationException ("The handler has already started sending requests");
+			}
 		}
 
 		string EncodeUrl (Uri url)
@@ -407,6 +439,7 @@ namespace Xamarin.Android.Net
 
 		internal async Task <HttpResponseMessage> DoSendAsync (HttpRequestMessage request, CancellationToken cancellationToken)
 		{
+			started = true;
 			AssertSelf ();
 			if (request == null)
 				throw new ArgumentNullException (nameof (request));
@@ -1050,15 +1083,6 @@ namespace Xamarin.Android.Net
 		internal TrustManagerFactory? ConfigureTrustManagerFactoryInternal (KeyStore? keyStore)
 			=> ConfigureTrustManagerFactory (keyStore);
 
-		void AppendEncoding (string encoding, ref List <string>? list)
-		{
-			if (list == null)
-				list = new List <string> ();
-			if (list.Contains (encoding))
-				return;
-			list.Add (encoding);
-		}
-
 		async Task <HttpURLConnection> SetupRequestInternal (HttpRequestMessage request, URLConnection conn)
 		{
 			if (conn == null)
@@ -1080,30 +1104,8 @@ namespace Xamarin.Android.Net
 				AddHeaders (httpConnection, request.Content.Headers);
 			AddHeaders (httpConnection, request.Headers);
 
-			List <string>? accept_encoding = null;
-
-			decompress_here = false;
-			if (AutomaticDecompression == DecompressionMethods.None) {
-				AppendEncoding (IDENTITY_ENCODING, ref accept_encoding); // Turns off compression for the Java client
-			} else {
-				if ((AutomaticDecompression & DecompressionMethods.GZip) != 0) {
-					AppendEncoding (GZIP_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-
-				if ((AutomaticDecompression & DecompressionMethods.Deflate) != 0) {
-					AppendEncoding (DEFLATE_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-
-				if ((AutomaticDecompression & DecompressionMethods.Brotli) != 0) {
-					AppendEncoding (BROTLI_ENCODING, ref accept_encoding);
-					decompress_here = true;
-				}
-			}
-
-			if (accept_encoding?.Count > 0)
-				httpConnection.SetRequestProperty ("Accept-Encoding", String.Join (",", accept_encoding));
+			if (_acceptEncoding is not null)
+				httpConnection.SetRequestProperty ("Accept-Encoding", _acceptEncoding);
 
 			if (UseCookies && CookieContainer != null && request.RequestUri is not null) {
 				string cookieHeaderValue = CookieContainer.GetCookieHeader (request.RequestUri);

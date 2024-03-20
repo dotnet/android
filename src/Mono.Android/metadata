@@ -1880,7 +1880,11 @@
   <attr api-since="34" path="/api/package[@name='android.content']/class[@name='ContextWrapper']/method[@name='registerReceiver' and count(parameter)=5 and parameter[1][@type='android.content.BroadcastReceiver'] and parameter[2][@type='android.content.IntentFilter'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='android.os.Handler'] and parameter[5][@type='int']]" name="deprecated">This method has an incorrect enumeration type. Use the overload that takes ReceiverFlags instead.</attr>
   <attr api-since="34" path="/api/package[@name='android.test.mock']/class[@name='MockContext']/method[@name='registerReceiver' and count(parameter)=3 and parameter[1][@type='android.content.BroadcastReceiver'] and parameter[2][@type='android.content.IntentFilter'] and parameter[3][@type='int']]" name="deprecated">This method has an incorrect enumeration type. Use the overload that takes ReceiverFlags instead.</attr>
   <attr api-since="34" path="/api/package[@name='android.test.mock']/class[@name='MockContext']/method[@name='registerReceiver' and count(parameter)=5 and parameter[1][@type='android.content.BroadcastReceiver'] and parameter[2][@type='android.content.IntentFilter'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='android.os.Handler'] and parameter[5][@type='int']]" name="deprecated">This method has an incorrect enumeration type. Use the overload that takes ReceiverFlags instead.</attr>
-	
+
+  <!-- These methods are hand-bound in HardwareBuffer.cs because they have a long enum type, which generator doesn't support. -->
+  <remove-node api-since="26" path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='create' and count(parameter)=5 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='long']]" />
+  <remove-node api-since="26" path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='getUsage' and count(parameter)=0]" />
+
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.

@@ -329,6 +329,20 @@ Se esse arquivo provém de um pacote NuGet, faça a atualização para uma vers�
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>Os metadados do item %(AndroidAsset.AssetPack) e %(AndroidAsset.AssetPack) só têm suporte quando “$(AndroidApplication)” é “true”.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>“{0}” do “@(AndroidAsset)” tem um metadado “DeliveryType” inválido de “{1}”. Os valores com suporte são “installtime”, “ondemand” ou “fastfollow”.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>O valor do AssetPack definido para “{0}” tem caracteres inválidos. “{1}” deve conter apenas A-z, a-z, 0-9 ou um sublinhado.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>Ocorreu um problema ao analisar {0}. Isso provavelmente se deve a XML incompleto ou inválido. Exceção: {1}</value>
     <comment>{0} - The file name

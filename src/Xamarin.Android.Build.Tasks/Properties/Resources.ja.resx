@@ -329,6 +329,20 @@ Visual Studio プロジェクトのプロパティ ページでデバッグ情�
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) および %(AndroidAsset.AssetPack) 項目メタデータは、'$(AndroidApplication)' が 'true' の場合にのみサポートされます。</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>'@(AndroidAsset)' '{0}' に、'{1}' の無効な 'DeliveryType' メタデータがあります。サポートされている値は、'installtime'、'ondemand'、または 'fastfollow' です。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>'{0}' に定義された AssetPack 値に無効な文字が含まれています。'{1}' には、A-z、a-z、0-9、またはアンダースコアのみを含める必要があります。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0} の解析で問題が発生しました。不完全または無効な XML が原因である可能性があります。例外: {1}</value>
     <comment>{0} - The file name

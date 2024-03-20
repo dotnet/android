@@ -329,6 +329,20 @@ Visual Studio 프로젝트 속성 페이지에서 디버깅 정보를 이식 가
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) 및 %(AndroidAsset.AssetPack) 항목 메타데이터는 '$(AndroidApplication)'이 'true'인 경우에만 지원됩니다.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>'@(AndroidAsset)' '{0}'에 '{1}'의 잘못된 'DeliveryType' 메타데이터가 있습니다. 지원되는 값은 'installtime', 'ondemand' 또는 'fastfollow'입니다.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>'{0}'에 대해 정의된 AssetPack 값에 잘못된 문자가 있습니다. '{1}'은(는) A-z, a-z, 0-9 또는 밑줄만 포함해야 합니다.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0}을(를) 구문 분석하는 중 문제가 발생했습니다. XML이 불완전하거나 잘못된 것 같습니다. 예외: {1}</value>
     <comment>{0} - The file name

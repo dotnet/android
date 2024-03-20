@@ -1,5 +1,5 @@
 ﻿using System;
-
+using System.Diagnostics.CodeAnalysis;
 using Android.App;
 using Android.Views;
 
@@ -9,6 +9,8 @@ namespace Xamarin.Android.Design
 
 	abstract class LayoutBinding
 	{
+		const DynamicallyAccessedMemberTypes Constructors = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors;
+
 		Activity? boundActivity;
 		View? boundView;
 		OnLayoutItemNotFoundHandler? onLayoutItemNotFound;
@@ -25,7 +27,13 @@ namespace Xamarin.Android.Design
 			this.onLayoutItemNotFound = onLayoutItemNotFound;
 		}
 
-		protected T FindView <T> (int resourceId, ref T cachedField) where T: View
+		protected T FindView <
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (
+				int resourceId,
+				ref T cachedField)
+			where T: View
 		{
 			if (cachedField != null)
 				return cachedField;
@@ -58,8 +66,14 @@ namespace Xamarin.Android.Design
 			throw new InvalidOperationException ("Finding fragments is supported only for Activity instances");
 		}
 
-		T __FindFragment<T> (int resourceId, Func<Activity, T?> finder, ref T? cachedField)
-			where T : Java.Lang.Object
+		T __FindFragment<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (
+				int resourceId,
+				Func<Activity, T?> finder,
+				ref T? cachedField)
+			where T: Java.Lang.Object
 		{
 			if (cachedField != null)
 				return cachedField;
@@ -76,8 +90,15 @@ namespace Xamarin.Android.Design
 		}
 #if __ANDROID_11__
 #pragma warning disable CA1422
-		protected T FindFragment<T> (int resourceId, global::Android.App.Fragment? __ignoreMe, ref T? cachedField)
-			where T : global::Android.App.Fragment
+		protected T FindFragment<
+				[DynamicallyAccessedMembers (Constructors)]
+				T
+		> (
+				int resourceId,
+				global::Android.App.Fragment? __ignoreMe,
+				ref T? cachedField
+		)
+			where T: global::Android.App.Fragment
 		{
 			return __FindFragment<T> (resourceId, (activity) => activity.FragmentManager?.FindFragmentById<T> (resourceId), ref cachedField);
 		}

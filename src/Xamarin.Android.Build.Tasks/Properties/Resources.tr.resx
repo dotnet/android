@@ -329,6 +329,20 @@ Bu dosya bir NuGet paketinden geliyorsa NuGet paketinin daha yeni bir sürümün
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) ve %(AndroidAsset.AssetPack) öğe meta verileri yalnızca `$(AndroidApplication)` değeri `true` olduğunda desteklenir.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>`@(AndroidAsset)` `{0}` geçersiz `DeliveryType` `{1}` meta verisini içeriyor. Desteklenen değerler şunlardır: `installtime`, `ondemand` veya `fastfollow`.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>`{0}` için tanımlanan AssetPack geçersiz karakterler içeriyor. `{1}` yalnızca A-z, a-z, 0-9 veya alt çizgi içermelidir.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0} ayrıştırılırken bir sorun oluştu. Bunun nedeni büyük olasılıkla tamamlanmamış veya geçersiz XML olabilir. Özel durum: {1}</value>
     <comment>{0} - The file name
