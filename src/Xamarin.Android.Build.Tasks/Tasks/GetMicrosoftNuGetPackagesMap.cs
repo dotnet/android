@@ -13,6 +13,8 @@ namespace Xamarin.Android.Tasks;
 
 public class GetMicrosoftNuGetPackagesMap : AndroidAsyncTask
 {
+	static readonly HttpClient http_client = new HttpClient ();
+
 	public override string TaskPrefix => "GNP";
 
 	/// <summary>
@@ -36,8 +38,7 @@ public class GetMicrosoftNuGetPackagesMap : AndroidAsyncTask
 		if (!all_files.Any (x => x.IsToday)) {
 			// No file for today, download a new one
 			try {
-				using var http = new HttpClient ();
-				var json = await http.GetStringAsync ("https://aka.ms/ms-nuget-packages");
+				var json = await http_client.GetStringAsync ("https://aka.ms/ms-nuget-packages");
 				var outfile = Path.Combine (MavenCacheDirectory, $"microsoft-packages-{DateTime.Today:yyyyMMdd}.json");
 
 				File.WriteAllText (outfile, json);

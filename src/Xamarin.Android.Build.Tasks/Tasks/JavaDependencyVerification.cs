@@ -140,7 +140,7 @@ class DependencyResolver
 		if (suggestion is string nuget)
 			log.LogCodedError ("XA4242", Properties.Resources.XA4242, artifact_spec, nuget);
 		else
-			log.LogCodedError ("XA4242", Properties.Resources.XA4241, artifact_spec);
+			log.LogCodedError ("XA4241", Properties.Resources.XA4241, artifact_spec);
 
 		return false;
 	}
