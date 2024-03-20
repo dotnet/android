@@ -1,10 +1,5 @@
 using System;
 using System.Globalization;
-
-using Android.App;
-using Android.Content;
-using Android.Runtime;
-
 using NUnit.Framework;
 
 namespace SystemTests {
@@ -13,34 +8,9 @@ namespace SystemTests {
 	public class AppDomainTest {
 
 		[Test]
-		[Category ("HybridAotNotWorking")] // See https://github.com/xamarin/xamarin-android/issues/1536
-		[Category ("DotNetIgnore")] // System.PlatformNotSupportedException : Secondary AppDomains are not supported on this platform.
-		public void DateTime_Now_Works ()
+		public void AppDomain_CreateDomain_Throws ()
 		{
-			new Boom().Bang();
-			
-
-			var otherDomain = AppDomain.CreateDomain ("other domain");
-
-			var otherType = typeof (Boom);
-			var obj = (Boom) otherDomain.CreateInstanceAndUnwrap (
-					otherType.Assembly.FullName,
-					otherType.FullName);
-			obj.Bang ();
-		}
-	}
-
-	class Boom : MarshalByRefObject
-	{
-		public void Bang()
-		{
-			var x = DateTime.Now;
-			Console.WriteLine ("Within AppDomain {0}, DateTime.Now={1}.", AppDomain.CurrentDomain.FriendlyName, x);
-		}
-
-		public override object InitializeLifetimeService ()
-		{
-			return null;
+			Assert.Throws<PlatformNotSupportedException> (() => AppDomain.CreateDomain ("other domain"));
 		}
 	}
 }

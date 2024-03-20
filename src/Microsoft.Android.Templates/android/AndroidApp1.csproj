@@ -10,4 +10,11 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
   </PropertyGroup>
+  <!--
+    Enable full trimming in Release mode.
+    To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
+  -->
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <TrimMode>full</TrimMode>
+  </PropertyGroup>
 </Project>

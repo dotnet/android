@@ -36,9 +36,13 @@
 
   <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
     <AndroidLinkTool Condition=" '$(AndroidLinkTool)' == '' ">r8</AndroidLinkTool>
+    <TrimMode Condition=" '$(TrimMode)' == '' ">full</TrimMode>
+    <!-- Trimmer switches required for tests -->
+    <JsonSerializerIsReflectionEnabledByDefault>true</JsonSerializerIsReflectionEnabledByDefault>
   </PropertyGroup>
 
   <ItemGroup>
+    <TrimmerRootAssembly Include="Java.Interop-Tests" RootMode="All" />
     <_AndroidRemapMembers Include="Remaps.xml" />
   </ItemGroup>
 
