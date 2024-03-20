@@ -254,6 +254,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 	return 0;
 }
 
+// TODO: review this. Do we really have to create the dir in release?
 void
 AndroidSystem::create_update_dir (char *override_dir)
 {

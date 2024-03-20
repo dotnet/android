@@ -1,4 +1,5 @@
 using NUnit.Framework;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -61,8 +62,12 @@ namespace Xamarin.Android.Build.Tests
 
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
 
-			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x));
-			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x));
+			var metadata = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
+				{"Abi", "arm64-v8a"},
+			};
+
+			var resolvedUserAssembliesList = resolvedUserAssemblies.Select (x => new TaskItem (x, metadata));
+			var resolvedAssembliesList = resolvedAssemblies.Select (x => new TaskItem (x, metadata));
 
 			var task = new GeneratePackageManagerJava {
 				BuildEngine = new MockBuildEngine (TestContext.Out),

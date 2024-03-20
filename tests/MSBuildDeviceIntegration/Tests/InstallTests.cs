@@ -15,12 +15,12 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("UsesDevice")]
 	public class InstallTests : DeviceTest
 	{
-		string GetContentFromAllOverrideDirectories (string packageName, bool useRunAsCommand = true)
+		string GetContentFromAllOverrideDirectories (string packageName, string abi, bool useRunAsCommand = true)
 		{
 			var adbShellArgs = $"shell run-as {packageName} ls";
 
 			var directorylist = string.Empty;
-			foreach (var dir in GetOverrideDirectoryPaths (packageName)) {
+			foreach (var dir in GetOverrideDirectoryPaths (packageName, abi)) {
 				var listing = RunAdbCommand ($"{adbShellArgs} {dir}");
 				if (!listing.Contains ("No such file or directory") && !listing.Contains ("Permission denied"))
 					directorylist += $"{listing} ";
@@ -75,7 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				if (!isRelease) {
 					StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 				}
@@ -136,7 +136,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				proj.IsRelease = true;
@@ -145,7 +145,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				Assert.AreEqual ("", directorylist.Trim (), "fastdev directory should NOT exist for Release builds.");
 
 				proj.IsRelease = false;
@@ -154,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 				Assert.AreEqual ($"package:{proj.PackageName}", RunAdbCommand ($"shell pm list packages {proj.PackageName}").Trim (),
 					$"{proj.PackageName} is not installed on the device.");
 
-				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				StringAssert.Contains ($"{proj.AssemblyName}", directorylist, $"{proj.AssemblyName} not found in fastdev directory.");
 
 				Assert.IsTrue (builder.Uninstall (proj));
@@ -178,7 +178,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty (proj.ReleaseProperties, "AndroidPackageFormat", "apk");
 
 			var abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			using (var builder = CreateApkBuilder ()) {
 				if (RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length != 0)
 					RunAdbCommand ("uninstall Mono.Android.DebugRuntime");
@@ -200,10 +200,10 @@ namespace Xamarin.Android.Build.Tests
 				//FIXME: https://github.com/xamarin/androidtools/issues/141
 				//Assert.AreEqual (0, RunAdbCommand ("shell pm list packages Mono.Android.DebugRuntime").Trim ().Length,
 				//	"The Shared Runtime should not have been installed.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
-				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
-				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__ directory.");
-				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__ directory.");
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
+				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__/{DeviceAbi} directory.");
+				StringAssert.Contains ($"System.Private.CoreLib.dll", directorylist, $"System.Private.CoreLib.dll should exist in the .__override__/{DeviceAbi} directory.");
+				StringAssert.Contains ($"Mono.Android.dll", directorylist, $"Mono.Android.dll should exist in the .__override__/{DeviceAbi} directory.");
 				Assert.IsTrue (builder.Uninstall (proj), "unnstall should have succeeded.");
 			}
 		}
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var builder = CreateApkBuilder (Path.Combine ("temp", TestContext.CurrentContext.Test.Name))) {
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				StringAssert.Contains ($"{proj.ProjectName}.dll", directorylist, $"{proj.ProjectName}.dll should exist in the .__override__ directory.");
 
 				//Now toggle FastDev to OFF
@@ -258,7 +258,7 @@ namespace Xamarin.Android.Build.Tests
 
 				Assert.IsTrue (builder.Install (proj), "Second install should have succeeded.");
 
-				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				Assert.AreEqual ("", directorylist, "There should be no files in Fast Dev directories! Instead found: " + directorylist);
 
 				//Deploy one last time to verify install still works without the .__override__ directory existing
@@ -331,7 +331,7 @@ namespace Xamarin.Android.Build.Tests
 				var didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity", Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
 				ClearShellProp ("debug.mono.log");
 				Assert.True (didLaunch, "Activity should have started.");
-				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName);
+				var directorylist = GetContentFromAllOverrideDirectories (proj.PackageName, DeviceAbi);
 				builder.Uninstall (proj);
 				StringAssert.Contains ("methods.txt", directorylist, $"methods.txt did not exist in the .__override__ directory.\nFound:{directorylist}");
 			}
@@ -480,9 +480,10 @@ namespace Xamarin.Android.Build.Tests
 					.Select (r => r = r.Replace (projectOutputPath, string.Empty).Replace ("\\", "/"));
 
 				var overrideContents = string.Empty;
-				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName)) {
+				foreach (var dir in GetOverrideDirectoryPaths (app.PackageName, DeviceAbi)) {
 					overrideContents += RunAdbCommand ($"shell run-as {app.PackageName} find {dir}");
 				}
+				Console.WriteLine ($"#grendel: overrideContents == {overrideContents}");
 				Assert.IsTrue (resourceFilesFromDisk.Any (), $"Unable to find any localized assemblies in {resourceFilesFromDisk}");
 				foreach (var res in resourceFilesFromDisk) {
 					StringAssert.Contains (res, overrideContents, $"{res} did not exist in the .__override__ directory.\nFound:{overrideContents}");
