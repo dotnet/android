@@ -283,7 +283,7 @@ stages:
 
 - stage: compliance_scan
   displayName: Compliance
-  #dependsOn: mac_build
+  dependsOn: []
   #condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
   jobs:
   - job: api_scan
