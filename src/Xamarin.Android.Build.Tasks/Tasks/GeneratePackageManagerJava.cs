@@ -264,7 +264,7 @@ namespace Xamarin.Android.Tasks
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
 				string? culture = MonoAndroidHelper.GetAssemblyCulture (assembly);
 				string fileName = Path.GetFileName (assembly.ItemSpec);
-				tring assemblyName;
+				string assemblyName;
 
 				if (String.IsNullOrEmpty (culture)) {
 					assemblyName = fileName;
