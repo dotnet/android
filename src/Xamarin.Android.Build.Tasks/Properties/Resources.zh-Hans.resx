@@ -330,16 +330,16 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
 {0} - The file name of a deprecated symbol file</comment>
   </data>
   <data name="XA0138" xml:space="preserve">
-    <value>%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.</value>
+    <value>仅当 `$(AndroidApplication)` 为 `true` 时，才支持 %(AndroidAsset.AssetPack)和 %(AndroidAsset.AssetPack)项元数据。</value>
     <comment></comment>
   </data>
   <data name="XA0139" xml:space="preserve">
-    <value>`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.</value>
+    <value>`@(AndroidAsset)` `{0}` 的 `DeliveryType` 元数据 `{1}` 无效。支持的值为 `installtime`、`ondemand` 或 `fastfollow`。</value>
     <comment>{0} - The file name
 {1} - The value of the attribute in the project file.</comment>
   </data>
   <data name="XA0140" xml:space="preserve">
-    <value>The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.</value>
+    <value>为 `{0}` 定义的 AssetPack 值包含无效字符。`{1}` 应仅包含 A-z、a-z、0-9 或下划线。</value>
     <comment>{0} - The file name
 {1} - The value of the attribute in the metadata.</comment>
   </data>
