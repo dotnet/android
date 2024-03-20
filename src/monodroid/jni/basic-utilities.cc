@@ -34,7 +34,10 @@ void
 BasicUtilities::create_public_directory (const char *dir)
 {
 	mode_t m = umask (0);
-	mkdir (dir, 0777);
+	int ret = mkdir (dir, 0777);
+	if (ret < 0) {
+		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", dir, std::strerror (errno));
+	}
 	umask (m);
 }
 

@@ -8,6 +8,7 @@ using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 using CecilMethodDefinition = global::Mono.Cecil.MethodDefinition;
 using CecilParameterDefinition = global::Mono.Cecil.ParameterDefinition;
@@ -135,7 +136,7 @@ namespace Xamarin.Android.Tasks
 				var methodName = EnsureType<MarshalMethodName> (data);
 
 				if (String.Compare ("id", fieldName, StringComparison.Ordinal) == 0) {
-					return $" id 0x{methodName.id:x}; name: {methodName.name}";
+					return $" name: {methodName.name}";
 				}
 
 				return String.Empty;
@@ -151,7 +152,7 @@ namespace Xamarin.Android.Tasks
 			[NativeAssembler (Ignore = true)]
 			public ulong Id64;
 
-			[NativeAssembler (UsesDataProvider = true)]
+			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong  id;
 			public string name;
 		}
@@ -225,9 +226,8 @@ namespace Xamarin.Android.Tasks
 			{ 'L', typeof(_jobjectArray) },
 		};
 
-		ICollection<string> uniqueAssemblyNames;
-		int numberOfAssembliesInApk;
-		IDictionary<string, IList<MarshalMethodEntry>> marshalMethods;
+		readonly ICollection<string> uniqueAssemblyNames;
+		readonly int numberOfAssembliesInApk;
 
 		StructureInfo marshalMethodsManagedClassStructureInfo;
 		StructureInfo marshalMethodNameStructureInfo;
@@ -235,16 +235,18 @@ namespace Xamarin.Android.Tasks
 		List<MarshalMethodInfo> methods;
 		List<StructureInstance<MarshalMethodsManagedClass>> classes = new List<StructureInstance<MarshalMethodsManagedClass>> ();
 
-		LlvmIrCallMarker defaultCallMarker;
-
+		readonly LlvmIrCallMarker defaultCallMarker;
 		readonly bool generateEmptyCode;
+		readonly AndroidTargetArch targetArch;
+		readonly NativeCodeGenState? codeGenState;
 
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are DISABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, AndroidTargetArch targetArch, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames)
 			: base (log)
 		{
+			this.targetArch = targetArch;
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
 			generateEmptyCode = true;
@@ -254,12 +256,12 @@ namespace Xamarin.Android.Tasks
 		/// <summary>
 		/// Constructor to be used ONLY when marshal methods are ENABLED
 		/// </summary>
-		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, IDictionary<string, IList<MarshalMethodEntry>> marshalMethods)
+		public MarshalMethodsNativeAssemblyGenerator (TaskLoggingHelper log, int numberOfAssembliesInApk, ICollection<string> uniqueAssemblyNames, NativeCodeGenState codeGenState)
 			: base (log)
 		{
 			this.numberOfAssembliesInApk = numberOfAssembliesInApk;
 			this.uniqueAssemblyNames = uniqueAssemblyNames ?? throw new ArgumentNullException (nameof (uniqueAssemblyNames));
-			this.marshalMethods = marshalMethods;
+			this.codeGenState = codeGenState ?? throw new ArgumentNullException (nameof (codeGenState));
 
 			generateEmptyCode = false;
 			defaultCallMarker = LlvmIrCallMarker.Tail;
@@ -267,12 +269,13 @@ namespace Xamarin.Android.Tasks
 
 		void Init ()
 		{
-			if (generateEmptyCode || marshalMethods == null || marshalMethods.Count == 0) {
+			if (generateEmptyCode || codeGenState.Classifier == null || codeGenState.Classifier.MarshalMethods.Count == 0) {
 				return;
 			}
 
 			var seenClasses = new Dictionary<string, int> (StringComparer.Ordinal);
 			var allMethods = new List<MarshalMethodInfo> ();
+			IDictionary<string, IList<MarshalMethodEntry>> marshalMethods = codeGenState.Classifier.MarshalMethods;
 
 			// It's possible that several otherwise different methods (from different classes, but with the same
 			// names and similar signatures) will actually share the same **short** native symbol name. In this case we must
@@ -305,6 +308,7 @@ namespace Xamarin.Android.Tasks
 			foreach (IList<MarshalMethodEntry> entryList in marshalMethods.Values) {
 				bool useFullNativeSignature = entryList.Count > 1;
 				foreach (MarshalMethodEntry entry in entryList) {
+					Log.LogDebugMessage ($"MM: processing {entry.DeclaringType.FullName} {entry.NativeCallback.FullName}");
 					ProcessAndAddMethod (allMethods, entry, useFullNativeSignature, seenClasses, overloadedNativeSymbolNames);
 				}
 			}
@@ -654,6 +658,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddMarshalMethod (LlvmIrModule module, MarshalMethodInfo method, ulong asmId, MarshalMethodsWriteState writeState)
 		{
+			Log.LogDebugMessage ($"MM: generating code for {method.Method.DeclaringType.FullName} {method.Method.NativeCallback.FullName}");
 			CecilMethodDefinition nativeCallback = method.Method.NativeCallback;
 			string backingFieldName = $"native_cb_{method.Method.JniMethodName}_{asmId}_{method.ClassCacheIndex}_{nativeCallback.MetadataToken.ToUInt32():x}";
 
@@ -848,12 +853,11 @@ namespace Xamarin.Android.Tasks
 				new NosyncFunctionAttribute (),
 				new NounwindFunctionAttribute (),
 				new WillreturnFunctionAttribute (),
-				// TODO: LLVM 16+ feature, enable when we switch to this version
-				// new MemoryFunctionAttribute {
-				// 	Default = MemoryAttributeAccessKind.Write,
-				// 	Argmem = MemoryAttributeAccessKind.None,
-				// 	InaccessibleMem = MemoryAttributeAccessKind.None,
-				// },
+				new MemoryFunctionAttribute {
+					Default = MemoryAttributeAccessKind.Write,
+					Argmem = MemoryAttributeAccessKind.None,
+					InaccessibleMem = MemoryAttributeAccessKind.None,
+				},
 				new UwtableFunctionAttribute (),
 				new MinLegalVectorWidthFunctionAttribute (0),
 				new NoTrappingMathFunctionAttribute (true),
@@ -981,10 +985,24 @@ namespace Xamarin.Android.Tasks
 
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
-				string clippedName = Path.Combine (Path.GetDirectoryName (name) ?? String.Empty, Path.GetFileNameWithoutExtension (name));
+				string cultureName = Path.GetDirectoryName (name) ?? String.Empty;
+				string clippedName = Path.Combine (cultureName, Path.GetFileNameWithoutExtension (name));
+				string inArchiveName;
+
+				if (cultureName.Length == 0) {
+					// Regular assemblies get the 'lib_' prefix
+					inArchiveName = $"{MonoAndroidHelper.MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER}{name}{MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT}";
+				} else {
+					// Satellite assemblies get the 'lib-{CULTURE}-' prefix
+					inArchiveName = $"{MonoAndroidHelper.MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER}{cultureName}-{Path.GetFileName (name)}{MonoAndroidHelper.MANGLED_ASSEMBLY_NAME_EXT}";
+				}
+
 				ulong hashFull32 = MonoAndroidHelper.GetXxHash (name, is64Bit: false);
+				ulong hashInArchive32 = MonoAndroidHelper.GetXxHash (inArchiveName, is64Bit: false);
 				ulong hashClipped32 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: false);
+
 				ulong hashFull64 = MonoAndroidHelper.GetXxHash (name, is64Bit: true);
+				ulong hashInArchive64 = MonoAndroidHelper.GetXxHash (inArchiveName, is64Bit: true);
 				ulong hashClipped64 = MonoAndroidHelper.GetXxHash (clippedName, is64Bit: true);
 
 				//
@@ -992,8 +1010,11 @@ namespace Xamarin.Android.Tasks
 				// `number_of_assembly_name_forms_in_image_cache` constant to the number of forms.
 				//
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashFull32, typeof(uint)), (name, index));
+				acs.Hashes32.Add ((uint)Convert.ChangeType (hashInArchive32, typeof(uint)), (inArchiveName, index));
 				acs.Hashes32.Add ((uint)Convert.ChangeType (hashClipped32, typeof(uint)), (clippedName, index));
+
 				acs.Hashes64.Add (hashFull64, (name, index));
+				acs.Hashes64.Add (hashInArchive64, (inArchiveName, index));
 				acs.Hashes64.Add (hashClipped64, (clippedName, index));
 
 				index++;
@@ -1067,7 +1088,7 @@ namespace Xamarin.Android.Tasks
 				i = acs.Hashes32[v32].index;
 			}
 
-			return $" {index}: {name} => 0x{value:x} => {i}";
+			return $" {index}: {name} => {i}";
 		}
 
 		void UpdateAssemblyImageCacheIndices (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)

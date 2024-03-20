@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tasks.LLVMIR;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -31,7 +32,13 @@ namespace Xamarin.Android.Tasks
 		sealed class CompressedAssemblyDescriptor
 		{
 			[NativeAssembler (Ignore = true)]
+			public uint Index;
+
+			[NativeAssembler (Ignore = true)]
 			public string BufferSymbolName;
+
+			[NativeAssembler (Ignore = true)]
+			public string AssemblyName;
 
 			public uint   uncompressed_file_size;
 			public bool   loaded;
@@ -64,65 +71,93 @@ namespace Xamarin.Android.Tasks
 			public CompressedAssemblyDescriptor descriptors;
 		};
 
-		IDictionary<string, CompressedAssemblyInfo> assemblies;
+		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies;
 		StructureInfo compressedAssemblyDescriptorStructureInfo;
 		StructureInfo compressedAssembliesStructureInfo;
+		Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> archData = new Dictionary<AndroidTargetArch, List<StructureInstance<CompressedAssemblyDescriptor>>> ();
 
-		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<string, CompressedAssemblyInfo> assemblies)
+		public CompressedAssembliesNativeAssemblyGenerator (TaskLoggingHelper log, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? archAssemblies)
 			: base (log)
 		{
-			this.assemblies = assemblies;
+			this.archAssemblies = archAssemblies;
 		}
 
-		void InitCompressedAssemblies (out List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors,
-		                               out StructureInstance<CompressedAssemblies>? compressedAssemblies,
+		void InitCompressedAssemblies (out List<LlvmIrGlobalVariable>? compressedAssemblies,
+		                               out List<LlvmIrGlobalVariable>? compressedAssemblyDescriptors,
 		                               out List<LlvmIrGlobalVariable>? buffers)
 		{
-			if (assemblies == null || assemblies.Count == 0) {
-				compressedAssemblyDescriptors = null;
+			if (archAssemblies == null || archAssemblies.Count == 0) {
 				compressedAssemblies = null;
+				compressedAssemblyDescriptors = null;
 				buffers = null;
 				return;
 			}
 
-			ulong counter = 0;
-			compressedAssemblyDescriptors = new List<StructureInstance<CompressedAssemblyDescriptor>> (assemblies.Count);
-			buffers = new List<LlvmIrGlobalVariable> (assemblies.Count);
-			foreach (var kvp in assemblies) {
-				string assemblyName = kvp.Key;
-				CompressedAssemblyInfo info = kvp.Value;
+			buffers = new List<LlvmIrGlobalVariable> ();
+			foreach (var kvpArch in archAssemblies) {
+				foreach (var kvp in kvpArch.Value) {
+					CompressedAssemblyInfo info = kvp.Value;
 
-				string bufferName = $"__compressedAssemblyData_{counter++}";
-				var descriptor = new CompressedAssemblyDescriptor {
-					BufferSymbolName = bufferName,
-					uncompressed_file_size = info.FileSize,
-					loaded = false,
-					data = 0
-				};
+					if (!archData.TryGetValue (info.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
+						descriptors = new List<StructureInstance<CompressedAssemblyDescriptor>> ();
+						archData.Add (info.TargetArch, descriptors);
+					}
 
-				var bufferVar = new LlvmIrGlobalVariable (typeof(List<byte>), bufferName, LlvmIrVariableOptions.LocalWritable) {
-					ZeroInitializeArray = true,
-					ArrayItemCount = descriptor.uncompressed_file_size,
-				};
-				buffers.Add (bufferVar);
+					string bufferName = $"__compressedAssemblyData_{info.DescriptorIndex}";
+					var descriptor = new CompressedAssemblyDescriptor {
+						Index = info.DescriptorIndex,
+						BufferSymbolName = bufferName,
+						AssemblyName = info.AssemblyName,
+						uncompressed_file_size = info.FileSize,
+						loaded = false,
+						data = 0
+					};
 
-				compressedAssemblyDescriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, descriptor));
+					descriptors.Add (new StructureInstance<CompressedAssemblyDescriptor> (compressedAssemblyDescriptorStructureInfo, descriptor));
+
+					var buffer = new LlvmIrGlobalVariable (typeof(List<byte>), descriptor.BufferSymbolName, LlvmIrVariableOptions.LocalWritable) {
+						ArrayItemCount = descriptor.uncompressed_file_size,
+						TargetArch = info.TargetArch,
+						ZeroInitializeArray = true,
+					};
+					buffers.Add (buffer);
+				}
 			}
 
-			compressedAssemblies = new StructureInstance<CompressedAssemblies> (compressedAssembliesStructureInfo, new CompressedAssemblies { count = (uint)assemblies.Count });
+			compressedAssemblies = new List<LlvmIrGlobalVariable> ();
+			compressedAssemblyDescriptors = new List<LlvmIrGlobalVariable> ();
+			foreach (var kvp in archData) {
+				List<StructureInstance<CompressedAssemblyDescriptor>> descriptors = kvp.Value;
+				descriptors.Sort ((StructureInstance<CompressedAssemblyDescriptor> a, StructureInstance<CompressedAssemblyDescriptor> b) => a.Instance.Index.CompareTo (b.Instance.Index));
+
+				var variable = new LlvmIrGlobalVariable (typeof(StructureInstance<CompressedAssemblies>), CompressedAssembliesSymbolName) {
+					Options = LlvmIrVariableOptions.GlobalWritable,
+					TargetArch = kvp.Key,
+					Value = new StructureInstance<CompressedAssemblies> (compressedAssembliesStructureInfo, new CompressedAssemblies { count = (uint)descriptors.Count, }),
+				};
+				compressedAssemblies.Add (variable);
+
+				variable = new LlvmIrGlobalVariable (typeof(List<StructureInstance<CompressedAssemblyDescriptor>>), DescriptorsArraySymbolName) {
+					GetArrayItemCommentCallback = GetCompressedAssemblyDescriptorsItemComment,
+					Options = LlvmIrVariableOptions.LocalWritable,
+					TargetArch = kvp.Key,
+					Value = descriptors,
+				};
+				compressedAssemblyDescriptors.Add (variable);
+			}
 		}
 
 		protected override void Construct (LlvmIrModule module)
 		{
 			MapStructures (module);
 
-			List<StructureInstance<CompressedAssemblyDescriptor>>? compressedAssemblyDescriptors;
-			StructureInstance<CompressedAssemblies>? compressedAssemblies;
-			List<LlvmIrGlobalVariable>? buffers;
+			InitCompressedAssemblies (
+				out List<LlvmIrGlobalVariable>? compressedAssemblies,
+				out List<LlvmIrGlobalVariable>? compressedAssemblyDescriptors,
+				out List<LlvmIrGlobalVariable>? buffers
+			);
 
-			InitCompressedAssemblies (out compressedAssemblyDescriptors, out compressedAssemblies, out buffers);
-
-			if (compressedAssemblyDescriptors == null) {
+			if (archData.Count == 0) {
 				module.AddGlobalVariable (
 					typeof(StructureInstance<CompressedAssemblies>),
 					CompressedAssembliesSymbolName,
@@ -132,12 +167,32 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			module.AddGlobalVariable (CompressedAssembliesSymbolName, compressedAssemblies, LlvmIrVariableOptions.GlobalWritable);
-			module.AddGlobalVariable (DescriptorsArraySymbolName, compressedAssemblyDescriptors, LlvmIrVariableOptions.LocalWritable);
+			module.Add (compressedAssemblies);
+			module.Add (compressedAssemblyDescriptors);
 
 			module.Add (new LlvmIrGroupDelimiterVariable ());
 			module.Add (buffers);
 			module.Add (new LlvmIrGroupDelimiterVariable ());
+		}
+
+		string? GetCompressedAssemblyDescriptorsItemComment (LlvmIrVariable v, LlvmIrModuleTarget target, ulong index, object? value, object? callerState)
+		{
+			List<StructureInstance<CompressedAssemblyDescriptor>> descriptors = GetArchDescriptors (target);
+			if ((int)index >= descriptors.Count) {
+				throw new InvalidOperationException ($"Internal error: index {index} is too big for variable '{v.Name}'");
+			}
+			StructureInstance<CompressedAssemblyDescriptor> desc = descriptors[(int)index];
+
+			return $" {index}: {desc.Instance.AssemblyName}";
+		}
+
+		List<StructureInstance<CompressedAssemblyDescriptor>> GetArchDescriptors (LlvmIrModuleTarget target)
+		{
+			if (!archData.TryGetValue (target.TargetArch, out List<StructureInstance<CompressedAssemblyDescriptor>> descriptors)) {
+				throw new InvalidOperationException ($"Internal error: missing compressed descriptors data for architecture '{target.TargetArch}'");
+			}
+
+			return descriptors;
 		}
 
 		void MapStructures (LlvmIrModule module)

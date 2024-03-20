@@ -1,8 +1,6 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.IO.Hashing;
-using System.Text;
 
 using Microsoft.Build.Utilities;
 
@@ -218,6 +216,7 @@ namespace Xamarin.Android.Tasks
 				BeforeWriteCallbackCallerState = cs,
 				GetArrayItemCommentCallback = GetJavaHashesItemComment,
 				GetArrayItemCommentCallbackCallerState = cs,
+				NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal,
 			};
 			map_java_hashes.WriteOptions &= ~LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 			module.Add (map_java_hashes);
@@ -264,7 +263,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: construction state expected but not found");
 			}
 
-			return $" {index}: {cs.JavaMap[(int)index].Instance.JavaName}";
+			return $" {index} => {cs.JavaMap[(int)index].Instance.JavaName}";
 		}
 
 		void GenerateAndSortJavaHashes (LlvmIrVariable variable, LlvmIrModuleTarget target, object? callerState)
