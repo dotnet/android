@@ -265,7 +265,14 @@ namespace Xamarin.Android.Build.Tests
 				string apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStores: true);
 
-				Assert.IsTrue (app_config.number_of_assemblies_in_apk == (uint)helper.GetNumberOfAssemblies (), "Assembly count must be equal between ApplicationConfig and the archive contents");
+				foreach (string abi in abis) {
+					AndroidTargetArch arch = MonoAndroidHelper.AbiToTargetArch (abi);
+					Assert.AreEqual (
+						app_config.number_of_assemblies_in_apk,
+						helper.GetNumberOfAssemblies (arch: arch),
+						$"Assembly count must be equal between ApplicationConfig and the archive contents for architecture {arch} (ABI: {abi})"
+					);
+				}
 			}
 		}
 
@@ -431,21 +438,6 @@ namespace Xamarin.Android.Build.Tests
 				var element = manifest.XPathSelectElement ($"/manifest/application/provider[@android:name='{proj.PackageName}']", namespaceResolver);
 				Assert.IsNotNull (element, "placeholder not replaced");
 			}
-		}
-
-		[Test]
-		[Category ("XamarinBuildDownload")]
-		public void ExtraAaptManifest ()
-		{
-			var proj = new XamarinAndroidApplicationProject ();
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nFirebase.Crashlytics.FirebaseCrashlytics.Instance.SendUnsentReports();");
-			proj.PackageReferences.Add (new Package { Id = "Xamarin.Firebase.Crashlytics", Version = "118.5.1.1" });
-			proj.PackageReferences.Add (KnownPackages.Xamarin_Build_Download);
-			using var builder = CreateApkBuilder ();
-			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			var manifest = File.ReadAllText (Path.Combine (Root, builder.ProjectDirectory, "obj", "Debug", "android", "AndroidManifest.xml"));
-			Assert.IsTrue (manifest.Contains ($"android:authorities=\"{proj.PackageName}.firebaseinitprovider\""), "placeholder not replaced");
-			Assert.IsFalse (manifest.Contains ("dollar_openBracket_applicationId_closeBracket"), "`aapt/AndroidManifest.xml` not ignored");
 		}
 
 		[Test]
@@ -786,7 +778,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Could not find android.jar for API level {proj.TargetSdkVersion}"), "XA5207 should have had a good error message.");
 				if (buildingInsideVisualStudio)
 					Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"Either install it in the Android SDK Manager"), "XA5207 should have an error message for Visual Studio.");
-				else 
+				else
 				    Assert.IsTrue (builder.LastBuildOutput.ContainsText ($"You can install the missing API level by running"), "XA5207 should have an error message for the command line.");
 			}
 			Directory.Delete (AndroidSdkDirectory, recursive: true);

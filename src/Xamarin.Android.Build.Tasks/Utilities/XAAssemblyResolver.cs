@@ -11,105 +11,29 @@ namespace Xamarin.Android.Tasks;
 
 class XAAssemblyResolver : IAssemblyResolver
 {
-	sealed class CacheEntry : IDisposable
-	{
-		bool disposed;
-
-		Dictionary<AndroidTargetArch, AssemblyDefinition> assemblies;
-		TaskLoggingHelper log;
-		AndroidTargetArch defaultArch;
-
-		/// <summary>
-		/// This field is to be used by the `Resolve` overloads which don't have a way of indicating the desired ABI target for the assembly, but only when the
-		/// `AndroidTargetArch.None` entry for the assembly in question is **absent**.  The field is always set to some value: either the very first assembly added
-		/// or the one with the `AndroidTargetArch.None` ABI.  The latter always wins.
-		/// </summary>
-		public AssemblyDefinition Default { get; private set; }
-		public Dictionary<AndroidTargetArch, AssemblyDefinition> Assemblies => assemblies;
-
-		public CacheEntry (TaskLoggingHelper log, string filePath, AssemblyDefinition asm, AndroidTargetArch arch)
-		{
-			if (asm == null) {
-				throw new ArgumentNullException (nameof (asm));
-			}
-
-			this.log = log;
-			Default = asm;
-			defaultArch = arch;
-			assemblies = new Dictionary<AndroidTargetArch, AssemblyDefinition> {
-				{ arch, asm },
-			};
-		}
-
-		public void Add (AndroidTargetArch arch, AssemblyDefinition asm)
-		{
-			if (asm == null) {
-				throw new ArgumentNullException (nameof (asm));
-			}
-
-			if (assemblies.ContainsKey (arch)) {
-				log.LogWarning ($"Entry for assembly '{asm}', architecture '{arch}' already exists.  Replacing the old entry.");
-			}
-
-			assemblies[arch] = asm;
-			if (arch == AndroidTargetArch.None && defaultArch != AndroidTargetArch.None) {
-				Default = asm;
-				defaultArch = arch;
-			}
-		}
-
-		void Dispose (bool disposing)
-		{
-			if (disposed || !disposing) {
-				return;
-			}
-
-			Default = null;
-			foreach (var kvp in assemblies) {
-				kvp.Value?.Dispose ();
-			}
-			assemblies.Clear ();
-			disposed = true;
-		}
-
-		public void Dispose ()
-		{
-			Dispose (disposing: true);
-			GC.SuppressFinalize (this);
-		}
-	}
-
-	/// <summary>
-	/// Contains a collection of directories where framework assemblies can be found.  This collection **must not**
-	/// contain any directories which contain ABI-specific assemblies.  For those, use <see cref="AbiSearchDirectories"/>
-	/// </summary>
-	public ICollection<string> FrameworkSearchDirectories { get; } = new List<string> ();
-
-	/// <summary>
-	/// Contains a collection of directories where Xamarin.Android (via linker, for instance) has placed the ABI
-	/// specific assemblies.  Each ABI has its own set of directories to search.
-	/// <summary>
-	public IDictionary<AndroidTargetArch, ICollection<string>> AbiSearchDirectories { get; } = new Dictionary<AndroidTargetArch, ICollection<string>> ();
-
 	readonly List<MemoryMappedViewStream> viewStreams = new List<MemoryMappedViewStream> ();
+	readonly Dictionary<string, AssemblyDefinition> cache;
 	bool disposed;
 	TaskLoggingHelper log;
 	bool loadDebugSymbols;
 	ReaderParameters readerParameters;
-	readonly Dictionary<string, CacheEntry> cache;
+	readonly AndroidTargetArch targetArch;
 
-	public XAAssemblyResolver (TaskLoggingHelper log, bool loadDebugSymbols, ReaderParameters? loadReaderParameters = null)
+	/// <summary>
+	/// **MUST** point to directories which contain assemblies for single ABI **only**.
+	/// One special case is when linking isn't enabled, in which instance directories
+	/// containing ABI-agnostic assemblies can we used as well.
+	public ICollection<string> SearchDirectories { get; } = new List<string> ();
+	public AndroidTargetArch TargetArch => targetArch;
+
+	public XAAssemblyResolver (AndroidTargetArch targetArch, TaskLoggingHelper log, bool loadDebugSymbols, ReaderParameters? loadReaderParameters = null)
 	{
+		this.targetArch = targetArch;
 		this.log = log;
 		this.loadDebugSymbols = loadDebugSymbols;
-		this.readerParameters = loadReaderParameters ?? new ReaderParameters();
+		this.readerParameters = loadReaderParameters ?? new ReaderParameters ();
 
-		cache = new Dictionary<string, CacheEntry> (StringComparer.OrdinalIgnoreCase);
-	}
-
-	public AssemblyDefinition? Resolve (string fullName, ReaderParameters? parameters = null)
-	{
-		return Resolve (AssemblyNameReference.Parse (fullName), parameters);
+		cache = new Dictionary<string, AssemblyDefinition> (StringComparer.OrdinalIgnoreCase);
 	}
 
 	public AssemblyDefinition? Resolve (AssemblyNameReference name)
@@ -119,42 +43,24 @@ class XAAssemblyResolver : IAssemblyResolver
 
 	public AssemblyDefinition? Resolve (AssemblyNameReference name, ReaderParameters? parameters)
 	{
-		return Resolve (AndroidTargetArch.None, name, parameters);
-	}
-
-	public AssemblyDefinition? Resolve (AndroidTargetArch arch, AssemblyNameReference name, ReaderParameters? parameters = null)
-	{
 		string shortName = name.Name;
-		if (cache.TryGetValue (shortName, out CacheEntry? entry)) {
-			return SelectAssembly (arch, name.FullName, entry, loading: false);
+		if (cache.TryGetValue (shortName, out AssemblyDefinition? assembly)) {
+			return assembly;
 		}
 
-		if (arch == AndroidTargetArch.None) {
-			return FindAndLoadFromDirectories (arch, FrameworkSearchDirectories, name, parameters);
-		}
-
-		if (!AbiSearchDirectories.TryGetValue (arch, out ICollection<string>? directories) || directories == null) {
-			throw CreateLoadException (name);
-		}
-
-		return FindAndLoadFromDirectories (arch, directories, name, parameters);
+		return FindAndLoadFromDirectories (name, parameters);
 	}
 
-	AssemblyDefinition? FindAndLoadFromDirectories (AndroidTargetArch arch, ICollection<string> directories, AssemblyNameReference name, ReaderParameters? parameters)
+	AssemblyDefinition? FindAndLoadFromDirectories (AssemblyNameReference name, ReaderParameters? parameters)
 	{
 		string? assemblyFile;
-		foreach (string dir in directories) {
+		foreach (string dir in SearchDirectories) {
 			if ((assemblyFile = SearchDirectory (name.Name, dir)) != null) {
-				return Load (arch, assemblyFile, parameters);
+				return Load (assemblyFile, parameters);
 			}
 		}
 
 		return null;
-	}
-
-	static FileNotFoundException CreateLoadException (AssemblyNameReference name)
-	{
-		return new FileNotFoundException ($"Could not load assembly '{name}'.");
 	}
 
 	static string? SearchDirectory (string name, string directory)
@@ -163,7 +69,11 @@ class XAAssemblyResolver : IAssemblyResolver
 			return name;
 		}
 
-		var file = Path.Combine (directory, $"{name}.dll");
+		if (!name.EndsWith (".dll", StringComparison.OrdinalIgnoreCase)) {
+			name = $"{name}.dll";
+		}
+
+		var file = Path.Combine (directory, name);
 		if (File.Exists (file)) {
 			return file;
 		}
@@ -171,12 +81,11 @@ class XAAssemblyResolver : IAssemblyResolver
 		return null;
 	}
 
-	public virtual AssemblyDefinition? Load (AndroidTargetArch arch, string filePath, ReaderParameters? readerParameters = null)
+	public virtual AssemblyDefinition? Load (string filePath, ReaderParameters? readerParameters = null)
 	{
 		string name = Path.GetFileNameWithoutExtension (filePath);
-		AssemblyDefinition? assembly;
-		if (cache.TryGetValue (name, out CacheEntry? entry)) {
-			assembly = SelectAssembly (arch, name, entry, loading: true);
+
+		if (cache.TryGetValue (name, out AssemblyDefinition? assembly)) {
 			if (assembly != null) {
 				return assembly;
 			}
@@ -189,11 +98,8 @@ class XAAssemblyResolver : IAssemblyResolver
 			return null;
 		}
 
-		if (!cache.TryGetValue (name, out entry)) {
-			entry = new CacheEntry (log, filePath, assembly, arch);
-			cache.Add (name, entry);
-		} else {
-			entry.Add (arch, assembly);
+		if (!cache.ContainsKey (name)) {
+			cache.Add (name, assembly);
 		}
 
 		return assembly;
@@ -219,7 +125,7 @@ class XAAssemblyResolver : IAssemblyResolver
 		try {
 			return LoadFromMemoryMappedFile (filePath, loadReaderParams);
 		} catch (Exception ex) {
-			log.LogWarning ($"Failed to read '{filePath}' with debugging symbols. Retrying to load it without it. Error details are logged below.");
+			log.LogWarning ($"Failed to read '{filePath}' with debugging symbols for target architecture '{targetArch}'. Retrying to load it without it. Error details are logged below.");
 			log.LogWarning ($"{ex.ToString ()}");
 			loadReaderParams.ReadSymbols = false;
 			return LoadFromMemoryMappedFile (filePath, loadReaderParams);
@@ -260,47 +166,9 @@ class XAAssemblyResolver : IAssemblyResolver
 		}
 	}
 
-	AssemblyDefinition? SelectAssembly (AndroidTargetArch arch, string assemblyName, CacheEntry? entry, bool loading)
-	{
-		if (entry == null) {
-			// Should "never" happen...
-			throw new ArgumentNullException (nameof (entry));
-		}
-
-		if (arch == AndroidTargetArch.None) {
-			// Disabled for now, generates too much noise.
-			// if (entry.Assemblies.Count > 1) {
-			// 	log.LogWarning ($"Architecture-agnostic entry requested for architecture-specific assembly '{assemblyName}'");
-			// }
-			return entry.Default;
-		}
-
-		if (!entry.Assemblies.TryGetValue (arch, out AssemblyDefinition? asm)) {
-			if (loading) {
-				return null;
-			}
-
-			if (!entry.Assemblies.TryGetValue (AndroidTargetArch.None, out asm)) {
-				throw new InvalidOperationException ($"Internal error: assembly '{assemblyName}' for architecture '{arch}' not found in cache entry and architecture-agnostic entry is missing as well");
-			}
-
-			if (asm == null) {
-				throw new InvalidOperationException ($"Internal error: architecture-agnostic cache entry for assembly '{assemblyName}' is null");
-			}
-
-			log.LogWarning ($"Returning architecture-agnostic cache entry for assembly '{assemblyName}'. Requested architecture was: {arch}");
-			return asm;
-		}
-
-		if (asm == null) {
-			throw new InvalidOperationException ($"Internal error: null reference for assembly '{assemblyName}' in assembly cache entry");
-		}
-
-		return asm;
-	}
-
 	public void Dispose ()
 	{
+		// Do not change this code. Put cleanup code in 'Dispose(bool disposing)' method
 		Dispose (disposing: true);
 		GC.SuppressFinalize (this);
 	}

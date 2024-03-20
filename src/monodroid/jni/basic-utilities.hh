@@ -6,6 +6,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <optional>
 #include <string_view>
 #include <type_traits>
 
@@ -13,6 +14,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <fcntl.h>
 
 #include "java-interop-util.h"
 #include "helpers.hh"
@@ -42,6 +44,27 @@ namespace xamarin::android
 		bool             directory_exists (const char *directory);
 		bool             file_copy (const char *to, const char *from);
 
+		static std::optional<size_t> get_file_size_at (int dirfd, const char *file_name) noexcept
+		{
+			struct stat sbuf;
+			if (fstatat (dirfd, file_name, &sbuf, 0) == -1) {
+				log_warn (LOG_ASSEMBLY, "Failed to stat file '%s': %s", file_name, std::strerror (errno));
+				return {};
+			}
+
+			return static_cast<size_t>(sbuf.st_size);
+		}
+
+		static std::optional<int> open_file_ro_at (int dirfd, const char *file_name) noexcept
+		{
+			int fd =  openat (dirfd, file_name, O_RDONLY);
+			if (fd < 0) {
+				log_error (LOG_ASSEMBLY, "Failed to open file '%s' for reading: %s", file_name, std::strerror (errno));
+				return {};
+			}
+
+			return fd;
+		}
 
 		// Make sure that `buf` has enough space! This is by design, the methods are supposed to be fast.
 		template<size_t MaxStackSpace, typename TBuffer>
@@ -107,13 +130,19 @@ namespace xamarin::android
 		}
 
 		template<size_t MaxStackSpace>
-		bool ends_with (internal::dynamic_local_string<MaxStackSpace>& str, std::string_view const& sv) const noexcept
+		bool ends_with (internal::dynamic_local_string<MaxStackSpace> const& str, std::string_view const& sv) const noexcept
 		{
 			if (str.length () < sv.length ()) {
 				return false;
 			}
 
 			return memcmp (str.get () + str.length () - sv.length (), sv.data (), sv.length ()) == 0;
+		}
+
+		template<size_t MaxStackSpace>
+		bool ends_with (internal::dynamic_local_string<MaxStackSpace>& str, std::string_view const& sv) const noexcept
+		{
+			return ends_with(static_cast<internal::dynamic_local_string<MaxStackSpace> const&>(str), sv);
 		}
 
 		bool ends_with (const char *str, std::string_view const& sv) const noexcept
@@ -193,9 +222,10 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			for (size_t i = str.length () - 1; i >= 0; i--) {
-				if (str[i] == ch) {
-					return str.get () + i;
+			for (size_t i = str.length (); i > 0; i--) {
+				const size_t index = i - 1;
+				if (str[index] == ch) {
+					return str.get () + index;
 				}
 			}
 
@@ -238,6 +268,12 @@ namespace xamarin::android
 			}
 
 			return strdup_new (s, strlen (s));
+		}
+
+		template<size_t BufferSize>
+		char *strdup_new (internal::dynamic_local_string<BufferSize> const& buf) noexcept
+		{
+			return strdup_new (buf.get (), buf.length ());
 		}
 
 		char *strdup_new (xamarin::android::internal::string_segment const& s, size_t from_index = 0) noexcept

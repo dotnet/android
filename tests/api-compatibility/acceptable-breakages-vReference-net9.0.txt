@@ -1,1 +1,2 @@
 Compat issues with assembly Mono.Android:
+CannotAddAbstractMembers : Member 'public void Android.Net.Wifi.WifiManager.WpsCallback.OnFailed(Android.Net.Wifi.WpsFailureReason)' is abstract in the implementation but is missing in the contract.

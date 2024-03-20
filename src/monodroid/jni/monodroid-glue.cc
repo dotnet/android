@@ -1,7 +1,6 @@
 #include <array>
 #include <cctype>
 #include <cerrno>
-#include <compare>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -13,6 +12,8 @@
 #include <fcntl.h>
 #include <pthread.h>
 #include <strings.h>
+
+#include <dlfcn.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <sys/syscall.h>
@@ -22,6 +23,7 @@
 #include <unistd.h>
 
 #include <jni.h>
+#include <android/dlext.h>
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/appdomain.h>
@@ -61,6 +63,7 @@
 #include "monovm-properties.hh"
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
+#include "search.hh"
 
 //#include "xamarin_getifaddrs.h"
 
@@ -185,16 +188,23 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 			fullpath.append (SharedConstants::DLL_EXTENSION);
 		}
 
-		log_info (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
-		if (utils.file_exists (fullpath.get ()))
-			result = mono_assembly_open_full (fullpath.get (), nullptr, 0);
+		log_debug (LOG_ASSEMBLY, "open_from_update_dir: trying to open assembly: %s\n", fullpath.get ());
+		if (utils.file_exists (fullpath.get ())) {
+			MonoImageOpenStatus status{};
+			result = mono_assembly_open_full (fullpath.get (), &status, 0);
+			if (result == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
+				log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", fullpath.get (), mono_image_strerror (status));
+			}
+		} else {
+			log_warn (LOG_ASSEMBLY, "open_from_update_dir: assembly file DOES NOT EXIST");
+		}
 		if (result != nullptr) {
 			// TODO: register .mdb, .pdb file
 			break;
 		}
 	}
 
-	if (result && utils.should_log (LOG_ASSEMBLY)) {
+	if (result != nullptr && utils.should_log (LOG_ASSEMBLY)) {
 		log_info_nocheck (LOG_ASSEMBLY, "open_from_update_dir: loaded assembly: %p\n", result);
 	}
 	return result;
@@ -221,8 +231,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 		bool  exists  = utils.file_exists (p.get ());
 
 		if (exists) {
-			log_info (LOG_ASSEMBLY, "should not register '%s' as it exists in the override directory '%s'", filename, odir);
-			return !exists;
+			return false;
 		}
 	}
 #endif
@@ -238,11 +247,20 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			if (od == nullptr || !utils.directory_exists (od)) {
 				continue;
 			}
-			log_info (LOG_ASSEMBLY, "Loading TypeMaps from %s", od);
-			embeddedAssemblies.try_load_typemaps_from_directory (od);
+
+			// TODO: temporary hack for the location of typemaps, to be fixed
+			dynamic_local_string<SENSIBLE_PATH_MAX> above { od };
+			above.append ("/..");
+			log_debug (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
+			embeddedAssemblies.try_load_typemaps_from_directory (above.get());
 		}
 	}
 #endif
+
+	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
+		return;
+	}
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
 	size_t prev_num_assemblies = 0;
@@ -255,9 +273,11 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 		if (have_split_apks) {
 			bool scan_apk = false;
 
+			// With split configs we need to scan only the abi apk, because both the assembly stores and the runtime
+			// configuration blob are in `lib/{ARCH}`, which in turn lives in the split config APK
 			if (!got_split_config_abi_apk && utils.ends_with (apk_file.get_cstr (), SharedConstants::split_config_abi_apk_name)) {
 				got_split_config_abi_apk = scan_apk = true;
-			} else if (!got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
+			} else if (!application_config.have_assembly_store && !got_base_apk && utils.ends_with (apk_file.get_cstr (), base_apk_name)) {
 				got_base_apk = scan_apk = true;
 			}
 
@@ -266,7 +286,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 			}
 		}
 
-		size_t cur_num_assemblies  = embeddedAssemblies.register_from<should_register_file> (apk_file.get_cstr ());
+		size_t cur_num_assemblies  = embeddedAssemblies.register_from_apk<should_register_file> (apk_file.get_cstr ());
 
 		*out_user_assemblies_count += (cur_num_assemblies - prev_num_assemblies);
 		prev_num_assemblies = cur_num_assemblies;
@@ -905,19 +925,19 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
-	size_t blob_time_index;
-	if (FastTiming::enabled ()) [[unlikely]] {
-		blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
-	}
-
 	if (embeddedAssemblies.have_runtime_config_blob ()) {
+		size_t blob_time_index;
+		if (FastTiming::enabled ()) [[unlikely]] {
+			blob_time_index = internal_timing->start_event (TimingEventKind::RuntimeConfigBlob);
+		}
+
 		runtime_config_args.kind = 1;
 		embeddedAssemblies.get_runtime_config_blob (runtime_config_args.runtimeconfig.data.data, runtime_config_args.runtimeconfig.data.data_len);
 		monovm_runtimeconfig_initialize (&runtime_config_args, cleanup_runtime_config, nullptr);
-	}
 
-	if (FastTiming::enabled ()) [[unlikely]] {
-		internal_timing->end_event (blob_time_index);
+		if (FastTiming::enabled ()) [[unlikely]] {
+			internal_timing->end_event (blob_time_index);
+		}
 	}
 
 	if (user_assemblies_count == 0 && androidSystem.count_override_assemblies () == 0 && !is_running_on_desktop) {
@@ -926,10 +946,11 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		           AndroidSystem::override_dirs [0],
 		           (AndroidSystem::override_dirs.size () > 1 && AndroidSystem::override_dirs [1] != nullptr) ? AndroidSystem::override_dirs [1] : "<unavailable>");
 #else
-		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s)");
+		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
 #endif
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `assemblies/` are STORED (not compressed)");
-		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `assemblies/` are compressed");
+		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
+		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `%s` are STORED (not compressed)", assemblies_prefix);
+		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed", assemblies_prefix);
 
 		Helpers::abort_application ();
 	}
@@ -1189,27 +1210,15 @@ MonodroidRuntime::convert_dl_flags (int flags)
 }
 
 force_inline DSOCacheEntry*
-MonodroidRuntime::find_dso_cache_entry ([[maybe_unused]] hash_t hash) noexcept
+MonodroidRuntime::find_dso_cache_entry (hash_t hash) noexcept
 {
-	hash_t entry_hash;
-	DSOCacheEntry *ret = nullptr;
-	size_t entry_count = application_config.number_of_dso_cache_entries;
-	DSOCacheEntry *entries = dso_cache;
-
-	while (entry_count > 0) {
-		ret = entries + (entry_count / 2);
-		entry_hash = static_cast<hash_t> (ret->hash);
-		auto result = hash <=> entry_hash;
-
-		if (result < 0) {
-			entry_count /= 2;
-		} else if (result > 0) {
-			entries = ret + 1;
-			entry_count -= entry_count / 2 + 1;
-		} else {
-			return ret;
-		}
+	auto equal = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash == key; };
+	auto less_than = [](DSOCacheEntry const& entry, hash_t key) -> bool { return entry.hash < key; };
+	ssize_t idx = Search::binary_search<DSOCacheEntry, equal, less_than> (hash, dso_cache, application_config.number_of_dso_cache_entries);
+	if (idx >= 0) {
+		return &dso_cache[idx];
 	}
+
 	return nullptr;
 }
 
@@ -1217,12 +1226,17 @@ force_inline void*
 MonodroidRuntime::monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, [[maybe_unused]] bool need_api_init)
 {
 	if (handle == nullptr && err != nullptr) {
-		*err = utils.monodroid_strdup_printf ("Could not load library: Library '%s' not found.", full_name);
+		const char *load_error = dlerror ();
+		if (load_error == nullptr) {
+			load_error = "Unknown error";
+		}
+		*err = utils.monodroid_strdup_printf ("Could not load library '%s'. %s", full_name, load_error);
 	}
 
 	if (free_memory) {
 		delete[] full_name;
 	}
+
 	return handle;
 }
 
@@ -1291,9 +1305,31 @@ MonodroidRuntime::monodroid_dlopen (const char *name, int flags, char **err) noe
 	}
 
 	StartupAwareLock lock (dso_handle_write_lock);
-	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
+#if defined (RELEASE)
+	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+		DSOApkEntry *apk_entry = dso_apk_entries;
+		for (size_t i = 0; i < application_config.number_of_shared_libraries; i++) {
+			if (apk_entry->name_hash != dso->real_name_hash) {
+				apk_entry++;
+				continue;
+			}
 
+			android_dlextinfo dli;
+			dli.flags = ANDROID_DLEXT_USE_LIBRARY_FD | ANDROID_DLEXT_USE_LIBRARY_FD_OFFSET;
+			dli.library_fd = apk_entry->fd;
+			dli.library_fd_offset = apk_entry->offset;
+			dso->handle = android_dlopen_ext (dso->name, flags, &dli);
+
+			if (dso->handle != nullptr) {
+				return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
+			}
+			break;
+		}
+	}
+#endif
+	unsigned int dl_flags = monodroidRuntime.convert_dl_flags (flags);
 	dso->handle = androidSystem.load_dso_from_any_directories (dso->name, dl_flags);
+
 	if (dso->handle != nullptr) {
 		return monodroid_dlopen_log_and_return (dso->handle, err, dso->name, false /* name_needs_free */);
 	}
@@ -1477,6 +1513,9 @@ MonodroidRuntime::set_profile_options ()
 			.append (",")
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
+	}
+	if (utils.create_directory (AndroidSystem::override_dirs[0], 0) < 0) {
+		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", AndroidSystem::override_dirs[0], std::strerror (errno));
 	}
 
 	log_warn (LOG_DEFAULT, "Initializing profiler with options: %s", value.get ());

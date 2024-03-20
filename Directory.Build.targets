@@ -7,4 +7,13 @@
     <PackageReference Update="Irony"                                        Version="1.1.0" />
   </ItemGroup>
 
+  <!-- Automatically add NRT attribute support for netstandard2.0 projects using NRT -->
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' AND ('$(Nullable)' == 'enable' OR '$(Nullable)' == 'annotations') ">
+    <Compile Include="$(MSBuildThisFileDirectory)external\Java.Interop\src\utils\NullableAttributes.cs" Visible="false" />
+  </ItemGroup>
+  
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' AND ('$(Nullable)' == 'enable' OR '$(Nullable)' == 'annotations') ">
+    <DefineConstants>$(DefineConstants);INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
+  </PropertyGroup>
+
 </Project>
