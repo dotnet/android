@@ -289,8 +289,8 @@ stages:
   - job: api_scan
     displayName: API Scan
     pool:
-      name: Azure Pipelines
-      vmImage: windows-2022
+      name: MAUI-1ESPT
+      demands: ImageOverride -equals $(WindowsPoolImage1ESPT)
     timeoutInMinutes: 480
     workspace:
       clean: all
@@ -340,7 +340,7 @@ stages:
         isLargeApp: true
         toolVersion: Latest
       env:
-        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId)
+        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanMAUI1ESPTMangedId)
 
     - task: SdtReport@2
       displayName: Guardian Export - Security Report
