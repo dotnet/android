@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Düzeni şablonu",
+  "name": "Android Layout",
   "description": "Android düzeni (XML) dosyası",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "Layout1.xml dosyasını düzenleyicide açar"
 }

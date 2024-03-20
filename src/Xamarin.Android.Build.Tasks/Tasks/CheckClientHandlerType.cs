@@ -47,6 +47,7 @@ namespace Xamarin.Android.Tasks
 				ReadSymbols = false,
 			};
 			using (var resolver = new DirectoryAssemblyResolver (this.CreateTaskLogger (), loadDebugSymbols: false, loadReaderParameters: readerParameters)) {
+				var cache = new TypeDefinitionCache ();
 				foreach (var asm in ResolvedAssemblies) {
 					var path = Path.GetFullPath (Path.GetDirectoryName (asm.ItemSpec));
 					if (!resolver.SearchDirectories.Contains (path)) {
@@ -66,11 +67,11 @@ namespace Xamarin.Android.Tasks
 					return false;
 				}
 
-				if (Extends (handlerType, "System.Net.Http.HttpClientHandler")) {
+				if (Extends (cache, handlerType, "System.Net.Http.HttpClientHandler")) {
 					Log.LogCodedError ("XA1031", Xamarin.Android.Tasks.Properties.Resources.XA1031_HCH, type);
 				}
 
-				if (!Extends (handlerType, "System.Net.Http.HttpMessageHandler")) {
+				if (!Extends (cache, handlerType, "System.Net.Http.HttpMessageHandler")) {
 					Log.LogCodedError ("XA1031", Xamarin.Android.Tasks.Properties.Resources.XA1031, type, "System.Net.Http.HttpMessageHandler");
 				}
 
@@ -78,12 +79,16 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		static bool Extends (TypeDefinition type, string validBase) {
-			var bt = type.Resolve ();
+		static bool Extends (TypeDefinitionCache cache, TypeDefinition type, string validBase) {
+			var bt = cache.Resolve (type);
 			while (bt != null) {
 				if (bt.FullName == validBase)
 					return true;
-				bt = bt.BaseType?.Resolve () ?? null;
+				if (bt.BaseType != null) {
+					bt = cache.Resolve (bt.BaseType);
+				} else {
+					bt = null;
+				}
 			}
 			return false;
 		}

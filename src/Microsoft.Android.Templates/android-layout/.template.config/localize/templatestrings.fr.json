@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Modèle de disposition Android",
+  "name": "Android Layout",
   "description": "Fichier de disposition Android (XML)",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "Ouvre Layout1.xml dans l’éditeur"
 }

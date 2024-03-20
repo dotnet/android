@@ -1,7 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 
-using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
 
@@ -21,6 +21,78 @@ namespace tmt
 			: base (stream, filePath, elf, dynsymSection, rodataSection, symSection)
 		{}
 
+		public override ulong DeterminePointerAddress (ISymbolEntry symbol, ulong pointerOffset)
+		{
+			var sym64 = symbol as SymbolEntry<ulong>;
+			if (sym64 == null) {
+				throw new ArgumentException ("must be of type SymbolEntry<ulong>, was {symbol.GetType ()}", nameof (symbol));
+			}
+
+			return DeterminePointerAddress (sym64.Value, pointerOffset);
+		}
+
+		public override ulong DeterminePointerAddress (ulong symbolValue, ulong pointerOffset)
+		{
+			const string RelaDynSectionName = ".rela.dyn";
+			ISection? sec = GetSection (ELF, RelaDynSectionName);
+			if (sec == null) {
+				Log.Warning ($"{FilePath} does not contain dynamic relocation section ('{RelaDynSectionName}')");
+				return 0;
+			}
+
+			var relaDyn = sec as Section<ulong>;
+			if (relaDyn == null) {
+				Log.Warning ($"Invalid section type, expected 'Section<ulong>', got '{sec.GetType ()}'");
+				return 0;
+			}
+
+			List<ELF64RelocationAddend> rels = LoadRelocationsAddend (relaDyn);
+			if (rels.Count == 0) {
+				Log.Warning ($"Relocation section '{RelaDynSectionName}' is empty");
+				return 0;
+			}
+
+			ulong symRelocAddress = symbolValue + pointerOffset;
+			Log.Debug ($"Pointer relocation address == 0x{symRelocAddress:x}");
+
+			ulong fileOffset = Relocations.GetValue (ELF, rels, symRelocAddress);
+			Log.Debug ($"File offset == 0x{fileOffset:x}");
+
+			return fileOffset;
+		}
+
+		public override byte[] GetDataFromPointer (ulong pointerValue, ulong size)
+		{
+			Log.Debug ($"Looking for section containing pointer 0x{pointerValue:x}");
+			ulong dataOffset = 0;
+			Section<ulong>? section = null;
+
+			foreach (Section<ulong> s in ELF.Sections) {
+				if (s.Type != SectionType.ProgBits) {
+					continue;
+				}
+
+				if (s.LoadAddress > pointerValue || (s.LoadAddress + s.Size) < pointerValue) {
+					continue;
+				}
+
+				Log.Debug ($"  Section '{s.Name}' matches");
+
+				// Pointer is a load address, we convert it to the in-section offset by subtracting section load address from
+				// the pointer
+				dataOffset = pointerValue - s.LoadAddress;
+				Log.Debug ($"  Pointer data section offset: 0x{dataOffset:x}");
+				section = s;
+				break;
+			}
+
+			if (section == null) {
+				throw new InvalidOperationException ($"Data for pointer 0x{pointerValue:x} not located");
+			}
+
+			return GetData (section, size, dataOffset);
+		}
+
 		public override byte[] GetData (ulong symbolValue, ulong size = 0)
 		{
 			Log.Debug ($"ELF64.GetData: Looking for symbol value {symbolValue:X08}");
@@ -30,7 +102,7 @@ namespace tmt
 				symbol = GetSymbol (Symbols, symbolValue);
 			}
 
-			if (symbol != null) {
+			if (symbol != null && symbol.PointedSection != null) {
 				Log.Debug ($"ELF64.GetData: found in section {symbol.PointedSection.Name}");
 				return GetData (symbol);
 			}
@@ -44,6 +116,26 @@ namespace tmt
 		protected override byte[] GetData (SymbolEntry<ulong> symbol)
 		{
 			return GetData (symbol, symbol.Size, OffsetInSection (symbol.PointedSection, symbol.Value));
+		}
+
+		List<ELF64RelocationAddend> LoadRelocationsAddend (Section<ulong> section)
+		{
+			var ret = new List<ELF64RelocationAddend> ();
+			byte[] data = section.GetContents ();
+			ulong offset = 0;
+			ulong numEntries = (ulong)data.Length / 24; // One record is 3 64-bit words
+
+			Log.Debug ($"Relocation section '{section.Name}' data length == {data.Length}; entries == {numEntries}");
+			while ((ulong)ret.Count < numEntries) {
+				ulong relOffset = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
+				ulong relInfo = Helpers.ReadUInt64 (data, ref offset, Is64Bit);
+				long relAddend = Helpers.ReadInt64 (data, ref offset, Is64Bit);
+
+				ret.Add (new ELF64RelocationAddend (relOffset, relInfo, relAddend));
+			}
+			Log.Debug ($"Read {ret.Count} entries");
+
+			return ret;
 		}
 
 		Section<ulong> FindSectionForValue (ulong symbolValue)

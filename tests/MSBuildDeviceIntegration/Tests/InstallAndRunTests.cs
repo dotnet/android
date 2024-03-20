@@ -257,13 +257,7 @@ namespace Library1 {
 					new BuildItem ("ProjectReference", "..\\LinkTestLib\\LinkTestLib.csproj"),
 				},
 				PackageReferences = {
-					KnownPackages.AndroidXMigration,
 					KnownPackages.AndroidXAppCompat,
-					KnownPackages.AndroidXAppCompatResources,
-					KnownPackages.AndroidXBrowser,
-					KnownPackages.AndroidXMediaRouter,
-					KnownPackages.AndroidXLegacySupportV4,
-					KnownPackages.AndroidXLifecycleLiveData,
 					KnownPackages.XamarinGoogleAndroidMaterial,
 				},
 				Sources = {

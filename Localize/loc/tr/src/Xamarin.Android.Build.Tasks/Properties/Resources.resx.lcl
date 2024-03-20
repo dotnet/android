@@ -417,6 +417,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0138" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[%(AndroidAsset.AssetPack) ve %(AndroidAsset.AssetPack) öğe meta verileri yalnızca `$(AndroidApplication)` değeri `true` olduğunda desteklenir.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0139" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[`@(AndroidAsset)` `{0}` geçersiz `DeliveryType` `{1}` meta verisini içeriyor. Desteklenen değerler şunlardır: `installtime`, `ondemand` veya `fastfollow`.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0140" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[`{0}` için tanımlanan AssetPack geçersiz karakterler içeriyor. `{1}` yalnızca A-z, a-z, 0-9 veya alt çizgi içermelidir.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
@@ -761,6 +788,15 @@
           <Val><![CDATA[The '{0}' MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Bu '{0}' MSBuild özelliği kullanım dışı bırakıldı ve .NET’ten kaldırılacak {1}. Daha fazla ayrıntı için bkz. https://aka.ms/net-android-deprecations için ayrıntılara bakın.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA1039" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Android Destek kitaplıkları .NET 9 ve sonraki sürümlerde desteklenmiyor, lütfen AndroidX'e geçin. Daha fazla ayrıntı için https://aka.ms/xamarin/androidx adresini ziyaret edin.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

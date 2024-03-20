@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android 布局模板",
+  "name": "Android Layout",
   "description": "Android 布局 (XML) 文件",
-  "postActions/openInEditor/description": "Opens Layout1.xml in the editor"
+  "postActions/openInEditor/description": "在编辑器中打开 Layout1.xml"
 }

@@ -1,71 +1,25 @@
 parameters:
-  configuration: $(XA.Build.Configuration)
-  xaSourcePath: $(System.DefaultWorkingDirectory)
   testRunTitle: Xamarin Android Tests
   testAssembly: ''
-  testResultsFile: TestResult.xml
-  nunitConsoleExtraArgs: ''
   dotNetTestExtraArgs: ''
-  useDotNet: true
-  useDotNetPreview: false
   workers: $(NUnit.NumberOfTestWorkers)
   condition: succeeded()
-  timeoutInMinutes: 0
+  timeoutInMinutes: 180
   retryCountOnTaskFailure: 0
 
 steps:
-- ${{ if and(eq(parameters.useDotNet, false), eq(parameters.useDotNetPreview, false)) }}:
-  - powershell: |
-      Write-Host '##vso[task.setvariable variable=TestResultsFormat]NUnit'
-      if ([Environment]::OSVersion.Platform -eq "Unix") {
-          & ${{ parameters.xaSourcePath }}/build-tools/scripts/nunit3-console ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
-      } else {
-          & cmd /c '${{ parameters.xaSourcePath }}\build-tools\scripts\nunit3-console.cmd' ${{ parameters.testAssembly }} --result ${{ parameters.testResultsFile }} --workers=${{ parameters.workers }} ${{ parameters.nunitConsoleExtraArgs }}
-      }
-      if ($LASTEXITCODE -ne 0) {
-          Write-Host "##vso[task.logissue type=error]Test suite had $LASTEXITCODE failure(s)."
-          Write-Host "##vso[task.complete result=Failed;]"
-          exit 0
-      }
-    displayName: run ${{ parameters.testRunTitle }}
-    condition: ${{ parameters.condition }}
-    continueOnError: true
-
-- ${{ if and(eq(parameters.useDotNet, true), eq(parameters.useDotNetPreview, true)) }}:
-  - powershell: Write-Host '##vso[task.setvariable variable=TestResultsFormat]VSTest'
-  - template: run-dotnet-preview.yaml
-    parameters:
-      configuration: ${{ parameters.configuration }}
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-      command: test
-      project: ${{ parameters.testAssembly }}
-      useExitCodeForErrors: true
-      arguments: >-
-        --results-directory . --logger "trx;LogFileName=${{ parameters.testResultsFile }}"
-        ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-      displayName: run ${{ parameters.testRunTitle }}
-      condition: ${{ parameters.condition }}
-
-- ${{ if and(eq(parameters.useDotNet, true), eq(parameters.useDotNetPreview, false)) }}:
-  - task: DotNetCoreCLI@2
-    inputs:
-      command: test
-      projects: ${{ parameters.testAssembly }}
-      arguments: >-
-        ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
-      publishTestResults: true
-      testRunTitle: ${{ parameters.testRunTitle }}
-    displayName: run ${{ parameters.testRunTitle }}
-    condition: ${{ parameters.condition }}
-    continueOnError: true
-    timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
-    retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
-
-- template: kill-processes.yaml
-
-- task: PublishTestResults@2
+- task: DotNetCoreCLI@2
   inputs:
-    testResultsFormat: $(TestResultsFormat)
-    testResultsFiles: ${{ parameters.testResultsFile }}
+    command: test
+    projects: ${{ parameters.testAssembly }}
+    arguments: >-
+      ${{ parameters.dotNetTestExtraArgs }} -- NUnit.NumberOfTestWorkers=${{ parameters.workers }}
+    publishTestResults: true
     testRunTitle: ${{ parameters.testRunTitle }}
-  condition: and(${{ parameters.condition }}, or(ne('${{ parameters.useDotNet }}', 'true'), eq('${{ parameters.useDotNetPreview }}', 'true')))
+  displayName: run ${{ parameters.testRunTitle }}
+  condition: ${{ parameters.condition }}
+  continueOnError: true
+  timeoutInMinutes: ${{ parameters.timeoutInMinutes }}
+  retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
+
+- template: /build-tools/automation/yaml-templates/kill-processes.yaml

@@ -1,2 +1,0 @@
-Compat issues with assembly Mono.Android:
-CannotRemoveAttribute : Attribute 'System.ObsoleteAttribute' exists on 'Android.OS.Environment.GetExternalStoragePublicDirectory(System.String)' in the contract but not the implementation.

@@ -832,6 +832,25 @@ APK root directory. The format of the path is `lib\ARCH\wrap.sh` where
 + `x86_64`
 + `x86`
 
+## AndroidIncludeAssetPacksInPackage
+
+This property controls if an Asset Packs build automatically are auto
+included in the final `.aab` file. It will default to `true`.
+
+In certain cases the user might want to release an interim release. In
+these cases the user does not need to update the asset pack. Especially
+if the contents of the asset pack have not changed. This property allows
+the user to skip the asset packs if they are not required.
+
+Added in .NET 9
+
+## AndroidInstallJavaDependencies
+
+The default value is `true` for command line builds. When set to `true`, enables
+installation of the Java SDK when running the `<InstallAndroidDependencies/>` target.
+
+Support for this property was added in .NET 9.
+
 ## AndroidJavadocVerbosity
 
 Specifies how "verbose"
@@ -1666,6 +1685,13 @@ as support for `$(AotAssemblies)` will be removed in a future release.
 ## AProfUtilExtraOptions
 
 Extra options to pass to `aprofutil`.
+
+## BeforeBuildAndroidAssetPacks
+
+MSBuild Targets listed in this
+property will run directly before the `AssetPack` items are built.
+
+Added in .NET 9
 
 ## BeforeGenerateAndroidManifest
 

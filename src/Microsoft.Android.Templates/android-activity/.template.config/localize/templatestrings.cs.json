@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Šablona aktivity Androidu",
+  "name": "Android Activity",
   "description": "Třída aktivity Androidu",
   "symbols/namespace/description": "obor názvů pro vygenerovaný kód",
-  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
+  "postActions/openInEditor/description": "Otevře soubor Activity1.cs v editoru"
 }

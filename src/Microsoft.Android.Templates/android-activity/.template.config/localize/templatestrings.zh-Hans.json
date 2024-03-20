@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android 活动模板",
+  "name": "Android Activity",
   "description": "Android 活动类",
   "symbols/namespace/description": "生成的代码的命名空间",
-  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
+  "postActions/openInEditor/description": "在编辑器中打开 Activity1.cs"
 }

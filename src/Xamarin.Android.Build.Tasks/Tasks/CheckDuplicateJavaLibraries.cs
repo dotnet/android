@@ -9,16 +9,12 @@ namespace Xamarin.Android.Tasks
 {
 	public class CheckDuplicateJavaLibraries : AndroidTask
 	{
-		readonly static string [] ExcludedFiles = new [] {
-			"classes.jar",
-			"r-classes.jar",
-		};
-
 		public override string TaskPrefix => "CDJ";
 
 		public ITaskItem [] JavaSourceFiles { get; set; }
 		public ITaskItem[] JavaLibraries { get; set; }
 		public ITaskItem[] LibraryProjectJars { get; set; }
+		public string [] ExcludedFiles { get; set; }
 
 		public override bool RunTask ()
 		{

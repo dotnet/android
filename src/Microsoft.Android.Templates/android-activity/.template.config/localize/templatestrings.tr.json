@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Etkinlik şablonu",
+  "name": "Android Activity",
   "description": "Android Etkinlik sınıfı",
   "symbols/namespace/description": "oluşturulan kod için ad alanı",
-  "postActions/openInEditor/description": "Opens Activity1.cs in the editor"
+  "postActions/openInEditor/description": "Activity1.cs dosyasını düzenleyicide açar"
 }

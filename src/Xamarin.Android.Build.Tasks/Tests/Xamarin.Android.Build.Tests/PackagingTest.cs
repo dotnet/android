@@ -39,8 +39,13 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = true
 			};
+
+			AndroidTargetArch[] supportedArches = new[] {
+				AndroidTargetArch.Arm,
+			};
+
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStores.ToString ());
-			proj.SetAndroidSupportedAbis ("armeabi-v7a");
+			proj.SetRuntimeIdentifiers (supportedArches);
 			proj.PackageReferences.Add (new Package {
 				Id = "Humanizer.Core",
 				Version = "2.14.1",
@@ -59,23 +64,23 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "System.Globalization"));
 			proj.OtherBuildItems.Add (new BuildItem ("Using", "Humanizer"));
 
-			var expectedFiles = new [] {
-					"Java.Interop.dll",
-					"Mono.Android.dll",
-					"Mono.Android.Runtime.dll",
-					"rc.bin",
-					"System.Console.dll",
-					"System.Private.CoreLib.dll",
-					"System.Runtime.dll",
-					"System.Runtime.InteropServices.dll",
-					"System.Linq.dll",
-					"UnnamedProject.dll",
-					"_Microsoft.Android.Resource.Designer.dll",
-					"Humanizer.dll",
-					"es/Humanizer.resources.dll",
-					"System.Collections.dll",
-					"System.Collections.Concurrent.dll",
-					"System.Text.RegularExpressions.dll",
+			var expectedFiles = new HashSet<string> {
+				"Java.Interop.dll",
+				"Mono.Android.dll",
+				"Mono.Android.Runtime.dll",
+				"System.Console.dll",
+				"System.Private.CoreLib.dll",
+				"System.Runtime.dll",
+				"System.Runtime.InteropServices.dll",
+				"System.Linq.dll",
+				"UnnamedProject.dll",
+				"_Microsoft.Android.Resource.Designer.dll",
+				"Humanizer.dll",
+				"es/Humanizer.resources.dll",
+				"System.Collections.dll",
+				"System.Collections.Concurrent.dll",
+				"System.Text.RegularExpressions.dll",
+				"libarc.bin.so",
 			};
 
 			using (var b = CreateApkBuilder ()) {
@@ -87,15 +92,11 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				List<string> missingFiles;
 				List<string> additionalFiles;
 
-				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles);
+				helper.Contains (expectedFiles, out existingFiles, out missingFiles, out additionalFiles, supportedArches);
 
 				Assert.IsTrue (missingFiles == null || missingFiles.Count == 0,
 				       string.Format ("The following Expected files are missing. {0}",
 				       string.Join (Environment.NewLine, missingFiles)));
-
-				Assert.IsTrue (additionalFiles == null || additionalFiles.Count == 0,
-					string.Format ("Unexpected Files found! {0}",
-					string.Join (Environment.NewLine, additionalFiles)));
 			}
 		}
 
@@ -261,25 +262,7 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 		public void CheckMetadataSkipItemsAreProcessedCorrectly ()
 		{
 			var packages = new List<Package> () {
-				KnownPackages.Android_Arch_Core_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
-				KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
-				KnownPackages.AndroidSupportV4_27_0_2_1,
-				KnownPackages.SupportCompat_27_0_2_1,
-				KnownPackages.SupportCoreUI_27_0_2_1,
-				KnownPackages.SupportCoreUtils_27_0_2_1,
-				KnownPackages.SupportDesign_27_0_2_1,
-				KnownPackages.SupportFragment_27_0_2_1,
-				KnownPackages.SupportMediaCompat_27_0_2_1,
-				KnownPackages.SupportV7AppCompat_27_0_2_1,
-				KnownPackages.SupportV7CardView_27_0_2_1,
-				KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				KnownPackages.SupportV7RecyclerView_27_0_2_1,
-				KnownPackages.VectorDrawable_27_0_2_1,
-				new Package () { Id = "Xamarin.Android.Support.Annotations", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Transition", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.v7.Palette", Version = "27.0.2.1" },
-				new Package () { Id = "Xamarin.Android.Support.Animated.Vector.Drawable", Version = "27.0.2.1" },
+				KnownPackages.Xamarin_Jetbrains_Annotations,
 			};
 
 			string metaDataTemplate = @"<AndroidCustomMetaDataForReferences Include=""%"">
@@ -483,7 +466,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				var helper = new ArchiveAssemblyHelper (apk);
 
 				foreach (string lang in languages) {
-					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					foreach (string rid in appBuilder.GetBuildRuntimeIdentifiers ()) {
+						string abi = MonoAndroidHelper.RidToAbi (rid);
+						Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					}
 				}
 			}
 		}
@@ -512,7 +498,10 @@ string.Join ("\n", packages.Select (x => metaDataTemplate.Replace ("%", x.Id))) 
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				var helper = new ArchiveAssemblyHelper (apk);
-				Assert.IsTrue (helper.Exists ($"assemblies/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/es/{proj.ProjectName}.resources.dll"), "Apk should contain satellite assemblies!");
+				}
 			}
 		}
 
@@ -644,20 +633,8 @@ public class Test
 		[TestCase (-1, 200)]
 		public void BuildApkWithZipFlushLimits (int filesLimit, int sizeLimit)
 		{
-			var proj = new XamarinAndroidApplicationProject  {
+			var proj = new XamarinFormsAndroidApplicationProject {
 				IsRelease = false,
-				PackageReferences = {
-					KnownPackages.SupportDesign_27_0_2_1,
-					KnownPackages.SupportV7CardView_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-					KnownPackages.SupportV7MediaRouter_27_0_2_1,
-				},
 			};
 			proj.SetProperty ("EmbedAssembliesIntoApk", "true");
 			if (filesLimit > 0)

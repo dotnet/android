@@ -28,6 +28,7 @@
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt</_SupportLicense>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt</_SupportLicense>
+    <_ILRepackEnabled Condition=" '$(_ILRepackEnabled)' == '' ">true</_ILRepackEnabled>
   </PropertyGroup>
   <ItemGroup>
     <None
@@ -96,6 +97,10 @@
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Aapt2.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Aapt2.targets</Link>
+    </None>
+    <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Assets.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Assets.targets</Link>
     </None>
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Javac.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -271,6 +276,7 @@
   </ItemGroup>
 
   <Target Name="ILRepacker"
+      Condition=" '$(_ILRepackEnabled)' == 'true' "
       BeforeTargets="CopyFilesToOutputDirectory"
       Inputs="$(MSBuildAllProjects);@(IntermediateAssembly);@(InputAssemblies)"
       Outputs="$(IntermediateOutputPath)ILRepacker.stamp" >

@@ -111,19 +111,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		[TestCase ("テスト", false, false, true)]
-		[TestCase ("テスト", true, true, false)]
-		[TestCase ("テスト", true, false, true)]
-		[TestCase ("随机生成器", false, false, true)]
-		[TestCase ("随机生成器", true, true, false)]
-		[TestCase ("随机生成器", true, false, true)]
-		[TestCase ("中国", false, false, true)]
-		[TestCase ("中国", true, true, false)]
-		[TestCase ("中国", true, false, true)]
-		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot, bool expectedResult)
+		[TestCase ("テスト", false, false)]
+		[TestCase ("テスト", true, true)]
+		[TestCase ("テスト", true, false)]
+		[TestCase ("随机生成器", false, false)]
+		[TestCase ("随机生成器", true, true)]
+		[TestCase ("随机生成器", true, false)]
+		[TestCase ("中国", false, false)]
+		[TestCase ("中国", true, true)]
+		[TestCase ("中国", true, false)]
+		public void BuildAotApplicationWithSpecialCharactersInProject (string testName, bool isRelease, bool aot)
 		{
-			if (!IsWindows)
-				expectedResult = true;
 			var rootPath = Path.Combine (Root, "temp", TestName);
 			var proj = new XamarinAndroidApplicationProject () {
 				ProjectName = testName,
@@ -132,13 +130,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis ("armeabi-v7a",  "arm64-v8a", "x86", "x86_64");
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName))){
-				builder.ThrowOnBuildFailure = false;
-				Assert.AreEqual (expectedResult, builder.Build (proj), "Build should have succeeded.");
-				if (!expectedResult) {
-					var aotFailed = builder.LastBuildOutput.ContainsText ("Precompiling failed");
-					var aapt2Failed = builder.LastBuildOutput.ContainsText ("APT2265");
-					Assert.IsTrue (aotFailed || aapt2Failed, "Error APT2265 or an AOT error should have been raised.");
-				}
+				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 			}
 		}
 
@@ -181,7 +173,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			proj.SetProperty ("AndroidNdkDirectory", AndroidNdkPath);
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			bool checkMinLlvmPath = enableLLVM && (supportedAbis == "armeabi-v7a" || supportedAbis == "x86");
@@ -205,7 +197,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),
@@ -236,7 +228,7 @@ namespace Xamarin.Android.Build.Tests
 				AotAssemblies = true,
 				PackageName = "com.xamarin.buildaotappandbundlewithspecialchars",
 			};
-			proj.SetAndroidSupportedAbis (supportedAbis);
+			proj.SetRuntimeIdentifiers (supportedAbis.Split (';'));
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
 			using (var b = CreateApkBuilder (path)) {
@@ -250,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 						proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 
 					var helper = new ArchiveAssemblyHelper (apk, usesAssemblyBlobs);
-					Assert.IsTrue (helper.Exists ("assemblies/UnnamedProject.dll"), $"UnnamedProject.dll should be in the {proj.PackageName}-Signed.apk");
+					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/UnnamedProject.dll"), $"{abi}/UnnamedProject.dll should be in {proj.PackageName}-Signed.apk");
 					using (var zipFile = ZipHelper.OpenZip (apk)) {
 						Assert.IsNotNull (ZipHelper.ReadFileFromZip (zipFile,
 							string.Format ("lib/{0}/libaot-UnnamedProject.dll.so", abi)),

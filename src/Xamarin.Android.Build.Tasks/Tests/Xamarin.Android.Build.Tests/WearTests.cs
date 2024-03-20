@@ -8,27 +8,6 @@ namespace Xamarin.Android.Build.Tests
 	public class WearTests : BaseTest
 	{
 		[Test]
-		public void ResolveLibraryImportsWithReadonlyFiles ()
-		{
-			//NOTE: doesn't need to be a full Android Wear app
-			var proj = new XamarinAndroidApplicationProject {
-				PackageReferences = {
-					KnownPackages.AndroidWear_2_2_0,
-					KnownPackages.Android_Arch_Core_Common_26_1_0,
-					KnownPackages.Android_Arch_Lifecycle_Common_26_1_0,
-					KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportPercent_27_0_2_1,
-					KnownPackages.SupportV7RecyclerView_27_0_2_1,
-				},
-			};
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
 		public void BasicProject ([Values (true, false)] bool isRelease)
 		{
 			var proj = new XamarinAndroidWearApplicationProject {
@@ -42,7 +21,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void BundledWearApp ()
 		{
-			var target = "_UpdateAndroidResgen";
 			var path = Path.Combine ("temp", TestName);
 			var app = new XamarinAndroidApplicationProject {
 				ProjectName = "MyApp",
@@ -71,7 +49,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				EnableDefaultItems = true,
 				PackageReferences = {
-					new Package { Id = "Xamarin.AndroidX.Wear", Version = "1.2.0.5" },
+					KnownPackages.XamarinAndroidXWear,
 					new Package { Id = "Xamarin.Android.Wear", Version = "2.2.0" },
 					new Package { Id = "Xamarin.AndroidX.PercentLayout", Version = "1.0.0.14" },
 					new Package { Id = "Xamarin.AndroidX.Legacy.Support.Core.UI", Version = "1.0.0.14" },
@@ -81,12 +59,7 @@ namespace Xamarin.Android.Build.Tests
 			var builder = CreateApkBuilder ();
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), $"{proj.ProjectName} should fail.");
-			var text = $"java.lang.RuntimeException";
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
-			text = $"is defined multiple times";
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
-			text = $"is from 'androidx.core.core.aar'";
-			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, text), $"Output did not contain '{text}'");
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, "error XA1039"), "Should receive error XA1039");
 		}
 	}
 }

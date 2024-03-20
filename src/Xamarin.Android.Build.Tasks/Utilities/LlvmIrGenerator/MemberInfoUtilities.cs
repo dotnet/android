@@ -71,5 +71,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			return attr.NeedsPadding;
 		}
+
+		public static LlvmIrVariableNumberFormat GetNumberFormat (this MemberInfo mi)
+		{
+			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			if (attr == null) {
+				return LlvmIrVariableNumberFormat.Default;
+			}
+
+			return attr.NumberFormat;
+		}
 	}
 }

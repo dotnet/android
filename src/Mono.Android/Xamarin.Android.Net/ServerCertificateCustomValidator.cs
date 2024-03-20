@@ -5,6 +5,8 @@ using System.Net.Http;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
+using Android.OS;
+using Android.Runtime;
 using Javax.Net.Ssl;
 
 using JavaCertificateException = Java.Security.Cert.CertificateException;
@@ -25,9 +27,9 @@ namespace Xamarin.Android.Net
 
 		public ITrustManager[] ReplaceX509TrustManager (ITrustManager[]? trustManagers, HttpRequestMessage requestMessage)
 		{
-			var originalX509TrustManager = FindX509TrustManager(trustManagers);
+			var originalX509TrustManager = FindX509TrustManager(trustManagers, out int originalTrustManagerIndex);
 			var trustManagerWithCallback = new TrustManager (originalX509TrustManager, requestMessage, Callback);
-			return ModifyTrustManagersArray (trustManagers, original: originalX509TrustManager, replacement: trustManagerWithCallback);
+			return ModifyTrustManagersArray (trustManagers, originalTrustManagerIndex, trustManagerWithCallback);
 		}
 
 		private sealed class TrustManager : Java.Lang.Object, IX509TrustManager
@@ -161,27 +163,45 @@ namespace Xamarin.Android.Net
 
 		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(IX509TrustManagerInvoker))]
 		[DynamicDependency(nameof(IX509TrustManager.CheckServerTrusted), typeof(X509ExtendedTrustManagerInvoker))]
-		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers)
+		private static IX509TrustManager FindX509TrustManager(ITrustManager[] trustManagers, out int index)
 		{
-			foreach (var trustManager in trustManagers) {
-				if (trustManager is IX509TrustManager tm)
-					return tm;
+			for (int i = 0; i < trustManagers.Length; i++) {
+				var trustManager = trustManagers [i];
+				if (trustManager is IX509TrustManager x509TrustManager) {
+					index = i;
+					return x509TrustManager;
+				}
+
+				// On API 21-23, the default Java trust manager is TrustManagerImpl from Conscrypt. The class implements X509TrustManager
+				// but the .NET pattern matching will fail in this case and we need to cast it explicitly.
+				int apiLevel = (int)Build.VERSION.SdkInt;
+				if (apiLevel <= 23) {
+					if (IsTrustManagerImpl (trustManager)) {
+						index = i;
+						return trustManager.JavaCast<IX509TrustManager> ();
+					}
+				}
 			}
 
 			throw new InvalidOperationException($"Could not find {nameof(IX509TrustManager)} in {nameof(ITrustManager)} array.");
+
+			static bool IsTrustManagerImpl (ITrustManager trustManager)
+			{
+				var javaClassName = JNIEnv.GetClassNameFromInstance (trustManager.Handle);
+				return javaClassName.Equals ("com/android/org/conscrypt/TrustManagerImpl", StringComparison.Ordinal);
+			}
 		}
 
-		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, IX509TrustManager original, IX509TrustManager replacement)
+		private static ITrustManager[] ModifyTrustManagersArray (ITrustManager[] trustManagers, int originalTrustManagerIndex, IX509TrustManager replacement)
 		{
 			var modifiedTrustManagersArray = new ITrustManager [trustManagers.Length];
 
 			for (int i = 0; i < trustManagers.Length; i++) {
-				if (trustManagers [i] == original) {
+				if (i == originalTrustManagerIndex) {
 					modifiedTrustManagersArray [i] = replacement;
 				} else {
 					modifiedTrustManagersArray [i] = trustManagers [i];
 				}
-
 			}
 
 			return modifiedTrustManagersArray;

@@ -1,0 +1,4 @@
+<Project>
+  <!-- Import $(LibZipSharpVersion) -->
+  <Import Project="..\Directory.Build.props" />
+</Project>

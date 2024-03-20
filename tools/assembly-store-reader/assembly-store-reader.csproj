@@ -3,8 +3,8 @@
 
   <PropertyGroup>
     <Company>Microsoft Corporation</Company>
-    <Copyright>2021 Microsoft Corporation</Copyright>
-    <Version>0.0.1</Version>
+    <Copyright>2023 Microsoft Corporation</Copyright>
+    <Version>0.0.2</Version>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <OutputPath>../../bin/$(Configuration)/bin/assembly-store-reader</OutputPath>
     <OutputType>Exe</OutputType>

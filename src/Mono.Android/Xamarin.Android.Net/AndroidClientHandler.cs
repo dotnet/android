@@ -313,14 +313,9 @@ namespace Xamarin.Android.Net
 		object? GetUnderlyingHandler ()
 		{
 			var fieldName = "_nativeHandler";
-			FieldInfo? field = null;
-
-			for (var type = GetType (); type != null; type = type.BaseType) {
-				field = type.GetField (fieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-				if (field != null)
-					break;
-			}
-
+			const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
+			FieldInfo? field = typeof (HttpClientHandler).GetField (fieldName, flags) ??
+				typeof (HttpMessageHandler).GetField (fieldName, flags);
 			if (field == null) {
 				throw new InvalidOperationException ($"Field '{fieldName}' is missing from type '{GetType ()}'.");
 			}

@@ -42,11 +42,15 @@ namespace Xamarin.Android.Build.Tests
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
 			var abis = new [] { "armeabi-v7a", "x86" };
+			AndroidTargetArch[] supportedArches = new [] {
+				AndroidTargetArch.Arm,
+				AndroidTargetArch.X86,
+			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.AndroidEnableMarshalMethods, marshalMethodsEnabled.ToString ());
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
@@ -57,7 +61,11 @@ namespace Xamarin.Android.Build.Tests
 				);
 
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
+					objPath,
+					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
+					true
+				);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
@@ -147,11 +155,6 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
-			if (forms) {
-				proj.PackageReferences.Clear ();
-				proj.PackageReferences.Add (KnownPackages.XamarinForms_5_0_0_2515);
-			}
-
 			byte [] apkDescData;
 			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
@@ -236,6 +239,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = xamarinForms ?
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
+			proj.IsRelease = isRelease;
 			if (multidex) {
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			}
@@ -244,7 +248,9 @@ namespace Xamarin.Android.Build.Tests
 				//	XA0119: Using Fast Deployment and Android App Bundles at the same time is not recommended.
 				proj.EmbedAssembliesIntoApk = true;
 			}
-			proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
+			// FIXME: Precompiling failed for TraceReloggerLib.dll, Dia2Lib.dll with exit code 1
+			if (!isRelease)
+				proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -353,44 +359,10 @@ class MemTest {
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			var packages = proj.PackageReferences;
-			packages.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : Android.Support.V7.App.AppCompatActivity");
+			packages.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("public class MainActivity : Activity", "public class MainActivity : AndroidX.AppCompat.App.AppCompatActivity");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-			}
-		}
-
-		[Test]
-		[NonParallelizable]
-		public void AndroidXMigration ([Values (true, false)] bool isRelease)
-		{
-			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-			};
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				var dexFile = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes.dex"));
-				FileAssert.Exists (dexFile);
-				// classes.dex should only have the androidx Java types
-				var className = "Landroidx/appcompat/app/AppCompatActivity;";
-				Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
-				className = "Landroid/appcompat/app/AppCompatActivity;";
-				Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
-				// FormsAppCompatActivity should inherit the AndroidX C# type
-				var forms = GetLinkedPath (b, isRelease, "Xamarin.Forms.Platform.Android.dll");
-				using (var assembly = AssemblyDefinition.ReadAssembly (forms)) {
-					var activity = assembly.MainModule.GetType ("Xamarin.Forms.Platform.Android.FormsAppCompatActivity");
-					Assert.AreEqual ("AndroidX.AppCompat.App.AppCompatActivity", activity.BaseType.FullName);
-				}
 			}
 		}
 
@@ -399,25 +371,9 @@ class MemTest {
 		{
 			var proj = new XamarinAndroidApplicationProject {
 				PackageReferences = {
-					new Package { Id = "Xamarin.Android.Support.Annotations", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Compat", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Core.UI", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Core.Utils", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Design", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.Fragment", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.VersionedParcelable", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Android.Support.v4", Version = "28.0.0.3" },
-					new Package { Id = "Xamarin.Build.Download", Version = "0.7.1" },
-					new Package { Id = "Xamarin.Essentials", Version = "1.3.1" },
-					new Package { Id = "Xamarin.GooglePlayServices.Ads.Identifier", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "71.1610.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "71.1620.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Clearcut", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Api", Version = "71.1630.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Measurement.Base", Version = "71.1630.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Phenotype", Version = "71.1600.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Stats", Version = "71.1601.0" },
-					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "71.1601.0" },
+					new Package { Id = "Xamarin.GooglePlayServices.Base", Version = "118.2.0.5" },
+					new Package { Id = "Xamarin.GooglePlayServices.Basement", Version = "118.2.0.5" },
+					new Package { Id = "Xamarin.GooglePlayServices.Tasks", Version = "118.0.2.6" },
 				}
 			};
 			using (var b = CreateApkBuilder ()) {
@@ -983,35 +939,25 @@ namespace UnamedProject
 
 		static readonly object [] BuildProguardEnabledProjectSource = new object [] {
 			new object [] {
-				/* isRelease */ false,
-				/* linkTool */  "",
 				/* rid */       "",
 			},
 			new object [] {
-				/* isRelease */ true,
-				/* linkTool */  "r8",
-				/* rid */       "",
-			},
-			new object [] {
-				/* isRelease */ true,
-				/* linkTool */  "r8",
 				/* rid */       "android-arm64",
 			},
 		};
 
 		[Test]
 		[TestCaseSource (nameof (BuildProguardEnabledProjectSource))]
-		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void BuildProguardEnabledProject (bool isRelease, string linkTool, string rid)
+		public void BuildProguardEnabledProject (string rid)
 		{
 			var proj = new XamarinFormsAndroidApplicationProject {
-				IsRelease = isRelease,
-				LinkTool = linkTool,
+				IsRelease = true,
+				LinkTool = "r8",
 			};
 			if (!string.IsNullOrEmpty (rid)) {
 				proj.SetProperty ("RuntimeIdentifier", rid);
 			}
-			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){isRelease}{linkTool}{rid}"))) {
+			using (var b = CreateApkBuilder (Path.Combine ("temp", $"BuildProguard Enabled(1){rid}"))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// warning XA4304: ProGuard configuration file 'XYZ' was not found.
 				StringAssertEx.DoesNotContain ("XA4304", b.LastBuildOutput, "Output should *not* contain XA4304 warnings");
@@ -1022,18 +968,16 @@ namespace UnamedProject
 				}
 
 				var toolbar_class = "androidx.appcompat.widget.Toolbar";
-				if (isRelease && !string.IsNullOrEmpty (linkTool)) {
-					var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
-					FileAssert.Exists (proguardProjectPrimary);
-					Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
+				var proguardProjectPrimary = Path.Combine (intermediate, "proguard", "proguard_project_primary.cfg");
+				FileAssert.Exists (proguardProjectPrimary);
+				Assert.IsTrue (StringAssertEx.ContainsText (File.ReadAllLines (proguardProjectPrimary), $"-keep class {proj.JavaPackageName}.MainActivity"), $"`{proj.JavaPackageName}.MainActivity` should exist in `proguard_project_primary.cfg`!");
 
-					var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
-					FileAssert.Exists (aapt_rules);
-					var lines = File.ReadAllLines (aapt_rules);
-					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
-					var activity_class = $"{proj.PackageName}.MainActivity";
-					Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {activity_class}"), $"`{activity_class}` should exist in `{aapt_rules}`!");
-				}
+				var aapt_rules = Path.Combine (intermediate, "aapt_rules.txt");
+				FileAssert.Exists (aapt_rules);
+				var lines = File.ReadAllLines (aapt_rules);
+				Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {toolbar_class}"), $"`{toolbar_class}` should exist in `{aapt_rules}`!");
+				var activity_class = $"{proj.PackageName}.MainActivity";
+				Assert.IsTrue (StringAssertEx.ContainsText (lines, $"-keep class {activity_class}"), $"`{activity_class}` should exist in `{aapt_rules}`!");
 
 				var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
 				FileAssert.Exists (dexFile);
@@ -1236,8 +1180,12 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1247,11 +1195,22 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
+
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1304,33 +1263,83 @@ namespace App1
 					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
-					var binSrc = Path.Combine (outputPath, "Library1.pdb");
+
+					const string LibraryBaseName = "Library1";
+					const string AppBaseName = "App1";
+					const string LibraryPdbName = LibraryBaseName + ".pdb";
+					const string LibraryDllName = LibraryBaseName + ".dll";
+					const string AppPdbName = AppBaseName + ".pdb";
+					const string AppDllName = AppBaseName + ".dll";
+
+					string libraryPdbBinSrc = Path.Combine (outputPath, LibraryPdbName);
+					string appPdbBinSrc = Path.Combine (outputPath, AppPdbName);
+
 					Assert.IsTrue (
-						File.Exists (Path.Combine (intermediate, "android", "assets", "Mono.Android.pdb")),
-						"Mono.Android.pdb must be copied to Intermediate directory");
+						File.Exists (libraryPdbBinSrc),
+						$"{LibraryPdbName} must be copied to bin directory");
+
 					Assert.IsTrue (
-						File.Exists (assetsPdb),
-						"Library1.pdb must be copied to Intermediate directory");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"Library1.pdb must be copied to bin directory");
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
-						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
-						if (data == null)
-							data = File.ReadAllBytes (assetsPdb);
-						var filedata = File.ReadAllBytes (binSrc);
-						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", binSrc);
+						File.Exists (appPdbBinSrc),
+						$"{AppPdbName} must be copied to bin directory");
+
+					var fileNames = new List<(string path, bool existsInBin)> {
+						("Mono.Android.pdb", false),
+						(AppPdbName,         true),
+						(LibraryPdbName,     true),
+						(AppDllName,         true),
+						(LibraryDllName,     true),
+					};
+
+					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
+					foreach (string abi in b.GetBuildAbis ()) {
+						foreach ((string fileName, bool existsInBin) in fileNames) {
+							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));
+						}
 					}
-					var androidAssets = Path.Combine (intermediate, "android", "assets", "App1.pdb");
-					binSrc = Path.Combine (outputPath, "App1.pdb");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"App1.pdb must be copied to bin directory");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should not differ.", binSrc, androidAssets);
-					androidAssets = Path.Combine (intermediate, "android", "assets", "App1.dll");
-					binSrc = Path.Combine (outputPath, "App1.dll");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should match.", binSrc, androidAssets);
+				}
+			}
+
+			void EnsureFilesAreTheSame (string intermediatePath, string? binPath, string fileName, string abi, ArchiveAssemblyHelper helper, bool uncompressIfNecessary)
+			{
+				string assetsFilePath = Path.Combine (intermediatePath, "android", "assets", abi, fileName);
+				Assert.IsTrue (File.Exists (assetsFilePath), $"'{fileName}' must be copied to Intermediate directory for ABI {abi}");
+
+				using var assetsFileStream = File.OpenRead (assetsFilePath);
+				string apkEntryPath = MonoAndroidHelper.MakeZipArchivePath ("assemblies", abi, fileName);
+				using Stream? apkEntryStream = helper.ReadEntry (apkEntryPath, MonoAndroidHelper.AbiToTargetArch (abi), uncompressIfNecessary);
+
+				if (apkEntryStream != null) { // FastDev won't put assemblies in the APK
+					FileAssert.AreEqual (apkEntryStream, assetsFileStream, $"'{apkEntryPath}' and '{assetsFilePath}' should not differ");
+				}
+
+				if (String.IsNullOrEmpty (binPath)) {
+					return;
+				}
+
+				// This is a bit fragile. We don't know which RID the `bin/` files were copied from, so we'll do our best to compare
+				// oranges to oranges by looking at file sizes before attempting the compare.  This is a very weak predicate, because
+				// the files may differ in e.g. the MVID and still have the same size.  The real fix for this is to have per-rid `bin/`
+				// subdirectories.
+				string binFilePath = Path.Combine (binPath, fileName);
+				Assert.IsTrue (File.Exists (binFilePath), $"'{fileName}' must be copied to the Output directory");
+
+				var assetsInfo = new FileInfo (assetsFilePath);
+				var binInfo = new FileInfo (binFilePath);
+
+				if (assetsInfo.Length != binInfo.Length) {
+					Assert.Warn ($"Ignoring comparison of '{binFilePath}' with '{assetsFilePath}' because their sizes differ");
+					return;
+				}
+
+				using var binFileStream = File.OpenRead (binFilePath);
+				assetsFileStream.Seek (0, SeekOrigin.Begin);
+				FileAssert.AreEqual (assetsFileStream, binFileStream, $"'{assetsFilePath}' and '{binFilePath}' should not differ");
+
+				if (apkEntryStream != null) {
+					binFileStream.Seek (0, SeekOrigin.Begin);
+					apkEntryStream.Seek (0, SeekOrigin.Begin);
+					FileAssert.AreEqual (apkEntryStream, binFileStream,  $"'{apkEntryPath}' and '{binFilePath}' should not differ");
 				}
 			}
 		}

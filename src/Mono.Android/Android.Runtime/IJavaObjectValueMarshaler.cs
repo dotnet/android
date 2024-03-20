@@ -10,9 +10,16 @@ namespace Android.Runtime
 {
 	sealed class IJavaObjectValueMarshaler : JniValueMarshaler<IJavaObject> {
 
+		const DynamicallyAccessedMemberTypes ConstructorsAndInterfaces = DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors | DynamicallyAccessedMemberTypes.Interfaces;
+		const string ExpressionRequiresUnreferencedCode = "System.Linq.Expression usage may trim away required code.";
+
 		internal    static  IJavaObjectValueMarshaler              Instance    = new IJavaObjectValueMarshaler ();
 
-		public override IJavaObject CreateGenericValue (ref JniObjectReference reference, JniObjectReferenceOptions options, Type? targetType)
+		public override IJavaObject CreateGenericValue (
+				ref JniObjectReference reference,
+				JniObjectReferenceOptions options,
+				[DynamicallyAccessedMembers (ConstructorsAndInterfaces)]
+				Type? targetType)
 		{
 			throw new NotImplementedException ();
 		}
@@ -27,6 +34,7 @@ namespace Android.Runtime
 			throw new NotImplementedException ();
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
 			return Expression.Call (
@@ -36,6 +44,7 @@ namespace Android.Runtime
 				sourceValue);
 		}
 
+		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
 			var r   = Expression.Variable (targetType, sourceValue.Name + "_val");

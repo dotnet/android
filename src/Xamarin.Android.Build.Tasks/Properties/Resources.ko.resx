@@ -329,6 +329,20 @@ Visual Studio 프로젝트 속성 페이지에서 디버깅 정보를 이식 가
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0}을(를) 구문 분석하는 중 문제가 발생했습니다. XML이 불완전하거나 잘못된 것 같습니다. 예외: {1}</value>
     <comment>{0} - The file name
@@ -1005,5 +1019,9 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
+  </data>
+  <data name="XA1039" xml:space="preserve">
+    <value>Android 지원 라이브러리는 .NET 9 이상에서 지원되지 않습니다. AndroidX로 마이그레이션하세요. 자세한 내용은 https://aka.ms/xamarin/androidx 페이지를 참조하세요.</value>
+    <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
 </root>

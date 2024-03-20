@@ -255,7 +255,7 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<JavaType> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
+		public IList<string> Merge (TaskLoggingHelper log, TypeDefinitionCache cache, List<TypeDefinition> subclasses, string applicationClass, bool embed, string bundledWearApplicationName, IEnumerable<string> mergedManifestDocuments)
 		{
 			var manifest = doc.Root;
 
@@ -330,8 +330,7 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException (string.Format ("The targetSdkVersion ({0}) is not a valid API level", targetSdkVersion));
 			int targetSdkVersionValue = tryTargetSdkVersion.Value;
 
-			foreach (JavaType jt in subclasses) {
-				TypeDefinition t = jt.Type;
+			foreach (TypeDefinition t in subclasses) {
 				if (t.IsAbstract)
 					continue;
 
@@ -568,23 +567,23 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<JavaType> subclasses, TypeDefinitionCache cache)
+		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
 			List<ApplicationAttribute> assemblyAttr =
-				Assemblies.Select (path => ApplicationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.Select (path => ApplicationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
 				.Where (attr => attr != null)
 				.ToList ();
 			List<MetaDataAttribute> metadata =
-				Assemblies.SelectMany (path => MetaDataAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => MetaDataAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
 					.Where (attr => attr != null)
 					.ToList ();
 			var usesLibraryAttr =
-				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
 				.Where (attr => attr != null);
 			var usesConfigurationAttr =
-				Assemblies.SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)))
+				Assemblies.SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
 				.Where (attr => attr != null);
 			if (assemblyAttr.Count > 1)
 				throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
@@ -592,9 +591,8 @@ namespace Xamarin.Android.Tasks {
 			List<ApplicationAttribute> typeAttr = new List<ApplicationAttribute> ();
 			List<UsesLibraryAttribute> typeUsesLibraryAttr = new List<UsesLibraryAttribute> ();
 			List<UsesConfigurationAttribute> typeUsesConfigurationAttr = new List<UsesConfigurationAttribute> ();
-			foreach (JavaType jt in subclasses) {
-				TypeDefinition t = jt.Type;
-				ApplicationAttribute aa = ApplicationAttribute.FromCustomAttributeProvider (t);
+			foreach (TypeDefinition t in subclasses) {
+				ApplicationAttribute aa = ApplicationAttribute.FromCustomAttributeProvider (t, cache);
 				if (aa == null)
 					continue;
 
@@ -602,9 +600,9 @@ namespace Xamarin.Android.Tasks {
 					throw new InvalidOperationException (string.Format ("Found [Application] on type {0}.  [Application] can only be used on subclasses of Application.", t.FullName));
 
 				typeAttr.Add (aa);
-				metadata.AddRange (MetaDataAttribute.FromCustomAttributeProvider (t));
+				metadata.AddRange (MetaDataAttribute.FromCustomAttributeProvider (t, cache));
 
-				typeUsesLibraryAttr.AddRange (UsesLibraryAttribute.FromCustomAttributeProvider (t));
+				typeUsesLibraryAttr.AddRange (UsesLibraryAttribute.FromCustomAttributeProvider (t, cache));
 			}
 
 			if (typeAttr.Count > 1)
@@ -743,7 +741,7 @@ namespace Xamarin.Android.Tasks {
 					(aa, element) => {
 						if (aa.MainLauncher)
 							AddLauncherIntentElements (element);
-						var la = LayoutAttribute.FromTypeDefinition (type);
+						var la = LayoutAttribute.FromTypeDefinition (type, cache);
 						if (la != null)
 							element.Add (la.ToElement (Resolver, PackageName, cache));
 					},
@@ -753,7 +751,7 @@ namespace Xamarin.Android.Tasks {
 		XElement InstrumentationFromTypeDefinition (TypeDefinition type, string name, TypeDefinitionCache cache)
 		{
 			return ToElement (type, name,
-					t => InstrumentationAttribute.FromCustomAttributeProvider (t).FirstOrDefault (),
+					(t, c) => InstrumentationAttribute.FromCustomAttributeProvider (t, c).FirstOrDefault (),
 					ia => {
 						if (ia.TargetPackage == null)
 							ia.SetTargetPackage (PackageName);
@@ -762,21 +760,21 @@ namespace Xamarin.Android.Tasks {
 					cache);
 		}
 
-		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TAttribute> parser, Func<TAttribute, XElement> toElement, TypeDefinitionCache cache)
+		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, TypeDefinitionCache cache)
 			where TAttribute : class
 		{
 			return ToElement (type, name, parser, toElement, update: null, cache);
 		}
 
-		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TAttribute> parser, Func<TAttribute, XElement> toElement, Action<TAttribute, XElement> update, TypeDefinitionCache cache)
+		XElement ToElement<TAttribute> (TypeDefinition type, string name, Func<TypeDefinition, TypeDefinitionCache, TAttribute> parser, Func<TAttribute, XElement> toElement, Action<TAttribute, XElement> update, TypeDefinitionCache cache)
 			where TAttribute : class
 		{
-			TAttribute attr = parser (type);
+			TAttribute attr = parser (type, cache);
 			if (attr == null)
 				return null;
 
-			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type);
-			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type);
+			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type, cache);
+			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type, cache);
 
 			XElement element = toElement (attr);
 			if (element.Attribute (attName) == null)
@@ -790,13 +788,13 @@ namespace Xamarin.Android.Tasks {
 
 		XElement ToProviderElement (TypeDefinition type, string name, TypeDefinitionCache cache)
 		{
-			var attr = ContentProviderAttribute.FromTypeDefinition (type);
+			var attr = ContentProviderAttribute.FromTypeDefinition (type, cache);
 			if (attr == null)
 				return null;
 
-			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type);
-			IEnumerable<GrantUriPermissionAttribute> grants = GrantUriPermissionAttribute.FromTypeDefinition (type);
-			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type);
+			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type, cache);
+			IEnumerable<GrantUriPermissionAttribute> grants = GrantUriPermissionAttribute.FromTypeDefinition (type, cache);
+			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type, cache);
 
 			XElement element = attr.ToElement (PackageName, cache);
 			if (element.Attribute (attName) == null)
@@ -838,7 +836,7 @@ namespace Xamarin.Android.Tasks {
 		void AddPermissions (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 			// Add unique permissions to the manifest
 			foreach (var pa in assemblyAttrs.Distinct (new PermissionAttribute.PermissionAttributeComparer ()))
 				if (!application.Parent.Descendants ("permission").Any (x => (string)x.Attribute (attName) == pa.Name))
@@ -848,7 +846,7 @@ namespace Xamarin.Android.Tasks {
 		void AddPermissionGroups (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionGroupAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pga in assemblyAttrs.Distinct (new PermissionGroupAttribute.PermissionGroupAttributeComparer ()))
@@ -859,7 +857,7 @@ namespace Xamarin.Android.Tasks {
 		void AddPermissionTrees (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => PermissionTreeAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add unique permissionGroups to the manifest
 			foreach (var pta in assemblyAttrs.Distinct (new PermissionTreeAttribute.PermissionTreeAttributeComparer ()))
@@ -870,7 +868,7 @@ namespace Xamarin.Android.Tasks {
 		void AddUsesPermissions (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => UsesPermissionAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add unique permissions to the manifest
 			foreach (var upa in assemblyAttrs.Distinct (new UsesPermissionAttribute.UsesPermissionComparer ()))
@@ -894,7 +892,7 @@ namespace Xamarin.Android.Tasks {
 		void AddUsesFeatures (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => UsesFeatureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add unique features by Name or glESVersion to the manifest
 			foreach (var feature in assemblyAttrs) {
@@ -915,7 +913,7 @@ namespace Xamarin.Android.Tasks {
 		void AddSupportsGLTextures (XElement application, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => SupportsGLTextureAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add unique items by Name to the manifest
 			foreach (var feature in assemblyAttrs) {
@@ -925,10 +923,10 @@ namespace Xamarin.Android.Tasks {
 			}
 		}
 
-		void AddInstrumentations (XElement manifest, IList<JavaType> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
+		void AddInstrumentations (XElement manifest, IList<TypeDefinition> subclasses, int targetSdkVersion, TypeDefinitionCache cache)
 		{
 			var assemblyAttrs =
-				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path)));
+				Assemblies.SelectMany (path => InstrumentationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache));
 
 			// Add instrumentation to the manifest
 			foreach (var ia in assemblyAttrs) {
@@ -938,8 +936,7 @@ namespace Xamarin.Android.Tasks {
 					manifest.Add (ia.ToElement (PackageName, cache));
 			}
 
-			foreach (JavaType jt in subclasses) {
-				TypeDefinition type = jt.Type;
+			foreach (TypeDefinition type in subclasses) {
 				if (type.IsSubclassOf ("Android.App.Instrumentation", cache)) {
 					var xe = InstrumentationFromTypeDefinition (type, JavaNativeTypeManager.ToJniName (type, cache).Replace ('/', '.'), cache);
 					if (xe != null)

@@ -23,12 +23,12 @@ namespace MonoDroid.Tuner {
 		{
 			// If this isn't a JLO or IJavaObject implementer,
 			// then we don't need to MarkJavaObjects
-			if (!type.ImplementsIJavaObject ())
+			if (!type.ImplementsIJavaObject (cache))
 				return;
 
 			PreserveJavaObjectImplementation (type);
 
-			if (IsImplementor (type))
+			if (IsImplementor (type, cache))
 				PreserveImplementor (type);
 
 			// If a user overrode a method, we need to preserve it,
@@ -195,7 +195,7 @@ namespace MonoDroid.Tuner {
 
 			foreach (var iface in type.Interfaces) {
 				var td = iface.InterfaceType.Resolve ();
-				if (!td.ImplementsIJavaPeerable ())
+				if (!td.ImplementsIJavaPeerable (cache))
 					continue;
 				Annotations.Mark (td);
 			}
@@ -302,9 +302,9 @@ namespace MonoDroid.Tuner {
 				PreserveMethod (type, ctor);
 		}
 
-		static bool IsImplementor (TypeDefinition type)
+		static bool IsImplementor (TypeDefinition type, IMetadataResolver cache)
 		{
-			return type.Name.EndsWith ("Implementor", StringComparison.Ordinal) && type.Inherits ("Java.Lang.Object");
+			return type.Name.EndsWith ("Implementor", StringComparison.Ordinal) && type.Inherits ("Java.Lang.Object", cache);
 		}
 
 		static bool IsUserType (TypeDefinition type)

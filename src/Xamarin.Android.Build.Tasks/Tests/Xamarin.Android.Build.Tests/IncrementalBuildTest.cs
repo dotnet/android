@@ -430,14 +430,18 @@ namespace Lib2
 
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var filesToTouch = new [] {
+				var filesToTouch = new List<string> {
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
-					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
+
+				foreach (string abi in b.GetBuildAbis ()) {
+					filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
+				}
+
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
@@ -642,8 +646,11 @@ namespace Lib2
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
 
 				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
-				var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", $"{lib2.ProjectName}.dll");
-				FileAssert.AreEqual (lib2Output, lib2InAppOutput, "new Library2 should have been copied to app output directory");
+
+				foreach (string abi in appBuilder.GetBuildAbis ()) {
+					var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
+					FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
+				}
 			}
 		}
 
@@ -655,8 +662,11 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
-				var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "FormsViewGroup.dll"));
-				File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
+					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped (KnownTargets.LinkAssembliesNoShrink);
 
@@ -819,10 +829,10 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
-				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
-					expected.Jars.Select (j => j.ItemSpec));
-				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec),
-					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec));
+				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.Jars.Select (j => j.ItemSpec).OrderBy (j => j));
+				CollectionAssert.AreEqual (actual.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j),
+					expected.ResolvedResourceDirectories.Select (j => j.ItemSpec).OrderBy (j => j));
 
 				// Add a new AAR file to the project
 				var aar = new AndroidItem.AndroidAarLibrary ("Jars\\android-crop-1.0.1.aar") {
@@ -1359,39 +1369,6 @@ namespace Lib2
 				FileAssert.Exists (apk);
 				using (var zip = ZipHelper.OpenZip (apk)) {
 					Assert.IsTrue (zip.ContainsEntry ("assets/foo/bar.txt"), "bar.txt should exist in apk!");
-				}
-			}
-		}
-
-		[Test]
-		[NonParallelizable]
-		public void AndroidXMigrationBug ()
-		{
-			var proj = new XamarinFormsAndroidApplicationProject ();
-			proj.PackageReferences.Add (KnownPackages.AndroidXMigration);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
-			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompatResources);
-			proj.PackageReferences.Add (KnownPackages.AndroidXBrowser);
-			proj.PackageReferences.Add (KnownPackages.AndroidXMediaRouter);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLegacySupportV4);
-			proj.PackageReferences.Add (KnownPackages.AndroidXLifecycleLiveData);
-			proj.PackageReferences.Add (KnownPackages.XamarinGoogleAndroidMaterial);
-
-			string source = "class Foo { }";
-			proj.Sources.Add (new BuildItem.Source ("Foo.cs") { TextContent = () => source });
-
-			using (var b = CreateApkBuilder ()) {
-				Assert.IsTrue (b.Build (proj), "first build should have succeeded.");
-				source = source.Replace ("Foo", "Bar");
-				proj.Touch ("Foo.cs");
-				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "second build should have succeeded.");
-				var targets = new [] {
-					"_CompileResources",
-					"_UpdateAndroidResgen",
-					"_GenerateAndroidResourceDir",
-				};
-				foreach (var target in targets) {
-					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped.");
 				}
 			}
 		}

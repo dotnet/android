@@ -29,9 +29,21 @@
       </Item>
       <Item ItemId=";name" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Android Activity template]]></Val>
+          <Val><![CDATA[Android Activity]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Modello di attività Android]]></Val>
+            <Val><![CDATA[Attività di Android]]></Val>
+          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Android Activity template]]></Val>
+          </Prev>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";postActions/openInEditor/description" ItemType="0" PsrId="306" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Opens Activity1.cs in the editor]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Apre Activity1.cs nell'editor]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

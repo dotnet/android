@@ -138,23 +138,17 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckEmbeddedSupportLibraryResources ()
+		public void CheckEmbeddedAndroidXResources ()
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = true,
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
-				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "android", "support", "v7", "appcompat", "R$drawable.class"));
+				var Rdrawable = b.Output.GetIntermediaryPath (Path.Combine ("android", "bin", "classes", "androidx", "appcompat", "R$drawable.class"));
 				Assert.IsTrue (File.Exists (Rdrawable), $"{Rdrawable} should exist");
 			}
 		}
@@ -410,8 +404,7 @@ namespace UnnamedProject
 	}
 }"
 			});
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, lib.ProjectName), cleanupOnDispose: false))
 			using (var b = CreateApkBuilder (Path.Combine (projectPath, proj.ProjectName), cleanupOnDispose: false)) {
 				Assert.IsTrue (libb.Build (lib), "Library Build should have succeeded.");
@@ -831,10 +824,6 @@ namespace Lib1 {
 </resources>",
 					}
 				},
-				PackageReferences = {
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-				},
 			};
 			using (var builder = CreateApkBuilder ()) {
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded");
@@ -1033,13 +1022,7 @@ namespace Lib1 {
 					new BuildItem.ProjectReference (@"..\Lib1\Lib1.csproj", libProj.ProjectName, libProj.ProjectGuid),
 				},
 				PackageReferences = {
-					KnownPackages.SupportMediaCompat_27_0_2_1,
-					KnownPackages.SupportFragment_27_0_2_1,
-					KnownPackages.SupportCoreUtils_27_0_2_1,
-					KnownPackages.SupportCoreUI_27_0_2_1,
-					KnownPackages.SupportCompat_27_0_2_1,
-					KnownPackages.AndroidSupportV4_27_0_2_1,
-					KnownPackages.SupportV7AppCompat_27_0_2_1,
+					KnownPackages.AndroidXAppCompat,
 				},
 			};
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
@@ -1224,20 +1207,7 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Core_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Common_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.Android_Arch_Lifecycle_Runtime_26_1_0);
-			proj.PackageReferences.Add (KnownPackages.AndroidSupportV4_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUI_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportCoreUtils_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportDesign_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportFragment_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportMediaCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7AppCompat_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7CardView_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7MediaRouter_27_0_2_1);
-			proj.PackageReferences.Add (KnownPackages.SupportV7RecyclerView_27_0_2_1);
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
@@ -1257,7 +1227,7 @@ namespace UnnamedProject
 				var r_java = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", proj.PackageNameJavaIntermediatePath, "R.java");
 				FileAssert.Exists (r_java);
 				var r_java_contents = File.ReadAllLines (r_java);
-				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"android/support/compat/R.java should contain `{textView1}`!");
+				Assert.IsTrue (StringAssertEx.ContainsText (r_java_contents, textView1), $"{r_java} should contain `{textView1}`!");
 			}
 		}
 

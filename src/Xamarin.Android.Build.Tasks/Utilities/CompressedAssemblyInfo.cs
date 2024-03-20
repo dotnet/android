@@ -2,19 +2,25 @@ using System;
 using System.IO;
 using Microsoft.Build.Framework;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks
 {
 	class CompressedAssemblyInfo
 	{
 		const string CompressedAssembliesInfoKey = "__CompressedAssembliesInfo";
 
-		public uint FileSize { get; }
-		public uint DescriptorIndex { get; set; }
+		public uint FileSize                { get; }
+		public uint DescriptorIndex         { get; }
+		public AndroidTargetArch TargetArch { get; }
+		public string AssemblyName          { get; }
 
-		public CompressedAssemblyInfo (uint fileSize)
+		public CompressedAssemblyInfo (uint fileSize, uint descriptorIndex, AndroidTargetArch targetArch, string assemblyName)
 		{
 			FileSize = fileSize;
-			DescriptorIndex = 0;
+			DescriptorIndex = descriptorIndex;
+			TargetArch = targetArch;
+			AssemblyName = assemblyName;
 		}
 
 		public static string GetKey (string projectFullPath)

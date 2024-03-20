@@ -20,10 +20,8 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <GeneratedOutputPath        Condition=" '$(GeneratedOutputPath)' == '' ">$(IntermediateOutputPath)generated\</GeneratedOutputPath>
     <AndroidJavadocVerbosity    Condition=" '$(AndroidJavadocVerbosity)' == '' ">intellisense</AndroidJavadocVerbosity>
     <ApiOutputFile              Condition=" '$(ApiOutputFile)' == '' ">$(IntermediateOutputPath)api.xml</ApiOutputFile>
-    <ClassParseToolExe          Condition=" '$(UsingAndroidNETSdk)' == 'true' ">class-parse.dll</ClassParseToolExe>
-    <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.exe</ClassParseToolExe>
-    <BindingsGeneratorToolExe   Condition=" '$(UsingAndroidNETSdk)' == 'true' ">generator.dll</BindingsGeneratorToolExe>
-    <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.exe</BindingsGeneratorToolExe>
+    <ClassParseToolExe          Condition=" '$(ClassParseToolExe)' == '' ">class-parse.dll</ClassParseToolExe>
+    <BindingsGeneratorToolExe   Condition=" '$(BindingsGeneratorToolExe)' == '' ">generator.dll</BindingsGeneratorToolExe>
     <JavadocToMdocToolExe       Condition=" '$(JavadocToMdocToolExe)' == '' ">javadoc-to-mdoc.exe</JavadocToMdocToolExe>
     <_GeneratorStampFile>$(_AndroidStampDirectory)generator.stamp</_GeneratorStampFile>
   </PropertyGroup>

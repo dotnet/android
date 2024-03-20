@@ -237,6 +237,10 @@ namespace Java.Interop {
 
 		internal static Type? TypeRegistrationFallback (string class_name)
 		{
+			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
+			static Type? TypeGetType (string name) =>
+				Type.GetType (name, throwOnError: false);
+
 			__TypeRegistrations.RegisterPackages ();
 
 			Type? type = null;
@@ -250,7 +254,7 @@ namespace Java.Interop {
 					return type;
 				}
 			}
-			if ((type = Type.GetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
+			if ((type = TypeGetType (JavaNativeTypeManager.ToCliType (class_name))) != null) {
 				return type;
 			}
 			return null;
@@ -267,7 +271,7 @@ namespace Java.Interop {
 		{
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
-			string class_name = GetClassName (class_ptr);
+			string? class_name = GetClassName (class_ptr);
 			lock (TypeManagerMapDictionaries.AccessLock) {
 				while (class_ptr != IntPtr.Zero && !TypeManagerMapDictionaries.JniToManaged.TryGetValue (class_name, out type)) {
 
@@ -279,22 +283,32 @@ namespace Java.Interop {
 
 					IntPtr super_class_ptr = JNIEnv.GetSuperclass (class_ptr);
 					JNIEnv.DeleteLocalRef (class_ptr);
+					class_name = null;
 					class_ptr = super_class_ptr;
-					class_name = GetClassName (class_ptr);
+					if (class_ptr != IntPtr.Zero) {
+						class_name = GetClassName (class_ptr);
+					}
 				}
 			}
 
-			JNIEnv.DeleteLocalRef (class_ptr);
-
-			if (type == null) {
-				JNIEnv.DeleteRef (handle, transfer);
-				throw new NotSupportedException (
-						FormattableString.Invariant ($"Internal error finding wrapper class for '{JNIEnv.GetClassNameFromInstance (handle)}'. (Where is the Java.Lang.Object wrapper?!)"),
-						CreateJavaLocationException ());
+			if (class_ptr != IntPtr.Zero) {
+				JNIEnv.DeleteLocalRef (class_ptr);
+				class_ptr = IntPtr.Zero;
 			}
 
-			if (targetType != null && !targetType.IsAssignableFrom (type))
+			if (targetType != null &&
+					(type == null ||
+					 !targetType.IsAssignableFrom (type))) {
 				type = targetType;
+			}
+
+			if (type == null) {
+				class_name = JNIEnv.GetClassNameFromInstance (handle);
+				JNIEnv.DeleteRef (handle, transfer);
+				throw new NotSupportedException (
+						FormattableString.Invariant ($"Internal error finding wrapper class for '{class_name}'. (Where is the Java.Lang.Object wrapper?!)"),
+						CreateJavaLocationException ());
+			}
 
 			if (type.IsInterface || type.IsAbstract) {
 				var invokerType = JavaObjectExtensions.GetInvokerType (type);

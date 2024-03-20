@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using Android.Views;
 using JLO = Java.Lang.Object;
 
@@ -49,7 +50,10 @@ namespace Android.Widget {
 	}
 
 	[Register ("android/widget/AdapterView", DoNotGenerateAcw=true)]
-	public abstract class AdapterView<T> : AdapterView  where T : IAdapter {
+	public abstract class AdapterView<
+			[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicConstructors | DynamicallyAccessedMemberTypes.NonPublicConstructors)]
+			T
+	> : AdapterView  where T : IAdapter {
 
 		public AdapterView (IntPtr handle, JniHandleOwnership transfer)
 			: base (handle, transfer)

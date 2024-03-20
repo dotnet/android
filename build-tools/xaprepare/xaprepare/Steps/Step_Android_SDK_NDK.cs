@@ -254,11 +254,9 @@ namespace Xamarin.Android.Prepare
 			}
 
 			// If only specific Android SDK platforms were requested, ignore ones that were not requested
-			if (component is AndroidPlatformComponent apc && context.AndroidSdkPlatforms.Any ()) {
-				if (!context.AndroidSdkPlatforms.Contains (apc.ApiLevel)) {
-					LogStatus ($"skipping, not requested", padLeft, Log.InfoColor);
-					return;
-				}
+			if (component is AndroidPlatformComponent apc && !ShouldInstall (apc, context)) {
+				LogStatus ($"skipping, not requested", padLeft, Log.InfoColor);
+				return;
 			}
 
 			if (missing)
@@ -276,6 +274,22 @@ namespace Xamarin.Android.Prepare
 			};
 
 			toInstall.Add (pkg);
+		}
+
+		bool ShouldInstall (AndroidPlatformComponent component, Context context)
+		{
+			var platforms = context.AndroidSdkPlatforms;
+
+			// If no specific platforms were requested, install everything
+			if (!platforms.Any () || platforms.Contains ("all"))
+				return true;
+
+			// If "latest" was requested, install the highest available stable version and any preview versions
+			if (platforms.Contains ("latest") && (component.IsLatestStable || component.IsPreview))
+				return true;
+
+			// Check if this is a user-requested platform
+			return context.AndroidSdkPlatforms.Contains (component.ApiLevel);
 		}
 
 		bool IsInstalled (AndroidToolchainComponent component, string path, out bool missing)

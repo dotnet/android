@@ -240,7 +240,7 @@ namespace Android.App {
 
 		ICollection<string> specified;
 
-		public static ApplicationAttribute FromCustomAttributeProvider (ICustomAttributeProvider provider)
+		public static ApplicationAttribute FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
 			CustomAttribute attr = provider.GetCustomAttributes ("Android.App.ApplicationAttribute")
 				.SingleOrDefault ();
@@ -249,7 +249,7 @@ namespace Android.App {
 			ApplicationAttribute self = new ApplicationAttribute () {
 				provider  = provider,
 			};
-			self.specified = mapping.Load (self, attr);
+			self.specified = mapping.Load (self, attr, cache);
 			if (provider is TypeDefinition) {
 				self.specified.Add ("Name");
 			}

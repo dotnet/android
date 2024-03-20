@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
+using System.IO;
 
 using Java.Interop.Tools.Cecil;
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
@@ -10,94 +11,80 @@ using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
-class JavaType
-{
-	public readonly TypeDefinition Type;
-	public readonly IDictionary<AndroidTargetArch, TypeDefinition>? PerAbiTypes;
-	public bool IsABiSpecific { get; }
-
-	public JavaType (TypeDefinition type, IDictionary<AndroidTargetArch, TypeDefinition>? perAbiTypes)
-	{
-		Type = type;
-		if (perAbiTypes != null) {
-			PerAbiTypes = new ReadOnlyDictionary<AndroidTargetArch, TypeDefinition> (perAbiTypes);
-			IsABiSpecific = perAbiTypes.Count > 1 || (perAbiTypes.Count == 1 && !perAbiTypes.ContainsKey (AndroidTargetArch.None));
-		}
-	}
-}
-
 class XAJavaTypeScanner
 {
-	sealed class TypeData
-	{
-		public readonly TypeDefinition FirstType;
-		public readonly Dictionary<AndroidTargetArch, TypeDefinition> PerAbi;
-
-		public bool IsAbiSpecific => !PerAbi.ContainsKey (AndroidTargetArch.None);
-
-		public TypeData (TypeDefinition firstType)
-		{
-			FirstType = firstType;
-			PerAbi = new Dictionary<AndroidTargetArch, TypeDefinition> ();
-		}
-	}
+	// Names of assemblies which don't have Mono.Android.dll references, or are framework assemblies, but which must
+	// be scanned for Java types.
+	static readonly HashSet<string> SpecialAssemblies = new HashSet<string> (StringComparer.OrdinalIgnoreCase) {
+		"Mono.Android.dll",
+		"Mono.Android.Runtime.dll",
+	};
 
 	public bool ErrorOnCustomJavaObject { get; set; }
 
-	TaskLoggingHelper log;
-	TypeDefinitionCache cache;
+	readonly TaskLoggingHelper log;
+	readonly TypeDefinitionCache cache;
+	readonly AndroidTargetArch targetArch;
 
-	public XAJavaTypeScanner (TaskLoggingHelper log, TypeDefinitionCache cache)
+	public XAJavaTypeScanner (AndroidTargetArch targetArch, TaskLoggingHelper log, TypeDefinitionCache cache)
 	{
+		this.targetArch = targetArch;
 		this.log = log;
 		this.cache = cache;
 	}
 
-	public List<JavaType> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
+	public List<TypeDefinition> GetJavaTypes (ICollection<ITaskItem> inputAssemblies, XAAssemblyResolver resolver)
 	{
-		var types = new Dictionary<string, TypeData> (StringComparer.Ordinal);
+		var types = new List<TypeDefinition> ();
 		foreach (ITaskItem asmItem in inputAssemblies) {
+			if (!ShouldScan (asmItem)) {
+				log.LogDebugMessage ($"[{targetArch}] Skipping Java type scanning in assembly '{asmItem.ItemSpec}'");
+				continue;
+			}
+			log.LogDebugMessage ($"[{targetArch}] Scanning assembly '{asmItem.ItemSpec}' for Java types");
+
 			AndroidTargetArch arch = MonoAndroidHelper.GetTargetArch (asmItem);
-			AssemblyDefinition asmdef = resolver.Load (arch, asmItem.ItemSpec);
+			if (arch != targetArch) {
+				throw new InvalidOperationException ($"Internal error: assembly '{asmItem.ItemSpec}' should be in the '{targetArch}' architecture, but is in '{arch}' instead.");
+			}
+
+			AssemblyDefinition asmdef = resolver.Load (asmItem.ItemSpec);
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
-					AddJavaType (td, types, arch);
+					AddJavaType (td, types);
 				}
 			}
 		}
 
-		var ret = new List<JavaType> ();
-		foreach (var kvp in types) {
-			ret.Add (new JavaType (kvp.Value.FirstType, kvp.Value.IsAbiSpecific ? kvp.Value.PerAbi : null));
-		}
-
-		return ret;
+		return types;
 	}
 
-	void AddJavaType (TypeDefinition type, Dictionary<string, TypeData> types, AndroidTargetArch arch)
+	bool ShouldScan (ITaskItem assembly)
 	{
-		if (type.IsSubclassOf ("Java.Lang.Object", cache) || type.IsSubclassOf ("Java.Lang.Throwable", cache) || (type.IsInterface && type.ImplementsInterface ("Java.Interop.IJavaPeerable", cache))) {
+		string name = Path.GetFileName (assembly.ItemSpec);
+		if (SpecialAssemblies.Contains (name)) {
+			return true;
+		}
+
+		string? hasMonoAndroidReferenceMetadata = assembly.GetMetadata ("HasMonoAndroidReference");
+		if (String.IsNullOrEmpty (hasMonoAndroidReferenceMetadata)) {
+			return true; // Just in case - the metadata missing might be a false negative
+		}
+
+		if (Boolean.TryParse (hasMonoAndroidReferenceMetadata, out bool hasMonoAndroidReference)) {
+			return hasMonoAndroidReference;
+		}
+
+		// A catch-all, it's better to do more work than to miss something important.
+		return true;
+	}
+
+	void AddJavaType (TypeDefinition type, List<TypeDefinition> types)
+	{
+		if (type.HasJavaPeer (cache)) {
 			// For subclasses of e.g. Android.App.Activity.
-			string typeName = type.GetPartialAssemblyQualifiedName (cache);
-			if (!types.TryGetValue (typeName, out TypeData typeData)) {
-				typeData = new TypeData (type);
-				types.Add (typeName, typeData);
-			}
-
-			if (typeData.PerAbi.ContainsKey (AndroidTargetArch.None)) {
-				if (arch == AndroidTargetArch.None) {
-					throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}");
-				}
-
-				throw new InvalidOperationException ($"Previously added type '{type.FullName}' was in ABI-agnostic assembly, new one comes from ABI {arch} assembly");
-			}
-
-			if (typeData.PerAbi.ContainsKey (arch)) {
-				throw new InvalidOperationException ($"Duplicate type '{type.FullName}' in assembly {type.Module.FileName}, for ABI {arch}");
-			}
-
-			typeData.PerAbi.Add (arch, type);
+			types.Add (type);
 		} else if (type.IsClass && !type.IsSubclassOf ("System.Exception", cache) && type.ImplementsInterface ("Android.Runtime.IJavaObject", cache)) {
 			string message = $"XA4212: Type `{type.FullName}` implements `Android.Runtime.IJavaObject` but does not inherit `Java.Lang.Object` or `Java.Lang.Throwable`. This is not supported.";
 
@@ -114,7 +101,7 @@ class XAJavaTypeScanner
 		}
 
 		foreach (TypeDefinition nested in type.NestedTypes) {
-			AddJavaType (nested, types, arch);
+			AddJavaType (nested, types);
 		}
 	}
 }

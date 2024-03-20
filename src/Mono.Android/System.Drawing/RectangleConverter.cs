@@ -31,6 +31,7 @@
 
 using System.ComponentModel;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Text;
 using System.ComponentModel.Design.Serialization;
@@ -147,6 +148,7 @@ namespace System.Drawing {
 			return true;
 		}
 
+		[RequiresUnreferencedCode ("The Type of value cannot be statically discovered.")]
 		public override PropertyDescriptorCollection? GetProperties (
 							ITypeDescriptorContext context,
 							object value, Attribute[] attributes)

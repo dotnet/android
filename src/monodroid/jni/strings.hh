@@ -5,11 +5,11 @@
 #include <cstring>
 #include <cerrno>
 #include <limits>
+#include <string_view>
 #include <type_traits>
 #include <unistd.h>
 
 #include "platform-compat.hh"
-#include "logger.hh"
 #include "helpers.hh"
 #include "shared-constants.hh"
 
@@ -81,6 +81,11 @@ namespace xamarin::android::internal
 			return equal (s, Size - 1);
 		}
 
+		force_inline bool equal (std::string_view const& s) noexcept
+		{
+			return equal (s.data (), s.length ());
+		}
+
 		force_inline bool starts_with_c (const char *s) const noexcept
 		{
 			if (s == nullptr)
@@ -106,6 +111,11 @@ namespace xamarin::android::internal
 		force_inline bool starts_with (const char (&s)[Size]) const noexcept
 		{
 			return starts_with (s, Size - 1);
+		}
+
+		force_inline bool starts_with (std::string_view const& s) const noexcept
+		{
+			return starts_with (s.data (), s.length ());
 		}
 
 		force_inline bool has_at (const char ch, size_t index) const noexcept
@@ -191,7 +201,7 @@ namespace xamarin::android::internal
 	private:
 		force_inline bool can_access (size_t index) const noexcept
 		{
-			if (XA_UNLIKELY (!initialized () || start () == nullptr)) {
+			if (!initialized () || start () == nullptr) [[unlikely]] {
 				return false;
 			}
 
@@ -450,6 +460,11 @@ namespace xamarin::android::internal
 			return append (str.get (), str.length ());
 		}
 
+		force_inline string_base& append (std::string_view const& sv) noexcept
+		{
+			return append (sv.data (), sv.length ());
+		}
+
 		template<size_t Size>
 		force_inline string_base& append (const char (&s)[Size]) noexcept
 		{
@@ -518,6 +533,11 @@ namespace xamarin::android::internal
 				return *this;
 
 			return assign (s, strlen (s));
+		}
+
+		force_inline string_base& assign (std::string_view const& sv) noexcept
+		{
+			return assign (sv.data (), sv.size ());
 		}
 
 		template<size_t Size>
@@ -620,6 +640,11 @@ namespace xamarin::android::internal
 		force_inline bool starts_with (const char (&s)[Size]) noexcept
 		{
 			return starts_with (s, Size - 1);
+		}
+
+		force_inline bool starts_with (std::string_view const& s) noexcept
+		{
+			return starts_with (s.data (), s.length ());
 		}
 
 		force_inline void set_length_after_direct_write (size_t new_length) noexcept
@@ -737,7 +762,7 @@ namespace xamarin::android::internal
 
 		force_inline void ensure_valid_index (size_t access_index) const noexcept
 		{
-			if (XA_LIKELY (access_index < idx && access_index < buffer.size ())) {
+			if (access_index < idx && access_index < buffer.size ()) [[likely]] {
 				return;
 			}
 
@@ -819,6 +844,12 @@ namespace xamarin::android::internal
 		template<size_t N>
 		explicit dynamic_local_string (const char (&str)[N])
 			: base (N)
+		{
+			base::append (str);
+		}
+
+		explicit dynamic_local_string (std::string_view const& str)
+			: base (str.length ())
 		{
 			base::append (str);
 		}

@@ -1,12 +1,15 @@
 using System;
 using System.IO;
 
+using ELFSharp.ELF.Sections;
+
 namespace tmt
 {
 	abstract class XamarinAppDSO : ITypemap
 	{
 		// Corresponds to the `FORMAT_TAG` constant in src/monodroid/xamarin-app.hh
-		protected const ulong FormatTag_V1 = 0x015E6972616D58;
+		protected const ulong FormatTag_V1 = 0x00015E6972616D58;
+		protected const ulong FormatTag_V2 = 0x00025E6972616D58;
 
 		protected const string FormatTag = "format_tag";
 
@@ -18,6 +21,7 @@ namespace tmt
 
 		public MapArchitecture MapArchitecture        => ELF.MapArchitecture;
 		public string FullPath                        { get; } = String.Empty;
+		protected abstract string LogTag              { get; }
 		public abstract string Description            { get; }
 		public abstract string FormatVersion          { get; }
 		public abstract Map Map                       { get; }
@@ -64,87 +68,44 @@ namespace tmt
 
 		protected uint ReadUInt32 (byte[] data, ref ulong offset, bool packed = false)
 		{
-			const ulong DataSize = 4;
-
-			if ((ulong)data.Length < (offset + DataSize))
-				throw new InvalidOperationException ("Not enough data to read a 32-bit integer");
-
-			uint ret = BitConverter.ToUInt32 (data, (int)offset);
-			offset += packed ? DataSize : GetPaddedSize<uint> (offset);
-
-			return ret;
+			return Helpers.ReadUInt32 (data, ref offset, Is64Bit, packed);
 		}
 
 		protected ulong ReadUInt64 (byte[] data, ref ulong offset, bool packed = false)
 		{
-			const ulong DataSize = 8;
-
-			if ((ulong)data.Length < (offset + DataSize))
-				throw new InvalidOperationException ("Not enough data to read a 64-bit integer");
-
-			ulong ret = BitConverter.ToUInt64 (data, (int)offset);
-			offset += packed ? DataSize : GetPaddedSize<ulong> (offset);
-
-			return ret;
+			return Helpers.ReadUInt64 (data, ref offset, Is64Bit, packed);
 		}
 
 		protected ulong ReadPointer (byte[] data, ref ulong offset, bool packed = false)
 		{
-			ulong ret;
+			return Helpers.ReadPointer (data, ref offset, Is64Bit, packed);
+		}
 
-			if (Is64Bit) {
-				ret = ReadUInt64 (data, ref offset, packed);
-			} else {
-				ret = (ulong)ReadUInt32 (data, ref offset, packed);
+		protected ulong ReadPointer (ISymbolEntry symbol, byte[] data, ref ulong offset, bool packed = false)
+		{
+			ulong prevOffset = offset;
+			ulong pointer = ReadPointer (data, ref offset, packed);
+			if (pointer == 0) {
+				pointer = ELF.DeterminePointerAddress (symbol, prevOffset);
 			}
 
-			return ret;
+			return pointer;
+		}
+
+		protected ulong ReadPointer (ulong symbolValue, byte[] data, ref ulong offset, bool packed = false)
+		{
+			ulong prevOffset = offset;
+			ulong pointer = ReadPointer (data, ref offset, packed);
+			if (pointer == 0) {
+				pointer = ELF.DeterminePointerAddress (symbolValue, prevOffset);
+			}
+
+			return pointer;
 		}
 
 		protected ulong GetPaddedSize<S> (ulong sizeSoFar)
 		{
-			ulong typeSize = GetTypeSize<S> ();
-
-			ulong modulo;
-			if (Is64Bit) {
-				modulo = typeSize < 8 ? 4u : 8u;
-			} else {
-				modulo = 4u;
-			}
-
-			ulong alignment = sizeSoFar % modulo;
-			if (alignment == 0)
-				return typeSize;
-
-			return typeSize + (modulo - alignment);
-		}
-
-		ulong GetTypeSize<S> ()
-		{
-			Type type = typeof(S);
-
-			if (type == typeof(string)) {
-				// We treat `string` as a generic pointer
-				return Is64Bit ? 8u : 4u;
-			}
-
-			if (type == typeof(byte)) {
-				return 1u;
-			}
-
-			if (type == typeof(bool)) {
-				return 1u;
-			}
-
-			if (type == typeof(Int32) || type == typeof(UInt32)) {
-				return 4u;
-			}
-
-			if (type == typeof(Int64) || type == typeof(UInt64)) {
-				return 8u;
-			}
-
-			throw new InvalidOperationException ($"Unable to map managed type {type} to native assembler type");
+			return Helpers.GetPaddedSize<S> (sizeSoFar, Is64Bit);
 		}
 	}
 }

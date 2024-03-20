@@ -84,22 +84,25 @@ namespace Xamarin.Android.Build.Tests
 				var versionNumber = index == -1 ?
 					$"{versionName}.0.0" :
 					$"{versionName.Substring (0, index)}.0.0";
-				var assemblyPath = b.Output.GetIntermediaryPath ($"android/assets/{proj.ProjectName}.dll");
-				FileAssert.Exists (assemblyPath);
-				using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 
-				// System.Reflection.AssemblyVersion
-				Assert.AreEqual (versionNumber, assembly.Name.Version.ToString ());
+				foreach (string abi in b.GetBuildAbis ()) {
+					var assemblyPath = b.Output.GetIntermediaryPath ($"android/assets/{abi}/{proj.ProjectName}.dll");
+					FileAssert.Exists (assemblyPath);
+					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
 
-				// System.Reflection.AssemblyFileVersion
-				var assemblyInfoVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyInformationalVersionAttribute");
-				Assert.IsNotNull (assemblyInfoVersion, "Should find AssemblyInformationalVersionAttribute!");
-				Assert.AreEqual (versionName, assemblyInfoVersion.ConstructorArguments [0].Value);
+					// System.Reflection.AssemblyVersion
+					Assert.AreEqual (versionNumber, assembly.Name.Version.ToString ());
 
-				// System.Reflection.AssemblyInformationalVersion
-				var assemblyFileVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyFileVersionAttribute");
-				Assert.IsNotNull (assemblyFileVersion, "Should find AssemblyFileVersionAttribute!");
-				Assert.AreEqual (versionNumber, assemblyFileVersion.ConstructorArguments [0].Value);
+					// System.Reflection.AssemblyFileVersion
+					var assemblyInfoVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyInformationalVersionAttribute");
+					Assert.IsNotNull (assemblyInfoVersion, "Should find AssemblyInformationalVersionAttribute!");
+					Assert.AreEqual (versionName, assemblyInfoVersion.ConstructorArguments [0].Value);
+
+					// System.Reflection.AssemblyInformationalVersion
+					var assemblyFileVersion = assembly.CustomAttributes.FirstOrDefault (a => a.AttributeType.FullName == "System.Reflection.AssemblyFileVersionAttribute");
+					Assert.IsNotNull (assemblyFileVersion, "Should find AssemblyFileVersionAttribute!");
+					Assert.AreEqual (versionNumber, assemblyFileVersion.ConstructorArguments [0].Value);
+				}
 			}
 		}
 

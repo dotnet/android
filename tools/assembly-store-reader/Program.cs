@@ -123,7 +123,7 @@ namespace Xamarin.Android.AssemblyStore
 				Console.Error.WriteLine (@"  where each BLOB_PATH can point to:
     * aab file
     * apk file
-    * index store file (e.g. base_assemblies.blob)
+    * index store file (e.g. base_assemblies.blob or assemblies.arm64_v8a.blob.so)
     * arch store file (e.g. base_assemblies.arm64_v8a.blob)
     * store manifest file (e.g. base_assemblies.manifest)
     * store base name (e.g. base or base_assemblies)

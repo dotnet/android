@@ -23,9 +23,16 @@ the new platform will be downloaded to your local Android SDK.
   - *or* run manually: `param-name-importer.exe -source-stub-zip C:/Users/USERNAME/android-toolchain/sdk/platforms/android-S/android-stubs-src.jar -output-text api-S.params.txt -output-xml api-S.params.xml -verbose -framework-only`
 - Copy the produced `api-X.params.txt` file to `/src/Mono.Android/Profiles/`
 
+### Generate `api.xml` File
+
+- Run `xaprepare android-sdk-platforms=all` to download all Android SDK platforms
+- Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
+- Run the following command to create a merged `api.xml`:
+  - `dotnet-local.cmd build build-tools\create-android-api -t:GenerateApiDescription`
+- Copy the `bin\BuildDebug\api\api-xx.xml` file to `src\Mono.Android\Profiles`
+
 ### Other Infrastructure Changes
 
-- Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
 - Add level to `/build-tools/Xamarin.Android.Tools.BootstrapTasks/Xamarin.Android.Tools.BootstrapTasks/CheckApiCompatibility.cs`
   to enable running ApiCompat against the new level. (ex: `{ "v11.0.99", "v11.0" }`)
 - Add level to `/build-tools/api-xml-adjuster/Makefile`
