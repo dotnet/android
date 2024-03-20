@@ -1,11 +1,13 @@
-﻿using System;
+﻿#nullable enable
+
+using System;
 using System.Diagnostics.CodeAnalysis;
 using Android.App;
 using Android.Views;
 
 namespace Xamarin.Android.Design
 {
-	public delegate Java.Lang.Object OnLayoutItemNotFoundHandler (int resourceId, Type expectedViewType);
+	public delegate Java.Lang.Object? OnLayoutItemNotFoundHandler (int resourceId, Type expectedViewType);
 
 	abstract class LayoutBinding
 	{
@@ -45,7 +47,7 @@ namespace Xamarin.Android.Design
 				ret = boundView.FindViewById <T> (resourceId);
 
 			if (ret == null && onLayoutItemNotFound != null)
-				ret = (T)onLayoutItemNotFound (resourceId, typeof (T));
+				ret = (T?)onLayoutItemNotFound (resourceId, typeof (T));
 
 			if (ret == null)
 				throw new global::System.InvalidOperationException ($"View not found (Resource ID: {resourceId})");
@@ -80,7 +82,7 @@ namespace Xamarin.Android.Design
 
 			var ret = finder (EnsureActivity ());
 			if (ret == null && onLayoutItemNotFound != null)
-				ret = (T)onLayoutItemNotFound (resourceId, typeof (T));
+				ret = (T?)onLayoutItemNotFound (resourceId, typeof (T));
 
 			if (ret == null)
 				throw new InvalidOperationException ($"Fragment not found (ID: {resourceId}; Type: {typeof (T)})");
