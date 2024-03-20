@@ -78,9 +78,11 @@ To include the Java library but not produce C# bindings for it, mark it with `Bi
 
 Alternatively, `<AndroidMavenLibrary>` can be used to retrieve a Java library from a Maven repository:
 
-```
+```xml
 <ItemGroup>
   <AndroidMavenLibrary Include="my.library:dependency-library" Version="1.0.0" />
+  <!-- or, if the Java library doesn't need to be bound -->
+  <AndroidMavenLibrary Include="my.library:dependency-library" Version="1.0.0" Bind="false" />
 </ItemGroup>
 ```
 
