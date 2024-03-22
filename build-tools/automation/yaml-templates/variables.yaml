@@ -16,7 +16,7 @@ variables:
 - name: ApkDiffToolVersion
   value: 0.0.15
 - name: TestSlicerToolVersion
-  value: 0.1.0-alpha5
+  value: 0.1.0-alpha7
 - name: BootsToolVersion
   value: 1.1.0.36
 - name: NUnitConsoleVersion
@@ -24,7 +24,7 @@ variables:
 - name: NUnit.NumberOfTestWorkers
   value: 4
 - name: DotNetSdkVersion
-  value: 7.0
+  value: 8.0
 - name: DotNetSdkQuality
   value: GA
 - name: GitHub.Token
@@ -42,7 +42,7 @@ variables:
 - name: DotNetTargetFramework
   value: net8.0
 - name: DotNetStableTargetFramework
-  value: net7.0
+  value: net8.0
 # Workaround: https://devdiv.visualstudio.com/DevDiv/_workitems/edit/1585820
 - name: _WriteTelemetryProperties
   value: false

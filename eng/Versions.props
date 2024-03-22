@@ -1,7 +1,7 @@
 <Project>
   <!--Package versions-->
   <PropertyGroup>
-    <MicrosoftDotnetSdkInternalPackageVersion>8.0.101-servicing.23614.6</MicrosoftDotnetSdkInternalPackageVersion>
+    <MicrosoftDotnetSdkInternalPackageVersion>8.0.202-servicing.24116.2</MicrosoftDotnetSdkInternalPackageVersion>
     <MicrosoftNETILLinkPackageVersion>8.0.3-servicing.24114.15</MicrosoftNETILLinkPackageVersion>
     <MicrosoftNETILLinkTasksPackageVersion>8.0.3</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>8.0.3</MicrosoftNETCoreAppRefPackageVersion>
@@ -19,8 +19,8 @@
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
     <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
-    <DotNetMonoManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETCoreAppRefPackageVersion), $(VersionSuffixRegex)))</DotNetMonoManifestVersionBand>
-    <DotNetEmscriptenManifestVersionBand>$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftNETWorkloadEmscriptenPackageVersion), $(VersionSuffixRegex)))</DotNetEmscriptenManifestVersionBand>
+    <DotNetMonoManifestVersionBand>8.0.100</DotNetMonoManifestVersionBand>
+    <DotNetEmscriptenManifestVersionBand>8.0.100</DotNetEmscriptenManifestVersionBand>
     <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
     <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
   </PropertyGroup>
