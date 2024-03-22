@@ -25,13 +25,14 @@ that Java binding dependencies are satisfied.
     
     <!-- Use downloaded POM files to ensure all Java dependencies are met. -->
     <JavaDependencyVerification
-      AndroidLibraries="@(AndroidLibrary)"
-      AdditionalManifests="@(AndroidAdditionalJavaManifest)"
-      PackageReferences="@(PackageReference)"
-      ProjectReferences="@(ProjectReference)"
-      IgnoredDependencies="@(AndroidIgnoredJavaDependency)"
-      MicrosoftPackagesFile="$(_ResolvedPackageMap)"
-      ProjectAssetsLockFile="$(ProjectAssetsFile)" />
+        AndroidLibraries="@(AndroidLibrary)"
+        AdditionalManifests="@(AndroidAdditionalJavaManifest)"
+        PackageReferences="@(PackageReference)"
+        ProjectReferences="@(ProjectReference)"
+        IgnoredDependencies="@(AndroidIgnoredJavaDependency)"
+        MicrosoftPackagesFile="$(_ResolvedPackageMap)"
+        ProjectAssetsLockFile="$(ProjectAssetsFile)"
+    />
     
   </Target>
 
