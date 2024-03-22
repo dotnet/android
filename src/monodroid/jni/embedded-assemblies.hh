@@ -282,7 +282,7 @@ namespace xamarin::android::internal {
 				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
-		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
+		force_inline static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
 		{
 			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
 		}

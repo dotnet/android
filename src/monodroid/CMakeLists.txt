@@ -29,14 +29,35 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+  set(DEBUG_BUILD True)
+else()
+  set(DEBUG_BUILD False)
+endif()
+
+set(XA_NO_INLINE "$ENV{XA_NO_INLINE}")
+if(XA_NO_INLINE)
+  set(DONT_INLINE_DEFAULT ON)
+else()
+  set(DONT_INLINE_DEFAULT OFF)
+endif()
+
+set(XA_NO_STRIP "$ENV{XA_NO_STRIP}")
+if(XA_NO_STRIP OR DEBUG_BUILD)
+  set(STRIP_DEBUG_DEFAULT OFF)
+endif()
+
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  # ASAN and UBSAN always require the debug symbols to be left in the binary
   set(STRIP_DEBUG_DEFAULT OFF)
   set(ANALYZERS_ENABLED ON)
 else()
-  set(STRIP_DEBUG_DEFAULT ON)
+  if(NOT XA_NO_STRIP)
+    set(STRIP_DEBUG_DEFAULT ON)
+  endif()
   set(ANALYZERS_ENABLED OFF)
 endif()
 
@@ -44,6 +65,7 @@ option(ENABLE_TIMING "Build with timing support" OFF)
 option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFAULT})
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ON)
+option(DONT_INLINE "Do not inline any functions which are usually inlined, to get better stack traces" ${DONT_INLINE_DEFAULT})
 
 if(USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
@@ -58,11 +80,7 @@ if(USE_CCACHE)
   endif()
 endif()
 
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  set(DEBUG_BUILD True)
-else()
-  set(DEBUG_BUILD False)
-endif()
+
 
 if(ANDROID_STL STREQUAL none)
   set(USES_LIBSTDCPP False)
@@ -179,6 +197,10 @@ add_compile_definitions(MONO_DLL_EXPORT)
 add_compile_definitions(NET)
 add_compile_definitions(JI_NO_VISIBILITY)
 
+if(DONT_INLINE)
+  add_compile_definitions(NO_INLINE)
+endif()
+
 if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
   add_compile_definitions(DEBUG)
 endif()
@@ -293,6 +315,13 @@ endif()
 
 if(STRIP_DEBUG)
   list(APPEND LOCAL_COMMON_LINKER_ARGS LINKER:-S)
+else()
+  # When not stripping symbols, we likely want to have precise stack traces, so
+  # we won't omit frame pointers
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fno-omit-frame-pointer
+    -fno-limit-debug-info
+  )
 endif()
 
 # Parameters to both functions are (all required):
