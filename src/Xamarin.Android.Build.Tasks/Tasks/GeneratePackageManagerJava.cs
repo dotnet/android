@@ -262,9 +262,16 @@ namespace Xamarin.Android.Tasks
 			HashSet<string> archAssemblyNames = null;
 			HashSet<string> uniqueAssemblyNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 			Action<ITaskItem> updateAssemblyCount = (ITaskItem assembly) => {
-				// We need to use the 'RelativePath' metadata, if found, because it will give us the correct path for satellite assemblies - with the culture in the path.
-				string? relativePath = assembly.GetMetadata ("RelativePath");
-				string assemblyName = String.IsNullOrEmpty (relativePath) ? Path.GetFileName (assembly.ItemSpec) : relativePath;
+				string? culture = MonoAndroidHelper.GetAssemblyCulture (assembly);
+				string fileName = Path.GetFileName (assembly.ItemSpec);
+				string assemblyName;
+
+				if (String.IsNullOrEmpty (culture)) {
+					assemblyName = fileName;
+				} else {
+					assemblyName = $"{culture}/{fileName}";
+				}
+
 				if (!uniqueAssemblyNames.Contains (assemblyName)) {
 					uniqueAssemblyNames.Add (assemblyName);
 				}
