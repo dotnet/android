@@ -37,11 +37,11 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (dotnet.New ("android-layout", Path.Combine (dotnet.ProjectDirectory, "Resources", "layout")), "`dotnet new android-layout` should succeed");
 
 			// Debug build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Debug" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Debug", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 
 			// Release build
-			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release" }), "`dotnet build` should succeed");
+			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
 			dotnet.AssertHasNoWarnings ();
 		}
 
