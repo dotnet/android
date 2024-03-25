@@ -310,7 +310,7 @@ stages:
         Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
       displayName: Extract binutils pdbs
 
-    ## Copy .dll, .exe, .pdb files for APIScan
+    ### Copy .dll, .exe, .pdb files for APIScan
     - task: CopyFiles@2
       displayName: Collect Files for APIScan
       inputs:
