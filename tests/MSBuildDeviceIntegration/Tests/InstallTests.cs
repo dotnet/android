@@ -617,8 +617,8 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var path = Path.Combine ("temp", TestName);
 			var itemToDelete = new AndroidItem.AndroidJavaSource ("TestJavaClass2.java") {
-						Encoding = Encoding.ASCII,
-						TextContent = () => @"package com.test.java;
+				Encoding = Encoding.ASCII,
+				TextContent = () => @"package com.test.java;
 
 public class TestJavaClass2 {
 
@@ -627,10 +627,10 @@ public class TestJavaClass2 {
 		return ""Java is called"";
 	}
 }",
-						Metadata = {
-							{ "Bind", "True" },
-						},
-					};
+				Metadata = {
+					{ "Bind", "True" },
+				},
+			};
 			var proj = new XamarinAndroidApplicationProject {
 				EnableDefaultItems = true,
 				AndroidJavaSources = {
@@ -650,7 +650,7 @@ public class TestJavaClass {
 						},
 					},
 					itemToDelete,
-				}
+				},
 			};
 			using (var b = CreateApkBuilder ()) {
 				b.ThrowOnBuildFailure = false;
