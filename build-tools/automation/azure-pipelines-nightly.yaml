@@ -283,8 +283,8 @@ stages:
 
 - stage: compliance_scan
   displayName: Compliance
-  dependsOn: []
-  #condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
+  dependsOn: mac_build
+  condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
   jobs:
   - job: api_scan
     displayName: API Scan
@@ -295,36 +295,31 @@ stages:
     workspace:
       clean: all
     steps:
-    #- template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
-    #  parameters:
-    #    installApkDiff: false
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
+      parameters:
+        installApkDiff: false
 
-    #- task: DownloadPipelineArtifact@2
-    #  displayName: Download binutils pdbs
-    #  inputs:
-    #    artifactName: $(WindowsToolchainPdbArtifactName)
-    #    downloadPath: $(Build.StagingDirectory)\binutils-pdb
+    - task: DownloadPipelineArtifact@2
+      displayName: Download binutils pdbs
+      inputs:
+        artifactName: $(WindowsToolchainPdbArtifactName)
+        downloadPath: $(Build.StagingDirectory)\binutils-pdb
 
-    #- powershell: |
-    #    Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
-    #    Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
-    #  displayName: Extract binutils pdbs
+    - powershell: |
+        Expand-Archive "$(Build.StagingDirectory)\binutils-pdb\$(WindowsToolchainPdbArtifactName).zip" "$(System.DefaultWorkingDirectory)\binutils-pdb"
+        Get-ChildItem -Path "$(System.DefaultWorkingDirectory)\binutils-pdb" -Recurse
+      displayName: Extract binutils pdbs
 
-    ### Copy .dll, .exe, .pdb files for APIScan
-    #- task: CopyFiles@2
-    #  displayName: Collect Files for APIScan
-    #  inputs:
-    #    Contents: |
-    #      $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
-    #      $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
-    #    TargetFolder: $(Build.StagingDirectory)\apiscan
-    #    OverWrite: true
-    #    flattenFolders: true
-
-    - pwsh: |
-        mkdir $(Build.StagingDirectory)\apiscan
-        New-Item $(Build.StagingDirectory)\apiscan\dummy.dll
-      displayName: create invalid file
+    ## Copy .dll, .exe, .pdb files for APIScan
+    - task: CopyFiles@2
+      displayName: Collect Files for APIScan
+      inputs:
+        Contents: |
+          $(System.DefaultWorkingDirectory)\bin\$(XA.Build.Configuration)\dotnet\packs\Microsoft.Android*\**\?(*.dll|*.exe|*.pdb)
+          $(System.DefaultWorkingDirectory)\binutils-pdb\*.pdb
+        TargetFolder: $(Build.StagingDirectory)\apiscan
+        OverWrite: true
+        flattenFolders: true
 
     - pwsh: Get-ChildItem -Path "$(Build.StagingDirectory)\apiscan" -Recurse
       displayName: List Files for APIScan
