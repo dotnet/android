@@ -257,6 +257,7 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();
