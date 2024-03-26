@@ -17,10 +17,12 @@ namespace Xamarin.ProjectTools
 
 			Sources = new List<BuildItem> ();
 			OtherBuildItems = new List<BuildItem> ();
+			AndroidJavaSources = new List<BuildItem> ();
 
 			ItemGroupList.Add (References);
 			ItemGroupList.Add (OtherBuildItems);
 			ItemGroupList.Add (Sources);
+			ItemGroupList.Add (AndroidJavaSources);
 
 			SetProperty ("RootNamespace", () => RootNamespace ?? ProjectName);
 			SetProperty ("AssemblyName", () => AssemblyName ?? ProjectName);
@@ -60,6 +62,7 @@ namespace Xamarin.ProjectTools
 
 		public IList<BuildItem> OtherBuildItems { get; private set; }
 		public IList<BuildItem> Sources { get; private set; }
+		public IList<BuildItem> AndroidJavaSources { get; private set; }
 
 		public IList<Property> ActiveConfigurationProperties {
 			get { return IsRelease ? ReleaseProperties : DebugProperties; }

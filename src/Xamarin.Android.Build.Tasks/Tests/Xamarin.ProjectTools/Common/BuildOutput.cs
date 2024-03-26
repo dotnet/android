@@ -52,9 +52,9 @@ namespace Xamarin.ProjectTools
 			return File.ReadLines (path).ToList ();
 		}
 
-		public bool IsTargetSkipped (string target) => IsTargetSkipped (Builder.LastBuildOutput, target);
+		public bool IsTargetSkipped (string target, bool defaultIfNotUsed = false) => IsTargetSkipped (Builder.LastBuildOutput, target, defaultIfNotUsed);
 
-		public static bool IsTargetSkipped (IEnumerable<string> output, string target)
+		public static bool IsTargetSkipped (IEnumerable<string> output, string target, bool defaultIfNotUsed = false)
 		{
 			bool found = false;
 			foreach (var line in output) {
@@ -69,7 +69,7 @@ namespace Xamarin.ProjectTools
 					if (found)
 						return true;
 			}
-			return false;
+			return defaultIfNotUsed;
 		}
 
 		/// <summary>

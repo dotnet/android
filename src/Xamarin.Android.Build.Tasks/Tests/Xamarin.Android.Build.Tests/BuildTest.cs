@@ -70,7 +70,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
 				Encoding = Encoding.ASCII,
 				TextContent = () => ResourceData.JavaSourceTestExtension,
 				Metadata = { { "Bind", "True"} },
@@ -1579,7 +1579,7 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = isRelease,
-				OtherBuildItems = {
+				AndroidJavaSources = {
 					new BuildItem (AndroidBuildActions.AndroidJavaSource, "ToolbarEx.java") {
 						TextContent = () => @"package com.unnamedproject.unnamedproject;
 import android.content.Context;
@@ -1624,11 +1624,11 @@ public class ToolbarEx {
 		public void CheckJavaError ()
 		{
 			var proj = new XamarinAndroidApplicationProject ();
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe.java") {
 				TextContent = () => "public classo TestMe { }",
 				Encoding = Encoding.ASCII
 			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe2.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "TestMe2.java") {
 				TextContent = () => "public class TestMe2 {" +
 					"public vod Test ()" +
 					"}",
