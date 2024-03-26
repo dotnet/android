@@ -135,21 +135,10 @@ It is shared between "legacy" binding projects and .NET 5 projects.
         Nullable="$(Nullable)"
         UseJavaLegacyResolver="$(_AndroidUseJavaLegacyResolver)"
         NamespaceTransforms="@(AndroidNamespaceReplacement)"
-        GeneratedFileListFile="$(GeneratedOutputPath)src\$(AssemblyName).projitems"
-    >
-      <Output TaskParameter="GeneratedFiles" ItemName="_GeneratedBindingFiles" />
-    </BindingsGenerator>
+    />
 
     <!-- Write a flag so we won't redo this target if nothing changed -->
     <Touch Files="$(_GeneratorStampFile)" AlwaysCreate="true" />
-
-    <ItemGroup Condition=" '@(_GeneratedBindingFiles->Count())' != '0' ">
-      <_ExistingGeneratedFiles Include="$(GeneratedOutputPath)**\*.cs" />
-      <_ExistingGeneratedFiles Remove="@(_GeneratedBindingFiles)" />
-    </ItemGroup>
-
-    <!-- Delete any files which should not be there. -->
-    <Delete Files="@(_ExistingGeneratedFiles)" Condition=" '@(_ExistingGeneratedFiles->Count())' != '0' "/>
 
     <ItemGroup>
       <FileWrites Include="$(GeneratedOutputPath)**\*.cs" />

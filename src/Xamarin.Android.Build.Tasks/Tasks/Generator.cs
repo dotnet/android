@@ -69,10 +69,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool UseJavaLegacyResolver { get; set; }
 
-		public string GeneratedFileListFile { get; set; }
-		[Output]
-		public ITaskItem [] GeneratedFiles { get; set; } = Array.Empty<ITaskItem> ();
-
 		private List<Tuple<string, string>> transform_files = new List<Tuple<string,string>> ();
 
 		public override bool RunTask ()
@@ -139,20 +135,7 @@ namespace Xamarin.Android.Tasks
 			if (Log.HasLoggedErrors)
 				return false;
 
-			var result = base.RunTask ();
-			List<ITaskItem> files = new List<ITaskItem> ();
-			if (result && GeneratedFileListFile != null && File.Exists (GeneratedFileListFile)) {
-				var doc = XDocument.Load (GeneratedFileListFile);
-				var compileItems = doc.XPathSelectElements ("//Project/ItemGroup/Compile");
-				foreach (var item in compileItems) {
-					var file = item.Attribute ("Include");
-					if (file != null && File.Exists (file.Value)) {
-						files.Add (new TaskItem (file.Value));
-					}
-				}
-			}
-			GeneratedFiles = files.ToArray ();
-			return result;
+			return base.RunTask ();
 		}
 
 		void WriteLine (StreamWriter sw, string line)
