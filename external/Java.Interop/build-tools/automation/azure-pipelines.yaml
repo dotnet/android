@@ -99,8 +99,8 @@ jobs:
   dependsOn: windows_dotnet_build
   condition: and(eq(dependencies.windows_dotnet_build.result, 'Succeeded'), eq(variables['Build.SourceBranch'], '${{ parameters.ApiScanSourceBranch }}'))
   pool:
-    name: Azure Pipelines
-    vmImage: windows-2022
+    name: MAUI-1ESPT
+    demands: ImageOverride -equals 1ESPT-Windows2022
   timeoutInMinutes: 480
   workspace:
     clean: all
@@ -135,7 +135,7 @@ jobs:
       isLargeApp: true
       toolVersion: Latest
     env:
-      AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+      AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanMAUI1ESPTManagedId)
 
   - task: SdtReport@2
     displayName: Guardian Export - Security Report
