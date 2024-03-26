@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
 				Encoding = Encoding.ASCII,
 				TextContent = () => ResourceData.JavaSourceTestExtension,
 				Metadata = { { "Bind", "True"} },
@@ -75,6 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				"_ResolveLibraryProjectImports",
 				"CoreCompile",
 				"_CreateAar",
+				"_ClearGeneratedManagedBindings",
 			};
 
 			var proj = new XamarinAndroidBindingProject () {
@@ -112,6 +113,23 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
 				}
+
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+				var cs_file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "generated", "src", "Com.Larvalabs.Svgandroid.SVGParser.cs");
+				FileAssert.Exists (cs_file);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
+				// Fast Update Check Build
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "PrepareResources;_GenerateCompileInputs"), "DTB should have succeeded.");
+				cs_file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "generated", "src", "Com.Larvalabs.Svgandroid.SVGParser.cs");
+				FileAssert.Exists (cs_file);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
+
 			}
 		}
 
@@ -671,6 +689,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should be skipped on second build!");
+				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings"), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
+				Assert.IsTrue (libBuilder.DesignTimeBuild (lib, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");
 				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 				appBuilder.Target = "SignAndroidPackage";
 				Assert.IsTrue (appBuilder.Build (app), "App SignAndroidPackage should have succeeded.");

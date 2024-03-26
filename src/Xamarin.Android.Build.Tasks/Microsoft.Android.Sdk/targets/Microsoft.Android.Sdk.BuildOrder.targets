@@ -120,9 +120,6 @@ properties that determine build ordering.
       UpdateAndroidResources;
       _BuildResourceDesigner;
       UpdateAndroidInterfaceProxies;
-      _SetAndroidGenerateManagedBindings;
-      _ClearGeneratedManagedBindings;
-      AddBindingsToCompile;
       _CheckForInvalidDesignerConfig;
     </ResolveReferencesDependsOn>
     <DesignTimeResolveAssemblyReferencesDependsOn>
@@ -144,6 +141,13 @@ properties that determine build ordering.
       _AddAndroidDefines;
       _IncludeLayoutBindingSources;
       AddLibraryJarsToBind;
+      _CollectLibrariesToBind;
+      _SetAndroidGenerateManagedBindings;
+      ExportJarToXml;
+      GenerateBindings;
+      _CollectGeneratedManagedBindingFiles;
+      _ClearGeneratedManagedBindings;
+      AddBindingsToCompile;
       _BuildResourceDesigner;
       _AddResourceDesignerFiles;
       $(CompileDependsOn);
