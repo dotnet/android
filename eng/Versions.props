@@ -17,7 +17,7 @@
     <!-- Match the first three version numbers and append 00 -->
     <VersionBand Condition=" '$(VersionBand)' == '' ">$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), `^\d+\.\d+\.\d`))00</VersionBand>
     <VersionSuffixRegex>\-(preview|rc|alpha).\d+</VersionSuffixRegex>
-    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">$(VersionBand)$([System.Text.RegularExpressions.Regex]::Match($(MicrosoftDotnetSdkInternalPackageVersion), $(VersionSuffixRegex)))</DotNetPreviewVersionBand>
+    <DotNetPreviewVersionBand Condition=" '$(DotNetPreviewVersionBand)' == '' ">8.0.100</DotNetPreviewVersionBand>
     <DotNetSdkManifestsFolder>$(DotNetPreviewVersionBand)</DotNetSdkManifestsFolder>
     <DotNetMonoManifestVersionBand>8.0.100</DotNetMonoManifestVersionBand>
     <DotNetEmscriptenManifestVersionBand>8.0.100</DotNetEmscriptenManifestVersionBand>
