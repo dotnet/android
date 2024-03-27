@@ -22,6 +22,6 @@
     <DotNetMonoManifestVersionBand>8.0.100</DotNetMonoManifestVersionBand>
     <DotNetEmscriptenManifestVersionBand>8.0.100</DotNetEmscriptenManifestVersionBand>
     <!-- NOTE: sometimes we hardcode this when transitioning to new version bands -->
-    <DotNetAndroidManifestVersionBand>$(DotNetPreviewVersionBand)</DotNetAndroidManifestVersionBand>
+    <DotNetAndroidManifestVersionBand>8.0.100</DotNetAndroidManifestVersionBand>
   </PropertyGroup>
 </Project>
