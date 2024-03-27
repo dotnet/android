@@ -388,7 +388,8 @@ namespace Xamarin.Android.Tasks
 						Log,
 						assemblyCount,
 						uniqueAssemblyNames,
-						EnsureCodeGenState (targetArch)
+						EnsureCodeGenState (targetArch),
+						mmTracingMode
 					);
 				} else {
 					marshalMethodsAsmGen = new MarshalMethodsNativeAssemblyGenerator (
