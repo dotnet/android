@@ -260,7 +260,12 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.AssertHasNoWarnings ();
+				// FIXME: https://github.com/dotnet/runtime/issues/100256
+				if (isRelease) {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), $"{b.BuildLogFile} should have 1 MSBuild warning.");
+				} else {
+					b.AssertHasNoWarnings ();
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
