@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Activity",
+  "name": "Działanie systemu Android",
   "description": "Klasa Aktywność systemu Android",
   "symbols/namespace/description": "przestrzeń nazw wygenerowanego kodu.",
   "postActions/openInEditor/description": "Otwiera plik Activity1.cs w edytorze"

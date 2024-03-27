@@ -39,7 +39,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("JavaSourceJar", "javaclasses-sources.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestSourcesJar,
 			});
-			proj.OtherBuildItems.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
+			proj.AndroidJavaSources.Add (new AndroidItem.AndroidJavaSource ("JavaSourceTestExtension.java") {
 				Encoding = Encoding.ASCII,
 				TextContent = () => ResourceData.JavaSourceTestExtension,
 				Metadata = { { "Bind", "True"} },
@@ -75,6 +75,7 @@ namespace Xamarin.Android.Build.Tests
 				"_ResolveLibraryProjectImports",
 				"CoreCompile",
 				"_CreateAar",
+				"_ClearGeneratedManagedBindings",
 			};
 
 			var proj = new XamarinAndroidBindingProject () {
@@ -112,6 +113,23 @@ namespace Xamarin.Android.Build.Tests
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
 				}
+
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+				var cs_file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "generated", "src", "Com.Larvalabs.Svgandroid.SVGParser.cs");
+				FileAssert.Exists (cs_file);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "third build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
+				// Fast Update Check Build
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "PrepareResources;_GenerateCompileInputs"), "DTB should have succeeded.");
+				cs_file = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "generated", "src", "Com.Larvalabs.Svgandroid.SVGParser.cs");
+				FileAssert.Exists (cs_file);
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "forth build should succeed");
+				foreach (var target in targets) {
+					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped on second build!");
+				}
+
 			}
 		}
 
@@ -671,6 +689,10 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				StringAssertEx.ContainsText (File.ReadAllLines (generatedIface), "string GreetWithQuestion (string name, global::Java.Util.Date date, string question);");
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
 				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should be skipped on second build!");
+				Assert.IsTrue (libBuilder.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings"), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
+				Assert.IsTrue (libBuilder.DesignTimeBuild (lib, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");
 				Assert.IsTrue (appBuilder.Build (app), "App build should have succeeded.");
 				appBuilder.Target = "SignAndroidPackage";
 				Assert.IsTrue (appBuilder.Build (app), "App SignAndroidPackage should have succeeded.");
@@ -790,6 +812,104 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 				var cs_file = b.Output.GetIntermediaryPath (Path.Combine ("generated", "src", "Com.Google.Auto.Value.AutoValueAttribute.cs"));
 				FileAssert.Exists (cs_file);
 			}
+		}
+
+		[Test]
+		public void AndroidMavenLibrary_FailsDueToUnverifiedDependency ()
+		{
+			// Test that <AndroidMavenLibrary> triggers Java dependency verification
+			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
+			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
+			item.Metadata.Add ("Version", "1.9.0");
+			item.Metadata.Add ("Repository", "Google");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item }
+			};
+
+			using (var b = CreateDllBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsFalse (b.Build (proj), "Build should have failed.");
+
+				// Ensure an error was raised
+				StringAssertEx.Contains ("error XA4242: Java dependency 'androidx.annotation:annotation:1.2.0' is not satisfied.", b.LastBuildOutput);
+			}
+		}
+
+		[Test]
+		public void AndroidMavenLibrary_IgnoreDependencyVerification ()
+		{
+			// Test that <AndroidMavenLibrary VerifyDependencies="false"> ignores Java dependency verification
+			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google"  VerifyDependencies="false"/>
+			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
+			item.Metadata.Add ("Version", "1.9.0");
+			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("VerifyDependencies", "false");
+			item.Metadata.Add ("Bind", "false");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item }
+			};
+
+			using (var b = CreateDllBuilder ()) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+			}
+		}
+
+		[Test]
+		public void AndroidMavenLibrary_AllDependenciesAreVerified ()
+		{
+			// Test that <AndroidMavenLibrary> triggers Java dependency verification and that
+			// all dependencies are verified via various supported mechanisms
+
+			// <AndroidMavenLibrary Include="androidx.core:core" Version="1.9.0" Repository="Google" />
+			var item = new BuildItem ("AndroidMavenLibrary", "androidx.core:core");
+			item.Metadata.Add ("Version", "1.9.0");
+			item.Metadata.Add ("Repository", "Google");
+			item.Metadata.Add ("Bind", "false");
+
+			// Dependency fulfilled by <PackageReference>
+			var annotations_nuget = new Package {
+				Id = "Xamarin.AndroidX.Annotation",
+				Version = "1.7.0.3"
+			};
+
+			// Dependency fulfilled by <AndroidMavenLibrary>
+			var annotations_experimental_androidlib = new BuildItem ("AndroidMavenLibrary", "androidx.annotation:annotation-experimental");
+			annotations_experimental_androidlib.Metadata.Add ("Version", "1.3.0");
+			annotations_experimental_androidlib.Metadata.Add ("Repository", "Google");
+			annotations_experimental_androidlib.Metadata.Add ("Bind", "false");
+			annotations_experimental_androidlib.Metadata.Add ("VerifyDependencies", "false");
+
+			// Dependency fulfilled by <ProjectReference>
+			var collection = new XamarinAndroidBindingProject ();
+
+			// Dependencies ignored by <AndroidIgnoredJavaDependency>
+			var concurrent = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.concurrent:concurrent-futures");
+			concurrent.Metadata.Add ("Version", "1.1.0");
+
+			var lifecycle = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.lifecycle:lifecycle-runtime");
+			lifecycle.Metadata.Add ("Version", "2.6.2");
+
+			var parcelable = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.versionedparcelable:versionedparcelable");
+			parcelable.Metadata.Add ("Version", "1.2.0");
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = { item, annotations_experimental_androidlib },
+				PackageReferences = { annotations_nuget },
+				OtherBuildItems = { concurrent, lifecycle, parcelable },
+			};
+
+			proj.AddReference (collection);
+			var collection_proj = proj.References.First ();
+			collection_proj.Metadata.Add ("JavaArtifact", "androidx.collection:collection");
+			collection_proj.Metadata.Add ("JavaVersion", "1.3.0");
+
+			using var a = CreateDllBuilder ();
+			using var b = CreateDllBuilder ();
+
+			Assert.IsTrue (a.Build (proj), "ProjectReference build should have succeeded.");
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 		}
 	}
 }

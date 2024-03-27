@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Activity",
+  "name": "Android 활동",
   "description": "Android 활동 클래스",
   "symbols/namespace/description": "생성된 코드의 네임스페이스",
   "postActions/openInEditor/description": "편집기에서 Activity1.cs를 엽니다."

@@ -74,8 +74,9 @@
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' and '$(PublishTrimmed)' == 'true' ">SdkOnly</AndroidLinkMode>
     <AndroidLinkMode Condition=" '$(AndroidLinkMode)' == '' ">None</AndroidLinkMode>
     <!-- For compat with user code not marked trimmable, only trim opt-in by default. -->
-    <TrimMode Condition=" '$(TrimMode)' == '' and '$(AndroidLinkMode)' == 'Full' ">link</TrimMode>
+    <TrimMode Condition=" '$(TrimMode)' == '' and '$(AndroidLinkMode)' == 'Full' ">full</TrimMode>
 		<TrimMode Condition="'$(TrimMode)' == ''">partial</TrimMode>
+    <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' and '$(TrimMode)' == 'full' ">false</SuppressTrimAnalysisWarnings>
     <SuppressTrimAnalysisWarnings Condition=" '$(SuppressTrimAnalysisWarnings)' == '' ">true</SuppressTrimAnalysisWarnings>
     <!-- Prefer $(RuntimeIdentifiers) plural -->
     <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' And '$(RuntimeIdentifiers)' == '' ">android-arm;android-arm64;android-x86;android-x64</RuntimeIdentifiers>

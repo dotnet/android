@@ -611,5 +611,73 @@ namespace Xamarin.Android.Build.Tests
 			var after = File.GetLastWriteTimeUtc (apkset);
 			Assert.AreNotEqual (before, after, $"{apkset} should change!");
 		}
+
+		[Test]
+		public void AppWithAndroidJavaSource ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var itemToDelete = new AndroidItem.AndroidJavaSource ("TestJavaClass2.java") {
+				Encoding = Encoding.ASCII,
+				TextContent = () => @"package com.test.java;
+
+public class TestJavaClass2 {
+
+	public String test(){
+		
+		return ""Java is called"";
+	}
+}",
+				Metadata = {
+					{ "Bind", "True" },
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				EnableDefaultItems = true,
+				AndroidJavaSources = {
+					new AndroidItem.AndroidJavaSource ("TestJavaClass.java") {
+						Encoding = Encoding.ASCII,
+						TextContent = () => @"package com.test.java;
+
+public class TestJavaClass {
+
+	public String test(){
+		
+		return ""Java is called"";
+	}
+}",
+						Metadata = {
+							{ "Bind", "True" },
+						},
+					},
+					itemToDelete,
+				},
+			};
+			using (var b = CreateApkBuilder ()) {
+				b.ThrowOnBuildFailure = false;
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				b.AssertHasNoWarnings ();
+				var generatedCode = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
+					"generated", "src", "Com.Test.Java.TestJavaClass.cs");
+				var generatedCode2 = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath,
+					"generated", "src", "Com.Test.Java.TestJavaClass2.cs");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have been generated.");
+				FileAssert.Exists (generatedCode2, $"'{generatedCode2}' should have been generated.");
+				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on DTB build!");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on DTB build.");
+				FileAssert.Exists (generatedCode2, $"'{generatedCode2}' should have not be deleted on DTB build.");
+				proj.AndroidJavaSources.Remove (itemToDelete);
+				File.Delete (Path.Combine (Root, b.ProjectDirectory, itemToDelete.Include ()));
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second build should have succeeded.");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on second build.");
+				FileAssert.DoesNotExist (generatedCode2, $"'{generatedCode2}' should have be deleted on second build.");
+				Assert.IsFalse (b.Output.IsTargetSkipped ("_CompileBindingJava"), $"`_CompileBindingJava` should run on second build!");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings"), $"`_ClearGeneratedManagedBindings` should be skipped on second build!");
+				// Call Install directly so Build does not get called automatically
+				Assert.IsTrue (b.RunTarget (proj, "Install", doNotCleanupOnUpdate: true, saveProject: false), "Install build should have succeeded.");
+				FileAssert.Exists (generatedCode, $"'{generatedCode}' should have not be deleted on Install build.");
+				Assert.IsTrue (b.Output.IsTargetSkipped ("_ClearGeneratedManagedBindings", defaultIfNotUsed: true), $"`_ClearGeneratedManagedBindings` should be skipped on Install build!");
+			}
+		}
 	}
 }

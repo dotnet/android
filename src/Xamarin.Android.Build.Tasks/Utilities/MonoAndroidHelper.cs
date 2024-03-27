@@ -585,6 +585,38 @@ namespace Xamarin.Android.Tasks
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "lib"));
 		}
 
+		public static string? GetAssemblyCulture (ITaskItem assembly)
+		{
+			// The best option
+			string? culture = assembly.GetMetadata ("Culture");
+			if (!String.IsNullOrEmpty (culture)) {
+				return TrimSlashes (culture);
+			}
+
+			// ...slightly worse
+			culture = assembly.GetMetadata ("RelativePath");
+			if (!String.IsNullOrEmpty (culture)) {
+				return TrimSlashes (Path.GetDirectoryName (culture));
+			}
+
+			// ...not ideal
+			culture = assembly.GetMetadata ("DestinationSubDirectory");
+			if (!String.IsNullOrEmpty (culture)) {
+				return TrimSlashes (culture);
+			}
+
+			return null;
+
+			string? TrimSlashes (string? s)
+			{
+				if (String.IsNullOrEmpty (s)) {
+					return null;
+				}
+
+				return s.TrimEnd ('/').TrimEnd ('\\');
+			}
+		}
+
 		/// <summary>
 		/// Process a collection of assembly `ITaskItem` objects, splitting it on the assembly architecture (<see cref="GetTargetArch"/>) while, at the same time, ignoring
 		/// all assemblies which are **not** in the <paramref name="supportedAbis"/> collection.  If necessary, the selection can be further controlled by passing a qualifier

@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Layout",
+  "name": "Układ systemu Android",
   "description": "Plik układu systemu Android (XML)",
   "postActions/openInEditor/description": "Otwiera plik Layout1.xml w edytorze"
 }
