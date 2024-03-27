@@ -16,7 +16,7 @@ namespace xamarin::android
 	{
 	public:
 		template<typename Ret, typename P1, typename P2>
-		static force_inline Ret add_with_overflow_check (const char *file, uint32_t line, P1 a, P2 b) noexcept
+		force_inline static Ret add_with_overflow_check (const char *file, uint32_t line, P1 a, P2 b) noexcept
 		{
 			Ret ret;
 
@@ -40,7 +40,7 @@ namespace xamarin::android
 		// fail
 		//
 		template<typename Ret>
-		static force_inline Ret multiply_with_overflow_check (const char *file, uint32_t line, size_t a, size_t b) noexcept
+		force_inline static Ret multiply_with_overflow_check (const char *file, uint32_t line, size_t a, size_t b) noexcept
 		{
 			Ret ret;
 

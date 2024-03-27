@@ -4,6 +4,8 @@ using System.IO;
 using Microsoft.Build.Framework;
 using Microsoft.Android.Build.Tasks;
 
+using Xamarin.Android.Tools;
+
 namespace Xamarin.Android.Tasks
 {
 	public class GenerateCompressedAssembliesNativeSourceFiles : AndroidTask
@@ -41,38 +43,54 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
-			var assemblies = new SortedDictionary<string, CompressedAssemblyInfo> (StringComparer.Ordinal);
-			foreach (ITaskItem assembly in ResolvedAssemblies) {
-				if (bool.TryParse (assembly.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-					continue;
+			Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
+				ResolvedAssemblies,
+				SupportedAbis,
+				validate: true,
+				shouldSkip: (ITaskItem asm) => bool.TryParse (asm.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value
+			);
+			var archAssemblies = new Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> ();
+			var counters = new Dictionary<AndroidTargetArch, uint> ();
+
+			foreach (var kvpPerArch in perArchAssemblies) {
+				AndroidTargetArch arch = kvpPerArch.Key;
+				Dictionary<string, ITaskItem> resolvedArchAssemblies = kvpPerArch.Value;
+
+				foreach (var kvp in resolvedArchAssemblies) {
+					ITaskItem assembly = kvp.Value;
+
+					if (!archAssemblies.TryGetValue (arch, out Dictionary<string, CompressedAssemblyInfo> assemblies)) {
+						assemblies = new Dictionary<string, CompressedAssemblyInfo> (StringComparer.OrdinalIgnoreCase);
+						archAssemblies.Add (arch, assemblies);
+					}
+
+					var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
+					if (assemblies.ContainsKey (assemblyKey)) {
+						Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetAssemblyAbi(assembly)})");
+						continue;
+					}
+
+					var fi = new FileInfo (assembly.ItemSpec);
+					if (!fi.Exists) {
+						Log.LogError ($"Assembly {assembly.ItemSpec} does not exist");
+						continue;
+					}
+
+
+					if (!counters.TryGetValue (arch, out uint counter)) {
+						counter = 0;
+					}
+					assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length), counter++, arch, Path.GetFileNameWithoutExtension (assembly.ItemSpec)));
+					counters[arch] = counter;
 				}
-
-				var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
-				if (assemblies.ContainsKey (assemblyKey)) {
-					Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec}");
-					continue;
-				}
-
-				var fi = new FileInfo (assembly.ItemSpec);
-				if (!fi.Exists) {
-					Log.LogError ($"Assembly {assembly.ItemSpec} does not exist");
-					continue;
-				}
-
-				assemblies.Add (assemblyKey, new CompressedAssemblyInfo (checked((uint)fi.Length)));
-			}
-
-			uint index = 0;
-			foreach (var kvp in assemblies) {
-				kvp.Value.DescriptorIndex = index++;
 			}
 
 			string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
 			Log.LogDebugMessage ($"Storing compression assemblies info with key '{key}'");
-			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, assemblies, RegisteredTaskObjectLifetime.Build);
-			Generate (assemblies);
+			BuildEngine4.RegisterTaskObjectAssemblyLocal (key, archAssemblies, RegisteredTaskObjectLifetime.Build);
+			Generate (archAssemblies);
 
-			void Generate (IDictionary<string, CompressedAssemblyInfo> dict)
+			void Generate (Dictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> dict)
 			{
 				var composer = new CompressedAssembliesNativeAssemblyGenerator (Log, dict);
 				LLVMIR.LlvmIrModule compressedAssemblies = composer.Construct ();

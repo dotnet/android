@@ -18,6 +18,15 @@ namespace xamarin::android::internal
 	class SharedConstants
 	{
 	public:
+		// These three MUST be the same as like-named constants in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.Basic.cs
+		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
+		static constexpr std::string_view MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER { "lib_" };
+		static constexpr size_t REGULAR_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
+		static constexpr char REGULAR_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER[REGULAR_ASSEMBLY_MARKER_INDEX];
+		static constexpr std::string_view MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER { "lib-" };
+		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
+		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
+
 		static constexpr std::string_view MONO_ANDROID_RUNTIME_ASSEMBLY_NAME  { "Mono.Android.Runtime" };
 		static constexpr std::string_view MONO_ANDROID_ASSEMBLY_NAME          { "Mono.Android" };
 		static constexpr std::string_view JAVA_INTEROP_ASSEMBLY_NAME          { "Java.Interop" };
@@ -27,7 +36,12 @@ namespace xamarin::android::internal
 		static constexpr std::string_view ANDROID_ENVIRONMENT_CLASS_NAME      { "AndroidEnvironment" };
 		static constexpr std::string_view ANDROID_RUNTIME_INTERNAL_CLASS_NAME { "AndroidRuntimeInternal" };
 		static constexpr std::string_view DLL_EXTENSION                       { ".dll" };
-		static constexpr std::string_view RUNTIME_CONFIG_BLOB_NAME            { "rc.bin" };
+		static constexpr std::string_view PDB_EXTENSION                       { ".pdb" };
+
+		static constexpr std::string_view RUNTIME_CONFIG_BLOB_BASE_NAME       { "libarc.bin" };
+		static constexpr size_t runtime_config_blob_name_size                 = calc_size (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
+		static constexpr auto RUNTIME_CONFIG_BLOB_NAME                        = concat_string_views<runtime_config_blob_name_size> (RUNTIME_CONFIG_BLOB_BASE_NAME, MANGLED_ASSEMBLY_NAME_EXT);
+
 		static constexpr std::string_view MONO_SGEN_SO                        { "libmonosgen-2.0.so" };
 		static constexpr std::string_view MONO_SGEN_ARCH_SO                   { "libmonosgen-" __BITNESS__ "-2.0.so" };
 		static constexpr std::string_view OVERRIDE_DIRECTORY_NAME             { ".__override__" };

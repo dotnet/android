@@ -1,3 +1,12 @@
+<!--toc:start-->
+- [Build Configuration](#build-configuration)
+  - [Options suitable to use in builds for public use](#options-suitable-to-use-in-builds-for-public-use)
+  - [Options suitable for local development](#options-suitable-for-local-development)
+    - [Native runtime (`src/monodroid`)](#native-runtime-srcmonodroid)
+      - [Disable function inlining](#disable-function-inlining)
+      - [Don't strip the runtime shared libraries](#dont-strip-the-runtime-shared-libraries)
+<!--toc:end-->
+
 # Build Configuration
 
 The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
@@ -9,6 +18,8 @@ the *vision*.)
 However, some properties may need to be altered in order to suit your
 requirements, such as the location of a cache directory to store
 the Android SDK and NDK.
+
+## Options suitable to use in builds for public use
 
 To modify the build process, copy
 [`Configuration.Override.props.in`](../../Configuration.Override.props.in)
@@ -93,7 +104,7 @@ Overridable MSBuild properties include:
 
   * `$(IgnoreMaxMonoVersion)`: Skip the enforcement of the `$(MonoRequiredMaximumVersion)`
     property. This is so that developers can run against the latest
-    and greatest. But the build system can enforce the min and max 
+    and greatest. But the build system can enforce the min and max
     versions. The default is `true`, however on CI we use:
 
          /p:IgnoreMaxMonoVersion=False
@@ -129,6 +140,43 @@ Overridable MSBuild properties include:
       * `4`: Mono 4.6 support.
       * `5`: Mono 4.8 and above support. This is the default.
 
-  * `$(AndroidEnableAssemblyCompression)`: Defaults to `True`. When enabled, all the 
+  * `$(AndroidEnableAssemblyCompression)`: Defaults to `True`. When enabled, all the
      assemblies placed in the APK will be compressed in `Release` builds. `Debug`
      builds are not affected.
+
+## Options suitable for local development
+
+### Native runtime (`src/monodroid`)
+
+Note that in order for the native build settings to have full effect, one needs to make sure that
+the entire native runtime is rebuilt **and** that all `cmake` files are regenerated.  This is true
+on the very first build, but rebuilds may require forcing the entire runtime to be rebuilt.
+
+The simplest way to do it is to remove `src/monodroid/obj` and run the usual build from the
+repository's root directory.
+
+#### Disable function inlining
+
+The native runtime by default builds with function inlining enabled, making heavy use of
+the feature in order to generate faster code.  However, when debugging a native crash inlining
+causes stack traces to point to unlikely locations, reporting the outer function as the crash
+location instead of the inlined function where crash actually happened.  There are two ways to
+enable this mode of operation:
+
+  1. Export the `XA_NO_INLINE` environment variable before building either the entire repository
+     or just `src/monodroid/`
+  2. Set the MSBuild property `DoNotInlineMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`
+
+Doing either will force all normally inlined functions to be strictly preserved and kept
+separate.  The generated code will be slower, but crash stack traces should be much more precise.
+
+#### Don't strip the runtime shared libraries
+
+Similar to the previous section, this option makes crash stack traces more informative.  In normal
+builds, all the debugging information is stripped from the runtime shared libraries, thus making
+stack traces rarely point to anything more than the surrounding function name (which may sometimes
+be misleading, too).  Just as for inlining, the no-strip mode can be enabled with one of two ways:
+
+  1. Export the `XA_NO_STRIP` environment variable before building either the entire repository
+     or just `src/monodroid/`
+  2. Set the MSBuild property `DoNotStripMonodroid` to `true`, when building `src/monodroid/monodroid.csproj`

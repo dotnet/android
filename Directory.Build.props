@@ -36,7 +36,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>34.99.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.3</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>preview.4</AndroidPackVersionSuffix>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
@@ -48,7 +48,7 @@
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
-    <SystemCollectionsImmutableVersion>6.0.0</SystemCollectionsImmutableVersion>
+    <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.13.1</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>

@@ -10,6 +10,7 @@ using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks
 {
@@ -80,6 +81,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return s;
+		}
+
+		public string GetStoreMethodKey (TypeDefinitionCache tdCache)
+		{
+			MethodDefinition registeredMethod = RegisteredMethod;
+			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
+			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
 		}
 	}
 
@@ -227,7 +235,7 @@ namespace Xamarin.Android.Tasks
 		}
 
 		TypeDefinitionCache tdCache;
-		XAAssemblyResolver resolver;
+		IAssemblyResolver resolver;
 		Dictionary<string, IList<MarshalMethodEntry>> marshalMethods;
 		HashSet<AssemblyDefinition> assemblies;
 		TaskLoggingHelper log;
@@ -235,13 +243,29 @@ namespace Xamarin.Android.Tasks
 		ulong rejectedMethodCount = 0;
 		ulong wrappedMethodCount = 0;
 		StreamWriter ignoredMethodsLog;
+		readonly AndroidTargetArch targetArch;
 
 		public IDictionary<string, IList<MarshalMethodEntry>> MarshalMethods => marshalMethods;
 		public ICollection<AssemblyDefinition> Assemblies => assemblies;
 		public ulong RejectedMethodCount => rejectedMethodCount;
 		public ulong WrappedMethodCount => wrappedMethodCount;
+		public TypeDefinitionCache TypeDefinitionCache => tdCache;
 
-		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, XAAssemblyResolver res, TaskLoggingHelper log, string intermediateOutputDirectory)
+		public MarshalMethodsClassifier (AndroidTargetArch targetArch, TypeDefinitionCache tdCache, IAssemblyResolver res, string intermediateOutputDirectory, TaskLoggingHelper log)
+		{
+			this.targetArch = targetArch;
+			this.log = log ?? throw new ArgumentNullException (nameof (log));
+			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
+			resolver = res ?? throw new ArgumentNullException (nameof (tdCache));
+			marshalMethods = new Dictionary<string, IList<MarshalMethodEntry>> (StringComparer.Ordinal);
+			assemblies = new HashSet<AssemblyDefinition> ();
+			typesWithDynamicallyRegisteredMethods = new HashSet<TypeDefinition> ();
+
+			var fs = File.Open (Path.Combine (intermediateOutputDirectory, $"{targetArch}-marshal-methods-ignored.txt"), FileMode.Create);
+			ignoredMethodsLog = new StreamWriter (fs, Files.UTF8withoutBOM);
+		}
+
+		public MarshalMethodsClassifier (TypeDefinitionCache tdCache, IAssemblyResolver res, string intermediateOutputDirectory, TaskLoggingHelper log)
 		{
 			this.log = log ?? throw new ArgumentNullException (nameof (log));
 			this.tdCache = tdCache ?? throw new ArgumentNullException (nameof (tdCache));
@@ -417,6 +441,24 @@ namespace Xamarin.Android.Tasks
 			AddTypeManagerSpecialCaseMethods ();
 		}
 
+		string GetAssemblyPathInfo (FieldDefinition? field)   => GetAssemblyPathInfo (field?.DeclaringType);
+		string GetAssemblyPathInfo (MethodDefinition? method) => GetAssemblyPathInfo (method?.DeclaringType);
+		string GetAssemblyPathInfo (TypeDefinition? type)     => GetAssemblyPathInfo (type?.Module?.Assembly);
+
+		string GetAssemblyPathInfo (AssemblyDefinition? asmdef)
+		{
+			if (asmdef == null) {
+				return "[assembly definition missing]";
+			}
+
+			string? path = asmdef.MainModule.FileName;
+			if (String.IsNullOrEmpty (path)) {
+				path = "unknown";
+			}
+
+			return $"[Arch: {targetArch}; Assembly: {path}]";
+		}
+
 		bool IsDynamicallyRegistered (TypeDefinition topType, MethodDefinition registeredMethod, MethodDefinition implementedMethod, CustomAttribute registerAttribute)
 		{
 			if (registerAttribute.ConstructorArguments.Count != 3) {
@@ -430,7 +472,7 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically");
+			log.LogWarning ($"Method '{registeredMethod.FullName}' will be registered dynamically {GetAssemblyPathInfo (registeredMethod)}");
 			rejectedMethodCount++;
 			return true;
 		}
@@ -453,7 +495,7 @@ namespace Xamarin.Android.Tasks
 			if (connectorName.Length < HandlerNameStart.Length + HandlerNameEnd.Length + 1 ||
 			    !connectorName.StartsWith (HandlerNameStart, StringComparison.Ordinal) ||
 			    !connectorName.EndsWith (HandlerNameEnd, StringComparison.Ordinal)) {
-				log.LogWarning ($"\tConnector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
+				log.LogWarning ($"Connector name '{connectorName}' must start with '{HandlerNameStart}', end with '{HandlerNameEnd}' and have at least one character between the two parts.");
 				return false;
 			}
 
@@ -468,19 +510,19 @@ namespace Xamarin.Android.Tasks
 
 			MethodDefinition connectorMethod = FindMethod (connectorDeclaringType, connectorName);
 			if (connectorMethod == null) {
-				LogIgnored (topType, registeredMethod, $"\tConnector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}'");
+				LogIgnored (topType, registeredMethod, $"Connector method '{connectorName}' not found in type '{connectorDeclaringType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			if (String.Compare ("System.Delegate", connectorMethod.ReturnType.FullName, StringComparison.Ordinal) != 0) {
-				LogIgnored (topType, registeredMethod, $"\tConnector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}'");
+				LogIgnored (topType, registeredMethod, $"Connector '{connectorName}' in type '{connectorDeclaringType.FullName}' has invalid return type, expected 'System.Delegate', found '{connectorMethod.ReturnType.FullName}' {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
 			var ncbs = new NativeCallbackSignature (registeredMethod, log, tdCache);
 			MethodDefinition nativeCallbackMethod = FindMethod (connectorDeclaringType, nativeCallbackName, ncbs);
 			if (nativeCallbackMethod == null) {
-				LogIgnored (topType, registeredMethod, $"\tUnable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}')");
+				LogIgnored (topType, registeredMethod, $"Unable to find native callback method '{nativeCallbackName}' in type '{connectorDeclaringType.FullName}', matching the '{registeredMethod.FullName}' signature (jniName: '{jniName}') {GetAssemblyPathInfo (connectorDeclaringType)}");
 				return false;
 			}
 
@@ -493,7 +535,7 @@ namespace Xamarin.Android.Tasks
 			FieldDefinition delegateField = FindField (nativeCallbackMethod.DeclaringType, delegateFieldName);
 			if (delegateField != null) {
 				if (String.Compare ("System.Delegate", delegateField.FieldType.FullName, StringComparison.Ordinal) != 0) {
-					LogIgnored (topType, registeredMethod, $"\tdelegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}'");
+					LogIgnored (topType, registeredMethod, $"delegate field '{delegateFieldName}' in type '{nativeCallbackMethod.DeclaringType.FullName}' has invalid type, expected 'System.Delegate', found '{delegateField.FieldType.FullName}' {GetAssemblyPathInfo (delegateField)}");
 					return false;
 				}
 			}
@@ -712,16 +754,9 @@ namespace Xamarin.Android.Tasks
 			return FindField (tdCache.Resolve (type.BaseType), fieldName, lookForInherited);
 		}
 
-		public string GetStoreMethodKey (MarshalMethodEntry methodEntry)
-		{
-			MethodDefinition registeredMethod = methodEntry.RegisteredMethod;
-			string typeName = registeredMethod.DeclaringType.FullName.Replace ('/', '+');
-			return $"{typeName}, {registeredMethod.DeclaringType.GetPartialAssemblyName (tdCache)}\t{registeredMethod.Name}";
-		}
-
 		void StoreMethod (MarshalMethodEntry entry)
 		{
-			string key = GetStoreMethodKey (entry);
+			string key = entry.GetStoreMethodKey (tdCache);
 
 			// Several classes can override the same method, we need to generate the marshal method only once, at the same time
 			// keeping track of overloads

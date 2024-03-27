@@ -42,11 +42,15 @@ namespace Xamarin.Android.Build.Tests
 		public void MarshalMethodsDefaultEnabledStatus (bool isRelease, bool marshalMethodsEnabled)
 		{
 			var abis = new [] { "armeabi-v7a", "x86" };
+			AndroidTargetArch[] supportedArches = new [] {
+				AndroidTargetArch.Arm,
+				AndroidTargetArch.X86,
+			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease
 			};
 			proj.SetProperty (KnownProperties.AndroidEnableMarshalMethods, marshalMethodsEnabled.ToString ());
-			proj.SetAndroidSupportedAbis (abis);
+			proj.SetRuntimeIdentifiers (abis);
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
@@ -57,7 +61,11 @@ namespace Xamarin.Android.Build.Tests
 				);
 
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
+				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
+					objPath,
+					String.Join (";", supportedArches.Select (arch => MonoAndroidHelper.ArchToAbi (arch))),
+					true
+				);
 				EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
 
 				Assert.That (app_config, Is.Not.Null, "application_config must be present in the environment files");
@@ -232,6 +240,10 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
+			// Enable full trimming
+			if (!xamarinForms && isRelease) {
+				proj.TrimModeRelease = TrimMode.Full;
+			}
 			if (multidex) {
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			}
@@ -988,14 +1000,14 @@ namespace UnamedProject
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
 				Encoding = Encoding.ASCII,
 				Metadata = { { "Bind", "False "}},
 			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
 				TextContent = () => "public class ManyMethods2 { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
@@ -1052,8 +1064,8 @@ namespace UnamedProject
 				}
 
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
-				while (proj.OtherBuildItems.Count > 1)
-					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+				while (proj.AndroidJavaSources.Count > 1)
+					proj.AndroidJavaSources.RemoveAt (proj.AndroidJavaSources.Count - 1);
 				proj.SetProperty ("AndroidEnableMultiDex", "False");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
@@ -1172,8 +1184,12 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1183,11 +1199,22 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
+
 				Assert.IsTrue (b.Build (proj), "second build failed");
-				Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android/assets/UnnamedProject.pdb")),
-					"UnnamedProject.pdb must be copied to the Intermediate directory");
+
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+
+					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
+					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
+				}
 			}
 		}
 
@@ -1240,33 +1267,83 @@ namespace App1
 					Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
 					var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 					var outputPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
-					var assetsPdb = Path.Combine (intermediate, "android", "assets", "Library1.pdb");
-					var binSrc = Path.Combine (outputPath, "Library1.pdb");
+
+					const string LibraryBaseName = "Library1";
+					const string AppBaseName = "App1";
+					const string LibraryPdbName = LibraryBaseName + ".pdb";
+					const string LibraryDllName = LibraryBaseName + ".dll";
+					const string AppPdbName = AppBaseName + ".pdb";
+					const string AppDllName = AppBaseName + ".dll";
+
+					string libraryPdbBinSrc = Path.Combine (outputPath, LibraryPdbName);
+					string appPdbBinSrc = Path.Combine (outputPath, AppPdbName);
+
 					Assert.IsTrue (
-						File.Exists (Path.Combine (intermediate, "android", "assets", "Mono.Android.pdb")),
-						"Mono.Android.pdb must be copied to Intermediate directory");
+						File.Exists (libraryPdbBinSrc),
+						$"{LibraryPdbName} must be copied to bin directory");
+
 					Assert.IsTrue (
-						File.Exists (assetsPdb),
-						"Library1.pdb must be copied to Intermediate directory");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"Library1.pdb must be copied to bin directory");
-					using (var apk = ZipHelper.OpenZip (Path.Combine (outputPath, proj.PackageName + "-Signed.apk"))) {
-						var data = ZipHelper.ReadFileFromZip (apk, "assemblies/Library1.pdb");
-						if (data == null)
-							data = File.ReadAllBytes (assetsPdb);
-						var filedata = File.ReadAllBytes (binSrc);
-						Assert.AreEqual (filedata.Length, data.Length, "Library1.pdb in the apk should match {0}", binSrc);
+						File.Exists (appPdbBinSrc),
+						$"{AppPdbName} must be copied to bin directory");
+
+					var fileNames = new List<(string path, bool existsInBin)> {
+						("Mono.Android.pdb", false),
+						(AppPdbName,         true),
+						(LibraryPdbName,     true),
+						(AppDllName,         true),
+						(LibraryDllName,     true),
+					};
+
+					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
+					foreach (string abi in b.GetBuildAbis ()) {
+						foreach ((string fileName, bool existsInBin) in fileNames) {
+							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));
+						}
 					}
-					var androidAssets = Path.Combine (intermediate, "android", "assets", "App1.pdb");
-					binSrc = Path.Combine (outputPath, "App1.pdb");
-					Assert.IsTrue (
-						File.Exists (binSrc),
-						"App1.pdb must be copied to bin directory");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should not differ.", binSrc, androidAssets);
-					androidAssets = Path.Combine (intermediate, "android", "assets", "App1.dll");
-					binSrc = Path.Combine (outputPath, "App1.dll");
-					FileAssert.AreEqual (binSrc, androidAssets, "{0} and {1} should match.", binSrc, androidAssets);
+				}
+			}
+
+			void EnsureFilesAreTheSame (string intermediatePath, string? binPath, string fileName, string abi, ArchiveAssemblyHelper helper, bool uncompressIfNecessary)
+			{
+				string assetsFilePath = Path.Combine (intermediatePath, "android", "assets", abi, fileName);
+				Assert.IsTrue (File.Exists (assetsFilePath), $"'{fileName}' must be copied to Intermediate directory for ABI {abi}");
+
+				using var assetsFileStream = File.OpenRead (assetsFilePath);
+				string apkEntryPath = MonoAndroidHelper.MakeZipArchivePath ("assemblies", abi, fileName);
+				using Stream? apkEntryStream = helper.ReadEntry (apkEntryPath, MonoAndroidHelper.AbiToTargetArch (abi), uncompressIfNecessary);
+
+				if (apkEntryStream != null) { // FastDev won't put assemblies in the APK
+					FileAssert.AreEqual (apkEntryStream, assetsFileStream, $"'{apkEntryPath}' and '{assetsFilePath}' should not differ");
+				}
+
+				if (String.IsNullOrEmpty (binPath)) {
+					return;
+				}
+
+				// This is a bit fragile. We don't know which RID the `bin/` files were copied from, so we'll do our best to compare
+				// oranges to oranges by looking at file sizes before attempting the compare.  This is a very weak predicate, because
+				// the files may differ in e.g. the MVID and still have the same size.  The real fix for this is to have per-rid `bin/`
+				// subdirectories.
+				string binFilePath = Path.Combine (binPath, fileName);
+				Assert.IsTrue (File.Exists (binFilePath), $"'{fileName}' must be copied to the Output directory");
+
+				var assetsInfo = new FileInfo (assetsFilePath);
+				var binInfo = new FileInfo (binFilePath);
+
+				if (assetsInfo.Length != binInfo.Length) {
+					Assert.Warn ($"Ignoring comparison of '{binFilePath}' with '{assetsFilePath}' because their sizes differ");
+					return;
+				}
+
+				using var binFileStream = File.OpenRead (binFilePath);
+				assetsFileStream.Seek (0, SeekOrigin.Begin);
+				FileAssert.AreEqual (assetsFileStream, binFileStream, $"'{assetsFilePath}' and '{binFilePath}' should not differ");
+
+				if (apkEntryStream != null) {
+					binFileStream.Seek (0, SeekOrigin.Begin);
+					apkEntryStream.Seek (0, SeekOrigin.Begin);
+					FileAssert.AreEqual (apkEntryStream, binFileStream,  $"'{apkEntryPath}' and '{binFilePath}' should not differ");
 				}
 			}
 		}

@@ -14,6 +14,30 @@ ms.date: 07/26/2022
 Build items control how a Xamarin.Android application
 or library project is built.
 
+## AndroidAdditionalJavaManifest
+
+`<AndroidAdditionalJavaManifest>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify additional POM files that will be needed to verify dependencies.
+These are often parent or imported POM files referenced by a Java library's POM file.
+
+```xml
+<ItemGroup>
+  <AndroidAdditionalJavaManifest Include="mylib-parent.pom" JavaArtifact="com.example:mylib-parent" JavaVersion="1.0.0" />
+</ItemGroup>
+```
+
+The following MSBuild metadata are required:
+
+- `%(JavaArtifact)`: The group and artifact id of the Java library matching the specifed POM
+  file in the form `{GroupId}:{ArtifactId}`.
+- `%(JavaVersion)`: The version of the Java library matching the specified POM file.
+  
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
+
 ## AndroidAsset
 
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
@@ -114,6 +138,30 @@ files).
 Files with a Build action of `AndroidJavaLibrary` are Java
 Archives ( `.jar` files) that will be included in the final Android
 package.
+
+## AndroidIgnoredJavaDependency
+
+`<AndroidIgnoredJavaDependency>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify a Java dependency that should be ignored. This can be
+used if a dependency will be fulfilled in a way that Java dependency resolution
+cannot detect.
+
+```xml
+<!-- Include format is {GroupId}:{ArtifactId} -->
+<ItemGroup>
+  <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations" Version="2.15.0" />
+</ItemGroup>
+```
+
+The following MSBuild metadata are required:
+
+- `%(Version)`: The version of the Java library matching the specified `%(Include)`.
+
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
 
 ## AndroidJavaSource
 
@@ -218,6 +266,17 @@ hosted in Maven.
   <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp" Version="4.9.3" />
 </ItemGroup>
 ```
+
+The following MSBuild metadata are supported:
+
+- `%(Version)`: Required version of the Java library referenced by `%(Include)`.
+- `%(Repository)`: Optional Maven repository to use. Supported values are `Central` (default),
+   `Google`, or an `https` URL to a Maven repository.
+
+The `<AndroidMavenLibrary>` item is translated to an 
+[`<AndroidLibrary>`](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/building-apps/build-items.md#androidlibrary) 
+item, so any metadata supported by `<AndroidLibrary>` like `Bind` or `Pack` are also supported.
+
 See the [AndroidMavenLibrary documentation](../AndroidMavenLibrary.md)
 for more details.
 

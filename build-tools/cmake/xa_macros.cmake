@@ -203,7 +203,6 @@ function(xa_common_prepare)
     -fno-function-sections
     -fno-data-sections
     -funswitch-loops
-    -finline-limit=300
     -Wa,-noexecstack
     -fPIC
     -g

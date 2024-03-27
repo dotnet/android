@@ -102,6 +102,14 @@ add_compile_definitions(MONO_DLL_EXPORT)
 add_compile_definitions(NET)
 add_compile_definitions(JI_NO_VISIBILITY)
 
+if(DONT_INLINE)
+  add_compile_definitions(NO_INLINE)
+endif()
+
+if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
+  add_compile_definitions(DEBUG)
+endif()
+
 if (ENABLE_TIMING)
   add_compile_definitions(MONODROID_TIMING)
 endif()
@@ -203,6 +211,13 @@ endif()
 
 if(STRIP_DEBUG)
   list(APPEND LOCAL_COMMON_LINKER_ARGS LINKER:-S)
+else()
+  # When not stripping symbols, we likely want to have precise stack traces, so
+  # we won't omit frame pointers
+  list(APPEND LOCAL_COMMON_COMPILER_ARGS
+    -fno-omit-frame-pointer
+    -fno-limit-debug-info
+  )
 endif()
 
 # Parameters to both functions are (all required):

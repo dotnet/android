@@ -33,6 +33,11 @@ do_abort_unless (const char* fmt, ...)
 #define abort_if_invalid_pointer_argument(_ptr_) abort_unless ((_ptr_) != nullptr, "Parameter '%s' must be a valid pointer", #_ptr_)
 #define abort_if_negative_integer_argument(_arg_) abort_unless ((_arg_) > 0, "Parameter '%s' must be larger than 0", #_arg_)
 
+// Helpers to use in "printf debugging". Normally not used in code anywhere. No code should be shipped with any
+// of the macros present.
+#define PD_LOG_LOCATION() log_info_nocheck (LOG_DEFAULT, "loc: %s:%d (%s)", __FILE__, __LINE__, __FUNCTION__)
+#define PD_LOG_FUNCTION() log_info_nocheck (LOG_DEFAULT, "%s [%s:%d]", __PRETTY_FUNCTION__, __FILE__, __LINE__)
+
 namespace xamarin::android
 {
 	template <typename T>

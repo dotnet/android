@@ -120,11 +120,14 @@ _ResolveAssemblies MSBuild target.
       <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />
       <_ResolvedJavaLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.jar' " />
     </ItemGroup>
+
+    <!-- All assemblies must be per-RID, thus no `->Distinct()` on `InputAssemblies` or `ResolvedSymbols` items -->
     <ProcessAssemblies
         RuntimeIdentifiers="@(_RIDs)"
-        InputAssemblies="@(_ResolvedAssemblyFiles->Distinct())"
+        DesignTimeBuild="$(DesignTimeBuild)"
+        InputAssemblies="@(_ResolvedAssemblyFiles)"
         InputJavaLibraries="@(_ResolvedJavaLibraries->Distinct())"
-        ResolvedSymbols="@(_ResolvedSymbolFiles->Distinct())"
+        ResolvedSymbols="@(_ResolvedSymbolFiles)"
         AndroidIncludeDebugSymbols="$(AndroidIncludeDebugSymbols)"
         PublishTrimmed="$(PublishTrimmed)">
       <Output TaskParameter="OutputAssemblies" ItemName="_ProcessedAssemblies" />

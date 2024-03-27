@@ -21,7 +21,9 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <_AndroidIntermediateBindingClassesZip>$(IntermediateOutputPath)binding\bin\$(MSBuildProjectName).jar</_AndroidIntermediateBindingClassesZip>
     <_AndroidIntermediateBindingClassesDocs>$(IntermediateOutputPath)binding\bin\$(MSBuildProjectName)-docs.xml</_AndroidIntermediateBindingClassesDocs>
     <_AndroidCompileJavaStampFile>$(_AndroidStampDirectory)_CompileJava.stamp</_AndroidCompileJavaStampFile>
+    <_AndroidCompileJavaFileList>$(IntermediateOutputPath)_CompileJava.FileList.txt</_AndroidCompileJavaFileList>
     <_AndroidCompileBindingJavaStampFile>$(_AndroidStampDirectory)_CompileBindingJava.stamp</_AndroidCompileBindingJavaStampFile>
+    <_AndroidCompileBindingJavaFileList>$(IntermediateOutputPath)_CompileBindingJava.FileList.txt</_AndroidCompileBindingJavaFileList>
   </PropertyGroup>
 
   <Target Name="_AdjustJavacVersionArguments">
@@ -74,18 +76,36 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
     <ItemGroup>
       <_JavaBindingSource Include="@(AndroidJavaSource)" Condition=" '%(AndroidJavaSource.Bind)' == 'True' " />
     </ItemGroup>
+    <WriteLinesToFile
+        File="$(_AndroidCompileBindingJavaFileList)"
+        Lines="@(_JavaBindingSource->ToLowerInvariant())"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidCompileBindingJavaFileList)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CollectJavaSource">
     <ItemGroup>
       <_JavaSource Include="@(AndroidJavaSource)" Condition=" '%(AndroidJavaSource.Bind)' != 'True' " />
     </ItemGroup>
+   <WriteLinesToFile
+        File="$(_AndroidCompileJavaFileList)"
+        Lines="@(_JavaSource->ToLowerInvariant())"
+        Overwrite="true"
+        WriteOnlyWhenDifferent="true"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidCompileJavaFileList)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CompileBindingJava"
       Condition=" '@(_JavaBindingSource->Count())' != '0' "
       DependsOnTargets="$(_CompileBindingJavaDependsOnTargets)"
-      Inputs="@(_AndroidMSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaBindingSource)"
+      Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileBindingJavaFileList);$(MonoPlatformJarPath);@(_JavaBindingSource)"
       Outputs="$(_AndroidCompileBindingJavaStampFile)">
 
     <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
@@ -132,7 +152,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
 
   <Target Name="_CompileJava"
     DependsOnTargets="$(_CompileJavaDependsOnTargets);_CollectJavaSource"
-    Inputs="@(_AndroidMSBuildAllProjects);$(MonoPlatformJarPath);@(_JavaStubFiles);@(_JavaSource)"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_AndroidCompileJavaFileList);$(MonoPlatformJarPath);@(_JavaStubFiles);@(_JavaSource)"
     Outputs="$(_AndroidCompileJavaStampFile)">
 
     <!-- remove existing <Javac /> outputs, since *.class files and classes.zip could contain old files -->
