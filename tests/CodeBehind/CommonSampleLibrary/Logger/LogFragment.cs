@@ -19,14 +19,21 @@ using Android.OS;
 using Android.Views;
 using Android.Widget;
 using Android.Graphics;
+using Android.Util;
 
 namespace CommonSampleLibrary
 {
+	#pragma warning disable CA1422
 	/**
 	* Simple fraggment which contains a LogView and uses is to output log data it receives
 	* through the LogNode interface.
 	*/
-	public class LogFragment : Fragment
+	public class LogFragment : 
+#if __HAVE_ANDROIDX__
+	AndroidX.Fragment.App.Fragment
+#else
+	Fragment
+#endif
 	{
 		LogView mLogView;
 		ScrollView mScrollView;
@@ -60,7 +67,7 @@ namespace CommonSampleLibrary
 
 			mLogView.Gravity = GravityFlags.Bottom;
 			mLogView.SetTextAppearance (Activity, Android.Resource.Style.TextAppearanceMedium);
-
+			
 			mScrollView.AddView (mLogView);
 			return mScrollView;
 		}
@@ -77,5 +84,6 @@ namespace CommonSampleLibrary
 			get { return mLogView; }
 		}
 	}
+	#pragma warning restore CA1422
 }
 

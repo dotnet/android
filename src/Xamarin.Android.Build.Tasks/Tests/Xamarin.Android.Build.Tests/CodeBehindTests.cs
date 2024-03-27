@@ -339,6 +339,7 @@ namespace Xamarin.Android.Build.Tests
 
 			CopyLogs (testInfo, true);
 			Assert.That (success, Is.True, "Build should have succeeded");
+			Assert.IsTrue (StringAssertEx.ContainsText (builder.LastBuildOutput, " 0 Warning(s)"), $"{builder.BuildLogFile} should have no MSBuild warnings.");
 
 			CopyGeneratedFiles (testInfo);
 
@@ -508,7 +509,8 @@ namespace Xamarin.Android.Build.Tests
 		string[] GetBuildProperties (LocalBuilder builder, bool manyBuild, bool dtbBuild, bool referenceAndroidX, params string[] extraConstants)
 		{
 			var ret = new List <string> {
-				"AndroidGenerateLayoutBindings=true"
+				"AndroidGenerateLayoutBindings=true",
+				"\"NoWarn=CS0414;CA1416;CS1591;XA1005;XA4225\""
 			};
 			if (manyBuild)
 				ret.Add ("ForceParallelBuild=true");

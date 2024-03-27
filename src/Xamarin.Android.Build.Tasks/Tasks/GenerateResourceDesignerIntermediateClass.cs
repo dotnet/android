@@ -24,6 +24,10 @@ using System;
 
 namespace %NAMESPACE% {
 	#pragma warning disable IDE0002
+	/// <summary>
+	/// Android Resource Designer class.
+	/// Exposes the Android Resource designer assembly into the project Namespace.
+	/// </summary>
 	public partial class Resource : %BASECLASS% {
 	}
 	#pragma warning restore IDE0002
