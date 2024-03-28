@@ -46,7 +46,7 @@ namespace Xamarin.Android.Build.Tests
 			if (template.Contains ("lib")) {
 				dotnet.AssertHasNoWarnings ();
 			} else {
-				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 1 Warning(s)"), $"{dotnet.BuildLogFile} should have 1 MSBuild warning.");
+				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 4 Warning(s)"), $"{dotnet.BuildLogFile} should have 4 MSBuild warnings.");
 			}
 		}
 
