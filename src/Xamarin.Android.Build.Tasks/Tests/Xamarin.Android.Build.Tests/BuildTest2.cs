@@ -261,7 +261,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				// FIXME: https://github.com/dotnet/runtime/issues/100256
-				if (isRelease) {
+				if (proj.TrimModeRelease == TrimMode.Full) {
 					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 1 Warning(s)"), $"{b.BuildLogFile} should have 1 MSBuild warning.");
 				} else {
 					b.AssertHasNoWarnings ();
