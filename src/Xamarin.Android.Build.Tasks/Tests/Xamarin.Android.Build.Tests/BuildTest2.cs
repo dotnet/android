@@ -1149,14 +1149,14 @@ namespace UnamedProject
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
 				Encoding = Encoding.ASCII,
 				Metadata = { { "Bind", "False "}},
 			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
 				TextContent = () => "public class ManyMethods2 { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
@@ -1229,8 +1229,8 @@ namespace UnamedProject
 				}
 
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
-				while (proj.OtherBuildItems.Count > 1)
-					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+				while (proj.AndroidJavaSources.Count > 1)
+					proj.AndroidJavaSources.RemoveAt (proj.AndroidJavaSources.Count - 1);
 				proj.SetProperty ("AndroidEnableMultiDex", "False");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
