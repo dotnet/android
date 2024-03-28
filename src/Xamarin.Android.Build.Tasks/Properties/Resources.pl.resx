@@ -968,7 +968,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     </comment>
   </data>
   <data name="XA4234" xml:space="preserve">
-    <value>'&lt;{0}&gt;' item '{1}' is missing required attribute '{2}'.</value>
+    <value>W elemencie „&lt;{0}&gt;” „{1}” brakuje wymaganego atrybutu „{2}”.</value>
     <comment>{0} - The MSBuild ItemGroup Item name
 {1} - The MSBuild Item ItemSpec
 {2} - The omitted MSBuild Item metadata attribute</comment>
@@ -991,8 +991,8 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {5} - The HttpClient provided download exception message</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
-    <value>Cannot download POM file for Maven artifact '{0}'.
-- {1}</value>
+    <value>Nie można pobrać pliku POM dla artefaktu Maven „{0}”.
+— {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
 {0} - Maven artifact id
 {1} - The HttpClient reported download exception message
@@ -1014,47 +1014,47 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
-    <value>Java dependency '{0}' is not satisfied.</value>
+    <value>Zależność Java „{0}” nie jest spełniona.</value>
     <comment>The following are literal names and should not be translated: Java.
 {0} - Maven dependency id</comment>
   </data>
   <data name="XA4242" xml:space="preserve">
-    <value>Java dependency '{0}' is not satisfied. Microsoft maintains the NuGet package '{1}' that could fulfill this dependency.</value>
+    <value>Zależność Java „{0}” nie jest spełniona. Firma Microsoft utrzymuje pakiet NuGet „{1}”, który może spełnić tę zależność.</value>
     <comment>The following are literal names and should not be translated: Java, Microsoft, NuGet.
 {0} - Maven dependency id
 {1} - NuGet package id</comment>
   </data>
   <data name="XA4243" xml:space="preserve">
-    <value>Attribute '{0}' is required when using '{1}' for '{2}' item '{3}'.</value>
+    <value>Atrybut „{0}” jest wymagany w przypadku używania elementu „{1}” dla elementu „{2}” „{3}”.</value>
     <comment>{0}, {1} - MSBuild XML attribute
 {2} - MSBuild XML element name
 {3} - MSBuild ItemSpec value</comment>
   </data>
   <data name="XA4244" xml:space="preserve">
-    <value>Attribute '{0}' cannot be empty for '{1}' item '{2}'.</value>
+    <value>Atrybut „{0}” nie może być pusty dla elementu „{1}” „{2}”.</value>
     <comment>{0} - MSBuild XML attribute
 {1} - MSBuild XML element name
 {2} - MSBuild ItemSpec value</comment>
   </data>
   <data name="XA4245" xml:space="preserve">
-    <value>Specified POM file '{0}' does not exist.</value>
+    <value>Określony plik POM „{0}” nie istnieje.</value>
     <comment>The following are literal names and should not be translated: POM.
 {0} - File path to POM file</comment>
   </data>
   <data name="XA4246" xml:space="preserve">
-    <value>Could not parse POM file '{0}'.
-- {1}</value>
+    <value>Nie można przeanalizować pliku POM „{0}”.
+— {1}</value>
     <comment>The following are literal names and should not be translated: POM.
 {0} - File path to POM file
 {1} - Exception message</comment>
   </data>
   <data name="XA4247" xml:space="preserve">
-    <value>Could not resolve POM file for artifact '{0}'.</value>
+    <value>Nie można rozpoznać pliku POM dla artefaktu „{0}”.</value>
     <comment>The following are literal names and should not be translated: POM.
 {0} - Java artifact id</comment>
   </data>
   <data name="XA4248" xml:space="preserve">
-    <value>Could not find NuGet package '{0}' version '{1}' in lock file. Ensure NuGet Restore has run since this &lt;PackageReference&gt; was added.</value>
+    <value>Nie można odnaleźć wersji „{1}” pakietu NuGet „{0}” w pliku blokady. Upewnij się, że narzędzie NuGet Restore zostało uruchomione od czasu dodania tego pakietu &lt;PackageReference&gt;.</value>
     <comment>The following are literal names and should not be translated: NuGet, PackageReference.
 {0} - NuGet package id
 {1} - NuGet package version</comment>
