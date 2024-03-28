@@ -257,9 +257,15 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.AssertHasNoWarnings ();
+				// FIXME: https://github.com/dotnet/runtime/issues/100256
+				if (!xamarinForms && isRelease) {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 4 Warning(s)"), $"{b.BuildLogFile} should have 4 MSBuild warnings.");
+				} else {
+					b.AssertHasNoWarnings ();
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
