@@ -43,8 +43,11 @@ namespace Xamarin.Android.Build.Tests
 			// Release build
 			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
 			// FIXME: https://github.com/dotnet/runtime/issues/100256
-			//dotnet.AssertHasNoWarnings ();
-			Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 1 Warning(s)"), $"{dotnet.BuildLogFile} should have 1 MSBuild warning.");
+			if (template.Contains ("lib")) {
+				dotnet.AssertHasNoWarnings ();
+			} else {
+				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 1 Warning(s)"), $"{dotnet.BuildLogFile} should have 1 MSBuild warning.");
+			}
 		}
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
