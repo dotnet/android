@@ -5,4 +5,10 @@
     <AssemblyName>CommonSampleLibrary</AssemblyName>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
+  <PropertyGroup>
+    <DefineConstants Condition=" '$(ExtraConstants)' != '' ">$(DefineConstants);$(ExtraConstants)</DefineConstants>
+  </PropertyGroup>
+  <ItemGroup Condition=" '$(ReferenceAndroidX)' == 'True' ">
+    <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.6.1.5" />
+  </ItemGroup>
 </Project>
