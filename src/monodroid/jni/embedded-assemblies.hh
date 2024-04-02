@@ -7,8 +7,10 @@
 #include <cstring>
 #include <limits>
 #include <string_view>
+#include <tuple>
 #include <vector>
 
+#include <dirent.h>
 #include <semaphore.h>
 
 #include <mono/metadata/object.h>
@@ -58,8 +60,8 @@ namespace xamarin::android::internal {
 
 		struct ZipEntryLoadState
 		{
-			int                   apk_fd;
-			const char * const    apk_name;
+			int                   file_fd;
+			const char *          file_name;
 			const char * const    prefix;
 			uint32_t              prefix_len;
 			size_t                buf_offset;
@@ -67,6 +69,9 @@ namespace xamarin::android::internal {
 			uint32_t              local_header_offset;
 			uint32_t              data_offset;
 			uint32_t              file_size;
+			bool                  bundled_assemblies_slow_path;
+			uint32_t              max_assembly_name_size;
+			uint32_t              max_assembly_file_name_size;
 		};
 
 	private:
@@ -76,17 +81,26 @@ namespace xamarin::android::internal {
 		static constexpr off_t ZIP_EOCD_LEN        = 22;
 		static constexpr off_t ZIP_CENTRAL_LEN     = 46;
 		static constexpr off_t ZIP_LOCAL_LEN       = 30;
-		static constexpr std::string_view assemblies_prefix { "assemblies/" };
+
 		static constexpr std::string_view zip_path_separator { "/" };
-		static constexpr std::string_view dot { "." };
-		static constexpr std::string_view assembly_store_prefix { "assemblies" };
+		static constexpr std::string_view apk_lib_dir_name { "lib" };
+		static constexpr size_t assemblies_prefix_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr auto assemblies_prefix = concat_string_views<assemblies_prefix_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+
+		// We have two records for each assembly, for names with and without the extension
+		static constexpr uint32_t assembly_store_index_entries_per_assembly = 2;
+		static constexpr uint32_t number_of_assembly_store_files = 1;
+		static constexpr std::string_view dso_suffix { ".so" };
+
+		static constexpr auto apk_lib_prefix = assemblies_prefix; // concat_const (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator);
+		static constexpr std::string_view assembly_store_prefix { "libassemblies." };
 		static constexpr std::string_view assembly_store_extension { ".blob" };
 
-		static constexpr size_t assembly_store_common_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, assembly_store_extension);
-		static constexpr auto assembly_store_common_file_name = concat_string_views<assembly_store_common_file_name_size> (zip_path_separator, assembly_store_prefix, assembly_store_extension);
+		static constexpr size_t assembly_store_file_name_size = calc_size (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr auto assembly_store_file_name = concat_string_views<assembly_store_file_name_size> (assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 
-		static constexpr size_t assembly_store_arch_file_name_size = calc_size (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
-		static constexpr auto assembly_store_arch_file_name = concat_string_views<assembly_store_arch_file_name_size> (zip_path_separator, assembly_store_prefix, dot, SharedConstants::android_abi, assembly_store_extension);
+		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr auto assembly_store_file_path = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 
 	public:
 		/* filename is e.g. System.dll, System.dll.mdb, System.pdb */
@@ -109,10 +123,22 @@ namespace xamarin::android::internal {
 
 		/* returns current number of *all* assemblies found from all invocations */
 		template<bool (*should_register_fn)(const char*)>
-		size_t register_from (const char *apk_file)
+		size_t register_from_apk (const char *apk_file) noexcept
 		{
 			static_assert (should_register_fn != nullptr, "should_register_fn is a required template parameter");
-			return register_from (apk_file, should_register_fn);
+			return register_from_apk (apk_file, should_register_fn);
+		}
+
+		template<bool (*should_register_fn)(const char*)>
+		size_t register_from_filesystem () noexcept
+		{
+			static_assert (should_register_fn != nullptr, "should_register_fn is a required template parameter");
+			return register_from_filesystem (should_register_fn);
+		}
+
+		static constexpr decltype(assemblies_prefix) const& get_assemblies_prefix () noexcept
+		{
+			return assemblies_prefix;
 		}
 
 		bool get_register_debug_symbols () const
@@ -151,13 +177,20 @@ namespace xamarin::android::internal {
 				return;
 			}
 
-			abort_unless (index_assembly_store_header != nullptr && assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
+			abort_unless (assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
 		}
 
 	private:
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoType *type, MonoClass *klass, const uint8_t *mvid) noexcept;
 		STATIC_IN_ANDROID_RELEASE MonoReflectionType* typemap_java_to_managed (hash_t hash, const MonoString *java_type_name) noexcept;
-		size_t register_from (const char *apk_file, monodroid_should_register should_register);
+		size_t register_from_apk (const char *apk_file, monodroid_should_register should_register) noexcept;
+		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
+		size_t register_from_filesystem (const char *dir, bool look_for_mangled_names, monodroid_should_register should_register) noexcept;
+
+		template<bool MangledNamesMode>
+		bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
+		bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
+
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
 
 		template<LoaderData TLoaderData>
@@ -229,31 +262,30 @@ namespace xamarin::android::internal {
 
 		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
-		const char* get_assemblies_prefix () const
+		std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () const noexcept
 		{
-			return assemblies_prefix_override != nullptr ? assemblies_prefix_override : assemblies_prefix.data ();
-		}
+			if (assemblies_prefix_override != nullptr) {
+				return { assemblies_prefix_override, static_cast<uint32_t>(strlen (assemblies_prefix_override)) };
+			}
 
-		uint32_t get_assemblies_prefix_length () const noexcept
-		{
-			return assemblies_prefix_override != nullptr ? static_cast<uint32_t>(strlen (assemblies_prefix_override)) : assemblies_prefix.length ();
+			if (application_config.have_assembly_store) {
+				return { apk_lib_prefix.data (), apk_lib_prefix.size () - 1 };
+			}
+
+			return {assemblies_prefix.data (), assemblies_prefix.size () - 1};
 		}
 
 		bool all_required_zip_entries_found () const noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == application_config.number_of_assembly_store_files &&
-				((application_config.have_runtime_config_blob && runtime_config_blob_found) ||
-				 !application_config.have_runtime_config_blob)
-				;
+				number_of_mapped_assembly_stores == number_of_assembly_store_files && number_of_zip_dso_entries >= application_config.number_of_shared_libraries
+				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
 		}
 
-		static force_inline c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
+		force_inline static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
 		{
 			return c_unique_ptr<char> (mono_string_to_utf8 (const_cast<MonoString*>(s)));
 		}
-
-		bool is_debug_file (dynamic_local_string<SENSIBLE_PATH_MAX> const& name) noexcept;
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
 		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
@@ -265,13 +297,75 @@ namespace xamarin::android::internal {
 		static const TypeMapModuleEntry* binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept;
 #endif
 		template<bool NeedsNameAlloc>
-		void set_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, int apk_fd, uint32_t data_offset, uint32_t data_size, uint32_t prefix_len, uint32_t max_name_size, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
+		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
-		const AssemblyStoreHashEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreHashEntry *entries, size_t entry_count) noexcept;
+		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
+		void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
+
+		constexpr size_t get_mangled_name_max_size_overhead ()
+		{
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT.size() +
+				   std::max (SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size(), SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size()) +
+				   1; // For the extra `-` char in the culture portion of satellite assembly's name
+		}
+
+		void configure_state_for_individual_assembly_load (ZipEntryLoadState& state) noexcept
+		{
+			state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
+			state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
+
+			// Enough room for the mangle character at the start, plus the extra extension
+			state.max_assembly_file_name_size = static_cast<uint32_t>(state.max_assembly_name_size + get_mangled_name_max_size_overhead ());
+		}
+
+		template<bool IsSatelliteAssembly>
+		static constexpr size_t get_mangled_prefix_length ()
+		{
+			if constexpr (IsSatelliteAssembly) {
+				// +1 for the extra `-` char in the culture portion of satellite assembly's name;
+				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.length () + 1;
+			} else {
+				return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.length ();
+			}
+		}
+
+		template<bool IsSatelliteAssembly>
+		static constexpr size_t get_mangled_data_size ()
+		{
+			return SharedConstants::MANGLED_ASSEMBLY_NAME_EXT.length () + get_mangled_prefix_length<IsSatelliteAssembly> ();
+		}
+
+		template<bool IsSatelliteAssembly>
+		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0) noexcept
+		{
+			constexpr size_t mangled_data_size = get_mangled_data_size<IsSatelliteAssembly> ();
+			if (name.length () <= mangled_data_size) {
+				// Nothing to do, the name is too short
+				return;
+			}
+
+			size_t new_size = name.length () - mangled_data_size;
+			memmove (name.get () + start_idx, name.get () + start_idx + get_mangled_prefix_length<IsSatelliteAssembly> (), new_size);
+			name.set_length (new_size);
+
+			if constexpr (IsSatelliteAssembly) {
+				// Make sure assembly name is {CULTURE}/assembly.dll
+				for (size_t idx = start_idx; idx < name.length (); idx++) {
+					if (name[idx] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
+						name[idx] = '/';
+						break;
+					}
+				}
+			}
+			log_debug (LOG_ASSEMBLY, "Unmangled name to '%s'", name.get ());
+		};
 
 	private:
+		static inline constexpr bool UnmangleSatelliteAssembly = true;
+		static inline constexpr bool UnmangleRegularAssembly = false;
+
 		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
 		std::vector<XamarinAndroidBundledAssembly> *extra_bundled_assemblies = nullptr;
 
@@ -291,10 +385,10 @@ namespace xamarin::android::internal {
 		md_mmap_info           runtime_config_blob_mmap{};
 		bool                   runtime_config_blob_found = false;
 		uint32_t               number_of_mapped_assembly_stores = 0;
+		uint32_t               number_of_zip_dso_entries = 0;
 		bool                   need_to_scan_more_apks = true;
 
-		AssemblyStoreHeader *index_assembly_store_header = nullptr;
-		AssemblyStoreHashEntry             *assembly_store_hashes;
+		AssemblyStoreIndexEntry *assembly_store_hashes;
 		std::mutex             assembly_decompress_mutex;
 	};
 }

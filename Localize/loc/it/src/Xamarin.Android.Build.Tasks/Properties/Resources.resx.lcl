@@ -417,6 +417,33 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0138" ItemType="0;.resx" PsrId="211" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[I metadati degli elementi %(AndroidAsset.AssetPack) e %(AndroidAsset.AssetPack) sono supportati solo quando '$(AndroidApplication)' è 'true'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0139" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['@(AndroidAsset)' '{0}' contiene metadati 'DeliveryType' non validi di '{1}'. I valori supportati sono 'installtime', 'ondemand' o 'fastfollow'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA0140" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il valore AssetPack definito per '{0}' contiene caratteri non validi. '{1}' deve contenere solo A-z, a-z, 0-9 o un carattere di sottolineatura.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
@@ -1163,10 +1190,13 @@
       </Item>
       <Item ItemId=";XA4234" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA['<{0}>' item '{1}' is missing required metadata '{2}']]></Val>
+          <Val><![CDATA['<{0}>' item '{1}' is missing required attribute '{2}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Nell'elemento '<{0}>' '{1}' mancano i metadati obbligatori '{2}']]></Val>
+            <Val><![CDATA['<{0}>' L’elemento '{1}' non dispone dell'attributo '{2}' richiesto.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA['<{0}>' item '{1}' is missing required metadata '{2}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1190,19 +1220,13 @@
       </Item>
       <Item ItemId=";XA4237" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot download POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          <Val><![CDATA[Cannot download POM file for Maven artifact '{0}'.]D;]A;- {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è possibile scaricare il file POM per l'artefatto Maven '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+            <Val><![CDATA[Non è possibile scaricare il file POM per l'artefatto Maven '{0}'.]D;]A;- {1}]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4238" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Cannot download parent POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Non è possibile scaricare il file POM padre per l'artefatto Maven '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Cannot download POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1211,6 +1235,78 @@
           <Val><![CDATA[Unknown Maven repository: '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Repository Maven sconosciuto: '{0}'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4241" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java dependency '{0}' is not satisfied.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La dipendenza Java '{0}' non è soddisfatta.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4242" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java dependency '{0}' is not satisfied. Microsoft maintains the NuGet package '{1}' that could fulfill this dependency.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[La dipendenza Java '{0}' non è soddisfatta. Microsoft gestisce il pacchetto NuGet '{1}' che può soddisfare questa dipendenza.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4243" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attribute '{0}' is required when using '{1}' for '{2}' item '{3}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'attributo '{0}' è obbligatorio quando si usa '{1}' per '{2}' l’elemento '{3}'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4244" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attribute '{0}' cannot be empty for '{1}' item '{2}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[L'attributo '{0}' non può essere vuoto per '{1}' l’elemento '{2}'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4245" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Specified POM file '{0}' does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Il file POM '{0}' specificato non esiste.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4246" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not parse POM file '{0}'.]D;]A;- {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile analizzare file POM '{0}'.]D;]A;- {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4247" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not resolve POM file for artifact '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile risolvere il file POM per l'artefatto '{0}'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4248" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not find NuGet package '{0}' version '{1}' in lock file. Ensure NuGet Restore has run since this <PackageReference> was added.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Non è stato possibile trovare il pacchetto NuGet '{0}' versione '{1}' nel file di blocco. Verificare che il ripristino NuGet sia stato eseguito dopo l'aggiunta di questo <PackageReference>.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

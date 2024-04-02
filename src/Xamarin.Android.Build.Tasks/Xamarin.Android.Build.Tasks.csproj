@@ -14,7 +14,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <OutputPath>$(MicrosoftAndroidSdkOutDir)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24;ANDROID_26;ANDROID_31</DefineConstants>
+    <DefineConstants>$(DefineConstants);TRACE;HAVE_CECIL;MSBUILD;ANDROID_24;ANDROID_26;ANDROID_31;INTERNAL_NULLABLE_ATTRIBUTES</DefineConstants>
     <AndroidGeneratedClassDirectory Condition=" '$(AndroidGeneratedClassDirectory)' == '' ">..\..\src\Mono.Android\obj\$(Configuration)\$(DotNetTargetFramework)\android-$(AndroidLatestStablePlatformId)\mcw</AndroidGeneratedClassDirectory>
     <NoWarn>8632</NoWarn>
     <SignAssembly>false</SignAssembly>
@@ -26,9 +26,9 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" GeneratePathProperty="true" />
-    <PackageReference Include="ILRepack" Version="2.0.18" />
+    <PackageReference Include="ILRepack" Version="2.0.28" />
     <PackageReference Include="Irony" />
-    <PackageReference Include="MavenNet" Version="2.2.14" GeneratePathProperty="true" />
+    <PackageReference Include="NuGet.ProjectModel" Version="6.9.1" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
@@ -97,6 +97,9 @@
     </Compile>
     <Compile Include="..\..\external\Java.Interop\src\utils\StringRocks.cs">
       <Link>Utilities\StringRocks.cs</Link>
+    </Compile>
+    <Compile Include="..\..\external\Java.Interop\src\utils\NullableAttributes.cs">
+      <Link>Utilities\NullableAttributes.cs</Link>
     </Compile>
     <Compile Include="..\Mono.Android\\Android.App\UsesLibraryAttribute.cs">
       <Link>Mono.Android\UsesLibraryAttribute.cs</Link>
@@ -225,6 +228,7 @@
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Diagnostics\Java.Interop.Tools.Diagnostics.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil.csproj" />
     <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers.csproj" />
+    <ProjectReference Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Maven\Java.Interop.Tools.Maven.csproj" />
     <!--
       Mono.Android.csproj needs to be built first because this project
       references files *generated* and contained within the Mono.Android project.

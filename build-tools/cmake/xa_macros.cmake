@@ -202,7 +202,6 @@ function(xa_common_prepare)
     -fno-strict-aliasing
     -ffunction-sections
     -funswitch-loops
-    -finline-limit=300
     -Wa,-noexecstack
     -fPIC
     -g

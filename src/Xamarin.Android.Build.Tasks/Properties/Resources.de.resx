@@ -329,6 +329,20 @@ Wenn diese Datei aus einem NuGet-Paket stammt, führen Sie ein Update auf eine n
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) und %(AndroidAsset.AssetPack)-Elementmetadaten werden nur unterstützt, wenn „$(AndroidApplication)“ auf „true“ festgelegt ist.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>“@(AndroidAsset)“ „{0}“ weist die ungültigen DeliveryType-Metadaten „{1}“ auf. Unterstützte Werte sind „installtime“, „ondemand“ oder „fastfollow“.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>Der für „{0}“ definierte AssetPack-Wert enthält ungültige Zeichen. „{1}“ darf nur A-z, a-z, 0-9 oder einen Unterstrich enthalten.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>Problem beim Analysieren von "{0}". Dies ist wahrscheinlich auf eine unvollständige oder ungültige XML-Datei zurückzuführen. Ausnahme: {1}</value>
     <comment>{0} - The file name
@@ -954,7 +968,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     </comment>
   </data>
   <data name="XA4234" xml:space="preserve">
-    <value>Für das "&lt;{0}&gt;"-Element "{1}" fehlen die erforderlichen Metadaten "{2}"</value>
+    <value>Für das „&lt;{0}&gt;“-Element „{1}“ fehlt das erforderliche Attribut „{2}“.</value>
     <comment>{0} - The MSBuild ItemGroup Item name
 {1} - The MSBuild Item ItemSpec
 {2} - The omitted MSBuild Item metadata attribute</comment>
@@ -977,23 +991,12 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {5} - The HttpClient provided download exception message</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
-    <value>Der POM-Datei für das Maven-Artefakt "{0}:{1}" kann nicht heruntergeladen werden.
-– {2}: {3}</value>
+    <value>Die POM-Datei für das Maven-Artefakt „{0}“ kann nicht heruntergeladen werden.
+– {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message
+{0} - Maven artifact id
+{1} - The HttpClient reported download exception message
 </comment>
-  </data>
-  <data name="XA4238" xml:space="preserve">
-    <value>Die übergeordnete POM-Datei für das Maven-Artefakt "{0}:{1}" kann nicht heruntergeladen werden.
-– {2}: {3}</value>
-    <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message</comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Unbekanntes Maven-Repository: "{0}".</value>
@@ -1009,5 +1012,51 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
   <data name="XA1039" xml:space="preserve">
     <value>Die Android-Unterstützungsbibliotheken werden in .NET 9 und höher nicht unterstützt. Migrieren Sie zu AndroidX. Weitere Informationen finden Sie https://aka.ms/xamarin/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
+  <data name="XA4241" xml:space="preserve">
+    <value>Java-Abhängigkeit „{0}“ wurde nicht erfüllt.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Maven dependency id</comment>
+  </data>
+  <data name="XA4242" xml:space="preserve">
+    <value>Java-Abhängigkeit „{0}“ wurde nicht erfüllt. Microsoft verwaltet das NuGet-Paket „{1}“, das diese Abhängigkeit erfüllen könnte.</value>
+    <comment>The following are literal names and should not be translated: Java, Microsoft, NuGet.
+{0} - Maven dependency id
+{1} - NuGet package id</comment>
+  </data>
+  <data name="XA4243" xml:space="preserve">
+    <value>Das Attribut „{0}“ ist erforderlich, wenn „{1}“ für das „{2}“-Element „{3}“ verwendet wird.</value>
+    <comment>{0}, {1} - MSBuild XML attribute
+{2} - MSBuild XML element name
+{3} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4244" xml:space="preserve">
+    <value>Das Attribut „{0}“ darf für das „{1}“-Element „{2}“ nicht leer sein.</value>
+    <comment>{0} - MSBuild XML attribute
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4245" xml:space="preserve">
+    <value>Die angegebene POM-Datei „{0}“ ist nicht vorhanden.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file</comment>
+  </data>
+  <data name="XA4246" xml:space="preserve">
+    <value>Die POM-Datei „{0}“ konnte nicht analysiert werden.
+– {1}</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file
+{1} - Exception message</comment>
+  </data>
+  <data name="XA4247" xml:space="preserve">
+    <value>Die POM-Datei für das Artefakt „{0}“ konnte nicht aufgelöst werden.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - Java artifact id</comment>
+  </data>
+  <data name="XA4248" xml:space="preserve">
+    <value>Das NuGet-Paket „{0}“ der Version „{1}“ wurde in der Sperrdatei nicht gefunden. Stellen Sie sicher, dass die NuGet-Wiederherstellung seit dem Hinzufügen dieser &lt;PackageReference&gt; ausgeführt wurde.</value>
+    <comment>The following are literal names and should not be translated: NuGet, PackageReference.
+{0} - NuGet package id
+{1} - NuGet package version</comment>
   </data>
 </root>

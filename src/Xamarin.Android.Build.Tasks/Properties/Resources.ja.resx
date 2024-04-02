@@ -329,6 +329,20 @@ Visual Studio プロジェクトのプロパティ ページでデバッグ情�
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) および %(AndroidAsset.AssetPack) 項目メタデータは、'$(AndroidApplication)' が 'true' の場合にのみサポートされます。</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>'@(AndroidAsset)' '{0}' に、'{1}' の無効な 'DeliveryType' メタデータがあります。サポートされている値は、'installtime'、'ondemand'、または 'fastfollow' です。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>'{0}' に定義された AssetPack 値に無効な文字が含まれています。'{1}' には、A-z、a-z、0-9、またはアンダースコアのみを含める必要があります。</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0} の解析で問題が発生しました。不完全または無効な XML が原因である可能性があります。例外: {1}</value>
     <comment>{0} - The file name
@@ -955,7 +969,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     </comment>
   </data>
   <data name="XA4234" xml:space="preserve">
-    <value>'&lt;{0}&gt;' 項目 '{1}' に必要なメタデータ '{2}' がありません</value>
+    <value>'&lt;{0}&gt;' アイテム '{1}' には、必要な属性 '{2}' がありません。</value>
     <comment>{0} - The MSBuild ItemGroup Item name
 {1} - The MSBuild Item ItemSpec
 {2} - The omitted MSBuild Item metadata attribute</comment>
@@ -978,23 +992,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {5} - The HttpClient provided download exception message</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
-    <value>Maven 成果物 '{0}:{1}' の POM ファイルをダウンロードできません。
-- {2}: {3}</value>
+    <value>Maven 成果物 '{0}' の POM ファイルをダウンロードできません。
+- {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message
+{0} - Maven artifact id
+{1} - The HttpClient reported download exception message
 </comment>
-  </data>
-  <data name="XA4238" xml:space="preserve">
-    <value>Maven 成果物 '{0}:{1}' の親 POM ファイルをダウンロードできません。
-- {2}: {3}</value>
-    <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message</comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>不明な Maven リポジトリ: '{0}'。</value>
@@ -1010,5 +1013,51 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1039" xml:space="preserve">
     <value>Android サポート ライブラリは .NET 9 以降ではサポートされていません。AndroidX に移行してください。詳細については、https://aka.ms/xamarin/androidx を参照してください。</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
+  <data name="XA4241" xml:space="preserve">
+    <value>Java 依存関係 '{0}' が満たされていません。</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Maven dependency id</comment>
+  </data>
+  <data name="XA4242" xml:space="preserve">
+    <value>Java 依存関係 '{0}' が満たされていません。Microsoft は、この依存関係を満たす可能性のある NuGet パッケージ '{1}' を保持しています。</value>
+    <comment>The following are literal names and should not be translated: Java, Microsoft, NuGet.
+{0} - Maven dependency id
+{1} - NuGet package id</comment>
+  </data>
+  <data name="XA4243" xml:space="preserve">
+    <value>'{2}' 項目 '{3}' に '{1}' を使用する場合は、属性 '{0}' が必要です。</value>
+    <comment>{0}, {1} - MSBuild XML attribute
+{2} - MSBuild XML element name
+{3} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4244" xml:space="preserve">
+    <value>'{1}' アイテム '{2}' の属性 '{0}' を空にすることはできません。</value>
+    <comment>{0} - MSBuild XML attribute
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4245" xml:space="preserve">
+    <value>指定された POM ファイル '{0}' は存在しません。</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file</comment>
+  </data>
+  <data name="XA4246" xml:space="preserve">
+    <value>POM ファイル '{0}' を解析できませんでした。
+- {1}</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file
+{1} - Exception message</comment>
+  </data>
+  <data name="XA4247" xml:space="preserve">
+    <value>成果物 '{0}' の POM ファイルを解決できませんでした。</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - Java artifact id</comment>
+  </data>
+  <data name="XA4248" xml:space="preserve">
+    <value>NuGet パッケージ '{0}' バージョン '{1}' がロック ファイルに見つかりませんでした。この &lt;PackageReference&gt; が追加されてから NuGet の復元が実行されていることを確認します。</value>
+    <comment>The following are literal names and should not be translated: NuGet, PackageReference.
+{0} - NuGet package id
+{1} - NuGet package version</comment>
   </data>
 </root>

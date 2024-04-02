@@ -57,6 +57,11 @@
       <Link>Xamarin.Android.Bindings.JarToXml.targets</Link>
     </None>
     <None
+        Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.JavaDependencyVerification.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Bindings.JavaDependencyVerification.targets</Link>
+    </None>
+    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Bindings.Maven.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Bindings.Maven.targets</Link>
@@ -97,6 +102,10 @@
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Aapt2.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Aapt2.targets</Link>
+    </None>
+    <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Assets.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Xamarin.Android.Assets.targets</Link>
     </None>
     <None Include="MSBuild\Xamarin\Android\Xamarin.Android.Javac.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -312,8 +321,6 @@
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Cecil.Mdb.pdb" />
     <_ExtraPackageSource Include="$(PkgMono_Unix)\lib\$(TargetFrameworkNETStandard)\Mono.Unix.pdb" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.pdb" />
-    <_ExtraPackageSource Include="$(PkgMavenNet)\lib\netstandard2.0\MavenNet.pdb" />
-    <_ExtraPackageTarget Include="$(OutputPath)\MavenNet.pdb" />
 
     <_ExtraPackageSource Include="$(MSBuildThisFileDirectory)\Resources\Mono.Unix.dll.config" />
     <_ExtraPackageTarget Include="$(OutputPath)\Mono.Unix.dll.config" />

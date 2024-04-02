@@ -104,14 +104,14 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Irony.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Java.Interop.Tools.Maven.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-interop.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)java-source-utils.jar" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)LayoutBinding.cs" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libZipSharp.dll" />
     <_MSBuildFiles Include="@(_LocalizationLanguages->'$(MicrosoftAndroidSdkOutDir)%(Identity)\libZipSharp.resources.dll')" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libZipSharp.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MavenNet.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MavenNet.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Unix.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Microsoft.Android.Build.BaseTasks.dll" />
@@ -136,8 +136,10 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Application.targets" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Assets.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.ClassParse.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.Core.targets" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.JavaDependencyVerification.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.Maven.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Build.Tasks.pdb" />

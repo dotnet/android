@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.Diagnostics.CodeAnalysis;
 using System.Drawing;
 
 using NUnit.Framework;
@@ -10,6 +11,7 @@ namespace System.Drawing {
 	public class TypeConverterTest {
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void ColorConverter ()
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (Color));
@@ -22,6 +24,7 @@ namespace System.Drawing {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void RectangleConverter ()
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (Rectangle));
@@ -34,6 +37,7 @@ namespace System.Drawing {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void PointConverter ()
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (Point));
@@ -44,6 +48,7 @@ namespace System.Drawing {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void SizeConverter ()
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (Size));
@@ -54,6 +59,7 @@ namespace System.Drawing {
 		}
 
 		[Test]
+		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void SizeFConverter ()
 		{
 			var typeConverter = TypeDescriptor.GetConverter (typeof (SizeF));

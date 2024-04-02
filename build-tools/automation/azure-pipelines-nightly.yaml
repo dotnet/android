@@ -340,7 +340,7 @@ stages:
         isLargeApp: true
         toolVersion: Latest
       env:
-        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanClientId);TenantId=$(ApiScanTenant);AppKey=$(ApiScanSecret)
+        AzureServicesAuthConnectionString: runAs=App;AppId=$(ApiScanMAUI1ESPTManagedId)
 
     - task: SdtReport@2
       displayName: Guardian Export - Security Report

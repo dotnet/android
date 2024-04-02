@@ -111,7 +111,14 @@
         Timeout="60000"
     />
     <Xamarin.Android.Tools.BootstrapTasks.Adb
-        Arguments="$(_AdbTarget) logcat -G 4M"
+        Arguments="$(_AdbTarget) logcat -G 256M"
+        IgnoreExitCode="True"
+        ToolExe="$(AdbToolExe)"
+        ToolPath="$(AdbToolPath)"
+        Timeout="60000"
+    />
+    <Xamarin.Android.Tools.BootstrapTasks.Adb
+        Arguments="$(_AdbTarget) logcat -c"
         IgnoreExitCode="True"
         ToolExe="$(AdbToolExe)"
         ToolPath="$(AdbToolPath)"

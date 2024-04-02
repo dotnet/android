@@ -30,8 +30,6 @@ namespace Xamarin.Android.Tasks
 				// generating code for the partial Activity class
 				public string BindingClassName { get; }
 
-				public bool LinkerPreserveConstructors { get; set; }
-
 				public List<string> ExtraImportNamespaces { get; } = new List <string> ();
 
 				public string AndroidFragmentType { get; }
@@ -155,20 +153,18 @@ namespace Xamarin.Android.Tasks
 				WritePartialClassOnSetContentViewPartial_Int (state);
 			}
 
-			public State BeginBindingFile (StreamWriter writer, string layoutResourceId, string classNamespace, string className, string androidFragmentType, bool linkerPreserveConstructors = true)
+			public State BeginBindingFile (StreamWriter writer, string layoutResourceId, string classNamespace, string className, string androidFragmentType)
 			{
-				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace), androidFragmentType) {
-					LinkerPreserveConstructors = linkerPreserveConstructors
-				};
+				var state = new State (writer, className, !String.IsNullOrWhiteSpace (classNamespace), androidFragmentType);
 				BeginBindingFile (state, layoutResourceId, classNamespace, className);
-				WriteBindingConstructors (state, className, state.LinkerPreserveConstructors);
+				WriteBindingConstructors (state, className);
 				return state;
 			}
 
 			protected abstract void BeginBindingFile (State state, string layoutResourceId, string classNamespace, string className);
 			public abstract void EndBindingFile (State state);
 
-			protected abstract void WriteBindingConstructors (State state, string className, bool linkerPreserve);
+			protected abstract void WriteBindingConstructors (State state, string className);
 			protected abstract void WriteBindingViewProperty (State state, LayoutWidget widget, string resourceNamespace);
 			protected abstract void WriteBindingFragmentProperty (State state, LayoutWidget widget, string resourceNamespace);
 			protected abstract void WriteBindingMixedProperty (State state, LayoutWidget widget, string resourceNamespace);
@@ -287,10 +283,11 @@ namespace Xamarin.Android.Tasks
 				WriteResetLocation (state);
 			}
 
-			public void WriteComment (State state, string text)
+			public void WriteComment (State state, params string [] text)
 			{
 				EnsureArgument (state, nameof (state));
-				WriteLineIndent (state, $"{LineCommentString}{text}");
+				foreach (string line in text)
+					WriteLineIndent (state, $"{LineCommentString}{line}");
 			}
 
 			public void WriteComment (State state, ICollection<string> lines)

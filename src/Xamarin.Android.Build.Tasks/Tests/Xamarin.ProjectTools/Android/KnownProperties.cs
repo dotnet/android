@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Xamarin.ProjectTools
 {
@@ -18,6 +18,7 @@ namespace Xamarin.ProjectTools
 		public const string RuntimeIdentifiers = "RuntimeIdentifiers";
 		public const string RunAOTCompilation = "RunAOTCompilation";
 		public const string PublishTrimmed = "PublishTrimmed";
+		public const string TrimMode = "TrimMode";
 		public const string SupportedOSPlatformVersion = "SupportedOSPlatformVersion";
 
 		public const string Deterministic = "Deterministic";

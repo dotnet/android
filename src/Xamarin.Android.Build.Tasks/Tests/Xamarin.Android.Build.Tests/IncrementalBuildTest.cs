@@ -430,14 +430,18 @@ namespace Lib2
 
 				var output = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath);
 				var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
-				var filesToTouch = new [] {
+				var filesToTouch = new List<string> {
 					Path.Combine (intermediate, "..", "project.assets.json"),
 					Path.Combine (intermediate, "build.props"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.dll"),
 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
-					Path.Combine (intermediate, "android", "assets", $"{proj.ProjectName}.dll"),
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
+
+				foreach (string abi in b.GetBuildAbis ()) {
+					filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
+				}
+
 				foreach (var file in filesToTouch) {
 					FileAssert.Exists (file);
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
@@ -642,8 +646,11 @@ namespace Lib2
 				Assert.IsTrue (appBuilder.Build (app, doNotCleanupOnUpdate: true, saveProject: false), "app SignAndroidPackage build should have succeeded.");
 
 				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
-				var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", $"{lib2.ProjectName}.dll");
-				FileAssert.AreEqual (lib2Output, lib2InAppOutput, "new Library2 should have been copied to app output directory");
+
+				foreach (string abi in appBuilder.GetBuildAbis ()) {
+					var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
+					FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
+				}
 			}
 		}
 
@@ -655,8 +662,11 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
-				var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", "FormsViewGroup.dll"));
-				File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
+					string abi = MonoAndroidHelper.RidToAbi (rid);
+					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
+					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
+				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "build should have succeeded.");
 				b.Output.AssertTargetIsNotSkipped (KnownTargets.LinkAssembliesNoShrink);
 

@@ -329,6 +329,20 @@ Visual Studio 프로젝트 속성 페이지에서 디버깅 정보를 이식 가
 The capitalized word "Portable" that appears earlier in the message is plain text and should be translated, but the lowercase word "portable" later in the message is a literal value and should not be translated.
 {0} - The file name of a deprecated symbol file</comment>
   </data>
+  <data name="XA0138" xml:space="preserve">
+    <value>%(AndroidAsset.AssetPack) 및 %(AndroidAsset.AssetPack) 항목 메타데이터는 '$(AndroidApplication)'이 'true'인 경우에만 지원됩니다.</value>
+    <comment></comment>
+  </data>
+  <data name="XA0139" xml:space="preserve">
+    <value>'@(AndroidAsset)' '{0}'에 '{1}'의 잘못된 'DeliveryType' 메타데이터가 있습니다. 지원되는 값은 'installtime', 'ondemand' 또는 'fastfollow'입니다.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the project file.</comment>
+  </data>
+  <data name="XA0140" xml:space="preserve">
+    <value>'{0}'에 대해 정의된 AssetPack 값에 잘못된 문자가 있습니다. '{1}'은(는) A-z, a-z, 0-9 또는 밑줄만 포함해야 합니다.</value>
+    <comment>{0} - The file name
+{1} - The value of the attribute in the metadata.</comment>
+  </data>
   <data name="XA1000" xml:space="preserve">
     <value>{0}을(를) 구문 분석하는 중 문제가 발생했습니다. XML이 불완전하거나 잘못된 것 같습니다. 예외: {1}</value>
     <comment>{0} - The file name
@@ -954,7 +968,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     </comment>
   </data>
   <data name="XA4234" xml:space="preserve">
-    <value>'&lt;{0}&gt;' 항목 '{1}'에 필수 메타데이터 '{2}'이(가) 없습니다.</value>
+    <value>'&lt;{0}&gt;' 항목 '{1}'에 필수 특성 '{2}'이(가) 없습니다.</value>
     <comment>{0} - The MSBuild ItemGroup Item name
 {1} - The MSBuild Item ItemSpec
 {2} - The omitted MSBuild Item metadata attribute</comment>
@@ -977,23 +991,12 @@ In this message, the term "handheld app" means "app for handheld devices."
 {5} - The HttpClient provided download exception message</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
-    <value>Maven 아티팩트 '{0}:{1}'에 대한 POM 파일 다운로드할 수 없습니다.
-- {2}: {3}</value>
+    <value>Maven 아티팩트 '{0}'에 대한 POM 파일 다운로드할 수 없습니다.
+- {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message
+{0} - Maven artifact id
+{1} - The HttpClient reported download exception message
 </comment>
-  </data>
-  <data name="XA4238" xml:space="preserve">
-    <value>Maven 아티팩트 '{0}:{1}'에 대한 부모 POM 파일을 다운로드할 수 없습니다.
-- {2}: {3}</value>
-    <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message</comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>알 수 없는 Maven 리포지토리: '{0}'.</value>
@@ -1009,5 +1012,51 @@ In this message, the term "handheld app" means "app for handheld devices."
   <data name="XA1039" xml:space="preserve">
     <value>Android 지원 라이브러리는 .NET 9 이상에서 지원되지 않습니다. AndroidX로 마이그레이션하세요. 자세한 내용은 https://aka.ms/xamarin/androidx 페이지를 참조하세요.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
+  <data name="XA4241" xml:space="preserve">
+    <value>Java 종속성 '{0}'이(가) 충족되지 않습니다.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Maven dependency id</comment>
+  </data>
+  <data name="XA4242" xml:space="preserve">
+    <value>Java 종속성 '{0}'이(가) 충족되지 않습니다. Microsoft는 이 종속성을 충족할 수 있는 NuGet 패키지 '{1}'을(를) 유지 관리합니다.</value>
+    <comment>The following are literal names and should not be translated: Java, Microsoft, NuGet.
+{0} - Maven dependency id
+{1} - NuGet package id</comment>
+  </data>
+  <data name="XA4243" xml:space="preserve">
+    <value>'{2}' item '{3}'에 대해 '{1}'을(를) 사용하는 경우 '{0}' 특성이 필요합니다.</value>
+    <comment>{0}, {1} - MSBuild XML attribute
+{2} - MSBuild XML element name
+{3} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4244" xml:space="preserve">
+    <value>'{1}' 항목 '{2}'에 대해 특성 '{0}'을(를) 비워 둘 수 없습니다.</value>
+    <comment>{0} - MSBuild XML attribute
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4245" xml:space="preserve">
+    <value>지정한 POM 파일 '{0}'이(가) 없습니다.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file</comment>
+  </data>
+  <data name="XA4246" xml:space="preserve">
+    <value>POM 파일 '{0}'을(를) 구문 분석할 수 없습니다.
+- {1}</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file
+{1} - Exception message</comment>
+  </data>
+  <data name="XA4247" xml:space="preserve">
+    <value>아티팩트 '{0}'에 대한 POM 파일 확인할 수 없습니다.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - Java artifact id</comment>
+  </data>
+  <data name="XA4248" xml:space="preserve">
+    <value>잠금 파일에서 NuGet 패키지 '{0}' 버전 '{1}'을(를) 찾을 수 없습니다. 이 &lt;PackageReference&gt;이 추가된 이후 NuGet 복원이 실행되었는지 확인합니다.</value>
+    <comment>The following are literal names and should not be translated: NuGet, PackageReference.
+{0} - NuGet package id
+{1} - NuGet package version</comment>
   </data>
 </root>

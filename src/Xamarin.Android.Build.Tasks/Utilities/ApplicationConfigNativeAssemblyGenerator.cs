@@ -6,7 +6,6 @@ using System.IO;
 using Java.Interop.Tools.TypeNameMappings;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-using Microsoft.Android.Build.Tasks;
 using Xamarin.Android.Tasks.LLVMIR;
 
 namespace Xamarin.Android.Tasks
@@ -51,12 +50,22 @@ namespace Xamarin.Android.Tasks
 
 			[NativeAssembler (UsesDataProvider = true, NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
 			public ulong hash;
+
+			[NativeAssembler (NumberFormat = LlvmIrVariableNumberFormat.Hexadecimal)]
+			public ulong real_name_hash;
 			public bool ignore;
 
 			[NativeAssembler (UsesDataProvider = true)]
 			public string name;
 			public IntPtr handle = IntPtr.Zero;
 		}
+
+		sealed class DSOApkEntry
+		{
+			public ulong name_hash;
+			public uint  offset; // offset into the APK
+			public int   fd; // apk file descriptor
+		};
 
 		// Order of fields and their type must correspond *exactly* to that in
 		// src/monodroid/jni/xamarin-app.hh AssemblyStoreAssemblyDescriptor structure
@@ -96,6 +105,7 @@ namespace Xamarin.Android.Tasks
 			[NativePointer (IsNull = true)]
 			public byte data_start;
 			public uint assembly_count;
+			public uint index_entry_count;
 
 			[NativePointer (IsNull = true)]
 			public AssemblyStoreAssemblyDescriptor assemblies;
@@ -105,12 +115,16 @@ namespace Xamarin.Android.Tasks
 		{
 			public override ulong GetBufferSize (object data, string fieldName)
 			{
-				if (String.Compare ("name", fieldName, StringComparison.Ordinal) != 0) {
-					return 0;
+				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
+				if (String.Compare ("name", fieldName, StringComparison.Ordinal) == 0) {
+					return xaba.name_length;
 				}
 
-				var xaba = EnsureType<XamarinAndroidBundledAssembly> (data);
-				return xaba.name_length;
+				if (String.Compare ("file_name", fieldName, StringComparison.Ordinal) == 0) {
+					return xaba.name_length + MonoAndroidHelper.GetMangledAssemblyNameSizeOverhead ();
+				}
+
+				return 0;
 			}
 		}
 
@@ -119,7 +133,10 @@ namespace Xamarin.Android.Tasks
 		[NativeAssemblerStructContextDataProvider (typeof (XamarinAndroidBundledAssemblyContextDataProvider))]
 		sealed class XamarinAndroidBundledAssembly
 		{
-			public int  apk_fd;
+			public int  file_fd;
+
+			[NativeAssembler (UsesDataProvider = true), NativePointer (PointsToPreAllocatedBuffer = true)]
+			public string file_name;
 			public uint data_offset;
 			public uint data_size;
 
@@ -142,6 +159,7 @@ namespace Xamarin.Android.Tasks
 
 		StructureInfo? applicationConfigStructureInfo;
 		StructureInfo? dsoCacheEntryStructureInfo;
+		StructureInfo? dsoApkEntryStructureInfo;
 		StructureInfo? xamarinAndroidBundledAssemblyStructureInfo;
 		StructureInfo? assemblyStoreSingleAssemblyRuntimeDataStructureinfo;
 		StructureInfo? assemblyStoreRuntimeDataStructureInfo;
@@ -159,7 +177,6 @@ namespace Xamarin.Android.Tasks
 		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssemblyStore { get; set; }
 		public int NumberOfAssembliesInApk { get; set; }
-		public int NumberOfAssemblyStoresInApks { get; set; }
 		public int BundledAssemblyNameWidth { get; set; } // including the trailing NUL
 		public int AndroidRuntimeJNIEnvToken { get; set; }
 		public int JNIEnvInitializeToken { get; set; }
@@ -217,8 +234,8 @@ namespace Xamarin.Android.Tasks
 				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
+				number_of_shared_libraries = (uint)NativeLibraries.Count,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
-				number_of_assembly_store_files = (uint)NumberOfAssemblyStoresInApks,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				android_runtime_jnienv_class_token = (uint)AndroidRuntimeJNIEnvToken,
 				jnienv_initialize_method_token = (uint)JNIEnvInitializeToken,
@@ -237,11 +254,18 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (dso_cache);
 
+			var dso_apk_entries = new LlvmIrGlobalVariable (typeof(List<StructureInstance<DSOApkEntry>>), "dso_apk_entries") {
+				ArrayItemCount = (ulong)NativeLibraries.Count,
+				Options = LlvmIrVariableOptions.GlobalWritable,
+				ZeroInitializeArray = true,
+			};
+			module.Add (dso_apk_entries);
+
 			if (!HaveAssemblyStore) {
 				xamarinAndroidBundledAssemblies = new List<StructureInstance<XamarinAndroidBundledAssembly>> (NumberOfAssembliesInApk);
 
 				var emptyBundledAssemblyData = new XamarinAndroidBundledAssembly {
-					apk_fd = -1,
+					file_fd = -1,
 					data_offset = 0,
 					data_size = 0,
 					data = 0,
@@ -273,19 +297,24 @@ namespace Xamarin.Android.Tasks
 			};
 			module.Add (assembly_store_bundled_assemblies);
 
-			itemCount = (ulong)(HaveAssemblyStore ? NumberOfAssemblyStoresInApks : 0);
-			var assembly_stores = new LlvmIrGlobalVariable (typeof(List<StructureInstance<AssemblyStoreRuntimeData>>), "assembly_stores", LlvmIrVariableOptions.GlobalWritable) {
-				ZeroInitializeArray = true,
-				ArrayItemCount = itemCount,
+			var storeRuntimeData = new AssemblyStoreRuntimeData {
+				data_start = 0,
+				assembly_count = 0,
 			};
-			module.Add (assembly_stores);
+
+			var assembly_store = new LlvmIrGlobalVariable (
+				new StructureInstance<AssemblyStoreRuntimeData>(assemblyStoreRuntimeDataStructureInfo, storeRuntimeData),
+				"assembly_store",
+				LlvmIrVariableOptions.GlobalWritable
+			);
+			module.Add (assembly_store);
 		}
 
 		void HashAndSortDSOCache (LlvmIrVariable variable, LlvmIrModuleTarget target, object? state)
 		{
 			var cache = variable.Value as List<StructureInstance<DSOCacheEntry>>;
 			if (cache == null) {
-				throw new InvalidOperationException ($"Internal error: DSO cache must no be empty");
+				throw new InvalidOperationException ($"Internal error: DSO cache must not be empty");
 			}
 
 			bool is64Bit = target.Is64Bit;
@@ -300,6 +329,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				entry.hash = MonoAndroidHelper.GetXxHash (entry.HashedName, is64Bit);
+				entry.real_name_hash = MonoAndroidHelper.GetXxHash (entry.name, is64Bit);
 			}
 
 			cache.Sort ((StructureInstance<DSOCacheEntry> a, StructureInstance<DSOCacheEntry> b) => a.Instance.hash.CompareTo (b.Instance.hash));
@@ -350,7 +380,14 @@ namespace Xamarin.Android.Tasks
 			{
 				nameMutations.Add (name);
 				if (name.EndsWith (".dll.so", StringComparison.OrdinalIgnoreCase)) {
-					nameMutations.Add (Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!);
+					string nameNoExt = Path.GetFileNameWithoutExtension (Path.GetFileNameWithoutExtension (name))!;
+					nameMutations.Add (nameNoExt);
+
+					// This helps us at runtime, because sometimes MonoVM will ask for "AssemblyName" and sometimes for "AssemblyName.dll".
+					// In the former case, the runtime would ask for the "libaot-AssemblyName.so" image, which doesn't exist - we have
+					// "libaot-AssemblyName.dll.so" instead and, thus, we are forced to check for and append the missing ".dll" extension when
+					// loading the assembly, unnecessarily wasting time.
+					nameMutations.Add ($"{nameNoExt}.so");
 				} else {
 					nameMutations.Add (Path.GetFileNameWithoutExtension (name)!);
 				}
@@ -375,6 +412,7 @@ namespace Xamarin.Android.Tasks
 			assemblyStoreRuntimeDataStructureInfo = module.MapStructure<AssemblyStoreRuntimeData> ();
 			xamarinAndroidBundledAssemblyStructureInfo = module.MapStructure<XamarinAndroidBundledAssembly> ();
 			dsoCacheEntryStructureInfo = module.MapStructure<DSOCacheEntry> ();
+			dsoApkEntryStructureInfo = module.MapStructure<DSOApkEntry> ();
 		}
 	}
 }

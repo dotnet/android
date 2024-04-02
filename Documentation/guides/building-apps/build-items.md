@@ -14,10 +14,65 @@ ms.date: 07/26/2022
 Build items control how a Xamarin.Android application
 or library project is built.
 
+## AndroidAdditionalJavaManifest
+
+`<AndroidAdditionalJavaManifest>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify additional POM files that will be needed to verify dependencies.
+These are often parent or imported POM files referenced by a Java library's POM file.
+
+```xml
+<ItemGroup>
+  <AndroidAdditionalJavaManifest Include="mylib-parent.pom" JavaArtifact="com.example:mylib-parent" JavaVersion="1.0.0" />
+</ItemGroup>
+```
+
+The following MSBuild metadata are required:
+
+- `%(JavaArtifact)`: The group and artifact id of the Java library matching the specifed POM
+  file in the form `{GroupId}:{ArtifactId}`.
+- `%(JavaVersion)`: The version of the Java library matching the specified POM file.
+  
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
+
 ## AndroidAsset
 
 Supports [Android Assets](https://developer.android.com/guide/topics/resources/providing-resources#OriginalFiles),
 files that would be included in the `assets` folder in a Java Android project.
+
+Starting with .NET 9 the `@(AndroidAsset)` build action also supports additional metadata for generating [Asset Packs](https://developer.android.com/guide/playcore/asset-delivery). The `%(AndroidAsset.AssetPack)` metadata can be used to automatically generate an asset pack of that name. This feature is only supported when the [`$(AndroidPackageFormat)`](#androidpackageformat) is set to `.aab`. The following example will place `movie2.mp4` and `movie3.mp4` in separate asset packs.
+
+```xml
+<ItemGroup>
+   <AndroidAsset Update="Asset/movie.mp4" />
+   <AndroidAsset Update="Asset/movie2.mp4" AssetPack="assets1" />
+   <AndroidAsset Update="Asset/movie3.mp4" AssetPack="assets2" />
+</ItemGroup>
+```
+
+This feature can be used to include large files in your application which would normally exceed the max
+package size limits of Google Play.
+
+If you have a large number of assets it might be more efficient to make use of the `base` asset pack.
+In this scenario you update ALL assets to be in a single asset pack then use the `AssetPack="base"` metadata
+to declare which specific assets end up in the base aab file. With this you can use wildcards to move most
+assets into the asset pack.
+
+```xml
+<ItemGroup>
+   <AndroidAsset Update="Assets/*" AssetPack="assets1" />
+   <AndroidAsset Update="Assets/movie.mp4" AssetPack="base" />
+   <AndroidAsset Update="Assets/some.png" AssetPack="base" />
+</ItemGroup>
+```
+
+In this example, `movie.mp4` and `some.png` will end up in the `base` aab file, while all the other assets
+will end up in the `assets1` asset pack.
+
+The additional metadata is only supported on .NET Android 9 and above.
 
 ## AndroidAarLibrary
 
@@ -83,6 +138,30 @@ files).
 Files with a Build action of `AndroidJavaLibrary` are Java
 Archives ( `.jar` files) that will be included in the final Android
 package.
+
+## AndroidIgnoredJavaDependency
+
+`<AndroidIgnoredJavaDependency>` is used in conjunction with [Java Dependency Resolution](../JavaDependencyVerification.md).
+
+It is used to specify a Java dependency that should be ignored. This can be
+used if a dependency will be fulfilled in a way that Java dependency resolution
+cannot detect.
+
+```xml
+<!-- Include format is {GroupId}:{ArtifactId} -->
+<ItemGroup>
+  <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations" Version="2.15.0" />
+</ItemGroup>
+```
+
+The following MSBuild metadata are required:
+
+- `%(Version)`: The version of the Java library matching the specified `%(Include)`.
+
+See the [Java Dependency Resolution documentation](../JavaDependencyVerification.md)
+for more details.
+
+This build action was introduced in .NET 9.
 
 ## AndroidJavaSource
 
@@ -187,6 +266,17 @@ hosted in Maven.
   <AndroidMavenLibrary Include="com.squareup.okhttp3:okhttp" Version="4.9.3" />
 </ItemGroup>
 ```
+
+The following MSBuild metadata are supported:
+
+- `%(Version)`: Required version of the Java library referenced by `%(Include)`.
+- `%(Repository)`: Optional Maven repository to use. Supported values are `Central` (default),
+   `Google`, or an `https` URL to a Maven repository.
+
+The `<AndroidMavenLibrary>` item is translated to an 
+[`<AndroidLibrary>`](https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/building-apps/build-items.md#androidlibrary) 
+item, so any metadata supported by `<AndroidLibrary>` like `Bind` or `Pack` are also supported.
+
 See the [AndroidMavenLibrary documentation](../AndroidMavenLibrary.md)
 for more details.
 
