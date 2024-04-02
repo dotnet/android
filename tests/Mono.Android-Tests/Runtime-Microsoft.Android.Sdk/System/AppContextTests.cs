@@ -1,5 +1,6 @@
 using NUnit.Framework;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 
 namespace SystemTests
@@ -44,7 +45,11 @@ namespace SystemTests
 
 		[Test]
 		[TestCaseSource (nameof (TestPrivateSwitchesSource))]
-		public void TestPrivateSwitches (string className, string propertyName, object expected)
+		public void TestPrivateSwitches (
+				[DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.All)]
+				string className,
+				string propertyName,
+				object expected)
 		{
 			var type = Type.GetType (className, throwOnError: true);
 			var members = type.GetMember (propertyName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);

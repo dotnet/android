@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Layout",
+  "name": "Android 레이아웃",
   "description": "Android 레이아웃(XML) 파일",
   "postActions/openInEditor/description": "편집기에서 Layout1.xml 엽니다."
 }

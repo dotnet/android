@@ -1190,10 +1190,13 @@
       </Item>
       <Item ItemId=";XA4234" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA['<{0}>' item '{1}' is missing required metadata '{2}']]></Val>
+          <Val><![CDATA['<{0}>' item '{1}' is missing required attribute '{2}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['<{0}>' 항목 '{1}'에 필수 메타데이터 '{2}'이(가) 없습니다.]]></Val>
+            <Val><![CDATA['<{0}>' 항목 '{1}'에 필수 특성 '{2}'이(가) 없습니다.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA['<{0}>' item '{1}' is missing required metadata '{2}']]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1217,19 +1220,13 @@
       </Item>
       <Item ItemId=";XA4237" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Cannot download POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          <Val><![CDATA[Cannot download POM file for Maven artifact '{0}'.]D;]A;- {1}]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Maven 아티팩트 '{0}:{1}'에 대한 POM 파일 다운로드할 수 없습니다.]D;]A;- {2}: {3}]]></Val>
+            <Val><![CDATA[Maven 아티팩트 '{0}'에 대한 POM 파일 다운로드할 수 없습니다.]D;]A;- {1}]]></Val>
           </Tgt>
-        </Str>
-        <Disp Icon="Str" />
-      </Item>
-      <Item ItemId=";XA4238" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
-        <Str Cat="Text">
-          <Val><![CDATA[Cannot download parent POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
-          <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Maven 아티팩트 '{0}:{1}'에 대한 부모 POM 파일을 다운로드할 수 없습니다.]D;]A;- {2}: {3}]]></Val>
-          </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Cannot download POM file for Maven artifact '{0}:{1}'.]D;]A;- {2}: {3}]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -1238,6 +1235,78 @@
           <Val><![CDATA[Unknown Maven repository: '{0}'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[알 수 없는 Maven 리포지토리: '{0}'.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4241" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java dependency '{0}' is not satisfied.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java 종속성 '{0}'이(가) 충족되지 않습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4242" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Java dependency '{0}' is not satisfied. Microsoft maintains the NuGet package '{1}' that could fulfill this dependency.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Java 종속성 '{0}'이(가) 충족되지 않습니다. Microsoft는 이 종속성을 충족할 수 있는 NuGet 패키지 '{1}'을(를) 유지 관리합니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4243" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attribute '{0}' is required when using '{1}' for '{2}' item '{3}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{2}' item '{3}'에 대해 '{1}'을(를) 사용하는 경우 '{0}' 특성이 필요합니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4244" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Attribute '{0}' cannot be empty for '{1}' item '{2}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA['{1}' 항목 '{2}'에 대해 특성 '{0}'을(를) 비워 둘 수 없습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4245" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Specified POM file '{0}' does not exist.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[지정한 POM 파일 '{0}'이(가) 없습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4246" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not parse POM file '{0}'.]D;]A;- {1}]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[POM 파일 '{0}'을(를) 구문 분석할 수 없습니다.]D;]A;- {1}]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4247" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not resolve POM file for artifact '{0}'.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[아티팩트 '{0}'에 대한 POM 파일 확인할 수 없습니다.]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
+      <Item ItemId=";XA4248" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[Could not find NuGet package '{0}' version '{1}' in lock file. Ensure NuGet Restore has run since this <PackageReference> was added.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[잠금 파일에서 NuGet 패키지 '{0}' 버전 '{1}'을(를) 찾을 수 없습니다. 이 <PackageReference>이 추가된 이후 NuGet 복원이 실행되었는지 확인합니다.]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

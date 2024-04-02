@@ -18,6 +18,10 @@
     <OutputPath>..\..\..\bin\Test$(Configuration)</OutputPath>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
+    <TrimMode Condition=" '$(TrimMode)' == '' ">full</TrimMode>
+  </PropertyGroup>
+
   <ItemGroup>
     <AndroidJavaSource Include="../Xamarin.Android.McwGen-Tests/java/**/*.java" />
     <Compile Remove="TimingTests.cs" />

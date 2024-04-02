@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
-  "name": "Android Layout",
+  "name": "Diseño de Android",
   "description": "Un archivo de diseño de Android (XML)",
   "postActions/openInEditor/description": "Abre Layout1.xml en el editor"
 }

@@ -186,6 +186,19 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + XA4230: Error parsing XML: {exception}
 + [XA4231](xa4231.md): The Android class parser value 'jar2xml' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.
 + [XA4232](xa4232.md): The Android code generation target 'XamarinAndroid' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.
++ [XA4234](xa4234.md): '<{item}>' item '{itemspec}' is missing required attribute '{name}'.
++ [XA4235](xa4235.md): Maven artifact specification '{artifact}' is invalid. The correct format is 'group_id:artifact_id'.
++ [XA4236](xa4236.md): Cannot download Maven artifact '{group}:{artifact}'. - {jar}: {exception} - {aar}: {exception}
++ [XA4237](xa4237.md): Cannot download POM file for Maven artifact '{artifact}'. - {exception}
++ [XA4239](xa4239.md): Unknown Maven repository: '{repository}'.
++ [XA4241](xa4241.md): Java dependency '{artifact}' is not satisfied.
++ [XA4242](xa4242.md): Java dependency '{artifact}' is not satisfied. Microsoft maintains the NuGet package '{nugetId}' that could fulfill this dependency.
++ [XA4243](xa4243.md): Attribute '{name}' is required when using '{name}' for '{element}' item '{itemspec}'.
++ [XA4244](xa4244.md): Attribute '{name}' cannot be empty for '{element}' item '{itemspec}'.
++ [XA4245](xa4245.md): Specified POM file '{file}' does not exist.
++ [XA4246](xa4246.md): Could not parse POM file '{file}'. - {exception}
++ [XA4247](xa4247.md): Could not resolve POM file for artifact '{artifact}'.
++ [XA4248](xa4248.md): Could not find NuGet package '{nugetId}' version '{version}' in lock file. Ensure NuGet Restore has run since this <PackageReference> was added.
 + XA4300: Native library '{library}' will not be bundled because it has an unsupported ABI.
 + [XA4301](xa4301.md): Apk already contains the item `xxx`.
 + [XA4302](xa4302.md): Unhandled exception merging \`AndroidManifest.xml\`: {ex}

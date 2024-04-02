@@ -212,6 +212,9 @@ _ResolveAssemblies MSBuild target.
   </Target>
 
   <Target Name="_IncludeNativeSystemLibraries">
+    <PropertyGroup>
+      <_AndroidIncludeSystemGlobalizationNative Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' == '' ">true</_AndroidIncludeSystemGlobalizationNative>
+    </PropertyGroup>
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
     </ItemGroup>

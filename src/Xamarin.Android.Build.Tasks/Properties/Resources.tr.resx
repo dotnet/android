@@ -330,16 +330,16 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
 {0} - The file name of a deprecated symbol file</comment>
   </data>
   <data name="XA0138" xml:space="preserve">
-    <value>%(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`.</value>
+    <value>%(AndroidAsset.AssetPack) ve %(AndroidAsset.AssetPack) öğe meta verileri yalnızca `$(AndroidApplication)` değeri `true` olduğunda desteklenir.</value>
     <comment></comment>
   </data>
   <data name="XA0139" xml:space="preserve">
-    <value>`@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`.</value>
+    <value>`@(AndroidAsset)` `{0}` geçersiz `DeliveryType` `{1}` meta verisini içeriyor. Desteklenen değerler şunlardır: `installtime`, `ondemand` veya `fastfollow`.</value>
     <comment>{0} - The file name
 {1} - The value of the attribute in the project file.</comment>
   </data>
   <data name="XA0140" xml:space="preserve">
-    <value>The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore.</value>
+    <value>`{0}` için tanımlanan AssetPack geçersiz karakterler içeriyor. `{1}` yalnızca A-z, a-z, 0-9 veya alt çizgi içermelidir.</value>
     <comment>{0} - The file name
 {1} - The value of the attribute in the metadata.</comment>
   </data>
@@ -968,7 +968,7 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
     </comment>
   </data>
   <data name="XA4234" xml:space="preserve">
-    <value>'&lt;{0}&gt;' '{1}' öğesinde gerekli '{2}' meta verileri eksik</value>
+    <value>'&lt;{0}&gt;', '{1} öğesinde gereken '{2}' özniteliği eksik.</value>
     <comment>{0} - The MSBuild ItemGroup Item name
 {1} - The MSBuild Item ItemSpec
 {2} - The omitted MSBuild Item metadata attribute</comment>
@@ -991,23 +991,12 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
 {5} - The HttpClient provided download exception message</comment>
   </data>
   <data name="XA4237" xml:space="preserve">
-    <value>'{0}:{1}' Maven yapıtı için POM dosyası indirilemiyor.
-- {2}: {3}</value>
+    <value>'{0}' Maven yapıtı için POM dosyası indirilemiyor.
+- {1}</value>
     <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message
+{0} - Maven artifact id
+{1} - The HttpClient reported download exception message
 </comment>
-  </data>
-  <data name="XA4238" xml:space="preserve">
-    <value>'{0}:{1}' Maven yapıtı için üst POM dosyası indirilemiyor.
-- {2}: {3}</value>
-    <comment>The following are literal names and should not be translated: POM, Maven
-{0} - Maven artifact group id
-{1} - Maven artifact id
-{2} - The .pom filename we tried to download
-{3} - The HttpClient reported download exception message</comment>
   </data>
   <data name="XA4239" xml:space="preserve">
     <value>Bilinmeyen Maven deposu: '{0}'.</value>
@@ -1023,5 +1012,51 @@ Bir komut satırı derlemesi için özel bir SDK yolu kullanmak için 'JavaSdkDi
   <data name="XA1039" xml:space="preserve">
     <value>Android Destek kitaplıkları .NET 9 ve sonraki sürümlerde desteklenmiyor, lütfen AndroidX'e geçin. Daha fazla ayrıntı için https://aka.ms/xamarin/androidx adresini ziyaret edin.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
+  </data>
+  <data name="XA4241" xml:space="preserve">
+    <value>'{0}' Java bağımlılığı karşılanmadı.</value>
+    <comment>The following are literal names and should not be translated: Java.
+{0} - Maven dependency id</comment>
+  </data>
+  <data name="XA4242" xml:space="preserve">
+    <value>'{0}' Java bağımlılığı karşılanmadı. Microsoft, bu bağımlılığı karşılayan '{1}' NuGet paketini korur.</value>
+    <comment>The following are literal names and should not be translated: Java, Microsoft, NuGet.
+{0} - Maven dependency id
+{1} - NuGet package id</comment>
+  </data>
+  <data name="XA4243" xml:space="preserve">
+    <value>'{0}' özniteliği '{2}', '{3}' öğesi için '{1}' kullanılırken gereklidir.</value>
+    <comment>{0}, {1} - MSBuild XML attribute
+{2} - MSBuild XML element name
+{3} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4244" xml:space="preserve">
+    <value>'{0}' özniteliği '{1}', '{2}' öğesi için boş olamaz.</value>
+    <comment>{0} - MSBuild XML attribute
+{1} - MSBuild XML element name
+{2} - MSBuild ItemSpec value</comment>
+  </data>
+  <data name="XA4245" xml:space="preserve">
+    <value>Belirtilen '{0}' POM dosyası yok.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file</comment>
+  </data>
+  <data name="XA4246" xml:space="preserve">
+    <value>'{0}' POM dosyası ayrıştırılamadı.
+- {1}</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - File path to POM file
+{1} - Exception message</comment>
+  </data>
+  <data name="XA4247" xml:space="preserve">
+    <value>'{0}' yapıt kimliği için POM dosyası çözümlenemedi.</value>
+    <comment>The following are literal names and should not be translated: POM.
+{0} - Java artifact id</comment>
+  </data>
+  <data name="XA4248" xml:space="preserve">
+    <value>'{0}' NuGet paketi '{1}' sürümü kilit dosyasında bulunamadı. Bu &lt;PackageReference&gt; eklendikten sonra NuGet Geri Yükleme'nin çalıştırıldığından emin olun.</value>
+    <comment>The following are literal names and should not be translated: NuGet, PackageReference.
+{0} - NuGet package id
+{1} - NuGet package version</comment>
   </data>
 </root>

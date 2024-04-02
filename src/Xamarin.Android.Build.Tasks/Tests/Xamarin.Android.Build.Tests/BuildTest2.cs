@@ -240,6 +240,10 @@ namespace Xamarin.Android.Build.Tests
 				new XamarinFormsAndroidApplicationProject () :
 				new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
+			// Enable full trimming
+			if (!xamarinForms && isRelease) {
+				proj.TrimModeRelease = TrimMode.Full;
+			}
 			if (multidex) {
 				proj.SetProperty ("AndroidEnableMultiDex", "True");
 			}
@@ -253,9 +257,15 @@ namespace Xamarin.Android.Build.Tests
 				proj.PackageReferences.Add (new Package { Id = "BenchmarkDotNet", Version = "0.13.1" });
 			proj.SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True"); // Disables API 29 warning in Xamarin.Build.Download
 			proj.SetProperty ("AndroidPackageFormat", packageFormat);
+			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.AssertHasNoWarnings ();
+				// FIXME: https://github.com/dotnet/runtime/issues/100256
+				if (!xamarinForms && isRelease) {
+					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 4 Warning(s)"), $"{b.BuildLogFile} should have 4 MSBuild warnings.");
+				} else {
+					b.AssertHasNoWarnings ();
+				}
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
@@ -996,14 +1006,14 @@ namespace UnamedProject
 		XamarinAndroidApplicationProject CreateMultiDexRequiredApplication (string debugConfigurationName = "Debug", string releaseConfigurationName = "Release")
 		{
 			var proj = new XamarinAndroidApplicationProject (debugConfigurationName, releaseConfigurationName);
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods.java") {
 				TextContent = () => "public class ManyMethods { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
 				Encoding = Encoding.ASCII,
 				Metadata = { { "Bind", "False "}},
 			});
-			proj.OtherBuildItems.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
+			proj.AndroidJavaSources.Add (new BuildItem (AndroidBuildActions.AndroidJavaSource, "ManyMethods2.java") {
 				TextContent = () => "public class ManyMethods2 { \n"
 					+ string.Join (Environment.NewLine, Enumerable.Range (0, 32768).Select (i => "public void method" + i + "() {}"))
 					+ "}",
@@ -1060,8 +1070,8 @@ namespace UnamedProject
 				}
 
 				//Now build project again after it no longer requires multidex, remove the *HUGE* AndroidJavaSource build items
-				while (proj.OtherBuildItems.Count > 1)
-					proj.OtherBuildItems.RemoveAt (proj.OtherBuildItems.Count - 1);
+				while (proj.AndroidJavaSources.Count > 1)
+					proj.AndroidJavaSources.RemoveAt (proj.AndroidJavaSources.Count - 1);
 				proj.SetProperty ("AndroidEnableMultiDex", "False");
 
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true), "Build should have succeeded.");
