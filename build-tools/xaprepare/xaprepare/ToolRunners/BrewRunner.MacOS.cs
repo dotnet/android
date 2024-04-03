@@ -11,8 +11,6 @@ namespace Xamarin.Android.Prepare
 		static readonly char[] lineSplit = new [] { '\n' };
 
 		bool? needSudo;
-		bool? needArch;
-
 		protected override string DefaultToolExecutableName => GetDefaultExecutableName ();
 		protected override string ToolName                  => "Homebrew";
 
@@ -35,13 +33,10 @@ namespace Xamarin.Android.Prepare
 					throw new InvalidOperationException ($"BrewRunner does not suppport {Context.Instance.OS.Name}");
 
 				needSudo = os.HomebrewVersion != null && os.HomebrewVersion < sudoVersion;
-				needArch = os.ProcessIsTranslated;
 			}
 
 			if (needSudo ?? false)
 				return "sudo";
-			if (needArch ?? false)
-				return "arch";
 
 			return BrewPath;
 		}
@@ -169,17 +164,7 @@ namespace Xamarin.Android.Prepare
 		{
 			ProcessRunner runner = CreateProcessRunner ();
 
-			if ((needSudo ?? false) && (needArch ?? false)) {
-				// So we run `sudo arch -arch x86_64 brew …`
-				runner.AddArgument ("arch");
-			}
-
-			if (needArch ?? false) {
-				runner.AddArgument ("-arch");
-				runner.AddArgument ("x86_64");
-			}
-
-			if ((needSudo ?? false) || (needArch ?? false)) {
+			if ((needSudo ?? false) ) {
 				runner.AddArgument (BrewPath);
 			}
 
