@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.18.1)
+cmake_minimum_required(VERSION 3.19)
 
 #
 # MUST be included before project()!
 #
-include("../../build-tools/cmake/xa_common.cmake")
+include("../../build-tools/cmake/xa_preamble.cmake")
 
 if(NOT DEFINED LIBUNWIND_LIBRARY_NAME)
   message(FATAL_ERROR "Please set the LIBUNWIND_LIBRARY_NAME variable on command line (-DLIBUNWIND_LIBRARY_NAME=base_library_name)")
@@ -46,9 +46,10 @@ project(
   LANGUAGES C ASM
 )
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_C_STANDARD_REQUIRED ON)
-set(CMAKE_C_EXTENSIONS OFF)
+#
+# MUST be included after project()!
+#
+include("../../build-tools/cmake/xa_common.cmake")
 
 include(CheckCSourceCompiles)
 include(CheckIncludeFiles)
