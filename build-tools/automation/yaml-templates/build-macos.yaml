@@ -29,8 +29,10 @@ stages:
     displayName: ${{ parameters.jobDisplayName }}
     pool:
       ${{ if or(eq(variables['Build.DefinitionName'], 'Xamarin.Android-PR'), eq(variables['Build.DefinitionName'], 'Xamarin.Android Nightly')) }}:
-        name: VSEng-Xamarin-RedmondMac-Android-Untrusted
-        demands: macOS.Name -equals Monterey
+        name: VSEng-VSMac-Xamarin-Shared
+        demands:
+        - macOS.Name -equals Ventura
+        - macOS.Architecture -equals arm64
       ${{ else }}:
         name: Azure Pipelines
         vmImage: $(HostedMacImage)
