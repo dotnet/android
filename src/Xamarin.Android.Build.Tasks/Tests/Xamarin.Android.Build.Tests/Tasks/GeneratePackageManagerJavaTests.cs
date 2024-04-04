@@ -61,6 +61,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 
 			File.WriteAllText (Path.Combine (path, "AndroidManifest.xml"), $@"<?xml version='1.0' ?><manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.net6.helloandroid' android:versionCode='1' />");
+			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=YYYY");
 
 			var metadata = new Dictionary<string, string> (StringComparer.OrdinalIgnoreCase) {
 				{"Abi", "arm64-v8a"},
@@ -82,9 +83,21 @@ namespace Xamarin.Android.Build.Tests
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				EnablePreloadAssembliesDefault = false,
 				InstantRunEnabled = false,
+				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
 			Assert.IsTrue (task.Execute (), "Task should have executed.");
 			AssertFileContentsMatch (Path.Combine (XABuildPaths.TestAssemblyOutputDirectory, "Expected", "CheckPackageManagerAssemblyOrder.java"), Path.Combine(path, "src", "mono", "MonoPackageManager_Resources.java"));
+			var txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
+			StringAssert.Contains ("YYYY", txt, "environment.arm64-v8a.ll should contain 'YYYY'");
+			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
+			StringAssert.Contains ("YYYY", txt, "environment.x86.ll should contain 'YYYY'");
+
+			File.WriteAllText (Path.Combine (path, "myenv.txt"), @"MYENV=XXXX");
+			Assert.IsTrue (task.Execute (), "Task should have executed.");
+			txt = File.ReadAllText (Path.Combine (path, "env", "environment.arm64-v8a.ll"));
+			StringAssert.Contains ("XXXX", txt, "environment.arm64-v8a.ll should contain 'XXXX'");
+			txt = File.ReadAllText (Path.Combine (path, "env", "environment.x86.ll"));
+			StringAssert.Contains ("XXXX", txt, "environment.x86.ll should contain 'XXXX'");
 		}
 	}
 }
