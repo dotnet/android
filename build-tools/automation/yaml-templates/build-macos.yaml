@@ -64,6 +64,9 @@ stages:
           targetPath: ${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/buildtoolsinventory.csv
           sbomEnabled: false
     steps:
+    - script: cat ~/.zshrc
+    - script: cat ~/.zprofile
+
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
         resource: ${{ parameters.repositoryAlias }}
