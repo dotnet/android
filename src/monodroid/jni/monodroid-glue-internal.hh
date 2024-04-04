@@ -64,6 +64,15 @@ namespace xamarin::android::internal
 		}
 	};
 
+	// Values must be identical to those in src/Mono.Android/Android.Runtime/RuntimeNativeMethods.cs
+	enum class TraceKind : uint32_t
+	{
+		Java    = 0x01,
+		Managed = 0x02,
+		Native  = 0x04,
+		Signals = 0x08,
+	};
+
 	class MonodroidRuntime
 	{
 		using pinvoke_api_map = tsl::robin_map<
@@ -146,6 +155,9 @@ namespace xamarin::android::internal
 		static constexpr std::string_view mono_component_diagnostics_tracing_name { "libmono-component-diagnostics_tracing.so" };
 		static constexpr hash_t mono_component_diagnostics_tracing_hash = xxhash::hash (mono_component_diagnostics_tracing_name);
 
+		static constexpr std::string_view xamarin_native_tracing_name { "libxamarin-native-tracing.so" };
+		static constexpr hash_t xamarin_native_tracing_name_hash = xxhash::hash (xamarin_native_tracing_name);
+
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
@@ -190,6 +202,7 @@ namespace xamarin::android::internal
 
 		void propagate_uncaught_exception (JNIEnv *env, jobject javaThread, jthrowable javaException);
 		char*	get_java_class_name_for_TypeManager (jclass klass);
+		void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
 
 	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
@@ -209,6 +222,22 @@ namespace xamarin::android::internal
 		static PinvokeEntry* find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept;
 		static void* handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept;
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
+
+		template<typename TFunc>
+		static void load_symbol (void *handle, const char *name, TFunc*& fnptr) noexcept
+		{
+			char *err = nullptr;
+			void *symptr = monodroid_dlsym (handle, name, &err, nullptr);
+
+			if (symptr == nullptr) {
+				log_warn (LOG_DEFAULT, "Failed to load symbol '%s' library with handle %p. %s", name, handle, err == nullptr ? "Unknown error" : err);
+				fnptr = nullptr;
+				return;
+			}
+
+			fnptr = reinterpret_cast<TFunc*>(symptr);
+		}
+
 		static void* monodroid_dlopen_ignore_component_or_load (hash_t hash, const char *name, int flags, char **err) noexcept;
 		static void* monodroid_dlopen (const char *name, int flags, char **err) noexcept;
 		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data) noexcept;
