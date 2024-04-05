@@ -7,6 +7,7 @@ This file contains targets specific for Android application projects.
 ***********************************************************************************************
 -->
 <Project>
+  <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.XASleepInternal" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
@@ -55,17 +56,52 @@ This file contains targets specific for Android application projects.
 
     <Message Text="Preparing application to log more information" Importance="High" />
     <Message Text="Setting the debug.mono.log property to: $(_MonoLog)" Importance="High" />
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell setprop debug.mono.log $(_MonoLog)" />
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) logcat -G 16M" />
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) logcat -c" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell"
+      Arguments="debug.mono.log $(_MonoLog)"
+    />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="logcat"
+      Arguments="-G 16M"
+    />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="logcat"
+      Arguments="-c"
+    />
 
     <Message Text="Running the application and waiting for it to fully start" Importance="High" />
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell"
+      Arguments="-S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+    />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />
     <XASleepInternal Milliseconds="$(RunLogDelayInMS)" />
 
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) logcat -d > &quot;$(_RunLogFilePath)&quot;" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="logcat"
+      Arguments="-d"
+      >
+      <Output TaskParameter="Result" PropertyName="_LogcatOutput" />
+    <WriteLinesToFile
+      File="$(_RunLogFilePath)"
+      Lines="$(_LogcatOutput)"
+    />
     <Message Text="Logcat output is available in $(_RunLogFilePath)" Importance="High" />
   </Target>
 </Project>
