@@ -98,6 +98,7 @@ This file contains targets specific for Android application projects.
       Arguments="-d"
       >
       <Output TaskParameter="Result" PropertyName="_LogcatOutput" />
+    </AndroidAdb>
     <WriteLinesToFile
       File="$(_RunLogFilePath)"
       Lines="$(_LogcatOutput)"
