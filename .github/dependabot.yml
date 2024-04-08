@@ -14,10 +14,8 @@ updates:
     schedule:
       interval: "daily"
     ignore:
-      - dependency-name: "external/apksig"
+      - dependency-name: "external/constexpr-xxh3"
       - dependency-name: "external/debugger-libs"
       - dependency-name: "external/lz4"
-      - dependency-name: "external/nrefactory"
-      - dependency-name: "external/opentk"
       - dependency-name: "external/robin-map"
-      - dependency-name: "external/sqlite"
+      - dependency-name: "external/xxHash"
