@@ -47,7 +47,7 @@ namespace Xamarin.Android.Prepare
 
 			public static readonly Uri NugetUri = new Uri ("https://dist.nuget.org/win-x86-commandline/v6.0.0/nuget.exe");
 
-			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
+			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.blob.core.windows.net/mono-sdks/");
 
 			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
 		}
