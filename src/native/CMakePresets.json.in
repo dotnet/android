@@ -6,33 +6,39 @@
         "patch": 0
     },
 
-    "configurePresets": {
+    "configurePresets": [
         {
             "name": "common",
             "hidden": true,
             "generator": "Ninja",
-            "debug": true,
+            "debug": {
+                "output": true
+            },
+            "toolchainFile": "@AndroidNdkDirectory@/build/cmake/android.toolchain.cmake",
             "cacheVariables": {
+                "ANDROID_NDK": "@AndroidNdkDirectory@",
+                "ANDROID_TOOLCHAIN": "clang",
                 "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
-                "ANDROID_TOOLCHAIN": "clang"
+                "CMAKE_MAKE_PROGRAM": "@NinjaPath@",
+                "OUTPUT_PATH": "@OutputPath@",
+                "XA_LIB_TOP_DIR": "@MicrosoftAndroidSdkOutDir@",
+                "XA_BUILD_CONFIGURATION": "@XA_BUILD_CONFIGURATION@"
             }
         },
 
         {
             "name": "common-debug",
-            "hidden": "true",
+            "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "XA_BUILD_CONFIGURATION": "Debug"
+                "CMAKE_BUILD_TYPE": "Debug"
             }
         },
 
         {
             "name": "common-release",
-            "hidden": "true",
+            "hidden": true,
             "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release",
-                "XA_BUILD_CONFIGURATION": "Release"
+                "CMAKE_BUILD_TYPE": "Release"
             }
         },
 
@@ -85,6 +91,8 @@
             "hidden": true,
             "cacheVariables": {
                 "ANDROID_ABI": "armeabi-v7a",
+                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARMEABI_V7_API_NET@",
+                "ANDROID_PLATFORM": "android-@NDK_ARMEABI_V7_API_NET@",
                 "ANDROID_RID": "android-arm"
             }
         },
@@ -94,6 +102,8 @@
             "hidden": true,
             "cacheVariables": {
                 "ANDROID_ABI": "arm64-v8a",
+                "ANDROID_NATIVE_API_LEVEL": "@NDK_ARM64_V8A_API_NET@",
+                "ANDROID_PLATFORM": "android-@NDK_ARM64_V8A_API_NET@",
                 "ANDROID_RID": "android-arm64"
             }
         },
@@ -103,6 +113,8 @@
             "hidden": true,
             "cacheVariables": {
                 "ANDROID_ABI": "x86",
+                "ANDROID_NATIVE_API_LEVEL": "@NDK_X86_API_NET@",
+                "ANDROID_PLATFORM": "android-@NDK_X86_API_NET@",
                 "ANDROID_RID": "android-x86"
             }
         },
@@ -112,6 +124,8 @@
             "hidden": true,
             "cacheVariables": {
                 "ANDROID_ABI": "x86_64",
+                "ANDROID_NATIVE_API_LEVEL": "@NDK_X86_64_API_NET@",
+                "ANDROID_PLATFORM": "android-@NDK_X86_64_API_NET@",
                 "ANDROID_RID": "android-x64"
             }
         },
@@ -305,5 +319,5 @@
             "name": "ubsan-debug-x86_64",
             "inherits": ["analyzers-debug-x86_64", "ubsan-common"]
         }
-    }
+    ]
 }

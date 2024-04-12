@@ -57,6 +57,7 @@ namespace Xamarin.Android.Prepare
 						Get_SourceLink_Json (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
+						Get_Cmake_Presets (context),
 					};
 				} else {
 					return new List <GeneratedFile> {
@@ -64,6 +65,7 @@ namespace Xamarin.Android.Prepare
 						Get_Configuration_OperatingSystem_props (context),
 						Get_Configuration_Generated_Props (context),
 						Get_Cmake_XA_Build_Configuration (context),
+						Get_Cmake_Presets (context),
 						Get_Ndk_projitems (context),
 						Get_XABuildConfig_cs (context),
 						Get_Omnisharp_Json (context),
@@ -102,6 +104,30 @@ namespace Xamarin.Android.Prepare
 				replacements,
 				Path.Combine (Configurables.Paths.BuildToolsScriptsDir, $"{OutputFileName}.in"),
 				Path.Combine (Configurables.Paths.BuildBinDir, OutputFileName)
+			);
+		}
+
+		GeneratedFile Get_Cmake_Presets (Context context)
+		{
+			const string OutputFileName = "CMakePresets.json";
+
+			Properties props = context.Properties;
+			var replacements = new Dictionary <string, string> (StringComparer.Ordinal) {
+				{ "@AndroidNdkDirectory@",       Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.AndroidNdkDirectory)) },
+				{ "@NinjaPath@",                 Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.NinjaPath)) },
+				{ "@MicrosoftAndroidSdkOutDir@", Utilities.EscapePathSeparators (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir)) },
+				{ "@OutputPath@",                Utilities.EscapePathSeparators (Path.Combine (props.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir), "lib")) },
+				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
+				{ "@NDK_ARM64_V8A_API_NET@",     BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
+				{ "@NDK_X86_API_NET@",           BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
+				{ "@NDK_X86_64_API_NET@",        BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
+				{ "@XA_BUILD_CONFIGURATION@",    context.Configuration },
+			};
+
+			return new GeneratedPlaceholdersFile (
+				replacements,
+				Path.Combine (Configurables.Paths.NativeSourcesDir, $"{OutputFileName}.in"),
+				Path.Combine (Configurables.Paths.NativeSourcesDir, OutputFileName)
 			);
 		}
 
