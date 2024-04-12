@@ -1,25 +1,6 @@
-cmake_minimum_required(VERSION 3.19)
-
-#
-# MUST be included before project()!
-#
-include("../../build-tools/cmake/xa_preamble.cmake")
-
-if(NOT DEFINED LIBUNWIND_LIBRARY_NAME)
-  message(FATAL_ERROR "Please set the LIBUNWIND_LIBRARY_NAME variable on command line (-DLIBUNWIND_LIBRARY_NAME=base_library_name)")
-endif()
-
-if(NOT DEFINED LIBUNWIND_SOURCE_DIR)
-  message(FATAL_ERROR "Please set the LIBUNWIND_SOURCE_DIR variable on command line (-DLIBUNWIND_SOURCE_DIR=source_dir_path)")
-endif()
-
-if(NOT DEFINED LIBUNWIND_OUTPUT_DIR)
-  message(FATAL_ERROR "Please set the LIBUNWIND_OUTPUT_DIR variable on command line (-DLIBUNWIND_OUTPUT_DIR=output_dir_path)")
-endif()
-
-if(NOT DEFINED LIBUNWIND_HEADERS_OUTPUT_DIR)
-  message(FATAL_ERROR "Please set the LIBUNWIND_HEADERS_OUTPUT_DIR variable on command line (-DLIBUNWIND_HEADERS_OUTPUT_DIR=output_dir_path)")
-endif()
+ensure_variable_set(LIBUNWIND_SOURCE_DIR)
+set(LIB_NAME unwind-xamarin)
+set(LIB_ALIAS xa::unwind)
 
 #
 # Read libunwind version
@@ -38,27 +19,11 @@ set(PKG_EXTRA "${UNWIND_EXTRA_VERSION}")
 set(PACKAGE_STRING "libunwind-xamarin")
 set(PACKAGE_BUGREPORT "")
 
-message(STATUS "Major: ${PKG_MAJOR}; Minor: ${PKG_MINOR}; Extra: ${PKG_EXTRA}")
-
-project(
-  libunwind-xamarin
-#  VERSION "${PKG_MAJOR}.${PKG_MINOR}.${PKG_EXTRA}"
-  LANGUAGES C ASM
-)
-
-#
-# MUST be included after project()!
-#
-include("../../build-tools/cmake/xa_common.cmake")
+message(STATUS "libunwind version: ${PKG_MAJOR}.${PKG_MINOR}.${PKG_EXTRA}")
 
 include(CheckCSourceCompiles)
 include(CheckIncludeFiles)
 include(CheckSymbolExists)
-include("../../build-tools/cmake/xa_macros.cmake")
-
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${LIBUNWIND_OUTPUT_DIR})
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${LIBUNWIND_OUTPUT_DIR})
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${LIBUNWIND_OUTPUT_DIR})
 
 if(CMAKE_ANDROID_ARCH_ABI STREQUAL arm64-v8a)
   set(TARGET_AARCH64 TRUE)
@@ -76,30 +41,19 @@ else()
   message(FATAL_ERROR "Unsupported Android ABI ${CMAKE_ANDROID_ARCH_ABI}")
 endif()
 
-set(DSO_SYMBOL_VISIBILITY "hidden")
-xa_common_prepare()
-
-if(CMAKE_BUILD_TYPE STREQUAL Debug)
-  list(APPEND LOCAL_COMPILER_ARGS -g -fno-omit-frame-pointer)
+if(IS_DEBUG)
+  list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS -g -fno-omit-frame-pointer)
 else()
-  list(APPEND LOCAL_COMPILER_ARGS -s -fomit-frame-pointer)
+  list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS -fomit-frame-pointer)
   add_compile_definitions(NDEBUG)
 endif()
-list(APPEND LOCAL_COMPILER_ARGS
-  ${XA_DEFAULT_SYMBOL_VISIBILITY}
+list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -fno-asynchronous-unwind-tables
   -fno-unwind-tables
+  -Wno-macro-redefined
 )
 
-xa_check_c_flags(XA_C_FLAGS "${LOCAL_COMPILER_ARGS}")
-xa_check_c_linker_flags(XA_C_LINKER_FLAGS "${LOCAL_COMPILER_ARGS}")
-
-add_compile_options(${XA_C_FLAGS})
-add_link_options(${XA_C_LINKER_FLAGS})
-
-add_compile_definitions(HAVE_CONFIG_H)
-add_compile_definitions(_GNU_SOURCE)
-add_compile_definitions(UNW_LOCAL_ONLY) # we don't need remote unwinding
+xa_check_c_args(LIBUNWIND_C_ARGS "${POTENTIAL_LOCAL_COMPILER_ARGS}")
 
 # Detect include files
 set(CMAKE_REQUIRED_DEFINITIONS -D_GNU_SOURCE)
@@ -125,34 +79,6 @@ configure_file(config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/config.h)
 configure_file(${LIBUNWIND_SOURCE_DIR}/include/libunwind-common.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/libunwind-common.h)
 configure_file(${LIBUNWIND_SOURCE_DIR}/include/libunwind.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/libunwind.h)
 configure_file(${LIBUNWIND_SOURCE_DIR}/include/tdep/libunwind_i.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/tdep/libunwind_i.h)
-
-# The files are nearly identical, the only difference is name of the header included when remote-only libunwind is used
-# We don't use it, but we still copy files to separate directories in order to avoid locking issues during parallel builds
-set(HEADERS_DIR ${LIBUNWIND_HEADERS_OUTPUT_DIR}/${CMAKE_ANDROID_ARCH_ABI})
-
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/include/libunwind-common.h DESTINATION ${HEADERS_DIR})
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/include/libunwind.h DESTINATION ${HEADERS_DIR})
-file(COPY ${CMAKE_CURRENT_BINARY_DIR}/include/tdep/libunwind_i.h DESTINATION ${HEADERS_DIR}/tdep/)
-
-include_directories(${LIBUNWIND_SOURCE_DIR}/include/tdep)
-include_directories(${LIBUNWIND_SOURCE_DIR}/include)
-include_directories(${LIBUNWIND_SOURCE_DIR}/src)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include/tdep)
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
-
-if(TARGET_ARM)
-  # Ensure that the remote and local unwind code can reside in the same binary without name clashing
-  add_definitions("-Darm_search_unwind_table=UNW_OBJ(arm_search_unwind_table)")
-  # We compile code with -std=c99 and the asm keyword is not recognized as it is a gnu extension
-  #TODO: possibly not needed? add_definitions(-Dasm=__asm__)
-  # The arm sources include ex_tables.h from include/tdep-arm without going through a redirection
-  # in include/tdep like it works for similar files on other architectures. So we need to add
-  # the include/tdep-arm to include directories
-  include_directories(${LIBUNWIND_SOURCE_DIR}/include/tdep-arm)
-elseif(TARGET_AARCH64)
-  # We compile code with -std=c99 and the asm keyword is not recognized as it is a gnu extension
-  #TODO: possibly not needed? add_definitions(-Dasm=__asm__)
-endif()
 
 set(SOURCES_DIR ${LIBUNWIND_SOURCE_DIR}/src)
 
@@ -384,12 +310,71 @@ if(TARGET_AARCH64)
   )
 endif()
 
-add_library(${LIBUNWIND_LIBRARY_NAME}
+add_library(
+  ${LIB_NAME}
   STATIC
   ${LIBUNWIND_XAMARIN_SOURCES}
 )
 
+add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
+
+target_include_directories(
+  ${LIB_NAME}
+  PUBLIC
+  "$<BUILD_INTERFACE:${LIBUNWIND_SOURCE_DIR}/include/tdep>"
+  "$<BUILD_INTERFACE:${LIBUNWIND_SOURCE_DIR}/include>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/tdep>"
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
+)
+
+if(TARGET_ARM)
+  # Ensure that the remote and local unwind code can reside in the same binary without name clashing
+  target_compile_definitions(
+    ${LIB_NAME}
+    PRIVATE
+    "arm_search_unwind_table=UNW_OBJ(arm_search_unwind_table)"
+  )
+
+  # We compile code with -std=c99 and the asm keyword is not recognized as it is a gnu extension
+  #TODO: possibly not needed? add_definitions(-Dasm=__asm__)
+  # The arm sources include ex_tables.h from include/tdep-arm without going through a redirection
+  # in include/tdep like it works for similar files on other architectures. So we need to add
+  # the include/tdep-arm to include directories
+  target_include_directories(
+    ${LIB_NAME}
+    PRIVATE
+    ${LIBUNWIND_SOURCE_DIR}/include/tdep-arm
+  )
+elseif(TARGET_AARCH64)
+  # We compile code with -std=c99 and the asm keyword is not recognized as it is a gnu extension
+  #TODO: possibly not needed? add_definitions(-Dasm=__asm__)
+endif()
+
+target_compile_options(
+  ${LIB_NAME}
+  PRIVATE
+  ${COMMON_C_ARGS} ${LIBUNWIND_C_ARGS}
+)
+
+target_include_directories(
+  ${LIB_NAME}
+  PRIVATE
+  ${LIBUNWIND_SOURCE_DIR}/src
+)
+
 target_link_options(
-  ${LIBUNWIND_LIBRARY_NAME}
+  ${LIB_NAME}
   PRIVATE ${XA_DEFAULT_SYMBOL_VISIBILITY}
+)
+
+target_compile_definitions(
+  ${LIB_NAME}
+  PUBLIC
+  UNW_LOCAL_ONLY
+)
+
+target_compile_definitions(
+  ${LIB_NAME}
+  PRIVATE
+  HAVE_CONFIG_H _GNU_SOURCE
 )

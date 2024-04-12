@@ -11,8 +11,26 @@ project(
   VERSION ${XA_VERSION}
   DESCRIPTION "Xamarin.Android native runtime"
   HOMEPAGE_URL "https://github.com/xamarin/xamarin-android"
-  LANGUAGES CXX C
+  LANGUAGES CXX C ASM
 )
+
+#
+# Sanity checks
+#
+macro(ensure_variable_set VARNAME)
+  if(NOT ${VARNAME})
+    message(FATAL_ERROR "Variable ${VARNAME} not set.  Please set it either on command line with -D${VARNAME}=value or in the presets file")
+  endif()
+endmacro()
+
+ensure_variable_set(ANDROID_ABI)
+ensure_variable_set(CMAKE_ANDROID_NDK)
+ensure_variable_set(OUTPUT_PATH)
+ensure_variable_set(XA_BUILD_CONFIGURATION)
+ensure_variable_set(XA_LIB_TOP_DIR)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${OUTPUT_PATH}/${ANDROID_RID}" CACHE PATH "" FORCE)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${OUTPUT_PATH}/${ANDROID_RID}" CACHE PATH "" FORCE)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -83,8 +101,11 @@ endif()
 #
 # Needed modules
 #
-include(CheckIncludeFile)
-include(CheckCXXSymbolExists)
+# include(CheckIncludeFile)
+# include(CheckCXXSymbolExists)
+include(CheckCXXCompilerFlag)
+include(CheckCCompilerFlag)
+include(CheckLinkerFlag)
 
 #
 # General config
@@ -112,30 +133,285 @@ else()
 endif()
 
 
-file(REAL_PATH "../../../" REPO_ROOT_DIR)
+file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
-set(SHARED_SOURCES_DIR "${REPO_ROOT_DIR}/src/native/shared")
-set(TRACING_SOURCES_DIR "${REPO_ROOT_DIR}/src/native/tracing")
+set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
+
 
 #
 # Include directories
 #
-include_directories(SYSTEM ${CMAKE_SYSROOT}/usr/include/c++/v1/)
-include_directories(SYSTEM "${NET_RUNTIME_DIR}/native/include/mono-2.0")
-include_directories("${JAVA_INTEROP_SRC_PATH}")
+set(SYSROOT_CXX_INCLUDE_DIR ${CMAKE_SYSROOT}/usr/include/c++/v1)
+set(MONO_RUNTIME_INCLUDE_DIR ${NET_RUNTIME_DIR}/native/include/mono-2.0)
+set(JAVA_INTEROP_INCLUDE_DIR ${JAVA_INTEROP_SRC_PATH})
 
 #
 # Compiler defines
 #
-add_compile_definitions(XA_VERSION="${XA_VERSION}")
-add_compile_definitions(_REENTRANT)
-add_compile_definitions(PLATFORM_ANDROID)
+macro(xa_add_compile_definitions TARGET)
+  target_compile_definitions(
+    ${TARGET}
+    PRIVATE
+    XA_VERSION="${XA_VERSION}"
+    _REENTRANT
+    PLATFORM_ANDROID
+  )
+
+  if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      ANDROID64
+    )
+  endif()
+endmacro()
 
 if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
   add_compile_definitions(DEBUG)
 endif()
 
-if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
-  add_compile_definitions(ANDROID64)
+if(NOT DEBUG_BUILD)
+  add_compile_definitions(RELEASE NDEBUG)
 endif()
+
+#
+# Compiler argument macros
+#
+macro(_compiler_has_arg _lang _arg)
+  string(REGEX REPLACE "-|,|=" "_" _arg_name ${_arg})
+  string(TOUPPER "${_lang}" _lang_upper)
+
+  cmake_language(CALL check_${_lang}_compiler_flag "${_arg}" HAS_${_arg_name}_${_lang_upper})
+  if(HAS_${_arg_name}_${_lang_upper})
+    set(COMPILER_ARG_FOUND True)
+  else()
+    set(COMPILER_ARG_FOUND False)
+  endif()
+endmacro()
+
+macro(cxx_compiler_has_arg _arg)
+  _compiler_has_arg(cxx ${_arg})
+endmacro()
+
+macro(c_compiler_has_arg _arg)
+  _compiler_has_arg(c ${_arg})
+endmacro()
+
+macro(_linker_has_arg _lang _arg)
+  string(REGEX REPLACE "-|,|=" "_" _arg_name ${_arg})
+  string(TOUPPER "${_lang}" _lang_upper)
+
+  check_linker_flag(${_lang} "${_arg}" HAS_${_arg_name}_LINKER_${_lang_upper})
+  if(HAS_${_arg_name}_LINKER_${_lang_upper})
+    set(LINKER_ARG_FOUND True)
+  else()
+    set(LINKER_ARG_FOUND False)
+  endif()
+endmacro()
+
+macro(cxx_linker_has_arg _arg)
+  _linker_has_arg(CXX ${_arg})
+endmacro()
+
+macro(c_linker_has_arg _arg)
+  _linker_has_arg(C ${_arg})
+endmacro()
+
+macro(xa_check_c_args VARNAME _CHECK_ARGS)
+  set(_CHECKED_ARGS "")
+
+  foreach(arg ${_CHECK_ARGS})
+    c_compiler_has_arg(${arg})
+    if(COMPILER_ARG_FOUND)
+      list(APPEND _CHECKED_ARGS "${arg}")
+    endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_ARGS}")
+endmacro()
+
+macro(xa_check_cxx_args VARNAME _CHECK_ARGS)
+  set(_CHECKED_ARGS "")
+
+  foreach(arg ${_CHECK_ARGS})
+    cxx_compiler_has_arg(${arg})
+    if(COMPILER_ARG_FOUND)
+      list(APPEND _CHECKED_ARGS "${arg}")
+    endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_ARGS}")
+endmacro()
+
+macro(xa_check_c_linker_args VARNAME _CHECK_ARGS)
+  set(_CHECKED_ARGS "")
+
+  foreach(arg ${_CHECK_ARGS})
+    c_linker_has_arg(${arg})
+    if(LINKER_ARG_FOUND)
+      list(APPEND _CHECKED_ARGS "${arg}")
+    endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_ARGS}")
+endmacro()
+
+macro(xa_check_cxx_linker_args VARNAME _CHECK_ARGS)
+  set(_CHECKED_ARGS "")
+
+  foreach(arg ${_CHECK_ARGS})
+    cxx_linker_has_arg(${arg})
+    if(LINKER_ARG_FOUND)
+      list(APPEND _CHECKED_ARGS "${arg}")
+    endif()
+  endforeach()
+
+  set(${VARNAME} "${_CHECKED_ARGS}")
+endmacro()
+
+#
+# Compiler args
+#
+set(CMAKE_CXX_VISIBILITY_PRESET "hidden")
+set(CMAKE_C_VISIBILITY_PRESET "hidden")
+
+#
+# Common flags are used when building all external
+# and our own code
+#
+set(POTENTIAL_COMMON_COMPILER_ARGS
+  -fstack-protector-strong
+  -fstrict-return
+  -fno-strict-aliasing
+  -fno-function-sections
+  -fno-data-sections
+  -funswitch-loops
+  -Wa,-noexecstack
+  -fPIC
+  -g
+  -O2
+)
+
+set(POTENTIAL_COMMON_LINKER_ARGS
+  -fstack-protector-strong
+  LINKER:-fstrict-return
+  LINKER:-z,now
+  LINKER:-z,relro
+  LINKER:-z,noexecstack
+  LINKER:--no-undefined
+  LINKER:--export-dynamic
+)
+
+# Add some options to increase security. They may mildly affect performance but they won't be big, because the features are
+# assisted by the hardware.
+if((CMAKE_ANDROID_ARCH_ABI STREQUAL "x86") OR (CMAKE_ANDROID_ARCH_ABI STREQUAL "x86_64"))
+  # -fcf-protection=full: Enable control flow protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on many x86 architectures
+  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+    -fcf-protection=full
+  )
+endif()
+
+if(CMAKE_ANDROID_ARCH_ABI STREQUAL "arm64-v8a")
+  # -mbranch-protection=standard: Enable branch protection to counter Return Oriented Programming (ROP) and Jump Oriented Programming (JOP) attacks on AArch64
+  # In clang -mbranch-protection=standard is equivalent to -mbranch-protection=bti+pac-ret and invokes the AArch64 Branch Target Identification (BTI) and Pointer Authentication using key A (pac-ret)
+  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+    -mbranch-protection=standard
+  )
+endif()
+
+if(COMPILER_DIAG_COLOR)
+  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+    -fdiagnostics-color=always
+    -fcolor-diagnostics
+  )
+endif()
+
+if(STRIP_DEBUG)
+  list(APPEND POTENTIAL_COMMON_LINKER_ARGS LINKER:-S)
+else()
+  # When not stripping symbols, we likely want to have precise stack traces, so
+  # we won't omit frame pointers
+  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
+    -fno-omit-frame-pointer
+    -fno-limit-debug-info
+  )
+endif()
+
+#
+# Flags to use only when building our code
+#
+set(POTENTIAL_XA_COMMON_COMPILER_ARGS
+  -Wall
+  -Wconversion
+  -Wdeprecated
+  -Wduplicated-branches
+  -Wduplicated-cond
+  -Werror=format-security
+  -Werror=return-type
+  -Wextra
+  -Wformat-security
+  -Wformat=2
+  -Wno-format-nonliteral
+  -Wimplicit-fallthrough
+  -Wmisleading-indentation
+  -Wnull-dereference
+  -Wpointer-arith
+  -Wshadow
+  -Wsign-compare
+  -Wtrampolines
+  -Wuninitialized
+  -fstrict-flex-arrays=3
+)
+
+if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS
+    -fno-omit-frame-pointer
+    -fno-optimize-sibling-calls
+  )
+endif()
+
+unset(SANITIZER_FLAGS)
+if (ENABLE_CLANG_ASAN)
+  set(SANITIZER_FLAGS -fsanitize=address)
+  set(CHECKED_BUILD_INFIX "-checked+asan")
+elseif(ENABLE_CLANG_UBSAN)
+  set(SANITIZER_FLAGS -fsanitize=undefined)
+  set(CHECKED_BUILD_INFIX "-checked+ubsan")
+endif()
+
+if(SANITIZER_FLAGS)
+  message(STATUS)
+  message(STATUS "Got sanitizer: ${SANITIZER_FLAGS}")
+  message(STATUS)
+
+  list(APPEND POTENTIAL_XA_COMMON_COMPILER_ARGS ${SANITIZER_FLAGS})
+  list(APPEND POTENTIAL_XA_COMMON_LINKER_ARGS ${SANITIZER_FLAGS})
+  list(APPEND CMAKE_REQUIRED_LINK_OPTIONS ${SANITIZER_FLAGS})
+endif()
+
+message(STATUS)
+message(STATUS "Checking support for common compiler and linker args")
+message(STATUS)
+xa_check_cxx_args(COMMON_CXX_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
+xa_check_c_args(COMMON_C_ARGS "${POTENTIAL_COMMON_COMPILER_ARGS}")
+xa_check_cxx_linker_args(COMMON_CXX_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
+xa_check_c_linker_args(COMMON_C_LINKER_ARGS "${POTENTIAL_COMMON_LINKER_ARGS}")
+
+message(STATUS)
+message(STATUS "Checking support for XA common compiler and linker args")
+message(STATUS)
+xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
+xa_check_c_args(XA_COMMON_C_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
+xa_check_cxx_linker_args(XA_COMMON_CXX_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
+xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
+
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_ARGS}>")
+add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
+
+add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
+add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
+
+add_subdirectory(libstub)
+add_subdirectory(shared)
+add_subdirectory(libunwind)

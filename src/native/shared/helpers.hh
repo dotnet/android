@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cstdlib>
 
-#include "java-interop-util.h"
+#include <java-interop-util.h>
 #include "platform-compat.hh"
 
 namespace xamarin::android
