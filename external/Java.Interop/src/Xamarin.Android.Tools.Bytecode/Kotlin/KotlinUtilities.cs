@@ -97,8 +97,7 @@ namespace Xamarin.Android.Tools.Bytecode
 
 		public static bool IsDefaultConstructorMarker (this MethodInfo method)
 		{
-			// A default constructor is synthetic and always has an int and a
-			// DefaultConstructorMarker as its final 2 parameters.
+			// A default constructor is synthetic and has a DefaultConstructorMarker as its final parameter.
 			if (method.Name != "<init>")
 				return false;
 
@@ -107,12 +106,11 @@ namespace Xamarin.Android.Tools.Bytecode
 
 			var parameters = method.GetParameters ();
 
-			if (parameters.Length < 2)
+			if (parameters.Length < 1)
 				return false;
 
-			// Parameter list ends with `int, DefaultConstructorMarker`.
-			return parameters [parameters.Length - 2].Type.TypeSignature == "I" &&
-				parameters [parameters.Length - 1].Type.TypeSignature == "Lkotlin/jvm/internal/DefaultConstructorMarker;";
+			// Parameter list ends with `DefaultConstructorMarker`.
+			return parameters [parameters.Length - 1].Type.TypeSignature == "Lkotlin/jvm/internal/DefaultConstructorMarker;";
 		}
 
 		// Sometimes the Kotlin provided JvmSignature is null (or unhelpful), so we need to construct one ourselves
