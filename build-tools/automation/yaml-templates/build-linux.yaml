@@ -67,7 +67,7 @@ stages:
         workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
         displayName: make prepare-external-git-dependencies
 
-    - task: NuGetAuthenticate@0
+    - task: NuGetAuthenticate@1
       displayName: authenticate with azure artifacts
       inputs:
         forceReinstallCredentialProvider: true
