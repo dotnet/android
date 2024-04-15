@@ -9,40 +9,23 @@ parameters:
   testResultsFormat: NUnit
   artifactSource: ""
   artifactFolder: ""
-  useDotNet: true
   condition: succeeded()
   retryCountOnTaskFailure: 1
 
 steps:
-- ${{ if eq(parameters.useDotNet, false) }}:
-  - task: MSBuild@1
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    configuration: ${{ parameters.buildConfiguration }}
+    xaSourcePath: ${{ parameters.xaSourcePath }}
     displayName: run ${{ parameters.testName }}
-    inputs:
-      solution: ${{ parameters.project }}
-      configuration: ${{ parameters.configuration }}
-      msbuildArguments: >-
-        /restore
-        /t:RunTestApp
-        /bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-        ${{ parameters.extraBuildArgs }}
+    project: ${{ parameters.project }}
+    arguments: >-
+      -t:RunTestApp
+      -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
+      -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
     condition: ${{ parameters.condition }}
     continueOnError: true
     retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
-
-- ${{ if eq(parameters.useDotNet, true) }}:
-  - template: run-dotnet-preview.yaml
-    parameters:
-      configuration: ${{ parameters.buildConfiguration }}
-      xaSourcePath: ${{ parameters.xaSourcePath }}
-      displayName: run ${{ parameters.testName }}
-      project: ${{ parameters.project }}
-      arguments: >-
-        -t:RunTestApp
-        -bl:${{ parameters.xaSourcePath }}/bin/Test${{ parameters.configuration }}/run-${{ parameters.testName }}.binlog
-        -v:n -c ${{ parameters.configuration }} ${{ parameters.extraBuildArgs }}
-      condition: ${{ parameters.condition }}
-      continueOnError: true
-      retryCountOnTaskFailure: ${{ parameters.retryCountOnTaskFailure }}
 
 - script: >
     DEST="$(Build.StagingDirectory)/Test${{ parameters.configuration }}/${{ parameters.artifactFolder }}/" &&
