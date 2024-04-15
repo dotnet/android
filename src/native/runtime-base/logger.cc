@@ -7,14 +7,12 @@
 #include <unistd.h>
 
 #include <android/log.h>
+#include <mono/utils/mono-publib.h>
 
+#include "android-system.hh"
 #include "logger.hh"
-
-#include "monodroid.h"
-#include "monodroid-glue.hh"
-#include "debug.hh"
+#include "shared-constants.hh"
 #include "util.hh"
-#include "globals.hh"
 
 #undef DO_LOG
 #define DO_LOG(_level_,_category_,_format_,_args_)						                        \
@@ -67,17 +65,17 @@ open_file (LogCategories category, const char *path, const char *override_dir, c
 	}
 
 	if (!path) {
-		utils.create_public_directory (override_dir);
-		p     = utils.path_combine (override_dir, filename);
+		Util::create_public_directory (override_dir);
+		p     = Util::path_combine (override_dir, filename);
 		path  = p;
 	}
 
 	unlink (path);
 
-	f = utils.monodroid_fopen (path, "a");
+	f = Util::monodroid_fopen (path, "a");
 
 	if (f) {
-		utils.set_world_accessable (path);
+		Util::set_world_accessable (path);
 	} else {
 		log_warn (category, "Could not open path '%s' for logging: %s", path, strerror (errno));
 	}
@@ -132,7 +130,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 	log_timing_categories = LOG_TIMING_DEFAULT;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_LOG_PROPERTY, value) == 0)
+	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_LOG_PROPERTY, value) == 0)
 		return;
 
 	string_segment param;
@@ -182,7 +180,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 		constexpr std::string_view CAT_GREF_EQUALS { "gref=" };
 		if (set_category (CAT_GREF_EQUALS, param, LOG_GREF, true /* arg_starts_with_name */)) {
-			gref_file = utils.strdup_new (param, CAT_GREF_EQUALS.length ());
+			gref_file = Util::strdup_new (param, CAT_GREF_EQUALS.length ());
 			continue;
 		}
 
@@ -198,7 +196,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 		constexpr std::string_view CAT_LREF_EQUALS { "lref=" };
 		if (set_category (CAT_LREF_EQUALS, param, LOG_LREF, true /* arg_starts_with_name */)) {
-			lref_file = utils.strdup_new (param, CAT_LREF_EQUALS.length ());
+			lref_file = Util::strdup_new (param, CAT_LREF_EQUALS.length ());
 			continue;
 		}
 
@@ -226,13 +224,13 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 		constexpr std::string_view MONO_LOG_MASK_ARG { "mono_log_mask=" };
 		if (param.starts_with (MONO_LOG_MASK_ARG)) {
-			mono_log_mask = utils.strdup_new (param, MONO_LOG_MASK_ARG.length ());
+			mono_log_mask = Util::strdup_new (param, MONO_LOG_MASK_ARG.length ());
 			continue;
 		}
 
 		constexpr std::string_view MONO_LOG_LEVEL_ARG { "mono_log_level=" };
 		if (param.starts_with (MONO_LOG_LEVEL_ARG)) {
-			mono_log_level = utils.strdup_new (param, MONO_LOG_LEVEL_ARG.length ());
+			mono_log_level = Util::strdup_new (param, MONO_LOG_LEVEL_ARG.length ());
 			continue;
 		}
 

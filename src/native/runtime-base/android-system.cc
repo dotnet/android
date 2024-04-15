@@ -3,13 +3,27 @@
 #include <cstring>
 #include <fcntl.h>
 
-#include "globals.hh"
+#include <mono/metadata/object.h>
+
 #include "android-system.hh"
-#include "jni-wrappers.hh"
-#include "xamarin-app.hh"
 #include "cpp-util.hh"
 #include "java-interop-dlfcn.h"
 #include "java-interop.h"
+#include "jni-wrappers.hh"
+#include "shared-constants.hh"
+#include "strings.hh"
+#include "util.hh"
+#include "xamarin-app.hh"
+
+using namespace microsoft::java_interop;
+using namespace xamarin::android::internal;
+using namespace xamarin::android;
+
+// These two must stay here until JavaInterop is converted to C++
+FILE  *gref_log;
+FILE  *lref_log;
+bool    gref_to_logcat;
+bool    lref_to_logcat;
 
 #if defined (DEBUG)
 namespace xamarin::android::internal {
@@ -20,17 +34,11 @@ namespace xamarin::android::internal {
 		struct BundledProperty *next;
 	};
 }
-#endif // DEBUG
 
-using namespace microsoft::java_interop;
-using namespace xamarin::android;
-using namespace xamarin::android::internal;
-
-#if defined (DEBUG)
 BundledProperty *AndroidSystem::bundled_properties = nullptr;
 
 BundledProperty*
-AndroidSystem::lookup_system_property (const char *name)
+AndroidSystem::lookup_system_property (const char *name) noexcept
 {
 	for (BundledProperty *p = bundled_properties; p != nullptr; p = p->next) {
 		if (strcmp (p->name, name) == 0) {
@@ -42,7 +50,7 @@ AndroidSystem::lookup_system_property (const char *name)
 #endif // DEBUG
 
 const char*
-AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
+AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noexcept
 {
 	value_len = 0;
 #if defined (DEBUG)
@@ -85,7 +93,7 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len)
 
 #if defined (DEBUG)
 void
-AndroidSystem::add_system_property (const char *name, const char *value)
+AndroidSystem::add_system_property (const char *name, const char *value) noexcept
 {
 	BundledProperty* p = lookup_system_property (name);
 	if (p != nullptr) {
@@ -122,7 +130,7 @@ AndroidSystem::add_system_property (const char *name, const char *value)
 #endif // DEBUG
 
 int
-AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len)
+AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value, size_t sp_value_len) noexcept
 {
 	if (name == nullptr || sp_value == nullptr)
 		return -1;
@@ -145,7 +153,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 }
 
 int
-AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value)
+AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& value) noexcept
 {
 	int len = _monodroid__system_property_get (name, value.get (), value.size ());
 	if (len > 0) {
@@ -164,7 +172,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 }
 
 int
-AndroidSystem::monodroid_get_system_property (const char *name, char **value)
+AndroidSystem::monodroid_get_system_property (const char *name, char **value) noexcept
 {
 	if (value)
 		*value = nullptr;
@@ -196,12 +204,12 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value)
 
 #if defined (DEBUG)
 size_t
-AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value)
+AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char **value) noexcept
 {
 	if (value != nullptr)
 		*value = nullptr;
 
-	FILE* fp = utils.monodroid_fopen (path, "r");
+	FILE* fp = Util::monodroid_fopen (path, "r");
 	if (fp == nullptr)
 		return 0;
 
@@ -233,7 +241,7 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 #endif // def DEBUG
 
 size_t
-AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value)
+AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] const char *name, [[maybe_unused]] char ** value) noexcept
 {
 #if defined (DEBUG)
 	for (const char *od : override_dirs) {
@@ -241,7 +249,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 			continue;
 		}
 
-		std::unique_ptr<char[]> override_file {utils.path_combine (od, name)};
+		std::unique_ptr<char[]> override_file {Util::path_combine (od, name)};
 		log_info (LOG_DEFAULT, "Trying to get property from %s", override_file.get ());
 		size_t result = _monodroid_get_system_property_from_file (override_file.get (), value);
 		if (result == 0 || value == nullptr || (*value) == nullptr || **value == '\0') {
@@ -256,7 +264,7 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 
 // TODO: review this. Do we really have to create the dir in release?
 void
-AndroidSystem::create_update_dir (char *override_dir)
+AndroidSystem::create_update_dir (char *override_dir) noexcept
 {
 #if defined (RELEASE)
 	/*
@@ -266,23 +274,23 @@ AndroidSystem::create_update_dir (char *override_dir)
 	 * However, if any logging is enabled (which should _not_ happen with
 	 * pre-loaded apps!), we need the .__override__ directory...
 	 */
-	if (log_categories == 0 && monodroid_get_system_property (Debug::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
+	if (log_categories == 0 && monodroid_get_system_property (SharedConstants::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
 		return;
 	}
 #endif // def RELEASE
 
 	override_dirs [0] = override_dir;
-	utils.create_public_directory (override_dir);
+	Util::create_public_directory (override_dir);
 	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 }
 
 bool
-AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
 	if (dso_path == nullptr)
 		return false;
 
-	if (base_dir == nullptr || utils.is_path_rooted (dso_path))
+	if (base_dir == nullptr || Util::is_path_rooted (dso_path))
 		return const_cast<char*>(dso_path); // Absolute path or no base path, can't do much with it
 
 	path.assign_c (base_dir)
@@ -293,27 +301,27 @@ AndroidSystem::get_full_dso_path (const char *base_dir, const char *dso_path, dy
 }
 
 void*
-AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check)
+AndroidSystem::load_dso (const char *path, unsigned int dl_flags, bool skip_exists_check) noexcept
 {
 	if (path == nullptr || *path == '\0')
 		return nullptr;
 
 	log_info (LOG_ASSEMBLY, "Trying to load shared library '%s'", path);
-	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !utils.file_exists (path)) {
+	if (!skip_exists_check && !is_embedded_dso_mode_enabled () && !Util::file_exists (path)) {
 		log_info (LOG_ASSEMBLY, "Shared library '%s' not found", path);
 		return nullptr;
 	}
 
 	char *error = nullptr;
 	void *handle = java_interop_lib_load (path, dl_flags, &error);
-	if (handle == nullptr && utils.should_log (LOG_ASSEMBLY))
+	if (handle == nullptr && Util::should_log (LOG_ASSEMBLY))
 		log_info_nocheck (LOG_ASSEMBLY, "Failed to load shared library '%s'. %s", path, error);
 	java_interop_free (error);
 	return handle;
 }
 
 void*
-AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags)
+AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t num_entries, const char *dso_name, unsigned int dl_flags) noexcept
 {
 	abort_if_invalid_pointer_argument (directories);
 	if (dso_name == nullptr)
@@ -333,13 +341,13 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 }
 
 void*
-AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags)
+AndroidSystem::load_dso_from_app_lib_dirs (const char *name, unsigned int dl_flags) noexcept
 {
 	return load_dso_from_specified_dirs (app_lib_directories.data (), app_lib_directories.size (), name, dl_flags);
 }
 
 void*
-AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags)
+AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [[maybe_unused]] unsigned int dl_flags) noexcept
 {
 #ifdef RELEASE
 	return nullptr;
@@ -349,7 +357,7 @@ AndroidSystem::load_dso_from_override_dirs ([[maybe_unused]] const char *name, [
 }
 
 void*
-AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags)
+AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_flags) noexcept
 {
 	void *handle = load_dso_from_override_dirs (name, dl_flags);
 	if (handle == nullptr)
@@ -358,16 +366,16 @@ AndroidSystem::load_dso_from_any_directories (const char *name, unsigned int dl_
 }
 
 bool
-AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_existing_dso_path_on_disk (const char *base_dir, const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
-	if (get_full_dso_path (base_dir, dso_name, path) && utils.file_exists (path.get ()))
+	if (get_full_dso_path (base_dir, dso_name, path) && Util::file_exists (path.get ()))
 		return true;
 
 	return false;
 }
 
 bool
-AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path)
+AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_string<SENSIBLE_PATH_MAX>& path) noexcept
 {
 	if (is_embedded_dso_mode_enabled ())
 		return false;
@@ -390,7 +398,7 @@ AndroidSystem::get_full_dso_path_on_disk (const char *dso_name, dynamic_local_st
 }
 
 int
-AndroidSystem::count_override_assemblies (void)
+AndroidSystem::count_override_assemblies (void) noexcept
 {
 	int c = 0;
 
@@ -398,14 +406,14 @@ AndroidSystem::count_override_assemblies (void)
 		DIR *dir;
 		dirent *e;
 
-		if (dir_path == nullptr || !utils.directory_exists (dir_path))
+		if (dir_path == nullptr || !Util::directory_exists (dir_path))
 			continue;
 
 		if ((dir = ::opendir (dir_path)) == nullptr)
 			continue;
 
 		while ((e = ::readdir (dir)) != nullptr && e) {
-			if (utils.monodroid_dirent_hasextension (e, ".dll"))
+			if (Util::monodroid_dirent_hasextension (e, ".dll"))
 				++c;
 		}
 		::closedir (dir);
@@ -415,7 +423,7 @@ AndroidSystem::count_override_assemblies (void)
 }
 
 long
-AndroidSystem::get_max_gref_count_from_system (void)
+AndroidSystem::get_max_gref_count_from_system (void) noexcept
 {
 	long max;
 
@@ -426,7 +434,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 	}
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> override;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_MAX_GREFC, override) > 0) {
+	if (monodroid_get_system_property (SharedConstants::DEBUG_MONO_MAX_GREFC, override) > 0) {
 		char *e;
 		max       = strtol (override.get (), &e, 10);
 		switch (*e) {
@@ -442,7 +450,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 		if (max < 0)
 			max = std::numeric_limits<int>::max ();
 		if (*e) {
-			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", Debug::DEBUG_MONO_MAX_GREFC.data (), override.get ());
+			log_warn (LOG_GC, "Unsupported '%s' value '%s'.", SharedConstants::DEBUG_MONO_MAX_GREFC.data (), override.get ());
 		}
 		log_warn (LOG_GC, "Overriding max JNI Global Reference count to %i", max);
 	}
@@ -450,7 +458,7 @@ AndroidSystem::get_max_gref_count_from_system (void)
 }
 
 long
-AndroidSystem::get_gref_gc_threshold ()
+AndroidSystem::get_gref_gc_threshold () noexcept
 {
 	if (max_gref_count == std::numeric_limits<int>::max ())
 		return max_gref_count;
@@ -459,7 +467,7 @@ AndroidSystem::get_gref_gc_threshold ()
 
 #if defined (DEBUG)
 void
-AndroidSystem::setup_environment (const char *name, const char *value)
+AndroidSystem::setup_environment (const char *name, const char *value) noexcept
 {
 	if (name == nullptr || *name == '\0')
 		return;
@@ -478,7 +486,7 @@ AndroidSystem::setup_environment (const char *name, const char *value)
 }
 
 void
-AndroidSystem::setup_environment_from_override_file (const char *path)
+AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 {
 	using read_count_type = size_t;
 
@@ -568,7 +576,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path)
 #endif // def DEBUG
 
 void
-AndroidSystem::setup_environment ()
+AndroidSystem::setup_environment () noexcept
 {
 	if (is_mono_aot_enabled () && *mono_aot_mode_name != '\0') {
 		switch (mono_aot_mode_name [0]) {
@@ -632,8 +640,8 @@ AndroidSystem::setup_environment ()
 #if defined (DEBUG)
 	// TODO: for debug read from file in the override directory named `environment`
 	for (const char *od : override_dirs) {
-		std::unique_ptr<char[]> env_override_file {utils.path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
-		if (utils.file_exists (env_override_file.get ())) {
+		std::unique_ptr<char[]> env_override_file {Util::path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
+		if (Util::file_exists (env_override_file.get ())) {
 			setup_environment_from_override_file (env_override_file.get ());
 		}
 	}
@@ -641,7 +649,7 @@ AndroidSystem::setup_environment ()
 }
 
 void
-AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, [[maybe_unused]] void *user_data)
+AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk_count, [[maybe_unused]] void *user_data) noexcept
 {
 	if (apk == nullptr || index != apk_count - 1)
 		return;
@@ -651,7 +659,110 @@ AndroidSystem::setup_process_args_apk (const char *apk, size_t index, size_t apk
 }
 
 void
-AndroidSystem::setup_process_args (jstring_array_wrapper &runtimeApks)
+AndroidSystem::setup_process_args (jstring_array_wrapper &runtimeApks) noexcept
 {
-	for_each_apk (runtimeApks, static_cast<BasicAndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
+	for_each_apk (runtimeApks, static_cast<AndroidSystem::ForEachApkHandler> (&AndroidSystem::setup_process_args_apk), nullptr);
+}
+
+void
+AndroidSystem::detect_embedded_dso_mode (jstring_array_wrapper& appDirs) noexcept
+{
+	// appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX] points to the native library directory
+	std::unique_ptr<char> libmonodroid_path {Util::path_combine (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr (), "libmonodroid.so")};
+	log_debug (LOG_ASSEMBLY, "Checking if libmonodroid was unpacked to %s", libmonodroid_path.get ());
+	if (!Util::file_exists (libmonodroid_path.get ())) {
+		log_debug (LOG_ASSEMBLY, "%s not found, assuming application/android:extractNativeLibs == false", libmonodroid_path.get ());
+		set_embedded_dso_mode_enabled (true);
+	} else {
+		log_debug (LOG_ASSEMBLY, "Native libs extracted to %s, assuming application/android:extractNativeLibs == true", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		set_embedded_dso_mode_enabled (false);
+	}
+}
+
+void
+AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks, jstring_array_wrapper& appDirs, bool have_split_apks) noexcept
+{
+	if (!is_embedded_dso_mode_enabled ()) {
+		log_debug (LOG_DEFAULT, "Setting up for DSO lookup in app data directories");
+
+		AndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
+		AndroidSystem::app_lib_directories [0] = Util::strdup_new (appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+		log_debug (LOG_ASSEMBLY, "Added filesystem DSO lookup location: %s", appDirs[SharedConstants::APP_DIRS_DATA_DIR_INDEX].get_cstr ());
+	} else {
+		log_debug (LOG_DEFAULT, "Setting up for DSO lookup directly in the APK");
+
+		if (have_split_apks) {
+			// If split apks are used, then we will have just a single app library directory. Don't allocate any memory
+			// dynamically in this case
+			AndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
+		} else {
+			size_t app_lib_directories_size = have_split_apks ? 1 : runtimeApks.get_length ();
+			AndroidSystem::app_lib_directories = std::span<const char*> (new const char*[app_lib_directories_size], app_lib_directories_size);
+		}
+
+		unsigned short built_for_cpu = 0, running_on_cpu = 0;
+		unsigned char is64bit = 0;
+		_monodroid_detect_cpu_and_architecture (&built_for_cpu, &running_on_cpu, &is64bit);
+		setup_apk_directories (running_on_cpu, runtimeApks, have_split_apks);
+	}
+}
+
+void
+AndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data) noexcept
+{
+	size_t apksLength = runtimeApks.get_length ();
+	for (size_t i = 0; i < apksLength; ++i) {
+		jstring_wrapper &e = runtimeApks [i];
+
+		(handler) (e.get_cstr (), i, apksLength, user_data);
+	}
+}
+
+force_inline void
+AndroidSystem::add_apk_libdir (const char *apk, size_t &index, const char *abi) noexcept
+{
+	abort_unless (index < app_lib_directories.size (), "Index out of range");
+	app_lib_directories [index] = Util::string_concat (apk, "!/lib/", abi);
+	log_debug (LOG_ASSEMBLY, "Added APK DSO lookup location: %s", app_lib_directories[index]);
+	index++;
+}
+
+force_inline void
+AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
+{
+	const char *abi = android_abi_names [running_on_cpu];
+	size_t number_of_added_directories = 0;
+
+	for (size_t i = 0; i < runtimeApks.get_length (); ++i) {
+		jstring_wrapper &e = runtimeApks [i];
+		const char *apk = e.get_cstr ();
+
+		if (have_split_apks) {
+			if (Util::ends_with (apk, SharedConstants::split_config_abi_apk_name)) {
+				add_apk_libdir (apk, number_of_added_directories, abi);
+				break;
+			}
+		} else {
+			add_apk_libdir (apk, number_of_added_directories, abi);
+		}
+	}
+
+	if (app_lib_directories.size () == number_of_added_directories) [[likely]] {
+		return;
+	}
+
+	abort_unless (number_of_added_directories > 0, "At least a single application lib directory must be added");
+	app_lib_directories = app_lib_directories.subspan (0, number_of_added_directories);
+}
+
+char*
+AndroidSystem::determine_primary_override_dir (jstring_wrapper &home) noexcept
+{
+	dynamic_local_string<SENSIBLE_PATH_MAX> name { home.get_cstr () };
+	name.append ("/")
+	    .append (SharedConstants::OVERRIDE_DIRECTORY_NAME)
+	    .append ("/")
+	    .append (SharedConstants::android_lib_abi);
+
+	return Util::strdup_new (name.get ());
 }

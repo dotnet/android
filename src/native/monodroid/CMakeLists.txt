@@ -22,12 +22,6 @@ option(ENABLE_TIMING "Build with timing support" OFF)
 
 # Environment checks
 
-if(NOT DEFINED MONO_PATH)
-  message(FATAL_ERROR "Please set the MONO_PATH variable on command line (-DMONO_PATH=PATH)")
-else()
-  string(REPLACE "\\" "/" MONO_PATH ${MONO_PATH})
-endif()
-
 if(NOT DEFINED CONFIGURATION)
   message(FATAL_ERROR "Please set the CONFIGURATION variable on command line (-DCONFIGURATION=name)")
 endif()
@@ -63,10 +57,7 @@ set(SOURCES_DIR ${CMAKE_SOURCE_DIR}/jni)
 set(BIONIC_SOURCES_DIR "${REPO_ROOT_DIR}/src-ThirdParty/bionic")
 set(LZ4_SRC_DIR "${EXTERNAL_DIR}/lz4/lib")
 set(LZ4_INCLUDE_DIR ${LZ4_SRC_DIR})
-set(XA_BIN_DIR "${REPO_ROOT_DIR}/bin/${XA_BUILD_CONFIGURATION}")
 set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
-set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
-set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
 
 set(LZ4_SOURCES
   "${LZ4_SRC_DIR}/lz4.c"
@@ -81,21 +72,8 @@ include_directories(${EXTERNAL_DIR})
 include_directories(SYSTEM ${CONSTEXPR_XXH3_DIR})
 include_directories(SYSTEM ${ROBIN_MAP_DIR}/include)
 include_directories(SYSTEM ${LZ4_INCLUDE_DIR})
-
 include_directories("jni")
-include_directories("${XA_BIN_DIR}/include")
-include_directories("${XA_BIN_DIR}/include/${ANDROID_ABI}/eglib")
 
-# This is to allow "release" builds with Debug build type and vice versa
-include_directories("../../bin/${CONFIGURATION}/include")
-include_directories("../../bin/${CONFIGURATION}/include/${ANDROID_ABI}/eglib")
-include_directories("${MONO_PATH}/mono/eglib")
-
-# Common preparation code
-include("../../build-tools/cmake/xa_macros.cmake")
-
-xa_common_prepare()
-xa_macos_prepare_arm64()
 
 # Compiler defines
 
@@ -285,9 +263,6 @@ set(XAMARIN_MONODROID_SOURCES
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${LZ4_SOURCES}
   ${XA_SHARED_SOURCES}
-  ${SOURCES_DIR}/android-system.cc
-  ${SOURCES_DIR}/basic-android-system.cc
-  ${SOURCES_DIR}/basic-utilities.cc
   ${SOURCES_DIR}/cpu-arch-detect.cc
   ${SOURCES_DIR}/debug-constants.cc
   ${SOURCES_DIR}/debug.cc
@@ -303,10 +278,10 @@ set(XAMARIN_MONODROID_SOURCES
   ${SOURCES_DIR}/monovm-properties.cc
   ${SOURCES_DIR}/osbridge.cc
   ${SOURCES_DIR}/pinvoke-override-api.cc
+  ${SOURCES_DIR}/runtime-util.cc
   ${SOURCES_DIR}/shared-constants.cc
   ${SOURCES_DIR}/timezones.cc
   ${SOURCES_DIR}/timing-internal.cc
-  ${SOURCES_DIR}/util.cc
   ${SOURCES_DIR}/xamarin_getifaddrs.cc
 )
 
@@ -476,43 +451,5 @@ target_link_options(
 
 target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
-  ${LINK_LIBS} xamarin-app
-  )
-
-if(NOT ANALYZERS_ENABLED)
-  macro(xa_add_stub_library _libname)
-    add_library(
-      ${_libname}
-      SHARED ${XAMARIN_STUB_LIB_SOURCES}
-    )
-
-    string(TOUPPER ${_libname} _libname_uc)
-    target_compile_definitions(
-      ${_libname}
-      PRIVATE STUB_LIB_NAME=lib${_libname} IN_LIB${_libname_uc}
-    )
-
-    target_compile_options(
-      ${_libname}
-      PRIVATE -nostdlib -fno-exceptions -fno-rtti
-    )
-
-    target_link_options(
-      ${_libname}
-      PRIVATE -nostdlib -fno-exceptions -fno-rtti
-    )
-
-    set_target_properties(
-      ${_libname}
-      PROPERTIES
-      LIBRARY_OUTPUT_DIRECTORY "${XA_LIBRARY_STUBS_OUTPUT_DIRECTORY}"
-    )
-  endmacro()
-
-  xa_add_stub_library(c)
-  xa_add_stub_library(m)
-
-  # These two are used by the marshal methods tracing library when linking libxamarin-app.so
-  xa_add_stub_library(log)
-  xa_add_stub_library(dl)
-endif()
+  ${LINK_LIBS} xa::xamarin-app
+)

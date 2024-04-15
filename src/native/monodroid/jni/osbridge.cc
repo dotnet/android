@@ -18,12 +18,6 @@
 #include "globals.hh"
 #include "osbridge.hh"
 
-// These two must stay here until JavaInterop is converted to C++
-FILE  *gref_log;
-FILE  *lref_log;
-bool    gref_to_logcat;
-bool    lref_to_logcat;
-
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
 

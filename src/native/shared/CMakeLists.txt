@@ -8,6 +8,9 @@ set(XA_SHARED_SOURCES
   new_delete.cc
 )
 
+set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
+set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")
+
 add_library(
   ${LIB_NAME}
   STATIC
@@ -21,6 +24,8 @@ target_include_directories(
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
   "$<BUILD_INTERFACE:${JAVA_INTEROP_INCLUDE_DIR}>"
+  "$<BUILD_INTERFACE:${EXTERNAL_DIR}>"
+  "$<BUILD_INTERFACE:${CONSTEXPR_XXH3_DIR}>"
 )
 
 target_include_directories(

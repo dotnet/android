@@ -1,8 +1,6 @@
 #ifndef __CPU_ARCH_H
 #define __CPU_ARCH_H
 
-#include <monodroid.h>
-
 #define CPU_KIND_UNKNOWN ((unsigned short)0)
 #define CPU_KIND_ARM     ((unsigned short)1)
 #define CPU_KIND_ARM64   ((unsigned short)2)

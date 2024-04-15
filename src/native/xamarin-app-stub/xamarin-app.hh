@@ -7,8 +7,8 @@
 
 #include <jni.h>
 #include <mono/metadata/image.h>
+#include <mono/utils/mono-publib.h>
 
-#include "monodroid.h"
 #include "xxhash.hh"
 
 static constexpr uint64_t FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version

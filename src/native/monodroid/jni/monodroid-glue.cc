@@ -64,6 +64,7 @@
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
 #include "search.hh"
+#include "runtime-util.hh"
 
 //#include "xamarin_getifaddrs.h"
 
@@ -794,7 +795,7 @@ MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int ve
 		return 0;
 	}
 
-	java_System = utils.get_class_from_runtime_field(env, runtimeClass, "java_lang_System", true);
+	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
 	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	return 1;
@@ -878,7 +879,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 
 	log_info (LOG_GC, "GREF GC Threshold: %i", init.grefGcThreshold);
 
-	init.grefClass = utils.get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
+	init.grefClass = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_Class", true);
 	Class_getName  = env->GetMethodID (init.grefClass, "getName", "()Ljava/lang/String;");
 	init.Class_forName = env->GetStaticMethodID (init.grefClass, "forName", "(Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class;");
 
@@ -941,7 +942,7 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	env->DeleteLocalRef (lrefLoaderClass);
 
 	init.grefLoader           = env->NewGlobalRef (loader);
-	init.grefIGCUserPeer      = utils.get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
+	init.grefIGCUserPeer      = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "mono_android_IGCUserPeer", true);
 
 	osBridge.initialize_on_runtime_init (env, runtimeClass);
 
@@ -1607,7 +1608,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	androidSystem.detect_embedded_dso_mode (applicationDirs);
 	androidSystem.set_running_in_emulator (isEmulator);
 
-	java_TimeZone = utils.get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
+	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
 	utils.monodroid_store_package_name (application_config.android_package_name);
 
@@ -1738,6 +1739,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
 {
+	Util::initialize ();
 	return monodroidRuntime.Java_JNI_OnLoad (vm, reserved);
 }
 

@@ -413,5 +413,7 @@ add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
 add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
 
 add_subdirectory(libstub)
-add_subdirectory(shared)
 add_subdirectory(libunwind)
+add_subdirectory(shared)
+add_subdirectory(xamarin-app-stub)
+add_subdirectory(runtime-base)

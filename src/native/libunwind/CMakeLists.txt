@@ -50,7 +50,12 @@ endif()
 list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -fno-asynchronous-unwind-tables
   -fno-unwind-tables
+
+  # Turn off some warnings, as we can't do much about them here...
+  -Wno-absolute-value
+  -Wno-incompatible-pointer-types
   -Wno-macro-redefined
+  -Wno-single-bit-bitfield-constant-conversion
 )
 
 xa_check_c_args(LIBUNWIND_C_ARGS "${POTENTIAL_LOCAL_COMPILER_ARGS}")
