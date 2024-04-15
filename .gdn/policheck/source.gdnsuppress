@@ -9,10 +9,32 @@
     "default": {
       "name": "default",
       "createdDate": "2023-02-22 23:55:29Z",
-      "lastUpdatedDate": "2024-02-22 21:40:38Z"
+      "lastUpdatedDate": "2024-04-15 16:33:16Z"
     }
   },
   "results": {
+     "5a0a8690d8a06dfdbf6002c67fa64a60a94f3fc77a594034cce20382e88002aa": {
+      "signature": "5a0a8690d8a06dfdbf6002c67fa64a60a94f3fc77a594034cce20382e88002aa",
+      "alternativeSignatures": [
+        "5c6188b6cec9a19a5e3b1c6b4a25fe79f1650edad0b9967c08983a33b57cdc2d"
+      ],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Exclusion list includeded in external sources.",
+      "createdDate": "2024-04-15 16:33:16Z"
+    },
+    "1b319055b8e507b220d0dab341e67e20f49632fd1844a08a4fcc6d4493930ac5": {
+      "signature": "1b319055b8e507b220d0dab341e67e20f49632fd1844a08a4fcc6d4493930ac5",
+      "alternativeSignatures": [
+        "5c6188b6cec9a19a5e3b1c6b4a25fe79f1650edad0b9967c08983a33b57cdc2d"
+      ],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Exclusion list includeded in external sources.",
+      "createdDate": "2024-04-15 16:33:16Z"
+    },
     "6789cab1bdc97b0cc3ad057b7fdd21d63cdf8bc2679391923803fa240ef81292": {
       "signature": "6789cab1bdc97b0cc3ad057b7fdd21d63cdf8bc2679391923803fa240ef81292",
       "alternativeSignatures": [
@@ -155,6 +177,17 @@
       ],
       "justification": "Reference to output from an external tool.",
       "createdDate": "2023-02-22 23:55:29Z"
+    },
+    "75474fa652dbbf8f96826100a5fe37ba686a032ca07d61ef68a79c8e4412c150": {
+      "signature": "75474fa652dbbf8f96826100a5fe37ba686a032ca07d61ef68a79c8e4412c150",
+      "alternativeSignatures": [
+        "c78c3f8e456228997085b6409a12dce8b11eb5454a5588652225bc48a77d4662"
+      ],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "Exclusion list includeded in external sources.",
+      "createdDate": "2024-04-15 16:33:16Z"
     },
     "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e": {
       "signature": "243e199c7aec22377e0363bdca82384278cc36b0674f35697935fde6c45cfd0e",
