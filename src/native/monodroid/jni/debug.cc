@@ -133,29 +133,6 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 }
 
 #if defined (DEBUG)
-void
-Debug::set_debugger_log_level (const char *level)
-{
-	if (level == nullptr || *level == '\0') {
-		got_debugger_log_level = false;
-		return;
-	}
-
-	unsigned long v = strtoul (level, nullptr, 0);
-	if (v == std::numeric_limits<unsigned long>::max () && errno == ERANGE) {
-		log_error (LOG_DEFAULT, "Invalid debugger log level value '%s', expecting a positive integer or zero", level);
-		return;
-	}
-
-	if (v > std::numeric_limits<int>::max ()) {
-		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", std::numeric_limits<int>::max ());
-		v = std::numeric_limits<int>::max ();
-	}
-
-	got_debugger_log_level = true;
-	debugger_log_level = static_cast<int>(v);
-}
-
 inline void
 Debug::parse_options (char *options, ConnOptions *opts)
 {

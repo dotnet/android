@@ -3,6 +3,7 @@
 #include <cstdarg>
 #include <cstdlib>
 #include <cstring>
+#include <limits>
 #include <strings.h>
 #include <unistd.h>
 
@@ -10,6 +11,7 @@
 #include <mono/utils/mono-publib.h>
 
 #include "android-system.hh"
+#include "cpp-util.hh"
 #include "logger.hh"
 #include "shared-constants.hh"
 #include "util.hh"
@@ -52,46 +54,72 @@ unsigned int log_categories = LOG_NONE;
 unsigned int log_timing_categories;
 int gc_spew_enabled;
 
-static FILE*
-open_file (LogCategories category, const char *path, const char *override_dir, const char *filename)
-{
-	char *p = NULL;
-	FILE *f;
+namespace {
+	FILE*
+	open_file (LogCategories category, const char *path, const char *override_dir, const char *filename)
+	{
+		char *p = NULL;
+		FILE *f;
 
-	if (path && access (path, W_OK) < 0) {
-		log_warn (category, "Could not open path '%s' for logging (\"%s\"). Using '%s/%s' instead.",
-				path, strerror (errno), override_dir, filename);
-		path  = NULL;
+		if (path && access (path, W_OK) < 0) {
+			log_warn (category, "Could not open path '%s' for logging (\"%s\"). Using '%s/%s' instead.",
+								path, strerror (errno), override_dir, filename);
+			path  = NULL;
+		}
+
+		if (!path) {
+			Util::create_public_directory (override_dir);
+			p     = Util::path_combine (override_dir, filename);
+			path  = p;
+		}
+
+		unlink (path);
+
+		f = Util::monodroid_fopen (path, "a");
+
+		if (f) {
+			Util::set_world_accessable (path);
+		} else {
+			log_warn (category, "Could not open path '%s' for logging: %s", path, strerror (errno));
+		}
+
+		free (p);
+
+		return f;
 	}
 
-	if (!path) {
-		Util::create_public_directory (override_dir);
-		p     = Util::path_combine (override_dir, filename);
-		path  = p;
-	}
 
-	unlink (path);
-
-	f = Util::monodroid_fopen (path, "a");
-
-	if (f) {
-		Util::set_world_accessable (path);
-	} else {
-		log_warn (category, "Could not open path '%s' for logging: %s", path, strerror (errno));
-	}
-
-	free (p);
-
-	return f;
+	const char *gref_file = nullptr;
+	const char *lref_file = nullptr;
+	bool light_gref  = false;
+	bool light_lref  = false;
 }
 
-static const char *gref_file = nullptr;
-static const char *lref_file = nullptr;
-static bool light_gref  = false;
-static bool light_lref  = false;
+void
+Logger::set_debugger_log_level (const char *level) noexcept
+{
+	if (level == nullptr || *level == '\0') {
+		_got_debugger_log_level = false;
+		return;
+	}
+
+	unsigned long v = strtoul (level, nullptr, 0);
+	if (v == std::numeric_limits<unsigned long>::max () && errno == ERANGE) {
+		log_error (LOG_DEFAULT, "Invalid debugger log level value '%s', expecting a positive integer or zero", level);
+		return;
+	}
+
+	if (v > std::numeric_limits<int>::max ()) {
+		log_warn (LOG_DEFAULT, "Debugger log level value is higher than the maximum of %u, resetting to the maximum value.", std::numeric_limits<int>::max ());
+		v = std::numeric_limits<int>::max ();
+	}
+
+	_got_debugger_log_level = true;
+	_debugger_log_level = static_cast<int>(v);
+}
 
 void
-init_reference_logging (const char *override_dir)
+Logger::init_reference_logging (const char *override_dir) noexcept
 {
 	if ((log_categories & LOG_GREF) != 0 && !light_gref) {
 		gref_log  = open_file (LOG_GREF, gref_file, override_dir, "grefs.txt");
@@ -107,8 +135,8 @@ init_reference_logging (const char *override_dir)
 	}
 }
 
-force_inline static bool
-set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name = false)
+force_inline bool
+Logger::set_category (std::string_view const& name, string_segment& arg, unsigned int entry, bool arg_starts_with_name) noexcept
 {
 	if ((log_categories & entry) == entry) {
 		return false;
@@ -123,11 +151,11 @@ set_category (std::string_view const& name, string_segment& arg, unsigned int en
 }
 
 void
-init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
+Logger::init_logging_categories (char*& mono_log_mask, char*& mono_log_level) noexcept
 {
 	mono_log_mask = nullptr;
 	mono_log_level = nullptr;
-	log_timing_categories = LOG_TIMING_DEFAULT;
+	_log_timing_categories = LogTimingCategories::Default;
 
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_LOG_PROPERTY, value) == 0)
@@ -212,13 +240,13 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 
 		if (param.starts_with ("timing=fast-bare")) {
 			log_categories |= LOG_TIMING;
-			log_timing_categories |= LOG_TIMING_FAST_BARE;
+			_log_timing_categories |= LogTimingCategories::FastBare;
 			continue;
 		}
 
 		if (param.starts_with ("timing=bare")) {
 			log_categories |= LOG_TIMING;
-			log_timing_categories |= LOG_TIMING_BARE;
+			_log_timing_categories |= LogTimingCategories::Bare;
 			continue;
 		}
 
@@ -239,7 +267,7 @@ init_logging_categories (char*& mono_log_mask, char*& mono_log_level)
 		if (param.starts_with (DEBUGGER_LOG_LEVEL)) {
 			dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> level;
 			level.assign (param.start () + DEBUGGER_LOG_LEVEL.length (), param.length () - DEBUGGER_LOG_LEVEL.length ());
-			debug.set_debugger_log_level (level.get ());
+			set_debugger_log_level (level.get ());
 		}
 #endif
 	}

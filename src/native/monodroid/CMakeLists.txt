@@ -256,11 +256,6 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
 set(XAMARIN_MONODROID_SOURCES
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-dlfcn.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-mono.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
-  ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
   ${LZ4_SOURCES}
   ${XA_SHARED_SOURCES}
   ${SOURCES_DIR}/cpu-arch-detect.cc
@@ -451,5 +446,9 @@ target_link_options(
 
 target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
-  ${LINK_LIBS} xa::xamarin-app
+  ${LINK_LIBS}
+  xa::xamarin-app
+  xa::shared
+  xa::runtime-base
+  xa::java-interop
 )

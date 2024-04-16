@@ -397,7 +397,7 @@ namespace xamarin::android
 		}
 
 	private:
-		static char package_property_suffix[9];
+		static inline std::array<char, 9> package_property_suffix;
 		static inline int page_size;
 	};
 }

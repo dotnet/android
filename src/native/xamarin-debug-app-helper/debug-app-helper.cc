@@ -9,8 +9,8 @@
 
 #include <android/log.h>
 
-#include "basic-android-system.hh"
-#include "basic-utilities.hh"
+#include "android-system.hh"
+#include "util.hh"
 #include "debug-app-helper.hh"
 #include "shared-constants.hh"
 #include "jni-wrappers.hh"
@@ -40,8 +40,6 @@ bool maybe_load_library (const char *path);
 static constexpr char TAG[] = "debug-app-helper";
 
 unsigned int log_categories = LOG_DEFAULT | LOG_ASSEMBLY;
-BasicUtilities utils;
-BasicAndroidSystem androidSystem;
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad ([[maybe_unused]] JavaVM *vm, [[maybe_unused]] void *reserved)
@@ -56,17 +54,17 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	jstring_array_wrapper applicationDirs (env, appDirs);
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 
-	androidSystem.detect_embedded_dso_mode (applicationDirs);
-	androidSystem.set_primary_override_dir (applicationDirs [0]);
-	androidSystem.set_override_dir (0, androidSystem.get_primary_override_dir ());
-	androidSystem.setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
+	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
+	AndroidSystem::set_primary_override_dir (applicationDirs [0]);
+	AndroidSystem::set_override_dir (0, AndroidSystem::get_primary_override_dir ());
+	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	jstring_wrapper jstr (env);
 
 	if (runtimeNativeLibDir != nullptr) {
 		jstr = runtimeNativeLibDir;
-		androidSystem.set_runtime_libdir (utils.strdup_new (jstr.get_cstr ()));
-		log_warn (LOG_DEFAULT, "Using runtime path: %s", androidSystem.get_runtime_libdir ());
+		AndroidSystem::set_runtime_libdir (Util::strdup_new (jstr.get_cstr ()));
+		log_warn (LOG_DEFAULT, "Using runtime path: %s", AndroidSystem::get_runtime_libdir ());
 	}
 
 	const char *monosgen_path = get_libmonosgen_path ();
@@ -80,17 +78,17 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 static void
 copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 {
-	char *from_file = utils.path_combine (from_dir, file);
+	char *from_file = Util::path_combine (from_dir, file);
 	char *to_file   = nullptr;
 
 	do {
-		if (!from_file || !utils.file_exists (from_file))
+		if (!from_file || !Util::file_exists (from_file))
 			break;
 
 		log_warn (LOG_DEFAULT, "Copying file `%s` from external location `%s` to internal location `%s`",
 				file, from_dir, to_dir);
 
-		to_file = utils.path_combine (to_dir, file);
+		to_file = Util::path_combine (to_dir, file);
 		if (!to_file)
 			break;
 
@@ -100,12 +98,12 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 			break;
 		}
 
-		if (!utils.file_copy (to_file, from_file)) {
+		if (!Util::file_copy (to_file, from_file)) {
 			log_warn (LOG_DEFAULT, "Copy failed from `%s` to `%s`: %s", from_file, to_file, strerror (errno));
 			break;
 		}
 
-		utils.set_user_executable (to_file);
+		Util::set_user_executable (to_file);
 	} while (0);
 
 	delete[] from_file;
@@ -115,14 +113,14 @@ copy_file_to_internal_location (char *to_dir, char *from_dir, char *file)
 static void
 copy_native_libraries_to_internal_location ()
 {
-	for (const char *od : BasicAndroidSystem::override_dirs) {
+	for (const char *od : AndroidSystem::override_dirs) {
 		DIR *dir;
 		dirent *e;
 
-		char *dir_path = utils.path_combine (od, "lib");
+		char *dir_path = Util::path_combine (od, "lib");
 		log_warn (LOG_DEFAULT, "checking directory: `%s`", dir_path);
 
-		if (dir_path == nullptr || !utils.directory_exists (dir_path)) {
+		if (dir_path == nullptr || !Util::directory_exists (dir_path)) {
 			log_warn (LOG_DEFAULT, "directory does not exist: `%s`", dir_path);
 			delete[] dir_path;
 			continue;
@@ -136,8 +134,8 @@ copy_native_libraries_to_internal_location ()
 
 		while ((e = readdir (dir)) != nullptr) {
 			log_warn (LOG_DEFAULT, "checking file: `%s`", e->d_name);
-			if (utils.monodroid_dirent_hasextension (e, ".so")) {
-				copy_file_to_internal_location (androidSystem.get_primary_override_dir (), dir_path, e->d_name);
+			if (Util::monodroid_dirent_hasextension (e, ".so")) {
+				copy_file_to_internal_location (AndroidSystem::get_primary_override_dir (), dir_path, e->d_name);
 			}
 		}
 		::closedir (dir);
@@ -151,9 +149,9 @@ runtime_exists (const char *dir, char*& libmonoso)
 	if (dir == nullptr || *dir == '\0')
 		return false;
 
-	libmonoso = utils.path_combine (dir, SharedConstants::MONO_SGEN_SO);
+	libmonoso = Util::path_combine (dir, SharedConstants::MONO_SGEN_SO);
 	log_warn (LOG_DEFAULT, "Checking whether Mono runtime exists at: %s", libmonoso);
-	if (utils.file_exists (libmonoso)) {
+	if (Util::file_exists (libmonoso)) {
 		log_info (LOG_DEFAULT, "Mono runtime found at: %s", libmonoso);
 		return true;
 	}
@@ -173,37 +171,37 @@ get_libmonosgen_path ()
 	// storage location before loading it.
 	copy_native_libraries_to_internal_location ();
 
-	if (androidSystem.is_embedded_dso_mode_enabled ()) {
+	if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		return SharedConstants::MONO_SGEN_SO.data ();
 	}
 
-	for (const char *od : BasicAndroidSystem::override_dirs) {
+	for (const char *od : AndroidSystem::override_dirs) {
 		if (runtime_exists (od, libmonoso)) {
 			return libmonoso;
 		}
 	}
 
-	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+	for (const char *app_lib_dir : AndroidSystem::app_lib_directories) {
 		if (runtime_exists (app_lib_dir, libmonoso)) {
 			return libmonoso;
 		}
 	}
 
-	if (androidSystem.get_runtime_libdir () != nullptr) {
-		libmonoso = utils.path_combine (androidSystem.get_runtime_libdir (), SharedConstants::MONO_SGEN_ARCH_SO);
+	if (AndroidSystem::get_runtime_libdir () != nullptr) {
+		libmonoso = Util::path_combine (AndroidSystem::get_runtime_libdir (), SharedConstants::MONO_SGEN_ARCH_SO);
 	} else
 		libmonoso = nullptr;
 
-	if (libmonoso != nullptr && utils.file_exists (libmonoso)) {
-		char* links_dir = utils.path_combine (androidSystem.get_primary_override_dir (), "links");
-		char* link = utils.path_combine (links_dir, SharedConstants::MONO_SGEN_SO);
-		if (!utils.directory_exists (links_dir)) {
-			if (!utils.directory_exists (androidSystem.get_primary_override_dir ()))
-				utils.create_public_directory (androidSystem.get_primary_override_dir ());
-			utils.create_public_directory (links_dir);
+	if (libmonoso != nullptr && Util::file_exists (libmonoso)) {
+		char* links_dir = Util::path_combine (AndroidSystem::get_primary_override_dir (), "links");
+		char* link = Util::path_combine (links_dir, SharedConstants::MONO_SGEN_SO);
+		if (!Util::directory_exists (links_dir)) {
+			if (!Util::directory_exists (AndroidSystem::get_primary_override_dir ()))
+				Util::create_public_directory (AndroidSystem::get_primary_override_dir ());
+			Util::create_public_directory (links_dir);
 		}
 		delete[] links_dir;
-		if (!utils.file_exists (link)) {
+		if (!Util::file_exists (link)) {
 			int result = symlink (libmonoso, link);
 			if (result != 0 && errno == EEXIST) {
 				log_warn (LOG_DEFAULT, "symlink exists, recreating: %s -> %s", link, libmonoso);
@@ -218,21 +216,21 @@ get_libmonosgen_path ()
 	}
 
 	log_warn (LOG_DEFAULT, "Trying to load sgen from: %s", libmonoso != nullptr ? libmonoso : "<NULL>");
-	if (libmonoso != nullptr && utils.file_exists (libmonoso))
+	if (libmonoso != nullptr && Util::file_exists (libmonoso))
 		return libmonoso;
 	delete[] libmonoso;
 
-	if (runtime_exists (BasicAndroidSystem::SYSTEM_LIB_PATH.data (), libmonoso))
+	if (runtime_exists (AndroidSystem::SYSTEM_LIB_PATH.data (), libmonoso))
 		return libmonoso;
 	log_fatal (LOG_DEFAULT, "Cannot find '%s'. Looked in the following locations:", SharedConstants::MONO_SGEN_SO);
 
-	for (const char *od : BasicAndroidSystem::override_dirs) {
+	for (const char *od : AndroidSystem::override_dirs) {
 		if (od == nullptr)
 			continue;
 		log_fatal (LOG_DEFAULT, "  %s", od);
 	}
 
-	for (const char *app_lib_dir : BasicAndroidSystem::app_lib_directories) {
+	for (const char *app_lib_dir : AndroidSystem::app_lib_directories) {
 		log_fatal (LOG_DEFAULT, "  %s", app_lib_dir);
 	}
 
