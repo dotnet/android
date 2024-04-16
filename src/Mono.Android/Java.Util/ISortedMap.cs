@@ -6,10 +6,6 @@ namespace Java.Util;
 #if ANDROID_35
 public partial interface ISortedMap
 {
-	// This gets generated as:
-	// return Android.Runtime.JavaDictionary.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
-	// instead of:
-	// return global::Java.Lang.Object.GetObject<Java.Util.ISequencedMap> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 	private static Delegate? cb_reversed;
 
 #pragma warning disable 0169
@@ -28,6 +24,11 @@ public partial interface ISortedMap
 		return JNIEnv.ToLocalJniHandle (__this.Reversed ());
 	}
 #pragma warning restore 0169
+
+	// This gets generated as:
+	// return Android.Runtime.JavaDictionary.FromJniHandle (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
+	// instead of:
+	// return global::Java.Lang.Object.GetObject<Java.Util.ISequencedMap> (__rm.Handle, JniHandleOwnership.TransferLocalRef)!;
 
 	// Metadata.xml XPath method reference: path="/api/package[@name='java.util']/interface[@name='SortedMap']/method[@name='reversed' and count(parameter)=0]"
 	[global::System.Runtime.Versioning.SupportedOSPlatformAttribute ("android35.0")]
