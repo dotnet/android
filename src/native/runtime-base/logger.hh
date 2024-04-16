@@ -20,6 +20,11 @@ namespace xamarin::android {
 		static void init_logging_categories (char*& mono_log_mask, char*& mono_log_level) noexcept;
 		static void init_reference_logging (const char *override_dir) noexcept;
 
+		static LogTimingCategories log_timing_categories () noexcept
+		{
+			return _log_timing_categories;
+		}
+
 #if defined(DEBUG)
 		static void set_debugger_log_level (const char *level) noexcept;
 
@@ -32,6 +37,16 @@ namespace xamarin::android {
 		{
 			return _debugger_log_level;
 		}
+
+		static void set_gc_spew_enabled (int yesno) noexcept
+		{
+			_gc_spew_enabled = yesno;
+		}
+
+		static int gc_spew_enabled () noexcept
+		{
+			return _gc_spew_enabled;
+		}
 #endif // def DEBUG
 
 	private:
@@ -42,7 +57,7 @@ namespace xamarin::android {
 #if defined(DEBUG)
 		static inline bool _got_debugger_log_level = false;
 		static inline int _debugger_log_level = 0;
-		static inline int _gc_spew_enabled;
+		static inline int _gc_spew_enabled = 0;
 #endif // def DEBUG
 	};
 
@@ -64,4 +79,6 @@ namespace xamarin::android {
 	// for format placeholders nor it uses variable arguments
 	void log_write (LogCategories category, LogLevel level, const char *message) noexcept;
 }
+
+extern unsigned int log_categories;
 #endif

@@ -17,6 +17,7 @@
 
 #include "globals.hh"
 #include "osbridge.hh"
+#include "runtime-util.hh"
 
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
@@ -653,12 +654,12 @@ OSBridge::describe_target (OSBridge::AddReferenceTarget target)
 {
 	if (target.is_mono_object) {
 		MonoClass *klass = mono_object_get_class (target.obj);
-		return utils.monodroid_strdup_printf ("object of class %s.%s",
+		return Util::monodroid_strdup_printf ("object of class %s.%s",
 			mono_class_get_namespace (klass),
 			mono_class_get_name (klass));
 	}
 	else
-		return utils.monodroid_strdup_printf ("<temporary object %p>", target.jobj);
+		return Util::monodroid_strdup_printf ("<temporary object %p>", target.jobj);
 }
 #endif
 
@@ -685,7 +686,7 @@ OSBridge::add_reference (JNIEnv *env, OSBridge::AddReferenceTarget target, OSBri
 	}
 
 #if DEBUG
-	if (gc_spew_enabled) {
+	if (Logger::gc_spew_enabled ()) {
 		char *description = describe_target (target),
 			 *reffed_description = describe_target (reffed_target);
 
@@ -922,7 +923,7 @@ OSBridge::gc_cleanup_after_java_collection (JNIEnv *env, int num_sccs, MonoGCBri
 					} else {
 						env->ExceptionClear ();
 #if DEBUG
-						if (gc_spew_enabled) {
+						if (Logger::gc_spew_enabled ()) {
 							klass = mono_object_get_class (obj);
 							log_error (LOG_GC, "Missing monodroidClearReferences method for object of class %s.%s",
 									mono_class_get_namespace (klass),
@@ -966,7 +967,7 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 		return;
 
 #if DEBUG
-	if (gc_spew_enabled) {
+	if (Logger::gc_spew_enabled ()) {
 		int i, j;
 		log_info (LOG_GC, "cross references callback invoked with %d sccs and %d xrefs.", num_sccs, num_xrefs);
 
@@ -982,7 +983,7 @@ OSBridge::gc_cross_references (int num_sccs, MonoGCBridgeSCC **sccs, int num_xre
 			}
 		}
 
-		if (utils.should_log (LOG_GC)) {
+		if (Util::should_log (LOG_GC)) {
 			for (i = 0; i < num_xrefs; ++i)
 				log_info_nocheck (LOG_GC, "xref [%d] %d -> %d", i, xrefs [i].src_scc_index, xrefs [i].dst_scc_index);
 		}
@@ -1006,12 +1007,12 @@ OSBridge::platform_supports_weak_refs (void)
 	char *value;
 	int api_level = 0;
 
-	if (androidSystem.monodroid_get_system_property ("ro.build.version.sdk", &value) > 0) {
+	if (AndroidSystem::monodroid_get_system_property ("ro.build.version.sdk", &value) > 0) {
 		api_level = atoi (value);
 		free (value);
 	}
 
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
+	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_WREF_PROPERTY, &value) > 0) {
 		int use_weak_refs = 0;
 		if (!strcmp ("jni", value))
 			use_weak_refs = 1;
@@ -1066,7 +1067,7 @@ OSBridge::ensure_jnienv (void)
 	JNIEnv *env;
 	jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	if (env == nullptr) {
-		mono_thread_attach (utils.get_current_domain (/* attach_thread_if_needed */ false));
+		mono_thread_attach (Util::get_current_domain (/* attach_thread_if_needed */ false));
 		jvm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	}
 	return env;
@@ -1101,7 +1102,7 @@ void
 OSBridge::initialize_on_runtime_init (JNIEnv *env, jclass runtimeClass)
 {
 	abort_if_invalid_pointer_argument (env);
-	GCUserPeer_class      = utils.get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
+	GCUserPeer_class      = RuntimeUtil::get_class_from_runtime_field(env, runtimeClass, "mono_android_GCUserPeer", true);
 	GCUserPeer_ctor       = env->GetMethodID (GCUserPeer_class, "<init>", "()V");
 	abort_unless (GCUserPeer_class != nullptr && GCUserPeer_ctor != nullptr, "Failed to load mono.android.GCUserPeer!");
 }
@@ -1115,7 +1116,7 @@ OSBridge::add_monodroid_domain (MonoDomain *domain)
 	 * use GC API to allocate memory and thus can't be called from within the GC callback as it causes a deadlock
 	 * (the routine allocating the memory waits for the GC round to complete first)
 	 */
-	MonoClass *runtime = utils.monodroid_get_class_from_name (
+	MonoClass *runtime = Util::monodroid_get_class_from_name (
 		domain,
 		SharedConstants::MONO_ANDROID_RUNTIME_ASSEMBLY_NAME.data (),
 		SharedConstants::ANDROID_RUNTIME_NS_NAME.data (),

@@ -32,6 +32,12 @@ target_compile_options(
   ${XA_COMMON_CXX_ARGS}
 )
 
+target_link_options(
+  ${LIB_NAME}
+  PRIVATE
+  ${XA_CXX_DSO_LINKER_ARGS}
+)
+
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE

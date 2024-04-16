@@ -25,6 +25,7 @@ endmacro()
 
 ensure_variable_set(ANDROID_ABI)
 ensure_variable_set(CMAKE_ANDROID_NDK)
+ensure_variable_set(CMAKE_BUILD_TYPE)
 ensure_variable_set(OUTPUT_PATH)
 ensure_variable_set(XA_BUILD_CONFIGURATION)
 ensure_variable_set(XA_LIB_TOP_DIR)
@@ -371,6 +372,11 @@ if (ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   )
 endif()
 
+set(POTENTIAL_XA_DSO_LINKER_ARGS
+  -fpic
+  -fstack-clash-protection
+)
+
 unset(SANITIZER_FLAGS)
 if (ENABLE_CLANG_ASAN)
   set(SANITIZER_FLAGS -fsanitize=address)
@@ -405,6 +411,8 @@ xa_check_cxx_args(XA_COMMON_CXX_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
 xa_check_c_args(XA_COMMON_C_ARGS "${POTENTIAL_XA_COMMON_COMPILER_ARGS}")
 xa_check_cxx_linker_args(XA_COMMON_CXX_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
 xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARGS}")
+xa_check_c_linker_args(XA_C_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
+xa_check_cxx_linker_args(XA_CXX_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
 
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_ARGS}>")
 add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
@@ -412,13 +420,17 @@ add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
 add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
 add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
 
-add_subdirectory(libstub)
 add_subdirectory(libunwind)
+add_subdirectory(lz4)
+add_subdirectory(libstub)
 add_subdirectory(shared)
 add_subdirectory(java-interop)
 add_subdirectory(xamarin-app-stub)
 add_subdirectory(runtime-base)
+add_subdirectory(tracing)
 
 if(DEBUG_BUILD)
   add_subdirectory(xamarin-debug-app-helper)
 endif()
+
+add_subdirectory(monodroid)

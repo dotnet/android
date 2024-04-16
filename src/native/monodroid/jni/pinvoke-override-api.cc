@@ -39,7 +39,7 @@ monodroid_get_log_categories ()
 static int
 monodroid_get_system_property (const char *name, char **value)
 {
-        return androidSystem.monodroid_get_system_property (name, value);
+        return AndroidSystem::monodroid_get_system_property (name, value);
 }
 
 static int
@@ -92,7 +92,7 @@ monodroid_free (void *ptr)
 static int
 _monodroid_max_gref_get ()
 {
-        return static_cast<int>(androidSystem.get_max_gref_count ());
+        return static_cast<int>(AndroidSystem::get_max_gref_count ());
 }
 
 static int
@@ -240,13 +240,13 @@ monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
 static char**
 monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens)
 {
-	return utils.monodroid_strsplit (str, delimiter, max_tokens);
+	return Util::monodroid_strsplit (str, delimiter, max_tokens);
 }
 
 static void
 monodroid_strfreev (char **str_array)
 {
-	utils.monodroid_strfreev (str_array);
+	Util::monodroid_strfreev (str_array);
 }
 
 static char*
@@ -255,7 +255,7 @@ monodroid_strdup_printf (const char *format, ...)
 	va_list args;
 
 	va_start (args, format);
-	char *ret = utils.monodroid_strdup_vprintf (format, args);
+	char *ret = Util::monodroid_strdup_vprintf (format, args);
 	va_end (args);
 
 	return ret;
@@ -270,19 +270,19 @@ monodroid_TypeManager_get_java_class_name (jclass klass)
 static void
 monodroid_store_package_name (const char *name)
 {
-	utils.monodroid_store_package_name (name);
+	Util::monodroid_store_package_name (name);
 }
 
 static int
 monodroid_get_namespaced_system_property (const char *name, char **value)
 {
-	return static_cast<int>(androidSystem.monodroid_get_system_property (name, value));
+	return static_cast<int>(AndroidSystem::monodroid_get_system_property (name, value));
 }
 
 static FILE*
 monodroid_fopen (const char* filename, const char* mode)
 {
-	return utils.monodroid_fopen (filename, mode);
+	return Util::monodroid_fopen (filename, mode);
 }
 
 static int
@@ -290,7 +290,7 @@ send_uninterrupted (int fd, void *buf, int len)
 {
 	if (len < 0)
 		len = 0;
-	return utils.send_uninterrupted (fd, buf, static_cast<size_t>(len));
+	return Util::send_uninterrupted (fd, buf, static_cast<size_t>(len));
 }
 
 static int
@@ -298,25 +298,25 @@ recv_uninterrupted (int fd, void *buf, int len)
 {
 	if (len < 0)
 		len = 0;
-	return static_cast<int>(utils.recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
+	return static_cast<int>(Util::recv_uninterrupted (fd, buf, static_cast<size_t>(len)));
 }
 
 static void
 set_world_accessable (const char *path)
 {
-	utils.set_world_accessable (path);
+	Util::set_world_accessable (path);
 }
 
 static void
 create_public_directory (const char *dir)
 {
-	utils.create_public_directory (dir);
+	Util::create_public_directory (dir);
 }
 
 static char*
 path_combine (const char *path1, const char *path2)
 {
-	return utils.path_combine (path1, path2);
+	return Util::path_combine (path1, path2);
 }
 
 static void*

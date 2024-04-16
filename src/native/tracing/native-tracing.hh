@@ -5,7 +5,9 @@
 #include <jni.h>
 #include <android/log.h>
 
+#if !defined(UNW_LOCAL_ONLY)
 #define UNW_LOCAL_ONLY
+#endif
 #include <libunwind.h>
 
 // Public API must not expose any types that are part of libc++ - we don't know what version of the

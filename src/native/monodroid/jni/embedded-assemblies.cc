@@ -68,7 +68,7 @@ void EmbeddedAssemblies::set_assemblies_prefix (const char *prefix)
 {
 	if (assemblies_prefix_override != nullptr)
 		delete[] assemblies_prefix_override;
-	assemblies_prefix_override = prefix != nullptr ? utils.strdup_new (prefix) : nullptr;
+	assemblies_prefix_override = prefix != nullptr ? Util::strdup_new (prefix) : nullptr;
 }
 
 force_inline void
@@ -159,7 +159,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 {
 	int fd;
 	bool close_fd;
-	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		log_debug (LOG_ASSEMBLY, "Mapping a runtime file from a filesystem");
 		close_fd = true;
 
@@ -200,7 +200,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	}
 
 	if constexpr (LogMapping) {
-		if (utils.should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
+		if (Util::should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
 			const char *p = (const char*) file.data;
 
 			std::array<char, 9> header;
@@ -300,7 +300,7 @@ template<LoaderData TLoaderData>
 force_inline MonoAssembly*
 EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
 {
-	if (!utils.ends_with (name, SharedConstants::DLL_EXTENSION)) {
+	if (!Util::ends_with (name, SharedConstants::DLL_EXTENSION)) {
 		name.append (SharedConstants::DLL_EXTENSION);
 	}
 
@@ -598,7 +598,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 		return nullptr;
 	}
 
-	MonoReflectionType *ret = mono_type_get_object (utils.get_current_domain (), type);
+	MonoReflectionType *ret = mono_type_get_object (Util::get_current_domain (), type);
 	if (ret == nullptr) [[unlikely]] {
 		log_warn (LOG_ASSEMBLY, "typemap: unable to instantiate managed type '%s'", managed_type_name);
 		return nullptr;
@@ -865,7 +865,7 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	md_mmap_info file_info;
 	md_mmap_info mmap_info;
 
-	size_t pageSize        = static_cast<size_t>(utils.monodroid_getpagesize ());
+	size_t pageSize        = static_cast<size_t>(Util::monodroid_getpagesize ());
 	size_t offsetFromPage  = offset % pageSize;
 	size_t offsetPage      = offset - offsetFromPage;
 	size_t offsetSize      = size + offsetFromPage;
@@ -1128,7 +1128,7 @@ EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
 		return;
 	}
 
-	std::unique_ptr<char> dir_path {utils.path_combine (path, "typemaps")};
+	std::unique_ptr<char> dir_path {Util::path_combine (path, "typemaps")};
 	DIR *dir;
 	if ((dir = ::opendir (dir_path.get ())) == nullptr) {
 		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
@@ -1211,8 +1211,8 @@ EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
 			return false;
 		}
 	} else {
-		if (utils.ends_with (dir_entry->d_name, SharedConstants::DLL_EXTENSION) ||
-			utils.ends_with (dir_entry->d_name, SharedConstants::PDB_EXTENSION)) {
+		if (Util::ends_with (dir_entry->d_name, SharedConstants::DLL_EXTENSION) ||
+			Util::ends_with (dir_entry->d_name, SharedConstants::PDB_EXTENSION)) {
 			assembly_count++;
 			copy_dentry_and_update_state (entry_name, state, dir_entry);
 		} else {
@@ -1359,7 +1359,7 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
 	constexpr bool LookForMangledNames = true;
 	size_t assembly_count = register_from_filesystem (
-		androidSystem.app_lib_directories[0],
+		AndroidSystem::app_lib_directories[0],
 		LookForMangledNames,
 		should_register
 	);
@@ -1368,7 +1368,7 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 	constexpr bool DoNotLookForMangledNames = false;
 
 	assembly_count += register_from_filesystem (
-		androidSystem.get_primary_override_dir (),
+		AndroidSystem::get_primary_override_dir (),
 		DoNotLookForMangledNames,
 		should_register
 	);

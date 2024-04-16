@@ -6,6 +6,7 @@
 #include <ctime>
 #include <vector>
 
+#include "cpp-util.hh"
 #include "logger.hh"
 #include "startup-aware-lock.hh"
 #include "strings.hh"
@@ -100,13 +101,13 @@ namespace xamarin::android::internal
 		force_inline static bool is_bare_mode () noexcept
 		{
 			return
-				(log_timing_categories & LOG_TIMING_BARE) == LOG_TIMING_BARE ||
-				(log_timing_categories & LOG_TIMING_FAST_BARE) == LOG_TIMING_FAST_BARE;
+				(Logger::log_timing_categories() & LogTimingCategories::Bare) == LogTimingCategories::Bare ||
+				(Logger::log_timing_categories() & LogTimingCategories::FastBare) == LogTimingCategories::FastBare;
 		}
 
 		force_inline static void initialize (bool log_immediately) noexcept
 		{
-			if (!utils.should_log (LOG_TIMING)) [[likely]] {
+			if (!Util::should_log (LOG_TIMING)) [[likely]] {
 				return;
 			}
 
@@ -172,7 +173,7 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info = utils.strdup_new (str.get (), str.length ());
+			events[event_index].more_info = Util::strdup_new (str.get (), str.length ());
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 
@@ -182,7 +183,7 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			events[event_index].more_info = utils.strdup_new (str, strlen (str));
+			events[event_index].more_info = Util::strdup_new (str, strlen (str));
 			log (events[event_index], false /* skip_log_if_more_info_missing */);
 		}
 

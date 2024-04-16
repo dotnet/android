@@ -1,5 +1,8 @@
 #include "timing-internal.hh"
 
+using namespace xamarin::android;
+using namespace xamarin::android::internal;
+
 void timing_point::mark ()
 {
 	FastTiming::get_time (sec, ns);

@@ -37,6 +37,12 @@ target_link_directories(
   ${NET_RUNTIME_DIR}/native
 )
 
+target_link_options(
+  ${LIB_NAME}
+  PRIVATE
+  ${XA_CXX_DSO_LINKER_ARGS}
+)
+
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE

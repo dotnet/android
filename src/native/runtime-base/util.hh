@@ -165,12 +165,12 @@ namespace xamarin::android
 		}
 
 		template<size_t MaxStackSpace>
-		static bool ends_with (internal::dynamic_local_string<MaxStackSpace>& str, std::string_view const& sv) noexcept
+		static bool ends_with (internal::dynamic_local_string<MaxStackSpace> const& str, std::string_view const& sv) noexcept
 		{
 			return ends_with(static_cast<internal::dynamic_local_string<MaxStackSpace> const&>(str), sv);
 		}
 
-		bool ends_with (const char *str, std::string_view const& sv) const noexcept
+		static bool ends_with (const char *str, std::string_view const& sv) noexcept
 		{
 			size_t len = strlen (str);
 			if (len < sv.length ()) {

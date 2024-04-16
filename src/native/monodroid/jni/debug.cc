@@ -74,24 +74,24 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 		strncpy (mname_ptr, desc, name_len);
 		mname_ptr [name_len] = 0;
 	} else {
-		mname_ptr = utils.strdup_new (desc);
+		mname_ptr = Util::strdup_new (desc);
 	}
 	std::unique_ptr<char> mname {mname_ptr};
 
 	unsigned int dlopen_flags = JAVA_INTEROP_LIB_LOAD_LOCALLY;
-	std::unique_ptr<char> libname {utils.string_concat ("libmono-profiler-", mname.get (), ".so")};
+	std::unique_ptr<char> libname {Util::string_concat ("libmono-profiler-", mname.get (), ".so")};
 	bool found = false;
-	void *handle = androidSystem.load_dso_from_any_directories (libname.get (), dlopen_flags);
+	void *handle = AndroidSystem::load_dso_from_any_directories (libname.get (), dlopen_flags);
 	found = load_profiler_from_handle (handle, desc, mname.get ());
 
 	if (!found && libmono_path != nullptr) {
-		std::unique_ptr<char> full_path {utils.path_combine (libmono_path, libname.get ())};
-		handle = androidSystem.load_dso (full_path.get (), dlopen_flags, FALSE);
+		std::unique_ptr<char> full_path {Util::path_combine (libmono_path, libname.get ())};
+		handle = AndroidSystem::load_dso (full_path.get (), dlopen_flags, FALSE);
 		found = load_profiler_from_handle (handle, desc, mname.get ());
 	}
 
 	if (found && logfile != nullptr)
-		utils.set_world_accessable (logfile);
+		Util::set_world_accessable (logfile);
 
 	if (!found)
 		log_warn (LOG_DEFAULT,
@@ -123,7 +123,7 @@ Debug::load_profiler_from_handle (void *dso_handle, const char *desc, const char
 	if (!dso_handle)
 		return false;
 
-	std::unique_ptr<char> symbol {utils.string_concat (INITIALIZER_NAME.data (), "_", name)};
+	std::unique_ptr<char> symbol {Util::string_concat (INITIALIZER_NAME.data (), "_", name)};
 	bool result = load_profiler (dso_handle, desc, symbol.get ());
 
 	if (result)
@@ -140,7 +140,7 @@ Debug::parse_options (char *options, ConnOptions *opts)
 
 	log_info (LOG_DEFAULT, "Connection options: '%s'", options);
 
-	args = utils.monodroid_strsplit (options, ",", 0);
+	args = Util::monodroid_strsplit (options, ",", 0);
 
 	for (ptr = args; ptr && *ptr; ptr++) {
 		const char *arg = *ptr;
@@ -213,7 +213,7 @@ Debug::start_debugging_and_profiling ()
 	}
 
 	char *connect_args = nullptr;
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
+	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
 			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
@@ -250,7 +250,7 @@ Debug::process_connection (int fd)
 		char command [257];
 		uint8_t cmd_len;
 
-		ssize_t rv = utils.recv_uninterrupted (fd, &cmd_len, sizeof(cmd_len));
+		ssize_t rv = Util::recv_uninterrupted (fd, &cmd_len, sizeof(cmd_len));
 		if (rv == 0) {
 			log_info (LOG_DEFAULT, "EOF on socket.\n");
 			return false;
@@ -260,7 +260,7 @@ Debug::process_connection (int fd)
 			return false;
 		}
 
-		rv = utils.recv_uninterrupted (fd, command, cmd_len);
+		rv = Util::recv_uninterrupted (fd, command, cmd_len);
 		if (rv <= 0) {
 			log_info (LOG_DEFAULT, "Error while receiving command from XS (%s)\n", strerror (errno));
 			return false;
@@ -287,7 +287,7 @@ Debug::handle_server_connection (void)
 
 	int flags = 1;
 	int rv = setsockopt (listen_socket, SOL_SOCKET, SO_REUSEADDR, &flags, sizeof (flags));
-	if (rv == -1 && utils.should_log (LOG_DEFAULT)) {
+	if (rv == -1 && Util::should_log (LOG_DEFAULT)) {
 		log_info_nocheck (LOG_DEFAULT, "Could not set SO_REUSEADDR on the listening socket (%s)", strerror (errno));
 		// not a fatal failure
 	}
@@ -434,7 +434,7 @@ Debug::process_cmd (int fd, char *cmd)
 	constexpr std::string_view PING_CMD { "ping" };
 	constexpr std::string_view PONG_REPLY { "pong" };
 	if (strcmp (cmd, PING_CMD.data ()) == 0) {
-		if (!utils.send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> (PONG_REPLY.data ())), 5))
+		if (!Util::send_uninterrupted (fd, const_cast<void*> (reinterpret_cast<const void*> (PONG_REPLY.data ())), 5))
 			log_error (LOG_DEFAULT, "Got keepalive request from XS, but could not send response back (%s)\n", strerror (errno));
 		return false;
 	}
@@ -479,7 +479,7 @@ Debug::process_cmd (int fd, char *cmd)
 		} else if (strncmp (prof, PROFILER_LOG.data (), PROFILER_LOG.length ()) == 0) {
 			use_fd = true;
 			profiler_fd = fd;
-			profiler_description = utils.monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
+			profiler_description = Util::monodroid_strdup_printf ("%s,output=#%i", prof, profiler_fd);
 		} else {
 			log_error (LOG_DEFAULT, "Unknown profiler: '%s'", prof);
 		}
@@ -512,7 +512,7 @@ Debug::start_debugging (void)
 
 	embeddedAssemblies.set_register_debug_symbols (true);
 
-	char *debug_arg = utils.monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
+	char *debug_arg = Util::monodroid_strdup_printf ("--debugger-agent=transport=socket-fd,address=%d,embedding=1", sdb_fd);
 	std::array<char*, 2> debug_options = {
 		debug_arg,
 		nullptr
@@ -548,7 +548,7 @@ Debug::start_profiling ()
 		return;
 
 	log_info (LOG_DEFAULT, "Loading profiler: '%s'", profiler_description);
-	monodroid_profiler_load (androidSystem.get_runtime_libdir (), profiler_description, nullptr);
+	monodroid_profiler_load (AndroidSystem::get_runtime_libdir (), profiler_description, nullptr);
 }
 
 static const char *soft_breakpoint_kernel_list[] = {
@@ -574,18 +574,18 @@ Debug::enable_soft_breakpoints (void)
 
 	char *value;
 	/* Soft breakpoints are enabled by default */
-	if (androidSystem.monodroid_get_system_property (Debug::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data ());
+	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS, &value) <= 0) {
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled by default (%s property not defined)", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data ());
 		return 1;
 	}
 
 	bool ret;
 	if (strcmp ("0", value) == 0) {
 		ret = false;
-		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
+		log_info (LOG_DEBUGGER, "soft breakpoints disabled (%s property set to %s)", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	} else {
 		ret = true;
-		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", Debug::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
+		log_info (LOG_DEBUGGER, "soft breakpoints enabled (%s property set to %s)", SharedConstants::DEBUG_MONO_SOFT_BREAKPOINTS.data (), value);
 	}
 	delete[] value;
 	return ret;

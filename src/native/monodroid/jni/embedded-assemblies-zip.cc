@@ -8,6 +8,7 @@
 
 #include "embedded-assemblies.hh"
 #include "globals.hh"
+#include "strings.hh"
 #include "xamarin-app.hh"
 #include "xxhash.hh"
 
@@ -51,7 +52,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	}
 
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		if (utils.ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
+		if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
 			return false;
@@ -68,17 +69,17 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	return true;
 }
 
-inline void
+void
 EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
 {
 #if defined (DEBUG)
-	const char *last_slash = utils.find_last (entry_name, '/');
+	const char *last_slash = Util::find_last (entry_name, '/');
 	bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
 #else
 	constexpr bool entry_is_overridden = false;
 #endif
 
-	if (register_debug_symbols && !entry_is_overridden && utils.ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
+	if (register_debug_symbols && !entry_is_overridden && Util::ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
 		if (bundled_debug_data == nullptr) {
 			bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
 			bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
@@ -89,7 +90,7 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 		return;
 	}
 
-	if (!utils.ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
+	if (!Util::ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
 		return;
 	}
 
@@ -166,7 +167,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 
 	int fd;
 	bool close_fd;
-	if (!androidSystem.is_embedded_dso_mode_enabled ()) {
+	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		log_debug (LOG_ASSEMBLY, "Mapping assembly blob file from filesystem");
 		close_fd = true;
 
@@ -232,7 +233,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 			continue;
 		}
 
-		if (!assembly_store_found && utils.ends_with (entry_name, assembly_store_file_path)) {
+		if (!assembly_store_found && Util::ends_with (entry_name, assembly_store_file_path)) {
 			assembly_store_found = true;
 			map_assembly_store (entry_name, state);
 			continue;
@@ -244,7 +245,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 
 		// Since it's not an assembly store, it's a shared library most likely and it is long enough for us not to have
 		// to check the length
-		if (utils.ends_with (entry_name, dso_suffix)) {
+		if (Util::ends_with (entry_name, dso_suffix)) {
 			constexpr size_t apk_lib_prefix_len = apk_lib_prefix.size () - 1;
 
 			const char *const name = entry_name.get () + apk_lib_prefix_len;
@@ -315,15 +316,15 @@ EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEnt
 {
 	entry.file_fd = state.file_fd;
 	if constexpr (NeedsNameAlloc) {
-		entry.name = utils.strdup_new (entry_name.get () + state.prefix_len);
-		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
-			entry.file_name = utils.strdup_new (state.file_name);
+		entry.name = Util::strdup_new (entry_name.get () + state.prefix_len);
+		if (!AndroidSystem::is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
+			entry.file_name = Util::strdup_new (state.file_name);
 		}
 	} else {
 		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
 		// don't need to append the terminating NUL even for strings of `max_name_size` characters
 		strncpy (entry.name, entry_name.get () + state.prefix_len, state.max_assembly_name_size);
-		if (!androidSystem.is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
+		if (!AndroidSystem::is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
 			strncpy (entry.file_name, state.file_name, state.max_assembly_file_name_size);
 		}
 	}

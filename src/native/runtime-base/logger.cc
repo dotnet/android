@@ -51,8 +51,6 @@ static constexpr std::array<const char*, 12> log_names = {
 #define CATEGORY_NAME(value) (value == 0 ? log_names [0] : log_names [static_cast<size_t>(ffs (value))])
 
 unsigned int log_categories = LOG_NONE;
-unsigned int log_timing_categories;
-int gc_spew_enabled;
 
 namespace {
 	FILE*
@@ -95,6 +93,7 @@ namespace {
 	bool light_lref  = false;
 }
 
+#if defined(DEBUG)
 void
 Logger::set_debugger_log_level (const char *level) noexcept
 {
@@ -117,6 +116,7 @@ Logger::set_debugger_log_level (const char *level) noexcept
 	_got_debugger_log_level = true;
 	_debugger_log_level = static_cast<int>(v);
 }
+#endif // def DEBUG
 
 void
 Logger::init_reference_logging (const char *override_dir) noexcept
@@ -274,7 +274,7 @@ Logger::init_logging_categories (char*& mono_log_mask, char*& mono_log_level) no
 
 #if DEBUG
 	if ((log_categories & LOG_GC) != 0)
-		gc_spew_enabled = 1;
+		_gc_spew_enabled = 1;
 #endif  /* DEBUG */
 }
 
@@ -341,17 +341,19 @@ static constexpr android_LogPriority loglevel_map[] = {
 
 static constexpr size_t loglevel_map_max_index = (sizeof(loglevel_map) / sizeof(android_LogPriority)) - 1;
 
-void
-log_write (LogCategories category, LogLevel level, const char *message) noexcept
-{
-	size_t map_index = static_cast<size_t>(level);
-	android_LogPriority priority;
+namespace xamarin::android {
+	void
+	log_write (LogCategories category, LogLevel level, const char *message) noexcept
+	{
+		size_t map_index = static_cast<size_t>(level);
+		android_LogPriority priority;
 
-	if (map_index > loglevel_map_max_index) {
-		priority = DEFAULT_PRIORITY;
-	} else {
-		priority = loglevel_map[map_index];
+		if (map_index > loglevel_map_max_index) {
+			priority = DEFAULT_PRIORITY;
+		} else {
+			priority = loglevel_map[map_index];
+		}
+
+		__android_log_write (priority, CATEGORY_NAME (category), message);
 	}
-
-	__android_log_write (priority, CATEGORY_NAME (category), message);
 }
