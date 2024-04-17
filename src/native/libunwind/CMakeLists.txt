@@ -1,5 +1,5 @@
 ensure_variable_set(LIBUNWIND_SOURCE_DIR)
-set(LIB_NAME unwind-xamarin)
+set(LIB_NAME unwind_xamarin)
 set(LIB_ALIAS xa::unwind)
 
 #
@@ -335,10 +335,6 @@ target_include_directories(
   ${LIB_NAME}
   PUBLIC
   "$<BUILD_INTERFACE:${LIBUNWIND_INCLUDE_DIRS}>"
-  # "$<BUILD_INTERFACE:${LIBUNWIND_SOURCE_DIR}/include/tdep>"
-  # "$<BUILD_INTERFACE:${LIBUNWIND_SOURCE_DIR}/include>"
-  # "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include/tdep>"
-  # "$<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}/include>"
 )
 
 if(TARGET_ARM)

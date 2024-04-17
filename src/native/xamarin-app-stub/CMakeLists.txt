@@ -13,10 +13,12 @@ add_library(
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
+set(XAMARIN_APP_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}")
+set(XAMARIN_APP_INCLUDE_DIRS "${XAMARIN_APP_INCLUDE_DIRS}" PARENT_SCOPE)
 target_include_directories(
   ${LIB_NAME}
   PUBLIC
-  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>"
+  "$<BUILD_INTERFACE:${XAMARIN_APP_INCLUDE_DIRS}>"
 )
 
 target_include_directories(
@@ -44,10 +46,16 @@ target_link_libraries(
   xa::shared
 )
 
+if(DEBUG_BUILD)
+  set(LIB_SUBDIR "Debug")
+else()
+  set(LIB_SUBDIR "Release")
+endif()
+
 set_target_properties(
   ${LIB_NAME}
   PROPERTIES
-  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  LIBRARY_OUTPUT_DIRECTORY "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${LIB_SUBDIR}"
 )
 
 xa_add_compile_definitions(${LIB_NAME})
