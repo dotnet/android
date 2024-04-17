@@ -54,6 +54,7 @@ target_link_directories(
 target_link_options(
   ${LIB_NAME}
   PRIVATE
+  ${XA_COMMON_CXX_LINKER_ARGS}
   ${XA_CXX_DSO_LINKER_ARGS}
 )
 

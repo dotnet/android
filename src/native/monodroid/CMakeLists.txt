@@ -155,14 +155,15 @@ target_link_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE
   ${XA_DEFAULT_SYMBOL_VISIBILITY}
+  ${XA_COMMON_CXX_LINKER_ARGS}
   ${XA_CXX_DSO_LINKER_ARGS}
-  )
+)
 
 target_link_libraries(
   ${XAMARIN_MONO_ANDROID_LIB}
   ${LINK_LIBS}
   xa::xamarin-app
-  xa::shared
+  ${SHARED_LIB_NAME}
   xa::runtime-base
   xa::java-interop
   xa::lz4

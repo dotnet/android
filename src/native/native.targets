@@ -8,14 +8,24 @@
   <Target Name="_ConfigureRuntimesInputs">
     <ItemGroup>
       <_ConfigureRuntimesInputs  Include="CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="java-interop\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="libstub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="libunwind\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="lz4\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="monodroid\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="runtime-base\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="shared\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="shared\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="tracing\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="xamarin-app-debug-helper\CMakeLists.txt" />
+      <_ConfigureRuntimesInputs  Include="xamarin-app-stub\CMakeLists.txt" />
       <_ConfigureRuntimesInputs  Include="..\..\build-tools\scripts\Ndk.targets" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Debug\CMakeCache.txt')" />
       <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-Release\CMakeCache.txt')" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-asan-Debug\CMakeCache.txt')"    Condition="'$(EnableNativeAnalyzers)' == 'true'" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-asan-Release\CMakeCache.txt')"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-ubsan-Debug\CMakeCache.txt')"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
+      <_ConfigureRuntimesOutputs Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-ubsan-Release\CMakeCache.txt')" Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_OutputDirsToCreate       Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug" />
       <_OutputDirsToCreate       Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Release" />
       <_OutputDirsToCreate       Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Debug"     Condition="'$(EnableNativeAnalyzers)' == 'true'" />

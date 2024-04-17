@@ -40,13 +40,14 @@ target_link_directories(
 target_link_options(
   ${LIB_NAME}
   PRIVATE
+  ${XA_COMMON_CXX_LINKER_ARGS}
   ${XA_CXX_DSO_LINKER_ARGS}
 )
 
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::shared
+  ${SHARED_LIB_NAME}
   xa::xamarin-app
   xa::runtime-base
   xa::java-interop

@@ -47,7 +47,7 @@ target_include_directories(
 target_link_libraries(
   ${LIB_NAME}
   PRIVATE
-  xa::shared
+  ${SHARED_LIB_NAME}
   xa::xamarin-app
 )
 

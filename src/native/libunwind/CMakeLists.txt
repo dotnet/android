@@ -55,7 +55,9 @@ list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -Wno-absolute-value
   -Wno-incompatible-pointer-types
   -Wno-macro-redefined
+  -Wno-sign-conversion
   -Wno-single-bit-bitfield-constant-conversion
+  -Wno-tautological-constant-out-of-range-compare
 )
 
 xa_check_c_args(LIBUNWIND_C_ARGS "${POTENTIAL_LOCAL_COMPILER_ARGS}")

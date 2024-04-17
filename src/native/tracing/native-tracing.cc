@@ -158,7 +158,7 @@ const char* xa_get_java_backtrace (JNIEnv *env) noexcept
 			trace.append ("\n");
 		}
 
-		append_frame_number (trace, i);
+		append_frame_number (trace, static_cast<size_t>(i));
 		trace.append (frame_desc);
 		env->ReleaseStringUTFChars (frame_desc_java, frame_desc);
 	}

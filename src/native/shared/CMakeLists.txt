@@ -11,6 +11,7 @@ set(XA_SHARED_CXX_ABI_SOURCES
 
 set(XA_SHARED_SOURCES
   helpers.cc
+  log_functions.cc
   new_delete.cc
 )
 
@@ -40,6 +41,13 @@ macro(lib_target_options TARGET_NAME)
     "$<BUILD_INTERFACE:${JAVA_INTEROP_INCLUDE_DIR}>"
     "$<BUILD_INTERFACE:${EXTERNAL_DIR}>"
     "$<BUILD_INTERFACE:${CONSTEXPR_XXH3_DIR}>"
+  )
+
+  target_link_libraries(
+    ${TARGET_NAME}
+    PUBLIC
+    xa::java-interop
+    -llog
   )
 
   target_include_directories(
