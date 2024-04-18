@@ -1,5 +1,6 @@
 {
     "$schema": "http://json.schemastore.org/ide.host",
+    "icon": "ide/icon.png",
     "appliesTo": "Android",
     "defaultItemExtension": "xml",
     "itemHierarchyPaths": [ "Android" ]
