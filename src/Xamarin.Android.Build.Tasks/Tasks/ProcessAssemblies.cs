@@ -142,11 +142,16 @@ namespace Xamarin.Android.Tasks
 		static ITaskItem? GetOrCreateSymbolItem (Dictionary<string, ITaskItem> symbols, ITaskItem assembly)
 		{
 			var symbolPath = Path.ChangeExtension (assembly.ItemSpec, ".pdb");
-			if (!symbols.TryGetValue (symbolPath, out var symbol)) {
+			if (!symbols.TryGetValue (symbolPath, out var symbol) || !string.IsNullOrEmpty (symbol.GetMetadata ("DestinationSubDirectory"))) {
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
 				if (File.Exists (symbolPath)) {
+					Console.WriteLine ($"DEBUG!: new symbols for {symbolPath}");
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+					return symbol;
 				}
+				Console.WriteLine ($"DEBUG!: woops! symbols do not exist at {symbolPath}");
+			} else {
+				Console.WriteLine ($"DEBUG!: using existing symbols for {symbolPath}");
 			}
 			return symbol;
 		}
@@ -185,6 +190,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string destination = Path.Combine (abi, item.GetMetadata ("DestinationSubDirectory"));
+				Log.LogDebugMessage ($"DEBUG!!!'{item.ItemSpec}' '{rid}' = '{abi}'. DestinationSubDirectory='{destination}'");
 				item.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 				item.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (item.ItemSpec)));
 			}

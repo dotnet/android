@@ -156,8 +156,14 @@ namespace Xamarin.Android.Build.Tests
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     false,
+				/* activityStarts */     true,
 				/* packageFormat */      "apk",
+			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
@@ -167,6 +173,12 @@ namespace Xamarin.Android.Build.Tests
 			},
 			new object[] {
 				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies:Dexes",
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
+			},
+			new object[] {
+				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
 				/* packageFormat */      "aab",
@@ -370,7 +382,23 @@ namespace ${ROOT_NAMESPACE} {
 				/* useLatestSdk */       true,
 			},
 			new object[] {
+				/* embedAssemblies */    false,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
 				/* embedAssemblies */    true,
+				/* fastDevType */        "Assemblies",
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
@@ -434,7 +462,9 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis (DeviceAbi);
+			var abis = new [] { "x86", DeviceAbi };
+			app.SetRuntimeIdentifiers (abis);
+			//app.SetAndroidSupportedAbis (DeviceAbi);
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
