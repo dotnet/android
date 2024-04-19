@@ -1610,8 +1610,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	java_TimeZone = RuntimeUtil::get_class_from_runtime_field (env, klass, "java_util_TimeZone", true);
 
-	Util::monodroid_store_package_name (application_config.android_package_name);
-
 	jstring_wrapper jstr (env, lang);
 	set_environment_variable ("LANG", jstr);
 

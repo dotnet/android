@@ -13,7 +13,6 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0x452e23128e42f0a, "monodroid_get_log_categories", reinterpret_cast<void*>(&monodroid_get_log_categories)},
 	{0xa50ce5de13bf8b5, "_monodroid_timezone_get_default_id", reinterpret_cast<void*>(&_monodroid_timezone_get_default_id)},
 	{0x19055d65edfd668e, "_monodroid_get_network_interface_up_state", reinterpret_cast<void*>(&_monodroid_get_network_interface_up_state)},
-	{0x2637a308c07d56b2, "monodroid_store_package_name", reinterpret_cast<void*>(&monodroid_store_package_name)},
 	{0x2b3b0ca1d14076da, "monodroid_get_dylib", reinterpret_cast<void*>(&monodroid_get_dylib)},
 	{0x2fbe68718cf2510d, "_monodroid_get_identity_hash_code", reinterpret_cast<void*>(&_monodroid_get_identity_hash_code)},
 	{0x3ade4348ac8ce0fa, "_monodroid_freeifaddrs", reinterpret_cast<void*>(&_monodroid_freeifaddrs)},
@@ -536,7 +535,6 @@ static PinvokeEntry internal_pinvokes[] = {
 	{0xc439b5d7, "_monodroid_lookup_replacement_type", reinterpret_cast<void*>(&_monodroid_lookup_replacement_type)},
 	{0xc5146c54, "_monodroid_gref_log_delete", reinterpret_cast<void*>(&_monodroid_gref_log_delete)},
 	{0xc58eafa5, "java_interop_free", reinterpret_cast<void*>(&java_interop_free)},
-	{0xc6c99d41, "monodroid_store_package_name", reinterpret_cast<void*>(&monodroid_store_package_name)},
 	{0xd3b5d2c1, "_monodroid_freeifaddrs", reinterpret_cast<void*>(&_monodroid_freeifaddrs)},
 	{0xd78c749d, "monodroid_get_log_categories", reinterpret_cast<void*>(&monodroid_get_log_categories)},
 	{0xd91f3619, "create_public_directory", reinterpret_cast<void*>(&create_public_directory)},
@@ -991,5 +989,5 @@ constexpr hash_t system_io_compression_native_library_hash = 0xafe3142c;
 constexpr hash_t system_security_cryptography_native_android_library_hash = 0x93625cd;
 #endif
 
-constexpr size_t internal_pinvokes_count = 50;
+constexpr size_t internal_pinvokes_count = 49;
 constexpr size_t dotnet_pinvokes_count = 428;

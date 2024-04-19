@@ -2,14 +2,14 @@
 MY_DIR="$(dirname $0)"
 HOST="$(uname | tr A-Z a-z)"
 
-MONODROID_SOURCE_DIR="${MY_DIR}/../../src/monodroid/jni"
+NATIVE_DIR="${MY_DIR}/../../src/native"
+MONODROID_SOURCE_DIR="${NATIVE_DIR}/monodroid/jni"
 GENERATOR_SOURCE="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables.cc"
 GENERATOR_BINARY="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables"
 TARGET_FILE="${MONODROID_SOURCE_DIR}/pinvoke-tables.include"
 GENERATED_FILE="${TARGET_FILE}.generated"
 DIFF_FILE="${TARGET_FILE}.diff"
 EXTERNAL_DIR="${MY_DIR}/../../external/"
-NATIVE_DIR="${MY_DIR}/../../src/native"
 
 function die()
 {

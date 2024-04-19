@@ -54,47 +54,6 @@ Util::recv_uninterrupted (int fd, void *buf, size_t len)
 	return static_cast<ssize_t>(total);
 }
 
-template<typename IdxType>
-inline void
-Util::package_hash_to_hex (IdxType /* idx */)
-{
-	package_property_suffix[sizeof (package_property_suffix) / sizeof (char) - 1] = 0x00;
-}
-
-template<typename IdxType, typename ...Indices>
-inline void
-Util::package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices)
-{
-	package_property_suffix [idx] = hex_chars [(hash & (0xF0000000 >> idx * 4)) >> ((7 - idx) * 4)];
-	package_hash_to_hex <IdxType> (hash, indices...);
-}
-
-void
-Util::monodroid_store_package_name (const char *name)
-{
-	if (!name || *name == '\0')
-		return;
-
-	/* Android properties can be at most 32 bytes long (!) and so we mustn't append the package name
-	 * as-is since it will most likely generate conflicts (packages tend to be named
-	 * com.mycompany.app), so we simply generate a hash code and use that instead. We treat the name
-	 * as a stream of bytes assumming it's an ASCII string using a simplified version of the hash
-	 * algorithm used by BCL's String.GetHashCode ()
-	 */
-	const char *ch = name;
-	uint32_t hash = 0;
-	while (*ch)
-		hash = (hash << 5) - (hash + static_cast<uint32_t>(*ch++));
-
-	// In C++14 or newer we could use std::index_sequence, but in C++11 it's a bit too much ado
-	// for this simple case, so a manual sequence it is.
-	//
-	// And yes, I know it could be done in a simple loop or in even simpler 8 lines of code, but
-	// that would be boring, wouldn't it? :)
-	package_hash_to_hex (hash, 0u, 1u, 2u, 3u, 4u, 5u, 6u, 7u);
-	log_debug (LOG_DEFAULT, "Generated hash 0x%s for package name %s", package_property_suffix, name);
-}
-
 MonoAssembly*
 Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename)
 {

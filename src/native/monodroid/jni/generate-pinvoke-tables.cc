@@ -1,7 +1,7 @@
 //
 // To build and run this utility run (on Linux or macOS):
 //
-//   ../../../build-tools/scripts/generate-pinvoke-tables.sh
+//   ../../../../build-tools/scripts/generate-pinvoke-tables.sh
 //
 // A reasonable C++20 compiler is required (g++ 10+, clang 11+, on mac it may require XCode 12.5 or newer)
 //
@@ -67,7 +67,6 @@ const std::vector<std::string> internal_pinvoke_names = {
 	"_monodroid_lref_log_delete",
 	"_monodroid_lref_log_new",
 	"_monodroid_max_gref_get",
-	"monodroid_store_package_name",
 	"monodroid_strdup_printf",
 	"monodroid_strfreev",
 	"monodroid_strsplit",

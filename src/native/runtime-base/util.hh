@@ -58,7 +58,6 @@ namespace xamarin::android
 			return page_size;
 		}
 
-		static void             monodroid_store_package_name (const char *name);
 		static MonoAssembly    *monodroid_load_assembly (MonoDomain *domain, const char *basename);
 		static MonoAssembly    *monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const char *basename);
 		static MonoClass       *monodroid_get_class_from_name (MonoDomain *domain, const char* assembly, const char *_namespace, const char *type);
@@ -167,7 +166,11 @@ namespace xamarin::android
 		template<size_t MaxStackSpace>
 		static bool ends_with (internal::dynamic_local_string<MaxStackSpace> const& str, std::string_view const& sv) noexcept
 		{
-			return ends_with(static_cast<internal::dynamic_local_string<MaxStackSpace> const&>(str), sv);
+			if (str.length () < sv.length ()) {
+				return false;
+			}
+
+			return memcmp (str.get () + str.length () - sv.length (), sv.data (), sv.length ()) == 0;
 		}
 
 		static bool ends_with (const char *str, std::string_view const& sv) noexcept
@@ -384,12 +387,6 @@ namespace xamarin::android
 		}
 
 	private:
-		template<typename IdxType>
-		static void package_hash_to_hex (IdxType idx);
-
-		template<typename IdxType = size_t, typename ...Indices>
-		static void package_hash_to_hex (uint32_t hash, IdxType idx, Indices... indices);
-
 		template<typename CharType>
 		static constexpr void assert_char_type ()
 		{
@@ -397,7 +394,6 @@ namespace xamarin::android
 		}
 
 	private:
-		static inline std::array<char, 9> package_property_suffix;
 		static inline int page_size;
 	};
 }
