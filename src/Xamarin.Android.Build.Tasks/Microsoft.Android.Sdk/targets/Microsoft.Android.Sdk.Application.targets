@@ -61,7 +61,7 @@ This file contains targets specific for Android application projects.
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="debug.mono.log $(_MonoLog)"
+      Arguments="setprop debug.mono.log $(_MonoLog)"
     />
     <AndroidAdb
       ToolExe="$(AdbToolExe)"
@@ -84,7 +84,7 @@ This file contains targets specific for Android application projects.
       ToolPath="$(AdbToolPath)"
       AdbTarget="$(AdbTarget)"
       Command="shell"
-      Arguments="-S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+      Arguments="am start -S -W -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
     />
 
     <Message Text="Sleeping for $(RunLogDelayInMS)ms to give logcat a chance to log all the messages" Importance="High" />
@@ -102,6 +102,7 @@ This file contains targets specific for Android application projects.
     <WriteLinesToFile
       File="$(_RunLogFilePath)"
       Lines="$(_LogcatOutput)"
+      Overwrite="true"
     />
     <Message Text="Logcat output is available in $(_RunLogFilePath)" Importance="High" />
   </Target>
