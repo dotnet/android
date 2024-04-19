@@ -85,5 +85,10 @@ namespace Microsoft.Android.Build.Tasks
 			else
 				logCodedError (prefix + "7000", ex.ToString ());
 		}
+
+		public static void LogUnhandledToolError (this TaskLoggingHelper log, string prefix, string toolOutput)
+		{
+			log.LogCodedError ($"XA{prefix}0000", toolOutput);
+		}
 	}
 }

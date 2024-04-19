@@ -9,6 +9,7 @@
     <IsPackable>false</IsPackable>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <RollForward>Major</RollForward>
   </PropertyGroup>
 
   <Import Project="..\..\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
