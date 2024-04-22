@@ -107,7 +107,7 @@ AndroidSystem::add_system_property (const char *name, const char *value) noexcep
 	}
 
 	size_t name_len  = strlen (name);
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, sizeof (BundledProperty), name_len + 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (sizeof (BundledProperty), name_len + 1);
 	p = reinterpret_cast<BundledProperty*> (malloc (alloc_size));
 	if (p == nullptr)
 		return;
@@ -137,7 +137,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 
 	char *buf = nullptr;
 	if (sp_value_len < PROPERTY_VALUE_BUFFER_LEN) {
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, PROPERTY_VALUE_BUFFER_LEN, 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (PROPERTY_VALUE_BUFFER_LEN, 1);
 		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
 		buf = new char [alloc_size];
 	}
@@ -168,7 +168,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, dynamic_local_st
 		return len;
 
 	value.assign (v, plen);
-	return ADD_WITH_OVERFLOW_CHECK (int, plen, 0);
+	return Helpers::add_with_overflow_check<int> (plen, 0);
 }
 
 int
@@ -191,7 +191,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value) no
 	}
 
 	if (len >= 0 && value) {
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, static_cast<size_t>(len), 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(len), 1);
 		*value = new char [alloc_size];
 		if (*value == nullptr)
 			return -len;
@@ -225,7 +225,7 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 		return file_size + 1;
 	}
 
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, file_size, 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (file_size, 1);
 	*value = new char[alloc_size];
 
 	size_t len = fread (*value, 1, file_size, fp);

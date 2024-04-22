@@ -167,7 +167,7 @@ _monodroid_get_dns_servers (void **dns_servers_array)
 	if (count <= 0)
 		return 0;
 
-	size_t alloc_size = MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof (char*), static_cast<size_t>(count));
+	size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (sizeof (char*), static_cast<size_t>(count));
 	char **ret = (char**)malloc (alloc_size);
 	char **p = ret;
 	for (int i = 0; i < 8; i++) {

@@ -1015,7 +1015,7 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 bool
 EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module)
 {
-	size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, header.assembly_name_length, 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (header.assembly_name_length, 1);
 	module.assembly_name = new char[alloc_size];
 
 	ssize_t nread = do_read (file_fd, module.assembly_name, header.assembly_name_length);
@@ -1036,8 +1036,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	// [name][index]
 	size_t java_entry_size = header.java_name_width + sizeof(uint32_t);
 	size_t managed_entry_size = header.managed_name_width + sizeof(uint32_t);
-	size_t data_size = ADD_WITH_OVERFLOW_CHECK (
-		size_t,
+	size_t data_size = Helpers::add_with_overflow_check<size_t> (
 		header.entry_count * java_entry_size,
 		header.entry_count * managed_entry_size
 	);

@@ -3,26 +3,28 @@
 
 #include <cstdint>
 #include <cstdlib>
+#include <source_location>
 
 #include <java-interop-util.h>
 #include "platform-compat.hh"
 
 namespace xamarin::android
 {
-#define ADD_WITH_OVERFLOW_CHECK(__ret_type__, __a__, __b__) xamarin::android::Helpers::add_with_overflow_check<__ret_type__>(__FILE__, __LINE__, (__a__), (__b__))
-#define MULTIPLY_WITH_OVERFLOW_CHECK(__ret_type__, __a__, __b__) xamarin::android::Helpers::multiply_with_overflow_check<__ret_type__>(__FILE__, __LINE__, (__a__), (__b__))
+// #define ADD_WITH_OVERFLOW_CHECK(__ret_type__, __a__, __b__) xamarin::android::Helpers::add_with_overflow_check<__ret_type__>(__FILE__, __LINE__, (__a__), (__b__))
+// #define MULTIPLY_WITH_OVERFLOW_CHECK(__ret_type__, __a__, __b__) xamarin::android::Helpers::multiply_with_overflow_check<__ret_type__>(__FILE__, __LINE__, (__a__), (__b__))
 
 	class [[gnu::visibility("hidden")]] Helpers
 	{
 	public:
 		template<typename Ret, typename P1, typename P2>
-		force_inline static Ret add_with_overflow_check (const char *file, uint32_t line, P1 a, P2 b) noexcept
+		force_inline static Ret add_with_overflow_check (P1 a, P2 b, std::source_location sloc = std::source_location::current ()) noexcept
 		{
+			constexpr bool DoNotLogLocation = false;
 			Ret ret;
 
 			if (__builtin_add_overflow (a, b, &ret)) [[unlikely]] {
-				log_fatal (LOG_DEFAULT, "Integer overflow on addition at %s:%u", file, line);
-				abort_application ();
+				log_fatal (LOG_DEFAULT, "Integer overflow on addition at %s:%u", sloc.file_name (), sloc.line ());
+				abort_application (DoNotLogLocation);
 			}
 
 			return ret;
@@ -40,19 +42,20 @@ namespace xamarin::android
 		// fail
 		//
 		template<typename Ret>
-		force_inline static Ret multiply_with_overflow_check (const char *file, uint32_t line, size_t a, size_t b) noexcept
+		force_inline static Ret multiply_with_overflow_check (size_t a, size_t b, std::source_location sloc = std::source_location::current ()) noexcept
 		{
+			constexpr bool DoNotLogLocation = false;
 			Ret ret;
 
 			if (__builtin_mul_overflow (a, b, &ret)) [[unlikely]] {
-				log_fatal (LOG_DEFAULT, "Integer overflow on multiplication at %s:%u", file, line);
-				abort_application ();
+				log_fatal (LOG_DEFAULT, "Integer overflow on multiplication at %s:%u", sloc.file_name (), sloc.line ());
+				abort_application (DoNotLogLocation);
 			}
 
 			return ret;
 		}
 
-		[[noreturn]] static void abort_application () noexcept;
+		[[noreturn]] static void abort_application (bool log_location = true, std::source_location sloc = std::source_location::current ()) noexcept;
 	};
 }
 #endif // __HELPERS_HH

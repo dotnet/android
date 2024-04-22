@@ -124,7 +124,7 @@ Util::path_combine (const char *path1, const char *path2)
 	if (path2 == nullptr)
 		return strdup_new (path1);
 
-	size_t len = ADD_WITH_OVERFLOW_CHECK (size_t, strlen (path1), strlen (path2) + 2);
+	size_t len = Helpers::add_with_overflow_check<size_t> (strlen (path1), strlen (path2) + 2);
 	char *ret = new char [len];
 	*ret = '\0';
 
@@ -341,7 +341,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 
 	size_t vector_size = (max_tokens > 0 && tokens_in_str >= max_tokens) ? max_tokens + 1 : tokens_in_str + 2; // Includes the terminating 'nullptr` entry
 
-	char **vector = static_cast<char**>(xmalloc (MULTIPLY_WITH_OVERFLOW_CHECK (size_t, sizeof(char*), vector_size)));
+	char **vector = static_cast<char**>(xmalloc (Helpers::multiply_with_overflow_check<size_t> (sizeof(char*), vector_size)));
 	size_t vector_idx = 0;
 
 	while (*str != '\0' && !(max_tokens > 0 && vector_idx + 1 >= max_tokens)) {
@@ -363,7 +363,7 @@ Util::monodroid_strsplit (const char *str, const char *delimiter, size_t max_tok
 		}
 
 		size_t toklen = static_cast<size_t>((str - c));
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, toklen, 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (toklen, 1);
 		char *token = static_cast<char*>(xmalloc (alloc_size));
 		strncpy (token, c, toklen);
 		token [toklen] = '\0';

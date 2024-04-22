@@ -281,7 +281,7 @@ namespace xamarin::android
 				return nullptr;
 			}
 
-			size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, len, 1);
+			size_t alloc_size = Helpers::add_with_overflow_check<size_t> (len, 1);
 			auto ret = new char[alloc_size];
 			memcpy (ret, s, len);
 			ret[len] = '\0';

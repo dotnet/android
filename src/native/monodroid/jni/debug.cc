@@ -69,7 +69,7 @@ Debug::monodroid_profiler_load (const char *libmono_path, const char *desc, cons
 
 	if (col != nullptr) {
 		size_t name_len = static_cast<size_t>(col - desc);
-		size_t alloc_size = ADD_WITH_OVERFLOW_CHECK (size_t, name_len, 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (name_len, 1);
 		mname_ptr = new char [alloc_size];
 		strncpy (mname_ptr, desc, name_len);
 		mname_ptr [name_len] = 0;

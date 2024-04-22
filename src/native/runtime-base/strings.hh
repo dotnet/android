@@ -776,7 +776,7 @@ namespace xamarin::android::internal
 
 		force_inline void ensure_have_extra (size_t length) noexcept
 		{
-			size_t needed_space = ADD_WITH_OVERFLOW_CHECK (size_t, length, idx + 1);
+			size_t needed_space = Helpers::add_with_overflow_check<size_t> (length, idx + 1);
 			if (needed_space > buffer.size ()) {
 				log_fatal (
 					LOG_DEFAULT,
@@ -790,11 +790,11 @@ namespace xamarin::android::internal
 		force_inline void resize_for_extra (size_t needed_space) noexcept
 		{
 			if constexpr (TStorage::has_resize) {
-				size_t required_space = ADD_WITH_OVERFLOW_CHECK (size_t, needed_space, idx + 1);
+				size_t required_space = Helpers::add_with_overflow_check<size_t> (needed_space, idx + 1);
 				size_t current_size = buffer.size ();
 				if (required_space > current_size) {
-					size_t new_size = ADD_WITH_OVERFLOW_CHECK (size_t, current_size, (current_size / 2));
-					new_size = ADD_WITH_OVERFLOW_CHECK (size_t, new_size, required_space);
+					size_t new_size = Helpers::add_with_overflow_check<size_t> (current_size, (current_size / 2));
+					new_size = Helpers::add_with_overflow_check<size_t> (new_size, required_space);
 					buffer.resize (new_size);
 				}
 			}
