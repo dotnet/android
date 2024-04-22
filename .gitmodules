@@ -29,4 +29,4 @@
 [submodule "external/xamarin-android-tools"]
     path = external/xamarin-android-tools
     url = https://github.com/xamarin/xamarin-android-tools
-    branch = main
+    branch = release/8.0.1xx
