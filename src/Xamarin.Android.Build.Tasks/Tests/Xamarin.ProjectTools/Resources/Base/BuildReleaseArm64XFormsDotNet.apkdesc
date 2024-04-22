@@ -38,13 +38,13 @@
       "Size": 8090
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 72410
+      "Size": 72406
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 458239
+      "Size": 458238
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5317
+      "Size": 5315
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
       "Size": 3991
@@ -239,7 +239,7 @@
       "Size": 87352
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 444392
+      "Size": 476432
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3138768
@@ -257,10 +257,7 @@
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 119192
-    },
-    "lib/arm64-v8a/libxamarin-native-tracing.so": {
-      "Size": 424360
+      "Size": 118920
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -413,10 +410,10 @@
       "Size": 6
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1221
+      "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 98412
+      "Size": 98298
     },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
@@ -443,7 +440,7 @@
       "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 98285
+      "Size": 98171
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -2483,5 +2480,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10386560
+  "PackageSize": 10271784
 }

@@ -11,13 +11,13 @@
       "Size": 1027
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 64240
+      "Size": 64231
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
       "Size": 91590
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5317
+      "Size": 5315
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 6539
@@ -44,7 +44,7 @@
       "Size": 87352
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 444392
+      "Size": 476432
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3138768
@@ -62,19 +62,16 @@
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 12984
-    },
-    "lib/arm64-v8a/libxamarin-native-tracing.so": {
-      "Size": 424360
+      "Size": 12696
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 3380
+      "Size": 3266
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 3253
+      "Size": 3139
     },
     "res/drawable-hdpi-v4/icon.png": {
       "Size": 2178
@@ -101,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2853485
+  "PackageSize": 2742805
 }

@@ -5,18 +5,18 @@
 #include "mono/utils/details/mono-dl-fallback-types.h"
 #include "monodroid-glue-internal.hh"
 #include "native-tracing.hh"
-#include "cppcompat.hh"
 #include <cpp-util.hh>
 
 using namespace xamarin::android::internal;
 
-static decltype(xa_get_native_backtrace)* _xa_get_native_backtrace;
-static decltype(xa_get_managed_backtrace)* _xa_get_managed_backtrace;
-static decltype(xa_get_java_backtrace)* _xa_get_java_backtrace;
-static decltype(xa_get_interesting_signal_handlers)* _xa_get_interesting_signal_handlers;
-static bool tracing_init_done;
-
-static std::mutex tracing_init_lock {};
+namespace {
+	decltype(xa_get_native_backtrace)* _xa_get_native_backtrace;
+	decltype(xa_get_managed_backtrace)* _xa_get_managed_backtrace;
+	decltype(xa_get_java_backtrace)* _xa_get_java_backtrace;
+	decltype(xa_get_interesting_signal_handlers)* _xa_get_interesting_signal_handlers;
+	bool tracing_init_done;
+	std::mutex tracing_init_lock {};
+}
 
 void
 MonodroidRuntime::log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept
