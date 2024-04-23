@@ -7,6 +7,7 @@ set(NATIVE_TRACING_INCLUDE_DIRS "${NATIVE_TRACING_INCLUDE_DIRS}" PARENT_SCOPE)
 set(XAMARIN_TRACING_SOURCES
   native-tracing.cc
 )
+add_clang_check_sources("${XAMARIN_TRACING_SOURCES}")
 
 add_library(
   ${LIB_NAME}

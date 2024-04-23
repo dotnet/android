@@ -278,6 +278,19 @@ macro(xa_check_cxx_linker_args VARNAME _CHECK_ARGS)
   set(${VARNAME} "${_CHECKED_ARGS}")
 endmacro()
 
+set(CLANG_CHECK_SOURCES "")
+macro(add_clang_check_sources SOURCES)
+  foreach(_source ${SOURCES})
+    cmake_path(IS_RELATIVE _source _relative_path)
+    if(${_relative_path})
+      list(APPEND _LOCAL_CLANG_CHECK_SOURCES_ ${CMAKE_CURRENT_SOURCE_DIR}/${_source})
+    else()
+      list(APPEND _LOCAL_CLANG_CHECK_SOURCES_ ${_source})
+    endif()
+  endforeach()
+  set(CLANG_CHECK_SOURCES "${_LOCAL_CLANG_CHECK_SOURCES_};${CLANG_CHECK_SOURCES}" PARENT_SCOPE)
+endmacro()
+
 #
 # Compiler args
 #
@@ -441,3 +454,10 @@ if(DEBUG_BUILD)
 endif()
 
 add_subdirectory(monodroid)
+
+add_custom_target(run_static_analysis
+  COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
+  COMMAND_EXPAND_LISTS
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  USES_TERMINAL
+)

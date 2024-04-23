@@ -1,14 +1,15 @@
 set(LIB_NAME xamarin-debug-app-helper)
 set(LIB_ALIAS xa::debug-app-helper)
 
-set(XAMARIN_APP_SOURCES
+set(XAMARIN_DEBUG_HELPER_SOURCES
   debug-app-helper.cc
 )
+add_clang_check_sources("${XAMARIN_DEBUG_HELPER_SOURCES}")
 
 add_library(
   ${LIB_NAME}
   SHARED
-  ${XAMARIN_APP_SOURCES}
+  ${XAMARIN_DEBUG_HELPER_SOURCES}
 )
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})

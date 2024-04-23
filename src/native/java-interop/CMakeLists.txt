@@ -8,6 +8,7 @@ set(JAVA_INTEROP_SOURCES
   ${JAVA_INTEROP_SRC_PATH}/java-interop-util.cc
   ${JAVA_INTEROP_SRC_PATH}/java-interop.cc
 )
+add_clang_check_sources("${JAVA_INTEROP_SOURCES}")
 
 add_library(
   ${LIB_NAME}

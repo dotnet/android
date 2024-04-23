@@ -14,6 +14,7 @@ set(XA_SHARED_SOURCES
   log_functions.cc
   new_delete.cc
 )
+add_clang_check_sources("${XA_SHARED_SOURCES};${XA_SHARED_CXX_ABI_SOURCES}")
 
 set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
 set(CONSTEXPR_XXH3_DIR "${EXTERNAL_DIR}/constexpr-xxh3")

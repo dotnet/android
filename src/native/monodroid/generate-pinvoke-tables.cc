@@ -1,7 +1,7 @@
 //
 // To build and run this utility run (on Linux or macOS):
 //
-//   ../../../../build-tools/scripts/generate-pinvoke-tables.sh
+//   ../../../build-tools/scripts/generate-pinvoke-tables.sh
 //
 // A reasonable C++20 compiler is required (g++ 10+, clang 11+, on mac it may require XCode 12.5 or newer)
 //

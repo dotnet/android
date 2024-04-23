@@ -8,6 +8,7 @@ set(XA_RUNTIME_BASE_SOURCES
   shared-constants.cc
   util.cc
 )
+add_clang_check_sources("${XA_RUNTIME_BASE_SOURCES}")
 
 list(APPEND POTENTIAL_LOCAL_COMPILER_ARGS
   -ffunction-sections

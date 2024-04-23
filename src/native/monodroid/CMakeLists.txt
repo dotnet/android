@@ -7,7 +7,6 @@ include(CheckCXXSymbolExists)
 
 # Paths
 
-set(SOURCES_DIR ${CMAKE_SOURCE_DIR}/monodroid/jni)
 set(BIONIC_SOURCES_DIR "${REPO_ROOT_DIR}/src-ThirdParty/bionic")
 set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
 
@@ -45,31 +44,40 @@ string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
 set(XAMARIN_MONODROID_SOURCES
-  ${SOURCES_DIR}/debug-constants.cc
-  ${SOURCES_DIR}/debug.cc
-  ${SOURCES_DIR}/embedded-assemblies-zip.cc
-  ${SOURCES_DIR}/embedded-assemblies.cc
-  ${SOURCES_DIR}/globals.cc
-  ${SOURCES_DIR}/jni-remapping.cc
-  ${SOURCES_DIR}/mono-log-adapter.cc
-  ${SOURCES_DIR}/monodroid-glue.cc
-  ${SOURCES_DIR}/monodroid-networkinfo.cc
-  ${SOURCES_DIR}/monodroid-tracing.cc
-  ${SOURCES_DIR}/monovm-properties.cc
-  ${SOURCES_DIR}/osbridge.cc
-  ${SOURCES_DIR}/pinvoke-override-api.cc
-  ${SOURCES_DIR}/runtime-util.cc
-  ${SOURCES_DIR}/timing.cc
-  ${SOURCES_DIR}/timezones.cc
-  ${SOURCES_DIR}/timing-internal.cc
-  ${SOURCES_DIR}/xamarin_getifaddrs.cc
+  debug-constants.cc
+  debug.cc
+  embedded-assemblies-zip.cc
+  embedded-assemblies.cc
+  globals.cc
+  jni-remapping.cc
+  mono-log-adapter.cc
+  monodroid-glue.cc
+  monodroid-networkinfo.cc
+  monodroid-tracing.cc
+  monovm-properties.cc
+  osbridge.cc
+  pinvoke-override-api.cc
+  runtime-util.cc
+  timing.cc
+  timezones.cc
+  timing-internal.cc
+  xamarin_getifaddrs.cc
+)
+
+list(APPEND LOCAL_CLANG_CHECK_SOURCES
+  ${XAMARIN_MONODROID_SOURCES}
 )
 
 if(NOT DEBUG_BUILD)
   list(APPEND XAMARIN_MONODROID_SOURCES
-    ${SOURCES_DIR}/xamarin-android-app-context.cc
+    xamarin-android-app-context.cc
+  )
+
+  list(APPEND LOCAL_CLANG_CHECK_SOURCES
+    xamarin-android-app-context.cc
   )
 endif()
+add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 
 if(NOT USES_LIBSTDCPP)
   list(APPEND XAMARIN_MONODROID_SOURCES
@@ -78,7 +86,7 @@ if(NOT USES_LIBSTDCPP)
 endif()
 
 # Build
-configure_file(jni/host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
+configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
 add_library(
   ${XAMARIN_MONO_ANDROID_LIB}

@@ -1,2 +1,6 @@
 libs
 sources.projitems
+pinvoke-tables.include.generated
+pinvoke-tables.include.diff
+generate-pinvoke-tables
+generate-pinvoke-tables.exe
