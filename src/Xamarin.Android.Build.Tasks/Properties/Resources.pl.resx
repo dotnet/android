@@ -562,11 +562,11 @@ Zmień wartość w pliku AndroidManifest.xml, aby odpowiadała wartości $(Suppo
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>Przyczyną może być przekroczenie limitu maksymalnej długości ścieżki systemu Windows przez projekt. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <value>This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="APT2265" xml:space="preserve">
-    <value>Może to być spowodowane tym, że projekt zawiera znaki inne niż ASCII w nazwie pliku lub ścieżce. Aby uzyskać szczegółowe informacje, zobacz https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.</value>
+    <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
@@ -1010,7 +1010,7 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
-    <value>Biblioteki pomocy technicznej systemu Android nie są obsługiwane na platformie .NET 9 i nowszych. Przeprowadź migrację do systemu AndroidX. Aby uzyskać więcej informacji, zobacz https://aka.ms/xamarin/androidx.</value>
+    <value>The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
