@@ -363,7 +363,7 @@
     <ReplaceFileContents
         SourceFile="$(MSBuildThisFileDirectory)Microsoft.Android.Sdk\in\Microsoft.Android.Sdk.BundledVersions.in.targets"
         DestinationFile="$(MSBuildThisFileDirectory)\Microsoft.Android.Sdk\targets\Microsoft.Android.Sdk.BundledVersions.targets"
-        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
+        Replacements="@ANDROID_PACK_VERSION_LONG@=$(AndroidPackVersionLong);@ANDROID_LATEST_STABLE_API_LEVEL@=$(AndroidLatestStableApiLevel);@ANDROID_LATEST_UNSTABLE_API_LEVEL@=$(AndroidLatestUnstableApiLevel);@DOTNET_TARGET_FRAMEWORK@=$(DotNetTargetFramework)" >
     </ReplaceFileContents>
   </Target>
 

@@ -48,7 +48,8 @@ namespace Xamarin.Android.Tasks
 		{
 			if (ExitCode != 0)
 				Log.LogCodedError (DefaultErrorCode, singleLine);
-			base.LogEventsFromTextOutput (singleLine, messageImportance);
+			else
+				base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }
