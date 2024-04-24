@@ -63,8 +63,13 @@ endif()
 
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
+option(ENABLE_PERFETTO "Enable use of perfetto." OFF)
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  if(ENABLE_PERFETT)
+    message(FATAL_ERROR "Perfetto and analyzer builds cannot be enabled at the same time")
+  endif()
+
   set(STRIP_DEBUG_DEFAULT OFF)
   set(ANALYZERS_ENABLED ON)
 else()
@@ -99,11 +104,11 @@ else()
   set(USES_LIBSTDCPP True)
 endif()
 
-if(ANALYZERS_ENABLED)
-  message(STATUS "Analyzers enabled")
+if(ANALYZERS_ENABLED OR ENABLE_PERFETTO)
+  message(STATUS "Analyzers or perfetto enabled")
   set(SHARED_LIB_NAME xa::shared-no-abi)
 else()
-  message(STATUS "NO analyzers enabled")
+  message(STATUS "NO analyzers or perfetto enabled")
   set(SHARED_LIB_NAME xa::shared)
 endif()
 #
@@ -442,7 +447,11 @@ add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
 
 add_subdirectory(libunwind)
 add_subdirectory(lz4)
-add_subdirectory(perfetto)
+
+if(ENABLE_PERFETTO)
+  add_subdirectory(perfetto)
+endif()
+
 add_subdirectory(libstub)
 add_subdirectory(shared)
 add_subdirectory(java-interop)

@@ -94,18 +94,6 @@ add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 # Build
 configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-add_library(
-  ${XAMARIN_MONO_ANDROID_LIB}
-  SHARED ${XAMARIN_MONODROID_SOURCES}
-)
-
-if(NOT ANALYZERS_ENABLED)
-  add_library(
-    ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
-    SHARED ${XAMARIN_MONODROID_PERFETTO_SOURCES}
-  )
-endif()
-
 macro(set_common_monodroid_properties TARGET)
   target_compile_definitions(
     ${TARGET}
@@ -173,42 +161,52 @@ macro(set_common_monodroid_properties TARGET)
   )
 endmacro()
 
-set_common_monodroid_properties(${XAMARIN_MONO_ANDROID_LIB})
-xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
-
-if (ENABLE_TIMING)
-  target_compile_definitions(
+if(NOT ENABLE_PERFETTO)
+  add_library(
     ${XAMARIN_MONO_ANDROID_LIB}
-    PRIVATE
-    MONODROID_TIMING
+    SHARED ${XAMARIN_MONODROID_SOURCES}
   )
-endif()
 
-target_link_libraries(
-  ${XAMARIN_MONO_ANDROID_LIB}
-  ${LINK_LIBS}
-  xa::xamarin-app
-  ${SHARED_LIB_NAME}
-  xa::runtime-base
-  xa::java-interop
-  xa::lz4
-  -lmonosgen-2.0
-  -llog
-)
+  set_common_monodroid_properties(${XAMARIN_MONO_ANDROID_LIB})
+  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
 
-if(NOT ANALYZERS_ENABLED)
+  if (ENABLE_TIMING)
+    target_compile_definitions(
+      ${XAMARIN_MONO_ANDROID_LIB}
+      PRIVATE
+      MONODROID_TIMING
+    )
+  endif()
+
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    ${LINK_LIBS}
+    xa::xamarin-app
+    ${SHARED_LIB_NAME}
+    xa::runtime-base
+    xa::java-interop
+    xa::lz4
+    -lmonosgen-2.0
+    -llog
+  )
+else()
+  add_library(
+    ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
+    SHARED ${XAMARIN_MONODROID_PERFETTO_SOURCES}
+  )
+
   set_common_monodroid_properties(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
   xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
 
   target_link_libraries(
-  ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
-  ${LINK_LIBS}
-  xa::xamarin-app
-  xa::shared-no-abi
-  xa::runtime-base
-  xa::java-interop
-  xa::lz4
-  -lmonosgen-2.0
-  -llog
-)
+    ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
+    ${LINK_LIBS}
+    xa::xamarin-app
+    xa::shared-no-abi
+    xa::runtime-base
+    xa::java-interop
+    xa::lz4
+    -lmonosgen-2.0
+    -llog
+  )
 endif()
