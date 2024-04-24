@@ -138,10 +138,9 @@ target_compile_options(
 target_include_directories(
   ${XAMARIN_MONO_ANDROID_LIB} BEFORE
   PRIVATE
-  ${CMAKE_CURRENT_BINARY_DIR}/include/ ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_CURRENT_BINARY_DIR}/include
   ${EXTERNAL_DIR}
   ${ROBIN_MAP_DIR}/include
-  jni
 )
 
 target_include_directories(
