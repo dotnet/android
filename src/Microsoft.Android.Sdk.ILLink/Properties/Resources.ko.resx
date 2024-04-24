@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="XA2000" xml:space="preserve">
-    <value>어셈블리에서 AppDomain.CreateDomain()의 사용이 검색되었습니다. {0}. .NET 6 이상에서는 단일 AppDomain만 지원하므로 .NET 6이 릴리스된 후에는 이 API를 Xamarin.Android에서 더 이상 사용할 수 없습니다.</value>
+    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher only supports a single AppDomain, so this API is no longer available.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>

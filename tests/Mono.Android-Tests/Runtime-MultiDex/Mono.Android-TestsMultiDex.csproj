@@ -17,7 +17,6 @@
     <AssemblyName>Mono.Android-TestsMultiDex</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-    <MandroidI18n>All</MandroidI18n>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>

@@ -1,0 +1,354 @@
+- name: .NET for Android
+  items:
+  - name: Getting Started
+    items:
+    - name: Installation
+      items:
+        - name: Overview
+          href: getting-started/installation/index.md
+        - name: Install .NET for Android
+          href: getting-started/installation/net-android.md
+        - name: Install dependencies
+          href: getting-started/installation/dependencies.md
+  - name: Building apps
+    items:
+    - name: Build process
+      href: building-apps/build-process.md
+    - name: Build targets
+      href: building-apps/build-targets.md
+    - name: Build properties
+      href: building-apps/build-properties.md
+    - name: Build items
+      href: building-apps/build-items.md
+  - name: Features
+    items:
+    - name: Layout code behind
+      href: features/layout-code-behind/index.md
+    - name: Maven
+      items:
+      - name: "@(AndroidMavenLibrary) build item"
+        href: features/maven/android-maven-library.md
+      - name: Resolving Java ependencies
+        href: features/maven/resolving-java-dependencies.md
+      - name: Java dependency verification
+        href: features/maven/java-dependency-verification.md
+  - name: Message reference
+    items:
+    - name: Overview
+      href: messages/index.md
+    - name: "ADBxxxx: ADB tooling"
+      items:
+      - name: "ADBxxxx: ADB tooling"
+        href: "messages/index.md#adbxxxx-adb-tooling"
+      - name: ADB0000
+        href: messages/adb0000.md
+      - name: ADB0010
+        href: messages/adb0010.md
+      - name: ADB0020
+        href: messages/adb0020.md
+      - name: ADB0030
+        href: messages/adb0030.md
+      - name: ADB0040
+        href: messages/adb0040.md
+      - name: ADB0050
+        href: messages/adb0050.md
+      - name: ADB0060
+        href: messages/adb0060.md
+    - name: "ANDXXxxxx: Generic Android tooling"
+      items:
+      - name: "ANDXXxxxx: Generic Android tooling"
+        href: "messages/index.md#andxxxxxx-generic-android-tooling"
+      - name: ANDAS0000
+        href: messages/andas0000.md
+      - name: ANDJS0000
+        href: messages/andjs0000.md
+      - name: ANDKT0000
+        href: messages/andkt0000.md
+      - name: ANDZA0000
+        href: messages/andza0000.md
+    - name: "APTxxxx: AAPT tooling"
+      items:
+      - name: "APTxxxx: AAPT tooling"
+        href: "messages/index.md#aptxxxx-aapt-tooling"
+      - name: APT0000
+        href: messages/apt0000.md
+      - name: APT0001
+        href: messages/apt0001.md
+      - name: APT2264
+        href: messages/apt2264.md
+      - name: APT2265
+        href: messages/apt2265.md
+    - name: "JAVAxxxx: Java tool"
+      items:
+      - name: "JAVAxxxx: Java tool"
+        href: "messages/index.md#javaxxxx-java-tool"
+      - name: JAVA0000
+        href: messages/java0000.md
+    - name: "JAVACxxxx: Java compiler"
+      items:
+      - name: "JAVACxxxx: Java compiler"
+        href: "messages/index.md#javacxxxx-java-compiler"
+      - name: JAVAC0000
+        href: messages/javac0000.md
+    - name: "XA0xxx: Environment issue or missing tooling"
+      items:
+      - name: "XA0xxx: Environment issue or missing tooling"
+        href: "messages/index.md#xa0xxx-environment-issue-or-missing-tooling"
+      - name: XA0000
+        href: messages/xa0000.md
+      - name: XA0001
+        href: messages/xa0001.md
+      - name: XA0002
+        href: messages/xa0002.md
+      - name: XA0003
+        href: messages/xa0003.md
+      - name: XA0004
+        href: messages/xa0004.md
+      - name: XA0030
+        href: messages/xa0030.md
+      - name: XA0031
+        href: messages/xa0031.md
+      - name: XA0032
+        href: messages/xa0032.md
+      - name: XA0033
+        href: messages/xa0033.md
+      - name: XA0034
+        href: messages/xa0034.md
+      - name: XA0035
+        href: messages/xa0035.md
+      - name: XA0036
+        href: messages/xa0036.md
+      - name: XA0101
+        href: messages/xa0101.md
+      - name: XA0102
+        href: messages/xa0102.md
+      - name: XA0103
+        href: messages/xa0103.md
+      - name: XA0105
+        href: messages/xa0105.md
+      - name: XA0107
+        href: messages/xa0107.md
+      - name: XA0108
+        href: messages/xa0108.md
+      - name: XA0109
+        href: messages/xa0109.md
+      - name: XA0111
+        href: messages/xa0111.md
+      - name: XA0112
+        href: messages/xa0112.md
+      - name: XA0113
+        href: messages/xa0113.md
+      - name: XA0115
+        href: messages/xa0115.md
+      - name: XA0116
+        href: messages/xa0116.md
+      - name: XA0117
+        href: messages/xa0117.md
+      - name: XA0118
+        href: messages/xa0118.md
+      - name: XA0119
+        href: messages/xa0119.md
+      - name: XA0121
+        href: messages/xa0121.md
+      - name: XA0122
+        href: messages/xa0122.md
+      - name: XA0125
+        href: messages/xa0125.md
+      - name: XA0126
+        href: messages/xa0126.md
+      - name: XA0127
+        href: messages/xa0127.md
+      - name: XA0128
+        href: messages/xa0128.md
+      - name: XA0129
+        href: messages/xa0129.md
+      - name: XA0130
+        href: messages/xa0130.md
+      - name: XA0131
+        href: messages/xa0131.md
+      - name: XA0132
+        href: messages/xa0132.md
+      - name: XA0133
+        href: messages/xa0133.md
+      - name: XA0134
+        href: messages/xa0134.md
+      - name: XA0135
+        href: messages/xa0135.md
+      - name: XA0136
+        href: messages/xa0136.md
+      - name: XA0137
+        href: messages/xa0137.md
+      - name: XA0138
+        href: messages/xa0138.md
+      - name: XA0139
+        href: messages/xa0139.md
+      - name: XA0140
+        href: messages/xa0140.md
+    - name: "XA1xxx: Project related"
+      items:
+      - name: "XA1xxx: Project related"
+        href: "messages/index.md#xa1xxx-project-related"
+      - name: XA1000
+        href: messages/xa1000.md
+      - name: XA1001
+        href: messages/xa1001.md
+      - name: XA1002
+        href: messages/xa1002.md
+      - name: XA1003
+        href: messages/xa1003.md
+      - name: XA1004
+        href: messages/xa1004.md
+      - name: XA1005
+        href: messages/xa1005.md
+      - name: XA1006
+        href: messages/xa1006.md
+      - name: XA1007
+        href: messages/xa1007.md
+      - name: XA1008
+        href: messages/xa1008.md
+      - name: XA1009
+        href: messages/xa1009.md
+      - name: XA1010
+        href: messages/xa1010.md
+      - name: XA1011
+        href: messages/xa1011.md
+      - name: XA1023
+        href: messages/xa1023.md
+      - name: XA1024
+        href: messages/xa1024.md
+      - name: XA1025
+        href: messages/xa1025.md
+      - name: XA1027
+        href: messages/xa1027.md
+      - name: XA1028
+        href: messages/xa1028.md
+      - name: XA1029
+        href: messages/xa1029.md
+      - name: XA1031
+        href: messages/xa1031.md
+      - name: XA1032
+        href: messages/xa1032.md
+      - name: XA1033
+        href: messages/xa1033.md
+      - name: XA1035
+        href: messages/xa1035.md
+      - name: XA1036
+        href: messages/xa1036.md
+      - name: XA1037
+        href: messages/xa1037.md
+    - name: "XA2xxx: Linker"
+      items:
+      - name: "XA2xxx: Linker"
+        href: "messages/index.md#xa2xxx-linker"
+      - name: XA2000
+        href: messages/xa2000.md
+      - name: XA2001
+        href: messages/xa2001.md
+      - name: XA2002
+        href: messages/xa2002.md
+    - name: "XA3xxx: Unmanaged code compilation"
+      href: "messages/index.md#xa3xxx-unmanaged-code-compilation"
+    - name: "XA4xxx: Code generation"
+      items:
+      - name: "XA4xxx: Code generation"
+        href: "messages/index.md#xa4xxx-code-generation"
+      - name: XA4214
+        href: messages/xa4214.md
+      - name: XA4215
+        href: messages/xa4215.md
+      - name: XA4216
+        href: messages/xa4216.md
+      - name: XA4218
+        href: messages/xa4218.md
+      - name: XA4231
+        href: messages/xa4231.md
+      - name: XA4232
+        href: messages/xa4232.md
+      - name: XA4234
+        href: messages/xa4234.md
+      - name: XA4235
+        href: messages/xa4235.md
+      - name: XA4236
+        href: messages/xa4236.md
+      - name: XA4237
+        href: messages/xa4237.md
+      - name: XA4239
+        href: messages/xa4239.md
+      - name: XA4241
+        href: messages/xa4241.md
+      - name: XA4242
+        href: messages/xa4242.md
+      - name: XA4243
+        href: messages/xa4243.md
+      - name: XA4244
+        href: messages/xa4244.md
+      - name: XA4245
+        href: messages/xa4245.md
+      - name: XA4246
+        href: messages/xa4246.md
+      - name: XA4247
+        href: messages/xa4247.md
+      - name: XA4248
+        href: messages/xa4248.md
+      - name: XA4301
+        href: messages/xa4301.md
+      - name: XA4302
+        href: messages/xa4302.md
+      - name: XA4303
+        href: messages/xa4303.md
+      - name: XA4304
+        href: messages/xa4304.md
+      - name: XA4305
+        href: messages/xa4305.md
+      - name: XA4306
+        href: messages/xa4306.md
+      - name: XA4307
+        href: messages/xa4307.md
+      - name: XA4308
+        href: messages/xa4308.md
+      - name: XA4309
+        href: messages/xa4309.md
+      - name: XA4310
+        href: messages/xa4310.md
+      - name: XA4312
+        href: messages/xa4312.md
+      - name: XA4313
+        href: messages/xa4313.md
+      - name: XA4314
+        href: messages/xa4314.md
+    - name: "XA5xxx: GCC and toolchain"
+      items:
+      - name: "XA5xxx: GCC and toolchain"
+        href: "messages/index.md#xa5xxx-gcc-and-toolchain"
+      - name: XA5205
+        href: messages/xa5205.md
+      - name: XA5207
+        href: messages/xa5207.md
+      - name: XA5300
+        href: messages/xa5300.md
+      - name: XA5301
+        href: messages/xa5301.md
+      - name: XA5302
+        href: messages/xa5302.md
+    - name: "XA6xxx: Internal tools"
+      href: "messages/index.md#xa6xxx-internal-tools"
+    - name: "XAccc7xxx: Unhandled MSBuild exceptions"
+      href: "messages/index.md#xaccc7xxx-unhandled-msbuild-exceptions"
+    - name: "XA8xxx: Linker step errors"
+      items:
+      - name: "XA8xxx: Linker step errors"
+        href: "messages/index.md#xa8xxx-linker-step-errors"
+      - name: XA8000/IL8000
+        href: messages/xa8000.md
+  - name: Resources
+    items:
+    - name: .NET 8 Release Notes
+      items:
+      - name: .NET 8 34.0.95
+        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.95
+      - name: .NET 8 34.0.85
+        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+      - name: .NET 8 34.0.79
+        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.85
+      - name: .NET 8 34.0.52
+        href: https://github.com/xamarin/xamarin-android/releases/tag/34.0.52
