@@ -442,6 +442,7 @@ add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
 
 add_subdirectory(libunwind)
 add_subdirectory(lz4)
+add_subdirectory(perfetto)
 add_subdirectory(libstub)
 add_subdirectory(shared)
 add_subdirectory(java-interop)
