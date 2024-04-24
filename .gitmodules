@@ -32,3 +32,6 @@
 	path = external/libunwind
 	url = https://github.com/libunwind/libunwind.git
 	branch = master
+[submodule "external/perfetto"]
+	path = external/perfetto
+	url = https://github.com/google/perfetto.git
