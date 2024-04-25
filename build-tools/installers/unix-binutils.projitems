@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.17</_LlvmLibExtension>
+    <_LlvmLibExtension Condition=" '$(HostOS)' == 'Linux' ">so.18.1</_LlvmLibExtension>
     <_LlvmLibExtension Condition=" '$(HostOS)' == 'Darwin' ">dylib</_LlvmLibExtension>
   </PropertyGroup>
 
@@ -62,8 +62,10 @@
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDebugInfoPDB.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMDemangle.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMExtensions.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMFrontendOffloading.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMFrontendOpenMP.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMGlobalISel.$(_LlvmLibExtension)" />
+    <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMHipStdPar.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMInstCombine.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMInstrumentation.$(_LlvmLibExtension)" />
     <_BinUtilsFilesUnixSign Include="$(MicrosoftAndroidSdkOutDir)$(HostOS)\binutils\lib\libLLVMipo.$(_LlvmLibExtension)" />

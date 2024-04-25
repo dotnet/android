@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 using Android.Runtime;
@@ -27,7 +28,7 @@ namespace Java.Lang {
 				this.removable = removable;
 				if (removable)
 					lock (instances)
-						instances [handler] = this;
+						instances.AddOrUpdate (handler, this);
 			}
 
 			public void Run ()
@@ -41,7 +42,7 @@ namespace Java.Lang {
 				Dispose ();
 			}
 
-			static Dictionary<Action, RunnableImplementor> instances = new Dictionary<Action, RunnableImplementor> ();
+			static ConditionalWeakTable<Action, RunnableImplementor> instances = new ();
 
 			public static RunnableImplementor Remove (Action handler)
 			{

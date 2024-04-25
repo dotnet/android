@@ -15,7 +15,7 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "L_17.0.6-7.2.1";
+		const string BinutilsVersion                = "L_18.1.4-8.0.0";
 
 		const string MicrosoftOpenJDK17Version      = "17.0.8";
 		const string MicrosoftOpenJDK17Release      = "17.0.8.7";
@@ -44,8 +44,6 @@ namespace Xamarin.Android.Prepare
 			///   Base URL for all Android SDK and NDK downloads. Used in <see cref="AndroidToolchain"/>
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
-
-			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
 
 			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
 		}

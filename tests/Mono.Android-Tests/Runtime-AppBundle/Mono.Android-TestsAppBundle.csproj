@@ -17,7 +17,6 @@
     <AssemblyName>Mono.Android-TestsAppBundle</AssemblyName>
     <AndroidManifest>Properties\AndroidManifest.xml</AndroidManifest>
     <AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-    <MandroidI18n>All</MandroidI18n>
     <AndroidPackageFormat>aab</AndroidPackageFormat>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\..\product.snk</AssemblyOriginatorKeyFile>
