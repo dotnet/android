@@ -206,6 +206,7 @@ else()
     xa::runtime-base
     xa::java-interop
     xa::lz4
+    xa::perfetto
     -lmonosgen-2.0
     -llog
   )

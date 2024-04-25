@@ -40,6 +40,10 @@
 
 #include "mono_android_Runtime.h"
 
+#if defined (PERFETTO_ENABLED)
+#include <perfetto.h>
+#endif
+
 #if defined (DEBUG)
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -76,6 +80,14 @@
 using namespace microsoft::java_interop;
 using namespace xamarin::android;
 using namespace xamarin::android::internal;
+
+#if defined(PERFETTO_ENABLED)
+PERFETTO_DEFINE_CATEGORIES(
+	perfetto::Category ("managed-runtime").SetDescription ("Events from the MonoVM runtime"),
+);
+
+PERFETTO_TRACK_EVENT_STATIC_STORAGE();
+#endif
 
 std::mutex MonodroidRuntime::pinvoke_map_write_lock;
 
@@ -530,6 +542,103 @@ MonodroidRuntime::set_debug_options (void)
 
 	embeddedAssemblies.set_register_debug_symbols (true);
 	mono_debug_init (MONO_DEBUG_FORMAT_MONO);
+}
+
+void
+MonodroidRuntime::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
+{
+#if defined(PERFETTO_ENABLED)
+	auto id = reinterpret_cast<uint64_t>(assembly);
+	auto track = perfetto::Track (id);
+	auto desc = track.Serialize ();
+	desc.set_name ("assembly_name");
+	perfetto::TrackEvent::SetTrackDescriptor (track, desc);
+	TRACE_EVENT_BEGIN ("managed-runtime", "Assembly load", track);
+#endif
+}
+
+void
+MonodroidRuntime::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
+{
+#if defined(PERFETTO_ENABLED)
+	auto id = reinterpret_cast<uint64_t>(assembly);
+	auto track = perfetto::Track (id);
+	auto desc = track.Serialize ();
+	desc.set_name ("assembly_name");
+	TRACE_EVENT_END ("managed-runtime", track);
+#endif
+}
+
+void
+MonodroidRuntime::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
+{
+
+}
+
+void
+MonodroidRuntime::prof_monitor_acquired ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
+{
+
 }
 
 void
@@ -1560,12 +1669,26 @@ MonodroidRuntime::install_logging_handlers ()
 	mono_trace_set_printerr_handler (mono_log_standard_streams_handler);
 }
 
+#if defined(PERFETTO_ENABLED)
+void MonodroidRuntime::init_perfetto () noexcept
+{
+	perfetto::TracingInitArgs args;
+	args.backends = perfetto::kSystemBackend;
+
+	perfetto::Tracing::Initialize (args);
+	perfetto::TrackEvent::Register ();
+}
+#endif
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
+#if defined(PERFETTO_ENABLED)
+
+#endif
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
 

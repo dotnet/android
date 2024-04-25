@@ -171,6 +171,23 @@ macro(xa_add_compile_definitions TARGET)
     PLATFORM_ANDROID
   )
 
+  if(ENABLE_PERFETTO)
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      PERFETTO_ENABLED
+      USES_LIBSTDCPP
+    )
+  endif()
+
+  if(ENABLE_PERFETTO OR ANALYZERS_ENABLED)
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      USES_LIBSTDCPP
+    )
+  endif()
+
   if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
     target_compile_definitions(
       ${TARGET}
