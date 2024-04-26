@@ -309,15 +309,6 @@ namespace xamarin::android::internal
 		static void prof_monitor_contention (MonoProfiler *prof, MonoObject *object) noexcept;
 		static void prof_monitor_acquired (MonoProfiler *prof, MonoObject *object) noexcept;
 
-		template<size_t MaxStackSpace>
-		static void get_full_class_name (MonoClass *klass, internal::dynamic_local_string<MaxStackSpace>& info) noexcept
-		{
-			info.append (mono_class_get_namespace (klass));
-			if (info.length () > 0) {
-				info.append (".");
-			}
-			info.append (mono_class_get_name (klass));
-		}
 #if !defined (RELEASE)
 		static MonoReflectionType* typemap_java_to_managed (MonoString *java_type_name) noexcept;
 		static const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
