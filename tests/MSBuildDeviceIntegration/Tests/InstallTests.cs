@@ -468,7 +468,7 @@ namespace Xamarin.Android.Build.Tests
 			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};
-			InlineData.AddCultureResourcesToProject (lib, "Foo", "CancelButton");
+			InlineData.AddCultureResourcesToProject (app, "Foo", "CancelButton");
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
