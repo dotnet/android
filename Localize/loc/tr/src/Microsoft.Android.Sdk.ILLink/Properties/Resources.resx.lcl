@@ -11,10 +11,13 @@
       <Disp Icon="Str" Disp="true" LocTbl="false" />
       <Item ItemId=";XA2000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+          <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher only supports a single AppDomain, so this API is no longer available.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.]]></Val>
+            <Val><![CDATA[Derlemede AppDomain.CreateDomain() kullanımı algılandı: {0}. .NET 6 ve üzeri yalnızca tek bir AppDomain'i desteklediğinden, bu API artık kullanılamaz.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
