@@ -1,14 +1,14 @@
-<img src="Documentation/images/banner.png" alt=".NET Android banner" height="145" >
+<img src="Documentation/images/banner.png" alt=".NET for Android banner" height="145" >
 
-.NET Android
+.NET for Android
 ===============
 
-.NET Android provides open-source bindings of the Android SDK and tooling for use with
+.NET for Android provides open-source bindings of the Android SDK and tooling for use with
 .NET managed languages such as C#. This ships as an optional [.NET workload][net-workload] for .NET 6+ that can 
 be updated independently from .NET in order to respond to external dependency updates like new Android
 platform and tooling.
 
-While .NET Android is an essential part of [MAUI][maui-intro], it is still fully supported to be 
+While .NET for Android is an essential part of [.NET MAUI][maui-intro], it is still fully supported to be 
 used independently for native Android development using .NET.
 
 This repository is also home to the classic Xamarin.Android product.
@@ -18,11 +18,11 @@ This repository is also home to the classic Xamarin.Android product.
 
 # Support
 
-.NET Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+.NET for Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
 
-Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
+Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
 
-> Xamarin support will end on May 1, 2024 for all classic Xamarin SDKs. Android 13 will be the final version classic Xamarin.Android will target.
+> Xamarin support ended on May 1, 2024 for all Xamarin SDKs including Xamarin.Forms. Android API 34 and Xcode 15 SDKs (iOS and iPadOS 17, macOS 14) are the final versions Xamarin targets from existing Xamarin SDKs (i.e. no new APIs are planned).
 
 [maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
 [xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
@@ -31,7 +31,7 @@ Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xama
 
 ## Current
 
-.NET Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
+.NET for Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
 the [workload documentation][workload-documentation] for installation commands.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
