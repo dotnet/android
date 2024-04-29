@@ -563,11 +563,11 @@ $(SupportedOSPlatformVersion) 値に一致するように AndroidManifest.xml �
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details.</value>
+    <value>これは、プロジェクトが Windows のパスの最大の長さの制限を超えたことが原因の可能性があります。詳細については、「https://learn.microsoft.com/dotnet/android/messages/apt2264」を参照してください。</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="APT2265" xml:space="preserve">
-    <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
+    <value>これは、プロジェクトのファイル名またはパスに ASCII 以外の文字が含まれている場合に発生する可能性があります。詳細については、「https://learn.microsoft.com/dotnet/android/messages/apt2265」を参照してください。</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
@@ -1011,7 +1011,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
-    <value>The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details.</value>
+    <value>Android サポート ライブラリは .NET 9 以降ではサポートされていません。AndroidX に移行してください。詳細については、「https://aka.ms/net-android/androidx」を参照してください。</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">
