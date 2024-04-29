@@ -8,23 +8,22 @@
 be updated independently from .NET in order to respond to external dependency updates like new Android
 platform and tooling.
 
-While .NET for Android is an essential part of [.NET MAUI][maui-intro], it is still fully supported to be 
-used independently for native Android development using .NET.
-
-This repository is also home to the classic Xamarin.Android product.
+.NET for Android is part of [.NET MAUI][maui-intro], and may also be used independently for native Android development using .NET.
 
 [net-workload]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 [maui-intro]: https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui
 
 # Support
 
-.NET for Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+.NET for Android is part of .NET MAUI, since it was introduced in May 2022 as part of .NET 6, and is currently supported as described on the [.NET MAUI Support Policy][maui-support-policy].
 
 Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
 
 > Xamarin support ended on May 1, 2024 for all Xamarin SDKs including Xamarin.Forms. Android API 34 and Xcode 15 SDKs (iOS and iPadOS 17, macOS 14) are the final versions Xamarin targets from existing Xamarin SDKs (i.e. no new APIs are planned).
 
-[maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
+Follow the [official upgrade guidance](https://learn.microsoft.com/dotnet/maui/migration) to bring your Xamarin applications to the latest version of .NET.
+
+[maui-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
 [xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
 
 # Downloads
