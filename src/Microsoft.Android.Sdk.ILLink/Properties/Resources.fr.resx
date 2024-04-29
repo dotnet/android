@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="XA2000" xml:space="preserve">
-    <value>Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher only supports a single AppDomain, so this API is no longer available.</value>
+    <value>Utilisation d’AppDomain.CreateDomain() détectée dans l’assembly : {0}. .NET 6 et les versions ultérieures ne prennent en charge qu’un seul AppDomain. Cette API n’est donc plus disponible.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
