@@ -15,7 +15,7 @@ platform and tooling.
 
 # Support
 
-.NET for Android is part of .NET MAUI, since it was introduced in May 2022 as part of .NET 6, and is currently supported as described on the [.NET MAUI Support Policy][maui-support-policy].
+.NET for Android is part of .NET MAUI, since it was introduced in May 2022 as part of .NET 6, and is currently supported as described in the [.NET MAUI Support Policy][maui-support-policy].
 
 Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
 
@@ -28,25 +28,20 @@ Follow the [official upgrade guidance](https://learn.microsoft.com/dotnet/maui/m
 
 # Downloads
 
-## Current
+.NET for Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. 
 
-.NET for Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
-the [workload documentation][workload-documentation] for installation commands.
+In its simplest form, .NET for Android can be installed by running:
+
+```
+dotnet workload install android
+```
+
+See the [.NET workload documentation][workload-documentation] for additional installation commands and options.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
 [workload-documentation]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 
-Classic Xamarin.Android installers are available here:
-
-| Platform        | Link   |
-|-----------------|--------|
-| **Commercial Xamarin.Android 13.2.2 (d17-8)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-8-Windows-x86_64] |
-| **Commercial Xamarin.Android 13.2.2 (d17-8)** for VSMac 2022                                  | [Download][commercial-d17-8-macOS-x86_64]   |
-
-[Previous Releases](Documentation/previous-releases.md) are also available for download.
-
-[commercial-d17-8-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-8-windows
-[commercial-d17-8-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-8-macos
+While no longer supported, Classic Xamarin.Android installers are still available [here](Documentation/previous-releases.md).
 
 # Contributing
 
