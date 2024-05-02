@@ -1,3 +1,5 @@
+<img src="Documentation/images/banner.png" alt=".NET for Android banner" height="145" >
+
 .NET for Android
 ===============
 
