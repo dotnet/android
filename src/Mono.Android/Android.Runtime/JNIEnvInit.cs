@@ -57,6 +57,7 @@ namespace Android.Runtime
 		{
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/8724
 			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Type should be preserved by the MarkJavaObjects trimmer step.")]
+			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicMethods | DynamicallyAccessedMemberTypes.NonPublicMethods | DynamicallyAccessedMemberTypes.NonPublicNestedTypes)]
 			static Type TypeGetType (string typeName) =>
 				Type.GetType (typeName, throwOnError: false);
 
