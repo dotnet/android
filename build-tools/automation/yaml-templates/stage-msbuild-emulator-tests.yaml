@@ -13,6 +13,7 @@ parameters:
   usesCleanImages: true
   shouldFailOnIssue: true
   emulatorStartContinueOnError: false
+  use1ESTemplate: true
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -25,19 +26,19 @@ stages:
       parallel: ${{ parameters.agent_count }}
     displayName: "macOS > Tests > MSBuild+Emulator"
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
-    timeoutInMinutes: 90
+      os: macOS
+    timeoutInMinutes: 180
     cancelTimeoutInMinutes: 5
     workspace:
       clean: all
     steps:
-    - template: setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        installLegacyDotNet: false
         installLegacyXamarinAndroid: true
-        restoreNUnitConsole: false
         updateMono: true
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
@@ -49,12 +50,12 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
         testFilter: $(ExcludedNightlyNUnitCategories)
@@ -66,12 +67,13 @@ stages:
           command: stop
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: Test Results - MSBuild With Emulator - macOS-$(System.JobPositionInPhase)
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}
 
@@ -88,17 +90,16 @@ stages:
       deviceName: wear_square
       androidSdkPlatforms: 33
     pool:
+      name: Azure Pipelines
       vmImage: $(HostedMacImage)
+      os: macOS
     workspace:
       clean: all
     steps:
-    - template: setup-test-environment.yaml
+    - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
       parameters:
         installTestSlicer: true
         installApkDiff: false
-        installLegacyDotNet: false
-        restoreNUnitConsole: false
-        updateMono: false
         xaSourcePath: ${{ parameters.xaSourcePath }}
         repositoryAlias: ${{ parameters.repositoryAlias }}
         commit: ${{ parameters.commit }}
@@ -109,7 +110,7 @@ stages:
         artifactName: $(TestAssembliesArtifactName)
         downloadPath: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)
 
-    - template: start-stop-emulator.yaml
+    - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
       parameters:
         specificImage: true
         deviceName: $(deviceName)
@@ -119,7 +120,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
         startContinueOnError: ${{ parameters.emulatorStartContinueOnError }}
 
-    - template: run-sliced-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-sliced-nunit-tests.yaml
       parameters:
         testRunTitle: WearOS On Device - macOS
         testAssembly: ${{ parameters.xaSourcePath }}/bin/Test$(XA.Build.Configuration)/MSBuildDeviceIntegration/$(DotNetStableTargetFramework)/MSBuildDeviceIntegration.dll
@@ -127,7 +128,7 @@ stages:
         xaSourcePath: ${{ parameters.xaSourcePath }}
 
     - ${{ if ne(parameters.usesCleanImages, true) }}:
-      - template: start-stop-emulator.yaml
+      - template: /build-tools/automation/yaml-templates/start-stop-emulator.yaml
         parameters:
           command: stop
           specificImage: true
@@ -137,12 +138,13 @@ stages:
           avdType: $(avdType)
           xaSourcePath: ${{ parameters.xaSourcePath }}
 
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         configuration: $(XA.Build.Configuration)
         artifactName: Test Results - Emulator $(avdApiLevel)-$(avdAbi)-$(avdType) - macOS
         xaSourcePath: ${{ parameters.xaSourcePath }}
+        use1ESTemplate: ${{ parameters.use1ESTemplate }}
 
-    - template: fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
       parameters:
         condition: ${{ parameters.shouldFailOnIssue }}

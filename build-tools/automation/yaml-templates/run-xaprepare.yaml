@@ -3,7 +3,6 @@ parameters:
   name:
   configuration: $(XA.Build.Configuration)
   xaSourcePath: $(System.DefaultWorkingDirectory)
-  framework: $(DotNetStableTargetFramework)
   condition: succeeded()
   arguments:
 
@@ -15,4 +14,4 @@ steps:
   inputs:
     command: run
     projects: ${{ parameters.xaSourcePath }}/build-tools/xaprepare/xaprepare/xaprepare.csproj
-    arguments: -f ${{ parameters.framework }} -c ${{ parameters.configuration }} -- ${{ parameters.arguments }} --no-emoji --run-mode=CI
+    arguments: -f $(DotNetStableTargetFramework) -c ${{ parameters.configuration }} -- ${{ parameters.arguments }} --no-emoji --run-mode=CI

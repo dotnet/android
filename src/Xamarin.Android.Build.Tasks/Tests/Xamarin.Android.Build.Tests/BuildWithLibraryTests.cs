@@ -269,11 +269,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			libB.Sources.Clear ();
 			libB.Sources.Add (new BuildItem.Source ("Foo.cs") {
-				TextContent = () => @"public class Foo {
-					public Foo () {
-						var bar = new Bar();
-					}
-				}",
+				TextContent = () => "public class Foo : Bar { }",
 			});
 
 			var libC = new XamarinAndroidLibraryProject () {
@@ -283,7 +279,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			libC.Sources.Clear ();
 			libC.Sources.Add (new BuildItem.Source ("Bar.cs") {
-				TextContent = () => "public class Bar { }",
+				TextContent = () => "public class Bar : Java.Lang.Object { }",
 			});
 			libC.Sources.Add (new BuildItem ("EmbeddedResource", "Foo.resx") {
 				TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -309,8 +305,8 @@ namespace Xamarin.Android.Build.Tests
 				ProjectName = "AppA",
 				IsRelease = true,
 				Sources = {
-					new BuildItem.Source ("Bar.cs") {
-						TextContent = () => "public class Bar : Foo { }",
+					new BuildItem.Source ("Baz.cs") {
+						TextContent = () => "public class Baz : Foo { }",
 					},
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -321,6 +317,10 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			appA.AddReference (libB);
+			if (!projectReference) {
+				// @(ProjectReference) implicits adds this reference. For `class Baz : Foo : Bar`:
+				appA.OtherBuildItems.Add (new BuildItem.Reference ($@"..\{libC.ProjectName}\bin\Release\{libC.TargetFramework}\{libC.ProjectName}.dll"));
+			}
 			var appBuilder = CreateApkBuilder (Path.Combine (path, appA.ProjectName));
 			Assert.IsTrue (appBuilder.Build (appA), $"{appA.ProjectName} should succeed");
 
@@ -332,6 +332,17 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/{libC.ProjectName}.dll");
 			helper.AssertContainsEntry ($"assemblies/es/{appA.ProjectName}.resources.dll");
 			helper.AssertContainsEntry ($"assemblies/es/{libC.ProjectName}.resources.dll");
+
+			var intermediate = Path.Combine (Root, appBuilder.ProjectDirectory, appA.IntermediateOutputPath);
+			var dexFile = Path.Combine (intermediate, "android", "bin", "classes.dex");
+			FileAssert.Exists (dexFile);
+
+			// NOTE: the crc hashes here might change one day, but if we used [Android.Runtime.Register("")]
+			// LibraryB.dll would have a reference to Mono.Android.dll, which invalidates the test.
+			string className = "Lcrc6414a4b78410c343a2/Bar;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+			className = "Lcrc646d2d82b4d8b39bd8/Foo;";
+			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 		}
 
 		[Test]

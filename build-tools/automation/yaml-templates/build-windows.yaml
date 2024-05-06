@@ -1,5 +1,4 @@
 parameters:
-  buildPool: $(1ESWindowsPool)
   buildResultArtifactName: Build Results - Windows
   checkoutCommit: ''
   checkoutPath: ''
@@ -20,11 +19,14 @@ stages:
   ${{ if and(ne(parameters.dependsOn, ''), ne(parameters.dependsOnResult, '')) }}:
     condition: eq(dependencies.${{ parameters.dependsOn }}.result, '${{ parameters.dependsOnResult }}')
   jobs:
-  # Check - "Xamarin.Android (Windows > Build & Smoke Test)"
+  # Check - "Xamarin.Android (Windows Windows > Build & Smoke Test)"
   - job: ${{ parameters.jobName }}
     displayName: ${{ parameters.jobDisplayName }}
-    pool: ${{ parameters.buildPool }}
-    timeoutInMinutes: 360
+    pool:
+      name: MAUI-1ESPT
+      image: $(WindowsPoolImage1ESPT)
+      os: windows
+    timeoutInMinutes: 240
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
@@ -33,15 +35,15 @@ stages:
         path: ${{ parameters.checkoutPath }}
         persistCredentials: ${{ parameters.checkoutPersistCredentials }}
 
-    - template: kill-processes.yaml
+    - template: /build-tools/automation/yaml-templates/kill-processes.yaml
 
-    - template: clean.yaml
+    - template: /build-tools/automation/yaml-templates/clean.yaml
 
     - script: |
         echo ##vso[task.setvariable variable=JI_JAVA_HOME]%JAVA_HOME_17_X64%
       displayName: set JI_JAVA_HOME to $(JAVA_HOME_17_X64)
 
-    - template: use-dot-net.yaml
+    - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
       parameters:
         remove_dotnet: true
 
@@ -77,7 +79,7 @@ stages:
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
     # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
-    - template: run-dotnet-preview.yaml
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
@@ -86,16 +88,15 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
-    - template: install-global-tool.yaml
+    - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
       parameters:
         toolName: apkdiff
         version: $(ApkDiffToolVersion)
 
-    - template: run-nunit-tests.yaml
+    - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml
       parameters:
         testRunTitle: Smoke MSBuild Tests - Windows Dotnet Build
         testAssembly: $(System.DefaultWorkingDirectory)\bin\Test$(XA.Build.Configuration)\$(DotNetStableTargetFramework)\Xamarin.Android.Build.Tests.dll
-        testResultsFile: TestResult-SmokeMSBuildTests-WinDotnetBuild-$(XA.Build.Configuration).xml
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
     - task: BatchScript@1
@@ -104,9 +105,9 @@ stages:
         filename: dotnet-local.cmd
         arguments: build samples\HelloWorld\HelloWorld\HelloWorld.DotNet.csproj
 
-    - template: upload-results.yaml
+    - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
         artifactName: ${{ parameters.buildResultArtifactName }}
         includeBuildResults: true
 
-    - template: fail-on-issue.yaml
+    - template: /build-tools/automation/yaml-templates/fail-on-issue.yaml
