@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Sınıf Kitaplığı",
-  "description": ".NET Android sınıf kitaplığı oluşturmak için proje",
+  "description": ".NET for Android sınıf kitaplığı oluşturmak için proje",
   "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }

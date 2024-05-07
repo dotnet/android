@@ -6,7 +6,7 @@
 
 // We can't use <mutex> on Android because it requires linking libc++ into the rutime, see below.
 //
-// Android NDK currently provides a build of libc++ which we cannot link into Xamarin.Android runtime because it would
+// Android NDK currently provides a build of libc++ which we cannot link into .NET for Android runtime because it would
 // expose libc++ symbols which would conflict with a version of libc++ potentially included in a mixed
 // native/Xamarin.Android application.
 //

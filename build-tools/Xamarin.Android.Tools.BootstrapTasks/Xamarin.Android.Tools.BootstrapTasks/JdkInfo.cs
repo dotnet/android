@@ -47,7 +47,7 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 					.FirstOrDefault ();
 
 				if (jdk == null) {
-					Log.LogError ($"Could not determine a valid JavaSdkPath, `{androidSdk.JavaSdkPath}` was not compatible with the Xamarin.Android build.");
+					Log.LogError ($"Could not determine a valid JavaSdkPath, `{androidSdk.JavaSdkPath}` was not compatible with the .NET for Android build.");
 					return false;
 				} else {
 					Log.LogMessage (MessageImportance.Low, $"  {nameof (jdk.HomePath)}: {jdk.HomePath}");

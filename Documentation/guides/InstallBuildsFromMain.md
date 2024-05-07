@@ -42,7 +42,7 @@ If you get the error:
 error XA5207: Could not find android.jar for API level 32.
 This means the Android SDK platform for API level 32 is not installed.
 Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...),
-or change the Xamarin.Android project to target an API version that is installed.
+or change your .NET for Android project to target an API version that is installed.
 ```
 
 On Windows, if your Android SDK is located in `C:\Program Files

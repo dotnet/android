@@ -684,7 +684,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher..
+        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.
         /// </summary>
         public static string XA1024 {
             get {
@@ -711,7 +711,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Using AAPT is not supported in Xamarin.Android projects that target .NET 6 or higher. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
+        ///   Looks up a localized string similar to Using AAPT is deprecated in favor of AAPT2. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
         /// </summary>
         public static string XA1026_dotnet {
             get {
@@ -747,7 +747,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released..
+        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.
         /// </summary>
         public static string XA2000 {
             get {
@@ -1107,7 +1107,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;class-parse&apos;..
+        ///   Looks up a localized string similar to The Android class parser value &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;class-parse&apos;..
         /// </summary>
         public static string XA4231 {
             get {
@@ -1116,7 +1116,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
+        ///   Looks up a localized string similar to The Android code generation target &apos;{0}&apos; is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use &apos;XAJavaInterop1&apos;..
         /// </summary>
         public static string XA4232 {
             get {
@@ -1409,7 +1409,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Referencing the Android Wear application project &apos;{0}&apos; from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead..
+        ///   Looks up a localized string similar to Referencing the Android Wear application project &apos;{0}&apos; from an Android application project is deprecated and will no longer be supported in a future version of .NET for Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead..
         /// </summary>
         public static string XA4312 {
             get {
@@ -1528,7 +1528,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. Either install it in the Android SDK Manager ({2}), or change the Xamarin.Android project to target an API version that is installed. ({1} missing.).
+        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. {2} See https://aka.ms/xa5207 for more details.
         /// </summary>
         public static string XA5207 {
             get {

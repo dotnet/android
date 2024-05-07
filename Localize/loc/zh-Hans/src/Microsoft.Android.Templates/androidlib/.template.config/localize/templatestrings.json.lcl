@@ -20,9 +20,9 @@
       </Item>
       <Item ItemId=";description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A project for creating a .NET Android class library]]></Val>
+          <Val><![CDATA[A project for creating a .NET for Android class library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[用于创建 .NET Android类库的项目]]></Val>
+            <Val><![CDATA[用于创建 .NET for Android类库的项目]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

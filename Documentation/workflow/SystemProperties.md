@@ -1,7 +1,7 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Custom Android system properties used by Xamarin.Android](#custom-android-system-properties-used-by-xamarinandroid)
+- [Custom Android system properties used by .NET for Android](#custom-android-system-properties-used-by-xamarinandroid)
     - [Introduction](#introduction)
     - [Known properties](#known-properties)
         - [debug.mono.connect](#debugmonoconnect)
@@ -19,11 +19,11 @@
         - [debug.mono.wref](#debugmonowref)
 
 <!-- markdown-toc end -->
-# Custom Android system properties used by Xamarin.Android
+# Custom Android system properties used by .NET for Android
 
 ## Introduction
 
-Xamarin.Android uses a number of custom Android system properties to
+.NET for Android uses a number of custom Android system properties to
 communicate settings to application at the run time.  Each property
 value can be no longer than 91 characters (as per Android OS limits)
 and can be set from the command line using the following syntax:
@@ -60,7 +60,7 @@ value doesn't matter, only its presence is checked.
 ### debug.mono.env
 
 Specifies a list of environment properties to set.  Property is only
-used in Debug builds of Xamarin.Android applications.  Its value
+used in Debug builds of .NET for Android applications.  Its value
 is a list of `NAME=VALUE` pairs separated with the pipe character
 (`|`), without any whitespace surrounding each of the pipe separators.
 
@@ -72,11 +72,11 @@ arguments to pass to the Mono runtime initialization function.
 ### debug.mono.gc
 
 Enable GC logging if set to any non-empty value.  Property is only
-used in Debug builds of Xamarin.Android applications.
+used in Debug builds of .NET for Android applications.
 
 ### debug.mono.gdb
 
-Set additional parameters when starting a Xamarin.Android application
+Set additional parameters when starting a .NET for Android application
 under GDB.  Each argument follows the `NAME:VALUE` format.  Supported
 arguments:
 
@@ -88,7 +88,7 @@ arguments:
 
 ### debug.mono.log
 
-Configure the Xamarin.Android runtime categories.  By default only the
+Configure the .NET for Android runtime categories.  By default only the
 `default` category is enabled, which logs a handful of messages during
 application startup and operation.  This property enables all the
 messages logged below the `info` level for any of the categories.
@@ -277,7 +277,7 @@ adb logcat -d > logcat.txt
 ```
 
 Technically, the broadcast can be sent to all applications running on
-the device, but in event there are more Xamarin.Android applications
+the device, but in event there are more .NET for Android applications
 which happen to have timing enabled, the output could be confusing so
 it's better to send the broadcast to a specific application/package
 only.

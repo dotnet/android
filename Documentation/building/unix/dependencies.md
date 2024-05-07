@@ -1,6 +1,6 @@
 # Build Dependencies for Linux and macOS
 
-Building Xamarin.Android requires:
+Building .NET for Android requires:
 
   * [Homebrew](#homebrew)
   * [Latest Mono](#mono-sdk)

@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Wear Uygulaması",
-  "description": ".NET Android Wear uygulaması oluşturmak için proje",
+  "description": ".NET for Android Wear uygulaması oluşturmak için proje",
   "symbols/packageName/description": "AndroidManifest.xm öğesindeki paket adını geçersiz kılar",
   "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }

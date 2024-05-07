@@ -1,5 +1,5 @@
 This is the Android App Bundle and `bundletool` integration
-specification for Xamarin.Android.
+specification for .NET for Android.
 
 # What are "app bundles"?
 
@@ -23,11 +23,11 @@ Google Play that has a wide array of benefits.
     > devices.
 
 These first two features of Android App Bundles are a natural fit for
-Xamarin.Android apps. The first version of `bundletool` support in
-Xamarin.Android will focus on these two benefits.
+.NET for Android apps. The first version of `bundletool` support in
+.NET for Android will focus on these two benefits.
 
 *Unfortunately* the next two features will be more involved. We could
-perhaps support them in Xamarin.Android down the road.
+perhaps support them in .NET for Android down the road.
 
 * Support for "Instant Apps":
 
@@ -35,7 +35,7 @@ perhaps support them in Xamarin.Android down the road.
     > an instant app entry point module from the Try Now button on
     > Google Play and web links without installation.
 
-Xamarin.Android does not yet have full support for [Instant
+.NET for Android does not yet have full support for [Instant
 Apps][instant_apps], in general. There would likely be some changes
 needed to the runtime, and there is a file size limit on the base APK
 size. App Bundles won't necessarily help anything for this.
@@ -48,7 +48,7 @@ size. App Bundles won't necessarily help anything for this.
     > Android Studio 3.2 to build apps with dynamic features, and join
     > the beta program to publish them on Google Play.
 
-For Xamarin.Android to implement this feature, I believe Instant App
+For .NET for Android to implement this feature, I believe Instant App
 support is needed first.
 
 For more information on App Bundles, visit the [getting
@@ -64,7 +64,7 @@ started][getting_started] guide.
 gradle, Android Studio, and Google Play use for working with Android
 App Bundles.
 
-Xamarin.Android will need to run `bundletool` for the following cases:
+.NET for Android will need to run `bundletool` for the following cases:
 
 * Create an Android App Bundle from a "base" zip file
 * Create an APK Set (`.apks` file) from an Android App Bundle
@@ -127,7 +127,7 @@ To enable app bundles, a new MSBuild property is needed:
 ```
 
 `$(AndroidPackageFormat)` will default to `apk` for the current
-Xamarin.Android behavior.
+.NET for Android behavior.
 
 Due to the various requirements for Android App Bundles, here are a
 reasonable set of defaults for `bundletool`:
@@ -153,7 +153,7 @@ commonly be enabled in `Release` builds for submission to Google Play:
 Using `$(AndroidPackageFormat)` could impact build times, since it
 takes some time for `bundletool` to generate an app bundle and
 device-specific APK set to be deployed. It would make sense, in a
-given Xamarin.Android `.csproj` file to use `apk` for `Debug` builds
+given .NET for Android `.csproj` file to use `apk` for `Debug` builds
 and `aab` for `Release` builds.
 
 ## aapt2
@@ -177,7 +177,7 @@ Suitable as input to the bundle tool for generating an App Bundle.
 
 This command-line switch is new in `aapt2` and can only be used with
 the version of `aapt2` from Maven. We are now shipping this new
-version in Xamarin.Android.
+version in .NET for Android.
 
 ## Generate a base ZIP file
 
@@ -190,7 +190,7 @@ file][zip_format] of the following structure:
 * `assets/`: all Android assets
 * `lib/`: all native libraries (`.so` files)
 * `root/`: any arbitrary files that need to go in the root of the
-  final APK on-device. Xamarin.Android will need to put .NET
+  final APK on-device. .NET for Android will need to put .NET
   assemblies in `root/assemblies`.
 * `resources.pb`: the resource table in protobuf format
 
@@ -202,7 +202,7 @@ See the [.aab format spec][aab_format] for further detail.
 ## BundleConfig.json
 
 Since .NET assemblies and typemap files must remain uncompressed in
-Xamarin.Android apps, we will also need to specify a
+.NET for Android apps, we will also need to specify a
 `BundleConfig.json` file:
 
 ```json
@@ -257,13 +257,13 @@ See [bundletool's source code][nativelibs] for details.
 ## Signing
 
 App Bundles can only be signed with `jarsigner` (not `apksigner`). App
-Bundles do not need to use `zipalign`. Xamarin.Android should go ahead
+Bundles do not need to use `zipalign`. .NET for Android should go ahead
 and sign the `.aab` file the same as it currently does for `.apk`
 files. A `com.company.app-Signed.aab` file will be generated in
 `$(OutputPath)`, to match our current behavior with APK files.
 
 Google Play has recently added support for [doing the final,
-production signing][app_signing], but Xamarin.Android should sign App
+production signing][app_signing], but .NET for Android should sign App
 Bundles with what is configured in the existing MSBuild properties.
 
 [app_signing]: https://developer.android.com/studio/publish/app-signing

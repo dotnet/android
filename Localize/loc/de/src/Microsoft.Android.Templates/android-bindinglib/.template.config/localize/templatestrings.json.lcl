@@ -20,9 +20,9 @@
       </Item>
       <Item ItemId=";description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          <Val><![CDATA[A project for creating a .NET for Android class library that binds to a native Java library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Ein Projekt zum Erstellen einer .NET Android-Klassenbibliothek, die an eine native Java-Bibliothek gebunden wird]]></Val>
+            <Val><![CDATA[Ein Projekt zum Erstellen einer .NET for Android-Klassenbibliothek, die an eine native Java-Bibliothek gebunden wird]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

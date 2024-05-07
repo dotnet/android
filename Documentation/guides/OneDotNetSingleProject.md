@@ -10,12 +10,12 @@ to create item templates for `AndroidManifest.xml` and `Info.plist`
 when (and if) they are removed from project templates.
 
 The concepts for a Xamarin "single project" go much beyond this. This
-document is a starting point for what needs to go in the .NET Android
+document is a starting point for what needs to go in the .NET for Android
 and Apple SDKs, while much of the remaining features would be in the
-Xamarin.Forms/MAUI MSBuild targets.
+MAUI MSBuild targets.
 
 For starters, we can add the following MSBuild properties to the
-Xamarin.Android and Xamarin.iOS/Mac SDKs:
+.NET for Android and .NET for iOS/etc. SDKs:
 
 * `$(ApplicationId)` maps to `/manifest/@package` and
   `CFBundleIdentifier`
@@ -180,7 +180,7 @@ it.
 
 One can imagine supporting a `.resx` key via a new
 `$(LocalizedApplicationTitle)` property. This would likely need to be
-implemented in Xamarin.Forms/MAUI MSBuild tasks as a way to provide a
+implemented in .NET for Android/MAUI MSBuild tasks as a way to provide a
 single `.resx` file to be translated to the appropriate format for iOS
 and Android. This is a consideration for the future.
 

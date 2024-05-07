@@ -147,7 +147,7 @@ namespace Xamarin.Android.UnitTests
 			string mfaVer = attribute == null ? "unknown" : attribute.InformationalVersion;
 
 			int alignColumn = 25;
-			LogPaddedInfo ("Xamarin.Android Version", mfaVer, alignColumn);
+			LogPaddedInfo (".NET for Android Version", mfaVer, alignColumn);
 
 			var aver = new List<string> ();
 			aver.Add (Build.VERSION.Release);
