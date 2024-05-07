@@ -54,6 +54,14 @@ namespace xamarin::android {
 
 	class PerfettoSupport
 	{
+		force_inline static void set_desc_name (perfetto::protos::gen::TrackDescriptor &desc, const char *name) noexcept
+		{
+			if (name == nullptr) {
+				return;
+			}
+			desc.set_name (name);
+		}
+
 	public:
 		template<detail::SupportedMonoType TMonoType>
 		force_inline static uint64_t get_track_id (TMonoType *data)
@@ -64,13 +72,14 @@ namespace xamarin::android {
 		template<detail::SupportedMonoType TMonoType>
 		force_inline static perfetto::Track get_name_annotated_track (TMonoType *data)
 		{
-			auto track = perfetto::Track (get_track_id (data));
+			auto track = perfetto::Track::FromPointer (data, perfetto::ThreadTrack::Current ());
 			auto desc = track.Serialize ();
 
 			if constexpr (std::is_same_v<MonoAssembly, TMonoType>) {
-				desc.set_name (mono_assembly_name_get_name (mono_assembly_get_name (data)));
+				MonoAssemblyName *asm_name = mono_assembly_get_name (data);
+				set_desc_name (desc, asm_name == nullptr ? nullptr : mono_assembly_name_get_name (asm_name));
 			} else if constexpr (std::is_same_v<MonoImage, TMonoType>) {
-				desc.set_name (mono_image_get_name (data));
+				set_desc_name (desc, mono_image_get_name (data));
 			} else if constexpr (std::is_same_v<MonoClass, TMonoType>) {
 				std::string name{};
 				append_full_class_name (data, name);
@@ -87,7 +96,6 @@ namespace xamarin::android {
 				return get_name_annotated_track (mono_object_get_class (data));
 			}
 			set_track_event_descriptor (track, desc);
-
 			return track;
 		}
 

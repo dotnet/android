@@ -585,7 +585,8 @@ void
 MonodroidRuntime::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (klass));
+	auto track = PerfettoSupport::get_name_annotated_track (klass);
+	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), track);
 #endif
 }
 
@@ -619,7 +620,8 @@ void
 MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (method));
+	auto track = PerfettoSupport::get_name_annotated_track (method);
+	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), track);
 #endif
 }
 
@@ -777,7 +779,9 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 	profiler_handle = mono_profiler_create (nullptr);
 	mono_profiler_set_thread_started_callback (profiler_handle, thread_start);
 	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
-
+#if defined (PERFETTO_ENABLED)
+	perfetto_hook_mono_events ();
+#endif
 	if (log_methods) [[unlikely]]{
 		jit_time.mark_start ();
 		mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
@@ -1686,13 +1690,42 @@ MonodroidRuntime::install_logging_handlers ()
 }
 
 #if defined(PERFETTO_ENABLED)
-void MonodroidRuntime::init_perfetto () noexcept
+void
+MonodroidRuntime::init_perfetto () noexcept
 {
+	log_warn (LOG_TIMING, "INIT perfetto");
 	perfetto::TracingInitArgs args;
 	args.backends = perfetto::kSystemBackend;
 
 	perfetto::Tracing::Initialize (args);
 	perfetto::TrackEvent::Register ();
+}
+
+void
+MonodroidRuntime::perfetto_hook_mono_events () noexcept
+{
+	if (profiler_handle == nullptr) {
+		return;
+	}
+
+	log_warn (LOG_TIMING, "HOOK perfetto");
+	mono_profiler_set_assembly_loading_callback (profiler_handle, prof_assembly_loading);
+	mono_profiler_set_assembly_loaded_callback (profiler_handle, prof_assembly_loaded);
+	mono_profiler_set_image_loading_callback (profiler_handle, prof_image_loading);
+	mono_profiler_set_image_loaded_callback (profiler_handle, prof_image_loaded);
+
+	mono_profiler_set_class_loading_callback (profiler_handle, prof_class_loading);
+	mono_profiler_set_class_loaded_callback (profiler_handle, prof_class_loaded);
+	mono_profiler_set_vtable_loading_callback (profiler_handle, prof_vtable_loading);
+	mono_profiler_set_vtable_loaded_callback (profiler_handle, prof_vtable_loaded);
+	mono_profiler_set_monitor_contention_callback (profiler_handle, prof_monitor_contention);
+	mono_profiler_set_monitor_acquired_callback (profiler_handle, prof_monitor_acquired);
+
+	mono_profiler_set_method_begin_invoke_callback (profiler_handle, prof_method_begin_invoke);
+	mono_profiler_set_method_end_invoke_callback (profiler_handle, prof_method_end_invoke);
+	mono_profiler_set_method_enter_callback (profiler_handle, prof_method_enter);
+	mono_profiler_set_method_leave_callback (profiler_handle, prof_method_leave);
+
 }
 #endif
 
@@ -1703,7 +1736,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jboolean haveSplitApks)
 {
 #if defined(PERFETTO_ENABLED)
-
+	init_perfetto ();
 #endif
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;

@@ -208,6 +208,7 @@ namespace xamarin::android::internal
 	private:
 #if defined(PERFETTO_ENABLED)
 		static void init_perfetto () noexcept;
+		void perfetto_hook_mono_events () noexcept;
 #endif
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
 		static void mono_log_standard_streams_handler (const char *str, mono_bool is_stdout);
