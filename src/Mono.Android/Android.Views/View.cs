@@ -49,12 +49,22 @@ namespace Android.Views {
 
 		public bool Post (Action action)
 		{
-			return Post (new Java.Lang.Thread.RunnableImplementor (action, true));
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			if (Post (runnable)) {
+				return true;
+			}
+			runnable.Dispose ();
+			return false;
 		}
 
 		public bool PostDelayed (Action action, long delayMillis)
 		{
-			return PostDelayed (new Java.Lang.Thread.RunnableImplementor (action, true), delayMillis);
+			var runnable    = new Java.Lang.Thread.RunnableImplementor (action, removable: true);
+			if (PostDelayed (runnable, delayMillis)) {
+				return true;
+			}
+			runnable.Dispose ();
+			return false;
 		}
 
 		public bool RemoveCallbacks (Action action)
