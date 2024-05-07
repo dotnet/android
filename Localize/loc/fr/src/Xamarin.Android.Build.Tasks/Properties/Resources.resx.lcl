@@ -56,22 +56,25 @@
       </Item>
       <Item ItemId=";APT2264" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+          <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Cela peut être dû au fait que le projet dépasse la limite de longueur maximale du chemin d’accès Windows. Pour plus d’informations, consultez https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.]]></Val>
+            <Val><![CDATA[Cela peut être dû au fait que le projet dépasse la limite de longueur maximale du chemin d’accès Windows. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2264.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[This is probably caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
+            <Val><![CDATA[This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264 for details.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
       <Item ItemId=";APT2265" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.]]></Val>
+          <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Cela peut être dû au fait que le projet contient des caractères non-ASCII dans son nom de fichier ou son chemin d’accès. Pour plus d’informations, consultez https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.]]></Val>
+            <Val><![CDATA[Cela peut être dû au fait que le projet contient des caractères non-ASCII dans son nom de fichier ou son chemin d’accès. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2265.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265 for details.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
@@ -794,10 +797,13 @@
       </Item>
       <Item ItemId=";XA1039" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.]]></Val>
+          <Val><![CDATA[The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Les bibliothèques Android Support ne sont pas prises en charge dans .NET 9 et les versions ultérieures, veuillez migrer vers AndroidX. Pour plus d’informations, consultez https://aka.ms/xamarin/androidx.]]></Val>
+            <Val><![CDATA[Les bibliothèques Android Support ne sont pas prises en charge dans .NET 9 et les versions ultérieures. Veuillez migrer vers AndroidX. Pour en savoir plus, consultez https://aka.ms/net-android/androidx.]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/xamarin/androidx for more details.]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

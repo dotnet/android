@@ -562,11 +562,11 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details.</value>
+    <value>Cela peut être dû au fait que le projet dépasse la limite de longueur maximale du chemin d’accès Windows. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2264.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="APT2265" xml:space="preserve">
-    <value>This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details.</value>
+    <value>Cela peut être dû au fait que le projet contient des caractères non-ASCII dans son nom de fichier ou son chemin d’accès. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
@@ -1010,7 +1010,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
-    <value>The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details.</value>
+    <value>Les bibliothèques Android Support ne sont pas prises en charge dans .NET 9 et les versions ultérieures. Veuillez migrer vers AndroidX. Pour en savoir plus, consultez https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">

@@ -277,8 +277,13 @@ namespace Xamarin.Android.Tasks
 #if MSBUILD
 		public static bool IsMonoAndroidAssembly (ITaskItem assembly)
 		{
+			// NOTE: look for both MonoAndroid and Android
 			var tfi = assembly.GetMetadata ("TargetFrameworkIdentifier");
-			if (string.Compare (tfi, "MonoAndroid", StringComparison.OrdinalIgnoreCase) == 0)
+			if (tfi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
+				return true;
+
+			var tpi = assembly.GetMetadata ("TargetPlatformIdentifier");
+			if (tpi.IndexOf ("Android", StringComparison.OrdinalIgnoreCase) != -1)
 				return true;
 
 			var hasReference = assembly.GetMetadata ("HasMonoAndroidReference");

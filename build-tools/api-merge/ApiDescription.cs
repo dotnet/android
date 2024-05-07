@@ -121,6 +121,13 @@ namespace Xamarin.Android.ApiMerge {
 						}
 					}
 #endif
+					foreach (var smember in stype.Elements ()) {
+						var nmember = GetMember (ntype, smember);
+
+						if (nmember is null)
+							SetRemovedSince (smember, platform);
+					}
+
 					foreach (var nmember in ntype.Elements ()) {
 						var smember = GetMember (stype, nmember);
 						if (smember == null) {
@@ -306,6 +313,16 @@ namespace Xamarin.Android.ApiMerge {
 				element.Add (new XAttribute ("deprecated-since", platform));
 			else
 				deprecatedSince.SetValue (platform);
+		}
+
+		void SetRemovedSince (XElement element, string platform)
+		{
+			if (element is null)
+				return;
+
+			// Don't replace an earlier removal, as we want to keep the earliest one.
+			if (!element.Attributes ("removed-since").Any ())
+				element.Add (new XAttribute ("removed-since", platform));
 		}
 
 		XElement AddWithLocation (XElement old, XElement child, string location)
