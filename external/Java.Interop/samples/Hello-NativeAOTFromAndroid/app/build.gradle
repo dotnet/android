@@ -1,0 +1,49 @@
+plugins {
+    id 'com.android.application'
+}
+
+dependencies {
+    implementation files('lib/java-interop.jar')
+}
+
+android {
+    namespace 'net.dot.jni.helloandroid'
+    compileSdk 33
+    // Doing this to match NDK NativeAOT is using
+    ndkVersion "23.2.8568313"
+
+    defaultConfig {
+        applicationId "net.dot.jni.helloandroid"
+        minSdk 21
+        targetSdk 33
+        versionCode 1
+        versionName "1.0"
+
+        // NOTE: for now, arm64 only. Might eventually do 4 ABIs
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
+    }
+
+    // Just use the built-in debug keystore
+    signingConfigs {
+        release {
+            storeFile file("${System.getProperty('user.home')}/.android/debug.keystore")
+            storePassword 'android'
+            keyAlias 'androiddebugkey'
+            keyPassword 'android'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}

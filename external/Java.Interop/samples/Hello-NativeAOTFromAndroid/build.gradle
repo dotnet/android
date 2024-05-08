@@ -1,0 +1,5 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+plugins {
+    // Need to use < 8.0 in order to use JDK-11
+    id 'com.android.application' version '7.4.0' apply false
+}

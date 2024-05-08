@@ -45,7 +45,7 @@ static class CecilExtensions
 		while ((bmethod = method.GetBaseDefinition (cache)) != method) {
 			method = bmethod;
 
-			if (method.AnyCustomAttributes (typeof (RegisterAttribute))) {
+			if (HasMethodRegistrationAttributes (method)) {
 				return method;
 			}
 		}
@@ -168,6 +168,7 @@ static class CecilExtensions
 		}
 	}
 
+	// Keep in sync w/ HasMethodRegistrationAttributes()
 	public static IEnumerable<RegisterAttribute> GetMethodRegistrationAttributes (Mono.Cecil.ICustomAttributeProvider p)
 	{
 		foreach (var a in CecilExtensions.GetAttributes<RegisterAttribute> (p, a => CecilExtensions.ToRegisterAttribute (a))) {
@@ -187,6 +188,25 @@ static class CecilExtensions
 			}
 			yield return r;
 		}
+	}
+
+	static readonly string[] MethodRegistrationAttributes = new[]{
+		typeof (RegisterAttribute).FullName,
+		"Java.Interop.JniConstructorSignatureAttribute",
+		"Java.Interop.JniMethodSignatureAttribute",
+	};
+
+	// Keep in sync w/ GetMethodRegistrationAttributes()
+	public static bool HasMethodRegistrationAttributes (Mono.Cecil.ICustomAttributeProvider p)
+	{
+		foreach (CustomAttribute custom_attribute in p.CustomAttributes) {
+			var customAttrType  = custom_attribute.Constructor.DeclaringType.FullName;
+			foreach (var t in MethodRegistrationAttributes) {
+				if (customAttrType == t)
+					return true;
+			}
+		}
+		return false;
 	}
 
 	public static IEnumerable<ExportAttribute> GetExportAttributes (IMemberDefinition p, IMetadataResolver cache)

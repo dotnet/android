@@ -1,0 +1,49 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
+  </PropertyGroup>
+
+  <Import Project="..\..\TargetFrameworkDependentValues.props" />
+
+  <PropertyGroup>
+    <RootNamespace>Java.Interop.Samples.NativeAotFromAndroid</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <PublishAot>true</PublishAot>
+    <PublishAotUsingRuntimePack>true</PublishAotUsingRuntimePack>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <NativeLib>Shared</NativeLib>
+    <RuntimeIdentifier Condition=" '$(RuntimeIdentifier)' == '' ">linux-bionic-arm64</RuntimeIdentifier>
+    <!-- Needed for cross-compilation, e.g. build linux-bionic-arm64 from osx-x64 -->
+    <PlatformTarget>AnyCPU</PlatformTarget>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- https://github.com/exelix11/SysDVR/blob/master/Client/Client.csproj -->
+    <!-- Android needs a proper soname property or it will refuse to load the library -->
+    <LinkerArg Include="-Wl,-soname,lib$(AssemblyName)$(NativeBinaryExt)" />
+    <TrimmerRootAssembly Include="Hello-NativeAOTFromAndroid" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Java.Interop\Java.Interop.csproj" />
+    <ProjectReference Include="..\..\src\Java.Runtime.Environment\Java.Runtime.Environment.csproj" />
+    <ProjectReference Include="..\..\src\Java.Base\Java.Base.csproj" />
+    <ProjectReference Include="..\..\src\Java.Interop.Export\Java.Interop.Export.csproj" />
+    <ProjectReference
+        Include="..\..\tools\jcw-gen\jcw-gen.csproj"
+        ReferenceOutputAssembly="false"
+    />
+    <ProjectReference
+        Include="..\..\tools\jnimarshalmethod-gen\Xamarin.Android.Tools.JniMarshalMethodGenerator.csproj"
+        ReferenceOutputAssembly="false"
+    />
+    <ProjectReference
+        Include="..\..\tools\generator\generator.csproj"
+        ReferenceOutputAssembly="false"
+    />
+  </ItemGroup>
+
+  <Import Project="Hello-NativeAOTFromAndroid.targets" />
+</Project>

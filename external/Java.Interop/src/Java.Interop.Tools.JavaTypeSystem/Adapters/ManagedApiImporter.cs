@@ -330,7 +330,11 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			attributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "System.ObsoleteAttribute");
 
 		static CustomAttribute? GetRegisterAttribute (Collection<CustomAttribute> attributes) =>
-			attributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute");
+			attributes.FirstOrDefault (a => {
+				var attrType    = a.AttributeType.FullNameCorrected ();
+				return attrType == "Android.Runtime.RegisterAttribute" ||
+					attrType == "Java.Interop.JniTypeSignatureAttribute";
+			});
 
 		static string? GetRegisteredJavaTypeName (TypeDefinition type)
 		{

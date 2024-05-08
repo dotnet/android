@@ -1,0 +1,221 @@
+<Project>
+
+  <UsingTask AssemblyFile="$(MSBuildThisFileDirectory)..\..\bin\Build$(Configuration)\Java.Interop.BootstrapTasks.dll" TaskName="Java.Interop.BootstrapTasks.ParseAndroidResources" />
+
+  <PropertyGroup>
+    <GeneratorPath>$(UtilityOutputFullPath)generator.dll</GeneratorPath>
+    <_JcwOutputDir>app/src/main/java/my/</_JcwOutputDir>
+    <_GradleJniLibsDir>app/src/main/jniLibs/arm64-v8a</_GradleJniLibsDir>
+    <AndroidNdkDirectory Condition=" '$(AndroidNdkDirectory)' == '' ">$(ANDROID_NDK_HOME)</AndroidNdkDirectory>
+    <AndroidSdkDirectory Condition=" '$(AndroidSdkDirectory)' == '' ">$(ANDROID_HOME)</AndroidSdkDirectory>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-arm64' ">aarch64-linux-android</_NdkSysrootAbi>
+    <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-arm64' ">aarch64-linux-android21-</_NdkClangPrefix>
+    <_NdkSysrootAbi Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-x64' ">x86_64-linux-android</_NdkSysrootAbi>
+    <_NdkClangPrefix Condition=" '$(RuntimeIdentifier)' == 'linux-bionic-x64' ">x86_64-linux-android21-</_NdkClangPrefix>
+    <_NdkPrebuiltAbi Condition=" '$(NETCoreSdkRuntimeIdentifier)' == 'osx-x64' ">darwin-x86_64</_NdkPrebuiltAbi>
+    <_NdkSysrootLibDir>$(AndroidNdkDirectory)/toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/sysroot/usr/lib/$(_NdkSysrootAbi)</_NdkSysrootLibDir>
+    <_NdkBinDir>$(AndroidNdkDirectory)/toolchains/llvm/prebuilt/$(_NdkPrebuiltAbi)/bin</_NdkBinDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="$(RuntimeIdentifier.StartsWith('linux-bionic'))">
+    <CppCompilerAndLinker>$(_NdkBinDir)/$(_NdkClangPrefix)clang</CppCompilerAndLinker>
+    <ObjCopyName>$(_NdkBinDir)/llvm-objcopy</ObjCopyName>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(RuntimeIdentifier.StartsWith('linux-bionic'))">
+    <LinkerArg Include="-Wl,--undefined-version" />
+  </ItemGroup>
+
+  <Target Name="_ValidateEnvironment"
+      BeforeTargets="Build">
+    <Error
+        Condition=" '$(AndroidNdkDirectory)' == '' Or !Exists($(AndroidNdkDirectory)) "
+        Text="Set the %24(AndroidNdkDirectory) MSBuild property or the %24ANDROID_NDK_HOME environment variable to the path of the Android NDK."
+     />
+    <Error
+        Condition=" !Exists($(_NdkSysrootLibDir))"
+        Text="NDK 'sysroot' dir `$(_NdkSysrootLibDir)` does not exist. You're on your own."
+    />
+    <Error
+        Condition=" '$(AndroidSdkDirectory)' == '' Or !Exists($(AndroidSdkDirectory)) "
+        Text="Set the %24(AndroidSdkDirectory) MSBuild property or the %24ANDROID_HOME environment variable to the path of the Android SDK."
+     />
+  </Target>
+
+  <ItemGroup>
+    <_GenerateAndroidBindingInputs Include="$(GeneratorPath)" />
+    <_GenerateAndroidBindingInputs Include="$(MSBuildThisFileFullPath)" />
+    <_GenerateAndroidBindingInputs Include="Transforms\**" />
+    <_GenerateAndroidBindingInputs Include="$(IntermediateOutputPath)mcw\api.xml" />
+  </ItemGroup>
+
+  <Target Name="_GenerateAndroidBinding"
+      BeforeTargets="CoreCompile"
+      Inputs="@(_GenerateAndroidBindingInputs)"
+      Outputs="$(IntermediateOutputPath)mcw\Hello-NativeAOTFromAndroid.projitems">
+    <MakeDir Directories="$(IntermediateOutputPath)mcw" />
+    <PropertyGroup>
+      <Generator>"$(GeneratorPath)"</Generator>
+      <_GenFlags>--public --global</_GenFlags>
+      <_Out>-o "$(IntermediateOutputPath)mcw"</_Out>
+      <_Codegen>--codegen-target=JavaInterop1</_Codegen>
+      <_Fixup>--fixup=Transforms/Metadata.xml</_Fixup>
+      <_Enums1>--preserve-enums --enumflags=Transforms/enumflags --enumfields=Transforms/map.csv --enummethods=Transforms/methodmap.csv</_Enums1>
+      <_Enums2>--enummetadata=$(IntermediateOutputPath)mcw/enummetadata</_Enums2>
+      <_Assembly>"--assembly=$(AssemblyName)"</_Assembly>
+      <_TypeMap>--type-map-report=$(IntermediateOutputPath)mcw/type-mapping.txt</_TypeMap>
+      <_Api>android.xml</_Api>
+      <_Dirs>--enumdir=$(IntermediateOutputPath)mcw</_Dirs>
+      <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(IntermediateOutputPath)'))</_FullIntermediateOutputPath>
+      <_LangFeatures>--lang-features=nullable-reference-types,default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
+    </PropertyGroup>
+    <ItemGroup>
+      <_RefAsmDir Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+      <_Lib Include="@(_RefAsmDir->'-L &quot;%(Identity)&quot;')" />
+      <_JavaBaseRef Include="@(ReferencePathWithRefAssemblies)"
+          Condition=" '%(FileName)' == 'Java.Base' "
+      />
+      <_Ref Include="@(_JavaBaseRef->'-r &quot;%(FullPath)&quot;')" />
+    </ItemGroup>
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+    </ItemGroup>
+    <Exec
+        Command="$(DotnetToolPath) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) @(_Lib, ' ') @(_Ref, ' ') $(_Codegen) $(_Fixup) $(_Enums1) $(_Enums2) $(_Versions) $(_Annotations) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <ItemGroup>
+      <Compile Include="$(_FullIntermediateOutputPath)\mcw\**\*.cs" KeepDuplicates="False" />
+    </ItemGroup>
+    <XmlPeek
+        Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
+        XmlInputPath="$(IntermediateOutputPath)mcw\Hello-NativeAOTFromAndroid.projitems"
+        Query="/msbuild:Project/msbuild:PropertyGroup/msbuild:DefineConstants/text()" >
+      <Output TaskParameter="Result" PropertyName="_GeneratedDefineConstants" />
+    </XmlPeek>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_CreateJavaCallableWrappers"
+      Condition=" '$(TargetPath)' != '' "
+      BeforeTargets="_BuildAppApk"
+      Inputs="$(TargetPath)"
+      Outputs="$(_JcwOutputDir).stamp">
+    <RemoveDir Directories="$(_JcwOutputDir)" />
+    <MakeDir Directories="$(_JcwOutputDir)" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_JcwGenRefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(_JcwOutputDir)"</_Output>
+      <_Libpath>@(_JcwGenRefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(_JcwOutputDir).stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_AddMarshalMethods"
+      Condition=" '$(TargetPath)' != '' "
+      Inputs="$(TargetPath)"
+      Outputs="$(IntermediateOutputPath).added-marshal-methods"
+      AfterTargets="_CreateJavaCallableWrappers">
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_JnimmRefAsmDirs Include="@(RuntimePackAsset->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JnimarshalmethodGen>"$(UtilityOutputFullPath)/jnimarshalmethod-gen.dll"</_JnimarshalmethodGen>
+      <_Verbosity>-v -v --keeptemp</_Verbosity>
+      <_Libpath>-L "$(TargetDir)" @(_JnimmRefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+      <!-- <_Output>-o "$(IntermediateOutputPath)/jonp"</_Output> -->
+    </PropertyGroup>
+
+    <Exec Command="$(DotnetToolPath) $(_JnimarshalmethodGen) &quot;$(TargetPath)&quot; $(_Verbosity) $(_Libpath)" />
+
+    <!-- the IlcCompile target uses files from `$(IntermediateOutputPath)`, not `$(TargetPath)`, so… update both? -->
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(IntermediateOutputPath)" />
+
+    <Touch Files="$(IntermediateOutputPath).added-marshal-methods" AlwaysCreate="True" />
+  </Target>
+
+  <ItemGroup>
+    <_BuildAppApkInput Include="$(MSBuildThisFileFullPath)" />
+    <_BuildAppApkInput Include="app\src\main\java\**\*.java" />
+    <_BuildAppApkInput Include="app\src\main\AndroidManifest.xml" />
+    <_BuildAppApkInput Include="app\**\build.gradle" />
+    <_BuildAppApkInput Include="$(NativeBinary)" />
+    <_BuildAppApkInput Include="$(OutputPath)java-interop.jar" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <_AfterBuildDependsOnTargets>
+      _CreateJavaCallableWrappers;
+      _AddMarshalMethods;
+    </_AfterBuildDependsOnTargets>
+  </PropertyGroup>
+
+  <Target Name="_AfterBuild"
+      AfterTargets="Build"
+      DependsOnTargets="$(_AfterBuildDependsOnTargets)"
+  />
+
+  <PropertyGroup>
+    <_GradleRtxtPath>app\build\intermediates\runtime_symbol_list\release\R.txt</_GradleRtxtPath>
+  </PropertyGroup>
+
+  <Target Name="_BuildRtxt"
+      BeforeTargets="CoreCompile"
+      Inputs="@(_BuildAppApkInput)"
+      Outputs="$(_GradleRtxtPath);$(IntermediateOutputPath)R.g.cs">
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; $(GradleArgs) :app:processReleaseResources"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);ANDROID_HOME=$(AndroidSdkDirectory)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <ParseAndroidResources
+        AndroidResourceFile="$(_GradleRtxtPath)"
+        OutputFile="$(IntermediateOutputPath)R.g.cs"
+        DeclaringNamespaceName="$(RootNamespace)"
+        DeclaringClassName="R"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(IntermediateOutputPath)R.g.cs" />
+      <Compile Include="$(IntermediateOutputPath)R.g.cs" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BuildAppApk"
+      AfterTargets="Publish"
+      Inputs="@(_BuildAppApkInput)"
+      Outputs="app/build/outputs/apk/release/app-release.apk">
+    <MakeDir Directories="$(_GradleJniLibsDir);app/lib" />
+    <ItemGroup>
+      <_GradleBuildSource Include="$(NativeBinary)" />
+      <_GradleBuildTarget Include="$(_GradleJniLibsDir)\lib$(AssemblyName)$(NativeBinaryExt)" />
+
+      <_GradleBuildSource Include="$(OutputPath)java-interop.jar" />
+      <_GradleBuildTarget Include="app\lib\java-interop.jar" />
+    </ItemGroup>
+    <Copy
+        SourceFiles="@(_GradleBuildSource)"
+        DestinationFiles="@(_GradleBuildTarget)"
+    />
+    <Exec
+        Command="&quot;$(GradleWPath)&quot; $(GradleArgs) assembleRelease > gradle.log"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome);ANDROID_HOME=$(AndroidSdkDirectory)"
+        WorkingDirectory="$(MSBuildThisFileDirectory)"
+    />
+    <Copy
+        SourceFiles="app/build/outputs/apk/release/app-release.apk"
+        DestinationFiles="$(OutputPath)net.dot.jni.helloandroid-Signed.apk"
+    />
+  </Target>
+</Project>

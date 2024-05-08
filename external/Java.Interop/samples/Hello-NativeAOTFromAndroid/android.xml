@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<api platform="34">
+  <package name="android.content" jni-name="android/content">
+    <class abstract="true" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" jni-extends="Ljava/lang/Object;" final="false" name="Context" static="false" visibility="public" jni-signature="Landroid/content/Context;">
+      <constructor deprecated="not deprecated" final="false" name="Context" jni-signature="()V" bridge="false" static="false" type="android.content.Context" synthetic="false" visibility="public" />
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="android.content.Context" extends-generic-aware="android.content.Context" jni-extends="Landroid/content/Context;" final="false" name="ContextWrapper" static="false" visibility="public" jni-signature="Landroid/content/ContextWrapper;">
+      <constructor deprecated="not deprecated" final="false" name="ContextWrapper" jni-signature="(Landroid/content/Context;)V" bridge="false" static="false" type="android.content.ContextWrapper" synthetic="false" visibility="public">
+        <parameter name="base" type="android.content.Context" jni-type="Landroid/content/Context;"></parameter>
+      </constructor>
+    </class>
+  </package>
+  <package name="android.view" jni-signature="android/view">
+    <class abstract="false" deprecated="not deprecated" extends="android.content.ContextWrapper" extends-generic-aware="android.content.ContextWrapper" jni-extends="Landroid/content/ContextWrapper;" final="false" name="ContextThemeWrapper" static="false" visibility="public" jni-signature="Landroid/view/ContextThemeWrapper;">
+      <constructor deprecated="not deprecated" final="false" name="ContextThemeWrapper" jni-signature="()V" bridge="false" static="false" type="android.view.ContextThemeWrapper" synthetic="false" visibility="public" />
+      <constructor deprecated="not deprecated" final="false" name="ContextThemeWrapper" jni-signature="(Landroid/content/Context;Landroid/content/res/Resources$Theme;)V" bridge="false" static="false" type="android.view.ContextThemeWrapper" synthetic="false" visibility="public" merge.SourceFile="..\..\bin\BuildDebug\api\api-23.xml.in">
+        <parameter name="base" type="android.content.Context" jni-type="Landroid/content/Context;"></parameter>
+        <parameter name="theme" type="android.content.res.Resources.Theme" jni-type="Landroid/content/res/Resources$Theme;"></parameter>
+      </constructor>
+      <constructor deprecated="not deprecated" final="false" name="ContextThemeWrapper" jni-signature="(Landroid/content/Context;I)V" bridge="false" static="false" type="android.view.ContextThemeWrapper" synthetic="false" visibility="public">
+        <parameter name="base" type="android.content.Context" jni-type="Landroid/content/Context;"></parameter>
+        <parameter name="themeResId" type="int" jni-type="I"></parameter>
+      </constructor>
+      <method abstract="false" deprecated="not deprecated" final="false" name="onCreate" jni-signature="(Landroid/os/Bundle;)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="protected">
+        <parameter name="savedInstanceState" type="android.os.Bundle" jni-type="Landroid/os/Bundle;"></parameter>
+      </method>
+    </class>
+  </package>
+  <package name="android.app" jni-signature="android/app">
+    <class abstract="false" deprecated="not deprecated" extends="android.view.ContextThemeWrapper" extends-generic-aware="android.view.ContextThemeWrapper" jni-extends="Landroid/view/ContextThemeWrapper;" final="false" name="Activity" static="false" visibility="public" jni-signature="Landroid/app/Activity;">
+      <constructor deprecated="not deprecated" final="false" name="Activity" jni-signature="()V" bridge="false" static="false" type="android.app.Activity" synthetic="false" visibility="public" />
+      <method abstract="false" deprecated="not deprecated" final="false" name="setContentView" jni-signature="(I)V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public">
+        <parameter name="layoutResID" type="int" jni-type="I"></parameter>
+      </method>
+    </class>
+  </package>
+  <package name="android.os" jni-name="android/os">
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" jni-extends="Ljava/lang/Object;" final="false" name="BaseBundle" static="false" visibility="public" jni-signature="Landroid/os/BaseBundle;" merge.SourceFile="..\..\bin\BuildDebug\api\api-21.xml.in">
+    </class>
+    <class abstract="false" deprecated="not deprecated" extends="android.os.BaseBundle" extends-generic-aware="android.os.BaseBundle" jni-extends="Landroid/os/BaseBundle;" final="true" name="Bundle" static="false" visibility="public" jni-signature="Landroid/os/Bundle;">
+      <constructor deprecated="not deprecated" final="false" name="Bundle" jni-signature="()V" bridge="false" static="false" type="android.os.Bundle" synthetic="false" visibility="public" />
+      <constructor deprecated="not deprecated" final="false" name="Bundle" jni-signature="(Landroid/os/Bundle;)V" bridge="false" static="false" type="android.os.Bundle" synthetic="false" visibility="public">
+        <parameter name="b" type="android.os.Bundle" jni-type="Landroid/os/Bundle;"></parameter>
+      </constructor>
+      <constructor deprecated="not deprecated" final="false" name="Bundle" jni-signature="(Landroid/os/PersistableBundle;)V" bridge="false" static="false" type="android.os.Bundle" synthetic="false" visibility="public" merge.SourceFile="..\..\bin\BuildDebug\api\api-21.xml.in">
+        <parameter name="b" type="android.os.PersistableBundle" jni-type="Landroid/os/PersistableBundle;"></parameter>
+      </constructor>
+      <constructor deprecated="not deprecated" final="false" name="Bundle" jni-signature="(I)V" bridge="false" static="false" type="android.os.Bundle" synthetic="false" visibility="public">
+        <parameter name="capacity" type="int" jni-type="I"></parameter>
+      </constructor>
+      <constructor deprecated="not deprecated" final="false" name="Bundle" jni-signature="(Ljava/lang/ClassLoader;)V" bridge="false" static="false" type="android.os.Bundle" synthetic="false" visibility="public">
+        <parameter name="loader" type="java.lang.ClassLoader" jni-type="Ljava/lang/ClassLoader;"></parameter>
+      </constructor>
+    </class>
+  </package>
+</api>

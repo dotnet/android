@@ -126,7 +126,7 @@ public class CecilImporter
 
 		foreach (var bt in type.GetBaseTypes (resolver)) {
 			ctorTypes.Add (bt);
-			var rattr = CecilExtensions.GetMethodRegistrationAttributes (bt).FirstOrDefault ();
+			var rattr = CecilExtensions.GetTypeRegistrationAttributes (bt).FirstOrDefault ();
 
 			if (rattr != null && rattr.DoNotGenerateAcw)
 				break;

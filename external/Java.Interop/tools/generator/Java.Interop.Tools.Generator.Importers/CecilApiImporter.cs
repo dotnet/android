@@ -250,7 +250,11 @@ namespace MonoDroid.Generation
 			attribute?.ConstructorArguments.Any () == true ? (string) attribute.ConstructorArguments [0].Value : null;
 
 		static CustomAttribute GetRegisterAttribute (Collection<CustomAttribute> attributes) =>
-			attributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "Android.Runtime.RegisterAttribute");
+			attributes.FirstOrDefault (a => {
+				var attrType    = a.AttributeType.FullNameCorrected ();
+				return attrType == "Android.Runtime.RegisterAttribute" ||
+					attrType == "Java.Interop.JniTypeSignatureAttribute";
+			});
 
 		static bool IsDefaultInterfaceMethod (GenBase declaringType, MethodDefinition method)
 		{
