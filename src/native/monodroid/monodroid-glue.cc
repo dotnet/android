@@ -542,8 +542,8 @@ void
 MonodroidRuntime::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (assembly);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::AssemblyLoadAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::AssemblyLoad> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::AssemblyLoadAnnotation.data (), track);
 #endif
 }
 
@@ -551,7 +551,10 @@ void
 MonodroidRuntime::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (assembly));
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::AssemblyLoad> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
+		PerfettoSupport::add_name_annotation (ctx, assembly);
+	});
 #endif
 }
 
@@ -559,8 +562,8 @@ void
 MonodroidRuntime::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (image);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::ImageLoadAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ImageLoad> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::ImageLoadAnnotation.data (), track);
 #endif
 }
 
@@ -568,7 +571,10 @@ void
 MonodroidRuntime::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (image));
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ImageLoad> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
+		PerfettoSupport::add_name_annotation (ctx, image);
+	});
 #endif
 }
 
@@ -576,8 +582,8 @@ void
 MonodroidRuntime::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (klass);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::ClassLoadAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ClassLoad> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::ClassLoadAnnotation.data (), track);
 #endif
 }
 
@@ -585,8 +591,8 @@ void
 MonodroidRuntime::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (klass);
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ClassLoad> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track);
 #endif
 }
 
@@ -594,8 +600,8 @@ void
 MonodroidRuntime::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (vtable);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::VTableLoadAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::VTableLoad> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::VTableLoadAnnotation.data (), track);
 #endif
 }
 
@@ -603,7 +609,8 @@ void
 MonodroidRuntime::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (vtable));
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::VTableLoad> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track);
 #endif
 }
 
@@ -611,8 +618,8 @@ void
 MonodroidRuntime::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (method);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::MethodInvokeAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInvoke> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MethodInvokeAnnotation.data (), track);
 #endif
 }
 
@@ -620,8 +627,10 @@ void
 MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (method);
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInvoke> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
+		PerfettoSupport::add_name_annotation (ctx, method);
+	});
 #endif
 }
 
@@ -629,8 +638,8 @@ void
 MonodroidRuntime::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (method);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::MethodRunTimeAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInner> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MethodRunTimeAnnotation.data (), track);
 #endif
 }
 
@@ -638,7 +647,10 @@ void
 MonodroidRuntime::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (method));
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInner> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
+		PerfettoSupport::add_name_annotation (ctx, method);
+	});
 #endif
 }
 
@@ -646,8 +658,8 @@ void
 MonodroidRuntime::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track (object);
-	TRACE_EVENT_BEGIN (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoConstants::MonitorContentionAnnotation.data (), track);
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonitorContention> ();
+	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MonitorContentionAnnotation.data (), track);
 #endif
 }
 
@@ -655,7 +667,8 @@ void
 MonodroidRuntime::prof_monitor_acquired ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
 {
 #if defined(PERFETTO_ENABLED)
-	TRACE_EVENT_END (PerfettoConstants::ManagedRuntimeCategory.data (), PerfettoSupport::get_track_id (object));
+	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonitorContention> ();
+	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track);
 #endif
 }
 
@@ -1691,7 +1704,7 @@ MonodroidRuntime::install_logging_handlers ()
 
 #if defined(PERFETTO_ENABLED)
 void
-MonodroidRuntime::init_perfetto () noexcept
+MonodroidRuntime::perfetto_init () noexcept
 {
 	log_warn (LOG_TIMING, "INIT perfetto");
 	perfetto::TracingInitArgs args;
@@ -1716,8 +1729,8 @@ MonodroidRuntime::perfetto_hook_mono_events () noexcept
 
 	mono_profiler_set_class_loading_callback (profiler_handle, prof_class_loading);
 	mono_profiler_set_class_loaded_callback (profiler_handle, prof_class_loaded);
-	mono_profiler_set_vtable_loading_callback (profiler_handle, prof_vtable_loading);
-	mono_profiler_set_vtable_loaded_callback (profiler_handle, prof_vtable_loaded);
+	// mono_profiler_set_vtable_loading_callback (profiler_handle, prof_vtable_loading);
+	// mono_profiler_set_vtable_loaded_callback (profiler_handle, prof_vtable_loaded);
 	mono_profiler_set_monitor_contention_callback (profiler_handle, prof_monitor_contention);
 	mono_profiler_set_monitor_acquired_callback (profiler_handle, prof_monitor_acquired);
 
@@ -1736,7 +1749,9 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
                                                           jboolean haveSplitApks)
 {
 #if defined(PERFETTO_ENABLED)
-	init_perfetto ();
+	perfetto_init ();
+
+	TRACE_EVENT (PerfettoConstants::MonodroidCategory.data (), PerfettoConstants::XAInitInternal.data ());
 #endif
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
