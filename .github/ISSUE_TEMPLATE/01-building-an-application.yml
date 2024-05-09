@@ -14,7 +14,8 @@ body:
       description: In what type(s) of Android application(s) do you see this issue?
       multiple: true
       options:
-      - .NET for Android (net7.0-android, net8.0-android, etc.)
+      - Classic Xamarin.Android (MonoAndroid13.0, etc.)
+      - .NET Android (net7.0-android, net8.0-android, etc.)
     validations:
       required: true
   - type: input
