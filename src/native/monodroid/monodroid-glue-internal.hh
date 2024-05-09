@@ -16,6 +16,10 @@
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
 
+#if defined(PERFETTO_ENABLED)
+#include "perfetto_support.hh"
+#endif
+
 // NDEBUG causes robin_map.h not to include <iostream> which, in turn, prevents indirect inclusion of <mutex>. <mutex>
 // conflicts with our std::mutex definition in cppcompat.hh
 #if !defined (NDEBUG)
@@ -205,11 +209,19 @@ namespace xamarin::android::internal
 		char*	get_java_class_name_for_TypeManager (jclass klass);
 		void log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept;
 
-	private:
 #if defined(PERFETTO_ENABLED)
 		static void perfetto_init () noexcept;
+
+	private:
 		void perfetto_hook_mono_events () noexcept;
+
+		force_inline static void perfetto_trace_event (std::string_view const& event_name)
+		{
+			auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonodroidRuntime> ();
+			TRACE_EVENT (PerfettoConstants::MonodroidCategory.data (), event_name.data (), track);
+		}
 #endif
+	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
 		static void mono_log_standard_streams_handler (const char *str, mono_bool is_stdout);
 

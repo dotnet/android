@@ -33,20 +33,23 @@ namespace xamarin::android {
 		static constexpr std::string_view MethodInvokeAnnotation      { "Method: invoke" };
 		static constexpr std::string_view MethodRunTimeAnnotation     { "Method: inner run time" };
 		static constexpr std::string_view MonitorContentionAnnotation { "Monitor contention" };
+		static constexpr std::string_view MonodroidRuntimeTrack       { "Monodroid" };
 
-		static constexpr std::string_view XAInitInternal              { "XA::InitInternal" };
+		static constexpr std::string_view XAInitInternal              { "InitInternal" };
 	};
 
 	enum class PerfettoTrackId : uint64_t
 	{
 		// We need to start high, so that we don't conflict with the standard Perfetto trakck IDs
-		AssemblyLoad = 0xDEADBEEF,
-		ClassLoad,
-		ImageLoad,
-		MethodInner,
-		MethodInvoke,
-		MonitorContention,
-		VTableLoad,
+		AssemblyLoadMonoVM = 0xDEADBEEF,
+		ClassLoadMonoVM,
+		ImageLoadMonoVM,
+		MethodInnerMonoVM,
+		MethodInvokeMonoVM,
+		MonitorContentionMonoVM,
+		VTableLoadMonoVM,
+
+		MonodroidRuntime,
 	};
 }
 
@@ -74,6 +77,7 @@ namespace xamarin::android {
 		static constexpr std::string_view AssemblyName_AnnotationName { "Assembly name" };
 		static constexpr std::string_view ImageName_AnnotationName    { "Image name" };
 		static constexpr std::string_view MethodName_AnnotationName   { "Method name" };
+		static constexpr std::string_view ClassName_AnnotationName    { "Class name" };
 
 		static constexpr std::string_view Null_AnnotationContent      { "<NULL>" };
 		static constexpr std::string_view MissingMethodName           { "<UNNAMED METHOD>" };
@@ -82,24 +86,27 @@ namespace xamarin::android {
 		template<xamarin::android::PerfettoTrackId TTrack>
 		force_inline static perfetto::Track get_name_annotated_track ()
 		{
-			auto track = perfetto::Track (static_cast<uint64_t>(TTrack), perfetto::ThreadTrack::Current ());
+			auto track = perfetto::Track (static_cast<uint64_t>(TTrack), perfetto::ProcessTrack::Current ());
 			auto desc = track.Serialize ();
 
-			if constexpr (TTrack == PerfettoTrackId::AssemblyLoad) {
+			if constexpr (TTrack == PerfettoTrackId::AssemblyLoadMonoVM) {
 				desc.set_name (PerfettoConstants::AssemblyLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::ImageLoad) {
+			} else if constexpr (TTrack == PerfettoTrackId::ImageLoadMonoVM) {
 				desc.set_name (PerfettoConstants::ImageLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::ClassLoad) {
+			} else if constexpr (TTrack == PerfettoTrackId::ClassLoadMonoVM) {
 				desc.set_name (PerfettoConstants::ClassLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::VTableLoad) {
+			} else if constexpr (TTrack == PerfettoTrackId::VTableLoadMonoVM) {
 				desc.set_name (PerfettoConstants::VTableLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MethodInvoke) {
+			} else if constexpr (TTrack == PerfettoTrackId::MethodInvokeMonoVM) {
 				desc.set_name (PerfettoConstants::MethodInvokeAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MethodInner) {
+			} else if constexpr (TTrack == PerfettoTrackId::MethodInnerMonoVM) {
 				desc.set_name (PerfettoConstants::MethodRunTimeAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MonitorContention) {
+			} else if constexpr (TTrack == PerfettoTrackId::MonitorContentionMonoVM) {
 				desc.set_name (PerfettoConstants::MonitorContentionAnnotation.data ());
+			} else if constexpr (TTrack == PerfettoTrackId::MonodroidRuntime) {
+				desc.set_name (PerfettoConstants::MonodroidRuntimeTrack.data ());
 			}
+
 			set_track_event_descriptor (track, desc);
 			return track;
 		}
@@ -116,10 +123,10 @@ namespace xamarin::android {
 				if (asm_name != nullptr) [[likely]] {
 					name = mono_assembly_name_get_name (asm_name);
 				}
-			} else if constexpr (std::same_as <MonoImage, TMonoType>) {
+			} else if constexpr (std::same_as<MonoImage, TMonoType>) {
 				annotation_name = &ImageName_AnnotationName;
 				name = mono_image_get_name (data);
-			} else if constexpr (std::same_as <MonoMethod, TMonoType>) {
+			} else if constexpr (std::same_as<MonoMethod, TMonoType>) {
 				annotation_name = &MethodName_AnnotationName;
 				append_full_class_name (mono_method_get_class (data), name);
 				name.append (".");
@@ -130,6 +137,15 @@ namespace xamarin::android {
 				} else {
 					name.append (MissingMethodName);
 				}
+			} else if constexpr (std::same_as<MonoClass, TMonoType>) {
+				annotation_name = &ClassName_AnnotationName;
+				append_full_class_name (data, name);
+			} else if constexpr (std::same_as<MonoVTable, TMonoType>) {
+				annotation_name = &ClassName_AnnotationName;
+				append_full_class_name (mono_vtable_class (data), name);
+			} else if constexpr (std::same_as<MonoObject, TMonoType>) {
+				annotation_name = &ClassName_AnnotationName;
+				append_full_class_name (mono_object_get_class (data), name);
 			}
 
 			auto annotation = ctx.event ()->add_debug_annotations ();
