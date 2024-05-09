@@ -71,7 +71,7 @@ namespace MonoDroid.Tuner {
 			if (named_arg.Name == null)
 				return;
 
-			var type_ref = (TypeReference) named_arg.Argument.Value;
+			var type_ref = named_arg.Argument.Value as TypeReference;
 			if (type_ref == null)
 				return;
 
