@@ -3,6 +3,7 @@
 
 #if defined(PERFETTO_ENABLED)
 #include <string_view>
+#include <type_traits>
 
 #include <mono/jit/jit.h>
 #include <mono/metadata/appdomain.h>
@@ -83,32 +84,53 @@ namespace xamarin::android {
 		static constexpr std::string_view MissingMethodName           { "<UNNAMED METHOD>" };
 
 	public:
-		template<xamarin::android::PerfettoTrackId TTrack>
+
+		force_inline constexpr static perfetto::StaticString get_event_name (std::string_view const& sv)
+		{
+			return perfetto::StaticString { sv.data () };
+		}
+
+		template<xamarin::android::PerfettoTrackId TTrack, bool UseThreadTrack>
 		force_inline static perfetto::Track get_name_annotated_track ()
 		{
-			auto track = perfetto::Track (static_cast<uint64_t>(TTrack), perfetto::ProcessTrack::Current ());
+			using TParentTrack = std::conditional_t<UseThreadTrack, perfetto::ProcessTrack, perfetto::ProcessTrack>;
+			auto track = perfetto::Track (static_cast<uint64_t>(PerfettoTrackId::MonodroidRuntime));
 			auto desc = track.Serialize ();
 
-			if constexpr (TTrack == PerfettoTrackId::AssemblyLoadMonoVM) {
-				desc.set_name (PerfettoConstants::AssemblyLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::ImageLoadMonoVM) {
-				desc.set_name (PerfettoConstants::ImageLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::ClassLoadMonoVM) {
-				desc.set_name (PerfettoConstants::ClassLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::VTableLoadMonoVM) {
-				desc.set_name (PerfettoConstants::VTableLoadAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MethodInvokeMonoVM) {
-				desc.set_name (PerfettoConstants::MethodInvokeAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MethodInnerMonoVM) {
-				desc.set_name (PerfettoConstants::MethodRunTimeAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MonitorContentionMonoVM) {
-				desc.set_name (PerfettoConstants::MonitorContentionAnnotation.data ());
-			} else if constexpr (TTrack == PerfettoTrackId::MonodroidRuntime) {
+			// if constexpr (TTrack == PerfettoTrackId::AssemblyLoadMonoVM) {
+			// 	desc.set_name (PerfettoConstants::AssemblyLoadAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::ImageLoadMonoVM) {
+			// 	desc.set_name (PerfettoConstants::ImageLoadAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::ClassLoadMonoVM) {
+			// 	desc.set_name (PerfettoConstants::ClassLoadAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::VTableLoadMonoVM) {
+			// 	desc.set_name (PerfettoConstants::VTableLoadAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::MethodInvokeMonoVM) {
+			// 	desc.set_name (PerfettoConstants::MethodInvokeAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::MethodInnerMonoVM) {
+			// 	desc.set_name (PerfettoConstants::MethodRunTimeAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::MonitorContentionMonoVM) {
+			// 	desc.set_name (PerfettoConstants::MonitorContentionAnnotation.data ());
+			// } else if constexpr (TTrack == PerfettoTrackId::MonodroidRuntime) {
 				desc.set_name (PerfettoConstants::MonodroidRuntimeTrack.data ());
-			}
+			//}
 
 			set_track_event_descriptor (track, desc);
 			return track;
+		}
+
+		template<xamarin::android::PerfettoTrackId TTrack>
+		[[gnu::flatten]]
+		force_inline static perfetto::Track get_name_annotated_process_track ()
+		{
+			return get_name_annotated_track<TTrack, false> ();
+		}
+
+		template<xamarin::android::PerfettoTrackId TTrack>
+		[[gnu::flatten]]
+		force_inline static perfetto::Track get_name_annotated_thread_track ()
+		{
+			return get_name_annotated_track<TTrack, true> ();
 		}
 
 		template<detail::SupportedMonoType TMonoType>

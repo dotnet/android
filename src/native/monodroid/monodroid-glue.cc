@@ -98,7 +98,7 @@ bool MonodroidRuntime::startup_in_progress = true;
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
-	JNIEnv* env;
+	JNIEnv* env = nullptr;
 	int r = osBridge.get_jvm ()->AttachCurrentThread (&env, nullptr);
 
 	if (r != JNI_OK) {
@@ -112,6 +112,10 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 void
 MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
+#if defined(PERFETTO_ENABLED)
+	perfetto::TrackEvent::Flush ();
+#endif
+
 	int r = osBridge.get_jvm ()->DetachCurrentThread ();
 	if (r != JNI_OK) {
 #if DEBUG
@@ -539,153 +543,14 @@ MonodroidRuntime::set_debug_options (void)
 }
 
 void
-MonodroidRuntime::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::AssemblyLoadMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::AssemblyLoadAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::AssemblyLoadMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, assembly);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ImageLoadMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::ImageLoadAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ImageLoadMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, image);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ClassLoadMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::ClassLoadAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::ClassLoadMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, klass);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::VTableLoadMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::VTableLoadAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::VTableLoadMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, vtable);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInvokeMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MethodInvokeAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInvokeMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, method);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInnerMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MethodRunTimeAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MethodInnerMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, method);
-	});
-#endif
-}
-
-void
-MonodroidRuntime::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonitorContentionMonoVM> ();
-	TRACE_EVENT_BEGIN (PerfettoConstants::MonoRuntimeCategory.data (), PerfettoConstants::MonitorContentionAnnotation.data (), track);
-#endif
-}
-
-void
-MonodroidRuntime::prof_monitor_acquired ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
-{
-#if defined(PERFETTO_ENABLED)
-	auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonitorContentionMonoVM> ();
-	TRACE_EVENT_END (PerfettoConstants::MonoRuntimeCategory.data (), track, [&](perfetto::EventContext ctx) {
-		PerfettoSupport::add_name_annotation (ctx, object);
-	});
-#endif
-}
-
-void
 MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
 #if defined(PERFETTO_ENABLED)
+	log_info (LOG_DEFAULT, "Trace event for mono_runtime_init");
 	TRACE_EVENT(
 		PerfettoConstants::MonoRuntimeCategory.data (),
 		"mono_runtime_init",
-		PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonodroidRuntime> ()
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
 	);
 #endif
 #if defined (DEBUG)
@@ -1764,8 +1629,8 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 #if defined(PERFETTO_ENABLED)
 	TRACE_EVENT(
 		PerfettoConstants::MonoRuntimeCategory.data (),
-		PerfettoConstants::XAInitInternal.data (),
-		PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonodroidRuntime> ()
+		"initInternal",
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
 	);
 #endif
 	char *mono_log_mask_raw = nullptr;
@@ -1894,7 +1759,13 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 
 	mono_runtime_init (env, runtime_args);
-
+#if defined(PERFETTO_ENABLED)
+	TRACE_EVENT(
+		PerfettoConstants::MonoRuntimeCategory.data (),
+		"initInternal_2",
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
+	);
+#endif
 	if (FastTiming::enabled ()) [[unlikely]] {
 		internal_timing->end_event (mono_runtime_init_index);
 	}
@@ -1934,6 +1805,10 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 #endif // def RELEASE && def ANDROID && def NET
 	startup_in_progress = false;
+
+#if defined(PERFETTO_ENABLED)
+	perfetto::TrackEvent::Flush ();
+#endif
 }
 
 JNIEXPORT jint JNICALL

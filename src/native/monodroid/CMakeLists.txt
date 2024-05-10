@@ -54,6 +54,7 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   mono-log-adapter.cc
   monodroid-glue.cc
   monodroid-networkinfo.cc
+  monodroid-profiling.cc
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc

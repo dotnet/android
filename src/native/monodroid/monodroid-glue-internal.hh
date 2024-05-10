@@ -214,12 +214,6 @@ namespace xamarin::android::internal
 
 	private:
 		void perfetto_hook_mono_events () noexcept;
-
-		force_inline static void perfetto_trace_event (std::string_view const& event_name)
-		{
-			auto track = PerfettoSupport::get_name_annotated_track<PerfettoTrackId::MonodroidRuntime> ();
-			TRACE_EVENT (PerfettoConstants::MonodroidCategory.data (), event_name.data (), track);
-		}
 #endif
 	private:
 		static void mono_log_handler (const char *log_domain, const char *log_level, const char *message, mono_bool fatal, void *user_data);
