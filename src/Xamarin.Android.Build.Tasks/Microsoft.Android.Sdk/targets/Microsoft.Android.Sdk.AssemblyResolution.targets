@@ -96,6 +96,7 @@ _ResolveAssemblies MSBuild target.
         ;_OuterIntermediateAssembly=@(IntermediateAssembly)
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        ;_OuterCustomViewMapFile=$(_CustomViewMapFile)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>

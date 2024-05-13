@@ -408,19 +408,7 @@ namespace Xamarin.Android.Tasks
 			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, HashSet<string>>> (mapFile, RegisteredTaskObjectLifetime.Build);
 			if (cachedMap != null)
 				return cachedMap;
-			var map = new Dictionary<string, HashSet<string>> ();
-			if (!File.Exists (mapFile))
-				return map;
-			foreach (var s in File.ReadLines (mapFile)) {
-				var items = s.Split (new char [] { ';' }, count: 2);
-				var key = items [0];
-				var value = items [1];
-				HashSet<string> set;
-				if (!map.TryGetValue (key, out set))
-					map.Add (key, set = new HashSet<string> ());
-				set.Add (value);
-			}
-			return map;
+			return LoadCustomViewMapFile (mapFile);
 		}
 
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)

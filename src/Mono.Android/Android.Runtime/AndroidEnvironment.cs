@@ -336,9 +336,7 @@ namespace Android.Runtime {
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (Xamarin.Android.Net.AndroidMessageHandler))]
 		static object GetHttpMessageHandler ()
 		{
-			// FIXME: https://github.com/xamarin/xamarin-android/issues/8797
-			// Note that this is a problem for custom $(AndroidHttpClientHandlerType) or $XA_HTTP_CLIENT_HANDLER_TYPE
-			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "DynamicDependency should preserve AndroidMessageHandler.")]
+			[UnconditionalSuppressMessage ("Trimming", "IL2057", Justification = "Preserved by the MarkJavaObjects trimmer step.")]
 			[return: DynamicallyAccessedMembers (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor)]
 			static Type TypeGetType (string typeName) =>
 				Type.GetType (typeName, throwOnError: false);
