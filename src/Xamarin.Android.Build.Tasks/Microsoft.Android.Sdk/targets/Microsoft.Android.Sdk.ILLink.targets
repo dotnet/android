@@ -9,6 +9,8 @@ This file contains the .NET 5-specific targets to customize ILLink
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
+  <UsingTask TaskName="Xamarin.Android.Tasks.GenerateILLinkXml" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
   <Target Name="_PrepareLinking"
       Condition=" '$(PublishTrimmed)' == 'true' "
       AfterTargets="ComputeResolvedFilesToPublishList"
@@ -94,6 +96,25 @@ This file contains the .NET 5-specific targets to customize ILLink
           Condition=" '@(ResolvedFileToPublish->Count())' != '0' and '%(Filename)' != '' "
           Include="@(_PreserveLists)" />
       <TrimmerRootDescriptor Include="@(LinkDescription)" />
+      <TrimmerRootDescriptor
+          Condition=" Exists('$(_AndroidGeneratedRootDescriptor)') "
+          Include="$(_AndroidGeneratedRootDescriptor)"
+      />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateILLinkXml"
+      Condition=" '$(PublishTrimmed)' == 'true' ">
+    <PropertyGroup>
+      <_AndroidGeneratedRootDescriptor>$(IntermediateOutputPath)net-android-trimmer.xml</_AndroidGeneratedRootDescriptor>
+    </PropertyGroup>
+    <GenerateILLinkXml
+        AndroidHttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+        CustomViewMapFile="$(_CustomViewMapFile)"
+        OutputFile="$(_AndroidGeneratedRootDescriptor)"
+    />
+    <ItemGroup>
+      <FileWrites Include="$(_AndroidGeneratedRootDescriptor)" />
     </ItemGroup>
   </Target>
 

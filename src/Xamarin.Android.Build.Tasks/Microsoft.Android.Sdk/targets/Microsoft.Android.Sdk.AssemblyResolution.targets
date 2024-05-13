@@ -81,7 +81,8 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
   </Target>
 
-  <Target Name="_ResolveAssemblies">
+  <Target Name="_ResolveAssemblies"
+      DependsOnTargets="_GenerateILLinkXml">
     <ItemGroup>
       <_RIDs Include="$(RuntimeIdentifier)"  Condition=" '$(RuntimeIdentifiers)' == '' " />
       <_RIDs Include="$(RuntimeIdentifiers)" Condition=" '$(RuntimeIdentifiers)' != '' " />
@@ -96,6 +97,7 @@ _ResolveAssemblies MSBuild target.
         ;_OuterIntermediateAssembly=@(IntermediateAssembly)
         ;_OuterOutputPath=$(OutputPath)
         ;_OuterIntermediateOutputPath=$(IntermediateOutputPath)
+        ;_AndroidGeneratedRootDescriptor=$(_AndroidGeneratedRootDescriptor)
       </_AdditionalProperties>
       <_AndroidBuildRuntimeIdentifiersInParallel Condition=" '$(_AndroidBuildRuntimeIdentifiersInParallel)' == '' ">true</_AndroidBuildRuntimeIdentifiersInParallel>
     </PropertyGroup>

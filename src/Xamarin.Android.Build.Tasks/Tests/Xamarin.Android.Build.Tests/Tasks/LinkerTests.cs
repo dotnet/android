@@ -156,14 +156,45 @@ namespace Xamarin.Android.Build.Tests
 			return assm;
 		}
 
-		private void PreserveCustomHttpClientHandler (string handlerType, string handlerAssembly, string testProjectName, string assemblyPath)
+		private void PreserveCustomHttpClientHandler (
+				string handlerType,
+				string handlerAssembly,
+				string testProjectName,
+				string assemblyPath,
+				TrimMode trimMode)
 		{
-			var proj = new XamarinAndroidApplicationProject () { IsRelease = true };
+			testProjectName += trimMode.ToString ();
+
+			var class_library = new XamarinAndroidLibraryProject {
+				IsRelease = true,
+				ProjectName = "MyClassLibrary",
+				Sources = {
+					new BuildItem.Source ("MyCustomHandler.cs") {
+						TextContent = () => """
+							class MyCustomHandler : System.Net.Http.HttpMessageHandler
+							{
+								protected override Task <HttpResponseMessage> SendAsync (HttpRequestMessage request, CancellationToken cancellationToken) =>
+									throw new NotImplementedException ();
+							}
+						"""
+					}
+				}
+			};
+			using (var libBuilder = CreateDllBuilder ($"{testProjectName}/{class_library.ProjectName}")) {
+				Assert.IsTrue (libBuilder.Build (class_library), $"Build for {class_library.ProjectName} should have succeeded.");
+			}
+
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "MyApp",
+				IsRelease = true,
+				TrimModeRelease = trimMode
+			};
+			proj.AddReference (class_library);
 			proj.AddReferences ("System.Net.Http");
 			string handlerTypeFullName = string.IsNullOrEmpty(handlerAssembly) ? handlerType : handlerType + ", " + handlerAssembly;
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidHttpClientHandlerType", handlerTypeFullName);
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("base.OnCreate (bundle);", "base.OnCreate (bundle);\nvar client = new System.Net.Http.HttpClient ();");
-			using (var b = CreateApkBuilder (testProjectName)) {
+			using (var b = CreateApkBuilder ($"{testProjectName}/{proj.ProjectName}")) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				using (var assembly = AssemblyDefinition.ReadAssembly (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, assemblyPath))) {
@@ -173,12 +204,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void PreserveCustomHttpClientHandlers ()
+		public void PreserveCustomHttpClientHandlers ([Values (TrimMode.Partial, TrimMode.Full)] TrimMode trimMode)
 		{
 			PreserveCustomHttpClientHandler ("Xamarin.Android.Net.AndroidMessageHandler", "",
-				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll");
+				"temp/PreserveAndroidMessageHandler", "android-arm64/linked/Mono.Android.dll", trimMode);
 			PreserveCustomHttpClientHandler ("System.Net.Http.SocketsHttpHandler", "System.Net.Http",
-				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll");
+				"temp/PreserveSocketsHttpHandler", "android-arm64/linked/System.Net.Http.dll", trimMode);
+			PreserveCustomHttpClientHandler ("MyCustomHandler", "MyClassLibrary",
+				"temp/MyCustomHandler", "android-arm64/linked/MyClassLibrary.dll", trimMode);
 		}
 
 		[Test]

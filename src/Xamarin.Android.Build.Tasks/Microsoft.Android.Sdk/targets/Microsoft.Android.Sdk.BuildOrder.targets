@@ -55,6 +55,7 @@ properties that determine build ordering.
       _SetLatestTargetFrameworkVersion;
       _GetLibraryImports;
       _RemoveRegisterAttribute;
+      _GenerateILLinkXml;
       _ResolveAssemblies;
       _ResolveSatellitePaths;
       _CreatePackageWorkspace;
