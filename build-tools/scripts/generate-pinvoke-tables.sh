@@ -24,7 +24,7 @@ Usage: ${MY_NAME} [OPTIONS]
 
 where OPTIONS are one or more of:
 
-   -c|--ci                  indicates that the script runs on one of the Xamarin.Android CI build
+   -c|--ci                  indicates that the script runs on one of the .NET for Android CI build
                             servers. This affects selection of the compiler
    -t|--test-only           indicate that the script should not replace the target file but merely
                             test whether the file is different to the newly generated one

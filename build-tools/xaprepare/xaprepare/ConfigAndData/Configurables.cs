@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 	// This class exists so that nobody has to jump around the source in order to find an URL to modify, a setting to
 	// tweak etc. Code that uses those configurables is all over the place, but the source of the data is here and only
 	// here it has to be changed if need be. The entries should be something that might have to be changed by somebody
-	// not familiar with the entirety of Xamarin.Android or a developer not usually involved in build system
+	// not familiar with the entirety of .NET for Android or a developer not usually involved in build system
 	// maintenance/development.
 	//
 	// When adding entries here, try to make their names clear and unambiguous. Don't hesitate using comments (doc

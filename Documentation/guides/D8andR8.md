@@ -1,4 +1,4 @@
-This is the D8 and R8 integration specification for Xamarin.Android.
+This is the D8 and R8 integration specification for .NET for Android.
 
 # What is D8? What is R8?
 
@@ -89,7 +89,7 @@ Usage: r8 [options] <input-files>
   --help                   # Print this message.
 ```
 
-# What did Xamarin.Android do *before* D8/R8?
+# What did .NET for Android do *before* D8/R8?
 
 In other words, what is currently happening *before* we introduce D8/R8 support?
 
@@ -116,7 +116,7 @@ In other words, what is currently happening *before* we introduce D8/R8 support?
 
 # What does this process look like with D8 / R8 enabled?
 
-Xamarin.Android now has two new MSBuild tasks: `<R8/>` and `<D8/>`.
+.NET for Android now has two new MSBuild tasks: `<R8/>` and `<D8/>`.
 
 1. The [Javac](https://github.com/xamarin/xamarin-android/blob/221a2190ebb3aaec9ecd9b1cf8f7f6174c43153a/src/Xamarin.Android.Build.Tasks/Tasks/Javac.cs)
    MSBuild task will remain unchanged.

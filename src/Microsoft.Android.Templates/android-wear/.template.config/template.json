@@ -4,7 +4,7 @@
   "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidWearApp",
   "name": "Android Wear Application",
-  "description": "A project for creating a .NET Android Wear application",
+  "description": "A project for creating a Wear OS app using .NET for Android",
   "shortName": "androidwear",
   "tags": {
     "language": "C#",

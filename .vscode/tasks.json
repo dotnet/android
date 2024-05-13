@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Build All Xamarin.Android",
+            "label": "Build All .NET for Android",
             "type": "shell",
             "windows":{ "command": ".\\build.cmd ${input:buildtype}"},
             "linux":{"command": "./build.sh ${input:buildtype}"},

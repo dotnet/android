@@ -19,13 +19,13 @@
 
 # Introduction
 
-At the core of `.NET Android` is its ability to interoperate with
+At the core of `.NET for Android` is its ability to interoperate with
 the Java/Kotlin APIs implemented in the Android system.  To make it
 work, it is necessary to "bridge" the two separate worlds of Java VM
 (`ART` in the Android OS) and the Managed VM (`MonoVM`).  Application
 developers expect to be able to call native Android APIs and receive
 calls (or react to events) from the Android side using code written in
-one of the .NET managed languages.  To make it work, `.NET Android`
+one of the .NET managed languages.  To make it work, `.NET for Android`
 employs a number of techniques, both at build and at run time, which
 are described in the sections below.
 
@@ -41,7 +41,7 @@ process resources, they don't "naturally" communicate with each other.
 There is no direct way to call Java/Kotlin from .NET a'la the
 `p/invoke` mechanism which allows calling native code APIs.  Nor there
 exists a way for Java/Kotlin code to invoke managed methods.  To make
-it possible, `.NET Android` takes advantage of the Java's [JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
+it possible, `.NET for Android` takes advantage of the Java's [JNI](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 (`Java Native Interface`), a mechanism that allows native code
 (.NET managed code being "native" in this context) to register
 implementations of Java methods, written outside the Java VM and in
@@ -79,7 +79,7 @@ sections.
 
 ## Java Callable Wrappers (JCW)
 
-`.NET Android` wraps the entire Android API by generating
+`.NET for Android` wraps the entire Android API by generating
 appropriate C# code which mirrors the Java/Kotlin code (classes,
 interfaces, methods, properties etc).  Each generated class that
 corresponds to a Java/Kotlin type, is derived from the
@@ -89,7 +89,7 @@ implement or override virtual Java methods.  To make registration and
 invoking of such methods possible, it is necessary to generate a Java
 class which mirrors the Managed one and provides an entry point to
 the Java <-> Managed transition.  The Java classes are generated
-during application (as well as `.NET Android`) build and we call
+during application (as well as `.NET for Android`) build and we call
 them **Java Callable Wrappers** (or **JCW** for short).  For instance,
 the following managed class:
 
@@ -226,7 +226,7 @@ public class MainActivity : AppCompatActivity
 ```
 
 The above code is actually generated in the `Android.App.Activity`
-class while .NET Android is built, from which our example
+class while .NET for Android is built, from which our example
 `MainActivity` eventually derives.
 
 What happens with the above code depends on the registration mechanism
@@ -234,7 +234,7 @@ and is described in the sections below.
 
 ## Dynamic registration
 
-This registration mechanism has been used by `.NET Android` since
+This registration mechanism has been used by `.NET for Android` since
 the beginning and it will remain in use for the foreseeable future
 when the application is built in the `Debug` configuration or when
 [Marshal Methods](#marshal-methods) are turned off.
@@ -297,12 +297,12 @@ methods registered with JNI:
   1. `mono.android.Runtime.register` is itself a native method,
      declared in the
      [`Runtime`](../../src/java-runtime/java/mono/android/Runtime.java)
-     class of .NET Android's Java runtime code, and implemented in
-     the native .NET Android
+     class of .NET for Android's Java runtime code, and implemented in
+     the native .NET for Android
      [runtime](../../src/monodroid/jni/monodroid-glue.cc) (the
      `MonodroidRuntime::Java_mono_android_Runtime_register` method).
 	 Purpose of this method is to prepare a call into the
-     .NET Android managed runtime code, the
+     .NET for Android managed runtime code, the
      [`Android.Runtime.JNIEnv::RegisterJniNatives`](../../src/Mono.Android/Android.Runtime/JNIEnv.cs)
      method.
   2. `Android.Runtime.JNIEnv::RegisterJniNatives` is passed name of
@@ -532,7 +532,7 @@ JNICALL Java_helloandroid_MainActivity_n_1onCreate__Landroid_os_Bundle_2 (JNIEnv
 ```
 
 The `xamarin_app_init` function is output only once and is called by
-the `.NET Android` runtime twice during application startup - once
+the `.NET for Android` runtime twice during application startup - once
 to pass `get_function_pointer_fn` which does **not** use any locks (as
 we know that until a certain point during startup we are in a single
 lock, so no data access races can happen) and the other time just
@@ -571,7 +571,7 @@ Managed assemblies (including `Mono.Android.dll`) which contain Java
 types need to be usable in two contexts: with the "traditional"
 dynamic registration and with marshal methods.  Both of these
 mechanisms, however, have different requirements.  We cannot assume
-that any assembly (either from .NET Android or a third party nuget)
+that any assembly (either from .NET for Android or a third party nuget)
 will have "marshal methods friendly" code and thus we need to make
 sure that the code meets our requirements.
 

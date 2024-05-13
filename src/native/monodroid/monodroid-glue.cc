@@ -1711,7 +1711,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	if (Util::should_log (LOG_DEFAULT)) [[unlikely]] {
 		log_info_nocheck (
 			LOG_DEFAULT,
-			".NET Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
+			".NET for Android version: %s (%s; %s); built on %s; NDK version: %s; API level: %s; MonoVM version: %s",
 			BuildInfo::xa_version.data (),
 			BuildInfo::architecture.data (),
 			BuildInfo::kind.data (),

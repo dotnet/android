@@ -1,6 +1,6 @@
 # Release Notes Generator
 
-Parses `git log` output to produce Xamarin.Android release notes fragments.
+Parses `git log` output to produce .NET for Android release notes fragments.
 
 Usage:
 

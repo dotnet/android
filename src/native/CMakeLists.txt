@@ -9,7 +9,7 @@ string(REGEX REPLACE "^[ \t]*<ProductVersion>(.*)</ProductVersion>" "\\1" XA_VER
 project(
   android-native-bits
   VERSION ${XA_VERSION}
-  DESCRIPTION "Xamarin.Android native runtime"
+  DESCRIPTION ".NET for Android native runtime"
   HOMEPAGE_URL "https://github.com/xamarin/xamarin-android"
   LANGUAGES CXX C ASM
 )

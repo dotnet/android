@@ -11,7 +11,7 @@ as required.
 There are two types of `pack`: Feature packs and Asset packs.
 *Feature* pack contains *non-native* Java code and other resources.
 Code in these types of `pack` can be launched via the `Context.StartActivity()`
-API call. At this time due to various constraints .NET Android cannot support
+API call. At this time due to various constraints .NET for Android cannot support
 Feature packs.
 
 *Asset* packs contain *only*
@@ -232,4 +232,4 @@ issues though.
  2. There is no IDE support for building this type of project.
 
 Having the user go through a number of hoops to implement this for
-.NET Android or .NET MAUI is not ideal.
+.NET for Android or .NET MAUI is not ideal.

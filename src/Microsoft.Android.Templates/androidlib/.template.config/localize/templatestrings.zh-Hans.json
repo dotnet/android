@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android 类库",
-  "description": "用于创建 .NET Android类库的项目",
+  "description": "用于创建 .NET for Android类库的项目",
   "symbols/supportedOSVersion/description": "替代项目中的 $(SupportedOSPlatformVersion)"
 }

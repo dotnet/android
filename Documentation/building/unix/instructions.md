@@ -1,10 +1,10 @@
-# Building Xamarin.Android on Linux and macOS
+# Building .NET for Android on Linux and macOS
 
-Building Xamarin.Android on Linux and macOS relies on GNU make and
+Building .NET for Android on Linux and macOS relies on GNU make and
 MSBuild via the `msbuild` command (within Mono). MSBuild via `xbuild`
 can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 
-# Building Xamarin.Android
+# Building .NET for Android
 
  1. Install the [build dependencies](dependencies.md).
 
@@ -58,11 +58,11 @@ can also be used by setting the `$(MSBUILD)` make variable to `xbuild`.
 2019][xamdevsummit] with a full walkthrough. Even though the demo was
 on Windows, many of the concepts should still apply:
 
-[![Build Xamarin.Android](https://img.youtube.com/vi/8qaQleb6Tbk/maxresdefault.jpg)][xamdevsummit]
+[![Build .NET for Android](https://img.youtube.com/vi/8qaQleb6Tbk/maxresdefault.jpg)][xamdevsummit]
 
 [xamdevsummit]: https://youtu.be/8qaQleb6Tbk
 
-# Creating a local .NET android Workload
+# Creating a local .NET for Android Workload
 
 `make prepare` provisions a specific build of .NET to
 `bin/$(Configuration)/dotnet`.
@@ -95,12 +95,12 @@ See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 # Creating installers
 
 Once `make all` or `make jenkins` have completed, macOS (.pkg),
-Windows (.vsix), and .NET android workload .nupkg files
+Windows (.vsix), and .NET for Android workload .nupkg files
 can be built with:
 
     make create-installers
 
-Alternatively, .NET android workload packs can be built with:
+Alternatively, .NET for Android workload packs can be built with:
 
     make create-nupkgs
     # -or-
@@ -350,24 +350,4 @@ For example, to rebuild Mono for armeabi-v7a:
 	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild/Xamarin/Android/lib/armeabi-v7a/libmonosgen-2.0.so
 	$ msbuild /t:_InstallRuntimes src/mono-runtimes/mono-runtimes.csproj
 
-
-# How do I rebuild BCL assemblies?
-
-The Xamarin.Android Base Class Library assemblies, such as `mscorlib.dll`,
-are built within `external/mono`, using Mono's normal build system:
-
-	# This updates external/mono/mcs/class/lib/monodroid/ASSEMBLY.dll
-	$ make -C external/mono/mcs/class/ASSEMBLY PROFILE=monodroid
-
-Alternatively, if you want to rebuild *all* the assemblies, the "host"
-Mono needs to be rebuilt. Note that the name of the "host" directory
-varies based on the operating system you're building from:
-
-	$ make -C src/mono-runtimes/obj/Debug/host-Darwin
-
-Once the assemblies have been rebuilt, they can be copied into the appropriate
-Xamarin.Android SDK directory by using the `_InstallBcl` target:
-
-	# This updates bin/$(Configuration)/lib/xamarin.android/xbuild-frameworks/MonoAndroid/v1.0/ASSEMBLY.dll
-	$ msbuild src/mono-runtimes/mono-runtimes.csproj /t:_InstallBcl
 

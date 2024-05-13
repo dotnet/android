@@ -29,7 +29,7 @@
 
 # Introduction
 
-This is a utility program to read Xamarin.Android application type
+This is a utility program to read .NET for Android application type
 maps compiled into a shared library named `libxamarin-app.so`.  This
 library is compiled for each native architecture separately and
 packaged together with the application into the APK archive.

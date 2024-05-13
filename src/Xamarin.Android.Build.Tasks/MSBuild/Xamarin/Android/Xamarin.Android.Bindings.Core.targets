@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Xamarin.Android.Bindings.Core.targets
 
-This file contains the core MSBuild logic for Xamarin.Android bindings.
+This file contains the core MSBuild logic for .NET for Android bindings.
 
 It is shared between "legacy" binding projects and .NET 5 projects.
 

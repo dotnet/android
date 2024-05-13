@@ -2,9 +2,9 @@
 
 # Getting Started
 
-  * [Installing the Xamarin.Android SDK](https://developer.xamarin.com/guides/android/getting_started/installation/)
-  * [Xamarin.Android Documentation](https://developer.xamarin.com/guides/android/)
-  * [Xamarin.Android API Documentation](https://developer.xamarin.com/api/root/MonoAndroid-lib/)
+  * [Installing the .NET for Android SDK](https://developer.xamarin.com/guides/android/getting_started/installation/)
+  * [.NET for Android Documentation](https://learn.microsoft.com/dotnet/android/)
+  * [.NET for Android API Documentation](https://learn.microsoft.com/en-us/dotnet/api/?preserve-view=true&view=net-android-34.0)
 
 
 # Project Docs
@@ -30,9 +30,9 @@
 
   * [Build System Configuration](building/configuration.md)
   * [Build Dependencies for Linux and macOS](building/unix/dependencies.md)
-  * [Building Xamarin.Android on Linux and macOS](building/unix/instructions.md)
+  * [Building .NET for Android on Linux and macOS](building/unix/instructions.md)
   * [Build Dependencies for Windows](building/windows/dependencies.md)
-  * [Building Xamarin.Android on Windows](building/windows/instructions.md)
+  * [Building .NET for Android on Windows](building/windows/instructions.md)
 
 
 # Development Workflow
@@ -50,4 +50,4 @@
 
 # Other Information
 
-  * [Wikipedia Entry for Xamarin.Android](https://en.wikipedia.org/wiki/Mono_(software)#Xamarin.Android)
+  * [Wikipedia Entry for .NET for Android](https://en.wikipedia.org/w/index.php?title=.NET_for_Android&redirect=yes)

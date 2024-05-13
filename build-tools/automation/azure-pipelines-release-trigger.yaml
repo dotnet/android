@@ -1,4 +1,4 @@
-# Xamarin.Android Release Definition Trigger
+# .NET for Android Release Definition Trigger
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 

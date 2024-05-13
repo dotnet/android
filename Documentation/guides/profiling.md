@@ -1,7 +1,7 @@
 # Profiling Startup
 
 There are currently a few different ways at getting timing information
-from Xamarin.Android & Mono. This document aims to demystify the
+from .NET for Android & Mono. This document aims to demystify the
 command-line commands involved in retrieving this data from Android
 devices.
 
@@ -68,7 +68,7 @@ After launching the app, we get additional information:
     09-04 14:44:12.561  9126  9126 I monodroid-timing: JNIEnv.RegisterJniNatives total time: 1567626252561.82 [elapsed: 2.182 ms]
     09-04 14:44:12.561  9126  9126 I monodroid-timing: Runtime.register: end time; elapsed: 0s:2::244636
 
-These are timings taken at different points during Xamarin.Android
+These are timings taken at different points during .NET for Android
 startup: across native and managed code.
 
 In case you have the XA build tree by hand, it is possible to process
