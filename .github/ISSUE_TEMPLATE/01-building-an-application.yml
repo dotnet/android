@@ -10,12 +10,13 @@ body:
   - type: dropdown
     id: android-type
     attributes:
-      label: Android application type
-      description: In what type(s) of Android application(s) do you see this issue?
+      label: Android framework version
+      description: In what target framework(s) of Android application(s) do you see this issue?
       multiple: true
       options:
-      - Classic Xamarin.Android (MonoAndroid13.0, etc.)
-      - .NET Android (net7.0-android, net8.0-android, etc.)
+      - net8.0-android
+      - net9.0-android
+      - Other
     validations:
       required: true
   - type: input
@@ -23,7 +24,7 @@ body:
     attributes:
       label: Affected platform version
       description: Please provide the version number of the platform you see this issue on.
-      placeholder: E.g. VS 2022 17.8.0, VSMac 17.6.7, .NET 8.0.100, etc.
+      placeholder: E.g. VS 2022 17.9.0, .NET 8.0.100, etc.
     validations:
       required: true
   - type: textarea
@@ -54,7 +55,7 @@ body:
     id: logs
     attributes:
       label: Relevant log output
-      description: Please copy and paste any (short!) relevant log output.  Longer logs can be attached as .txt files.  This is likely a [diagnostic MSBuild log](https://docs.microsoft.com/en-us/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output) or attach a [MSBuild binlog](https://docs.microsoft.com/en-us/visualstudio/msbuild/obtaining-build-logs-with-msbuild?view=vs-2022#save-a-binary-log).
+      description: Please copy and paste any (short!) relevant log output.  Longer logs can be attached as .txt files.  This is likely a [diagnostic MSBuild log](https://docs.microsoft.com/en-us/xamarin/android/troubleshooting/troubleshooting#diagnostic-msbuild-output) or attach a [MSBuild binlog](https://aka.ms/binlog).
       render: shell
   - type: markdown
     attributes:
