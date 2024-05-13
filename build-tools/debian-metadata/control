@@ -11,10 +11,10 @@ Vcs-Browser: https://github.com/xamarin/xamarin-android
 Package: xamarin.android-oss
 Architecture: amd64
 Depends: msbuild, java8-sdk, ${cli:Depends}, ${misc:Depends}, ${shlibs:Depends}
-Description: Xamarin.Android libraries and runtime (host component)
+Description: .NET for Android libraries and runtime (host component)
  The best way to build native Android apps.
  .
- * Ship native Android packages. Xamarin.Android uses just-in-time 
+ * Ship native Android packages. .NET for Android uses just-in-time 
    compilation for sophisticated runtime optimization of your app’s
    performance, meaning your app is a native Android APK.
  * Access any Android API, including new form factors. We bring 100% of 

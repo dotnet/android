@@ -1,6 +1,6 @@
 # Development tips and native debugging
 
-Tips and tricks while developing Xamarin.Android.
+Tips and tricks while developing .NET for Android.
 
 # Run MSBuild-Based On-Device Unit Tests
 
@@ -16,7 +16,7 @@ If you need to run only *one* `[Test]` method, you can use
 
 # Update directory
 
-When a Xamarin.Android app launches on an Android device, and the app was
+When a .NET for Android app launches on an Android device, and the app was
 built in the `Debug` configuration, it will create an "update" directory
 during process startup, printing the created directory to `adb logcat`:
 
@@ -85,10 +85,10 @@ that, run the `xa-lldb` script as described in README.md.
 
 First, you'll need to get a version of `libmonosgen-2.0.so` that includes debug
 symbols.  You can either use a custom local build or download the debug version
-of `libmonosgen-2.0.so` for a published Xamarin.Android version:
+of `libmonosgen-2.0.so` for a published .NET for Android version:
 
  1. Go to <https://github.com/xamarin/xamarin-android/tags> and click on the
-    Xamarin.Android version you are debugging.
+    .NET for Android version you are debugging.
 
  2. Find the **OSS core** section at the bottom of the release information and
     click the link to the open-source build.
@@ -136,7 +136,7 @@ versions of `libmonosgen-2.0.so`.
  3. Rename the file to `libmonosgen-2.0.so`.
 
     ![libmonosgen-2.0.so added to the lib/arm64-v8a directory of the
-      Xamarin.Android app project in the Visual Studio Solution
+      .NET for Android app project in the Visual Studio Solution
       Explorer](../images/lib-arm64-v8a-libmonosgen.png)
 
  4. Set the **Build Action** of the file to **AndroidNativeLibrary**.
@@ -210,7 +210,7 @@ the symbols by hand might be useful in some cases.
 
 # Attaching GDB using Visual Studio on Windows
 
-Visual Studio can attach GDB to Xamarin.Android for native debugging.  The
+Visual Studio can attach GDB to .NET for Android for native debugging.  The
 integration includes the usual features like the graphical thread and call stack
 windows and the ability to set breakpoints using the source code editor.
 
@@ -267,7 +267,7 @@ are more familiar with LLDB than GDB or if you already have Android Studio
 installed and don't currently have the Android NDK installed.
 
  1. Install [Android Studio][android-studio].  If you already have an Android
-    SDK installation for Xamarin.Android, you can click **Cancel** on the **Android
+    SDK installation for .NET for Android, you can click **Cancel** on the **Android
     Studio Setup Wizard** when you launch Android Studio.
 
  2. Open the signed debuggable APK for the application in Android Studio via
@@ -284,7 +284,7 @@ installed and don't currently have the Android NDK installed.
     ![New SDK in the Android Studio Project Structure Modules Dependencies
       window](../images/android-studio-modules-dependencies.png)
 
-    Select the Android SDK folder you're using with Xamarin.Android, and then
+    Select the Android SDK folder you're using with .NET for Android, and then
     under **Build target**, pick the appropriate Android API to match the APK.
 
     ![Create New Android SDK window in Android

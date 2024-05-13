@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks
 			// Check that we have a compatible NDK version for the targeted ABIs.
 			if (Version.Main.Major < 19) {
 				logMessage (
-					"The detected Android NDK version is incompatible with this version of Xamarin.Android, " +
+					"The detected Android NDK version is incompatible with this version of .NET for Android, " +
 					"please upgrade to NDK r19 or newer.");
 			}
 

@@ -1465,7 +1465,7 @@
   <!-- Until API Level 26, android.graphics.Color was static. In API Level 26,
   it became instantiable and got instance members.
 
-  Xamarin.Android had wrong premise that android.graphics.Color can be totally
+  .NET for Android had wrong premise that android.graphics.Color can be totally
   different thing and thus introduced completely different API with the same
   type name. Wrong wrong wrong. It was wrong decision made back in 2010.
 

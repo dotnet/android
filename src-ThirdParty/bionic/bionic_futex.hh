@@ -1,5 +1,5 @@
 /*
- * Ported to Xamarin.Android from: https://android.googlesource.com/platform/bionic/+/refs/tags/android-11.0.0_r31/libc/private/bionic_futex.h
+ * Ported to .NET for Android from: https://android.googlesource.com/platform/bionic/+/refs/tags/android-11.0.0_r31/libc/private/bionic_futex.h
  */
 
 /*

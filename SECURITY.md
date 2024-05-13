@@ -2,7 +2,8 @@
 
 ## Supported Versions
 
-The Xamarin.Android support policy, including supported versions, can be found at the [Xamarin Support Policy](https://dotnet.microsoft.com/platform/support/policy/xamarin).
+The .NET for Android support policy, including supported versions, can be found at
+[.NET Multi-platform App UI (.NET MAUI) Support Policy](https://dotnet.microsoft.com/en-us/platform/support/policy/maui).
 
 ## Reporting a Vulnerability
 

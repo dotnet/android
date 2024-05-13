@@ -27,7 +27,7 @@ the device/emulator filesystem)
 
 ## Rationale
 
-During native startup, the Xamarin.Android runtime looks inside the
+During native startup, the .NET for Android runtime looks inside the
 application APK file for the managed assemblies (and their associated
 pdb and config files, if applicable) in order to map them (using the
 `mmap(2)` call) into memory so that they can be given to the Mono
@@ -36,7 +36,7 @@ the memory mapping is that, as far as Android is concerned, managed
 assembly files are just data/resources and, thus, aren't extracted to
 the filesystem.  As a result, Mono wouldn't be able to find the
 assemblies by scanning the filesystem - the host application
-(Xamarin.Android) must give it a hand in finding them.
+(.NET for Android) must give it a hand in finding them.
 
 Applications can contain hundreds of assemblies (for instance a Hello
 World MAUI application currently contains over 120 assemblies) and
@@ -58,7 +58,7 @@ architecture-specific stores.  dotnet ships with a handful of
 assemblies that **are** architecture-specific - those assemblies are
 placed in an architecture specific store, one per architecture
 supported by and enabled for the application.  On the execution time,
-the Xamarin.Android runtime will always map the architecture-agnostic
+the .NET for Android runtime will always map the architecture-agnostic
 store and one, and **only** one, of the architecture-specific stores.
 
 Stores are placed in the same location in the APK/AAB archive where the
@@ -72,8 +72,8 @@ Each APK in the application (e.g. the future Feature APKs) **may**
 contain the above two assembly store files (some APKs may contain only
 resources, other may contain only native libraries etc)
 
-Currently, Xamarin.Android applications will produce only one set of
-stores but when Xamarin.Android adds support for Android Features, each
+Currently, .NET for Android applications will produce only one set of
+stores but when .NET for Android adds support for Android Features, each
 feature APK will contain its own set of stores.  All of the APKs will
 follow the location, format and naming conventions described above.
 

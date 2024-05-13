@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android クラス ライブラリ",
-  "description": ".NET Android クラス ライブラリを作成するためのプロジェクト",
+  "description": ".NET for Android クラス ライブラリを作成するためのプロジェクト",
   "symbols/supportedOSVersion/description": "プロジェクト ファイルの $(SupportedOSPlatformVersion) をオーバーライドします"
 }

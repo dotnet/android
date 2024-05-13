@@ -183,7 +183,7 @@ namespace Xamarin.Android.Prepare
 		public Characters Characters                      => characters ?? throw new InvalidOperationException ("Context not initialized properly (was .Init called?)");
 
 		/// <summary>
-		///   Xamarin.Android version
+		///   .NET for Android version
 		/// </summary>
 		public string ProductVersion                      => productVersion;
 
@@ -259,14 +259,14 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Prefix where Xamarin.Android is installed
+		///   Prefix where .NET for Android is installed
 		/// </summary>
 		public string XAInstallPrefix {
 			get {
 				if (String.IsNullOrEmpty (xaInstallPrefix)) {
 					xaInstallPrefix = Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
 					if (String.IsNullOrEmpty (xaInstallPrefix))
-						throw new InvalidOperationException ("Xamarin.Android install prefix property has an empty value or is absent");
+						throw new InvalidOperationException (".NET for Android install prefix property has an empty value or is absent");
 				}
 				return xaInstallPrefix!;
 			}

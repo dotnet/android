@@ -40,7 +40,7 @@ base + feature apk size.
 Instant App developers are encouraged to put as few assets in the .apk as possible and download the 
 rest when the app is first started.
 
-**Impact on Xamarin.Android**: XA nearly pushes the size limit with a simple "Hello World" application
+**Impact on .NET for Android**: .NET for Android nearly pushes the size limit with a simple "Hello World" application
 where, in Release build, the Mono runtime is nearly 3MB in size - not including the BCL, SDK and
 application assemblies. While it would be possible to download the Mono runtime and the assemblies on
 the app startup (XA app include a small Java stub responsible for launching of the managed application),
@@ -54,9 +54,9 @@ Instant Apps are not allowed to contain and run any arbitrary native code/librar
 exists most probably for security reasons. It is also disallowed to dynamically load any code other
 than the Instant Apps runtime.
 
-**Impact on Xamarin.Android**: it prevents XA applications from running since both
-the Mono and the Xamarin.Android runtimes are implemented as shared libraries (we also need, depending
-on application, the Sqlite and Boring TLS libraries). In order to support Instant Apps in Xamarin.Android,
+**Impact on .NET for Android**: it prevents .NET for Android applications from running since both
+the Mono and the .NET for Android runtimes are implemented as shared libraries (we also need, depending
+on application, the Sqlite library). In order to support Instant Apps in .NET for Android,
 its runtime as well as the Mono runtime would have to be included in the set of allowed native code
 libraries by Google/Android.
 
