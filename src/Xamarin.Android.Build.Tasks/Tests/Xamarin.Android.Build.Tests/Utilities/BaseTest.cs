@@ -28,13 +28,13 @@ namespace Xamarin.Android.Build.Tests
 		public string Root => Path.GetFullPath (XABuildPaths.TestOutputDirectory);
 
 		/// <summary>
-		/// Checks if a commercial Xamarin.Android is available
+		/// Checks if a commercial .NET for Android is available
 		/// * Defaults to Assert.Ignore ()
 		/// </summary>
 		public void AssertCommercialBuild (bool fail = false)
 		{
 			if (!TestEnvironment.CommercialBuildAvailable) {
-				var message = $"'{TestName}' requires a commercial build of Xamarin.Android.";
+				var message = $"'{TestName}' requires a commercial build of .NET for Android.";
 				if (fail) {
 					Assert.Fail (message);
 				} else {
@@ -241,7 +241,7 @@ namespace Xamarin.Android.Build.Tests
 			Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList"));
 			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "mscorlib.dll"), "");
 			File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", "v1.0", "RedistList", "FrameworkList.xml"),
-				$"<FileList Redist=\"MonoAndroid\" Name=\"Xamarin.Android Base Class Libraries\"></FileList>");
+				$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android Base Class Libraries\"></FileList>");
 			foreach (var v in versions) {
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion));
 				Directory.CreateDirectory (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList"));
@@ -249,7 +249,7 @@ namespace Xamarin.Android.Build.Tests
 				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "AndroidApiInfo.xml"),
 					$"<AndroidApiInfo>\n<Id>{v.Id}</Id>\n<Level>{v.Level}</Level>\n<Name>{v.Name}</Name>\n<Version>{v.FrameworkVersion}</Version>\n<Stable>{v.Stable}</Stable>\n</AndroidApiInfo>");
 				File.WriteAllText (Path.Combine (referencesDirectory, "MonoAndroid", v.FrameworkVersion, "RedistList", "FrameworkList.xml"),
-					$"<FileList Redist=\"MonoAndroid\" Name=\"Xamarin.Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
+					$"<FileList Redist=\"MonoAndroid\" Name=\".NET for Android {v.FrameworkVersion} Support\" IncludeFramework=\"v1.0\"></FileList>");
 			}
 			return referencesDirectory;
 		}
@@ -303,7 +303,7 @@ namespace Xamarin.Android.Build.Tests
 			java = java +
 				$"echo Property settings:{Environment.NewLine}" +
 				$"echo {quote}    java.home = {dir}{quote}{Environment.NewLine}" +
-				$"echo {quote}    java.vendor = Xamarin.Android Unit Tests{quote}{Environment.NewLine}" +
+				$"echo {quote}    java.vendor = .NET for Android Unit Tests{quote}{Environment.NewLine}" +
 				$"echo {quote}    java.version = {javaVersion}{quote}{Environment.NewLine}" +
 				$"echo {quote}    xamarin.multi-line = line the first{quote}{Environment.NewLine}" +
 				$"echo {quote}        line the second{quote}{Environment.NewLine}" +

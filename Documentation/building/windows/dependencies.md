@@ -1,8 +1,8 @@
 # Build Dependencies for Windows
 
-Building Xamarin.Android requires:
+Building .NET for Android requires:
 
-  * An existing installation of the Xamarin.Android SDK and the Android SDK
+  * An existing installation of the .NET for Android SDK and the Android SDK
   * The .NET Framework 3.5 &ndash; 4.7 development tools
   * Git for Windows
   * The Java Development Kit (JDK)

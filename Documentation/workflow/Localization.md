@@ -1,6 +1,6 @@
 # Localization
 
-All new Xamarin.Android MSBuild error or warning messages should be localizable,
+All new .NET for Android MSBuild error or warning messages should be localizable,
 so when adding a new message, follow these steps:
 
  1. Add the new message to

@@ -306,7 +306,7 @@ the bump.
 `Fixes: ` is used to indicate that a bug located at a specific URL is fixed by
 the commit.  *Full* URLs are to be used, *not* GitHub abbreviations, as just
 because GitHub is used this week doesn't mean it will continue to use GitHub
-for the infinite future.  (GitHub is already Xamarin.Android's *third* bug
+for the infinite future.  (GitHub is already .NET for Android's *third* bug
 repo, after `bugzilla.novell.com` and `bugzilla.xamarin.com`...)
 
 Links to private bugs may be used.

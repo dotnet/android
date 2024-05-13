@@ -8,10 +8,10 @@ namespace Xamarin.Android.Prepare
 	partial class Step_InstallGNUBinutils : StepWithDownloadProgress
 	{
 		static readonly string[]? WindowsExtensions = {".exe", ".cmd"};
-		static readonly string ProductName = $"Xamarin.Android Toolchain {Configurables.Defaults.BinutilsVersion}";
+		static readonly string ProductName = $".NET for Android Toolchain {Configurables.Defaults.BinutilsVersion}";
 
 		public Step_InstallGNUBinutils ()
-			: base ("Install Xamarin.Android Toolchain")
+			: base ("Install .NET for Android Toolchain")
 		{}
 
 		protected override async Task<bool> Execute (Context context)

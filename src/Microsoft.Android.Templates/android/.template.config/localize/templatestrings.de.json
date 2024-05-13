@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android-Anwendung",
-  "description": "Ein Projekt zum Erstellen einer .NET Android-Anwendung",
+  "description": "Ein Projekt zum Erstellen einer .NET for Android-Anwendung",
   "symbols/packageName/description": "Überschreibt den Paketnamen in der Datei „AndroidManifest.xml“.",
   "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt"
 }

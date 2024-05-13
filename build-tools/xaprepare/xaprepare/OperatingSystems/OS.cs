@@ -17,7 +17,7 @@ namespace Xamarin.Android.Prepare
 		public abstract string Type { get; }
 
 		/// <summary>
-		///   List of programs Xamarin.Android depends on when running on the particular OS
+		///   List of programs .NET for Android depends on when running on the particular OS
 		/// </summary>
 		public abstract List<Program> Dependencies { get; }
 

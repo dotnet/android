@@ -47,7 +47,7 @@ Within [`.external`](../../.external) indicate the mono branch and commit.  For 
 
 ### Ensure it *builds*
 
-`make all` only builds a subset of the full Xamarin.Android SDK: support
+`make all` only builds a subset of the full .NET for Android SDK: support
 for only select ABIs (host OS, x86, armeabi-v7a), only one `Mono.Android.dll`
 version, and *no* builds for Windows support.
 

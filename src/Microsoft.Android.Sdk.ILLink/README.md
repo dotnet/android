@@ -1,1 +1,1 @@
-ILLink custom [sub]steps for Xamarin.Android/NET5
+ILLink custom [sub]steps for .NET for Android

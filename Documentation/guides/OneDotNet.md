@@ -1,9 +1,9 @@
-# .NET 6 and Xamarin.Android
+# .NET for Android
 
 _NOTE: this document is very likely to change, as the requirements for
 .NET 6 are better understood._
 
-A .NET 6 project for a Xamarin.Android application will look something
+A .NET 6 project for a .NET for Android application will look something
 like:
 
 ```xml
@@ -31,7 +31,7 @@ Changes for bindings projects are documented [here][binding].
 ## .NET Configuration Files
 
 No support for [configuration files][config] such as `Foo.dll.config`
-or `Foo.exe.config` is available in Xamarin.Android projects targeting
+or `Foo.exe.config` is available in .NET for Android projects targeting
 .NET 6. [`<dllmap>`][dllmap] configuration elements are not supported
 in .NET Core at all, and other element types for compatibility
 packages like [System.Configuration.ConfigurationManager][nuget] have
@@ -201,7 +201,7 @@ turn these settings off:
 ## dotnet cli
 
 There are currently a few "verbs" we are aiming to get working in
-Xamarin.Android:
+.NET for Android:
 
     dotnet new
     dotnet build
@@ -250,12 +250,12 @@ to produce a self-contained "app" happens:
 
 https://docs.microsoft.com/en-us/dotnet/core/whats-new/dotnet-core-3-0#readytorun-images
 
-However, for Xamarin.Android, `dotnet build` should produce something
+However, for .NET for Android, `dotnet build` should produce something
 that is runnable. This basically means we need to create an `.apk` or
 `.aab` file during `build`. We will need to reorder any MSBuild tasks
 from the dotnet SDK, so that they will run during `build`.
 
-This means Xamarin.Android would run:
+This means .NET for Android would:
 
 * Run `aapt` to generate `Resource.designer.cs` and potentially emit
   build errors for issues in `@(AndroidResource)` files.
@@ -275,7 +275,7 @@ copy the output to a `publish` directory on disk.
 _NOTE: Behavior inside IDEs will differ. The `Build` target will not
 produce an `.apk` file if `$(BuildingInsideVisualStudio)` is `true`.
 IDEs will call the `Install` target for deployment, which will produce
-the `.apk` file. This behavior matches "legacy" Xamarin.Android._
+the `.apk` file.
 
 [illink]: https://github.com/mono/linker/blob/master/src/linker/README.md
 

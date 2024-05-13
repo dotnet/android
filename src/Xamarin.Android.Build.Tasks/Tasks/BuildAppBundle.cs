@@ -20,7 +20,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "BAB";
 
 		static readonly string [] UncompressedByDefault = new [] {
-			// Xamarin.Android specific files
+			// .NET for Android specific files
 			"typemap.mj",
 			"typemap.jm",
 			"assemblies/**",

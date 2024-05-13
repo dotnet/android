@@ -1,7 +1,7 @@
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
-- [Xamarin.Android build preparation utility](#xamarinandroid-build-preparation-utility)
+- [.NET for Android build preparation utility](#xamarinandroid-build-preparation-utility)
     - [Introduction](#introduction)
     - [Why?](#why)
     - [Supported operating systems](#supported-operating-systems)
@@ -18,11 +18,11 @@
         - [Log files](#log-files)
 
 <!-- markdown-toc end -->
-# Xamarin.Android build preparation utility
+# .NET for Android build preparation utility
 
 ## Introduction
 
-The task and purpose of this utility is to prepare the `Xamarin.Android` source tree for build by 
+The task and purpose of this utility is to prepare the .NET for Android source tree for build by 
 performing a number of steps which need to be done only once (or very few and far between) mostly after
 the repository is freshly cloned.
 
@@ -32,7 +32,7 @@ The utility is written in C# as a .NET 4.7 console app and does not depend on an
 ## Why?
 
 The utility replaces older system which was implemented using a vast collection of MSBuild projects, 
-target files, property files distributed around the `Xamarin.Android` source tree which caused the following,
+target files, property files distributed around the .NET for Android source tree which caused the following,
 but not limited to, problems:
 
   - MSBuild doesn't very well interface with 3rd party build systems, which caused the need to employ a number
@@ -72,7 +72,7 @@ The utility requires that the following is present on the host system:
 
 ## Build configuration
 
-The utility is designed to make it easy(-ier) to change all aspects of `Xamarin.Android` build preparation process including,
+The utility is designed to make it easy(-ier) to change all aspects of .NET for Android build preparation process including,
 but not limited to:
 
  - Android API levels
@@ -97,15 +97,15 @@ utility is built on that particular operating system.
 The files mentioned above are found in the [ConfigAndData](xaprepare/ConfigAndData) directory and are briefly described below.
 
  - [AbiNames.cs](xaprepare/ConfigAndData/AbiNames.cs)
-   Rarely modified, contains all the target ABI names as used throughout the `Xamarin.Android` source as well as a number of
+   Rarely modified, contains all the target ABI names as used throughout the .NET for Android source as well as a number of
    helper methods used throughout the preparation utility code. **Be very careful** when modifying the names there as it may
    break the build!
  - [BuildAndroidPlatforms.cs](xaprepare/ConfigAndData/BuildAndroidPlatforms.cs)
    Modified whenever a new Android platform is added, this file names all of the Android API levels along with platform/API
-   identifiers and `Xamarin.Android` framework names corresponding to specific API levels. The file also contains specification
+   identifiers and .NET for Android framework names corresponding to specific API levels. The file also contains specification
    of minimum NDK API levels used for all the Android device targets.
  - [CommonLicenses.cs](xaprepare/ConfigAndData/CommonLicenses.cs)
-   A file with constants containing paths to licenses commonly used by software `Xamarin.Android` uses. The licenses are used
+   A file with constants containing paths to licenses commonly used by software .NET for Android uses. The licenses are used
    when generating Third Party Notices.
  - [Configurables](xaprepare/ConfigAndData/Configurables.cs)
    The file (and its OS-specific companions) contain all of the tunable bits and pieces of configuration that affect various
@@ -113,7 +113,7 @@ The files mentioned above are found in the [ConfigAndData](xaprepare/ConfigAndDa
    `Configurables.Defaults`
  - [Runtimes.cs](xaprepare/ConfigAndData/Runtimes.cs)
    This file defines **all** of the Mono runtimes, BCL (Base Class Library) assemblies, utilities and components used by
-   `Xamarin.Android` in the build as well as generated as part of the build for inclusion in bundles and installers.
+   .NET for Android in the build as well as generated as part of the build for inclusion in bundles and installers.
  - [Dependencies/*.cs](xaprepare/ConfigAndData/Dependencies)
    Files in this directory contain dependencies (program and package names + versions) for all the supported operating systems.
 
@@ -123,7 +123,7 @@ The files mentioned above are found in the [ConfigAndData](xaprepare/ConfigAndDa
 
 The utility employs the abstraction of "scenarios" which are collections of various steps to perform in order to achieve a
 specific goal. The main scenario is named `Standard` and is the default one if no other scenario is named on the command line 
-(by using the `-s NAME` parameter). You can list all the scenarios by issuing the following command from the root of `Xamarin.Android`
+(by using the `-s NAME` parameter). You can list all the scenarios by issuing the following command from the root of .NET for Android
 source tree:
 
 ```
@@ -133,7 +133,7 @@ make PREPARE_ARGS=--ls
 ### Invocation
 
 In order to run the preparation utility on your development machine, all you need to do is to invoke the following command from
-the root of the `Xamarin.Android` source tree:
+the root of the .NET for Android source tree:
 
 ```
 make prepare

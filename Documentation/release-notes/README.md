@@ -88,7 +88,7 @@ any custom release notes.
   - `### Android API bindings`
   - `### Bindings projects`
   - `### Design-time build process`
-  - `### Xamarin.Android SDK installation`
+  - `### .NET for Android SDK installation`
   - `### IDE compatibility`
 
 - Write a list item to go under the heading.  Start the item with one of the

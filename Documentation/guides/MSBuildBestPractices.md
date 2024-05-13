@@ -3,7 +3,7 @@
 This guide is a work-in-progress, but really has two main goals:
 - What are good MSBuild practices, in general?
 - What are good MSBuild practice in relation to what we already have
-  going on in Xamarin.Android MSBuild targets?
+  going on in .NET for Android MSBuild targets?
 
 ## Debugging MSBuild Tasks
 
@@ -19,7 +19,7 @@ Waiting for debugger to attach (dotnet PID 13001).  Press enter to continue...
 
 You can then use VS or VSCode to attach to this process and debug you tasks.
 
-In the case of .NET Android we need to do a couple of thing first though. Firstly
+In the case of .NET for Android we need to do a couple of thing first though. Firstly
 we need to disable the use of `ILRepacker` on the `Xamarin.Android.Build.Tasks`
 assembly. This is because `ILRepacker` does NOT handle debug symbols very well.
 Assemblies it generates seem to be JIT optimized so the debugger will not load
@@ -65,7 +65,7 @@ Once MSBuild starts it will print the following
 Waiting for debugger to attach (dotnet PID xxxx).  Press enter to continue...
 ```
 
-You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the Xamarin.Android.sln solution open. For VSCode open the workspace then use the `Attach to Process` Run and Debug option. You will be prompted for the PID and it will then connect.
+You need to copy the PID value so we can use this in the IDE. For Visual Studio you can use the `Attach to Process` menu option, while you have the `Xamarin.Android.sln` solution open. For VSCode open the workspace then use the `Attach to Process` Run and Debug option. You will be prompted for the PID and it will then connect.
 
 Once connected go back to your command prompt and press ENTER so that the MSBuild process can continue.
 
@@ -378,7 +378,7 @@ evaluates `$(MSBuildAllProjects)` since [MSBuild 16.0][allprojects].
 
 > NOTE: You might consider using `@(_AndroidMSBuildAllProjects)`
 > instead of `$(MSBuildAllProjects)` when working on the
-> Xamarin.Android MSBuild targets. We have excluded the `*.csproj.user`
+> .NET for Android MSBuild targets. We have excluded the `*.csproj.user`
 > file for performance reasons.
 
 One pitfall, is this `_GenerateDocumentation` example *must* touch the
@@ -540,7 +540,7 @@ Or if you want to cache across multiple-builds, use
 > Use `as` for casts to avoid any unexpected `InvalidCastException`'s.
 > Use the `RegisterTaskObjectAssemblyLocal()` or
 > `GetRegisteredTaskObjectAssemblyLocal()` extension methods within
-> the Xamarin.Android codebase.
+> the .NET for Android codebase.
 
 To *test* and validate your MSBuild task's use of
 `RegisteredTaskObjectLifetime.AppDomain` you have two choices:
@@ -571,9 +571,9 @@ an implementation of MSBuild out-of-process nodes yet._
 [static_csharp]: https://softwareengineering.stackexchange.com/questions/161222/dont-use-static-in-c
 [project_system]: https://marketplace.visualstudio.com/items?itemName=VisualStudioProductTeam.ProjectSystemTools
 
-# Best Practices for Xamarin.Android MSBuild targets
+# Best Practices for .NET for Android MSBuild targets
 
-## Naming in Xamarin.Android targets
+## Naming in .NET for Android targets
 
 As mentioned [above](/MSBuildBestPractices.md#naming), a good amount
 of consideration should be done before adding new public-facing
@@ -583,11 +583,11 @@ since an obvious feature flag will be needed to enable it.
 The main thing to keep in mind here is that almost all of our
 public-facing MSBuild properties should be prefixed with `Android`.
 This is a good convention so it is easy to know which properties are
-specific to Xamarin.Android, and this will prevent them from
+specific to .NET for Android, and this will prevent them from
 conflicting with MSBuild properties from other products. All MSBuild
 properties are effectively "global variables"...
 
-## Xamarin.Android MSBuild Task base classes
+## .NET for Android MSBuild Task base classes
 
 We have a few base classes to simplify error handling, `async` /
 `await` usage, etc.
