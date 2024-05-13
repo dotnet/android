@@ -268,6 +268,10 @@ namespace xamarin::android::internal
 		void set_debug_options ();
 		void parse_gdb_options ();
 		void mono_runtime_init (JNIEnv *env, dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args);
+		void timing_init () noexcept;
+		void timing_init_extended () noexcept;
+		void timing_init_verbose () noexcept;
+		void timing_init_extreme () noexcept;
 		void init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader);
 		void set_environment_variable_for_directory (const char *name, jstring_wrapper &value, bool createDirectory, mode_t mode);
 

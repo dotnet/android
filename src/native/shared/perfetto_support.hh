@@ -93,8 +93,8 @@ namespace xamarin::android {
 		template<xamarin::android::PerfettoTrackId TTrack, bool UseThreadTrack>
 		force_inline static perfetto::Track get_name_annotated_track ()
 		{
-			using TParentTrack = std::conditional_t<UseThreadTrack, perfetto::ProcessTrack, perfetto::ProcessTrack>;
-			auto track = perfetto::Track (static_cast<uint64_t>(PerfettoTrackId::MonodroidRuntime));
+			using TParentTrack = std::conditional_t<UseThreadTrack, perfetto::ThreadTrack, perfetto::ProcessTrack>;
+			auto track = perfetto::Track (static_cast<uint64_t>(PerfettoTrackId::MonodroidRuntime), TParentTrack::Current ());
 			auto desc = track.Serialize ();
 
 			// if constexpr (TTrack == PerfettoTrackId::AssemblyLoadMonoVM) {
