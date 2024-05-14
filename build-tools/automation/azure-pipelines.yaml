@@ -504,9 +504,9 @@ extends:
             buildType: specific
             project: DevDiv
             definition: 11410
-            buildVersionToDownload: latestFromBranch
+            pipelineId: 9568160
+            buildVersionToDownload: specific
             allowPartiallySucceededBuilds: true
-            branchName: refs/heads/main
             artifactName: nuget-signed
             downloadPath: $(Build.StagingDirectory)\nuget-signed
 
