@@ -10,7 +10,6 @@
   <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
 
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)"/>
-  <UsingTask TaskName="Microsoft.DotNet.Build.Tasks.Feed.PushToBuildStorage" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" />
 
@@ -205,7 +204,7 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
-    <PushToBuildStorage
+    <PushToAzureDevOpsArtifacts
       ItemsToPush="@(ItemsToPush)"
       ManifestBuildData="@(ManifestBuildData)"
       ManifestRepoUri="$(BUILD_REPOSITORY_NAME)"
