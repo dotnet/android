@@ -112,7 +112,9 @@ namespace Xamarin.Android.Tasks
 
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
+			Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: Start of Loop");
 			foreach (ITaskItem assembly in InputAssemblies) {
+				Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: {assembly.ItemSpec}");
 				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
 					// Designer builds don't produce assemblies, so library and main application DLLs might not
 					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
@@ -130,6 +132,7 @@ namespace Xamarin.Android.Tasks
 				}
 				output.Add (assembly);
 			}
+			Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: End of Loop");
 		}
 
 		static bool IsFromAKnownRuntimePack (ITaskItem assembly)
@@ -145,13 +148,9 @@ namespace Xamarin.Android.Tasks
 			if (!symbols.TryGetValue (symbolPath, out var symbol) || !string.IsNullOrEmpty (symbol.GetMetadata ("DestinationSubDirectory"))) {
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
 				if (File.Exists (symbolPath)) {
-					Console.WriteLine ($"DEBUG!: new symbols for {symbolPath}");
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);
 					return symbol;
 				}
-				Console.WriteLine ($"DEBUG!: woops! symbols do not exist at {symbolPath}");
-			} else {
-				Console.WriteLine ($"DEBUG!: using existing symbols for {symbolPath}");
 			}
 			return symbol;
 		}
@@ -190,7 +189,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string destination = Path.Combine (abi, item.GetMetadata ("DestinationSubDirectory"));
-				Log.LogDebugMessage ($"DEBUG!!!'{item.ItemSpec}' '{rid}' = '{abi}'. DestinationSubDirectory='{destination}'");
+				//Log.LogDebugMessage ($"DEBUG!!!'{item.ItemSpec}' '{rid}' = '{abi}'. DestinationSubDirectory='{destination}'");
 				item.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 				item.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (item.ItemSpec)));
 			}
