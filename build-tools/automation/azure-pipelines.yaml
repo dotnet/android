@@ -576,7 +576,7 @@ extends:
             -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
             $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
             -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
-          displayName: generate and publish BAR manifest
+          displayName: generate and publish assets
           #condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         #- powershell: |

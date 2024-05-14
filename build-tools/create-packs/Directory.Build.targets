@@ -164,7 +164,7 @@
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
-  <!-- https://github.com/dotnet/arcade/blob/d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
+  <!-- https://github.com/dotnet/arcade/blob/efc3da96e5ac110513e92ebd9ef87c73f44d8540/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
   <Target Name="PublishToBuildAssetRegistry">
     <PropertyGroup>
       <ArtifactsLogDir>$(OutputPath)</ArtifactsLogDir>
@@ -213,6 +213,17 @@
       ManifestCommit="$(BUILD_SOURCEVERSION)"
       AssetManifestPath="$(AssetManifestPath)"
       PublishingVersion="3" />
+
+    <MSBuild
+        Targets="Restore"
+        Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion)"
+    />
+
+    <MSBuild
+        Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(ManifestsPath);MaestroApiEndpoint=$(MaestroApiEndpoint)"
+    />
   </Target>
 
   <Target Name="PushManifestToBuildAssetRegistry" >
