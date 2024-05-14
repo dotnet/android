@@ -1083,9 +1083,11 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CustomApplicationClassAndMultiDex ()
+		public void CustomApplicationClassAndMultiDex ([Values (true, false)] bool isRelease)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.IsRelease = isRelease;
+			proj.TrimModeRelease = TrimMode.Full;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.Sources.Add (new BuildItem ("Compile", "CustomApp.cs") { TextContent = () => @"
 using System;
@@ -1108,7 +1110,7 @@ namespace UnnamedProject {
         }
     }
 }" });
-			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
