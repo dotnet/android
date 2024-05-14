@@ -222,7 +222,7 @@
 
     <MSBuild
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(AssetManifestPath);MaestroApiEndpoint=https://maestro.dot.net"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(ArtifactsLogDir)AssetManifest;MaestroApiEndpoint=https://maestro.dot.net"
     />
   </Target>
 
