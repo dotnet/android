@@ -168,8 +168,9 @@
   <!-- https://github.com/dotnet/arcade/blob/d8a997bd4a23c6d6fe7c785b3b440be7dd8463e9/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
   <Target Name="PublishToBuildAssetRegistry">
     <PropertyGroup>
+      <ArtifactsLogDir>$(OutputPath)</ArtifactsLogDir>
       <AssetManifestFileName>Assets.xml</AssetManifestFileName>
-      <AssetManifestPath>$(OutputPath)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
+      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
     </PropertyGroup>
 
     <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
@@ -180,7 +181,7 @@
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
 
-    <Error Condition="'$(BUILD_BUILDNUMBER)' == ''" Text="The BUILD_BUILDNUMBER property is required." />
+    <!--Error Condition="'$(BUILD_BUILDNUMBER)' == ''" Text="The BUILD_BUILDNUMBER property is required." />
     <Error Condition="'$(ArtifactsLogDir)' == ''" Text="The ArtifactsLogDir property is required." />
     <Error Condition="'$(BUILD_SOURCEBRANCH)' == ''" Text="The BUILD_SOURCEBRANCH property is required." />
     <Error Condition="'$(BUILD_SOURCEVERSION)' == ''" Text="The BUILD_SOURCEVERSION property is required." />
@@ -190,7 +191,7 @@
     <Error Condition="'$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)' == ''" Text="The SYSTEM_TEAMFOUNDATIONCOLLECTIONURI property is required." />
     <Error Condition="'$(SYSTEM_TEAMPROJECT)' == ''" Text="The SYSTEM_TEAMPROJECT property is required." />
     <Error Condition="'$(BUILD_BUILDID)' == ''" Text="The BUILD_BUILDID property is required." />
-    <Error Condition="'$(SYSTEM_DEFINITIONID)' == ''" Text="The SYSTEM_DEFINITIONID property is required." />
+    <Error Condition="'$(SYSTEM_DEFINITIONID)' == ''" Text="The SYSTEM_DEFINITIONID property is required." /-->
 
     <Message Text="Publishing %(ItemsToPush.Identity)" Importance="normal" />
 
