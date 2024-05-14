@@ -188,7 +188,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid .NET Android assembly store file", entry_name.get ());
+		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid .NET for Android assembly store file", entry_name.get ());
 		Helpers::abort_application ();
 	}
 

@@ -29,10 +29,12 @@ namespace Xamarin.Android.Manifest {
 
 		public static TypeDefinition ResolveType (string type, ICustomAttributeProvider provider, IAssemblyResolver resolver)
 		{
+			if (type == null)
+				throw new ArgumentException ("Type resolution support requires a non-null Type.", nameof (type));
 			if (provider == null)
-				throw new ArgumentException ("Type resolution support requires an AssemblyDefinition or TypeDefinition.", "provider");
+				throw new ArgumentException ("Type resolution support requires an AssemblyDefinition or TypeDefinition.", nameof (provider));
 			if (resolver == null)
-				throw new ArgumentException ("Type resolution support requires a IAssemblyResolver.", "resolver");
+				throw new ArgumentException ("Type resolution support requires a IAssemblyResolver.", nameof (resolver));
 
 			// `type` is either a "bare" type "Foo.Bar", or an
 			// assembly-qualified type "Foo.Bar, AssemblyName [Version=...]?".

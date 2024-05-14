@@ -44,7 +44,7 @@ namespace Xamarin.Android.Prepare
 					Log.DebugLine ($"{ToolName} executable path is rooted, using verbatim");
 					FullToolPath = toolPath;
 				} else {
-					Log.DebugLine ($"{ToolName} executable path is relative to Xamarin.Android repository root");
+					Log.DebugLine ($"{ToolName} executable path is relative to .NET for Android repository root");
 					FullToolPath = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, toolPath);
 				}
 			}

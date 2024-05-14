@@ -1,28 +1,28 @@
 # VSCode Support
 
-Xamarin.Android itself can be developed within
+.NET for Android itself can be developed within
 [Visual Studio Code (VSCode)](https://code.visualstudio.com/).
 There is a workspace included in the repo `Xamarin.Android.code-workspace`.
 The required extensions should be installed when you open the
 workspace.
 
-## Building Xamarin.Android
+## Building .NET for Android
 
 Open the `Xamarin.Android.code-workspace` in VSCode. Then use the
 Build Command Pallette (Ctrl+Shift+B in Windows, Cmd+Shift+B on Mac)
 to list the available build commands.
 
-Select **Build All Xamarin.Android**. You will then be presented with a
+Select **Build All .NET for Android**. You will then be presented with a
 list of options:
 
 * `Prepare` - Installs the required Dependencies.
 * `PrepareExternal` - Installs the required Commercial Dependencies (Xamarin Team Members Only)
-* `Build` - Build Xamarin.Android.
+* `Build` - Build .NET for Android.
 * `Pack` - Create the NuGet Packages.
 * `Everything` - Calls Prepare, Build and Pack.
 
 The normal order is `Prepare`, `Build` then `Pack`. This will result in
-a usable copy of Xamarin.Android. You can now use it to build apps
+a usable copy of .NET for Android. You can now use it to build apps
 and run the unit tests.
 
 Note: `PrepareExternal` is for internal Xamarin Team members only, this sets up
@@ -49,7 +49,7 @@ global nuget cache, usually  in `$HOME/.nuget` or `%USERPROFILE%/.nuget`.
 The setting you need to set is `nxunitExplorer.nunit`. This will need
 to be done in your **Preferences** > **Settings** in VSCode. This will save
 the setting globally so it will be available when ever you open
-Xamarin.Android.
+.NET for Android.
 
 Alternatively you can add something like the following to the `Xamarin.Android.code-workspace`:
 
@@ -87,19 +87,19 @@ tests. The upstream pull request is
 ### derivitec-ltd.vscode-dotnet-adapter
 
 This should work out of the box as long as you have `dotnet` installed. This is
-a dependency for Xamarin.Android so it should be installed as soon as you
-build Xamarin.Android.
+a dependency for .NET for Android so it should be installed as soon as you
+build .NET for Android.
 
 ### Running the Sample
 
-Xamarin.Android provides a few Debug configurations in VSCode to debug the
+.NET for Android provides a few Debug configurations in VSCode to debug the
 sample applications `HelloWorld` and `VSAndroidApp`. You can select the
 `Debug Sample` Run and Debug config to run and debug the samples under
 `mono` or you can use `Debug Sample Under DotNet` to debug this under the
 .net 6 system.
 
 In order to use the `Debug Sample Under DotNet` you will need to have built
-Xamarin.Android for .net 6 using the `Pack` command mentioned earlier.
+.NET for Android for .net 6 using the `Pack` command mentioned earlier.
 See the [windows documentation](../building/windows/instructions.md) or
 [\*nix documentation](../building/unix/instructions.md) for additional details
 on working with .net 6.
@@ -126,7 +126,7 @@ in `.vscode/tasks.json`.
 },
 ```
 
-you can add your own projects here and they will run with the Xamarin.Android
+you can add your own projects here and they will run with the .NET for Android
 you have built locally.
 
 

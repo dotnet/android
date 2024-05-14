@@ -1,4 +1,4 @@
-# Xamarin.Android Pipeline
+# .NET for Android Pipeline
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 

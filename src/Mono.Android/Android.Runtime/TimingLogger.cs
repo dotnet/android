@@ -3,7 +3,7 @@ using System;
 namespace Android.Runtime
 {
 	/// <summary>
-	///   A class which uses the native Xamarin.Android runtime to accurately measure (to the nanosecond level) time
+	///   A class which uses the native .NET for Android runtime to accurately measure (to the nanosecond level) time
 	///   spent executing a portion of code bracketed with calls to <see cref="Start"/> (or the constructor, by
 	///   default) and <see cref="Stop"/>.
 	///   Timing messages are logged with the <c>Info</c> priority and the <c>monodroid-timing</c> tag in the
@@ -50,7 +50,7 @@ namespace Android.Runtime
 
 		/// <summary>
 		///   Stop measuring time and log message specified in the <paramref name="stopMessage"/> parameter. If
-		///   message is not specified, the Xamarin.Android runtime will use the default message, <c>"Managed
+		///   message is not specified, the .NET for Android runtime will use the default message, <c>"Managed
 		///   Timing"</c>. Time is reported in the following format:
 		///
 		/// <para>

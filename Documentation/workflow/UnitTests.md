@@ -1,6 +1,6 @@
 # Unit Tests
 
-Unit test infrastructure for .NET Android.
+Unit test infrastructure for .NET for Android.
 
 # Tools
 
@@ -76,7 +76,7 @@ If no Android device is attached, then the emulator will be created.
 The `ADB_TARGET` environment variable can be used to explicitly specify which
 Android device should be used when running Device Integration Tests.
 
-NOTE: Not all tests work under .NET Android yet. So we need to filter
+NOTE: Not all tests work under .NET for Android yet. So we need to filter
 them on the `DotNetIgnore` category.
 
 To run a specific test you can use the `Name=Value` argument for `--filter`,
@@ -119,7 +119,7 @@ If no Android device is attached, then the emulator will be created.
 The `ADB_TARGET` environment variable can be used to explicitly specify which
 Android device should be used when running Device Integration Tests.
 
-NOTE: Not all tests work under .NET Android yet. So we need to filter
+NOTE: Not all tests work under .NET for Android yet. So we need to filter
 them on the `DotNetIgnore` category.
 
 To run a specific test you can use the `Name=Value` argument for the `--filter`,
@@ -260,7 +260,7 @@ task and return a `bool`.
 Assert.IsTrue (task.Execute (), "Task should succeed.");
 ```
 
-NOTE: It is common practice in .NET Android to provide a text description on
+NOTE: It is common practice in .NET for Android to provide a text description on
 an `Assert` call. This makes it easier to track down where a particular test
 is failing.
 

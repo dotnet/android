@@ -23,7 +23,7 @@
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\MonoDroid.Tuner\MonoDroidProfile.cs" Link="MonoDroid.Tuner\MonoDroidProfile.cs" />
     <Compile Include="..\Xamarin.Android.Build.Tasks\Linker\Mobile.Tuner\MobileProfile.cs" Link="Mobile.Tuner\MobileProfile.cs" />
 
-    <!--Other Xamarin.Android / Java.Interop files-->
+    <!--Other .NET for Android / Java.Interop files-->
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\CustomAttributeProviderRocks.cs" Link="Java.Interop\CustomAttributeProviderRocks.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\MethodDefinitionRocks.cs" Link="Java.Interop\MethodDefinitionRocks.cs" />
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.Cecil\Java.Interop.Tools.Cecil\TypeDefinitionCache.cs" Link="Java.Interop\TypeDefinitionCache.cs" />

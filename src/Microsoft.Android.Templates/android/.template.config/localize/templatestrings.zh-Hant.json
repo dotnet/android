@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android 應用程式",
-  "description": "用於建立 .NET Android 應用程式的專案",
+  "description": "用於建立 .NET for Android 應用程式的專案",
   "symbols/packageName/description": "覆寫 AndroidManifest.xml 中的套件名稱",
   "symbols/supportedOSVersion/description": "覆寫專案中的 $(SupportedOSPlatformVersion)"
 }

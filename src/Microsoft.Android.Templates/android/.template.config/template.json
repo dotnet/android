@@ -4,7 +4,7 @@
   "classifications": [ "Android", "Mobile" ],
   "identity": "Microsoft.Android.AndroidApp",
   "name": "Android Application",
-  "description": "A project for creating a .NET Android application",
+  "description": "A project for creating a .NET for Android application",
   "shortName": "android",
   "tags": {
     "language": "C#",

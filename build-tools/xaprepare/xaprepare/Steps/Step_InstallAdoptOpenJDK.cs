@@ -199,19 +199,19 @@ namespace Xamarin.Android.Prepare
 			string xaVersionFile = Path.Combine (installDir, XAVersionInfoFile);
 			if (!File.Exists (xaVersionFile)) {
 				installedVersion = cv;
-				Log.DebugLine ($"Unable to find Xamarin.Android version file {xaVersionFile}");
+				Log.DebugLine ($"Unable to find .NET for Android version file {xaVersionFile}");
 				return false;
 			}
 
 			lines = File.ReadAllLines (xaVersionFile);
 			if (lines == null || lines.Length == 0) {
-				Log.DebugLine ($"Xamarin.Android version file {xaVersionFile} is empty, cannot determine release version");
+				Log.DebugLine ($".NET for Android version file {xaVersionFile} is empty, cannot determine release version");
 				return false;
 			}
 
 			string rv = lines[0].Trim ();
 			if (String.IsNullOrEmpty (rv)) {
-				Log.DebugLine ($"Xamarin.Android version file {xaVersionFile} does not contain release version information");
+				Log.DebugLine ($".NET for Android version file {xaVersionFile} does not contain release version information");
 				return false;
 			}
 

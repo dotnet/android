@@ -740,9 +740,9 @@ namespace UnamedProject
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
-				// These files won't exist in OSS Xamarin.Android, thus the existence check and
+				// These files won't exist in OSS .NET for Android, thus the existence check and
 				// Assert.Ignore below. They will also not exist in the commercial version of
-				// Xamarin.Android unless fastdev is enabled.
+				// .NET for Android unless fastdev is enabled.
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
 					if (info.Exists) {
@@ -1083,9 +1083,11 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CustomApplicationClassAndMultiDex ()
+		public void CustomApplicationClassAndMultiDex ([Values (true, false)] bool isRelease)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.IsRelease = isRelease;
+			proj.TrimModeRelease = TrimMode.Full;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.Sources.Add (new BuildItem ("Compile", "CustomApp.cs") { TextContent = () => @"
 using System;
@@ -1108,7 +1110,7 @@ namespace UnnamedProject {
         }
     }
 }" });
-			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));

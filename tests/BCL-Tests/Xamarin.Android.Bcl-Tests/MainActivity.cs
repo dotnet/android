@@ -4,7 +4,7 @@ using Android.OS;
 
 namespace UnitTestRunner
 {
-	[Activity(Label = "Xamarin.Android UnitTestRunner", MainLauncher = true, Icon = "@mipmap/icon")]
+	[Activity(Label = ".NET for Android UnitTestRunner", MainLauncher = true, Icon = "@mipmap/icon")]
 	public class MainActivity : Activity
 	{
 		int count = 1;

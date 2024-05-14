@@ -6,7 +6,7 @@ https://github.com/jonathanpeppers/Mono.Profiler.Android#usage-of-the-aot-profil
 
 ## Updating Profiles
 
-Build Xamarin.Android following our instructions to build on
+Build .NET for Android following our instructions to build on
 [Windows][0] or [Unix-like platforms][1]. Make sure to build with
 `-p:Configuration=Release` or `CONFIGURATION=Release`.
 
@@ -31,7 +31,7 @@ files don't change, it is likely not necessary to update the
 Once you've updated the profile, always test to make sure the times
 you get are either "the same" or slightly better than before.
 
-Build Xamarin.Android again in `Release` mode to get the updated
+Build .NET for Android again in `Release` mode to get the updated
 profiles, or manually copy the new `dotnet.aotprofile` to:
 
 ```

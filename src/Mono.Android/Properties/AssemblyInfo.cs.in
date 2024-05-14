@@ -14,7 +14,7 @@ using System.Runtime.Versioning;
 
 [assembly: AssemblyInformationalVersion ("@PACKAGE_VERSION@.@PACKAGE_VERSION_BUILD@; git-rev-head:@PACKAGE_HEAD_REV@; git-branch:@PACKAGE_HEAD_BRANCH@")]
 [assembly: AssemblyTitle ("Mono.Android.dll")]
-[assembly: AssemblyProduct ("Xamarin.Android")]
+[assembly: AssemblyProduct (".NET for Android")]
 // FIXME: Probably need to add Copyright 2009-2011 Novell Inc.
 // [assembly: AssemblyCopyright ("Copyright 2011-2014 Xamarin Inc.")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]

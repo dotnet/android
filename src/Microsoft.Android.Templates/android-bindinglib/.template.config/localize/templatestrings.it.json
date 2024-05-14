@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Binding a libreria Java Android",
-  "description": "Progetto per la creazione di una libreria di classi .NET Android che esegue il binding a una libreria Java nativa.",
+  "description": "Progetto per la creazione di una libreria di classi .NET for Android che esegue il binding a una libreria Java nativa.",
   "symbols/supportedOSVersion/description": "Esegue l'override di $(SupportedOSPlatformVersion) nel progetto"
 }

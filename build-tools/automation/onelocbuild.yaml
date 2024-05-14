@@ -1,4 +1,4 @@
-# Xamarin.Android OneLocBuild
+# .NET for Android OneLocBuild
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
