@@ -526,10 +526,10 @@ extends:
       # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
       - job: push_signed_nugets
         displayName: Push Internal
-        dependsOn:
-        - nuget_convert
-        - sign_net_linux
-        condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
+        #dependsOn:
+        #- nuget_convert
+        #- sign_net_linux
+        #condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
         timeoutInMinutes: 60
         pool: $(VSEngMicroBuildPool)
         workspace:
@@ -551,79 +551,92 @@ extends:
 
         - task: DownloadPipelineArtifact@2
           inputs:
+            buildType: specific
+            project: DevDiv
+            definition: 11410
+            buildVersionToDownload: latestFromBranch
+            allowPartiallySucceededBuilds: true
+            branchName: refs/heads/main
             artifactName: nuget-signed
             downloadPath: $(Build.StagingDirectory)\nuget-signed
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-linux-signed
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+        #- task: DownloadPipelineArtifact@2
+        #  inputs:
+        #    artifactName: nuget-signed
+        #    downloadPath: $(Build.StagingDirectory)\nuget-signed
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: vs-msi-nugets
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+        #- task: DownloadPipelineArtifact@2
+        #  inputs:
+        #    artifactName: nuget-linux-signed
+        #    downloadPath: $(Build.StagingDirectory)\nuget-signed
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+        #- task: DownloadPipelineArtifact@2
+        #  inputs:
+        #    artifactName: vs-msi-nugets
+        #    downloadPath: $(Build.StagingDirectory)\nuget-signed
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(NupkgCommitStatusName)
-            blobName: $(NupkgCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\nuget-signed
-            yamlResourceName: yaml-templates
+        #- task: DownloadPipelineArtifact@2
+        #  inputs:
+        #    artifactName: $(WindowsToolchainPdbArtifactName)
+        #    downloadPath: $(Build.StagingDirectory)\nuget-signed
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(VSDropCommitStatusName)
-            blobName: $(VSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-signed
-                downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
+        #- template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
+        #  parameters:
+        #    githubToken: $(GitHub.Token)
+        #    githubContext: $(NupkgCommitStatusName)
+        #    blobName: $(NupkgCommitStatusName)
+        #    packagePrefix: xamarin-android
+        #    artifactsPath: $(Build.StagingDirectory)\nuget-signed
+        #    yamlResourceName: yaml-templates
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(MultiTargetVSDropCommitStatusName)
-            blobName: $(MultiTargetVSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-multitarget-signed
-                downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
+        #- template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
+        #  parameters:
+        #    githubToken: $(GitHub.Token)
+        #    githubContext: $(VSDropCommitStatusName)
+        #    blobName: $(VSDropCommitStatusName)
+        #    packagePrefix: xamarin-android
+        #    artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
+        #    yamlResourceName: yaml-templates
+        #    downloadSteps:
+        #    - task: DownloadPipelineArtifact@2
+        #      inputs:
+        #        artifactName: vsdrop-signed
+        #        downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
+
+        #- template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
+        #  parameters:
+        #    githubToken: $(GitHub.Token)
+        #    githubContext: $(MultiTargetVSDropCommitStatusName)
+        #    blobName: $(MultiTargetVSDropCommitStatusName)
+        #    packagePrefix: xamarin-android
+        #    artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
+        #    yamlResourceName: yaml-templates
+        #    downloadSteps:
+        #    - task: DownloadPipelineArtifact@2
+        #      inputs:
+        #        artifactName: vsdrop-multitarget-signed
+        #        downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
 
         - powershell: >-
             & dotnet build -v:n -c $(XA.Build.Configuration)
-            -t:PushManifestToBuildAssetRegistry
+            -t:PublishToBuildAssetRegistry
+            -p:ManifestsPath=$(Build.StagingDirectory)\nuget-signed\AssetManifest
             -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+            -p:MaestroApiEndpoint=https://maestro.dot.net
             -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
             $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
             -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
           displayName: generate and publish BAR manifest
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+          #condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-        - powershell: |
-            $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
-            $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-            $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-            & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
-          displayName: add build to default darc channel
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+        #- powershell: |
+        #    $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
+        #    $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+        #    $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+        #    & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+        #    & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+        #  displayName: add build to default darc channel
+        #  condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - template: build-tools\automation\yaml-templates\upload-results.yaml@self
           parameters:
