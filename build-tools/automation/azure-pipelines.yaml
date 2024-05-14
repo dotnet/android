@@ -467,6 +467,7 @@ extends:
 
     - stage: dotnet_prepare_release
       displayName: Prepare .NET Release
+      dependsOn: []
       #dependsOn:
       #- mac_build
       #- linux_build
