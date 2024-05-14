@@ -66,7 +66,12 @@ namespace MonoDroid.Tuner {
 			if (!attribute.HasProperties)
 				return;
 
-			var type_ref = (TypeReference) attribute.Properties.First (p => p.Name == property).Argument.Value;
+			// NOTE: CustomAttributeNamedArgument is a struct
+			var named_arg = attribute.Properties.FirstOrDefault (p => p.Name == property);
+			if (named_arg.Name == null)
+				return;
+
+			var type_ref = named_arg.Argument.Value as TypeReference;
 			if (type_ref == null)
 				return;
 
