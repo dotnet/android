@@ -4,7 +4,7 @@ parameters:
   stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
   dependsOn: mac_build
-  agent_count: 10
+  agent_count: 12
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
