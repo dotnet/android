@@ -570,9 +570,7 @@ extends:
         - powershell: >-
             & dotnet build -v:n -c $(XA.Build.Configuration)
             -t:PublishToBuildAssetRegistry
-            -p:ManifestsPath=$(Build.StagingDirectory)\nuget-signed\AssetManifest
             -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-            -p:MaestroApiEndpoint=https://maestro.dot.net
             -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
             $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
             -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
