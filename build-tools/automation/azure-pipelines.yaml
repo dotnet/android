@@ -220,16 +220,6 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
             artifactFolder: $(DotNetTargetFramework)-Default
 
-        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
-          parameters:
-            configuration: $(XA.Build.Configuration)
-            testName: Xamarin.Android.JcwGen_Tests_FastDev
-            project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-            testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml
-            artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
-            artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
-            extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS

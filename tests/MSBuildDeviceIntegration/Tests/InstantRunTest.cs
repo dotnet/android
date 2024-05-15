@@ -16,23 +16,19 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinFormsAndroidApplicationProject {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
 			Assert.IsTrue (b.Clean (proj), "Clean should have succeeded.");
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-
-			var manifest = b.Output.GetIntermediaryAsText (BuildOutputFiles.AndroidManifest);
-			Assert.IsTrue (File.Exists (b.Output.GetIntermediaryPath ("android/bin/dex/mono.android.dex")), "there should be mono.android.dex in the intermediaries.");
 
 			using (var apk = ((AndroidApplicationBuildOutput) b.Output).OpenApk ()) {
 				var dexFile = Path.GetTempFileName ();
 				File.WriteAllBytes (dexFile, apk.GetRaw (ApkContents.ClassesDex));
 				try {
 					string className = "Lcom/xamarin/forms/platform/android/FormsViewGroup;";
-					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should *not* include `{className}`!");
+					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 					className = "Lmono/MonoRuntimeProvider;";
-					Assert.IsFalse (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
+					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 					className = "Lmono/MonoPackageManager;";
 					Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 				} finally {
@@ -49,7 +45,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", useManagedResourceGenerator.ToString ());
 			proj.SetProperty ("AndroidUseDesignerAssembly", "False");
@@ -124,7 +119,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
@@ -139,7 +133,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
@@ -182,7 +175,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
 			foreach (var pkg in packages)
@@ -211,7 +203,6 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
@@ -237,75 +228,11 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void InstantRunFastDevTypemaps ()
-		{
-			AssertCommercialBuild ();
-
-			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
-			};
-			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
-				var apk = Path.Combine (Root, b.ProjectDirectory,
-					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				Assert.IsNull (ZipHelper.ReadFileFromZip (apk, "Mono.Android.typemap"), $"Mono.Android.typemap should NOT be in {apk}.");
-				var logLines = b.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
-					l.Contains ("Target _BuildApkFastDev needs to be built")),
-					"Apk should have been built");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("Mono.Android.typemap")), "Mono.Android.typemap should have been uploaded");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("typemap.index")), "typemap.index should have been uploaded");
-			}
-		}
-
-		[Test]
-		public void InstantRunNativeLibrary ()
-		{
-			AssertCommercialBuild ();
-
-			var nativeLib = new AndroidItem.AndroidNativeLibrary ($"foo\\{DeviceAbi}\\libtest.so") {
-				BinaryContent = () => new byte [10],
-				MetadataValues = $"Link=libs\\{DeviceAbi}\\libtest.so",
-			};
-			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
-				OtherBuildItems = {
-					nativeLib,
-				},
-			};
-			//NOTE: in .NET 6 by default an x86_64 emulator would fall back to x86 if we don't set this.
-			proj.SetAndroidSupportedAbis (DeviceAbi);
-			proj.SetDefaultTargetDevice ();
-			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
-				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
-				var logLines = b.LastBuildOutput;
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
-					l.Contains ("Target _BuildApkFastDev needs to be built")),
-					"Apk should have been built");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("libtest.so")), "libtest.so should have been uploaded");
-
-				nativeLib.BinaryContent = () => new byte [20];
-				nativeLib.Timestamp = DateTime.UtcNow.AddSeconds(1);
-				Assert.IsTrue (b.Install (proj, doNotCleanupOnUpdate: true, saveProject: false), "install should have succeeded. 1");
-				logLines = b.LastBuildOutput;
-				Assert.IsFalse (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
-					l.Contains ("Target _BuildApkFastDev needs to be built")),
-					"Apk should not have been built");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("libtest.so")), "libtest.so should have been uploaded");
-			}
-		}
-
-		[Test]
 		public void InstantRunFastDevDexes ([Values (false, true)] bool useEmbeddedDex)
 		{
 			AssertCommercialBuild ();
 
 			var proj = new XamarinAndroidApplicationProject () {
-				AndroidFastDeploymentType = "Assemblies:Dexes",
 			};
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
@@ -316,7 +243,6 @@ namespace Xamarin.Android.Build.Tests
 					l.Contains ("Target _BuildApkFastDev needs to be built")),
 					"Apk should have been built");
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_Upload\" completely")), "_Upload target should have run");
-				Assert.IsTrue (logLines.Any (l => l.Contains ("NotifySync CopyFile") && l.Contains ("classes.dex")), "classes.dex should have been uploaded");
 				ClearAdbLogcat ();
 				RunProjectAndAssert (proj, b);
 				Assert.True (WaitForActivityToStart (proj.PackageName, "MainActivity",
