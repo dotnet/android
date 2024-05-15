@@ -540,15 +540,6 @@ extends:
         variables:
         - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
           - group: Publish-Build-Assets
-        templateContext:
-          outputs:
-          - output: nuget
-            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
-            useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
-            packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
-            packageParentPath: $(Build.StagingDirectory)\nuget-signed
-            nuGetFeedType: external
-            publishFeedCredentials: $(DotNetFeedCredential)
         steps:
         - checkout: self
 
@@ -620,11 +611,11 @@ extends:
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - powershell: |
-            $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
+            $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
             $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
             $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
             & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
           displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
