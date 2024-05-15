@@ -542,6 +542,7 @@ faster.) Valid values include:
 - `Dexes`: Deploy `.dex` files, native libraries and typemaps.
   **The `Dexes` value can *only* be used on devices running
   Android 4.4 or later (API-19).**
+  **`Dexes` support was removed in .NET 9
 
 The default value is `Assemblies`.
 

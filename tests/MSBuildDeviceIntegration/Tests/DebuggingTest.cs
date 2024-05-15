@@ -149,25 +149,7 @@ namespace Xamarin.Android.Build.Tests
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     false,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
 				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
 				/* packageFormat */      "aab",
 			},
@@ -324,22 +306,6 @@ namespace ${ROOT_NAMESPACE} {
 			new object[] {
 				/* embedAssemblies */    false,
 				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* allowDeltaInstall */  false,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* packageFormat */      "apk",
