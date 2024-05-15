@@ -22,9 +22,9 @@
     </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
-    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="8.0.0-beta.24225.1">
+    <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
-      <Sha>67d23f4ba1813b315e7e33c71d18b63475f5c5f8</Sha>
+      <Sha>70831f0d126fe88b81d7dc8de11358e17a5ce364</Sha>
     </Dependency>
     <Dependency Name="Microsoft.DotNet.Build.Tasks.Feed" Version="8.0.0-beta.24225.1">
       <Uri>https://github.com/dotnet/arcade</Uri>
