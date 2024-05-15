@@ -599,12 +599,12 @@ extends:
 
         - powershell: >-
             & dotnet build -v:n -c $(XA.Build.Configuration)
-            -t:PublishToBuildAssetRegistry
+            -t:PushManifestToBuildAssetRegistry
             -p:BuildAssetRegistryToken=$(MaestroAccessToken)
             -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
             $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
             -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
-          displayName: generate and publish assets
+          displayName: generate and publish BAR manifest
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - powershell: |
@@ -613,7 +613,7 @@ extends:
             $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
             & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
             & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
-          displayName: add build to default darc channel and feed
+          displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - template: build-tools\automation\yaml-templates\upload-results.yaml@self
