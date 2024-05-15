@@ -180,22 +180,10 @@
 
     <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
 
-    <!--Error Condition="'$(BUILD_BUILDNUMBER)' == ''" Text="The BUILD_BUILDNUMBER property is required." />
-    <Error Condition="'$(ArtifactsLogDir)' == ''" Text="The ArtifactsLogDir property is required." />
-    <Error Condition="'$(BUILD_SOURCEBRANCH)' == ''" Text="The BUILD_SOURCEBRANCH property is required." />
-    <Error Condition="'$(BUILD_SOURCEVERSION)' == ''" Text="The BUILD_SOURCEVERSION property is required." />
-    <Error Condition="'$(BUILD_REPOSITORY_URI)' == ''" Text="The BUILD_REPOSITORY_URI property is required." />
-    <Error Condition="'$(MaestroAccessToken)' == ''" Text="The MaestroAccessToken property is required." />
-    <Error Condition="'$(MaestroApiEndpoint)' == ''" Text="The MaestroApiEndpoint property is required." />
-    <Error Condition="'$(SYSTEM_TEAMFOUNDATIONCOLLECTIONURI)' == ''" Text="The SYSTEM_TEAMFOUNDATIONCOLLECTIONURI property is required." />
-    <Error Condition="'$(SYSTEM_TEAMPROJECT)' == ''" Text="The SYSTEM_TEAMPROJECT property is required." />
-    <Error Condition="'$(BUILD_BUILDID)' == ''" Text="The BUILD_BUILDID property is required." />
-    <Error Condition="'$(SYSTEM_DEFINITIONID)' == ''" Text="The SYSTEM_DEFINITIONID property is required." /-->
-
     <Message Text="Publishing %(ItemsToPush.Identity)" Importance="normal" />
 
     <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=TODO" />
+      <ManifestBuildData Include="InitialAssetsLocation=" />
       <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
@@ -223,45 +211,6 @@
     <MSBuild
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
         Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(ArtifactsLogDir)AssetManifest;MaestroApiEndpoint=https://maestro.dot.net"
-    />
-  </Target>
-
-  <Target Name="PushManifestToBuildAssetRegistry" >
-    <ItemGroup>
-      <BuildArtifacts Include="$(OutputPath)*.nupkg" />
-    </ItemGroup>
-
-    <Error Condition="'@(BuildArtifacts)' == ''" Text="No packages to create manifest from." />
-
-    <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
-      <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
-      <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
-      <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
-      <ManifestBuildData Include="AzureDevOpsBuildNumber=$(BUILD_BUILDNUMBER)" />
-      <ManifestBuildData Include="AzureDevOpsRepository=$(BUILD_REPOSITORY_URI)" />
-      <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
-    </ItemGroup>
-
-    <GenerateBuildManifest
-        Artifacts="@(BuildArtifacts)"
-        OutputPath="$(OutputPath)bar-manifests\AssetManifest.xml"
-        BuildId="$(BUILD_BUILDNUMBER)"
-        BuildData="@(ManifestBuildData)"
-        RepoUri="$(BUILD_REPOSITORY_URI)"
-        RepoBranch="$(BUILD_SOURCEBRANCH)"
-        RepoCommit="$(BUILD_SOURCEVERSION)"
-        PublishingVersion="3" />
-
-    <MSBuild
-        Targets="Restore"
-        Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion)"
-    />
-
-    <MSBuild
-        Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(OutputPath)bar-manifests;MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com"
     />
   </Target>
 
