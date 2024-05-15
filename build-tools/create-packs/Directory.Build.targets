@@ -165,7 +165,7 @@
   </Target>
 
   <!-- https://github.com/dotnet/arcade/blob/efc3da96e5ac110513e92ebd9ef87c73f44d8540/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
-  <Target Name="PushManifestToBuildAssetRegistry">
+  <Target Name="PushManifestToBuildAssetRegistry" >
     <PropertyGroup>
       <ArtifactsLogDir>$(OutputPath)</ArtifactsLogDir>
       <AssetManifestFileName>Assets.xml</AssetManifestFileName>
