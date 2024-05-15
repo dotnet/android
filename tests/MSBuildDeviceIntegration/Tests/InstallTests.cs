@@ -504,7 +504,7 @@ namespace Xamarin.Android.Build.Tests
 			AssertCommercialBuild ();
 
 			var class1src = new BuildItem.Source ("Class1.cs") {
-				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 0; } }"
+				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
 			};
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -514,7 +514,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var class2src = new BuildItem.Source ("Class2.cs") {
-				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 0; } }"
+				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 40; } }"
 			};
 			var lib2 = new DotNetStandard {
 				ProjectName = "Library2",
@@ -546,7 +546,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-
+			
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
 				builder.ThrowOnBuildFailure = false;
 				builder.BuildLogFile = "install.log";
@@ -569,7 +569,7 @@ namespace Xamarin.Android.Build.Tests
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
-				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 100; } }";
+				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 1; } }";
 				class1src.Timestamp = DateTime.UtcNow.AddSeconds(1);
 				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
 					lb1.BuildLogFile = "build2.log";
@@ -577,7 +577,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-				Assert.AreNotEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library1.dll was not the same size.");
+				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library1.dll was not the same size.");
 
 				builder.BuildLogFile = "install3.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
