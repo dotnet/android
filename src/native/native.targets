@@ -182,7 +182,7 @@
   </Target>
 
   <Target Name="_CleanRuntimes"
-          AfterTargets="Clean">
+      AfterTargets="Clean">
     <Exec
         Command="$(NinjaPath) -v clean"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"/>
