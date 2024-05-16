@@ -22,8 +22,11 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating a .NET for Android application]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Проект для создания приложения .NET для Android]]></Val>
+            <Val><![CDATA[Проект создания приложения .NET для Android]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android application]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

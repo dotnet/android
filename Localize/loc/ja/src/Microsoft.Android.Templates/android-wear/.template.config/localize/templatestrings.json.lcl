@@ -24,6 +24,9 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[.NET for Android Wear アプリケーションを作成するためのプロジェクト]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android Wear application]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -71,7 +71,6 @@
 #include "timing-internal.hh"
 #include "search.hh"
 #include "runtime-util.hh"
-
 #include "cpp-util.hh"
 #include "strings.hh"
 

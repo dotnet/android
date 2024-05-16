@@ -53,7 +53,11 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "use-stdlib",
+=======
+            "name": "analyzers-common",
+>>>>>>> main
             "hidden": true,
             "inherits": "common",
             "cacheVariables": {
@@ -77,13 +81,21 @@
         {
             "name": "analyzers-debug",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-debug"]
+=======
+            "inherits": ["analyzers-common", "common-debug"]
+>>>>>>> main
         },
 
         {
             "name": "analyzers-release",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-release"]
+=======
+            "inherits": ["analyzers-common", "common-release"]
+>>>>>>> main
         },
 
         {
@@ -131,6 +143,7 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "perfetto-common",
             "hidden": true,
             "cacheVariables": {
@@ -139,6 +152,8 @@
         },
 
         {
+=======
+>>>>>>> main
             "name": "asan-common",
             "hidden": true,
             "cacheVariables": {
@@ -165,6 +180,7 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "perfetto-debug-armeabi-v7a",
             "inherits": ["use-stdlib", "perfetto-common", "common-debug", "common-armeabi-v7a"]
         },
@@ -178,12 +194,21 @@
             "name": "analyzers-debug-armeabi-v7a",
             "hidden": true,
             "inherits": ["use-stdlib", "common-debug", "common-armeabi-v7a"]
+=======
+            "name": "analyzers-debug-armeabi-v7a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-armeabi-v7a"]
+>>>>>>> main
         },
 
         {
             "name": "analyzers-release-armeabi-v7a",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-release", "common-armeabi-v7a"]
+=======
+            "inherits": ["analyzers-common", "common-release", "common-armeabi-v7a"]
+>>>>>>> main
         },
 
         {
@@ -219,6 +244,7 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "perfetto-debug-arm64-v8a",
             "inherits": ["use-stdlib", "perfetto-common", "common-debug", "common-arm64-v8a"]
         },
@@ -232,12 +258,21 @@
             "name": "analyzers-debug-arm64-v8a",
             "hidden": true,
             "inherits": ["use-stdlib", "common-debug", "common-arm64-v8a"]
+=======
+            "name": "analyzers-debug-arm64-v8a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-arm64-v8a"]
+>>>>>>> main
         },
 
         {
             "name": "analyzers-release-arm64-v8a",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-release", "common-arm64-v8a"]
+=======
+            "inherits": ["analyzers-common", "common-release", "common-arm64-v8a"]
+>>>>>>> main
         },
 
         {
@@ -273,6 +308,7 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "perfetto-debug-x86",
             "inherits": ["use-stdlib", "perfetto-common", "common-debug", "common-x86"]
         },
@@ -286,12 +322,21 @@
             "name": "analyzers-debug-x86",
             "hidden": true,
             "inherits": ["use-stdlib", "common-debug", "common-x86"]
+=======
+            "name": "analyzers-debug-x86",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-x86"]
+>>>>>>> main
         },
 
         {
             "name": "analyzers-release-x86",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-release", "common-x86"]
+=======
+            "inherits": ["analyzers-common", "common-release", "common-x86"]
+>>>>>>> main
         },
 
         {
@@ -327,6 +372,7 @@
         },
 
         {
+<<<<<<< HEAD
             "name": "perfetto-debug-x86_64",
             "inherits": ["use-stdlib", "perfetto-common", "common-debug", "common-x86_64"]
         },
@@ -340,12 +386,21 @@
             "name": "analyzers-debug-x86_64",
             "hidden": true,
             "inherits": ["use-stdlib", "common-debug", "common-x86_64"]
+=======
+            "name": "analyzers-debug-x86_64",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-x86_64"]
+>>>>>>> main
         },
 
         {
             "name": "analyzers-release-x86_64",
             "hidden": true,
+<<<<<<< HEAD
             "inherits": ["use-stdlib", "common-release", "common-x86_64"]
+=======
+            "inherits": ["analyzers-common", "common-release", "common-x86_64"]
+>>>>>>> main
         },
 
         {

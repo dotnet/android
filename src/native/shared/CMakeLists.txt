@@ -14,6 +14,7 @@ set(XA_SHARED_SOURCES
   log_functions.cc
   new_delete.cc
 )
+<<<<<<< HEAD
 
 if(ENABLE_PERFETTO)
   list(APPEND XA_SHARED_SOURCES
@@ -21,6 +22,8 @@ if(ENABLE_PERFETTO)
   )
 endif()
 
+=======
+>>>>>>> main
 add_clang_check_sources("${XA_SHARED_SOURCES};${XA_SHARED_CXX_ABI_SOURCES}")
 
 set(XXHASH_DIR "${EXTERNAL_DIR}/xxHash")
@@ -51,6 +54,7 @@ macro(lib_target_options TARGET_NAME)
     "$<BUILD_INTERFACE:${CONSTEXPR_XXH3_DIR}>"
   )
 
+<<<<<<< HEAD
   if(ENABLE_PERFETTO)
     target_link_libraries(
       ${TARGET_NAME}
@@ -59,6 +63,8 @@ macro(lib_target_options TARGET_NAME)
     )
   endif()
 
+=======
+>>>>>>> main
   target_link_libraries(
     ${TARGET_NAME}
     PUBLIC

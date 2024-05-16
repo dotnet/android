@@ -42,9 +42,14 @@ endif()
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
+<<<<<<< HEAD
 set(XAMARIN_MONO_ANDROID_PERFETTO_LIB "mono-android-perfetto.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
 list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
+=======
+
+set(XAMARIN_MONODROID_SOURCES
+>>>>>>> main
   debug-constants.cc
   debug.cc
   embedded-assemblies-zip.cc
@@ -54,7 +59,10 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   mono-log-adapter.cc
   monodroid-glue.cc
   monodroid-networkinfo.cc
+<<<<<<< HEAD
   monodroid-profiling.cc
+=======
+>>>>>>> main
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
@@ -66,8 +74,17 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   xamarin_getifaddrs.cc
 )
 
+<<<<<<< HEAD
 if(NOT DEBUG_BUILD)
   list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
+=======
+list(APPEND LOCAL_CLANG_CHECK_SOURCES
+  ${XAMARIN_MONODROID_SOURCES}
+)
+
+if(NOT DEBUG_BUILD)
+  list(APPEND XAMARIN_MONODROID_SOURCES
+>>>>>>> main
     xamarin-android-app-context.cc
   )
 
@@ -75,6 +92,7 @@ if(NOT DEBUG_BUILD)
     xamarin-android-app-context.cc
   )
 endif()
+<<<<<<< HEAD
 
 list(APPEND XAMARIN_MONODROID_SOURCES
   ${XAMARIN_MONODROID_COMMON_SOURCES}
@@ -83,6 +101,9 @@ list(APPEND XAMARIN_MONODROID_SOURCES
 list(APPEND XAMARIN_MONODROID_PERFETTO_SOURCES
   ${XAMARIN_MONODROID_COMMON_SOURCES}
 )
+=======
+add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
+>>>>>>> main
 
 if(NOT USES_LIBSTDCPP)
   list(APPEND XAMARIN_MONODROID_SOURCES
@@ -90,6 +111,7 @@ if(NOT USES_LIBSTDCPP)
   )
 endif()
 
+<<<<<<< HEAD
 add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 
 # Build
@@ -211,3 +233,99 @@ else()
     -llog
   )
 endif()
+=======
+# Build
+configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
+
+add_library(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  SHARED ${XAMARIN_MONODROID_SOURCES}
+)
+
+target_compile_definitions(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  PRIVATE
+  HAVE_CONFIG_H
+  HAVE_LZ4
+  JI_DLL_EXPORT
+  JI_NO_VISIBILITY
+  MONO_DLL_EXPORT
+  NET
+  TSL_NO_EXCEPTIONS
+)
+
+if(DONT_INLINE)
+  target_compile_definitions(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    PRIVATE
+    NO_INLINE
+  )
+endif()
+
+if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
+  target_compile_definitions(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    PRIVATE
+    DEBUG
+  )
+endif()
+
+if (ENABLE_TIMING)
+  target_compile_definitions(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    PRIVATE
+    MONODROID_TIMING
+  )
+endif()
+
+target_compile_options(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  PRIVATE
+  ${XA_DEFAULT_SYMBOL_VISIBILITY}
+)
+
+target_include_directories(
+  ${XAMARIN_MONO_ANDROID_LIB} BEFORE
+  PRIVATE
+  ${CMAKE_CURRENT_BINARY_DIR}/include
+  ${EXTERNAL_DIR}
+  ${ROBIN_MAP_DIR}/include
+)
+
+target_include_directories(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  SYSTEM PRIVATE
+  ${SYSROOT_CXX_INCLUDE_DIR}
+  ${MONO_RUNTIME_INCLUDE_DIR}
+  ${NATIVE_TRACING_INCLUDE_DIRS}
+  ${LIBUNWIND_INCLUDE_DIRS}
+)
+
+target_link_directories(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  PRIVATE
+  ${NET_RUNTIME_DIR}/native
+)
+
+target_link_options(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  PRIVATE
+  ${XA_DEFAULT_SYMBOL_VISIBILITY}
+  ${XA_COMMON_CXX_LINKER_ARGS}
+  ${XA_CXX_DSO_LINKER_ARGS}
+)
+
+target_link_libraries(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  ${LINK_LIBS}
+  xa::xamarin-app
+  ${SHARED_LIB_NAME}
+  xa::runtime-base
+  xa::java-interop
+  xa::lz4
+  -lmonosgen-2.0
+  -llog
+)
+
+xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
+>>>>>>> main
