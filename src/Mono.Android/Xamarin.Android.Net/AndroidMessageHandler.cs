@@ -827,6 +827,7 @@ namespace Xamarin.Android.Net
 						     // what to do with the response
 
 				case HttpStatusCode.TemporaryRedirect: // 307
+				case HttpStatusCode.PermanentRedirect: // 308
 					break;
 
 				default:
