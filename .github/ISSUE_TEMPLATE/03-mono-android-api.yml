@@ -8,9 +8,9 @@ body:
       value: |
         Issues with missing Android API or the API not working as documented are tracked here.
 
-        If you are not sure how to use an API or how to accomplish your task, better support is available from our community of application writers, available in several forms:
+        If you are not sure how to use an API or how to accomplish your task, better support is available from the community of application writers, available in several forms:
 
-        [Microsoft Q&A](https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html)
+        [Microsoft Q&A](https://learn.microsoft.com/answers/products/97/dotnet/)
         [Stack Overflow](https://stackoverflow.com)
   - type: dropdown
     id: android-type
