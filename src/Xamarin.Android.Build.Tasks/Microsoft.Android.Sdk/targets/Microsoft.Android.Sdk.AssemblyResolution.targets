@@ -214,6 +214,7 @@ _ResolveAssemblies MSBuild target.
   <Target Name="_IncludeNativeSystemLibraries">
     <PropertyGroup>
       <_AndroidIncludeSystemGlobalizationNative Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' == '' ">true</_AndroidIncludeSystemGlobalizationNative>
+      <_AndroidEnableNativeStackTracing Condition=" '$(_AndroidEnableNativeStackTracing)' == ''">false</_AndroidEnableNativeStackTracing>
     </PropertyGroup>
     <ItemGroup>
       <_ResolvedNativeLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.so' " />
@@ -224,11 +225,12 @@ _ResolveAssemblies MSBuild target.
       <_MonoComponent Condition=" '$(AndroidIncludeDebugSymbols)' == 'true' " Include="debugger" />
       <_MonoComponent Condition=" '$(_AndroidExcludeMarshalIlgenComponent)' != 'true' " Include="marshal-ilgen" />
       <!-- Filename without extension -->
-      <_MonoExcludedLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidIncludeSystemGlobalizationNative)' != 'true' " Include="libSystem.Globalization.Native" />
+      <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
     </ItemGroup>
     <ProcessNativeLibraries
         InputLibraries="@(_ResolvedNativeLibraries)"
-        ExcludedLibraries="@(_MonoExcludedLibraries)"
+        ExcludedLibraries="@(_ExcludedNativeLibraries)"
         Components="@(_MonoComponent->Distinct())"
         IncludeDebugSymbols="$(AndroidIncludeDebugSymbols)">
       <Output TaskParameter="OutputLibraries" ItemName="FrameworkNativeLibrary" />
