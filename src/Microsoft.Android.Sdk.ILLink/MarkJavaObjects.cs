@@ -27,7 +27,7 @@ namespace MonoDroid.Tuner {
 
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") || assembly.MainModule.HasTypeReference ("Android.Runtime.IJavaObject");
+			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") || assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
 		}
 
 		public void ProcessAssembly (AssemblyDefinition assembly, string androidHttpClientHandlerType, Dictionary<string, HashSet<string>> customViewMap)

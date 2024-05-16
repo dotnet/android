@@ -10,6 +10,12 @@ namespace Xamarin.Android.RuntimeTests
 	[TestFixture]
 	public class CustomWidgetTests
 	{
+		public CustomWidgetTests()
+		{
+			// NOTE: ensure the C# compiler has a reference to the library
+			new Mono.Android_Test.Library.Foo ();
+		}
+
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23880
 		[Test]
 		public void UpperCaseCustomWidget_ShouldNotThrowInflateException ()
