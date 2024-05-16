@@ -22,8 +22,11 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating a .NET for Android class library that binds to a native Java library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Proyecto para crear una biblioteca de clases de .NET for Android que enlaza a una biblioteca de Java nativa]]></Val>
+            <Val><![CDATA[Proyecto para crear una biblioteca de clases de .NET para Android que enlaza a una biblioteca de Java nativa]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -5,37 +5,37 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 19476
+      "Size": 377764
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 1027
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 64656
+      "Size": 64231
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 92222
+      "Size": 91590
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5153
+      "Size": 5315
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 6538
+      "Size": 6539
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 8520
+      "Size": 8525
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 571268
+      "Size": 570166
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
       "Size": 2544
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 4016
+      "Size": 4020
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 2931
+      "Size": 2933
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 1586
@@ -44,10 +44,10 @@
       "Size": 87352
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 369976
+      "Size": 476432
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3154144
+      "Size": 3138768
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 67248
@@ -56,16 +56,16 @@
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 95296
+      "Size": 94720
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 17952
+      "Size": 12696
     },
     "META-INF/BNDLTOOL.RSA": {
-      "Size": 1223
+      "Size": 1221
     },
     "META-INF/BNDLTOOL.SF": {
       "Size": 3266
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2640405
+  "PackageSize": 2742805
 }

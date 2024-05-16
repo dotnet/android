@@ -28,3 +28,7 @@
 [submodule "external/constexpr-xxh3"]
 	path = external/constexpr-xxh3
 	url = https://github.com/chys87/constexpr-xxh3.git
+[submodule "external/libunwind"]
+	path = external/libunwind
+	url = https://github.com/libunwind/libunwind.git
+	branch = master
