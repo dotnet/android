@@ -33,10 +33,7 @@ static inline constexpr int FALSE = 0;
 
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/appdomain.h>
-<<<<<<< HEAD
 #include <mono/metadata/class.h>
-=======
->>>>>>> main
 #include <mono/metadata/threads.h>
 #include <mono/metadata/mono-private-unstable.h>
 #include <mono/utils/mono-publib.h>
