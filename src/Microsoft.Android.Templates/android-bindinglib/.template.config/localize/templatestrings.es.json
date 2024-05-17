@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Enlace de biblioteca Java de Android",
-  "description": "Proyecto para crear una biblioteca de clases de .NET for Android que enlaza a una biblioteca de Java nativa",
+  "description": "Proyecto para crear una biblioteca de clases de .NET para Android que enlaza a una biblioteca de Java nativa",
   "symbols/supportedOSVersion/description": "Invalida $(SupportedOSPlatformVersion) en el proyecto"
 }
