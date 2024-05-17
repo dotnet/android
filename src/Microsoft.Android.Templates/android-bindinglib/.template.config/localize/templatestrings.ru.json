@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Привязка библиотеки Java для Android",
-  "description": "Проект по созданию библиотеки классов .NET для Android с привязкой к собственной библиотеке Java.",
+  "description": "Проект создания библиотеки классов .NET для Android, которая привязывается к собственной библиотеке Java.",
   "symbols/supportedOSVersion/description": "Переопределяет $(SupportedOSPlatformVersion) в файле проекта"
 }

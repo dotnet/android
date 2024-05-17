@@ -24,6 +24,9 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Projekt pro vytvoření knihovny tříd androidu .NET, která se váže na nativní knihovnu Java]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
