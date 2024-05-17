@@ -48,6 +48,8 @@ namespace MonoDroid.Tuner {
 				}
 
 				// Custom views in Android .xml files
+				if (!type.ImplementsIJavaObject (cache))
+					continue;
 				if (customViewMap.ContainsKey (type.FullName)) {
 					Annotations.Mark (type);
 					PreserveJavaObjectImplementation (type);
