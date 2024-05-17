@@ -5,10 +5,7 @@
       "Size": 6652
     },
     "classes.dex": {
-      "Size": 9440180
-    },
-    "classes2.dex": {
-      "Size": 150920
+      "Size": 9170480
     },
     "kotlin/annotation/annotation.kotlin_builtins": {
       "Size": 928
@@ -35,52 +32,52 @@
       "Size": 2279
     },
     "lib/arm64-v8a/lib_FormsViewGroup.dll.so": {
-      "Size": 8090
+      "Size": 8330
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 72406
+      "Size": 72813
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 458238
+      "Size": 458967
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5315
+      "Size": 5320
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
-      "Size": 3991
+      "Size": 3989
     },
     "lib/arm64-v8a/lib_netstandard.dll.so": {
-      "Size": 5625
+      "Size": 5623
     },
     "lib/arm64-v8a/lib_System.Collections.Concurrent.dll.so": {
-      "Size": 11516
+      "Size": 11517
     },
     "lib/arm64-v8a/lib_System.Collections.dll.so": {
       "Size": 15411
     },
     "lib/arm64-v8a/lib_System.Collections.NonGeneric.dll.so": {
-      "Size": 7441
+      "Size": 7438
     },
     "lib/arm64-v8a/lib_System.ComponentModel.dll.so": {
-      "Size": 1933
+      "Size": 1932
     },
     "lib/arm64-v8a/lib_System.ComponentModel.Primitives.dll.so": {
       "Size": 2547
     },
     "lib/arm64-v8a/lib_System.ComponentModel.TypeConverter.dll.so": {
-      "Size": 6081
+      "Size": 6082
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 6571
+      "Size": 6573
     },
     "lib/arm64-v8a/lib_System.Core.dll.so": {
-      "Size": 1969
+      "Size": 1968
     },
     "lib/arm64-v8a/lib_System.Diagnostics.DiagnosticSource.dll.so": {
-      "Size": 9060
+      "Size": 9059
     },
     "lib/arm64-v8a/lib_System.Diagnostics.TraceSource.dll.so": {
-      "Size": 6545
+      "Size": 6544
     },
     "lib/arm64-v8a/lib_System.dll.so": {
       "Size": 2325
@@ -89,106 +86,106 @@
       "Size": 1930
     },
     "lib/arm64-v8a/lib_System.Drawing.Primitives.dll.so": {
-      "Size": 11963
+      "Size": 11962
     },
     "lib/arm64-v8a/lib_System.IO.Compression.Brotli.dll.so": {
-      "Size": 11183
+      "Size": 11143
     },
     "lib/arm64-v8a/lib_System.IO.Compression.dll.so": {
-      "Size": 15859
+      "Size": 15861
     },
     "lib/arm64-v8a/lib_System.IO.IsolatedStorage.dll.so": {
-      "Size": 9902
+      "Size": 9901
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 20211
+      "Size": 20210
     },
     "lib/arm64-v8a/lib_System.Linq.Expressions.dll.so": {
-      "Size": 164628
+      "Size": 164581
     },
     "lib/arm64-v8a/lib_System.Net.Http.dll.so": {
-      "Size": 68041
+      "Size": 68045
     },
     "lib/arm64-v8a/lib_System.Net.Primitives.dll.so": {
-      "Size": 22237
+      "Size": 22265
     },
     "lib/arm64-v8a/lib_System.Net.Requests.dll.so": {
-      "Size": 3587
+      "Size": 3586
     },
     "lib/arm64-v8a/lib_System.ObjectModel.dll.so": {
-      "Size": 8563
+      "Size": 8561
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 874803
+      "Size": 876073
     },
     "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
-      "Size": 193451
+      "Size": 193452
     },
     "lib/arm64-v8a/lib_System.Private.Uri.dll.so": {
-      "Size": 42901
+      "Size": 42907
     },
     "lib/arm64-v8a/lib_System.Private.Xml.dll.so": {
-      "Size": 215939
+      "Size": 216091
     },
     "lib/arm64-v8a/lib_System.Private.Xml.Linq.dll.so": {
-      "Size": 16623
+      "Size": 16621
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 2701
+      "Size": 2700
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
       "Size": 4020
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.dll.so": {
-      "Size": 1857
+      "Size": 1856
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.Formatters.dll.so": {
       "Size": 2477
     },
     "lib/arm64-v8a/lib_System.Runtime.Serialization.Primitives.dll.so": {
-      "Size": 3750
+      "Size": 3749
     },
     "lib/arm64-v8a/lib_System.Security.Cryptography.dll.so": {
-      "Size": 8101
+      "Size": 8447
     },
     "lib/arm64-v8a/lib_System.Text.RegularExpressions.dll.so": {
-      "Size": 161254
+      "Size": 161293
     },
     "lib/arm64-v8a/lib_System.Xml.dll.so": {
       "Size": 1752
     },
     "lib/arm64-v8a/lib_System.Xml.Linq.dll.so": {
-      "Size": 1768
+      "Size": 1767
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 5007
+      "Size": 4998
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Activity.dll.so": {
-      "Size": 16116
+      "Size": 16323
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.AppCompat.AppCompatResources.dll.so": {
-      "Size": 6216
+      "Size": 6438
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.AppCompat.dll.so": {
-      "Size": 138048
+      "Size": 138385
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CardView.dll.so": {
       "Size": 6959
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CoordinatorLayout.dll.so": {
-      "Size": 17921
+      "Size": 18150
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Core.dll.so": {
-      "Size": 126998
+      "Size": 127206
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.CursorAdapter.dll.so": {
       "Size": 8978
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.DrawerLayout.dll.so": {
-      "Size": 15286
+      "Size": 15504
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Fragment.dll.so": {
-      "Size": 51531
+      "Size": 51881
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Legacy.Support.Core.UI.dll.so": {
       "Size": 6233
@@ -206,16 +203,16 @@
       "Size": 13063
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.RecyclerView.dll.so": {
-      "Size": 93541
+      "Size": 93874
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.SavedState.dll.so": {
       "Size": 5107
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.SwipeRefreshLayout.dll.so": {
-      "Size": 13946
+      "Size": 14226
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.ViewPager.dll.so": {
-      "Size": 19014
+      "Size": 19353
     },
     "lib/arm64-v8a/lib_Xamarin.Forms.Core.dll.so": {
       "Size": 563905
@@ -230,7 +227,7 @@
       "Size": 63542
     },
     "lib/arm64-v8a/lib_Xamarin.Google.Android.Material.dll.so": {
-      "Size": 66169
+      "Size": 66529
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 1586
@@ -239,10 +236,10 @@
       "Size": 87352
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 476432
+      "Size": 492104
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3138768
+      "Size": 3154304
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 67248
@@ -251,13 +248,13 @@
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 94720
+      "Size": 95296
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 118920
+      "Size": 348336
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -413,7 +410,7 @@
       "Size": 1223
     },
     "META-INF/BNDLTOOL.SF": {
-      "Size": 98298
+      "Size": 98214
     },
     "META-INF/com.android.tools/proguard/coroutines.pro": {
       "Size": 1345
@@ -440,7 +437,7 @@
       "Size": 5
     },
     "META-INF/MANIFEST.MF": {
-      "Size": 98171
+      "Size": 98087
     },
     "META-INF/maven/com.google.guava/listenablefuture/pom.properties": {
       "Size": 96
@@ -2480,5 +2477,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10271784
+  "PackageSize": 10238958
 }
