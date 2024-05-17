@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Aplicativo Android Wear",
-  "description": "Um projeto para criar um aplicativo .NET for Android Wear",
+  "description": "Um projeto para a criação de um aplicativo .NET para Android Wear",
   "symbols/packageName/description": "Substitui o nome do pacote no AndroidManifest.xml",
   "symbols/supportedOSVersion/description": "Substitui a $(SupportedOSPlatformVersion) no projeto"
 }
