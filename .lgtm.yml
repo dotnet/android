@@ -1,2 +1,6 @@
 queries:
   - exclude: cs/campaign/constantine
+paths:
+  exclude:
+    # we don't ship lz4 tests
+    - external/lz4/tests
