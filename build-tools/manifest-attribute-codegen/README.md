@@ -1,8 +1,8 @@
 # What is this?
 
-`manifest-attribute-codegen` a tool that collects Android SDK
-resource information about what XML elements can be placed in an AndroidManifest.xml, then generate a unified
-element/attribute definition with "which API introduced this" information.
+`manifest-attribute-codegen` a tool that collects Android SDK resource information about what 
+XML elements can be placed in an AndroidManifest.xml (from Android SDK `attrs_manifest.xml` files), 
+then generate a unified element/attribute definition with "which API introduced this" information.
 
 Using this information, we can generate `[(Application|Activity|etc)Attribute]` classes that can be used
 by both `Mono.Android` and `Xamarin.Android.Build.Tasks`.
@@ -26,7 +26,29 @@ dotnet build -t:GenerateManifestAttributes
 If all found elements/attributes are accounted for in `metadata.xml`, new `*Attribute.cs` files
 will be generated.
 
-If everything isn't accounted for, you will be required to specify how to handle the new pieces.
+If everything isn't accounted for, a list of unaccounted elements/attributes will be specified
+in the error output, and you will be required to specify how to handle the new pieces.
+
+# Metadata file structure
+
+There are two instances of entries in the `metadata.xml` file: `type` and `element`. These represent
+valid instances of entries and attributes respectively that can be placed in an `AndroidManifest.xml` file
+as specified in the Android SDK `attrs_manifest.xml` files.
+
+For example, the following valid `AndroidManifestxml` entry:
+
+```xml
+<activity name="MyActivity" />
+```
+
+would be represented with the following `metadata.xml` entries:
+
+```xml
+<type name="activity" namespace="Android.App" outputFile="src\Xamarin.Android.NamingCustomAttributes\Android.App\ActivityAttribute.cs" usage="AttributeTargets.Class" jniNameProvider="true" />
+<element path="activity.name" visible="true" />
+```
+
+The required/optional attributes for `<type>` and `<element>` are described below.
 
 # Handling new types (elements)
 
@@ -93,6 +115,10 @@ To surface the attribute:
 <element path="activity.foo" visible="true" />
 ```
 
+Required metadata
+
+- **path** - A specifier for this attribute, of the form `{element_name}.{attribute_name}`
+
 Optional metadata (note that if any metadata is set, `visible` is assumed to be `true` unless specified otherwise):
 
 - **type** - C# type to override missing type information from the manifest definition
@@ -100,6 +126,3 @@ Optional metadata (note that if any metadata is set, `visible` is assumed to be 
 - **obsolete** - A string describing the reason for this member being `[Obsolete ("foo")]`
 - **readonly** - Whether to generate the property with a `private set`, defaults to `false`
 - **manualMap** - Whether to exclude the property from the `mapping` field used by `Xamarin.Android.Build.Tasks, defaults to `false`
-
-
-
