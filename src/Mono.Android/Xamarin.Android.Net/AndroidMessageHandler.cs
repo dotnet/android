@@ -9,6 +9,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Net.Security;
 using System.Security.Authentication;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading;
@@ -21,6 +22,7 @@ using Java.Net;
 using Java.Security;
 using Java.Security.Cert;
 using Javax.Net.Ssl;
+using JavaX509Certificate = Java.Security.Cert.X509Certificate;
 
 namespace Xamarin.Android.Net
 {
@@ -208,7 +210,20 @@ namespace Xamarin.Android.Net
 
 		public ClientCertificateOption ClientCertificateOptions { get; set; }
 
-		public X509CertificateCollection? ClientCertificates { get; set; }
+		private X509CertificateCollection? _clientCertificates;
+		public X509CertificateCollection? ClientCertificates
+		{
+			get
+			{
+				if (ClientCertificateOptions != ClientCertificateOption.Manual) {
+					throw new InvalidOperationException ($"Enable manual options first on {nameof (ClientCertificateOptions)}");
+				}
+
+				return _clientCertificates ?? (_clientCertificates = new X509CertificateCollection ());
+			}
+
+			set => _clientCertificates = value;
+		}
 
 		public ICredentials? DefaultProxyCredentials { get; set; }
 
@@ -1151,48 +1166,125 @@ namespace Xamarin.Android.Net
 				return;
 			}
 
-			var keyStore = InitializeKeyStore (out bool gotCerts);
-			keyStore = ConfigureKeyStore (keyStore);
-			var kmf = ConfigureKeyManagerFactory (keyStore);
+			var keyStore = GetConfiguredKeyStoreInstance (out bool gotTrustedCerts, out bool gotClientCerts);
+			var kmf = GetConfiguredKeyManagerFactory (keyStore, gotClientCerts);
 			var tmf = ConfigureTrustManagerFactory (keyStore);
 
-			if (tmf == null) {
-				// If there are no trusted certs, no custom trust manager factory or custom certificate validation callback
-				// there is no point in changing the behavior of the default SSL socket factory
-				if (!gotCerts && _serverCertificateCustomValidator is null)
-					return;
+			// If there are no trusted certs, no custom trust manager factory, no custom key manager factory, or custom
+			// certificate validation callback there is no point in changing the behavior of the default SSL socket factory
+			if (tmf == null && kmf == null && !gotTrustedCerts && _serverCertificateCustomValidator is null) {
+				return;
+			}
 
+			var context = SSLContext.GetInstance ("TLS");
+			var trustManagers = GetTrustManagers (tmf, keyStore, gotTrustedCerts, requestMessage);
+			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
+			httpsConnection.SSLSocketFactory = context?.SocketFactory;
+		}
+
+		KeyManagerFactory? GetConfiguredKeyManagerFactory (KeyStore? keyStore, bool gotClientCerts)
+		{
+			var kmf = ConfigureKeyManagerFactory (keyStore);
+			if (kmf == null && gotClientCerts) {
+				kmf = KeyManagerFactory.GetInstance ("PKIX");
+				kmf?.Init (keyStore, null);
+			}
+
+			return kmf;
+		}
+
+		KeyStore? GetConfiguredKeyStoreInstance (out bool gotTrustedCerts, out bool gotClientCerts)
+		{
+			var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
+			keyStore?.Load (null, null);
+			LoadTrustedCertificates (keyStore, out gotTrustedCerts);
+			LoadClientCertificates (keyStore, out gotClientCerts);
+			return ConfigureKeyStore (keyStore);
+		}
+
+		ITrustManager[]? GetTrustManagers (TrustManagerFactory? tmf, KeyStore? keyStore, bool gotTrustedCerts, HttpRequestMessage requestMessage)
+		{
+			if (tmf == null) {
 				tmf = TrustManagerFactory.GetInstance (TrustManagerFactory.DefaultAlgorithm);
-				tmf?.Init (gotCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
+				tmf?.Init (gotTrustedCerts ? keyStore : null); // only use the custom key store if the user defined any trusted certs
 			}
 
 			ITrustManager[]? trustManagers = tmf?.GetTrustManagers ();
 
-			var customValidator = _serverCertificateCustomValidator;
-			if (customValidator is not null) {
+			if (_serverCertificateCustomValidator is {} customValidator) {
 				trustManagers = customValidator.ReplaceX509TrustManager (trustManagers, requestMessage);
 			}
 
-			var context = SSLContext.GetInstance ("TLS");
-			context?.Init (kmf?.GetKeyManagers (), trustManagers, null);
-			httpsConnection.SSLSocketFactory = context?.SocketFactory;
+			return trustManagers;
+		}
 
-			KeyStore? InitializeKeyStore (out bool gotCerts)
-			{
-				var keyStore = KeyStore.GetInstance (KeyStore.DefaultType);
-				keyStore?.Load (null, null);
-				gotCerts = TrustedCerts?.Count > 0;
+		void LoadTrustedCertificates (KeyStore? keyStore, out bool gotCerts)
+		{
+			gotCerts = TrustedCerts?.Count > 0;
 
-				if (gotCerts) {
-					for (int i = 0; i < TrustedCerts!.Count; i++) {
-						Certificate cert = TrustedCerts [i];
-						if (cert == null)
-							continue;
-						keyStore?.SetCertificateEntry ($"ca{i}", cert);
-					}
+			if (gotCerts) {
+				for (int i = 0; i < TrustedCerts!.Count; i++) {
+					Certificate cert = TrustedCerts [i];
+					if (cert == null)
+						continue;
+					keyStore?.SetCertificateEntry ($"ca{i}", cert);
 				}
+			}
+		}
 
-				return keyStore;
+		void LoadClientCertificates (KeyStore? keyStore, out bool gotCerts)
+		{
+			gotCerts = false;
+
+			if (_clientCertificates is null) {
+				return;
+			}
+
+			for (int i = 0; i < _clientCertificates.Count; i++) {
+				var clientCertificate = new X509Certificate2 (_clientCertificates [i]);
+				if (SetKeyEntry (keyStore, alias: $"key{i}", clientCertificate)) {
+					gotCerts = true;
+				}
+			}
+		}
+
+		static bool SetKeyEntry (KeyStore? keyStore, string alias, X509Certificate2 clientCertificate)
+		{
+			if (!clientCertificate.HasPrivateKey) {
+				return false;
+			}
+
+			var (key, algorithmName) = GetPrivateKeyAlgorithm (clientCertificate);
+			if (key is null || algorithmName is null) {
+				return false;
+			}
+
+			var keyFactory = KeyFactory.GetInstance (algorithmName);
+			var certificateFactory = CertificateFactory.GetInstance ("X.509");
+			if (keyFactory is null || certificateFactory is null) {
+				return false;
+			}
+
+			var javaKey = keyFactory.GeneratePrivate (new Java.Security.Spec.PKCS8EncodedKeySpec (key.ExportPkcs8PrivateKey ())).JavaCast<IKey> ();
+			var javaCert = certificateFactory.GenerateCertificate (new MemoryStream (clientCertificate.Export (X509ContentType.Cert)));
+			if (javaKey is null || javaCert is null) {
+				return false;
+			}
+
+			keyStore?.SetKeyEntry (alias, javaKey, null, new Certificate [] { javaCert });
+			return true;
+		}
+
+		static (AsymmetricAlgorithm?, string?) GetPrivateKeyAlgorithm (X509Certificate2 cert)
+		{
+			if (cert.GetRSAPrivateKey () is {} rsa) {
+				return (rsa, "RSA");
+			} else if (cert.GetECDsaPrivateKey () is {} ec) {
+				return (ec, "EC");
+			} else if (cert.GetDSAPrivateKey () is {} dsa) {
+				return (dsa, "DSA");
+			} else {
+				return (null, null);
 			}
 		}
 
