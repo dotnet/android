@@ -24,6 +24,9 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[用于创建绑定到本机 Java 库的 .NET for Android 类库的项目]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>
