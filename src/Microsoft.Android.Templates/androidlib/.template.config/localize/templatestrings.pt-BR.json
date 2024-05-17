@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Biblioteca de Classes do Android",
-  "description": "Um projeto para criar uma biblioteca de classes Android .NET",
+  "description": "Um projeto para a criação de uma biblioteca de classes .NET para Android",
   "symbols/supportedOSVersion/description": "Substitui a $(SupportedOSPlatformVersion) no projeto"
 }
