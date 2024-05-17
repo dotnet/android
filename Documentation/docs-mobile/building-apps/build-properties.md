@@ -542,13 +542,14 @@ faster.) Valid values include:
 - `Dexes`: Deploy `.dex` files, native libraries and typemaps.
   **The `Dexes` value can *only* be used on devices running
   Android 4.4 or later (API-19).**
-  **`Dexes` support was removed in .NET 9
 
 The default value is `Assemblies`.
 
 Support for Fast Deploying resources and assets via that system was
 removed in commit [f0d565fe](https://github.com/xamarin/xamarin-android/commit/f0d565fe4833f16df31378c77bbb492ffd2904b9). This was becuase it required the use of
 deprecated API's to work.
+
+**Support for this feature was removed in .NET 9
 
 **Experimental**.
 

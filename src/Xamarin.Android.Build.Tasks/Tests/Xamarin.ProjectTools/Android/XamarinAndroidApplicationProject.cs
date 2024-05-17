@@ -129,11 +129,6 @@ namespace Xamarin.ProjectTools
 			set { SetProperty (KnownProperties.AndroidLinkTool, value); }
 		}
 
-		public string AndroidFastDeploymentType {
-			get { return GetProperty (KnownProperties.AndroidFastDeploymentType); }
-			set { SetProperty (KnownProperties.AndroidFastDeploymentType, value); }
-		}
-
 		public bool UseJackAndJill {
 			get { return string.Equals (GetProperty (KnownProperties.UseJackAndJill), "True", StringComparison.OrdinalIgnoreCase); }
 			set { SetProperty (KnownProperties.UseJackAndJill, value.ToString ()); }
