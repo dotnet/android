@@ -452,7 +452,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
-    <value>Il file di configurazione '{0}' verrà ignorato. I file di configurazione .NET non sono supportati in progetti .NET for Android destinati a .NET 6 o versione successiva.</value>
+    <value>Il file di configurazione '{0}' verrà ignorato. I file di configurazione .NET non sono supportati in progetti .NET per Android destinati a .NET 6 o versione successiva.</value>
     <comment>The following are literal names and should not be translated: .NET, .NET for Android.
 {0} - The file name such as 'Foo.dll.config'</comment>
   </data>
@@ -465,7 +465,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>L'uso di AAPT non è supportato in progetti .NET for Android destinati a .NET 6 o versione successiva. Abilitare 'Usa sistema di creazione pacchetti Android incrementale (AAPT2)' nelle pagine delle proprietà del progetto di Visual Studio o modificare il file di progetto in un editor di testo e impostare la proprietà 'AndroidUseAapt2' di MSBuild su 'true'.</value>
+    <value>L'uso di AAPT non è supportato in progetti .NET per Android destinati a .NET 6 o versione successiva. Abilitare 'Usa sistema di creazione pacchetti Android incrementale (AAPT2)' nelle pagine delle proprietà del progetto di Visual Studio o modificare il file di progetto in un editor di testo e impostare la proprietà 'AndroidUseAapt2' di MSBuild su 'true'.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
@@ -525,7 +525,7 @@ Modificare il valore in AndroidManifest.xml in modo che corrisponda al valore $(
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>È stato rilevato l'uso di AppDomain.CreateDomain() nell'assembly: {0}. .NET 6 e versioni successive supporteranno solo un singolo AppDomain, quindi questa API non sarà più disponibile in .NET for Android dopo il rilascio di .NET 6.</value>
+    <value>È stato rilevato l'uso di AppDomain.CreateDomain() nell'assembly: {0}. .NET 6 e versioni successive supporteranno solo un singolo AppDomain, quindi questa API non sarà più disponibile in .NET per Android dopo il rilascio di .NET 6.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
@@ -724,12 +724,12 @@ In this message, "root element" refers to the root element of an XML file.
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4231" xml:space="preserve">
-    <value>Il valore '{0}' del parser di classi Android è deprecato e verrà rimosso in una versione futura di .NET for Android. Aggiornare le proprietà del progetto in modo da usare 'class-parse'.</value>
+    <value>Il valore '{0}' del parser di classi Android è deprecato e verrà rimosso in una versione futura di .NET Zper Android. Aggiornare le proprietà del progetto in modo da usare 'class-parse'.</value>
     <comment>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>La destinazione '{0}' per la generazione del codice Android è deprecato e verrà rimosso in una versione futura di .NET for Android. Aggiornare le proprietà del progetto in modo da usare 'XAJavaInterop1'.</value>
+    <value>La destinazione '{0}' per la generazione del codice Android è deprecato e verrà rimosso in una versione futura di .NET per Android. Aggiornare le proprietà del progetto in modo da usare 'XAJavaInterop1'.</value>
     <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -810,7 +810,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA4312" xml:space="preserve">
-    <value>Il riferimento a un progetto applicazione Android Wear '{0}' da un progetto Applicazione Android è deprecato e non sarà più supportato in una versione futura di .NET for Android. Rimuovere il riferimento al progetto Applicazione Android Wear dal progetto Applicazione Android e distribuire l'applicazione Wear come applicazione autonoma.</value>
+    <value>Il riferimento a un progetto applicazione Android Wear '{0}' da un progetto Applicazione Android è deprecato e non sarà più supportato in una versione futura di .NET per Android. Rimuovere il riferimento al progetto Applicazione Android Wear dal progetto Applicazione Android e distribuire l'applicazione Wear come applicazione autonoma.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
@@ -890,7 +890,7 @@ Per altri dettagli, vedi https://aka.ms/xa5207.</value>
 {2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>Installalo in Gestione Android SDK (Strumenti &gt; Android &gt; Gestione Android SDK...) oppure modifica il progetto Android .NET in modo che sia destinato a una versione API installata.</value>
+    <value>Installalo in Gestione Android SDK (Strumenti &gt; Android &gt; Gestione Android SDK...) oppure modifica il progetto per Android .NET in modo che sia destinato a una versione API installata.</value>
     <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
