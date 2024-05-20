@@ -57,11 +57,10 @@ variables:
   - name: DotNetFeedCredential
     value: dnceng-dotnet9
 - name: MicroBuildSignType
-  value: Test
-  #${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
-  #  value: Real
-  #${{ else }}:
-  #  value: Test
+  ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
+    value: Real
+  ${{ else }}:
+    value: Test
 
 extends:
   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
@@ -471,7 +470,7 @@ extends:
       dependsOn:
       - mac_build
       - linux_build
-      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Test'))
+      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
       - template: sign-artifacts/jobs/v2.yml@yaml-templates
@@ -536,9 +535,8 @@ extends:
         workspace:
           clean: all
         variables:
-        - group: Publish-Build-Assets
-        #- ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-        #  - group: Publish-Build-Assets
+        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          - group: Publish-Build-Assets
         steps:
         - checkout: self
           clean: true
