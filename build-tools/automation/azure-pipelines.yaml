@@ -57,10 +57,11 @@ variables:
   - name: DotNetFeedCredential
     value: dnceng-dotnet9
 - name: MicroBuildSignType
-  ${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
-    value: Real
-  ${{ else }}:
-    value: Test
+  value: Test
+  #${{ if and(or(eq(variables['Build.DefinitionName'], 'Xamarin.Android'), eq(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), ne(variables['Build.Reason'], 'PullRequest')) }}:
+  #  value: Real
+  #${{ else }}:
+  #  value: Test
 
 extends:
   ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
@@ -470,7 +471,7 @@ extends:
       dependsOn:
       - mac_build
       - linux_build
-      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Test'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
       - template: sign-artifacts/jobs/v2.yml@yaml-templates
@@ -535,10 +536,13 @@ extends:
         workspace:
           clean: all
         variables:
-        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-          - group: Publish-Build-Assets
+        - group: Publish-Build-Assets
+        #- ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+        #  - group: Publish-Build-Assets
         steps:
         - checkout: self
+          clean: true
+          submodules: recursive
 
         - task: DownloadPipelineArtifact@2
           inputs:
@@ -598,7 +602,7 @@ extends:
                 downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
 
         - task: DotNetCoreCLI@2
-          displayName: build Xamarin.Android.Tools.BootstrapTasks.csproj
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
           inputs:
             projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
