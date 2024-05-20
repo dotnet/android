@@ -465,7 +465,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Používání AAPT se v projektech .NET pro Android, které cílí na .NET 6 nebo vyšší, nepodporuje. Povolte prosím možnost Použít systém přírůstkového balení pro Android (aapt2) na stránce vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a nastavte vlastnost MSBuildu AndroidUseAapt2 na true.</value>
+    <value>Používání AAPT se v projektech .NET pro Android, které cílí na .NET 6 nebo vyšší, nepodporuje. Povolte prosím možnost Použít systém přírůstkového balení pro Android (aapt2) na stránce vlastností projektu sady Visual Studio, nebo upravte soubor projektu v textovém editoru a nastavte vlastnost MSBuild AndroidUseAapt2 na true.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
