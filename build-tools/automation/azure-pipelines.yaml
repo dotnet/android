@@ -542,6 +542,8 @@ extends:
           - group: Publish-Build-Assets
         steps:
         - checkout: self
+          clean: true
+          submodules: recursive
 
         - task: DownloadPipelineArtifact@2
           inputs:
@@ -600,14 +602,22 @@ extends:
                 artifactName: vsdrop-multitarget-signed
                 downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
 
-        - powershell: >-
-            & dotnet build -v:n -c $(XA.Build.Configuration)
-            -t:PushManifestToBuildAssetRegistry
-            -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-            -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-            $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-            -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+        - task: DotNetCoreCLI@2
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          inputs:
+            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+
+        - task: DotNetCoreCLI@2
           displayName: generate and publish BAR manifest
+          inputs:
+            projects: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+            arguments: >-
+              -t:PushManifestToBuildAssetRegistry
+              -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+              -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
+              -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - powershell: |
