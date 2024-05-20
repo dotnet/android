@@ -231,8 +231,8 @@ namespace tmt
 
 			byte[] ret = new byte[size];
 			Array.Copy (data, (int)offset, ret, 0, ret.Length);
-			Endianess myEndianness = BitConverter.IsLittleEndian ? Endianess.LittleEndian : Endianess.BigEndian;
-			if (AnyELF.Endianess != myEndianness) {
+			Endianness myEndianness = BitConverter.IsLittleEndian ? Endianness.LittleEndian : Endianness.BigEndian;
+			if (AnyELF.Endianness != myEndianness) {
 				Array.Reverse (ret);
 			}
 
@@ -255,7 +255,7 @@ namespace tmt
 				return false;
 			}
 
-			if (elf.Endianess != Endianess.LittleEndian) {
+			if (elf.Endianness != Endianness.LittleEndian) {
 				Log.Warning ($"AnELF.TryLoad: {filePath} is not a little-endian binary");
 				return false;
 			}
