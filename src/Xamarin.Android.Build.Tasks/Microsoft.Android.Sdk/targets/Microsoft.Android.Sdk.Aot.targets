@@ -155,9 +155,16 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
          However, there should be a better way to do it... Ideally, when marshal methods are enabled **nothing** should modify any
          assemblies after marshal method classifier and rewriter runs.
     -->
+    <PropertyGroup>
+      <_StampDir>$(_AndroidStampDirectory)\..\..\stamp</_StampDir>
+    </PropertyGroup>
+    <MakeDir
+        Condition=" '@(_UpdateStamp.Count)' != '0' "
+        Directories="$(_StampDir)"
+    />
     <Touch
         Condition=" '@(_UpdateStamp.Count)' != '0' "
-        Files="$(_AndroidStampDirectory)\..\..\stamp\_GenerateJavaStubs.stamp"
+        Files="$(_StampDir)\_GenerateJavaStubs.stamp"
         AlwaysCreate="True"
     />
     <WriteLinesToFile
