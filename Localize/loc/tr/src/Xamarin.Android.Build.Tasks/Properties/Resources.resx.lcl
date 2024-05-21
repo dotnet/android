@@ -649,10 +649,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA['{0}' yapılandırma dosyası göz ardı ediliyor. .NET yapılandırma dosyaları, .NET 6 veya üstünü hedefleyen .NET for Android projelerinde desteklenmez.]]></Val>
+            <Val><![CDATA['{0}' yapılandırma dosyası göz ardı ediliyor. .NET yapılandırma dosyaları, .NET 6 veya üstünü hedefleyen Android için .NET projelerinde desteklenmez.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.]]></Val>
+            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET Android projects that target .NET 6 or higher.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -679,10 +679,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Using AAPT is not supported in .NET for Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[.NET 6 veya üstünü hedefleyen .NET for Android projelerinde AAPT kullanımı desteklenmez. Lütfen Visual Studio projesinin özellik sayfalarındaki 'Artımlı Android paketleme sistemini (aapt2) kullan' seçeneğini etkinleştirin veya proje dosyasını bir metin düzenleyicisinde düzenleyip 'AndroidUseAapt2' MSBuild özelliğini 'true' olarak ayarlayın.]]></Val>
+            <Val><![CDATA[.NET 6 veya üstünü hedefleyen Android için .NET projelerinde AAPT kullanımı desteklenmez. Lütfen Visual Studio projesinin özellik sayfalarındaki 'Artımlı Android paketleme sistemini (aapt2) kullan' seçeneğini etkinleştirin veya proje dosyasını bir metin düzenleyicisinde düzenleyip 'AndroidUseAapt2' MSBuild özelliğini 'true' olarak ayarlayın.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Using AAPT is not supported in Xamarin.Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
+            <Val><![CDATA[Using AAPT is not supported in .NET Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -811,10 +811,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Derlemede AppDomain.CreateDomain() kullanımı algılandı: {0}. .NET 6 ve üzeri yalnızca tek bir AppDomain'i destekleyeceğinden, .NET 6 yayımlandıktan sonra bu API artık .NET for Android'de kullanılamayacaktır.]]></Val>
+            <Val><![CDATA[Derlemede AppDomain.CreateDomain() kullanımı algılandı: {0}. .NET 6 ve üzeri yalnızca tek bir AppDomain'i destekleyeceğinden, .NET 6 yayımlandıktan sonra bu API artık Android için .NET'te kullanılamayacaktır.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1165,10 +1165,10 @@
         <Str Cat="Text">
           <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android sınıfı ayrıştırıcı değeri '{0}' kullanımdan kaldırıldı ve .NET for Android'in gelecekteki bir sürümünde kaldırılacak. Proje özelliklerini 'class-parse' kullanacak şekilde güncelleştirin.]]></Val>
+            <Val><![CDATA[Android sınıfı ayrıştırıcı değeri '{0}' kullanımdan kaldırıldı ve Android için .NET'in gelecekteki bir sürümünde kaldırılacak. Proje özelliklerini 'class-parse' kullanacak şekilde güncelleştirin.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.]]></Val>
+            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'class-parse'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1177,10 +1177,10 @@
         <Str Cat="Text">
           <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Android kod oluşturma hedefi '{0}' kullanımdan kaldırıldı ve .NET for Android'in gelecekteki bir sürümünde kaldırılacak. Proje özelliklerini 'XAJavaInterop1' kullanacak şekilde güncelleştirin.]]></Val>
+            <Val><![CDATA[Android kod oluşturma hedefi '{0}' kullanımdan kaldırıldı ve Android için .NET'in gelecekteki bir sürümünde kaldırılacak. Proje özelliklerini 'XAJavaInterop1' kullanacak şekilde güncelleştirin.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1465,10 +1465,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of .NET for Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bir Android uygulama projesinden Android Wear uygulama projesine '{0}' başvurmak artık kullanımdan kaldırıldı ve .NET for Android'in gelecekteki bir sürümünde artık desteklenmeyecek. Android Wear uygulama projesi referansını Android uygulama projesinden kaldırın ve bunun yerine Wear uygulamasını bağımsız bir uygulama olarak dağıtın.]]></Val>
+            <Val><![CDATA[Bir Android uygulama projesinden Android Wear uygulama projesine '{0}' başvurmak artık kullanımdan kaldırıldı ve Android için .NET'in gelecekteki bir sürümünde artık desteklenmeyecek. Android Wear uygulama projesi referansını Android uygulama projesinden kaldırın ve bunun yerine Wear uygulamasını bağımsız bir uygulama olarak dağıtın.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
+            <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of .NET Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1606,10 +1606,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...), or change the .NET for Android project to target an API version that is installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Bunu Android SDK Yöneticisi'ne yükleyin (Araçlar > Android > Android SDK Yöneticisi...) veya .NET for Android projesini, yüklü bir API sürümünü hedefleyecek şekilde değiştirin.]]></Val>
+            <Val><![CDATA[Bunu Android SDK Yöneticisi'ne yükleyin (Araçlar > Android > Android SDK Yöneticisi...) veya Android için .NET projesini, yüklü bir API sürümünü hedefleyecek şekilde değiştirin.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Tools > Android > Android SDK Manager...]]></Val>
+            <Val><![CDATA[Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...), or change the .NET Android project to target an API version that is installed.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
