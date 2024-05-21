@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android-Java-Bibliotheksbindung",
-  "description": "Ein Projekt zum Erstellen einer .NET for Android-Klassenbibliothek, die an eine native Java-Bibliothek gebunden wird",
+  "description": "Ein Projekt zum Erstellen einer .NET für Android-Klassenbibliothek, die an eine native Java-Bibliothek gebunden wird",
   "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt"
 }
