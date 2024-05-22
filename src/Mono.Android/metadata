@@ -1922,6 +1922,10 @@
   <attr api-since="35" path="/api/package[@name='android.media']/class[@name='MediaRouter2']/method[@name='getRouteListingPreference' and count(parameter)=0]" name="propertyName"></attr>
   <attr api-since="35" path="/api/package[@name='android.media']/class[@name='MediaRouter2']/method[@name='setRouteListingPreference' and count(parameter)=1 and parameter[1][@type='android.media.RouteListingPreference']]" name="propertyName"></attr>
 
+  <!-- These new default interface methods on a Listener interface cause duplicate named EventHandlers to be generated, change to a unique name. -->
+  <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpActiveChangedListener']/method[@name='onOpActiveChanged' and count(parameter)=8 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='java.lang.String'] and parameter[5][@type='int'] and parameter[6][@type='boolean'] and parameter[7][@type='int'] and parameter[8][@type='int']]" name="managedName">OnOpActiveChanged2</attr>
+  <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpChangedListener']/method[@name='onOpChanged' and count(parameter)=4 and parameter[1][@type='java.lang.String'] and parameter[2][@type='java.lang.String'] and parameter[3][@type='int'] and parameter[4][@type='java.lang.String']]" name="managedName">OnOpChanged2</attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.

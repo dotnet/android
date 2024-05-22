@@ -1,5 +1,10 @@
 #nullable enable
 abstract Android.AdServices.OnDevicePersonalization.IsolatedService.OnRequest(Android.AdServices.OnDevicePersonalization.RequestToken! requestToken) -> Android.AdServices.OnDevicePersonalization.IIsolatedWorker!
+abstract Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.CreateCaptureRequest(int templateType) -> Android.Hardware.Camera2.CaptureRequest.Builder!
+abstract Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.GetSessionCharacteristics(Android.Hardware.Camera2.Params.SessionConfiguration! sessionConfig) -> Android.Hardware.Camera2.CameraCharacteristics!
+abstract Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.Id.get -> string!
+abstract Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.IsSessionConfigurationSupported(Android.Hardware.Camera2.Params.SessionConfiguration! config) -> bool
+abstract Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.OpenCamera(Java.Util.Concurrent.IExecutor! executor, Android.Hardware.Camera2.CameraDevice.StateCallback! callback) -> void
 abstract Android.Media.Midi.MidiUmpDeviceService.OnGetInputPortReceivers() -> System.Collections.Generic.IList<Android.Media.Midi.MidiReceiver!>!
 abstract Android.Net.Wifi.WifiManager.WpsCallback.OnFailed(Android.Net.Wifi.WpsFailureReason reason) -> void
 Android.AccessibilityServices.IBrailleDisplayController
@@ -197,30 +202,6 @@ Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.ExpirationT
 Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.FetchUri.get -> Android.Net.Uri!
 Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.Name.get -> string?
 Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.UserBiddingSignals.get -> Android.AdServices.Common.AdSelectionSignals?
-Android.AdServices.CustomAudiences.PartialCustomAudience
-Android.AdServices.CustomAudiences.PartialCustomAudience.ActivationTime.get -> Java.Time.Instant?
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.Build() -> Android.AdServices.CustomAudiences.PartialCustomAudience!
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.Builder(string! name) -> void
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.SetActivationTime(Java.Time.Instant? activationTime) -> Android.AdServices.CustomAudiences.PartialCustomAudience.Builder!
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.SetExpirationTime(Java.Time.Instant? expirationTime) -> Android.AdServices.CustomAudiences.PartialCustomAudience.Builder!
-Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.SetUserBiddingSignals(Android.AdServices.Common.AdSelectionSignals? userBiddingSignals) -> Android.AdServices.CustomAudiences.PartialCustomAudience.Builder!
-Android.AdServices.CustomAudiences.PartialCustomAudience.DescribeContents() -> int
-Android.AdServices.CustomAudiences.PartialCustomAudience.ExpirationTime.get -> Java.Time.Instant?
-Android.AdServices.CustomAudiences.PartialCustomAudience.InterfaceConsts
-Android.AdServices.CustomAudiences.PartialCustomAudience.Name.get -> string!
-Android.AdServices.CustomAudiences.PartialCustomAudience.UserBiddingSignals.get -> Android.AdServices.Common.AdSelectionSignals?
-Android.AdServices.CustomAudiences.PartialCustomAudience.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.Build() -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.Builder(Android.Net.Uri! updateUri, Java.Time.Duration! minDelay, System.Collections.Generic.IList<Android.AdServices.CustomAudiences.PartialCustomAudience!>! partialCustomAudienceList) -> void
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetMinDelay(Java.Time.Duration! minDelay) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetPartialCustomAudienceList(System.Collections.Generic.IList<Android.AdServices.CustomAudiences.PartialCustomAudience!>! partialCustomAudiences) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.SetUpdateUri(Android.Net.Uri! updateUri) -> Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.MinDelay.get -> Java.Time.Duration!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.PartialCustomAudienceList.get -> System.Collections.Generic.IList<Android.AdServices.CustomAudiences.PartialCustomAudience!>!
-Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.UpdateUri.get -> Android.Net.Uri!
 Android.AdServices.Measurement.SourceRegistrationRequest
 Android.AdServices.Measurement.SourceRegistrationRequest.Builder
 Android.AdServices.Measurement.SourceRegistrationRequest.Builder.Build() -> Android.AdServices.Measurement.SourceRegistrationRequest!
@@ -472,6 +453,7 @@ Android.AdServices.Topics.EncryptedTopic.GetEncryptedTopic() -> byte[]!
 Android.AdServices.Topics.EncryptedTopic.KeyIdentifier.get -> string!
 Android.AdServices.Topics.GetTopicsResponse.Builder.Builder(System.Collections.Generic.IList<Android.AdServices.Topics.Topic!>! topics, System.Collections.Generic.IList<Android.AdServices.Topics.EncryptedTopic!>! encryptedTopics) -> void
 Android.AdServices.Topics.GetTopicsResponse.EncryptedTopics.get -> System.Collections.Generic.IList<Android.AdServices.Topics.EncryptedTopic!>!
+Android.App.Activity.RequestPermissions(string![]! permissions, int requestCode, int deviceId) -> void
 Android.App.ApplicationStartInfo
 Android.App.ApplicationStartInfo.DefiningUid.get -> int
 Android.App.ApplicationStartInfo.DescribeContents() -> int
@@ -488,6 +470,24 @@ Android.App.ApplicationStartInfo.StartupState.get -> int
 Android.App.ApplicationStartInfo.StartupTimestamps.get -> System.Collections.Generic.IDictionary<Java.Lang.Integer!, Java.Lang.Long!>!
 Android.App.ApplicationStartInfo.WasForceStopped() -> bool
 Android.App.ApplicationStartInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.App.AppOpsManager.IOnOpActiveChangedListener.OnOpActiveChanged2(string! op, int uid, string! packageName, string? attributionTag, int virtualDeviceId, bool active, int attributionFlags, int attributionChainId) -> void
+Android.App.AppOpsManager.IOnOpChangedListener.OnOpChanged2(string! op, string! packageName, int userId, string! persistentDeviceId) -> void
+Android.App.AppOpsManager.OpActiveChanged2EventArgs
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.Active.get -> bool
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.AttributionChainId.get -> int
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.AttributionFlags.get -> int
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.AttributionTag.get -> string?
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.Op.get -> string!
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.OpActiveChanged2EventArgs(string! op, int uid, string! packageName, string? attributionTag, int virtualDeviceId, bool active, int attributionFlags, int attributionChainId) -> void
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.PackageName.get -> string!
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.Uid.get -> int
+Android.App.AppOpsManager.OpActiveChanged2EventArgs.VirtualDeviceId.get -> int
+Android.App.AppOpsManager.OpChanged2EventArgs
+Android.App.AppOpsManager.OpChanged2EventArgs.Op.get -> string!
+Android.App.AppOpsManager.OpChanged2EventArgs.OpChanged2EventArgs(string! op, string! packageName, int userId, string! persistentDeviceId) -> void
+Android.App.AppOpsManager.OpChanged2EventArgs.PackageName.get -> string!
+Android.App.AppOpsManager.OpChanged2EventArgs.PersistentDeviceId.get -> string!
+Android.App.AppOpsManager.OpChanged2EventArgs.UserId.get -> int
 Android.App.AppSearch.AppSearchSchema.Builder.AddParentType(string! parentSchemaType) -> Android.App.AppSearch.AppSearchSchema.Builder!
 Android.App.AppSearch.AppSearchSchema.DescribeContents() -> int
 Android.App.AppSearch.AppSearchSchema.DocumentPropertyConfig.Builder.AddIndexableNestedProperties(params string![]! indexableNestedProperties) -> Android.App.AppSearch.AppSearchSchema.DocumentPropertyConfig.Builder!
@@ -599,6 +599,13 @@ Android.App.AutomaticZenRule.IconResId.get -> int
 Android.App.AutomaticZenRule.IsManualInvocationAllowed.get -> bool
 Android.App.AutomaticZenRule.TriggerDescription.get -> string?
 Android.App.AutomaticZenRule.Type.get -> int
+Android.App.ComponentCaller
+Android.App.ComponentCaller.CheckContentUriPermission(Android.Net.Uri! uri, int modeFlags) -> int
+Android.App.ComponentCaller.Package.get -> string?
+Android.App.ComponentCaller.Uid.get -> int
+Android.App.Job.JobInfo.Builder.AddDebugTag(string! tag) -> Android.App.Job.JobInfo.Builder!
+Android.App.Job.JobInfo.Builder.RemoveDebugTag(string! tag) -> Android.App.Job.JobInfo.Builder!
+Android.App.Job.JobInfo.Builder.SetTraceTag(string? traceTag) -> Android.App.Job.JobInfo.Builder!
 Android.App.Notification.TvExtender
 Android.App.Notification.TvExtender.ChannelId.get -> string?
 Android.App.Notification.TvExtender.ContentIntent.get -> Android.App.PendingIntent?
@@ -612,6 +619,9 @@ Android.App.Notification.TvExtender.SetDeleteIntent(Android.App.PendingIntent? i
 Android.App.Notification.TvExtender.SetSuppressShowOverApps(bool suppress) -> Android.App.Notification.TvExtender!
 Android.App.Notification.TvExtender.TvExtender() -> void
 Android.App.Notification.TvExtender.TvExtender(Android.App.Notification! notif) -> void
+Android.App.NotificationChannel.VibrationEffect.get -> Android.OS.VibrationEffect?
+Android.App.NotificationChannel.VibrationEffect.set -> void
+Android.App.PictureInPictureUiState.IsTransitioningToPip.get -> bool
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.AppOwnedSdkSandboxInterface(string! name, long version, Android.OS.IBinder! binder) -> void
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.DescribeContents() -> int
@@ -624,6 +634,7 @@ Android.App.SdkSandbox.SdkSandboxManager.AppOwnedSdkSandboxInterfaces.get -> Sys
 Android.App.SdkSandbox.SdkSandboxManager.RegisterAppOwnedSdkSandboxInterface(Android.App.SdkSandbox.AppOwnedSdkSandboxInterface! appOwnedSdkSandboxInterface) -> void
 Android.App.SdkSandbox.SdkSandboxManager.UnregisterAppOwnedSdkSandboxInterface(string! name) -> void
 Android.App.Usage.StorageStats.GetAppBytesByDataType(int dataType) -> long
+Android.App.Usage.UsageEvents.Event.Extras.get -> Android.OS.PersistableBundle!
 Android.App.Usage.UsageEventsQuery
 Android.App.Usage.UsageEventsQuery.BeginTimeMillis.get -> long
 Android.App.Usage.UsageEventsQuery.Builder
@@ -638,7 +649,21 @@ Android.App.Usage.UsageEventsQuery.InterfaceConsts
 Android.App.Usage.UsageEventsQuery.PackageNames.get -> System.Collections.Generic.ICollection<string!>!
 Android.App.Usage.UsageEventsQuery.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.App.Usage.UsageStatsManager.QueryEvents(Android.App.Usage.UsageEventsQuery! query) -> Android.App.Usage.UsageEvents?
+Android.Appwidget.AppWidgetProviderInfo.GeneratedPreviewCategories.get -> int
+Android.Appwidget.AppWidgetProviderInfo.GeneratedPreviewCategories.set -> void
+Android.Bluetooth.BluetoothA2dp.SupportedCodecTypes.get -> System.Collections.Generic.ICollection<Android.Bluetooth.BluetoothCodecType!>!
+Android.Bluetooth.BluetoothCodecConfig.Builder.SetExtendedCodecType(Android.Bluetooth.BluetoothCodecType? codecType) -> Android.Bluetooth.BluetoothCodecConfig.Builder!
+Android.Bluetooth.BluetoothCodecConfig.ExtendedCodecType.get -> Android.Bluetooth.BluetoothCodecType?
+Android.Bluetooth.BluetoothCodecType
+Android.Bluetooth.BluetoothCodecType.CodecId.get -> long
+Android.Bluetooth.BluetoothCodecType.CodecName.get -> string!
+Android.Bluetooth.BluetoothCodecType.DescribeContents() -> int
+Android.Bluetooth.BluetoothCodecType.InterfaceConsts
+Android.Bluetooth.BluetoothCodecType.IsMandatoryCodec.get -> bool
+Android.Bluetooth.BluetoothCodecType.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Bluetooth.BluetoothDevice.AddressType.get -> int
 Android.Companion.AssociationInfo.IsSelfManaged.get -> bool
+Android.Companion.CompanionDeviceManager.IsPermissionTransferUserConsented(int associationId) -> bool
 Android.Companion.Virtual.VirtualDevice.DisplayName.get -> string?
 Android.Companion.Virtual.VirtualDevice.DisplayNameFormatted.get -> Java.Lang.ICharSequence?
 Android.Companion.Virtual.VirtualDevice.GetDisplayIds() -> int[]!
@@ -656,6 +681,19 @@ Android.Companion.Virtual.VirtualDeviceManager.VirtualDeviceClosedEventArgs.Virt
 Android.Companion.Virtual.VirtualDeviceManager.VirtualDeviceCreatedEventArgs
 Android.Companion.Virtual.VirtualDeviceManager.VirtualDeviceCreatedEventArgs.DeviceId.get -> int
 Android.Companion.Virtual.VirtualDeviceManager.VirtualDeviceCreatedEventArgs.VirtualDeviceCreatedEventArgs(int deviceId) -> void
+Android.Content.AttributionSource.Builder.SetDeviceId(int deviceId) -> Android.Content.AttributionSource.Builder!
+Android.Content.AttributionSource.DeviceId.get -> int
+Android.Content.ClipData.Item.Builder
+Android.Content.ClipData.Item.Builder.Build() -> Android.Content.ClipData.Item!
+Android.Content.ClipData.Item.Builder.Builder() -> void
+Android.Content.ClipData.Item.Builder.SetHtmlText(string? htmlText) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ClipData.Item.Builder.SetIntent(Android.Content.Intent? intent) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ClipData.Item.Builder.SetIntentSender(Android.Content.IntentSender? intentSender) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ClipData.Item.Builder.SetText(Java.Lang.ICharSequence? text) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ClipData.Item.Builder.SetText(string? text) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ClipData.Item.Builder.SetUri(Android.Net.Uri? uri) -> Android.Content.ClipData.Item.Builder!
+Android.Content.ContextParams.Builder.SetShouldRegisterAttributionSource(bool shouldRegister) -> Android.Content.ContextParams.Builder!
+Android.Content.ContextParams.ShouldRegisterAttributionSource() -> bool
 Android.Content.IntentFilter.AddUriRelativeFilterGroup(Android.Content.UriRelativeFilterGroup! group) -> void
 Android.Content.IntentFilter.ClearUriRelativeFilterGroups() -> void
 Android.Content.IntentFilter.CountUriRelativeFilterGroups() -> int
@@ -696,6 +734,13 @@ Android.Content.PM.ArchivedPackageInfo.VersionCodeMajor.get -> int
 Android.Content.PM.LauncherApps.ArchiveCompatibilityParams
 Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.ArchiveCompatibilityParams() -> void
 Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.ArchiveCompatibilityParams(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Content.PM.LauncherApps.GetLauncherUserInfo(Android.OS.UserHandle! userHandle) -> Android.Content.PM.LauncherUserInfo?
+Android.Content.PM.LauncherUserInfo
+Android.Content.PM.LauncherUserInfo.DescribeContents() -> int
+Android.Content.PM.LauncherUserInfo.InterfaceConsts
+Android.Content.PM.LauncherUserInfo.UserSerialNumber.get -> int
+Android.Content.PM.LauncherUserInfo.UserType.get -> string!
+Android.Content.PM.LauncherUserInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.Content.PM.PackageInstaller.UnarchivalState
 Android.Content.PM.PackageItemInfo.IsArchived.get -> bool
 Android.Content.PM.PackageItemInfo.IsArchived.set -> void
@@ -757,8 +802,13 @@ Android.Database.Sqlite.SQLiteRawStatement.Reset() -> void
 Android.Database.Sqlite.SQLiteRawStatement.ResultColumnCount.get -> int
 Android.Database.Sqlite.SQLiteRawStatement.Step() -> bool
 Android.Graphics.Fonts.FontFamily.Builder.BuildVariableFamily() -> Android.Graphics.Fonts.FontFamily?
+Android.Graphics.Gainmap.Gainmap(Android.Graphics.Gainmap! gainmap, Android.Graphics.Bitmap! gainmapContents) -> void
 Android.Graphics.ImageDecoder.Allocator.get -> Android.Graphics.ImageDecoderAllocator
 Android.Graphics.ImageDecoder.Allocator.set -> void
+Android.Graphics.Matrix44
+Android.Graphics.Matrix44.Matrix44() -> void
+Android.Graphics.Matrix44.Matrix44(Android.Graphics.Matrix! mat) -> void
+Android.Graphics.Matrix44.Matrix44(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Graphics.Pdf.Content.PdfPageGotoLinkContent
 Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.Bounds.get -> System.Collections.Generic.IList<Android.Graphics.RectF!>!
 Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.DescribeContents() -> int
@@ -934,12 +984,64 @@ Android.Graphics.Text.LineBreakConfig.Hyphenation.get -> int
 Android.Graphics.Text.LineBreakConfig.InterfaceConsts
 Android.Graphics.Text.LineBreakConfig.Merge(Android.Graphics.Text.LineBreakConfig! config) -> Android.Graphics.Text.LineBreakConfig!
 Android.Graphics.Text.LineBreakConfig.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Graphics.Text.LineBreaker.Builder.SetUseBoundsForWidth(bool useBoundsForWidth) -> Android.Graphics.Text.LineBreaker.Builder!
 Android.Graphics.Text.PositionedGlyphs.GetFakeBold(int index) -> bool
 Android.Graphics.Text.PositionedGlyphs.GetFakeItalic(int index) -> bool
 Android.Graphics.Text.PositionedGlyphs.GetItalicOverride(int index) -> float
 Android.Graphics.Text.PositionedGlyphs.GetWeightOverride(int index) -> float
+Android.Hardware.Biometrics.BiometricPrompt.CryptoObject.CryptoObject(long operationHandle) -> void
+Android.Hardware.Biometrics.BiometricPrompt.CryptoObject.OperationHandle.get -> long
+Android.Hardware.Biometrics.IPromptContentItem
+Android.Hardware.Biometrics.IPromptContentView
+Android.Hardware.Biometrics.PromptContentItemBulletedText
+Android.Hardware.Biometrics.PromptContentItemBulletedText.DescribeContents() -> int
+Android.Hardware.Biometrics.PromptContentItemBulletedText.InterfaceConsts
+Android.Hardware.Biometrics.PromptContentItemBulletedText.PromptContentItemBulletedText(string! text) -> void
+Android.Hardware.Biometrics.PromptContentItemBulletedText.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Hardware.Biometrics.PromptContentItemPlainText
+Android.Hardware.Biometrics.PromptContentItemPlainText.DescribeContents() -> int
+Android.Hardware.Biometrics.PromptContentItemPlainText.InterfaceConsts
+Android.Hardware.Biometrics.PromptContentItemPlainText.PromptContentItemPlainText(string! text) -> void
+Android.Hardware.Biometrics.PromptContentItemPlainText.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder.Build() -> Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton!
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder.Builder() -> void
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder.SetDescription(string! description) -> Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder!
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder.SetMoreOptionsButtonListener(Java.Util.Concurrent.IExecutor! executor, Android.Content.IDialogInterfaceOnClickListener! listener) -> Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder!
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.DescribeContents() -> int
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Description.get -> string?
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.InterfaceConsts
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.MoreOptionsButtonListener.get -> Android.Content.IDialogInterfaceOnClickListener!
+Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Hardware.Biometrics.PromptVerticalListContentView
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.AddListItem(Android.Hardware.Biometrics.IPromptContentItem! listItem) -> Android.Hardware.Biometrics.PromptVerticalListContentView.Builder!
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.AddListItem(Android.Hardware.Biometrics.IPromptContentItem! listItem, int index) -> Android.Hardware.Biometrics.PromptVerticalListContentView.Builder!
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.Build() -> Android.Hardware.Biometrics.PromptVerticalListContentView!
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.Builder() -> void
+Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.SetDescription(string! description) -> Android.Hardware.Biometrics.PromptVerticalListContentView.Builder!
+Android.Hardware.Biometrics.PromptVerticalListContentView.DescribeContents() -> int
+Android.Hardware.Biometrics.PromptVerticalListContentView.Description.get -> string?
+Android.Hardware.Biometrics.PromptVerticalListContentView.InterfaceConsts
+Android.Hardware.Biometrics.PromptVerticalListContentView.ListItems.get -> System.Collections.Generic.IList<Android.Hardware.Biometrics.IPromptContentItem!>!
+Android.Hardware.Biometrics.PromptVerticalListContentView.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Hardware.Camera2.CameraCharacteristics.AvailableSessionCharacteristicsKeys.get -> System.Collections.Generic.IList<Android.Hardware.Camera2.CameraCharacteristics.Key!>!
+Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup
+Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.CameraDeviceSetup(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Hardware.Camera2.CameraExtensionCharacteristics.Get(int extension, Android.Hardware.Camera2.CameraCharacteristics.Key! key) -> Java.Lang.Object?
 Android.Hardware.Camera2.CameraExtensionCharacteristics.GetKeys(int extension) -> System.Collections.Generic.ICollection<Android.Hardware.Camera2.CameraCharacteristics.Key!>!
+Android.Hardware.Camera2.CameraManager.GetCameraDeviceSetup(string! cameraId) -> Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup!
+Android.Hardware.Camera2.CameraManager.IsCameraDeviceSetupSupported(string! cameraId) -> bool
+Android.Hardware.Camera2.Params.ExtensionSessionConfiguration.ClearColorSpace() -> void
+Android.Hardware.Camera2.Params.ExtensionSessionConfiguration.ColorSpace.get -> Android.Graphics.ColorSpace?
+Android.Hardware.Camera2.Params.ExtensionSessionConfiguration.SetColorSpace(Android.Graphics.ColorSpace.Named! colorSpace) -> void
+Android.Hardware.Camera2.Params.OutputConfiguration.OutputConfiguration(int format, Android.Util.Size! surfaceSize) -> void
+Android.Hardware.Camera2.Params.OutputConfiguration.OutputConfiguration(int format, Android.Util.Size! surfaceSize, long usage) -> void
+Android.Hardware.Camera2.Params.OutputConfiguration.OutputConfiguration(int surfaceGroupId, int format, Android.Util.Size! surfaceSize) -> void
+Android.Hardware.Camera2.Params.OutputConfiguration.OutputConfiguration(int surfaceGroupId, int format, Android.Util.Size! surfaceSize, long usage) -> void
+Android.Hardware.Camera2.Params.SessionConfiguration.SessionConfiguration(int sessionType, System.Collections.Generic.IList<Android.Hardware.Camera2.Params.OutputConfiguration!>! outputs) -> void
+Android.Hardware.Camera2.Params.SessionConfiguration.SetStateCallback(Java.Util.Concurrent.IExecutor! executor, Android.Hardware.Camera2.CameraCaptureSession.StateCallback! cb) -> void
 Android.Hardware.HardwareBuffer.Usage.get -> Android.Hardware.HardwareBufferUsage
 Android.Hardware.HardwareBufferUsage
 Android.Hardware.HardwareBufferUsage.None = 0 -> Android.Hardware.HardwareBufferUsage
@@ -958,14 +1060,193 @@ Android.Hardware.HardwareBufferUsage.UsageProtectedContent = 16384 -> Android.Ha
 Android.Hardware.HardwareBufferUsage.UsageSensorDirectData = 8388608 -> Android.Hardware.HardwareBufferUsage
 Android.Hardware.HardwareBufferUsage.UsageVideoEncode = 65536 -> Android.Hardware.HardwareBufferUsage
 Android.Hardware.Input.InputManager.GetInputDeviceViewBehavior(int deviceId) -> Android.Views.InputDevice.ViewBehavior?
+Android.Hardware.OverlayProperties
+Android.Hardware.OverlayProperties.DescribeContents() -> int
+Android.Hardware.OverlayProperties.InterfaceConsts
+Android.Hardware.OverlayProperties.IsCombinationSupported(int dataspace, int format) -> bool
+Android.Hardware.OverlayProperties.IsMixedColorSpacesSupported.get -> bool
+Android.Hardware.OverlayProperties.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.Hardware.SyncFence.SyncFence(Android.Hardware.SyncFence! other) -> void
 Android.Health.Connect.AggregateRecordsGroupedByDurationResponse.GetDataOrigins(Android.Health.Connect.DataTypes.AggregationType! aggregationType) -> System.Collections.Generic.ICollection<Android.Health.Connect.DataTypes.DataOrigin!>!
 Android.Health.Connect.AggregateRecordsGroupedByPeriodResponse.GetDataOrigins(Android.Health.Connect.DataTypes.AggregationType! aggregationType) -> System.Collections.Generic.ICollection<Android.Health.Connect.DataTypes.DataOrigin!>!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ActiveCaloriesBurnedGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ActiveCaloriesBurnedGoal.ActiveCalories.get -> Android.Health.Connect.DataTypes.Units.Energy!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ActiveCaloriesBurnedGoal.ActiveCaloriesBurnedGoal(Android.Health.Connect.DataTypes.Units.Energy! activeCalories) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceGoal.Distance.get -> Android.Health.Connect.DataTypes.Units.Length!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceGoal.DistanceGoal(Android.Health.Connect.DataTypes.Units.Length! distance) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceWithVariableRestGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceWithVariableRestGoal.Distance.get -> Android.Health.Connect.DataTypes.Units.Length!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceWithVariableRestGoal.DistanceWithVariableRestGoal(Android.Health.Connect.DataTypes.Units.Length! distance, Java.Time.Duration! duration) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceWithVariableRestGoal.Duration.get -> Java.Time.Duration!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DurationGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DurationGoal.Duration.get -> Java.Time.Duration!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DurationGoal.DurationGoal(Java.Time.Duration! duration) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ExerciseCompletionGoal(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.RepetitionsGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.RepetitionsGoal.Repetitions.get -> int
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.RepetitionsGoal.RepetitionsGoal(int repetitions) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.StepsGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.StepsGoal.Steps.get -> int
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.StepsGoal.StepsGoal(int steps) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.TotalCaloriesBurnedGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.TotalCaloriesBurnedGoal.TotalCalories.get -> Android.Health.Connect.DataTypes.Units.Energy!
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.TotalCaloriesBurnedGoal.TotalCaloriesBurnedGoal(Android.Health.Connect.DataTypes.Units.Energy! totalCalories) -> void
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnknownGoal
+Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnspecifiedGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.AmrapGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.CadenceGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.CadenceGoal.CadenceGoal(double minRpm, double maxRpm) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.CadenceGoal.MaxRpm.get -> double
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.CadenceGoal.MinRpm.get -> double
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.ExercisePerformanceGoal(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.HeartRateGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.HeartRateGoal.HeartRateGoal(int minBpm, int maxBpm) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.HeartRateGoal.MaxBpm.get -> int
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.HeartRateGoal.MinBpm.get -> int
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.PowerGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.PowerGoal.MaxPower.get -> Android.Health.Connect.DataTypes.Units.Power!
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.PowerGoal.MinPower.get -> Android.Health.Connect.DataTypes.Units.Power!
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.PowerGoal.PowerGoal(Android.Health.Connect.DataTypes.Units.Power! minPower, Android.Health.Connect.DataTypes.Units.Power! maxPower) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.RateOfPerceivedExertionGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.RateOfPerceivedExertionGoal.RateOfPerceivedExertionGoal(int rpe) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.RateOfPerceivedExertionGoal.Rpe.get -> int
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.SpeedGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.SpeedGoal.MaxSpeed.get -> Android.Health.Connect.DataTypes.Units.Velocity!
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.SpeedGoal.MinSpeed.get -> Android.Health.Connect.DataTypes.Units.Velocity!
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.SpeedGoal.SpeedGoal(Android.Health.Connect.DataTypes.Units.Velocity! minSpeed, Android.Health.Connect.DataTypes.Units.Velocity! maxSpeed) -> void
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.UnknownGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.WeightGoal
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.WeightGoal.Mass.get -> Android.Health.Connect.DataTypes.Units.Mass!
+Android.Health.Connect.DataTypes.ExercisePerformanceGoal.WeightGoal.WeightGoal(Android.Health.Connect.DataTypes.Units.Mass! mass) -> void
+Android.Health.Connect.DataTypes.ExerciseSessionRecord.Builder.SetPlannedExerciseSessionId(string? id) -> Android.Health.Connect.DataTypes.ExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.ExerciseSessionRecord.PlannedExerciseSessionId.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseBlock
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.AddStep(Android.Health.Connect.DataTypes.PlannedExerciseStep! step) -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.Build() -> Android.Health.Connect.DataTypes.PlannedExerciseBlock!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.Builder(int repetitions) -> void
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.ClearSteps() -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.SetDescription(Java.Lang.ICharSequence? description) -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.SetDescription(string? description) -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.SetRepetitions(int repetitions) -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.SetSteps(System.Collections.Generic.IList<Android.Health.Connect.DataTypes.PlannedExerciseStep!>! steps) -> Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Description.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.DescriptionFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Repetitions.get -> int
+Android.Health.Connect.DataTypes.PlannedExerciseBlock.Steps.get -> System.Collections.Generic.IList<Android.Health.Connect.DataTypes.PlannedExerciseStep!>!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Blocks.get -> System.Collections.Generic.IList<Android.Health.Connect.DataTypes.PlannedExerciseBlock!>!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.AddBlock(Android.Health.Connect.DataTypes.PlannedExerciseBlock! block) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.Build() -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.Builder(Android.Health.Connect.DataTypes.Metadata! metadata, int exerciseType, Java.Time.Instant! startTime, Java.Time.Instant! endTime) -> void
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.Builder(Android.Health.Connect.DataTypes.Metadata! metadata, int exerciseType, Java.Time.LocalDate! startDate, Java.Time.Duration! duration) -> void
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.ClearBlocks() -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.ClearEndZoneOffset() -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.ClearStartZoneOffset() -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetBlocks(System.Collections.Generic.IList<Android.Health.Connect.DataTypes.PlannedExerciseBlock!>! blocks) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetEndTime(Java.Time.Instant! endTime) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetEndZoneOffset(Java.Time.ZoneOffset! endZoneOffset) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetExerciseType(int exerciseType) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetMetadata(Android.Health.Connect.DataTypes.Metadata! metadata) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetNotes(Java.Lang.ICharSequence? notes) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetNotes(string? notes) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetStartTime(Java.Time.Instant! startTime) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetStartZoneOffset(Java.Time.ZoneOffset! startZoneOffset) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetTitle(Java.Lang.ICharSequence? title) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.SetTitle(string? title) -> Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.CompletedExerciseSessionId.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Duration.get -> Java.Time.Duration!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.ExerciseType.get -> int
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.HasExplicitTime.get -> bool
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Notes.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.NotesFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.StartDate.get -> Java.Time.LocalDate!
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Title.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.TitleFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DataTypes.PlannedExerciseStep
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.AddPerformanceGoal(Android.Health.Connect.DataTypes.ExercisePerformanceGoal! performanceGoal) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.Build() -> Android.Health.Connect.DataTypes.PlannedExerciseStep!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.Builder(int exerciseType, int exerciseCategory, Android.Health.Connect.DataTypes.ExerciseCompletionGoal! completionGoal) -> void
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.ClearPerformanceGoals() -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetCompletionGoal(Android.Health.Connect.DataTypes.ExerciseCompletionGoal! completionGoal) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetDescription(Java.Lang.ICharSequence? description) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetDescription(string? description) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetExerciseCategory(int category) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetExerciseType(int exerciseType) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.SetPerformanceGoals(System.Collections.Generic.IList<Android.Health.Connect.DataTypes.ExercisePerformanceGoal!>! performanceGoals) -> Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.CompletionGoal.get -> Android.Health.Connect.DataTypes.ExerciseCompletionGoal!
+Android.Health.Connect.DataTypes.PlannedExerciseStep.Description.get -> string?
+Android.Health.Connect.DataTypes.PlannedExerciseStep.DescriptionFormatted.get -> Java.Lang.ICharSequence?
+Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategory.get -> int
+Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseType.get -> int
+Android.Health.Connect.DataTypes.PlannedExerciseStep.PerformanceGoals.get -> System.Collections.Generic.IList<Android.Health.Connect.DataTypes.ExercisePerformanceGoal!>!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Baseline.get -> Android.Health.Connect.DataTypes.Units.Temperature?
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.Build() -> Android.Health.Connect.DataTypes.SkinTemperatureRecord!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.Builder(Android.Health.Connect.DataTypes.Metadata! metadata, Java.Time.Instant! startTime, Java.Time.Instant! endTime) -> void
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.ClearEndZoneOffset() -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.ClearStartZoneOffset() -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.SetBaseline(Android.Health.Connect.DataTypes.Units.Temperature? baseline) -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.SetDeltas(System.Collections.Generic.IList<Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta!>! deltas) -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.SetEndZoneOffset(Java.Time.ZoneOffset! endZoneOffset) -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.SetMeasurementLocation(int measurementLocation) -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.SetStartZoneOffset(Java.Time.ZoneOffset! startZoneOffset) -> Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta.Delta(Android.Health.Connect.DataTypes.Units.TemperatureDelta! delta, Java.Time.Instant! time) -> void
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta.GetDelta() -> Android.Health.Connect.DataTypes.Units.TemperatureDelta!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta.Time.get -> Java.Time.Instant!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.Deltas.get -> System.Collections.Generic.IList<Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta!>!
+Android.Health.Connect.DataTypes.SkinTemperatureRecord.MeasurementLocation.get -> int
+Android.Health.Connect.DataTypes.Units.TemperatureDelta
+Android.Health.Connect.DataTypes.Units.TemperatureDelta.CompareTo(Android.Health.Connect.DataTypes.Units.TemperatureDelta! other) -> int
+Android.Health.Connect.DataTypes.Units.TemperatureDelta.InCelsius.get -> double
+Android.Icu.Text.DisplayOptions
+Android.Icu.Text.DisplayOptions.Builder
+Android.Icu.Text.DisplayOptions.Builder.Builder(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Icu.Text.DisplayOptions.Capitalization
+Android.Icu.Text.DisplayOptions.CopyToBuilder() -> Android.Icu.Text.DisplayOptions.Builder?
+Android.Icu.Text.DisplayOptions.DisplayLength
+Android.Icu.Text.DisplayOptions.GetCapitalization() -> Android.Icu.Text.DisplayOptions.Capitalization?
+Android.Icu.Text.DisplayOptions.GetDisplayLength() -> Android.Icu.Text.DisplayOptions.DisplayLength?
+Android.Icu.Text.DisplayOptions.GetGrammaticalCase() -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+Android.Icu.Text.DisplayOptions.GetNameStyle() -> Android.Icu.Text.DisplayOptions.NameStyle?
+Android.Icu.Text.DisplayOptions.GetNounClass() -> Android.Icu.Text.DisplayOptions.NounClass?
+Android.Icu.Text.DisplayOptions.GetPluralCategory() -> Android.Icu.Text.DisplayOptions.PluralCategory?
+Android.Icu.Text.DisplayOptions.GetSubstituteHandling() -> Android.Icu.Text.DisplayOptions.SubstituteHandling?
+Android.Icu.Text.DisplayOptions.GrammaticalCase
+Android.Icu.Text.DisplayOptions.GrammaticalCase.Identifier.get -> string?
+Android.Icu.Text.DisplayOptions.NameStyle
+Android.Icu.Text.DisplayOptions.NounClass
+Android.Icu.Text.DisplayOptions.NounClass.Identifier.get -> string?
+Android.Icu.Text.DisplayOptions.PluralCategory
+Android.Icu.Text.DisplayOptions.PluralCategory.Identifier.get -> string?
+Android.Icu.Text.DisplayOptions.SubstituteHandling
+Android.InputMethodServices.InputMethodService.FinishConnectionlessStylusHandwriting(Java.Lang.ICharSequence? text) -> void
+Android.InputMethodServices.InputMethodService.FinishConnectionlessStylusHandwriting(string? text) -> void
+Android.Locations.Altitude.AltitudeConverter.TryAddMslAltitudeToLocation(Android.Locations.Location! location) -> bool
 Android.Media.LoudnessCodecController
 Android.Media.LoudnessCodecController.IOnLoudnessCodecUpdateListener
 Android.Media.LoudnessCodecController.IOnLoudnessCodecUpdateListener.OnLoudnessCodecUpdate(Android.Media.MediaCodec! mediaCodec, Android.OS.Bundle! codecValues) -> Android.OS.Bundle!
 Android.Media.LoudnessCodecController.LoudnessCodecController(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Media.LoudnessCodecController.LoudnessCodecUpdateHandler
+Android.Media.MediaCodec.DetachOutputSurface() -> void
+Android.Media.MediaCodec.OutputFrame.BufferInfos.get -> Java.Util.ArrayDeque!
+Android.Media.MediaCodec.QueueInputBuffers(int index, Java.Util.ArrayDeque! bufferInfos) -> void
+Android.Media.MediaCodec.QueueRequest.SetMultiFrameEncryptedLinearBlock(Android.Media.MediaCodec.LinearBlock! block, Java.Util.ArrayDeque! bufferInfos, Java.Util.ArrayDeque! cryptoInfos) -> Android.Media.MediaCodec.QueueRequest!
+Android.Media.MediaCodec.QueueRequest.SetMultiFrameLinearBlock(Android.Media.MediaCodec.LinearBlock! block, Java.Util.ArrayDeque! infos) -> Android.Media.MediaCodec.QueueRequest!
+Android.Media.MediaCodec.QueueSecureInputBuffers(int index, Java.Util.ArrayDeque! bufferInfos, Java.Util.ArrayDeque! cryptoInfos) -> void
+Android.Media.MediaFormat.QpOffsetRect
+Android.Media.MediaFormat.QpOffsetRect.FlattenToString() -> string!
+Android.Media.MediaFormat.QpOffsetRect.QpOffsetRect(Android.Graphics.Rect! contour, int qpOffset) -> void
+Android.Media.MediaFormat.QpOffsetRect.Set(Android.Graphics.Rect! contour, int qpOffset) -> void
+Android.Media.MediaRoute2Info.Builder.SetSuitabilityStatus(int suitabilityStatus) -> Android.Media.MediaRoute2Info.Builder!
+Android.Media.MediaRoute2Info.SuitabilityStatus.get -> int
 Android.Media.MediaRouter2.CancelScanRequest(Android.Media.MediaRouter2.ScanToken! token) -> void
 Android.Media.MediaRouter2.GetRouteListingPreference() -> Android.Media.RouteListingPreference?
 Android.Media.MediaRouter2.RegisterRouteListingPreferenceUpdatedCallback(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! routeListingPreferenceCallback) -> void
@@ -1044,6 +1325,11 @@ Android.Media.Midi.MidiUmpDeviceService.DeviceInfo.get -> Android.Media.Midi.Mid
 Android.Media.Midi.MidiUmpDeviceService.MidiUmpDeviceService() -> void
 Android.Media.Midi.MidiUmpDeviceService.MidiUmpDeviceService(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
 Android.Media.Midi.MidiUmpDeviceService.OutputPortReceivers.get -> System.Collections.Generic.IList<Android.Media.Midi.MidiReceiver!>!
+Android.Media.RoutingSessionInfo.Builder.SetTransferInitiator(Android.OS.UserHandle? transferInitiatorUserHandle, string? transferInitiatorPackageName) -> Android.Media.RoutingSessionInfo.Builder!
+Android.Media.RoutingSessionInfo.Builder.SetTransferReason(int transferReason) -> Android.Media.RoutingSessionInfo.Builder!
+Android.Media.RoutingSessionInfo.TransferReason.get -> int
+Android.Net.IpSec.Ike.IkeSession.Dump(Java.IO.PrintWriter! pw) -> void
+Android.Net.IpSec.Ike.IkeSessionParams.IkeOptions.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
 Android.Net.IpSecTransform.RequestIpSecTransformState(Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
 Android.Net.IpSecTransformState
 Android.Net.IpSecTransformState.Builder
@@ -1082,8 +1368,103 @@ Android.Net.Nsd.NsdServiceInfo.Subtypes.get -> System.Collections.Generic.IColle
 Android.Net.Nsd.NsdServiceInfo.Subtypes.set -> void
 Android.Net.Vcn.VcnGatewayConnectionConfig.Builder.SetSafeModeEnabled(bool enabled) -> Android.Net.Vcn.VcnGatewayConnectionConfig.Builder!
 Android.Net.Vcn.VcnGatewayConnectionConfig.IsSafeModeEnabled.get -> bool
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder.Build() -> Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig!
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder.Builder(int scanType) -> void
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder.SetFrequencyMhz(int frequencyMhz) -> Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder!
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.DescribeContents() -> int
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.FrequencyMhz.get -> int
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.InterfaceConsts
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.ScanType.get -> int
+Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.DeviceConfigurationChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.DeviceConfigurationChangedEventArgs.DeviceConfigurationChangedEventArgs(Android.Net.Wifi.P2p.WifiP2pDevice? p2pDevice) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.DeviceConfigurationChangedEventArgs.P2pDevice.get -> Android.Net.Wifi.P2p.WifiP2pDevice?
+Android.Net.Wifi.P2p.WifiP2pManager.DiscoveryStateChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.DiscoveryStateChangedEventArgs.DiscoveryStateChangedEventArgs(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.DiscoveryStateChangedEventArgs.State.get -> int
+Android.Net.Wifi.P2p.WifiP2pManager.FrequencyChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.FrequencyChangedEventArgs.FrequencyChangedEventArgs(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.FrequencyChangedEventArgs.P2pGroup.get -> Android.Net.Wifi.P2p.WifiP2pGroup!
+Android.Net.Wifi.P2p.WifiP2pManager.FrequencyChangedEventArgs.P2pInfo.get -> Android.Net.Wifi.P2p.WifiP2pInfo!
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreatedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreatedEventArgs.GroupCreatedEventArgs(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreatedEventArgs.P2pGroup.get -> Android.Net.Wifi.P2p.WifiP2pGroup!
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreatedEventArgs.P2pInfo.get -> Android.Net.Wifi.P2p.WifiP2pInfo!
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailedEventArgs.GroupCreationFailedEventArgs(int reason) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailedEventArgs.Reason.get -> int
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnDeviceConfigurationChanged(Android.Net.Wifi.P2p.WifiP2pDevice? p2pDevice) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnDiscoveryStateChanged(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnFrequencyChanged(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnGroupCreated(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnGroupCreating() -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnGroupCreationFailed(int reason) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnGroupNegotiationRejectedByUser() -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnGroupRemoved() -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnListenStateChanged(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnP2pStateChanged(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnPeerClientDisconnected(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnPeerClientJoined(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener.OnPeerListChanged(Android.Net.Wifi.P2p.WifiP2pDeviceList! p2pDeviceList) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.ListenStateChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.ListenStateChangedEventArgs.ListenStateChangedEventArgs(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.ListenStateChangedEventArgs.State.get -> int
+Android.Net.Wifi.P2p.WifiP2pManager.P2pStateChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.P2pStateChangedEventArgs.P2pStateChangedEventArgs(int state) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.P2pStateChangedEventArgs.State.get -> int
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientDisconnectedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientDisconnectedEventArgs.P2pGroup.get -> Android.Net.Wifi.P2p.WifiP2pGroup!
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientDisconnectedEventArgs.P2pInfo.get -> Android.Net.Wifi.P2p.WifiP2pInfo!
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientDisconnectedEventArgs.PeerClientDisconnectedEventArgs(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientJoinedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientJoinedEventArgs.P2pGroup.get -> Android.Net.Wifi.P2p.WifiP2pGroup!
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientJoinedEventArgs.P2pInfo.get -> Android.Net.Wifi.P2p.WifiP2pInfo!
+Android.Net.Wifi.P2p.WifiP2pManager.PeerClientJoinedEventArgs.PeerClientJoinedEventArgs(Android.Net.Wifi.P2p.WifiP2pInfo! p2pInfo, Android.Net.Wifi.P2p.WifiP2pGroup! p2pGroup) -> void
+Android.Net.Wifi.P2p.WifiP2pManager.PeerListChangedEventArgs
+Android.Net.Wifi.P2p.WifiP2pManager.PeerListChangedEventArgs.P2pDeviceList.get -> Android.Net.Wifi.P2p.WifiP2pDeviceList!
+Android.Net.Wifi.P2p.WifiP2pManager.PeerListChangedEventArgs.PeerListChangedEventArgs(Android.Net.Wifi.P2p.WifiP2pDeviceList! p2pDeviceList) -> void
+Android.Net.Wifi.Rtt.RangingResult.Builder
+Android.Net.Wifi.Rtt.RangingResult.Builder.Build() -> Android.Net.Wifi.Rtt.RangingResult!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Builder() -> void
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211azInitiatorTxLtfRepetitionsCount(int i2rTxLtfRepetitions) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211azNtbMeasurement(bool is80211azNtbMeasurement) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211azNumberOfRxSpatialStreams(int numRxSpatialStreams) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211azNumberOfTxSpatialStreams(int numTxSpatialStreams) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211azResponderTxLtfRepetitionsCount(int r2iTxLtfRepetitions) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.Set80211mcMeasurement(bool is80211mcMeasurement) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetDistanceMm(int distanceMm) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetDistanceStdDevMm(int distanceStdDevMm) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetLci(byte[]? lci) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetLcr(byte[]? lcr) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetMacAddress(Android.Net.MacAddress? macAddress) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetMaxTimeBetweenNtbMeasurementsMicros(long ntbMaxMeasurementTime) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetMeasurementBandwidth(int measurementBandwidth) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetMeasurementChannelFrequencyMHz(int frequencyMHz) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetMinTimeBetweenNtbMeasurementsMicros(long ntbMinMeasurementTime) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetNumAttemptedMeasurements(int numAttemptedMeasurements) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetNumSuccessfulMeasurements(int numSuccessfulMeasurements) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetPeerHandle(Android.Net.Wifi.Aware.PeerHandle? peerHandle) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetRangingTimestampMillis(long timestamp) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetRssi(int rssi) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetStatus(int status) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Builder.SetUnverifiedResponderLocation(Android.Net.Wifi.Rtt.ResponderLocation? responderLocation) -> Android.Net.Wifi.Rtt.RangingResult.Builder!
+Android.Net.Wifi.Rtt.RangingResult.Get80211azInitiatorTxLtfRepetitionsCount() -> int
+Android.Net.Wifi.Rtt.RangingResult.Get80211azNumberOfRxSpatialStreams() -> int
+Android.Net.Wifi.Rtt.RangingResult.Get80211azNumberOfTxSpatialStreams() -> int
+Android.Net.Wifi.Rtt.RangingResult.Get80211azResponderTxLtfRepetitionsCount() -> int
 Android.Net.Wifi.Rtt.RangingResult.GetLci() -> byte[]!
 Android.Net.Wifi.Rtt.RangingResult.GetLcr() -> byte[]!
+Android.Net.Wifi.Rtt.RangingResult.Is80211azNtbMeasurement() -> bool
+Android.Net.Wifi.Rtt.RangingResult.MaxTimeBetweenNtbMeasurementsMicros.get -> long
+Android.Net.Wifi.Rtt.RangingResult.MinTimeBetweenNtbMeasurementsMicros.get -> long
+Android.Net.Wifi.Rtt.ResponderConfig.Builder.Set80211azNtbSupported(bool supports80211azNtb) -> Android.Net.Wifi.Rtt.ResponderConfig.Builder!
+Android.Net.Wifi.Rtt.ResponderConfig.Is80211azNtbSupported() -> bool
+Android.Net.Wifi.WifiInfo.Builder.SetSubscriptionId(int subId) -> Android.Net.Wifi.WifiInfo.Builder!
+Android.Net.Wifi.WifiNetworkSuggestion.Builder.SetWifi7Enabled(bool enabled) -> Android.Net.Wifi.WifiNetworkSuggestion.Builder!
+Android.Net.Wifi.WifiNetworkSuggestion.IsWifi7Enabled.get -> bool
 Android.Nfc.CardEmulators.CardEmulation.RegisterPollingLoopFilterForService(Android.Content.ComponentName! service, string! pollingLoopFilter, bool autoTransact) -> bool
 Android.Nfc.CardEmulators.CardEmulation.RegisterPollingLoopPatternFilterForService(Android.Content.ComponentName! service, string! pollingLoopPatternFilter, bool autoTransact) -> bool
 Android.Nfc.CardEmulators.CardEmulation.RemovePollingLoopFilterForService(Android.Content.ComponentName! service, string! pollingLoopFilter) -> bool
@@ -1100,9 +1481,20 @@ Android.Nfc.CardEmulators.PollingFrame.VendorSpecificGain.get -> int
 Android.Nfc.CardEmulators.PollingFrame.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.Nfc.NfcAdapter.IsObserveModeEnabled.get -> bool
 Android.Nfc.NfcAdapter.IsObserveModeSupported.get -> bool
+Android.Nfc.NfcAdapter.IsReaderOptionEnabled.get -> bool
+Android.Nfc.NfcAdapter.IsReaderOptionSupported.get -> bool
 Android.Nfc.NfcAdapter.ResetDiscoveryTechnology(Android.App.Activity! activity) -> void
 Android.Nfc.NfcAdapter.SetDiscoveryTechnology(Android.App.Activity! activity, int pollTechnology, int listenTechnology) -> void
 Android.Nfc.NfcAdapter.SetObserveModeEnabled(bool enabled) -> bool
+Android.OS.PowerMonitor
+Android.OS.PowerMonitor.DescribeContents() -> int
+Android.OS.PowerMonitor.InterfaceConsts
+Android.OS.PowerMonitor.Name.get -> string!
+Android.OS.PowerMonitor.Type.get -> int
+Android.OS.PowerMonitor.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.OS.PowerMonitorReadings
+Android.OS.PowerMonitorReadings.GetConsumedEnergy(Android.OS.PowerMonitor! powerMonitor) -> long
+Android.OS.PowerMonitorReadings.GetTimestampMillis(Android.OS.PowerMonitor! powerMonitor) -> long
 Android.OS.ProfilingManager
 Android.OS.ProfilingManager.RegisterForAllProfilingResults(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! listener) -> void
 Android.OS.ProfilingManager.RequestProfiling(int profilingType, Android.OS.Bundle? parameters, string? tag, Android.OS.CancellationSignal? cancellationSignal, Java.Util.Concurrent.IExecutor? executor, Java.Util.Functions.IConsumer? listener) -> void
@@ -1165,8 +1557,23 @@ Android.Provider.E2eeContactKeysManager.UpdateE2eeContactKeyRemoteVerificationSt
 Android.Provider.E2eeContactKeysManager.UpdateE2eeSelfKeyRemoteVerificationState(string! deviceId, string! accountId, int remoteVerificationState) -> bool
 Android.Provider.E2eeContactKeysManager.UpdateOrInsertE2eeContactKey(string! lookupKey, string! deviceId, string! accountId, byte[]! keyValue) -> void
 Android.Provider.E2eeContactKeysManager.UpdateOrInsertE2eeSelfKey(string! deviceId, string! accountId, byte[]! keyValue) -> bool
-Android.Security.FileIntegrityManager.GetFsVerityDigest(Java.IO.File! file) -> byte[]?
-Android.Security.FileIntegrityManager.SetupFsVerity(Java.IO.File! file) -> void
+Android.Security.Keystore.KeyGenParameterSpec.Builder.SetMgf1Digests(params string![]! mgf1Digests) -> Android.Security.Keystore.KeyGenParameterSpec.Builder!
+Android.Security.Keystore.KeyGenParameterSpec.IsMgf1DigestsSpecified.get -> bool
+Android.Security.Keystore.KeyGenParameterSpec.Mgf1Digests.get -> System.Collections.Generic.ICollection<string!>!
+Android.Security.Keystore.KeyProtection.Builder.SetMgf1Digests(params string![]? mgf1Digests) -> Android.Security.Keystore.KeyProtection.Builder!
+Android.Security.Keystore.KeyProtection.IsMgf1DigestsSpecified.get -> bool
+Android.Security.Keystore.KeyProtection.Mgf1Digests.get -> System.Collections.Generic.ICollection<string!>!
+Android.Service.Chooser.ChooserResult
+Android.Service.Chooser.ChooserResult.DescribeContents() -> int
+Android.Service.Chooser.ChooserResult.InterfaceConsts
+Android.Service.Chooser.ChooserResult.IsShortcut.get -> bool
+Android.Service.Chooser.ChooserResult.SelectedComponent.get -> Android.Content.ComponentName?
+Android.Service.Chooser.ChooserResult.Type.get -> int
+Android.Service.Chooser.ChooserResult.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Service.Chooser.IAdditionalContentContract
+Android.Service.Chooser.IAdditionalContentContract.IColumns
+Android.Service.Chooser.IAdditionalContentContract.ICursorExtraKeys
+Android.Service.Chooser.IAdditionalContentContract.IMethodNames
 Android.Service.Notification.Condition.Condition(Android.Net.Uri? id, string? summary, Android.Service.Notification.ConditionState state, int source) -> void
 Android.Service.Notification.Condition.Condition(Android.Net.Uri? id, string? summary, string? line1, string? line2, int icon, Android.Service.Notification.ConditionState state, int source, Android.Service.Notification.ConditionFlags flags) -> void
 Android.Service.Notification.Condition.Source.get -> int
@@ -1189,6 +1596,13 @@ Android.Service.Notification.ZenDeviceEffects.ShouldUseNightMode() -> bool
 Android.Service.Notification.ZenDeviceEffects.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 Android.Service.Notification.ZenPolicy.Builder.AllowPriorityChannels(bool allow) -> Android.Service.Notification.ZenPolicy.Builder!
 Android.Service.Notification.ZenPolicy.PriorityChannelsAllowed.get -> int
+Android.Service.Persistentdata.PersistentDataBlockManager
+Android.Service.Persistentdata.PersistentDataBlockManager.PersistentDataBlockManager(nint javaReference, Android.Runtime.JniHandleOwnership transfer) -> void
+Android.Telecom.CallControl.RequestMuteState(bool isMuted, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.Telecom.CallControl.RequestVideoState(int videoState, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! callback) -> void
+Android.Telecom.ICallEventCallback.OnVideoStateChanged(int videoState) -> void
+Android.Telecom.PhoneAccount.HasSimultaneousCallingRestriction.get -> bool
+Android.Telecom.PhoneAccount.SimultaneousCallingRestriction.get -> System.Collections.Generic.ICollection<Android.Telecom.PhoneAccountHandle!>!
 Android.Telephony.Mbms.DownloadStatus
 Android.Telephony.Mbms.DownloadStatus.ActivelyDownloading = 1 -> Android.Telephony.Mbms.DownloadStatus
 Android.Telephony.Mbms.DownloadStatus.PendingDownload = 2 -> Android.Telephony.Mbms.DownloadStatus
@@ -1196,12 +1610,52 @@ Android.Telephony.Mbms.DownloadStatus.PendingDownloadWindow = 4 -> Android.Telep
 Android.Telephony.Mbms.DownloadStatus.PendingRepair = 3 -> Android.Telephony.Mbms.DownloadStatus
 Android.Telephony.Mbms.DownloadStatus.Unknown = 0 -> Android.Telephony.Mbms.DownloadStatus
 Android.Telephony.NetworkRegistrationInfo.IsNonTerrestrialNetwork.get -> bool
+Android.Telephony.NetworkRegistrationInfo.RejectCause.get -> int
 Android.Telephony.PreciseDataConnectionState.NetworkValidationStatus.get -> int
 Android.Telephony.StreamingState
 Android.Telephony.StreamingState.Stalled = 3 -> Android.Telephony.StreamingState
 Android.Telephony.StreamingState.Started = 2 -> Android.Telephony.StreamingState
 Android.Telephony.StreamingState.Stopped = 1 -> Android.Telephony.StreamingState
 Android.Text.DynamicLayout.Builder.SetLineBreakConfig(Android.Graphics.Text.LineBreakConfig! lineBreakConfig) -> Android.Text.DynamicLayout.Builder!
+Android.Text.DynamicLayout.Builder.SetMinimumFontMetrics(Android.Graphics.Paint.FontMetrics? minimumFontMetrics) -> Android.Text.DynamicLayout.Builder!
+Android.Text.DynamicLayout.Builder.SetShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang) -> Android.Text.DynamicLayout.Builder!
+Android.Text.DynamicLayout.Builder.SetUseBoundsForWidth(bool useBoundsForWidth) -> Android.Text.DynamicLayout.Builder!
+Android.Text.Layout.BreakStrategy.get -> int
+Android.Text.Layout.Builder
+Android.Text.Layout.Builder.Build() -> Android.Text.Layout!
+Android.Text.Layout.Builder.Builder(Java.Lang.ICharSequence! text, int start, int end, Android.Text.TextPaint! paint, int width) -> void
+Android.Text.Layout.Builder.Builder(string! text, int start, int end, Android.Text.TextPaint! paint, int width) -> void
+Android.Text.Layout.Builder.SetAlignment(Android.Text.Layout.Alignment! alignment) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetBreakStrategy(int breakStrategy) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetEllipsize(Android.Text.TextUtils.TruncateAt? ellipsize) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetEllipsizedWidth(int ellipsizeWidth) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetFallbackLineSpacingEnabled(bool fallbackLineSpacing) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetFontPaddingIncluded(bool includeFontPadding) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetHyphenationFrequency(int hyphenationFrequency) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetJustificationMode(int justificationMode) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetLeftIndents(int[]? leftIndents) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetLineBreakConfig(Android.Graphics.Text.LineBreakConfig! lineBreakConfig) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetLineSpacingAmount(float amount) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetLineSpacingMultiplier(float multiplier) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetMaxLines(int maxLines) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetMinimumFontMetrics(Android.Graphics.Paint.FontMetrics? minimumFontMetrics) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetRightIndents(int[]? rightIndents) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetTextDirectionHeuristic(Android.Text.ITextDirectionHeuristic! textDirection) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Builder.SetUseBoundsForWidth(bool useBoundsForWidth) -> Android.Text.Layout.Builder!
+Android.Text.Layout.Ellipsize.get -> Android.Text.TextUtils.TruncateAt?
+Android.Text.Layout.GetLeftIndents() -> int[]?
+Android.Text.Layout.GetRightIndents() -> int[]?
+Android.Text.Layout.HyphenationFrequency.get -> int
+Android.Text.Layout.IsFontPaddingIncluded.get -> bool
+Android.Text.Layout.JustificationMode.get -> int
+Android.Text.Layout.LineSpacingAmount.get -> float
+Android.Text.Layout.LineSpacingMultiplier.get -> float
+Android.Text.Layout.MaxLines.get -> int
+Android.Text.Layout.TextDirectionHeuristic.get -> Android.Text.ITextDirectionHeuristic!
+Android.Text.StaticLayout.Builder.SetMinimumFontMetrics(Android.Graphics.Paint.FontMetrics? minimumFontMetrics) -> Android.Text.StaticLayout.Builder!
+Android.Text.StaticLayout.Builder.SetShiftDrawingOffsetForStartOverhang(bool shiftDrawingOffsetForStartOverhang) -> Android.Text.StaticLayout.Builder!
+Android.Text.StaticLayout.Builder.SetUseBoundsForWidth(bool useBoundsForWidth) -> Android.Text.StaticLayout.Builder!
 Android.Text.Style.LineBreakConfigSpan
 Android.Text.Style.LineBreakConfigSpan.DescribeContents() -> int
 Android.Text.Style.LineBreakConfigSpan.InterfaceConsts
@@ -1209,9 +1663,31 @@ Android.Text.Style.LineBreakConfigSpan.LineBreakConfig.get -> Android.Graphics.T
 Android.Text.Style.LineBreakConfigSpan.LineBreakConfigSpan(Android.Graphics.Text.LineBreakConfig! lineBreakConfig) -> void
 Android.Text.Style.LineBreakConfigSpan.SpanTypeId.get -> int
 Android.Text.Style.LineBreakConfigSpan.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.Build() -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.Builder() -> void
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetColumnCount(int columnCount) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetHierarchical(bool hierarchical) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetImportantForAccessibilityItemCount(int importantForAccessibilityItemCount) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetItemCount(int itemCount) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetRowCount(int rowCount) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.SetSelectionMode(int selectionMode) -> Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder!
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.ImportantForAccessibilityItemCount.get -> int
+Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.ItemCount.get -> int
 Android.Views.IAttachedSurfaceControl.InputTransferToken.get -> Android.Window.InputTransferToken!
 Android.Views.InputDevice.ViewBehavior
 Android.Views.InputDevice.ViewBehavior.ShouldSmoothScroll(int axis, int source) -> bool
+Android.Views.InputMethods.IConnectionlessHandwritingCallback
+Android.Views.InputMethods.IConnectionlessHandwritingCallback.OnError(int errorCode) -> void
+Android.Views.InputMethods.IConnectionlessHandwritingCallback.OnResult(Java.Lang.ICharSequence! text) -> void
+Android.Views.InputMethods.IConnectionlessHandwritingCallbackExtensions
+Android.Views.InputMethods.InputMethodInfo.SupportsConnectionlessStylusHandwriting() -> bool
+Android.Views.InputMethods.InputMethodManager.AcceptStylusHandwritingDelegation(Android.Views.View! delegateView, string! delegatorPackageName, int flags, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
+Android.Views.InputMethods.InputMethodManager.AcceptStylusHandwritingDelegation(Android.Views.View! delegateView, string! delegatorPackageName, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
+Android.Views.InputMethods.InputMethodManager.IsConnectionlessStylusHandwritingAvailable.get -> bool
+Android.Views.InputMethods.InputMethodManager.StartConnectionlessStylusHandwriting(Android.Views.View! view, Android.Views.InputMethods.CursorAnchorInfo? cursorAnchorInfo, Java.Util.Concurrent.IExecutor! callbackExecutor, Android.Views.InputMethods.IConnectionlessHandwritingCallback! callback) -> void
+Android.Views.InputMethods.InputMethodManager.StartConnectionlessStylusHandwritingForDelegation(Android.Views.View! delegatorView, Android.Views.InputMethods.CursorAnchorInfo? cursorAnchorInfo, Java.Util.Concurrent.IExecutor! callbackExecutor, Android.Views.InputMethods.IConnectionlessHandwritingCallback! callback) -> void
+Android.Views.InputMethods.InputMethodManager.StartConnectionlessStylusHandwritingForDelegation(Android.Views.View! delegatorView, Android.Views.InputMethods.CursorAnchorInfo? cursorAnchorInfo, string! delegatePackageName, Java.Util.Concurrent.IExecutor! callbackExecutor, Android.Views.InputMethods.IConnectionlessHandwritingCallback! callback) -> void
 Android.Views.IScrollFeedbackProvider
 Android.Views.IScrollFeedbackProvider.CreateProvider(Android.Views.View! view) -> Android.Views.IScrollFeedbackProvider!
 Android.Views.IScrollFeedbackProvider.OnScrollLimit(int inputDeviceId, int source, int axis, bool isStart) -> void
@@ -1233,8 +1709,22 @@ Android.Views.SurfaceControl.TransactionStats.LatchTimeNanos.get -> long
 Android.Views.SurfaceControl.TransactionStats.PresentFence.get -> Android.Hardware.SyncFence!
 Android.Views.SurfaceControlViewHost.SurfaceControlViewHost(Android.Content.Context! context, Android.Views.Display! display, Android.Window.InputTransferToken? hostInputTransferToken) -> void
 Android.Views.SurfaceControlViewHost.SurfacePackage.InputTransferToken.get -> Android.Window.InputTransferToken?
+Android.Views.View.ContentSensitivity.get -> int
+Android.Views.View.ContentSensitivity.set -> void
+Android.Views.View.IsContentSensitive.get -> bool
 Android.Views.View.PendingCredentialCallback.get -> Android.OS.IOutcomeReceiver?
 Android.Views.View.PendingCredentialRequest.get -> Android.Credentials.GetCredentialRequest?
+Android.Views.WindowInsets.Builder.SetBoundingRects(int typeMask, System.Collections.Generic.IList<Android.Graphics.Rect!>! rects) -> Android.Views.WindowInsets.Builder!
+Android.Views.WindowInsets.Builder.SetBoundingRectsIgnoringVisibility(int typeMask, System.Collections.Generic.IList<Android.Graphics.Rect!>! rects) -> Android.Views.WindowInsets.Builder!
+Android.Views.WindowInsets.Builder.SetFrame(int width, int height) -> Android.Views.WindowInsets.Builder!
+Android.Views.WindowInsets.Frame.get -> Android.Util.Size!
+Android.Views.WindowInsets.GetBoundingRects(int typeMask) -> System.Collections.Generic.IList<Android.Graphics.Rect!>!
+Android.Views.WindowInsets.GetBoundingRectsIgnoringVisibility(int typeMask) -> System.Collections.Generic.IList<Android.Graphics.Rect!>!
+Android.Widget.RemoteViews.DrawInstructions
+Android.Widget.RemoteViews.DrawInstructions.Builder
+Android.Widget.RemoteViews.DrawInstructions.Builder.Build() -> Android.Widget.RemoteViews.DrawInstructions!
+Android.Widget.RemoteViews.DrawInstructions.Builder.Builder(System.Collections.Generic.IList<byte[]!>! instructions) -> void
+Android.Widget.RemoteViews.RemoteViews(Android.Widget.RemoteViews.DrawInstructions! drawInstructions) -> void
 Android.Window.InputTransferToken
 Android.Window.InputTransferToken.DescribeContents() -> int
 Android.Window.InputTransferToken.InterfaceConsts
@@ -1276,8 +1766,6 @@ const Android.AdServices.Common.FrequencyCapFilters.InterfaceConsts.ParcelableWr
 const Android.AdServices.Common.KeyedFrequencyCap.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.AdServices.Common.KeyedFrequencyCap.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.AdServices.CustomAudiences.CustomAudience.FlagAuctionServerRequestOmitAds = 1 -> int
-const Android.AdServices.CustomAudiences.PartialCustomAudience.InterfaceConsts.ContentsFileDescriptor = 1 -> int
-const Android.AdServices.CustomAudiences.PartialCustomAudience.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.AdServices.Measurement.SourceRegistrationRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.AdServices.Measurement.SourceRegistrationRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.AdServices.OnDevicePersonalization.AppInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
@@ -1298,10 +1786,15 @@ const Android.AdServices.OnDevicePersonalization.TrainingInterval.SchedulingMode
 const Android.AdServices.OnDevicePersonalization.TrainingInterval.SchedulingModeRecurrent = 2 -> int
 const Android.AdServices.OnDevicePersonalization.UserData.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.AdServices.OnDevicePersonalization.UserData.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.Admin.DeviceAdminInfo.HeadlessDeviceOwnerModeSingleUser = 2 -> int
 const Android.App.Admin.DevicePolicyIdentifiers.ContentProtectionPolicy = "contentProtection" -> string!
+const Android.App.Admin.DevicePolicyIdentifiers.PasswordComplexityPolicy = "passwordComplexity" -> string!
+const Android.App.Admin.DevicePolicyIdentifiers.SecurityLoggingPolicy = "securityLogging" -> string!
+const Android.App.Admin.DevicePolicyIdentifiers.UsbDataSignalingPolicy = "usbDataSignaling" -> string!
 const Android.App.Admin.DevicePolicyManager.ContentProtectionDisabled = 1 -> int
 const Android.App.Admin.DevicePolicyManager.ContentProtectionEnabled = 2 -> int
 const Android.App.Admin.DevicePolicyManager.ContentProtectionNotControlledByPolicy = 0 -> int
+const Android.App.Admin.SecurityLog.TagBackupServiceToggled = 210044 -> int
 const Android.App.ApplicationStartInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.App.ApplicationStartInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.App.ApplicationStartInfo.LaunchModeSingleInstance = 2 -> int
@@ -1384,6 +1877,7 @@ const Android.App.AutomaticZenRule.TypeScheduleCalendar = 2 -> int
 const Android.App.AutomaticZenRule.TypeScheduleTime = 1 -> int
 const Android.App.AutomaticZenRule.TypeTheater = 6 -> int
 const Android.App.AutomaticZenRule.TypeUnknown = -1 -> int
+const Android.App.Notification.CategoryVoicemail = "voicemail" -> string!
 const Android.App.NotificationManager.ActionConsolidatedNotificationPolicyChanged = "android.app.action.CONSOLIDATED_NOTIFICATION_POLICY_CHANGED" -> string!
 const Android.App.NotificationManager.AutomaticRuleStatusActivated = 4 -> int
 const Android.App.NotificationManager.AutomaticRuleStatusDeactivated = 5 -> int
@@ -1399,14 +1893,45 @@ const Android.App.Usage.StorageStats.AppDataTypeFileTypeReferenceProfile = 1 -> 
 const Android.App.Usage.StorageStats.AppDataTypeLib = 5 -> int
 const Android.App.Usage.UsageEventsQuery.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.App.Usage.UsageEventsQuery.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.App.Usage.UsageStatsManager.ExtraEventAction = "android.app.usage.extra.EVENT_ACTION" -> string!
+const Android.App.Usage.UsageStatsManager.ExtraEventCategory = "android.app.usage.extra.EVENT_CATEGORY" -> string!
+const Android.Bluetooth.BluetoothCodecType.CodecIdAac = 2 -> long
+const Android.Bluetooth.BluetoothCodecType.CodecIdAptx = 16797695 -> long
+const Android.Bluetooth.BluetoothCodecType.CodecIdAptxHd = 604035071 -> long
+const Android.Bluetooth.BluetoothCodecType.CodecIdLdac = -1442763265 -> long
+const Android.Bluetooth.BluetoothCodecType.CodecIdOpus = 16834815 -> long
+const Android.Bluetooth.BluetoothCodecType.CodecIdSbc = 0 -> long
+const Android.Bluetooth.BluetoothCodecType.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Bluetooth.BluetoothCodecType.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Bluetooth.BluetoothDevice.AddressTypeAnonymous = 255 -> int
+const Android.Bluetooth.BluetoothGatt.GattConnectionTimeout = 147 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate11025 = 2 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate176400 = 1024 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate192000 = 2048 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate22050 = 8 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate384000 = 4096 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate88200 = 256 -> int
+const Android.Bluetooth.BluetoothLeAudioCodecConfig.SampleRate96000 = 512 -> int
+const Android.Bluetooth.BluetoothSocketException.UnixFileSocketCreationFailure = 21 -> int
+const Android.Content.Context.BindPackageIsolatedProcess = 16384 -> int
 const Android.Content.Context.ContactKeysService = "contact_keys" -> string!
+const Android.Content.Context.PersistentDataBlockService = "persistent_data_block" -> string!
 const Android.Content.Context.ProfilingService = "profiling" -> string!
 const Android.Content.Context.SecurityStateService = "security_state" -> string!
 const Android.Content.Intent.ActionPackageUnstopped = "android.intent.action.PACKAGE_UNSTOPPED" -> string!
+const Android.Content.Intent.ActionProfileAvailable = "android.intent.action.PROFILE_AVAILABLE" -> string!
+const Android.Content.Intent.ActionProfileUnavailable = "android.intent.action.PROFILE_UNAVAILABLE" -> string!
 const Android.Content.Intent.ActionUnarchivePackage = "android.intent.action.UNARCHIVE_PACKAGE" -> string!
 const Android.Content.Intent.ChooserContentTypeAlbum = 1 -> int
 const Android.Content.Intent.ExtraArchival = "android.intent.extra.ARCHIVAL" -> string!
+const Android.Content.Intent.ExtraChooserAdditionalContentUri = "android.intent.extra.CHOOSER_ADDITIONAL_CONTENT_URI" -> string!
 const Android.Content.Intent.ExtraChooserContentTypeHint = "android.intent.extra.CHOOSER_CONTENT_TYPE_HINT" -> string!
+const Android.Content.Intent.ExtraChooserFocusedItemPosition = "android.intent.extra.CHOOSER_FOCUSED_ITEM_POSITION" -> string!
+const Android.Content.Intent.ExtraChooserResult = "android.intent.extra.CHOOSER_RESULT" -> string!
+const Android.Content.Intent.ExtraChooserResultIntentSender = "android.intent.extra.CHOOSER_RESULT_INTENT_SENDER" -> string!
+const Android.Content.Intent.ExtraMetadataText = "android.intent.extra.METADATA_TEXT" -> string!
+const Android.Content.PM.LauncherUserInfo.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Content.PM.LauncherUserInfo.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Content.PM.PackageInstaller.ExtraUnarchiveAllUsers = "android.content.pm.extra.UNARCHIVE_ALL_USERS" -> string!
 const Android.Content.PM.PackageInstaller.ExtraUnarchiveId = "android.content.pm.extra.UNARCHIVE_ID" -> string!
 const Android.Content.PM.PackageInstaller.ExtraUnarchivePackageName = "android.content.pm.extra.UNARCHIVE_PACKAGE_NAME" -> string!
@@ -1496,16 +2021,78 @@ const Android.Graphics.Text.LineBreaker.JustificationModeInterCharacter = 2 -> i
 const Android.Graphics.Text.PositionedGlyphs.NoOverride = 1E-45 -> float
 const Android.Hardware.Biometrics.BiometricManager.BiometricNoAuthentication = -1 -> long
 const Android.Hardware.Biometrics.BiometricPrompt.BiometricNoAuthentication = -1 -> long
+const Android.Hardware.Biometrics.PromptContentItemBulletedText.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Hardware.Biometrics.PromptContentItemBulletedText.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Hardware.Biometrics.PromptContentItemPlainText.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Hardware.Biometrics.PromptContentItemPlainText.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Hardware.Biometrics.PromptVerticalListContentView.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Hardware.Biometrics.PromptVerticalListContentView.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Hardware.Camera2.CameraMetadata.ControlAeModeOnLowLightBoostBrightnessPriority = 6 -> int
 const Android.Hardware.Camera2.CameraMetadata.ControlLowLightBoostStateActive = 1 -> int
 const Android.Hardware.Camera2.CameraMetadata.ControlLowLightBoostStateInactive = 0 -> int
+const Android.Hardware.HardwareBuffer.R16 = 57 -> int
+const Android.Hardware.HardwareBuffer.R8 = 56 -> int
+const Android.Hardware.HardwareBuffer.Rg1616 = 58 -> int
+const Android.Hardware.HardwareBuffer.Rgba10101010 = 59 -> int
+const Android.Hardware.OverlayProperties.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Hardware.OverlayProperties.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryActive = 3 -> int
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryCooldown = 4 -> int
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryRecovery = 5 -> int
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryRest = 2 -> int
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryUnknown = 0 -> int
+const Android.Health.Connect.DataTypes.PlannedExerciseStep.ExerciseCategoryWarmup = 1 -> int
+const Android.Health.Connect.DataTypes.SkinTemperatureRecord.MeasurementLocationFinger = 1 -> int
+const Android.Health.Connect.DataTypes.SkinTemperatureRecord.MeasurementLocationToe = 2 -> int
+const Android.Health.Connect.DataTypes.SkinTemperatureRecord.MeasurementLocationUnknown = 0 -> int
+const Android.Health.Connect.DataTypes.SkinTemperatureRecord.MeasurementLocationWrist = 3 -> int
 const Android.Health.Connect.HealthPermissions.ReadExerciseRoutes = "android.permission.health.READ_EXERCISE_ROUTES" -> string!
+const Android.Health.Connect.HealthPermissions.ReadHealthDataHistory = "android.permission.health.READ_HEALTH_DATA_HISTORY" -> string!
+const Android.Health.Connect.HealthPermissions.ReadHealthDataInBackground = "android.permission.health.READ_HEALTH_DATA_IN_BACKGROUND" -> string!
+const Android.Health.Connect.HealthPermissions.ReadPlannedExercise = "android.permission.health.READ_PLANNED_EXERCISE" -> string!
+const Android.Health.Connect.HealthPermissions.ReadSkinTemperature = "android.permission.health.READ_SKIN_TEMPERATURE" -> string!
+const Android.Health.Connect.HealthPermissions.WritePlannedExercise = "android.permission.health.WRITE_PLANNED_EXERCISE" -> string!
+const Android.Health.Connect.HealthPermissions.WriteSkinTemperature = "android.permission.health.WRITE_SKIN_TEMPERATURE" -> string!
+const Android.Icu.Lang.UCharacter.ILineBreak.Aksara = 43 -> int
+const Android.Icu.Lang.UCharacter.ILineBreak.AksaraPrebase = 44 -> int
+const Android.Icu.Lang.UCharacter.ILineBreak.AksaraStart = 45 -> int
+const Android.Icu.Lang.UCharacter.ILineBreak.Virama = 47 -> int
+const Android.Icu.Lang.UCharacter.ILineBreak.ViramaFinal = 46 -> int
+const Android.Icu.Lang.UCharacter.LineBreak.Aksara = 43 -> int
+const Android.Icu.Lang.UCharacter.LineBreak.AksaraPrebase = 44 -> int
+const Android.Icu.Lang.UCharacter.LineBreak.AksaraStart = 45 -> int
+const Android.Icu.Lang.UCharacter.LineBreak.Virama = 47 -> int
+const Android.Icu.Lang.UCharacter.LineBreak.ViramaFinal = 46 -> int
+const Android.Icu.Lang.UCharacter.UnicodeBlock.CjkUnifiedIdeographsExtensionIId = 328 -> int
+const Android.Locations.GnssNavigationMessage.TypeIrnL1 = 1795 -> int
+const Android.Locations.GnssNavigationMessage.TypeIrnL5 = 1794 -> int
+const Android.Manifest.Permission.AccessHiddenProfiles = "android.permission.ACCESS_HIDDEN_PROFILES" -> string!
 const Android.Manifest.Permission.DetectScreenRecording = "android.permission.DETECT_SCREEN_RECORDING" -> string!
 const Android.Manifest.Permission.ForegroundServiceMediaProcessing = "android.permission.FOREGROUND_SERVICE_MEDIA_PROCESSING" -> string!
+const Android.Manifest.Permission.ManageDevicePolicyAssistContent = "android.permission.MANAGE_DEVICE_POLICY_ASSIST_CONTENT" -> string!
+const Android.Manifest.Permission.ManageDevicePolicyBlockUninstall = "android.permission.MANAGE_DEVICE_POLICY_BLOCK_UNINSTALL" -> string!
+const Android.Manifest.Permission.ManageDevicePolicyCameraToggle = "android.permission.MANAGE_DEVICE_POLICY_CAMERA_TOGGLE" -> string!
 const Android.Manifest.Permission.ManageDevicePolicyContentProtection = "android.permission.MANAGE_DEVICE_POLICY_CONTENT_PROTECTION" -> string!
+const Android.Manifest.Permission.ManageDevicePolicyManagedSubscriptions = "android.permission.MANAGE_DEVICE_POLICY_MANAGED_SUBSCRIPTIONS" -> string!
+const Android.Manifest.Permission.ManageDevicePolicyMicrophoneToggle = "android.permission.MANAGE_DEVICE_POLICY_MICROPHONE_TOGGLE" -> string!
 const Android.Manifest.Permission.MediaRoutingControl = "android.permission.MEDIA_ROUTING_CONTROL" -> string!
-const Android.Manifest.Permission.RunBackupJobs = "android.permission.RUN_BACKUP_JOBS" -> string!
+const Android.Manifest.Permission.ReadDropboxData = "android.permission.READ_DROPBOX_DATA" -> string!
+const Android.Manifest.Permission.SetBiometricDialogAdvanced = "android.permission.SET_BIOMETRIC_DIALOG_ADVANCED" -> string!
+const Android.Media.MediaCodec.ConfigureFlagDetachedSurface = 8 -> int
+const Android.Media.MediaCodec.ParameterKeyQpOffsetMap = "qp-offset-map" -> string!
+const Android.Media.MediaCodec.ParameterKeyQpOffsetRects = "qp-offset-rects" -> string!
+const Android.Media.MediaCodecInfo.CodecCapabilities.FEATUREDetachedSurface = "detached-surface" -> string!
+const Android.Media.MediaCodecInfo.CodecCapabilities.FEATUREDynamicColorAspects = "dynamic-color-aspects" -> string!
+const Android.Media.MediaCodecInfo.CodecCapabilities.FEATUREHlgEditing = "hlg-editing" -> string!
+const Android.Media.MediaCodecInfo.CodecCapabilities.FEATURERoi = "region-of-interest" -> string!
+const Android.Media.MediaFormat.KeyBufferBatchMaxOutputSize = "buffer-batch-max-output-size" -> string!
+const Android.Media.MediaFormat.KeyBufferBatchThresholdOutputSize = "buffer-batch-threshold-output-size" -> string!
 const Android.Media.MediaFormat.KeyImportance = "importance" -> string!
+const Android.Media.MediaRoute2Info.SuitabilityStatusNotSuitableForTransfer = 2 -> int
+const Android.Media.MediaRoute2Info.SuitabilityStatusSuitableForDefaultTransfer = 0 -> int
+const Android.Media.MediaRoute2Info.SuitabilityStatusSuitableForManualTransfer = 1 -> int
 const Android.Media.MediaRoute2Info.TypeHdmiArc = 10 -> int
 const Android.Media.MediaRoute2Info.TypeHdmiEarc = 29 -> int
 const Android.Media.MediaRoute2Info.TypeRemoteCar = 1008 -> int
@@ -1572,12 +2159,33 @@ const Android.Media.Metrics.MediaItemInfo.SourceTypeRemoteLiveStream = 6 -> int
 const Android.Media.Metrics.MediaItemInfo.SourceTypeUnspecified = 0 -> int
 const Android.Media.Metrics.MediaItemInfo.ValueUnspecified = -1 -> int
 const Android.Media.Midi.MidiUmpDeviceService.ServiceInterface = "android.media.midi.MidiUmpDeviceService" -> string!
+const Android.Media.RoutingSessionInfo.TransferReasonApp = 2 -> int
+const Android.Media.RoutingSessionInfo.TransferReasonFallback = 0 -> int
+const Android.Media.RoutingSessionInfo.TransferReasonSystemRequest = 1 -> int
+const Android.Net.IpSec.Ike.IkeSessionParams.IkeDpdDelaySecDisabled = 2147483647 -> int
 const Android.Net.IpSecTransformState.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Net.IpSecTransformState.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Net.NetworkCapabilities.NetCapabilityLocalNetwork = 36 -> int
 const Android.Net.NetworkCapabilities.TransportSatellite = 10 -> int
 const Android.Net.Nsd.DiscoveryRequest.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Net.Nsd.DiscoveryRequest.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonConnectionCancelled = 0 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonGroupRemoved = 4 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonInvitationFailed = 5 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonProvisionDiscoveryFailed = 3 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonTimedOut = 1 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.GroupCreationFailureReasonUserRejected = 2 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.WifiP2pScanFull = 0 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.WifiP2pScanSingleFreq = 2 -> int
+const Android.Net.Wifi.P2p.WifiP2pManager.WifiP2pScanSocial = 1 -> int
+const Android.Net.Wifi.Rtt.WifiRttManager.CharacteristicsKeyBooleanNtbInitiator = "key_ntb_initiator" -> string!
+const Android.Net.Wifi.WifiManager.FlagSendDhcpHostnameRestrictionOpen = 1 -> int
+const Android.Net.Wifi.WifiManager.FlagSendDhcpHostnameRestrictionSecure = 2 -> int
+const Android.Net.Wifi.WifiManager.RoamingModeAggressive = 2 -> int
+const Android.Net.Wifi.WifiManager.RoamingModeNone = 0 -> int
+const Android.Net.Wifi.WifiManager.RoamingModeNormal = 1 -> int
 const Android.Nfc.CardEmulators.PollingFrame.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Nfc.CardEmulators.PollingFrame.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Nfc.CardEmulators.PollingFrame.PollingLoopTypeA = 65 -> int
@@ -1593,6 +2201,12 @@ const Android.Nfc.NfcAdapter.FlagListenNfcPassiveB = 2 -> int
 const Android.Nfc.NfcAdapter.FlagListenNfcPassiveF = 4 -> int
 const Android.Nfc.NfcAdapter.FlagReaderDisable = 0 -> int
 const Android.Nfc.NfcAdapter.FlagReaderKeep = -2147483648 -> int
+const Android.OS.Build.VERSION_CODES.VanillaIceCream = 10000 -> int
+const Android.OS.PowerMonitor.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.OS.PowerMonitor.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.OS.PowerMonitor.PowerMonitorTypeConsumer = 0 -> int
+const Android.OS.PowerMonitor.PowerMonitorTypeMeasurement = 1 -> int
+const Android.OS.PowerMonitorReadings.EnergyUnavailable = -1 -> int
 const Android.OS.ProfilingManager.ProfilingTypeHeapProfile = 2 -> int
 const Android.OS.ProfilingManager.ProfilingTypeJavaHeapDump = 1 -> int
 const Android.OS.ProfilingManager.ProfilingTypeStackSampling = 3 -> int
@@ -1611,7 +2225,15 @@ const Android.OS.ProfilingResult.InterfaceConsts.ParcelableWriteReturnValue = An
 const Android.OS.SecurityStateManager.KeyKernelVersion = "kernel_version" -> string!
 const Android.OS.SecurityStateManager.KeySystemSpl = "system_spl" -> string!
 const Android.OS.SecurityStateManager.KeyVendorSpl = "vendor_spl" -> string!
+const Android.OS.UserManager.DisallowAddPrivateProfile = "no_add_private_profile" -> string!
+const Android.OS.UserManager.DisallowAssistContent = "no_assist_content" -> string!
 const Android.OS.UserManager.DisallowNearFieldCommunicationRadio = "no_near_field_communication_radio" -> string!
+const Android.OS.UserManager.DisallowSimGlobally = "no_sim_globally" -> string!
+const Android.OS.UserManager.UserTypeProfileClone = "android.os.usertype.profile.CLONE" -> string!
+const Android.OS.UserManager.UserTypeProfileManaged = "android.os.usertype.profile.MANAGED" -> string!
+const Android.OS.UserManager.UserTypeProfilePrivate = "android.os.usertype.profile.PRIVATE" -> string!
+const Android.Provider.CallLog.Calls.AssertedDisplayName = "asserted_display_name" -> string!
+const Android.Provider.CallLog.Calls.IsBusinessCall = "is_business_call" -> string!
 const Android.Provider.CloudMediaProviderContract.ExtraPageSize = "android.provider.extra.PAGE_SIZE" -> string!
 const Android.Provider.E2eeContactKeysManager.E2eeContactKey.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Provider.E2eeContactKeysManager.E2eeContactKey.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
@@ -1637,16 +2259,63 @@ const Android.Provider.Telephony.Carriers.MtuV4 = "mtu_v4" -> string!
 const Android.Provider.Telephony.Carriers.MtuV6 = "mtu_v6" -> string!
 const Android.Provider.Telephony.Carriers.UserEditable = "user_editable" -> string!
 const Android.Provider.Telephony.Carriers.UserVisible = "user_visible" -> string!
+const Android.Service.Chooser.ChooserResult.ChooserResultCopy = 1 -> int
+const Android.Service.Chooser.ChooserResult.ChooserResultEdit = 2 -> int
+const Android.Service.Chooser.ChooserResult.ChooserResultSelectedComponent = 0 -> int
+const Android.Service.Chooser.ChooserResult.ChooserResultUnknown = -1 -> int
+const Android.Service.Chooser.ChooserResult.InterfaceConsts.ContentsFileDescriptor = 1 -> int
+const Android.Service.Chooser.ChooserResult.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Service.Chooser.IAdditionalContentContract.IColumns.Uri = "uri" -> string!
+const Android.Service.Chooser.IAdditionalContentContract.ICursorExtraKeys.Position = "position" -> string!
+const Android.Service.Chooser.IAdditionalContentContract.IMethodNames.OnSelectionChanged = "onSelectionChanged" -> string!
+const Android.Service.Controls.ControlsProviderService.ControlsSurfaceActivityPanel = 0 -> int
+const Android.Service.Controls.ControlsProviderService.ControlsSurfaceDream = 1 -> int
+const Android.Service.Controls.ControlsProviderService.ExtraControlsSurface = "android.service.controls.extra.CONTROLS_SURFACE" -> string!
 const Android.Service.Notification.Condition.SourceContext = 3 -> int
 const Android.Service.Notification.Condition.SourceSchedule = 2 -> int
 const Android.Service.Notification.Condition.SourceUnknown = 0 -> int
 const Android.Service.Notification.Condition.SourceUserAction = 1 -> int
 const Android.Service.Notification.ZenDeviceEffects.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Service.Notification.ZenDeviceEffects.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
+const Android.Service.Voice.VoiceInteractionSession.KeyForegroundActivities = "android.service.voice.FOREGROUND_ACTIVITIES" -> string!
 const Android.Speech.RecognizerIntent.ExtraLanguageSwitchInitialActiveDurationTimeMillis = "android.speech.extra.LANGUAGE_SWITCH_INITIAL_ACTIVE_DURATION_TIME_MILLIS" -> string!
 const Android.Speech.RecognizerIntent.ExtraLanguageSwitchMaxSwitches = "android.speech.extra.LANGUAGE_SWITCH_MAX_SWITCHES" -> string!
 const Android.Telecom.Call.Details.PropertyIsTransactional = 32768 -> int
+const Android.Telecom.Call.ExtraAssertedDisplayName = "android.telecom.extra.ASSERTED_DISPLAY_NAME" -> string!
+const Android.Telecom.Call.ExtraIsBusinessCall = "android.telecom.extra.IS_BUSINESS_CALL" -> string!
+const Android.Telecom.CallAttributes.SupportsVideoCalling = 16 -> int
 const Android.Telecom.TelecomManager.ExtraCallLogUri = "android.telecom.extra.CALL_LOG_URI" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.DomainCs = 1 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.DomainPs3gpp = 2 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.DomainPsNon3gpp = 3 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyCrossStackRedialTimerSecInt = "imsemergency.cross_stack_redial_timer_sec_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyCallSetupTimerOnCurrentNetworkSecInt = "imsemergency.emergency_call_setup_timer_on_current_network_sec_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyCdmaPreferredNumbersStringArray = "imsemergency.emergency_cdma_preferred_numbers_string_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyDomainPreferenceIntArray = "imsemergency.emergency_domain_preference_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyDomainPreferenceRoamingIntArray = "imsemergency.emergency_domain_preference_roaming_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyLtePreferredAfterNrFailedBool = "imsemergency.emergency_lte_preferred_after_nr_failed_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyNetworkScanTypeInt = "imsemergency.emergency_network_scan_type_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyOverCsRoamingSupportedAccessNetworkTypesIntArray = "imsemergency.emergency_over_cs_roaming_supported_access_network_types_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyOverCsSupportedAccessNetworkTypesIntArray = "imsemergency.emergency_over_cs_supported_access_network_types_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyOverImsRoamingSupported3gppNetworkTypesIntArray = "imsemergency.emergency_over_ims_roaming_supported_3gpp_network_types_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyOverImsSupported3gppNetworkTypesIntArray = "imsemergency.emergency_over_ims_supported_3gpp_network_types_int_array" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyRequiresImsRegistrationBool = "imsemergency.emergency_requires_ims_registration_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyRequiresVolteEnabledBool = "imsemergency.emergency_requires_volte_enabled_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyScanTimerSecInt = "imsemergency.emergency_scan_timer_sec_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyEmergencyVowifiRequiresConditionInt = "imsemergency.emergency_vowifi_requires_condition_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyMaximumCellularSearchTimerSecInt = "imsemergency.maximum_cellular_search_timer_sec_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyMaximumNumberOfEmergencyTriesOverVowifiInt = "imsemergency.maximum_number_of_emergency_tries_over_vowifi_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyPreferImsEmergencyWhenVoiceCallsOnCsBool = "imsemergency.prefer_ims_emergency_when_voice_calls_on_cs_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyQuickCrossStackRedialTimerSecInt = "imsemergency.quick_cross_stack_redial_timer_sec_int" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyScanLimitedServiceAfterVolteFailureBool = "imsemergency.scan_limited_service_after_volte_failure_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.KeyStartQuickCrossStackRedialTimerWhenRegisteredBool = "imsemergency.start_quick_cross_stack_redial_timer_when_registered_bool" -> string!
+const Android.Telephony.CarrierConfigManager.ImsEmergency.RedialTimerDisabled = 0 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.ScanTypeFullService = 1 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.ScanTypeFullServiceFollowedByLimitedService = 2 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.ScanTypeNoPreference = 0 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.VowifiRequiresNone = 0 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.VowifiRequiresSettingEnabled = 1 -> int
+const Android.Telephony.CarrierConfigManager.ImsEmergency.VowifiRequiresValidEid = 2 -> int
 const Android.Telephony.CarrierConfigManager.Iwlan.KeyChildSessionAesGcmKeySizeIntArray = "iwlan.child_session_aes_gcm_key_size_int_array" -> string!
 const Android.Telephony.CarrierConfigManager.Iwlan.KeyIkeSessionAesGcmKeySizeIntArray = "iwlan.ike_session_encryption_aes_gcm_key_size_int_array" -> string!
 const Android.Telephony.CarrierConfigManager.Iwlan.KeySupportedChildSessionAeadAlgorithmsIntArray = "iwlan.supported_child_session_aead_algorithms_int_array" -> string!
@@ -1665,8 +2334,11 @@ const Android.Telephony.CarrierConfigManager.KeySatelliteConnectionHysteresisSec
 const Android.Telephony.CarrierConfigManager.KeySatelliteEntitlementStatusRefreshDaysInt = "satellite_entitlement_status_refresh_days_int" -> string!
 const Android.Telephony.CarrierConfigManager.KeySatelliteEntitlementSupportedBool = "satellite_entitlement_supported_bool" -> string!
 const Android.Telephony.CarrierConfigManager.KeyShowRoamingIndicatorBool = "show_roaming_indicator_bool" -> string!
+const Android.Telephony.CarrierConfigManager.KeySupportsBusinessCallComposerBool = "supports_business_call_composer_bool" -> string!
 const Android.Telephony.Data.ApnSetting.TypeRcs = 32768 -> int
 const Android.Telephony.DisconnectCause.SatelliteEnabled = 82 -> int
+const Android.Telephony.Euicc.EuiccManager.EuiccMemoryFieldUnavailable = -1 -> long
+const Android.Telephony.Ims.Feature.MmTelFeature.MmTelCapabilities.CapabilityTypeCallComposerBusinessOnly = 32 -> int
 const Android.Telephony.NetworkRegistrationInfo.ServiceTypeMms = 6 -> int
 const Android.Telephony.PreciseDataConnectionState.NetworkValidationFailure = 4 -> int
 const Android.Telephony.PreciseDataConnectionState.NetworkValidationInProgress = 2 -> int
@@ -1678,6 +2350,7 @@ const Android.Telephony.SubscriptionManager.ServiceCapabilityData = 3 -> int
 const Android.Telephony.SubscriptionManager.ServiceCapabilitySms = 2 -> int
 const Android.Telephony.SubscriptionManager.ServiceCapabilityVoice = 1 -> int
 const Android.Telephony.TelephonyManager.ActionResetMobileNetworkSettings = "android.telephony.action.RESET_MOBILE_NETWORK_SETTINGS" -> string!
+const Android.Telephony.TelephonyManager.CallComposerStatusBusinessOnly = 2 -> int
 const Android.Telephony.TelephonyManager.EventDisplayEmergencyMessage = "android.telephony.event.DISPLAY_EMERGENCY_MESSAGE" -> string!
 const Android.Telephony.TelephonyManager.ExtraEmergencyCallToSatelliteHandoverType = "android.telephony.extra.EMERGENCY_CALL_TO_SATELLITE_HANDOVER_TYPE" -> string!
 const Android.Telephony.TelephonyManager.ExtraEmergencyCallToSatelliteLaunchIntent = "android.telephony.extra.EMERGENCY_CALL_TO_SATELLITE_LAUNCH_INTENT" -> string!
@@ -1686,20 +2359,44 @@ const Android.Text.Layout.JustificationModeInterCharacter = 2 -> int
 const Android.Text.Style.LineBreakConfigSpan.InterfaceConsts.ContentsFileDescriptor = 1 -> int
 const Android.Text.Style.LineBreakConfigSpan.InterfaceConsts.ParcelableWriteReturnValue = Android.OS.ParcelableWriteFlags.ReturnValue -> Android.OS.ParcelableWriteFlags
 const Android.Util.DisplayMetrics.Density390 = 390 -> int
+const Android.Views.Accessibility.AccessibilityNodeInfo.ActionArgumentScrollAmountFloat = "android.view.accessibility.action.ARGUMENT_SCROLL_AMOUNT_FLOAT" -> string!
+const Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Undefined = -1 -> int
+const Android.Views.InputMethods.IConnectionlessHandwritingCallback.ConnectionlessHandwritingErrorNoTextRecognized = 0 -> int
+const Android.Views.InputMethods.IConnectionlessHandwritingCallback.ConnectionlessHandwritingErrorOther = 2 -> int
+const Android.Views.InputMethods.IConnectionlessHandwritingCallback.ConnectionlessHandwritingErrorUnsupported = 1 -> int
+const Android.Views.InputMethods.InputMethodManager.HandwritingDelegateFlagHomeDelegatorAllowed = 1 -> int
+const Android.Views.IWindowInsetsController.AppearanceLightCaptionBars = 256 -> int
+const Android.Views.IWindowInsetsController.AppearanceTransparentCaptionBarBackground = 128 -> int
+const Android.Views.IWindowManager.CompatSmallCoverScreenOptIn = 1 -> int
 const Android.Views.IWindowManager.PropertyCompatAllowIgnoringOrientationRequestWhenLoopDetected = "android.window.PROPERTY_COMPAT_ALLOW_IGNORING_ORIENTATION_REQUEST_WHEN_LOOP_DETECTED" -> string!
 const Android.Views.IWindowManager.PropertyCompatAllowMinAspectRatioOverride = "android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE" -> string!
 const Android.Views.IWindowManager.PropertyCompatAllowResizeableActivityOverrides = "android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES" -> string!
+const Android.Views.IWindowManager.PropertyCompatAllowSmallCoverScreen = "android.window.PROPERTY_COMPAT_ALLOW_SMALL_COVER_SCREEN" -> string!
 const Android.Views.IWindowManager.PropertyCompatAllowUserAspectRatioFullscreenOverride = "android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_FULLSCREEN_OVERRIDE" -> string!
 const Android.Views.IWindowManager.PropertyCompatAllowUserAspectRatioOverride = "android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_OVERRIDE" -> string!
+const Android.Views.IWindowManager.PropertySupportsMultiInstanceSystemUi = "android.window.PROPERTY_SUPPORTS_MULTI_INSTANCE_SYSTEM_UI" -> string!
 const Android.Views.IWindowManager.ScreenRecordingStateNotVisible = 0 -> int
 const Android.Views.IWindowManager.ScreenRecordingStateVisible = 1 -> int
 const Android.Views.KeyEvent.KeycodeEmojiPicker = 317 -> int
 const Android.Views.KeyEvent.KeycodeScreenshot = 318 -> int
+const Android.Views.View.ContentSensitivityAuto = 0 -> int
+const Android.Views.View.ContentSensitivityNotSensitive = 2 -> int
+const Android.Views.View.ContentSensitivitySensitive = 1 -> int
+const Android.Views.View.DragFlagGlobalSameApplication = 4096 -> int
+const Android.Views.View.DragFlagStartIntentSenderOnUnhandledDrag = 8192 -> int
+const Android.Views.View.RequestedFrameRateCategoryDefault = NaN -> float
+const Android.Views.View.RequestedFrameRateCategoryHigh = -4 -> float
+const Android.Views.View.RequestedFrameRateCategoryLow = -2 -> float
+const Android.Views.View.RequestedFrameRateCategoryNoPreference = -1 -> float
+const Android.Views.View.RequestedFrameRateCategoryNormal = -3 -> float
+const Android.Views.WindowManager.CompatSmallCoverScreenOptIn = 1 -> int
 const Android.Views.WindowManager.PropertyCompatAllowIgnoringOrientationRequestWhenLoopDetected = "android.window.PROPERTY_COMPAT_ALLOW_IGNORING_ORIENTATION_REQUEST_WHEN_LOOP_DETECTED" -> string!
 const Android.Views.WindowManager.PropertyCompatAllowMinAspectRatioOverride = "android.window.PROPERTY_COMPAT_ALLOW_MIN_ASPECT_RATIO_OVERRIDE" -> string!
 const Android.Views.WindowManager.PropertyCompatAllowResizeableActivityOverrides = "android.window.PROPERTY_COMPAT_ALLOW_RESIZEABLE_ACTIVITY_OVERRIDES" -> string!
+const Android.Views.WindowManager.PropertyCompatAllowSmallCoverScreen = "android.window.PROPERTY_COMPAT_ALLOW_SMALL_COVER_SCREEN" -> string!
 const Android.Views.WindowManager.PropertyCompatAllowUserAspectRatioFullscreenOverride = "android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_FULLSCREEN_OVERRIDE" -> string!
 const Android.Views.WindowManager.PropertyCompatAllowUserAspectRatioOverride = "android.window.PROPERTY_COMPAT_ALLOW_USER_ASPECT_RATIO_OVERRIDE" -> string!
+const Android.Views.WindowManager.PropertySupportsMultiInstanceSystemUi = "android.window.PROPERTY_SUPPORTS_MULTI_INSTANCE_SYSTEM_UI" -> string!
 const Android.Views.WindowManager.ScreenRecordingStateNotVisible = 0 -> int
 const Android.Views.WindowManager.ScreenRecordingStateVisible = 1 -> int
 const Android.Window.InputTransferToken.InterfaceConsts.ContentsFileDescriptor = 1 -> int
@@ -1873,10 +2570,6 @@ override Android.AdServices.Common.KeyedFrequencyCap.Builder.JniPeerMembers.get 
 override Android.AdServices.Common.KeyedFrequencyCap.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.AdServices.CustomAudiences.PartialCustomAudience.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.AdServices.CustomAudiences.PartialCustomAudience.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
-override Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.Measurement.SourceRegistrationRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.Measurement.SourceRegistrationRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.AdServices.OnDevicePersonalization.AppInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -1967,21 +2660,28 @@ override Android.App.AppSearch.EnterpriseGlobalSearchSession.ThresholdType.get -
 override Android.App.AppSearch.SchemaVisibilityConfig.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.AppSearch.SchemaVisibilityConfig.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.AutomaticZenRule.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.App.ComponentCaller.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.Notification.TvExtender.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.Usage.UsageEventsQuery.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.App.Usage.UsageEventsQuery.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Bluetooth.BluetoothCodecType.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Content.ClipData.Item.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.PM.ArchivedActivityInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.PM.ArchivedPackageInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.ThresholdClass.get -> nint
 override Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.ThresholdType.get -> System.Type!
+override Android.Content.PM.LauncherUserInfo.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.PM.PackageInstaller.UnarchivalState.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.UriRelativeFilter.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Content.UriRelativeFilterGroup.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Crypto.Hpke.XdhKeySpec.Format.get -> string!
 override Android.Crypto.Hpke.XdhKeySpec.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Database.Sqlite.SQLiteRawStatement.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Graphics.Matrix44.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Graphics.Matrix44.ThresholdClass.get -> nint
+override Android.Graphics.Matrix44.ThresholdType.get -> System.Type!
 override Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.Destination.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Graphics.Pdf.Content.PdfPageImageContent.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -2001,9 +2701,64 @@ override Android.Graphics.Pdf.PdfRendererPreV.JniPeerMembers.get -> Java.Interop
 override Android.Graphics.Pdf.PdfRendererPreV.Page.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Graphics.Pdf.RenderParams.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Graphics.Pdf.RenderParams.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptContentItemBulletedText.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptContentItemPlainText.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptVerticalListContentView.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Biometrics.PromptVerticalListContentView.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.ThresholdClass.get -> nint
+override Android.Hardware.Camera2.CameraDevice.CameraDeviceSetup.ThresholdType.get -> System.Type!
+override Android.Hardware.OverlayProperties.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ActiveCaloriesBurnedGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DistanceWithVariableRestGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.DurationGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.RepetitionsGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.StepsGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ThresholdClass.get -> nint
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.ThresholdType.get -> System.Type!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.TotalCaloriesBurnedGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnknownGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnspecifiedGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.AmrapGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.CadenceGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.HeartRateGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.PowerGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.RateOfPerceivedExertionGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.SpeedGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.ThresholdClass.get -> nint
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.ThresholdType.get -> System.Type!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.UnknownGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.ExercisePerformanceGoal.WeightGoal.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseBlock.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseBlock.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseSessionRecord.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseStep.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.PlannedExerciseStep.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.SkinTemperatureRecord.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.SkinTemperatureRecord.Delta.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.SkinTemperatureRecord.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Health.Connect.DataTypes.Units.TemperatureDelta.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.Builder.ThresholdClass.get -> nint
+override Android.Icu.Text.DisplayOptions.Builder.ThresholdType.get -> System.Type!
+override Android.Icu.Text.DisplayOptions.Capitalization.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.DisplayLength.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.GrammaticalCase.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.NameStyle.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.NounClass.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.PluralCategory.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Icu.Text.DisplayOptions.SubstituteHandling.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Media.LoudnessCodecController.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Media.LoudnessCodecController.ThresholdClass.get -> nint
 override Android.Media.LoudnessCodecController.ThresholdType.get -> System.Type!
+override Android.Media.MediaFormat.QpOffsetRect.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Media.MediaRouter2.ScanRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Media.MediaRouter2.ScanRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Media.MediaRouter2.ScanToken.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -2019,7 +2774,12 @@ override Android.Net.IpSecTransformState.Builder.JniPeerMembers.get -> Java.Inte
 override Android.Net.IpSecTransformState.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Net.Nsd.DiscoveryRequest.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Net.Nsd.DiscoveryRequest.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Net.Wifi.Rtt.RangingResult.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Nfc.CardEmulators.PollingFrame.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.OS.PowerMonitor.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.OS.PowerMonitorReadings.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.OS.ProfilingManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.OS.ProfilingResult.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.OS.SecurityStateManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
@@ -2029,11 +2789,19 @@ override Android.OS.WorkDuration.JniPeerMembers.get -> Java.Interop.JniPeerMembe
 override Android.Provider.E2eeContactKeysManager.E2eeContactKey.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Provider.E2eeContactKeysManager.E2eeSelfKey.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Provider.E2eeContactKeysManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Chooser.ChooserResult.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Notification.ZenDeviceEffects.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Service.Notification.ZenDeviceEffects.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Persistentdata.PersistentDataBlockManager.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Service.Persistentdata.PersistentDataBlockManager.ThresholdClass.get -> nint
+override Android.Service.Persistentdata.PersistentDataBlockManager.ThresholdType.get -> System.Type!
+override Android.Text.Layout.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Text.Style.LineBreakConfigSpan.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Views.Accessibility.AccessibilityNodeInfo.CollectionInfo.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Views.InputDevice.ViewBehavior.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Views.SurfaceControl.TransactionStats.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.RemoteViews.DrawInstructions.Builder.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
+override Android.Widget.RemoteViews.DrawInstructions.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Window.InputTransferToken.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Android.Window.TrustedPresentationThresholds.JniPeerMembers.get -> Java.Interop.JniPeerMembers!
 override Java.Nio.MappedByteBuffer.Compact() -> Java.Nio.ByteBuffer?
@@ -2070,7 +2838,6 @@ static Android.AdServices.Common.AdFilters.Creator.get -> Android.OS.IParcelable
 static Android.AdServices.Common.AppInstallFilters.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.Common.FrequencyCapFilters.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.Common.KeyedFrequencyCap.Creator.get -> Android.OS.IParcelableCreator!
-static Android.AdServices.CustomAudiences.PartialCustomAudience.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.Measurement.SourceRegistrationRequest.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.OnDevicePersonalization.AppInfo.Creator.get -> Android.OS.IParcelableCreator!
 static Android.AdServices.OnDevicePersonalization.EventLogRecord.Creator.get -> Android.OS.IParcelableCreator!
@@ -2099,11 +2866,14 @@ static Android.App.AppSearch.SetSchemaResponse.MigrationFailure.Creator.get -> A
 static Android.App.AppSearch.StorageInfo.Creator.get -> Android.OS.IParcelableCreator!
 static Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.Creator.get -> Android.OS.IParcelableCreator!
 static Android.App.Usage.UsageEventsQuery.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Bluetooth.BluetoothCodecType.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Content.PM.LauncherUserInfo.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Content.PM.PackageInstaller.UnarchivalState.CreateGenericErrorState(int unarchiveId) -> Android.Content.PM.PackageInstaller.UnarchivalState!
 static Android.Content.PM.PackageInstaller.UnarchivalState.CreateInsufficientStorageState(int unarchiveId, long requiredStorageBytes, Android.App.PendingIntent? userActionIntent) -> Android.Content.PM.PackageInstaller.UnarchivalState!
 static Android.Content.PM.PackageInstaller.UnarchivalState.CreateNoConnectivityState(int unarchiveId) -> Android.Content.PM.PackageInstaller.UnarchivalState!
 static Android.Content.PM.PackageInstaller.UnarchivalState.CreateOkState(int unarchiveId) -> Android.Content.PM.PackageInstaller.UnarchivalState!
 static Android.Content.PM.PackageInstaller.UnarchivalState.CreateUserActionRequiredState(int unarchiveId, Android.App.PendingIntent! userActionIntent) -> Android.Content.PM.PackageInstaller.UnarchivalState!
+static Android.Content.Res.Resources.RegisterResourcePaths(string! uniqueId, Android.Content.PM.ApplicationInfo! appInfo) -> void
 static Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Graphics.Pdf.Content.PdfPageGotoLinkContent.Destination.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Graphics.Pdf.Content.PdfPageImageContent.Creator.get -> Android.OS.IParcelableCreator!
@@ -2116,16 +2886,26 @@ static Android.Graphics.Pdf.Models.PageMatchBounds.Creator.get -> Android.OS.IPa
 static Android.Graphics.Pdf.Models.Selection.PageSelection.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Graphics.Pdf.Models.Selection.SelectionBoundary.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Graphics.Text.LineBreakConfig.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Hardware.Biometrics.PromptContentItemBulletedText.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Hardware.Biometrics.PromptContentItemPlainText.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Hardware.Biometrics.PromptContentViewWithMoreOptionsButton.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Hardware.Biometrics.PromptVerticalListContentView.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Hardware.Biometrics.PromptVerticalListContentView.MaxEachItemCharacterNumber.get -> int
+static Android.Hardware.Biometrics.PromptVerticalListContentView.MaxItemCount.get -> int
 static Android.Hardware.Camera2.CameraCharacteristics.ControlLowLightBoostInfoLuminanceRange.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
 static Android.Hardware.Camera2.CameraCharacteristics.FlashSingleStrengthDefaultLevel.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
 static Android.Hardware.Camera2.CameraCharacteristics.FlashSingleStrengthMaxLevel.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
 static Android.Hardware.Camera2.CameraCharacteristics.FlashTorchStrengthDefaultLevel.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
 static Android.Hardware.Camera2.CameraCharacteristics.FlashTorchStrengthMaxLevel.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
+static Android.Hardware.Camera2.CameraCharacteristics.InfoSessionConfigurationQueryVersion.get -> Android.Hardware.Camera2.CameraCharacteristics.Key!
 static Android.Hardware.Camera2.CaptureRequest.FlashStrengthLevel.get -> Android.Hardware.Camera2.CaptureRequest.Key!
 static Android.Hardware.Camera2.CaptureResult.ControlLowLightBoostState.get -> Android.Hardware.Camera2.CaptureResult.Key!
 static Android.Hardware.Camera2.CaptureResult.FlashStrengthLevel.get -> Android.Hardware.Camera2.CaptureResult.Key!
+static Android.Hardware.Camera2.Params.OutputConfiguration.CreateInstancesForMultiResolutionOutput(System.Collections.Generic.ICollection<Android.Hardware.Camera2.Params.MultiResolutionStreamInfo!>! streams, int format) -> System.Collections.Generic.IList<Android.Hardware.Camera2.Params.OutputConfiguration!>!
+static Android.Hardware.Camera2.Params.OutputConfiguration.SetSurfacesForMultiResolutionOutput(System.Collections.Generic.ICollection<Android.Hardware.Camera2.Params.OutputConfiguration!>! outputConfigurations, Android.Hardware.Camera2.MultiResolutionImageReader! multiResolutionImageReader) -> void
 static Android.Hardware.HardwareBuffer.Create(int width, int height, Android.Hardware.HardwareBufferFormat format, int layers, Android.Hardware.HardwareBufferUsage usage) -> Android.Hardware.HardwareBuffer!
 static Android.Hardware.HardwareBuffer.IsSupported(int width, int height, Android.Hardware.HardwareBufferFormat format, int layers, long usage) -> bool
+static Android.Hardware.OverlayProperties.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Health.Connect.DataTypes.BloodPressureRecord.DiastolicAvg.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.BloodPressureRecord.DiastolicMax.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.BloodPressureRecord.DiastolicMin.get -> Android.Health.Connect.DataTypes.AggregationType!
@@ -2135,23 +2915,102 @@ static Android.Health.Connect.DataTypes.BloodPressureRecord.SystolicMin.get -> A
 static Android.Health.Connect.DataTypes.CyclingPedalingCadenceRecord.RpmAvg.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.CyclingPedalingCadenceRecord.RpmMax.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.CyclingPedalingCadenceRecord.RpmMin.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnknownGoal.Instance.get -> Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnknownGoal!
+static Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnspecifiedGoal.Instance.get -> Android.Health.Connect.DataTypes.ExerciseCompletionGoal.UnspecifiedGoal!
+static Android.Health.Connect.DataTypes.ExercisePerformanceGoal.AmrapGoal.Instance.get -> Android.Health.Connect.DataTypes.ExercisePerformanceGoal.AmrapGoal!
+static Android.Health.Connect.DataTypes.ExercisePerformanceGoal.UnknownGoal.Instance.get -> Android.Health.Connect.DataTypes.ExercisePerformanceGoal.UnknownGoal!
 static Android.Health.Connect.DataTypes.NutritionRecord.TransFatTotal.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DataTypes.SkinTemperatureRecord.SkinTemperatureDeltaAvg.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DataTypes.SkinTemperatureRecord.SkinTemperatureDeltaMax.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DataTypes.SkinTemperatureRecord.SkinTemperatureDeltaMin.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.SpeedRecord.SpeedAvg.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.SpeedRecord.SpeedMax.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.SpeedRecord.SpeedMin.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.StepsCadenceRecord.StepsCadenceRateAvg.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.StepsCadenceRecord.StepsCadenceRateMax.get -> Android.Health.Connect.DataTypes.AggregationType!
 static Android.Health.Connect.DataTypes.StepsCadenceRecord.StepsCadenceRateMin.get -> Android.Health.Connect.DataTypes.AggregationType!
+static Android.Health.Connect.DataTypes.Units.TemperatureDelta.FromCelsius(double value) -> Android.Health.Connect.DataTypes.Units.TemperatureDelta!
+static Android.Icu.Lang.UCharacter.UnicodeBlock.CjkUnifiedIdeographsExtensionI.get -> Android.Icu.Lang.UCharacter.UnicodeBlock?
 static Android.Icu.Text.Collator.GetEquivalentReorderCodes(int reorderCode) -> int[]?
+static Android.Icu.Text.DisplayOptions.Capitalization.BeginningOfSentence.get -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.MiddleOfSentence.get -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.Standalone.get -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.UiListOrMenu.get -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.Undefined.get -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.Capitalization?
+static Android.Icu.Text.DisplayOptions.Capitalization.Values() -> Android.Icu.Text.DisplayOptions.Capitalization![]?
+static Android.Icu.Text.DisplayOptions.DisplayLength.LengthFull.get -> Android.Icu.Text.DisplayOptions.DisplayLength?
+static Android.Icu.Text.DisplayOptions.DisplayLength.LengthShort.get -> Android.Icu.Text.DisplayOptions.DisplayLength?
+static Android.Icu.Text.DisplayOptions.DisplayLength.Undefined.get -> Android.Icu.Text.DisplayOptions.DisplayLength?
+static Android.Icu.Text.DisplayOptions.DisplayLength.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.DisplayLength?
+static Android.Icu.Text.DisplayOptions.DisplayLength.Values() -> Android.Icu.Text.DisplayOptions.DisplayLength![]?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Ablative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Accusative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Comitative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Dative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Ergative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.FromIdentifier(string? identifier) -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Genitive.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Instrumental.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Locative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.LocativeCopulative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Nominative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Oblique.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Prepositional.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Sociative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Undefined.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Values() -> Android.Icu.Text.DisplayOptions.GrammaticalCase![]?
+static Android.Icu.Text.DisplayOptions.GrammaticalCase.Vocative.get -> Android.Icu.Text.DisplayOptions.GrammaticalCase?
+static Android.Icu.Text.DisplayOptions.InvokeBuilder() -> Android.Icu.Text.DisplayOptions.Builder?
+static Android.Icu.Text.DisplayOptions.NameStyle.DialectNames.get -> Android.Icu.Text.DisplayOptions.NameStyle?
+static Android.Icu.Text.DisplayOptions.NameStyle.StandardNames.get -> Android.Icu.Text.DisplayOptions.NameStyle?
+static Android.Icu.Text.DisplayOptions.NameStyle.Undefined.get -> Android.Icu.Text.DisplayOptions.NameStyle?
+static Android.Icu.Text.DisplayOptions.NameStyle.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.NameStyle?
+static Android.Icu.Text.DisplayOptions.NameStyle.Values() -> Android.Icu.Text.DisplayOptions.NameStyle![]?
+static Android.Icu.Text.DisplayOptions.NounClass.Animate.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Common.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Feminine.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.FromIdentifier(string? identifier) -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Inanimate.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Masculine.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Neuter.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Other.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Personal.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Undefined.get -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.NounClass?
+static Android.Icu.Text.DisplayOptions.NounClass.Values() -> Android.Icu.Text.DisplayOptions.NounClass![]?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Few.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.FromIdentifier(string? identifier) -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Many.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.One.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Other.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Two.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Undefined.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Values() -> Android.Icu.Text.DisplayOptions.PluralCategory![]?
+static Android.Icu.Text.DisplayOptions.PluralCategory.Zero.get -> Android.Icu.Text.DisplayOptions.PluralCategory?
+static Android.Icu.Text.DisplayOptions.SubstituteHandling.NoSubstitute.get -> Android.Icu.Text.DisplayOptions.SubstituteHandling?
+static Android.Icu.Text.DisplayOptions.SubstituteHandling.Substitute.get -> Android.Icu.Text.DisplayOptions.SubstituteHandling?
+static Android.Icu.Text.DisplayOptions.SubstituteHandling.Undefined.get -> Android.Icu.Text.DisplayOptions.SubstituteHandling?
+static Android.Icu.Text.DisplayOptions.SubstituteHandling.ValueOf(string? name) -> Android.Icu.Text.DisplayOptions.SubstituteHandling?
+static Android.Icu.Text.DisplayOptions.SubstituteHandling.Values() -> Android.Icu.Text.DisplayOptions.SubstituteHandling![]?
+static Android.Icu.Text.NumberFormat.Field.ApproximatelySign.get -> Android.Icu.Text.NumberFormat.Field?
+static Android.Icu.Util.MeasureUnit.Quarter.get -> Android.Icu.Util.MeasureUnit?
+static Android.Icu.Util.MeasureUnit.Tonne.get -> Android.Icu.Util.MeasureUnit?
+static Android.Icu.Util.VersionInfo.Unicode151.get -> Android.Icu.Util.VersionInfo?
 static Android.Media.LoudnessCodecController.Create(int sessionId) -> Android.Media.LoudnessCodecController!
 static Android.Media.LoudnessCodecController.Create(int sessionId, Java.Util.Concurrent.IExecutor! executor, Android.Media.LoudnessCodecController.IOnLoudnessCodecUpdateListener! listener) -> Android.Media.LoudnessCodecController!
+static Android.Media.MediaFormat.QpOffsetRect.FlattenToString(System.Collections.Generic.IList<Android.Media.MediaFormat.QpOffsetRect!>! qpOffsetRects) -> string!
 static Android.Media.MediaRouter2.GetInstance(Android.Content.Context! context, string! clientPackageName, Java.Util.Concurrent.IExecutor! executor, Java.Lang.IRunnable! onInstanceInvalidatedListener) -> Android.Media.MediaRouter2!
 static Android.Media.Metrics.EditingEndedEvent.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Media.Metrics.MediaItemInfo.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Net.IpSecTransformState.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Net.Nsd.DiscoveryRequest.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Nfc.CardEmulators.PollingFrame.Creator.get -> Android.OS.IParcelableCreator!
 static Android.OS.Debug.Rss.get -> long
+static Android.OS.PowerMonitor.Creator.get -> Android.OS.IParcelableCreator!
 static Android.OS.Process.GetAppUidForSdkSandboxUid(int uid) -> int
 static Android.OS.Process.GetSdkSandboxUidForAppUid(int uid) -> int
 static Android.OS.Process.IsSdkSandboxUid(int uid) -> bool
@@ -2161,6 +3020,10 @@ static Android.Provider.E2eeContactKeysManager.E2eeContactKey.Creator.get -> And
 static Android.Provider.E2eeContactKeysManager.E2eeSelfKey.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Provider.E2eeContactKeysManager.MaxKeySizeBytes.get -> int
 static Android.Resource.Attribute.Allow.get -> int
+static Android.Resource.Attribute.AllowCrossUidActivitySwitchFromBelow.get -> int
+static Android.Resource.Attribute.AutoTransact.get -> int
+static Android.Resource.Attribute.ContentSensitivity.get -> int
+static Android.Resource.Attribute.DefaultLocale.get -> int
 static Android.Resource.Attribute.FragmentAdvancedPattern.get -> int
 static Android.Resource.Attribute.FragmentPattern.get -> int
 static Android.Resource.Attribute.FragmentPrefix.get -> int
@@ -2170,6 +3033,14 @@ static Android.Resource.Attribute.QueryAdvancedPattern.get -> int
 static Android.Resource.Attribute.QueryPattern.get -> int
 static Android.Resource.Attribute.QueryPrefix.get -> int
 static Android.Resource.Attribute.QuerySuffix.get -> int
+static Android.Resource.Attribute.RequireContentUriPermissionFromCaller.get -> int
+static Android.Resource.Attribute.ShiftDrawingOffsetForStartOverhang.get -> int
+static Android.Resource.Attribute.ShouldDefaultToObserveMode.get -> int
+static Android.Resource.Attribute.SupportsConnectionlessStylusHandwriting.get -> int
+static Android.Resource.Attribute.SystemUserOnly.get -> int
+static Android.Resource.Attribute.UseBoundsForWidth.get -> int
+static Android.Resource.Attribute.UseLocalePreferredLineHeightForMinimum.get -> int
+static Android.Resource.Attribute.WindowIsFrameRatePowerSavingsBalanced.get -> int
 static Android.Resource.Attribute.WindowOptOutEdgeToEdgeEnforcement.get -> int
 static Android.Resource.Color.SystemError0.get -> int
 static Android.Resource.Color.SystemError10.get -> int
@@ -2187,15 +3058,19 @@ static Android.Resource.Color.SystemError900.get -> int
 static Android.Resource.Color.SystemOnSurfaceDisabled.get -> int
 static Android.Resource.Color.SystemOutlineDisabled.get -> int
 static Android.Resource.Color.SystemSurfaceDisabled.get -> int
+static Android.Service.Chooser.ChooserResult.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Service.Notification.ZenDeviceEffects.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Systems.OsConstants.IpprotoEsp.get -> int
 static Android.Systems.OsConstants.Ipv6Pktinfo.get -> int
 static Android.Systems.OsConstants.NetlinkXfrm.get -> int
 static Android.Systems.OsConstants.PacketIgnoreOutgoing.get -> int
 static Android.Systems.OsConstants.SolPacket.get -> int
+static Android.Telephony.PhoneNumberUtils.IsWpsCallNumber(string! number) -> bool
 static Android.Text.Style.LineBreakConfigSpan.CreateNoBreakSpan() -> Android.Text.Style.LineBreakConfigSpan!
 static Android.Text.Style.LineBreakConfigSpan.CreateNoHyphenationSpan() -> Android.Text.Style.LineBreakConfigSpan!
 static Android.Text.Style.LineBreakConfigSpan.Creator.get -> Android.OS.IParcelableCreator!
+static Android.Views.InputMethods.IConnectionlessHandwritingCallbackExtensions.OnResult(this Android.Views.InputMethods.IConnectionlessHandwritingCallback! self, string! text) -> void
+static Android.Widget.RemoteViews.DrawInstructions.SupportedVersion.get -> long
 static Android.Window.InputTransferToken.Creator.get -> Android.OS.IParcelableCreator!
 static Android.Window.TrustedPresentationThresholds.Creator.get -> Android.OS.IParcelableCreator!
 static Java.Lang.Character.CodePointOf(string! name) -> int
@@ -2292,7 +3167,6 @@ virtual Android.AdServices.AdSelection.UpdateAdCounterHistogramRequest.AdSelecti
 virtual Android.AdServices.AdSelection.UpdateAdCounterHistogramRequest.CallerAdTech.get -> Android.AdServices.Common.AdTechIdentifier!
 virtual Android.AdServices.CustomAudiences.AddCustomAudienceOverrideRequest.BiddingLogicJsVersion.get -> long
 virtual Android.AdServices.CustomAudiences.CustomAudienceManager.FetchAndJoinCustomAudience(Android.AdServices.CustomAudiences.FetchAndJoinCustomAudienceRequest! fetchAndJoinCustomAudienceRequest, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
-virtual Android.AdServices.CustomAudiences.CustomAudienceManager.ScheduleCustomAudienceUpdate(Android.AdServices.CustomAudiences.ScheduleCustomAudienceUpdateRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.AdServices.Common.IAdServicesOutcomeReceiver! receiver) -> void
 virtual Android.AdServices.Measurement.MeasurementManager.DeleteRegistrations(Android.AdServices.Measurement.DeletionRequest! deletionRequest, Java.Util.Concurrent.IExecutor! executor, Android.AdServices.Common.IAdServicesOutcomeReceiver! callback) -> void
 virtual Android.AdServices.Measurement.MeasurementManager.GetMeasurementApiStatus(Java.Util.Concurrent.IExecutor! executor, Android.AdServices.Common.IAdServicesOutcomeReceiver! callback) -> void
 virtual Android.AdServices.Measurement.MeasurementManager.RegisterSource(Android.AdServices.Measurement.SourceRegistrationRequest! request, Java.Util.Concurrent.IExecutor? executor, Android.AdServices.Common.IAdServicesOutcomeReceiver? callback) -> void
@@ -2320,12 +3194,22 @@ virtual Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationManage
 virtual Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationManager.ExecuteResult.SurfacePackageToken.get -> Android.AdServices.OnDevicePersonalization.SurfacePackageToken?
 virtual Android.AdServices.OnDevicePersonalization.OnDevicePersonalizationManager.RequestSurfacePackage(Android.AdServices.OnDevicePersonalization.SurfacePackageToken! surfacePackageToken, Android.OS.IBinder! surfaceViewHostToken, int displayId, int width, int height, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
 virtual Android.AdServices.Signals.ProtectedSignalsManager.UpdateSignals(Android.AdServices.Signals.UpdateSignalsRequest! updateSignalsRequest, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
+virtual Android.App.Activity.Caller.get -> Android.App.ComponentCaller?
+virtual Android.App.Activity.CurrentCaller.get -> Android.App.ComponentCaller!
+virtual Android.App.Activity.InitialCaller.get -> Android.App.ComponentCaller!
+virtual Android.App.Activity.OnActivityResult(int requestCode, Android.App.Result resultCode, Android.Content.Intent? data, Android.App.ComponentCaller! caller) -> void
+virtual Android.App.Activity.OnNewIntent(Android.Content.Intent! intent, Android.App.ComponentCaller! caller) -> void
+virtual Android.App.Activity.OnRequestPermissionsResult(int requestCode, string![]! permissions, Android.Content.PM.Permission[]! grantResults, int deviceId) -> void
+virtual Android.App.Activity.SetAllowCrossUidActivitySwitchFromBelow(bool allowed) -> void
+virtual Android.App.Activity.SetIntent(Android.Content.Intent? newIntent, Android.App.ComponentCaller? newCaller) -> void
+virtual Android.App.Activity.ShouldShowRequestPermissionRationale(string! permission, int deviceId) -> bool
 virtual Android.App.ActivityManager.AddApplicationStartInfoCompletionListener(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! listener) -> void
 virtual Android.App.ActivityManager.AddStartInfoTimestamp(int key, long timestampNs) -> void
 virtual Android.App.ActivityManager.GetHistoricalProcessStartReasons(int maxNum) -> System.Collections.Generic.IList<Android.App.ApplicationStartInfo!>!
 virtual Android.App.ActivityManager.RemoveApplicationStartInfoCompletionListener(Java.Util.Functions.IConsumer! listener) -> void
 virtual Android.App.Admin.DevicePolicyManager.GetContentProtectionPolicy(Android.Content.ComponentName? admin) -> int
 virtual Android.App.Admin.DevicePolicyManager.SetContentProtectionPolicy(Android.Content.ComponentName? admin, int policy) -> void
+virtual Android.App.Admin.DevicePolicyManager.SubscriptionIds.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
 virtual Android.App.AppSearch.AppSearchManager.CreateEnterpriseGlobalSearchSession(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
 virtual Android.App.AppSearch.EnterpriseGlobalSearchSession.GetByDocumentId(string! packageName, string! databaseName, Android.App.AppSearch.GetByDocumentIdRequest! request, Java.Util.Concurrent.IExecutor! executor, Android.App.AppSearch.IBatchResultCallback! callback) -> void
 virtual Android.App.AppSearch.EnterpriseGlobalSearchSession.GetSchema(string! packageName, string! databaseName, Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! callback) -> void
@@ -2337,17 +3221,33 @@ virtual Android.App.AppSearch.GenericDocument.Builder.SetSchemaType(string! sche
 virtual Android.App.AppSearch.SetSchemaResponse.MigrationFailure.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 virtual Android.App.AppSearch.SetSchemaResponse.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
 virtual Android.App.AppSearch.StorageInfo.WriteToParcel(Android.OS.Parcel! dest, Android.OS.ParcelableWriteFlags flags) -> void
+virtual Android.App.GrammaticalInflectionManager.SystemGrammaticalGender.get -> int
+virtual Android.App.Instrumentation.CallActivityOnNewIntent(Android.App.Activity! activity, Android.Content.Intent! intent, Android.App.ComponentCaller! caller) -> void
+virtual Android.App.Job.JobInfo.DebugTags.get -> System.Collections.Generic.ICollection<string!>!
+virtual Android.App.Job.JobInfo.TraceTag.get -> string?
+virtual Android.App.LocaleConfig.DefaultLocale.get -> Java.Util.Locale?
 virtual Android.App.NotificationManager.AreAutomaticZenRulesUserManaged() -> bool
 virtual Android.App.NotificationManager.GetAutomaticZenRuleState(string! id) -> int
 virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.AppOwnedSdkSandboxInterfaces.get -> System.Collections.Generic.IList<Android.App.SdkSandbox.AppOwnedSdkSandboxInterface!>!
 virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.ClientPackageName.get -> string!
 virtual Android.App.SdkSandbox.SdkProvider.SdkSandboxController.LoadSdk(string! sdkName, Android.OS.Bundle! params, Java.Util.Concurrent.IExecutor! executor, Android.OS.IOutcomeReceiver! receiver) -> void
+virtual Android.App.Service.OnTimeout(int startId, int fgsType) -> void
+virtual Android.Appwidget.AppWidgetManager.GetWidgetPreview(Android.Content.ComponentName! provider, Android.OS.UserHandle? profile, int widgetCategory) -> Android.Widget.RemoteViews?
+virtual Android.Appwidget.AppWidgetManager.RemoveWidgetPreview(Android.Content.ComponentName! provider, int widgetCategories) -> void
+virtual Android.Appwidget.AppWidgetManager.SetWidgetPreview(Android.Content.ComponentName! provider, int widgetCategories, Android.Widget.RemoteViews! preview) -> bool
+virtual Android.Content.ClipData.Item.IntentSender.get -> Android.Content.IntentSender?
 virtual Android.Content.Context.BindIsolatedService(Android.Content.Intent! service, Android.Content.Context.BindServiceFlags! flags, string! instanceName, Java.Util.Concurrent.IExecutor! executor, Android.Content.IServiceConnection! conn) -> bool
 virtual Android.Content.Context.BindIsolatedService(Android.Content.Intent! service, int flags, string! instanceName, Java.Util.Concurrent.IExecutor! executor, Android.Content.IServiceConnection! conn) -> bool
+virtual Android.Content.Context.CheckContentUriPermissionFull(Android.Net.Uri! uri, int pid, int uid, int modeFlags) -> int
+virtual Android.Content.Intent.IsMismatchingFilter.get -> bool
 virtual Android.Content.OM.FabricatedOverlay.SetNinePatchResourceValue(string! resourceName, Android.OS.ParcelFileDescriptor! value, string? configuration) -> void
 virtual Android.Content.OM.FabricatedOverlay.SetResourceValue(string! resourceName, Android.Content.Res.AssetFileDescriptor! value, string? configuration) -> void
+virtual Android.Content.PM.CrossProfileApps.IsManagedProfile(Android.OS.UserHandle! userHandle) -> bool
+virtual Android.Content.PM.CrossProfileApps.IsProfile(Android.OS.UserHandle! userHandle) -> bool
 virtual Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.SetEnableIconOverlay(bool enableIconOverlay) -> void
 virtual Android.Content.PM.LauncherApps.ArchiveCompatibilityParams.SetEnableUnarchivalConfirmation(bool enableUnarchivalConfirmation) -> void
+virtual Android.Content.PM.LauncherApps.GetAppMarketActivityIntent(string? packageName, Android.OS.UserHandle! user) -> Android.Content.IntentSender?
+virtual Android.Content.PM.LauncherApps.GetPreInstalledSystemPackages(Android.OS.UserHandle! userHandle) -> System.Collections.Generic.IList<string!>!
 virtual Android.Content.PM.LauncherApps.SetArchiveCompatibility(Android.Content.PM.LauncherApps.ArchiveCompatibilityParams! params) -> void
 virtual Android.Content.PM.PackageInfo.ApexPackageName.get -> string?
 virtual Android.Content.PM.PackageInfo.ArchiveTimeMillis.get -> long
@@ -2368,27 +3268,96 @@ virtual Android.Database.Sqlite.SQLiteDatabase.CreateRawStatement(string! sql) -
 virtual Android.Database.Sqlite.SQLiteDatabase.LastChangedRowCount.get -> long
 virtual Android.Database.Sqlite.SQLiteDatabase.LastInsertRowId.get -> long
 virtual Android.Database.Sqlite.SQLiteDatabase.TotalChangedRowCount.get -> long
+virtual Android.Graphics.BitmapShader.SetOverrideGainmap(Android.Graphics.Gainmap? overrideGainmap) -> void
+virtual Android.Graphics.Canvas.ClipOutShader(Android.Graphics.Shader! shader) -> void
+virtual Android.Graphics.Canvas.ClipShader(Android.Graphics.Shader! shader) -> void
+virtual Android.Graphics.Canvas.Concat(Android.Graphics.Matrix44? m) -> void
+virtual Android.Graphics.Matrix44.Concat(Android.Graphics.Matrix44! b) -> Android.Graphics.Matrix44!
+virtual Android.Graphics.Matrix44.Get(int row, int col) -> float
+virtual Android.Graphics.Matrix44.GetValues(float[]! dst) -> void
+virtual Android.Graphics.Matrix44.Invert() -> bool
+virtual Android.Graphics.Matrix44.IsIdentity.get -> bool
+virtual Android.Graphics.Matrix44.Map(float x, float y, float z, float w) -> float[]!
+virtual Android.Graphics.Matrix44.Map(float x, float y, float z, float w, float[]! dst) -> void
+virtual Android.Graphics.Matrix44.Reset() -> void
+virtual Android.Graphics.Matrix44.Rotate(float deg, float xComp, float yComp, float zComp) -> Android.Graphics.Matrix44!
+virtual Android.Graphics.Matrix44.Scale(float x, float y, float z) -> Android.Graphics.Matrix44!
+virtual Android.Graphics.Matrix44.Set(int row, int col, float val) -> void
+virtual Android.Graphics.Matrix44.SetValues(float[]! src) -> void
+virtual Android.Graphics.Matrix44.Translate(float x, float y, float z) -> Android.Graphics.Matrix44!
+virtual Android.Graphics.Paint.FontMetricsInt.Set(Android.Graphics.Paint.FontMetrics! fontMetrics) -> void
+virtual Android.Graphics.Paint.FontMetricsInt.Set(Android.Graphics.Paint.FontMetricsInt! fontMetricsInt) -> void
+virtual Android.Graphics.Paint.GetFontMetricsForLocale(Android.Graphics.Paint.FontMetrics! metrics) -> void
+virtual Android.Graphics.Paint.GetFontMetricsIntForLocale(Android.Graphics.Paint.FontMetricsInt! metrics) -> void
 virtual Android.Hardware.Biometrics.BiometricManager.GetLastAuthenticationTime(int authenticators) -> long
+virtual Android.Hardware.Biometrics.BiometricPrompt.Builder.SetContentView(Android.Hardware.Biometrics.IPromptContentView! view) -> Android.Hardware.Biometrics.BiometricPrompt.Builder!
+virtual Android.Hardware.Biometrics.BiometricPrompt.Builder.SetLogoBitmap(Android.Graphics.Bitmap! logoBitmap) -> Android.Hardware.Biometrics.BiometricPrompt.Builder!
+virtual Android.Hardware.Biometrics.BiometricPrompt.Builder.SetLogoDescription(string! logoDescription) -> Android.Hardware.Biometrics.BiometricPrompt.Builder!
+virtual Android.Hardware.Biometrics.BiometricPrompt.Builder.SetLogoRes(int logoRes) -> Android.Hardware.Biometrics.BiometricPrompt.Builder!
+virtual Android.Hardware.Biometrics.BiometricPrompt.ContentView.get -> Android.Hardware.Biometrics.IPromptContentView?
+virtual Android.Hardware.Biometrics.BiometricPrompt.LogoBitmap.get -> Android.Graphics.Bitmap?
+virtual Android.Hardware.Biometrics.BiometricPrompt.LogoDescription.get -> string?
+virtual Android.Hardware.Biometrics.BiometricPrompt.LogoRes.get -> int
+virtual Android.Icu.Number.FormattedNumber.NounClass.get -> Android.Icu.Text.DisplayOptions.NounClass?
+virtual Android.Icu.Number.NumberFormatterSettings.DisplayOptions(Android.Icu.Text.DisplayOptions? displayOptions) -> Java.Lang.Object?
 virtual Android.Icu.Text.Collator.GetReorderCodes() -> int[]?
 virtual Android.Icu.Text.Collator.SetReorderCodes(params int[]? order) -> void
+virtual Android.Icu.Text.DateTimePatternGenerator.GetDateTimeFormat(int style) -> string?
+virtual Android.Icu.Text.DateTimePatternGenerator.SetDateTimeFormat(int style, string? dateTimeFormat) -> void
+virtual Android.Icu.Text.DisplayOptions.Builder.Build() -> Android.Icu.Text.DisplayOptions?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetCapitalization(Android.Icu.Text.DisplayOptions.Capitalization? capitalization) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetDisplayLength(Android.Icu.Text.DisplayOptions.DisplayLength? displayLength) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetGrammaticalCase(Android.Icu.Text.DisplayOptions.GrammaticalCase? grammaticalCase) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetNameStyle(Android.Icu.Text.DisplayOptions.NameStyle? nameStyle) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetNounClass(Android.Icu.Text.DisplayOptions.NounClass? nounClass) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetPluralCategory(Android.Icu.Text.DisplayOptions.PluralCategory? pluralCategory) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.Icu.Text.DisplayOptions.Builder.SetSubstituteHandling(Android.Icu.Text.DisplayOptions.SubstituteHandling? substituteHandling) -> Android.Icu.Text.DisplayOptions.Builder?
+virtual Android.InputMethodServices.InputMethodService.OnStartConnectionlessStylusHandwriting(int inputType, Android.Views.InputMethods.CursorAnchorInfo? cursorAnchorInfo) -> bool
+virtual Android.Media.AudioManager.GetSupportedDeviceTypes(int direction) -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
 virtual Android.Media.LoudnessCodecController.AddMediaCodec(Android.Media.MediaCodec! mediaCodec) -> bool
 virtual Android.Media.LoudnessCodecController.Close() -> void
 virtual Android.Media.LoudnessCodecController.GetLoudnessCodecParams(Android.Media.MediaCodec! mediaCodec) -> Android.OS.Bundle!
 virtual Android.Media.LoudnessCodecController.RemoveMediaCodec(Android.Media.MediaCodec! mediaCodec) -> void
+virtual Android.Media.MediaCodec.Callback.OnOutputBuffersAvailable(Android.Media.MediaCodec! codec, int index, Java.Util.ArrayDeque! infos) -> void
 virtual Android.Media.MediaRouter2.RoutingController.TransferableRoutes.get -> System.Collections.Generic.IList<Android.Media.MediaRoute2Info!>!
+virtual Android.Media.MediaRouter2.RoutingController.WasTransferInitiatedBySelf() -> bool
 virtual Android.Media.Midi.MidiUmpDeviceService.OnClose() -> void
 virtual Android.Media.Midi.MidiUmpDeviceService.OnDeviceStatusChanged(Android.Media.Midi.MidiDeviceStatus! status) -> void
 virtual Android.Net.NetworkRequest.Builder.SetSubscriptionIds(System.Collections.Generic.ICollection<Java.Lang.Integer!>! subIds) -> Android.Net.NetworkRequest.Builder!
 virtual Android.Net.NetworkRequest.SubscriptionIds.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
+virtual Android.Net.Wifi.P2p.WifiP2pDevice.IpAddress.get -> Java.Net.InetAddress?
+virtual Android.Net.Wifi.P2p.WifiP2pManager.RegisterWifiP2pListener(Java.Util.Concurrent.IExecutor! executor, Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener! listener) -> void
+virtual Android.Net.Wifi.P2p.WifiP2pManager.StartPeerDiscovery(Android.Net.Wifi.P2p.WifiP2pManager.Channel! channel, Android.Net.Wifi.P2p.WifiP2pDiscoveryConfig! config, Android.Net.Wifi.P2p.WifiP2pManager.IActionListener? listener) -> void
+virtual Android.Net.Wifi.P2p.WifiP2pManager.UnregisterWifiP2pListener(Android.Net.Wifi.P2p.WifiP2pManager.IWifiP2pListener! listener) -> void
+virtual Android.Net.Wifi.ScanResult.Is80211azNtbResponder() -> bool
+virtual Android.Net.Wifi.ScanResult.IsTwtResponder.get -> bool
+virtual Android.Net.Wifi.WifiInfo.PasspointUniqueId.get -> string?
+virtual Android.Net.Wifi.WifiManager.GetPerSsidRoamingModes(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! resultsCallback) -> void
+virtual Android.Net.Wifi.WifiManager.IsAggressiveRoamingModeSupported.get -> bool
+virtual Android.Net.Wifi.WifiManager.IsD2dSupportedWhenInfraStaDisabled.get -> bool
+virtual Android.Net.Wifi.WifiManager.IsWepSupported.get -> bool
+virtual Android.Net.Wifi.WifiManager.IsWpaPersonalSupported.get -> bool
+virtual Android.Net.Wifi.WifiManager.QuerySendDhcpHostnameRestriction(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IIntConsumer! resultsCallback) -> void
+virtual Android.Net.Wifi.WifiManager.RemovePerSsidRoamingMode(Android.Net.Wifi.WifiSsid! ssid) -> void
+virtual Android.Net.Wifi.WifiManager.SetPerSsidRoamingMode(Android.Net.Wifi.WifiSsid! ssid, int roamingMode) -> void
+virtual Android.Net.Wifi.WifiManager.SetSendDhcpHostnameRestriction(int restriction) -> void
 virtual Android.Nfc.CardEmulators.HostApduService.ProcessPollingFrames(System.Collections.Generic.IList<Android.Nfc.CardEmulators.PollingFrame!>! frame) -> void
 virtual Android.OS.BatteryManager.GetStringProperty(int id) -> string?
 virtual Android.OS.HardwarePropertiesManager.GetDeviceTemperatures(Android.OS.DeviceTemperatureType type, Android.OS.TemperatureSource source) -> float[]!
+virtual Android.OS.Health.SystemHealthManager.GetPowerMonitorReadings(System.Collections.Generic.IList<Android.OS.PowerMonitor!>! powerMonitors, Java.Util.Concurrent.IExecutor? executor, Android.OS.IOutcomeReceiver! onResult) -> void
+virtual Android.OS.Health.SystemHealthManager.GetSupportedPowerMonitors(Java.Util.Concurrent.IExecutor? executor, Java.Util.Functions.IConsumer! onResult) -> void
 virtual Android.OS.PerformanceHintManager.Session.ReportActualWorkDuration(Android.OS.WorkDuration! workDuration) -> void
 virtual Android.OS.PerformanceHintManager.Session.SetPreferPowerEfficiency(bool enabled) -> void
 virtual Android.OS.PowerManager.ThermalHeadroomThresholds.get -> System.Collections.Generic.IDictionary<Java.Lang.Integer!, Java.Lang.Float!>!
 virtual Android.OS.SecurityStateManager.GlobalSecurityState.get -> Android.OS.Bundle!
+virtual Android.Service.Persistentdata.PersistentDataBlockManager.IsFactoryResetProtectionActive.get -> bool
+virtual Android.Telecom.Call.Details.Id.get -> string!
+virtual Android.Telecom.PhoneAccount.Builder.ClearSimultaneousCallingRestriction() -> Android.Telecom.PhoneAccount.Builder!
+virtual Android.Telecom.PhoneAccount.Builder.SetSimultaneousCallingRestriction(System.Collections.Generic.ICollection<Android.Telecom.PhoneAccountHandle!>! handles) -> Android.Telecom.PhoneAccount.Builder!
+virtual Android.Telecom.TelecomManager.RegisteredPhoneAccounts.get -> System.Collections.Generic.IList<Android.Telecom.PhoneAccount!>!
 virtual Android.Telephony.Data.ApnSetting.Builder.SetAlwaysOn(bool alwaysOn) -> Android.Telephony.Data.ApnSetting.Builder!
 virtual Android.Telephony.Data.ApnSetting.IsAlwaysOn.get -> bool
+virtual Android.Telephony.Euicc.EuiccManager.AvailableMemoryInBytes.get -> long
 virtual Android.Telephony.Mbms.DownloadStatusListener.OnStatusUpdated(Android.Telephony.Mbms.DownloadRequest? request, Android.Telephony.Mbms.FileInfo? fileInfo, Android.Telephony.Mbms.DownloadStatus status) -> void
 virtual Android.Telephony.Mbms.StreamingServiceCallback.OnStreamMethodUpdated(Android.Telephony.Mbms.StreamingMethod methodType) -> void
 virtual Android.Telephony.Mbms.StreamingServiceCallback.OnStreamStateUpdated(Android.Telephony.StreamingState state, Android.Telephony.Mbms.StreamingStateChangedReason reason) -> void
@@ -2397,13 +3366,30 @@ virtual Android.Telephony.SubscriptionInfo.IsOnlyNonTerrestrialNetwork.get -> bo
 virtual Android.Telephony.SubscriptionInfo.ServiceCapabilities.get -> System.Collections.Generic.ICollection<Java.Lang.Integer!>!
 virtual Android.Telephony.TelephonyManager.IsDeviceSmsCapable.get -> bool
 virtual Android.Telephony.TelephonyManager.IsDeviceVoiceCapable.get -> bool
+virtual Android.Text.BoringLayout.Metrics.DrawingBoundingBox.get -> Android.Graphics.RectF!
+virtual Android.Text.Layout.ComputeDrawingBoundingBox() -> Android.Graphics.RectF!
 virtual Android.Text.Layout.GetLineLetterSpacingUnitCount(int line, bool includeTrailingWhitespace) -> int
+virtual Android.Text.Layout.LineBreakConfig.get -> Android.Graphics.Text.LineBreakConfig!
+virtual Android.Text.Layout.MinimumFontMetrics.get -> Android.Graphics.Paint.FontMetrics?
+virtual Android.Text.Layout.ShiftDrawingOffsetForStartOverhang.get -> bool
+virtual Android.Text.Layout.UseBoundsForWidth.get -> bool
+virtual Android.Views.Accessibility.AccessibilityNodeInfo.GranularScrollingSupported.get -> bool
+virtual Android.Views.Accessibility.AccessibilityNodeInfo.GranularScrollingSupported.set -> void
+virtual Android.Views.Display.OverlaySupport.get -> Android.Hardware.OverlayProperties!
+virtual Android.Views.InputMethods.EditorInfo.StylusHandwritingEnabled.get -> bool
+virtual Android.Views.InputMethods.EditorInfo.StylusHandwritingEnabled.set -> void
 virtual Android.Views.SurfaceControl.Transaction.AddTransactionCompletedListener(Java.Util.Concurrent.IExecutor! executor, Java.Util.Functions.IConsumer! listener) -> Android.Views.SurfaceControl.Transaction!
 virtual Android.Views.SurfaceControl.Transaction.SetDesiredHdrHeadroom(Android.Views.SurfaceControl! sc, float desiredRatio) -> Android.Views.SurfaceControl.Transaction!
 virtual Android.Views.SurfaceControl.Transaction.SetDesiredPresentTimeNanos(long desiredPresentTimeNanos) -> Android.Views.SurfaceControl.Transaction!
 virtual Android.Views.SurfaceControl.Transaction.SetFrameTimeline(long vsyncId) -> Android.Views.SurfaceControl.Transaction!
 virtual Android.Views.SurfaceView.SetDesiredHdrHeadroom(float desiredHeadroom) -> void
 virtual Android.Views.View.ClearPendingCredentialRequest() -> void
+virtual Android.Views.View.FrameContentVelocity.get -> float
+virtual Android.Views.View.FrameContentVelocity.set -> void
+virtual Android.Views.View.HandwritingDelegateFlags.get -> int
+virtual Android.Views.View.HandwritingDelegateFlags.set -> void
+virtual Android.Views.View.RequestedFrameRate.get -> float
+virtual Android.Views.View.RequestedFrameRate.set -> void
 virtual Android.Views.View.SetPendingCredentialRequest(Android.Credentials.GetCredentialRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
 virtual Android.Views.ViewStructure.ClearCredentialManagerRequest() -> void
 virtual Android.Views.ViewStructure.PendingCredentialCallback.get -> Android.OS.IOutcomeReceiver?
@@ -2411,8 +3397,25 @@ virtual Android.Views.ViewStructure.PendingCredentialRequest.get -> Android.Cred
 virtual Android.Views.ViewStructure.SetPendingCredentialRequest(Android.Credentials.GetCredentialRequest! request, Android.OS.IOutcomeReceiver! callback) -> void
 virtual Android.Views.Window.DesiredHdrHeadroom.get -> float
 virtual Android.Views.Window.DesiredHdrHeadroom.set -> void
+virtual Android.Views.Window.FrameRateBoostOnTouchEnabled.get -> bool
+virtual Android.Views.Window.FrameRateBoostOnTouchEnabled.set -> void
+virtual Android.Views.Window.FrameRatePowerSavingsBalanced.get -> bool
+virtual Android.Views.Window.FrameRatePowerSavingsBalanced.set -> void
 virtual Android.Views.WindowManagerLayoutParams.DesiredHdrHeadroom.get -> float
 virtual Android.Views.WindowManagerLayoutParams.DesiredHdrHeadroom.set -> void
+virtual Android.Views.WindowManagerLayoutParams.FrameRateBoostOnTouchEnabled.get -> bool
+virtual Android.Views.WindowManagerLayoutParams.FrameRateBoostOnTouchEnabled.set -> void
+virtual Android.Views.WindowManagerLayoutParams.FrameRatePowerSavingsBalanced.get -> bool
+virtual Android.Views.WindowManagerLayoutParams.FrameRatePowerSavingsBalanced.set -> void
+virtual Android.Widget.RemoteViews.SetOnStylusHandwritingPendingIntent(int viewId, Android.App.PendingIntent? pendingIntent) -> void
+virtual Android.Widget.TextView.LocalePreferredLineHeightForMinimumUsed.get -> bool
+virtual Android.Widget.TextView.LocalePreferredLineHeightForMinimumUsed.set -> void
+virtual Android.Widget.TextView.MinimumFontMetrics.get -> Android.Graphics.Paint.FontMetrics?
+virtual Android.Widget.TextView.MinimumFontMetrics.set -> void
+virtual Android.Widget.TextView.ShiftDrawingOffsetForStartOverhang.get -> bool
+virtual Android.Widget.TextView.ShiftDrawingOffsetForStartOverhang.set -> void
+virtual Android.Widget.TextView.UseBoundsForWidth.get -> bool
+virtual Android.Widget.TextView.UseBoundsForWidth.set -> void
 virtual Java.Nio.ByteBuffer.Get(int index, byte[]! dst) -> Java.Nio.ByteBuffer!
 virtual Java.Nio.ByteBuffer.Get(int index, byte[]! dst, int offset, int length) -> Java.Nio.ByteBuffer!
 virtual Java.Nio.ByteBuffer.Put(int index, byte[]! src) -> Java.Nio.ByteBuffer!
