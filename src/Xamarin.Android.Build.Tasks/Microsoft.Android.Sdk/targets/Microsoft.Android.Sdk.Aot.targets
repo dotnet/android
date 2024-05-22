@@ -159,11 +159,11 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <_StampDir>$(_AndroidStampDirectory)\..\..\stamp</_StampDir>
     </PropertyGroup>
     <MakeDir
-        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp.Count)' > '0' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_UpdateStamp.Count)' > 0 "
         Directories="$(_StampDir)"
     />
     <Touch
-        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp.Count)' > '0' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_UpdateStamp.Count)' > 0 "
         Files="$(_StampDir)\_GenerateJavaStubs.stamp"
         AlwaysCreate="True"
     />
