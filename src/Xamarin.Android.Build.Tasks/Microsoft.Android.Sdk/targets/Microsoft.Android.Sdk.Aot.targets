@@ -144,7 +144,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         DestinationFiles="@(_ILStripUpdatedAssemblies->'%(UntrimmedAssemblyFilePath)')"
     />
     <ItemGroup>
-      <_UpdateStamp Include="@(_ILStripUpdatedAssemblies)" Condition=" '%(_ILStripUpdatedAssemblies.ILStripped)' == 'true' " />
+      <_UpdateStamp Include="@(_ILStripUpdatedAssemblies)" Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_ILStripUpdatedAssemblies.ILStripped)' == 'true' " />
     </ItemGroup>
 
     <!-- We must update the stamp file used by `_GenerateJavaStubs`, but `$(_AndroidStampDirectory)` **here** is inside a per-RID parent
@@ -159,11 +159,11 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
       <_StampDir>$(_AndroidStampDirectory)\..\..\stamp</_StampDir>
     </PropertyGroup>
     <MakeDir
-        Condition=" '@(_UpdateStamp.Count)' != '0' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp.Count)' > '0' "
         Directories="$(_StampDir)"
     />
     <Touch
-        Condition=" '@(_UpdateStamp.Count)' != '0' "
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp.Count)' > '0' "
         Files="$(_StampDir)\_GenerateJavaStubs.stamp"
         AlwaysCreate="True"
     />
