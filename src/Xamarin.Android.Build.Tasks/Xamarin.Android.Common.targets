@@ -538,7 +538,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA1037"
       ResourceName="XA1037"
       FormatArguments="AndroidFastDeploymentType;9"
-      Condition=" '$(AndroidFastDeploymentType)' == '' "
+      Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
 </Target>
 
