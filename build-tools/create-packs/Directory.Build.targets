@@ -164,7 +164,8 @@
   </Target>
 
   <!-- https://github.com/dotnet/arcade/blob/efc3da96e5ac110513e92ebd9ef87c73f44d8540/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
-  <Target Name="PushManifestToBuildAssetRegistry" >
+  <Target Name="PushManifestToBuildAssetRegistry" 
+      DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
       <ArtifactsLogDir>$(OutputPath)</ArtifactsLogDir>
       <AssetManifestFileName>Assets.xml</AssetManifestFileName>
@@ -204,12 +205,12 @@
     <MSBuild
         Targets="Restore"
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion)"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersionLong)"
     />
 
     <MSBuild
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(ArtifactsLogDir)AssetManifest;MaestroApiEndpoint=https://maestro.dot.net"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersionLong);ManifestsPath=$(ArtifactsLogDir)AssetManifest;MaestroApiEndpoint=https://maestro.dot.net"
     />
   </Target>
 
