@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
+using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
 
@@ -249,19 +250,33 @@ namespace Xamarin.Android.NetTests
 		}
 
 		[Test]
-		public async Task AndroidMessageHandlerSendsClientCertificate ()
+		public async Task AndroidMessageHandlerSendsClientCertificate ([Values(true, false)] bool setClientCertificateOptionsExplicitly)
 		{
-			const string testClientCertificate = "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";
-			using X509Certificate2 certificate = new X509Certificate2 (Convert.FromBase64String (testClientCertificate), "pass");
+			using X509Certificate2 certificate = BuildClientCertificate ();
 
 			using var handler = new AndroidMessageHandler ();
+			if (setClientCertificateOptionsExplicitly) {
+				handler.ClientCertificateOptions = ClientCertificateOption.Manual;
+			}
 			handler.ClientCertificates.Add (certificate);
+
 			using var client = new HttpClient (handler);
 			var response = await client.GetAsync ("https://corefx-net-tls.azurewebsites.net/EchoClientCertificate.ashx");
 			var content = await response.EnsureSuccessStatusCode ().Content.ReadAsStringAsync ();
 
 			X509Certificate2 certificate2 = new X509Certificate2 (global::System.Convert.FromBase64String (content));
 			Assert.AreEqual (certificate.Thumbprint, certificate2.Thumbprint);
+		}
+
+		[Test]
+		public async Task AndroidMessageHandlerRejectsClientCertificateOptionsAutomatic ()
+		{
+			var handler = new AndroidMessageHandler
+			{
+				ClientCertificateOptions = ClientCertificateOption.Automatic,
+			};
+
+			Assert.Throws<InvalidOperationException>(() => handler.ClientCertificates.Add (BuildClientCertificate ()));
 		}
 
 		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
@@ -277,6 +292,38 @@ namespace Xamarin.Android.NetTests
 			// of these and we need to catch both here
 			catch (System.Net.WebException) {}
 			catch (System.Net.Http.HttpRequestException) {}
+		}
+
+		// Adapted from https://github.com/dotnet/runtime/blob/e8b89a3fde2911c6cbac0488bf82c74329a7224a/src/libraries/Common/tests/System/Security/Cryptography/X509Certificates/CertificateAuthority.cs#L797
+		private static X509Certificate2 BuildClientCertificate ()
+		{
+			DateTimeOffset start = DateTimeOffset.UtcNow;
+			DateTimeOffset end = start.AddMonths (3);
+
+			using RSA rootKey = RSA.Create (keySizeInBits: 2048);
+			using RSA clientKey = RSA.Create (keySizeInBits: 2048);
+
+			var rootReq = new CertificateRequest ("CN=Test Root, O=Test Root Organization", rootKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+			rootReq.CertificateExtensions.Add (new X509BasicConstraintsExtension (certificateAuthority: true, hasPathLengthConstraint: false, pathLengthConstraint: 0, critical: true));
+			rootReq.CertificateExtensions.Add (new X509SubjectKeyIdentifierExtension (rootReq.PublicKey, critical: false));
+			X509Certificate2 rootCert = rootReq.CreateSelfSigned (start.AddDays (-2), end.AddDays (2));
+
+			var clientReq = new CertificateRequest ("CN=Test End Entity, O=Test End Entity Organization", clientKey, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+			clientReq.CertificateExtensions.Add (new X509BasicConstraintsExtension (certificateAuthority: false, hasPathLengthConstraint: false, pathLengthConstraint: 0, critical: false));
+			clientReq.CertificateExtensions.Add (new X509KeyUsageExtension (X509KeyUsageFlags.DigitalSignature | X509KeyUsageFlags.KeyEncipherment | X509KeyUsageFlags.DataEncipherment, critical: false));
+			clientReq.CertificateExtensions.Add (new X509EnhancedKeyUsageExtension (enhancedKeyUsages: new OidCollection { new Oid ("1.3.6.1.5.5.7.3.2", null) }, critical: false)); // TLS client EKU
+			clientReq.CertificateExtensions.Add (new X509SubjectKeyIdentifierExtension (clientReq.PublicKey, critical: false));
+
+			var serial = new byte [sizeof (long)];
+			RandomNumberGenerator.Fill (serial);
+
+			X509Certificate2 clientCert = clientReq.Create (rootCert, start, end, serial);
+
+			var tmp = clientCert;
+			clientCert = clientCert.CopyWithPrivateKey (clientKey);
+			tmp.Dispose ();
+
+			return clientCert;
 		}
 	}
 }
