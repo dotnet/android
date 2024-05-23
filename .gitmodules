@@ -2,6 +2,10 @@
     path = external/android-api-docs
     url = https://github.com/xamarin/android-api-docs
     branch = main
+[submodule "external/constexpr-xxh3"]
+    path = external/constexpr-xxh3
+    url = https://github.com/chys87/constexpr-xxh3.git
+    branch = main
 [submodule "external/debugger-libs"]
     path = external/debugger-libs
     url = https://github.com/mono/debugger-libs
@@ -10,6 +14,10 @@
     path = external/Java.Interop
     url = https://github.com/xamarin/java.interop.git
     branch = main
+[submodule "external/libunwind"]
+    path = external/libunwind
+    url = https://github.com/libunwind/libunwind.git
+    branch = v1.8-stable
 [submodule "external/lz4"]
     path = external/lz4
     url = https://github.com/xamarin/lz4
@@ -25,10 +33,3 @@
 [submodule "external/xxHash"]
     path = external/xxHash
     url = https://github.com/Cyan4973/xxHash.git
-[submodule "external/constexpr-xxh3"]
-    path = external/constexpr-xxh3
-    url = https://github.com/chys87/constexpr-xxh3.git
-[submodule "external/libunwind"]
-    path = external/libunwind
-    url = https://github.com/libunwind/libunwind.git
-    branch = v1.8-stable
