@@ -39,7 +39,7 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 		if (output == null)
 			this.output = System.out;
 		else {
-			final File file     = new File(output);     // lgtm [java/path-injection-local] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
+			final File file     = new File(output);     // CodeQL [SM00697] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 			final File parent   = file.getParentFile();
 			if (parent != null) {
 				parent.mkdirs();
@@ -86,7 +86,7 @@ public final class JavadocXmlGenerator implements AutoCloseable {
 			final   Element    blurb    = document.createElement("copyright");
 			final   NodeList   contents = readXmlFile(copyright);
 			if (contents == null) {
-				final byte[]   data     = Files.readAllBytes(copyright.toPath());
+				final byte[]   data     = Files.readAllBytes(copyright.toPath());   // CodeQL [SM00697] java-source-utils.jar is a command-line app, and is useless if it doesn't support command-line args.
 				blurb.appendChild(document.createCDATASection(new String(data, StandardCharsets.UTF_8)));
 			} else {
 				final int len = contents.getLength();
