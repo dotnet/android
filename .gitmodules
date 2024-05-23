@@ -23,12 +23,12 @@
     url = https://github.com/xamarin/xamarin-android-tools
     branch = main
 [submodule "external/xxHash"]
-	path = external/xxHash
-	url = https://github.com/Cyan4973/xxHash.git
+    path = external/xxHash
+    url = https://github.com/Cyan4973/xxHash.git
 [submodule "external/constexpr-xxh3"]
-	path = external/constexpr-xxh3
-	url = https://github.com/chys87/constexpr-xxh3.git
+    path = external/constexpr-xxh3
+    url = https://github.com/chys87/constexpr-xxh3.git
 [submodule "external/libunwind"]
-	path = external/libunwind
-	url = https://github.com/libunwind/libunwind.git
-	branch = master
+    path = external/libunwind
+    url = https://github.com/libunwind/libunwind.git
+    branch = v1.8-stable
