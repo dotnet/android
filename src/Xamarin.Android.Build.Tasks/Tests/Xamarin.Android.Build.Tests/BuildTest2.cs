@@ -275,7 +275,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("_AndroidUseJavaLegacyResolver", "true", true, true)]
 		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true)]
 		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true)]
-		public void PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject)
+		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject)
 		{
 			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
 			proj.IsRelease = isRelease;
