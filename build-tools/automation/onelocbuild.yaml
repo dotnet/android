@@ -17,7 +17,10 @@ jobs:
 - job: OneLocBuild
   displayName: OneLocBuild
   condition: and(eq(variables['System.TeamProject'], 'DevDiv'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
-  pool: VSEngSS-MicroBuild2022-1ES
+  pool:
+    name: AzurePipelines-EO
+    demands:
+    - ImageOverride -equals 1ESPT-Windows2022
   timeoutInMinutes: 30
   variables:
   - group: Xamarin-Secrets
