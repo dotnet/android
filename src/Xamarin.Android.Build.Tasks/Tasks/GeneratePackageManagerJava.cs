@@ -79,6 +79,7 @@ namespace Xamarin.Android.Tasks
 		public string TlsProvider { get; set; }
 		public string AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
+		public string? CustomBundleConfigFile { get; set; }
 
 		[Output]
 		public string BuildId { get; set; }
@@ -357,6 +358,7 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementTypeCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementTypeCount,
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
+				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
@@ -438,6 +440,15 @@ namespace Xamarin.Android.Tasks
 			{
 				return s.Replace ("\"", "\\\"");
 			}
+		}
+
+		bool ShouldIgnoreSplitConfigs ()
+		{
+			if (String.IsNullOrEmpty (CustomBundleConfigFile)) {
+				return false;
+			}
+
+			return BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile);
 		}
 
 		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
