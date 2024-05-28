@@ -258,7 +258,7 @@ namespace Xamarin.Android.Build.Tests
 
 					case 10: // ignore_split_configs: bool / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
-						ret.marshal_methods_enabled = ConvertFieldToBool ("ignore_split_configs", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						ret.ignore_split_configs = ConvertFieldToBool ("ignore_split_configs", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
 					case 11: // bound_stream_io_exception_type: byte / .byte

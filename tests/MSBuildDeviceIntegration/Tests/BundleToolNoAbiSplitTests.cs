@@ -13,7 +13,7 @@ namespace Xamarin.Android.Build.Tests
 	[Category ("XamarinBuildDownload")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
-		static readonly string [] RIDs = new [] { "android-arm", "android-arm64", "android-x86", "android-64" };
+		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
 
 		XamarinAndroidApplicationProject app;
 		ProjectBuilder appBuilder;
@@ -104,7 +104,7 @@ namespace Xamarin.Android.Build.Tests
 			//NOTE: this is here to enable adb shell run-as
 			app.AndroidManifest = app.AndroidManifest.Replace ("<application ", "<application android:debuggable=\"true\" ");
 			app.SetProperty (app.ReleaseProperties, "AndroidPackageFormat", "aab");
-			app.SetRuntimeIdentifiers (RIDs);
+			app.SetRuntimeIdentifiers (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.config");
 			app.SetProperty ("_FastDeploymentDiagnosticLogging", "true");
 
@@ -118,7 +118,7 @@ namespace Xamarin.Android.Build.Tests
 			string objPath = Path.Combine (Root, appBuilder.ProjectDirectory, app.IntermediateOutputPath);
                         List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (
                                 objPath,
-                                String.Join (";", RIDs.Select (rid => MonoAndroidHelper.RidToAbi (rid))),
+                                String.Join (";", Abis),
                                 true
                         );
                         EnvironmentHelper.ApplicationConfig app_config = EnvironmentHelper.ReadApplicationConfig (envFiles);
