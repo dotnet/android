@@ -147,7 +147,11 @@ namespace Xamarin.Android.Build.Tests
 		public void InstallAndRun ()
 		{
 			Assert.IsTrue (appBuilder.Install (app), "Install should have succeeded.");
-			AdbStartActivity ($"{app.PackageName}/{app.JavaPackageName}.MainActivity");
+			RunProjectAndAssert (app, appBuilder);
+			Assert.True (
+				WaitForActivityToStart (app.PackageName, "MainActivity", Path.Combine (Root, appBuilder.ProjectDirectory, "logcat.log"), 30),
+				"Activity should have started."
+			);
 		}
 	}
 }
