@@ -535,6 +535,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' "
   />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="AndroidFastDeploymentType;9"
+      Condition=" '$(AndroidFastDeploymentType)' != '' "
+  />
 </Target>
 
 <!--

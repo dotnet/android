@@ -269,6 +269,26 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase ("AndroidFastDeploymentType", "Assemblies", true, false)]
+		[TestCase ("AndroidFastDeploymentType", "Assemblies", false, false)]
+		[TestCase ("_AndroidUseJavaLegacyResolver", "true", false, true)]
+		[TestCase ("_AndroidUseJavaLegacyResolver", "true", true, true)]
+		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true)]
+		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true)]
+		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject)
+		{
+			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
+			proj.IsRelease = isRelease;
+			proj.SetProperty (property, value);
+			
+			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
+					$"Should not get a warning about the {property} property");
+			}
+		}
+
+		[Test]
 		public void ClassLibraryHasNoWarnings ()
 		{
 			var proj = new XamarinAndroidLibraryProject ();
