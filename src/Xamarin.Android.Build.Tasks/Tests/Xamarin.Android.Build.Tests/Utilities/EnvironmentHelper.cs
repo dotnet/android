@@ -36,7 +36,7 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		// This must be identical to the like-named structure in src/monodroid/jni/xamarin-app.h
+		// This must be identical to the like-named structure in src/native/xamarin-app-stub/xamarin-app.hh
 		public sealed class ApplicationConfig
 		{
 			public bool   uses_mono_llvm;
@@ -49,6 +49,7 @@ namespace Xamarin.Android.Build.Tests
 			public bool   have_runtime_config_blob;
 			public bool   have_assemblies_blob;
 			public bool   marshal_methods_enabled;
+			public bool   ignore_split_configs;
 			public byte   bound_stream_io_exception_type;
 			public uint   package_naming_policy;
 			public uint   environment_variable_count;
@@ -66,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 			public string android_package_name = String.Empty;
 		}
 
-		const uint ApplicationConfigFieldCount = 25;
+		const uint ApplicationConfigFieldCount = 26;
 
 		const string ApplicationConfigSymbolName = "application_config";
 		const string AppEnvironmentVariablesSymbolName = "app_environment_variables";
@@ -255,77 +256,82 @@ namespace Xamarin.Android.Build.Tests
 						ret.marshal_methods_enabled = ConvertFieldToBool ("marshal_methods_enabled", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 10: // bound_stream_io_exception_type: byte / .byte
+					case 10: // ignore_split_configs: bool / .byte
+						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
+						ret.marshal_methods_enabled = ConvertFieldToBool ("ignore_split_configs", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
+						break;
+
+					case 11: // bound_stream_io_exception_type: byte / .byte
 						AssertFieldType (envFile.Path, parser.SourceFilePath, ".byte", field [0], item.LineNumber);
 						ret.bound_stream_io_exception_type = ConvertFieldToByte ("bound_stream_io_exception_type", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 11: // package_naming_policy: uint32_t / .word | .long
+					case 12: // package_naming_policy: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.package_naming_policy = ConvertFieldToUInt32 ("package_naming_policy", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 12: // environment_variable_count: uint32_t / .word | .long
+					case 13: // environment_variable_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.environment_variable_count = ConvertFieldToUInt32 ("environment_variable_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 13: // system_property_count: uint32_t / .word | .long
+					case 14: // system_property_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.system_property_count = ConvertFieldToUInt32 ("system_property_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 14: // number_of_assemblies_in_apk: uint32_t / .word | .long
+					case 15: // number_of_assemblies_in_apk: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_assemblies_in_apk = ConvertFieldToUInt32 ("number_of_assemblies_in_apk", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 15: // bundled_assembly_name_width: uint32_t / .word | .long
+					case 16: // bundled_assembly_name_width: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.bundled_assembly_name_width = ConvertFieldToUInt32 ("bundled_assembly_name_width", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 16: // number_of_assembly_store_files: uint32_t / .word | .long
+					case 17: // number_of_assembly_store_files: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_assembly_store_files = ConvertFieldToUInt32 ("number_of_assembly_store_files", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 17: // number_of_dso_cache_entries: uint32_t / .word | .long
+					case 18: // number_of_dso_cache_entries: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("number_of_dso_cache_entries", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 18: // android_runtime_jnienv_class_token: uint32_t / .word | .long
+					case 19: // android_runtime_jnienv_class_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("android_runtime_jnienv_class_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 19: // jnienv_initialize_method_token: uint32_t / .word | .long
+					case 20: // jnienv_initialize_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("jnienv_initialize_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 20: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
+					case 21: // jnienv_registerjninatives_method_token: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.number_of_dso_cache_entries = ConvertFieldToUInt32 ("jnienv_registerjninatives_method_token", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 21: // jni_remapping_replacement_type_count: uint32_t / .word | .long
+					case 22: // jni_remapping_replacement_type_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_type_count = ConvertFieldToUInt32 ("jni_remapping_replacement_type_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 22: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
+					case 23: // jni_remapping_replacement_method_index_entry_count: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.jni_remapping_replacement_method_index_entry_count = ConvertFieldToUInt32 ("jni_remapping_replacement_method_index_entry_count", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 23: // mono_components_mask: uint32_t / .word | .long
+					case 24: // mono_components_mask: uint32_t / .word | .long
 						Assert.IsTrue (expectedUInt32Types.Contains (field [0]), $"Unexpected uint32_t field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						ret.mono_components_mask = ConvertFieldToUInt32 ("mono_components_mask", envFile.Path, parser.SourceFilePath, item.LineNumber, field [1]);
 						break;
 
-					case 24: // android_package_name: string / [pointer type]
+					case 25: // android_package_name: string / [pointer type]
 						Assert.IsTrue (expectedPointerTypes.Contains (field [0]), $"Unexpected pointer field type in '{envFile.Path}:{item.LineNumber}': {field [0]}");
 						pointers.Add (field [1].Trim ());
 						break;
