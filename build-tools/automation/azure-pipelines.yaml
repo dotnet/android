@@ -521,7 +521,10 @@ extends:
         - sign_net_linux
         condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
         timeoutInMinutes: 60
-        pool: $(VSEngMicroBuildPool)
+        pool:
+          name: AzurePipelines-EO
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
         workspace:
           clean: all
         variables:
