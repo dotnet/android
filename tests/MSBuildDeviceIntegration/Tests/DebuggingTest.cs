@@ -332,7 +332,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "aab",
@@ -347,7 +346,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
