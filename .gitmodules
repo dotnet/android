@@ -1,6 +1,6 @@
 [submodule "external/android-api-docs"]
     path = external/android-api-docs
-    url = https://github.com/xamarin/android-api-docs
+    url = https://github.com/dotnet/android-api-docs
     branch = main
 [submodule "external/constexpr-xxh3"]
     path = external/constexpr-xxh3
