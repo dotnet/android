@@ -342,7 +342,8 @@ extends:
           parameters:
             xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
-            dotnetVersion: 9.0.100-preview.4.24267.66
+            dotnetVersion: 9.0
+            dotnetQuality: preview
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
