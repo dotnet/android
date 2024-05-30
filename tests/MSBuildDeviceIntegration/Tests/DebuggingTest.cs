@@ -407,9 +407,8 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			var abis = new [] { "x86", DeviceAbi };
+			var abis = new [] { DeviceAbi };
 			app.SetRuntimeIdentifiers (abis);
-			//app.SetAndroidSupportedAbis (DeviceAbi);
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
