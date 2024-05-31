@@ -3,9 +3,10 @@ parameters:
   xaSourcePath: $(System.DefaultWorkingDirectory)
   jdkTestFolder: $(JAVA_HOME_17_X64)
   remove_dotnet: false
+  dotnetVersion: $(DotNetSdkVersion)
+  dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
-  installLegacyDotNet: false
   installLegacyXamarinAndroid: false
   updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
@@ -33,16 +34,12 @@ steps:
   displayName: set JI_JAVA_HOME to ${{ parameters.jdkTestFolder }}
   condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-# Install .NET 6 for legacy tests
-- ${{ if eq(parameters.installLegacyDotNet, true) }}:
-  - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
-    parameters:
-      version: 6.0
-      quality: GA
-      remove_dotnet: ${{ parameters.remove_dotnet }}
-
 # Install latest .NET
 - template: /build-tools/automation/yaml-templates/use-dot-net.yaml
+  parameters:
+    version: ${{ parameters.dotnetVersion }}
+    quality: ${{ parameters.dotnetQuality }}
+    remove_dotnet: ${{ parameters.remove_dotnet }}
 
 - task: DotNetCoreCLI@2
   displayName: shut down existing build daemons
