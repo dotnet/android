@@ -17,17 +17,17 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_18.1.6-8.0.0";
 
-		const string MicrosoftOpenJDK17Version      = "17.0.8";
-		const string MicrosoftOpenJDK17Release      = "17.0.8.7";
-		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.8+7";
+		const string MicrosoftOpenJDK17Version      = "17.0.11";
+		const string MicrosoftOpenJDK17Release      = "17.0.11.9";
+		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.11+9";
 
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-linux-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-macOS-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-windows-x64.zip
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-linux-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macOS-x64.tar.gz or https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macos-aarch64.pkg
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-windows-x64.zip
 			public static readonly Uri MicrosoftOpenJDK17 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK17Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
