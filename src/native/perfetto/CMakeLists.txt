@@ -1,9 +1,9 @@
 set(LIB_NAME xa-perfetto)
 set(LIB_ALIAS xa::perfetto)
 
-set(PERFETTO_DIR "${EXTERNAL_DIR}/perfetto")
-set(PERFETTO_SDK_DIR "${PERFETTO_DIR}/sdk")
-set(PERFETTO_INCLUDE_DIR "${PERFETTO_DIR}/sdk")
+set(PERFETTO_DIR "${${REPO_ROOT_DIR}}/src-ThirdParty/perfetto")
+set(PERFETTO_SDK_DIR "${PERFETTO_DIR}")
+set(PERFETTO_INCLUDE_DIR "${PERFETTO_DIR}")
 
 set(PERFETTO_SOURCES
   ${PERFETTO_SDK_DIR}/perfetto.cc
