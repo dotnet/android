@@ -8,19 +8,20 @@ body:
       value: |
         Issues with missing Android API or the API not working as documented are tracked here.
 
-        If you are not sure how to use an API or how to accomplish your task, better support is available from our community of application writers, available in several forms:
+        If you are not sure how to use an API or how to accomplish your task, better support is available from the community of application writers, available in several forms:
 
-        [Microsoft Q&A](https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html)
+        [Microsoft Q&A](https://learn.microsoft.com/answers/products/97/dotnet/)
         [Stack Overflow](https://stackoverflow.com)
   - type: dropdown
     id: android-type
     attributes:
-      label: Android application type
-      description: In what type(s) of Android application(s) do you see this issue?
+      label: Android framework version
+      description: In what target framework(s) of Android application(s) do you see this issue?
       multiple: true
       options:
-      - Classic Xamarin.Android (MonoAndroid13.0, etc.)
-      - .NET Android (net7.0-android, net8.0-android, etc.)
+      - net8.0-android
+      - net9.0-android
+      - Other
     validations:
       required: true
   - type: input
@@ -28,7 +29,7 @@ body:
     attributes:
       label: Affected platform version
       description: Please provide the version number of the platform you see this issue on.
-      placeholder: E.g. VS 2022 17.8.0, VSMac 17.6.7, .NET 8.0.100, etc.
+      placeholder: E.g. VS 2022 17.9.0, .NET 8.0.100, etc.
     validations:
       required: true
   - type: textarea
