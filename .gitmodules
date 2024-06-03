@@ -22,10 +22,6 @@
     path = external/lz4
     url = https://github.com/xamarin/lz4
     branch = release
-[submodule "external/perfetto"]
-    path = external/perfetto
-    url = https://github.com/google/perfetto.git
-    branch = main
 [submodule "external/robin-map"]
     path = external/robin-map
     url = https://github.com/xamarin/robin-map
