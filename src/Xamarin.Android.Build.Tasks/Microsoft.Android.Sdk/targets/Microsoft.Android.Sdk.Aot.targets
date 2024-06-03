@@ -143,6 +143,30 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         SourceFiles="@(_ILStripUpdatedAssemblies)"
         DestinationFiles="@(_ILStripUpdatedAssemblies->'%(UntrimmedAssemblyFilePath)')"
     />
+    <ItemGroup>
+      <_UpdateStamp Include="@(_ILStripUpdatedAssemblies)" Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '%(_ILStripUpdatedAssemblies.ILStripped)' == 'true' " />
+    </ItemGroup>
+
+    <!-- We must update the stamp file used by `_GenerateJavaStubs`, but `$(_AndroidStampDirectory)` **here** is inside a per-RID parent
+         directory (e.g. `obj/Release/android-arm64/stamp`) and not the "top level" one (`obj/Release/stamp`).  Since **both** are set
+         in the same place (in `Xamarin.Android.Common.targets`), we don't know where the "top level" one really is.  Hence the hack.
+         If the locations or their relative paths change, then the `EnableAndroidStripILAfterAOTFalse` test will fail.
+
+         However, there should be a better way to do it... Ideally, when marshal methods are enabled **nothing** should modify any
+         assemblies after marshal method classifier and rewriter runs.
+    -->
+    <PropertyGroup>
+      <_StampDir>$(_AndroidStampDirectory)\..\..\stamp</_StampDir>
+    </PropertyGroup>
+    <MakeDir
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp->Count())' &gt; 0 "
+        Directories="$(_StampDir)"
+    />
+    <Touch
+        Condition=" '$(AndroidStripILAfterAOT)' == 'true' and '@(_UpdateStamp->Count())' &gt; 0 "
+        Files="$(_StampDir)\_GenerateJavaStubs.stamp"
+        AlwaysCreate="True"
+    />
     <WriteLinesToFile
         File="$(_AndroidStampDirectory)_AndroidAot.stamp"
         Lines="@(_MonoAOTCompiledAssemblies->'%(LibraryFile)')"
