@@ -416,7 +416,7 @@ E,30,android/app/ApplicationExitInfo.REASON_EXIT_SELF,1,Android.App.ApplicationE
 E,33,android/app/ApplicationExitInfo.REASON_FREEZER,14,Android.App.ApplicationExitInfoReason,Freezer,remove,
 E,30,android/app/ApplicationExitInfo.REASON_INITIALIZATION_FAILURE,7,Android.App.ApplicationExitInfoReason,InitializationFailure,remove,
 E,30,android/app/ApplicationExitInfo.REASON_LOW_MEMORY,3,Android.App.ApplicationExitInfoReason,LowMemory,remove,
-E,30,android/app/ApplicationExitInfo.REASON_OTHER,10,Android.App.ApplicationExitInfoReason,Other,remove,
+E,30,android/app/ApplicationExitInfo.REASON_OTHER,13,Android.App.ApplicationExitInfoReason,Other,remove,
 E,34,android/app/ApplicationExitInfo.REASON_PACKAGE_STATE_CHANGE,15,Android.App.ApplicationExitInfoReason,PackageStateChange,remove,
 E,34,android/app/ApplicationExitInfo.REASON_PACKAGE_UPDATED,16,Android.App.ApplicationExitInfoReason,PackageUpdated,remove,
 E,30,android/app/ApplicationExitInfo.REASON_PERMISSION_CHANGE,8,Android.App.ApplicationExitInfoReason,PermissionChange,remove,
