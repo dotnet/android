@@ -451,7 +451,7 @@ the runtime and APK size.  In order to enable Perfetto support, it is necessary 
 MSBuild property to `true`.
 
 With that property set, the application can be used as usual, with Perfetto trace recording enabled at any
-chosen point in time, using mechanisms external to .NET for Android and the application.  The mechanisms are
+chosen point in time, using mechanisms external to `.NET for Android` and the application.  The mechanisms are
 described in detail on the following web pages:
 
   1. [Quickstart: Record traces on Android](https://perfetto.dev/docs/quickstart/android-tracing)
@@ -460,7 +460,7 @@ described in detail on the following web pages:
 After recording the trace using whichever method, location of the trace file to download from device (e.g.
 using [`adb pull`](https://developer.android.com/topic/performance/tracing/on-device#download_report_using_adb))
 can be determined by looking at the logcat output captured from the device.  The location is logged by Android
-component called "Traceur", and looks similar to the entry below:
+component called `Traceur`, and looks similar to the entry below:
 
 ```
 05-13 17:25:17.186  3705  9320 V Traceur : Saving perfetto trace to /data/local/traces/trace-raven-AP1A.240405.002-2024-05-13-17-25-16.perfetto-trace
