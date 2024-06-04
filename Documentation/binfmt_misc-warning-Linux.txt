@@ -4,11 +4,11 @@ Your Linux appears to have support for binfmt_misc kernel module enabled.
 The module makes it possible to execute non-Linux binaries if the appropriate
 interpreter for the given format is available.
 Your machine is configured to handle Windows PE executables either via Mono or
-Wine. It will make the Xamarin.Android build fail IF you choose to build the
+Wine. It will make the .NET for Android build fail IF you choose to build the
 Windows cross-compilers by enabling the 'mxe-Win32' or 'mxe-Win64' host targets.
 
 You can disable the binfmt_misc module by issuing the following command as root
-before building Xamarin.Android:
+before building .NET for Android:
 
    echo 0 > /proc/sys/fs/binfmt_misc/status
 

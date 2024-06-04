@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\external\Java.Interop\tools\class-parse\class-parse.csproj" ReferenceOutputAssembly="False" />
+    <ProjectReference Include="..\..\external\Java.Interop\tools\param-name-importer\param-name-importer.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-xml-adjuster\api-xml-adjuster.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\api-merge\api-merge.csproj" ReferenceOutputAssembly="False" />
     <ProjectReference Include="..\jnienv-gen\jnienv-gen.csproj" ReferenceOutputAssembly="False" SkipGetTargetFrameworkProperties="True" />
@@ -111,6 +112,27 @@
     
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; $(ApiMerge) -config=$(_ConfigurationFile) -config-input-dir=$(_ConfigurationInputBaseDirectory) -config-output-dir=$(_ConfigurationOutputBaseDirectory)" />
+    
+    <ItemGroup>
+      <_GeneratedApiDescriptionFiles Include="$(_ConfigurationOutputBaseDirectory)*.xml" />
+    </ItemGroup>
+    
+    <Copy SourceFiles="@(_GeneratedApiDescriptionFiles)" DestinationFolder="..\..\src\Mono.Android\Profiles\" />
+  </Target>
+  
+  <!-- Creates 'api-XX.params.txt' file -->
+  <!-- Unstable: dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=VanillaIceCream -->
+  <!-- Stable: dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=35 -->
+  <Target Name="GenerateParamsFile">    
+    
+    <PropertyGroup>
+      <_ParamNameImporter>$(MicrosoftAndroidSdkOutDir)\param-name-importer.dll</_ParamNameImporter>
+      <_SourceStubZip>$(AndroidSdkDirectory)\platforms\android-$(ParamApiLevel)\android-stubs-src.jar</_SourceStubZip>
+      <_ParamOutputTextFile>..\..\src\Mono.Android\Profiles\api-$(ParamApiLevel).params.txt</_ParamOutputTextFile>
+    </PropertyGroup>
+    
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; $(_ParamNameImporter) -source-stub-zip=$(_SourceStubZip) -output-text $(_ParamOutputTextFile) -verbose -framework-only" />
         
   </Target>
   

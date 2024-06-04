@@ -32,7 +32,6 @@ namespace Xamarin.ProjectTools
 		public const string OutputPath = "OutputPath";
 		public const string IntermediateOutputPath = "IntermediateOutputPath";
 		public const string OutputType = "OutputType";
-		public const string AndroidFastDeploymentType = "AndroidFastDeploymentType";
 		public const string AndroidClassParser = "AndroidClassParser";
 		public const string _AndroidAllowDeltaInstall = "_AndroidAllowDeltaInstall";
 		public const string Nullable = "Nullable";

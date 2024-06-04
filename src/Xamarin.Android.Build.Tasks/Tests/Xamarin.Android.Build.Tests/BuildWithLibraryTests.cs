@@ -601,7 +601,7 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidLibraryProject ();
 			using (var b = CreateDllBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
+				Assert.IsTrue (b.Output.IsTargetSkipped (target, defaultIfNotUsed: true), $"`{target}` should be skipped!");
 			}
 		}
 

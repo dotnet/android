@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Powiązanie biblioteki języka Java systemu Android",
-  "description": "Projekt służący do tworzenia biblioteki klas .NET Android z powiązaniem z natywną biblioteką języka Java",
+  "description": "Projekt służący do tworzenia biblioteki klas platformy .NET dla systemu Android z powiązaniem z natywną biblioteką języka Java",
   "symbols/supportedOSVersion/description": "Nadpisuje element $(SupportedOSPlatformVersion) w projekcie"
 }

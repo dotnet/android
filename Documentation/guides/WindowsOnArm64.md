@@ -108,7 +108,7 @@ other commands.
 
 ## Set the Path to the Android SDK
 
-The .NET Android workload doesn't know how to locate Android Studio's
+The .NET for Android workload doesn't know how to locate Android Studio's
 Android SDK by default. This is because it is normally managed by
 Visual Studio.
 

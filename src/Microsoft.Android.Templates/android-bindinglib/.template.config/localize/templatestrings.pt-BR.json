@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Associação da Biblioteca Java do Android",
-  "description": "Um projeto para criar uma biblioteca de classes Android .NET que se associa a uma biblioteca nativa do Java.",
+  "description": "Um projeto para criar uma biblioteca de classes .NET para Android que se vincula a uma biblioteca nativa em Java",
   "symbols/supportedOSVersion/description": "Substitui a $(SupportedOSPlatformVersion) no projeto"
 }

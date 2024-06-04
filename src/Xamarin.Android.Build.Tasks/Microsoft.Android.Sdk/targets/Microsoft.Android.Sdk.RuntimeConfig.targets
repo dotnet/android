@@ -17,8 +17,8 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
   <ItemGroup>
     <!--
       See: https://docs.microsoft.com/en-us/dotnet/core/tutorials/netcore-hosting#step-3-%2D-prepare-runtime-properties
-      These properties shouldn't be used in Xamarin.Android apps as there are no directories the runtime can search,
-      everything related to assemblies or shared libraries must go through the Xamarin.Android native runtime.
+      These properties shouldn't be used in .NET for Android apps as there are no directories the runtime can search,
+      everything related to assemblies or shared libraries must go through the .NET for Android native runtime.
     -->
     <_RuntimeConfigReservedProperties Include="TRUSTED_PLATFORM_ASSEMBLIES"/>
     <_RuntimeConfigReservedProperties Include="APP_PATHS"/>

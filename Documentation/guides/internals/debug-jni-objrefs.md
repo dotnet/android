@@ -4,7 +4,7 @@ How to debug and diagnose app crashes due to invalid JNI Object References.
 
 ## Overview
 
-Xamarin.Android apps and .NET SDK for Android apps make heavy use of the
+.NET for Android apps apps make heavy use of the
 [Java Native Interface (JNI)](https://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html)
 to create Java instances, invoke methods on those Java instances, and allow Java interfaces to be implemented
 and Java methods to be overridden. When dealing with Java instances,

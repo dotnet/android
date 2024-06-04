@@ -20,10 +20,13 @@
       </Item>
       <Item ItemId=";description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A project for creating a .NET Android Wear application]]></Val>
+          <Val><![CDATA[A project for creating a .NET for Android Wear application]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[.NET Android Wear uygulaması oluşturmak için proje]]></Val>
+            <Val><![CDATA[Android için .NET Wear uygulaması oluşturmak için proje]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android Wear application]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

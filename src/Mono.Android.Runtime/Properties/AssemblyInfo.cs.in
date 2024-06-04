@@ -13,7 +13,7 @@ using System.Runtime.Versioning;
 
 [assembly: AssemblyInformationalVersion ("@PACKAGE_VERSION@.@PACKAGE_VERSION_BUILD@; git-rev-head:@PACKAGE_HEAD_REV@; git-branch:@PACKAGE_HEAD_BRANCH@")]
 [assembly: AssemblyTitle ("Mono.Android.Runtime.dll")]
-[assembly: AssemblyProduct ("Xamarin.Android")]
+[assembly: AssemblyProduct (".NET for Android")]
 [assembly: AssemblyCompany ("Microsoft Corporation")]
 [assembly: TargetPlatform("Android@API_LEVEL@.0")]
 [assembly: SupportedOSPlatform("Android@MIN_API_LEVEL@.0")]

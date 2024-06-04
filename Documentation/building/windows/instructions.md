@@ -1,12 +1,12 @@
-# Building Xamarin.Android on Windows
+# Building .NET for Android on Windows
 
-Building Xamarin.Android on Windows requires .NET and the `msbuild` command
+Building .NET for Android on Windows requires .NET and the `msbuild` command
 be available within the Command-Line environment.
 (The **Developer Command Prompt** that Visual Studio installs is sufficient.)
 
 MSBuild version 15 or later is required.
 
-# Building Xamarin.Android
+# Building .NET for Android
 
  1. Install the [build dependencies](dependencies.md).
 
@@ -80,13 +80,13 @@ So for example:
 [windows_path]: https://www.java.com/en/download/help/path.xml
 [set_alias]: https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.utility/set-alias?view=powershell-6
 
-# Creating a local .NET android Workload
+# Creating a local .NET for Android Workload
 
 `dotnet msbuild Xamarin.Android.sln -t:Prepare` provisions a
 specific build of .NET to `bin\$(Configuration)\dotnet`.
 
 Once the prepare target is complete, you can set up a local
-.NET android workload install with:
+.NET for Android workload install with:
 
     dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet -m:1
 
@@ -121,7 +121,7 @@ See the [One .NET Documentation](../../guides/OneDotNet.md) for further details.
 # Creating installers
 
 Once `dotnet msbuild Xamarin.Android.sln -t:Prepare` is complete,
-.NET android workload packs can be built with:
+.NET for Android workload packs can be built with:
 
     dotnet-local.cmd build Xamarin.Android.sln -t:BuildDotNet,PackDotNet -m:1
 

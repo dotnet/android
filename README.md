@@ -1,53 +1,47 @@
-<img src="Documentation/images/banner.png" alt=".NET Android banner" height="145" >
+<img src="Documentation/images/banner.png" alt=".NET for Android banner" height="145" >
 
-.NET Android
+.NET for Android
 ===============
 
-.NET Android provides open-source bindings of the Android SDK and tooling for use with
+.NET for Android provides open-source bindings of the Android SDK and tooling for use with
 .NET managed languages such as C#. This ships as an optional [.NET workload][net-workload] for .NET 6+ that can 
 be updated independently from .NET in order to respond to external dependency updates like new Android
 platform and tooling.
 
-While .NET Android is an essential part of [MAUI][maui-intro], it is still fully supported to be 
-used independently for native Android development using .NET.
-
-This repository is also home to the classic Xamarin.Android product.
+.NET for Android is part of [.NET MAUI][maui-intro], and may also be used independently for native Android development using .NET.
 
 [net-workload]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 [maui-intro]: https://learn.microsoft.com/en-us/dotnet/maui/what-is-maui
 
 # Support
 
-.NET Android is now part of .NET 6+ and follows the same support lifecycle as the [MAUI Support Lifecycle][maui-support-lifecycle].
+.NET for Android is part of .NET MAUI, since it was introduced in May 2022 as part of .NET 6, and is currently supported as described in the [.NET MAUI Support Policy][maui-support-policy].
 
-Support for classic Xamarin.Android will end on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
+Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy]:
 
-> Xamarin support will end on May 1, 2024 for all classic Xamarin SDKs. Android 13 will be the final version classic Xamarin.Android will target.
+> Xamarin support ended on May 1, 2024 for all Xamarin SDKs including Xamarin.Forms. Android API 34 and Xcode 15 SDKs (iOS and iPadOS 17, macOS 14) are the final versions Xamarin targets from existing Xamarin SDKs (i.e. no new APIs are planned).
 
-[maui-support-lifecycle]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
+Follow the [official upgrade guidance](https://learn.microsoft.com/dotnet/maui/migration) to bring your Xamarin applications to the latest version of .NET.
+
+[maui-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/maui
 [xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
 
 # Downloads
 
-## Current
+.NET for Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. 
 
-.NET Android ships as a workload through the `dotnet` workload system in [.NET 6+][dotnet-download]. See
-the [workload documentation][workload-documentation] for installation commands.
+In its simplest form, .NET for Android can be installed by running:
+
+```
+dotnet workload install android
+```
+
+See the [.NET workload documentation][workload-documentation] for additional installation commands and options.
 
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
 [workload-documentation]: https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-workload-install
 
-Classic Xamarin.Android installers are available here:
-
-| Platform        | Link   |
-|-----------------|--------|
-| **Commercial Xamarin.Android 13.2.2 (d17-8)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-8-Windows-x86_64] |
-| **Commercial Xamarin.Android 13.2.2 (d17-8)** for VSMac 2022                                  | [Download][commercial-d17-8-macOS-x86_64]   |
-
-[Previous Releases](Documentation/previous-releases.md) are also available for download.
-
-[commercial-d17-8-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-8-windows
-[commercial-d17-8-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-8-macos
+While no longer supported, Classic Xamarin.Android installers are still available [here](Documentation/previous-releases.md).
 
 # Contributing
 

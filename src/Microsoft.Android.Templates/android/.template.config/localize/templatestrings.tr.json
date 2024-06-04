@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Uygulaması",
-  "description": ".NET Android uygulaması oluşturmak için proje",
+  "description": "Android için .NET uygulaması oluşturmak için proje",
   "symbols/packageName/description": "AndroidManifest.xm öğesindeki paket adını geçersiz kılar",
   "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }

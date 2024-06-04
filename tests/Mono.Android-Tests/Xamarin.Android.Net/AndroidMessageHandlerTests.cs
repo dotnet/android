@@ -234,6 +234,20 @@ namespace Xamarin.Android.NetTests
 			Assert.IsTrue (result.IsSuccessStatusCode);
 		}
 
+		[Test]
+		public async Task AndroidMessageHandlerFollows308PermanentRedirect ()
+		{
+			int callbackCounter = 0;
+
+			var handler = new AndroidMessageHandler ();
+
+			var client = new HttpClient (handler);
+			var result = await client.GetAsync ("https://httpbin.org/redirect-to?url=https://www.microsoft.com/&status_code=308");
+
+			Assert.IsTrue (result.IsSuccessStatusCode);
+			Assert.AreEqual ("https://www.microsoft.com/", result.RequestMessage.RequestUri.ToString ());
+		}
+
 		private async Task AssertRejectsRemoteCertificate (Func<Task> makeRequest)
 		{
 			// there is a difference between the exception that's thrown in the .NET build and the legacy Xamarin

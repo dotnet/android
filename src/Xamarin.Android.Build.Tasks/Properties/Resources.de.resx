@@ -430,7 +430,7 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
   <data name="XA1019" xml:space="preserve">
     <value>Die LibraryProjectProperties-Datei "{0}" befindet sich in einem übergeordneten Verzeichnis des Zwischenausgabeverzeichnisses für das Bindungsprojekt. Passen Sie den Pfad so an, dass die ursprüngliche Datei "project.properties" direkt aus dem Android-Bibliotheksprojektverzeichnis verwendet wird.</value>
     <comment>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
-In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET Android project written in C# or F#.
+In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET for Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</comment>
   </data>
   <data name="XA1020" xml:space="preserve">
@@ -452,8 +452,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
-    <value>Die Konfigurationsdatei "{0}" wird ignoriert. .NET-Konfigurationsdateien werden in .NET Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt.</value>
-    <comment>The following are literal names and should not be translated: .NET, .NET Android.
+    <value>Die Konfigurationsdatei „{0}“ wird ignoriert. .NET-Konfigurationsdateien werden in .NET für Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt.</value>
+    <comment>The following are literal names and should not be translated: .NET, .NET for Android.
 {0} - The file name such as 'Foo.dll.config'</comment>
   </data>
   <data name="XA1025" xml:space="preserve">
@@ -465,7 +465,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>Die Verwendung von AAPT wird in .NET Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt. Aktivieren Sie "Inkrementelles Android-Paketierungssystem (aapt2) verwenden" in den Visual Studio-Projekteigenschaftsseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft "AndroidUseAapt2" auf WAHR fest.</value>
+    <value>Die Verwendung von AAPT wird in .NET für Android-Projekten, die auf .NET 6 oder höher ausgerichtet sind, nicht unterstützt. Aktivieren Sie „Inkrementelles Android-Paketierungssystem (AAPT2) verwenden“ auf den Visual Studio-Projekteigenschaftsseiten, oder bearbeiten Sie die Projektdatei in einem Text-Editor, und legen Sie die MSBuild-Eigenschaft „AndroidUseAapt2“ auf WAHR fest.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
@@ -525,7 +525,7 @@ Bitte ändern Sie den Wert in einen Assembly-basierten Typnamen, der von "System
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>Die Verwendung von AppDomain.CreateDomain() wurde in der Assembly {0} erkannt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach der Veröffentlichung von .NET 6 nicht mehr in .NET Android verfügbar ist.</value>
+    <value>Die Verwendung von AppDomain.CreateDomain() wurde in der Assembly {0} erkannt. .NET 6 und höher unterstützt nur eine einzelne AppDomain, sodass diese API nach der Veröffentlichung von .NET 6 nicht mehr in .NET für Android verfügbar ist.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
@@ -724,12 +724,12 @@ In this message, "root element" refers to the root element of an XML file.
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4231" xml:space="preserve">
-    <value>Der Android-Klassenparserwert "{0}" ist veraltet und wird in einer zukünftigen Version von .NET Android entfernt. Aktualisieren Sie die Projekteigenschaften, um "class-parse" zu verwenden.</value>
+    <value>Der Android-Klassenparserwert „{0}“ ist veraltet und wird in einer zukünftigen Version von .NET für Android entfernt. Aktualisieren Sie die Projekteigenschaften, um „class-parse“ zu verwenden.</value>
     <comment>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>Das Android-Codegenerierungsziel "{0}" ist veraltet und wird in einer zukünftigen Version von .NET Android entfernt. Aktualisieren Sie die Projekteigenschaften, um "XAJavaInterop1" zu verwenden.</value>
+    <value>Das Android-Codegenerierungsziel „{0}“ ist veraltet und wird in einer zukünftigen Version von .NET für Android entfernt. Aktualisieren Sie die Projekteigenschaften, um „XAJavaInterop1“ zu verwenden.</value>
     <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -810,7 +810,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA4312" xml:space="preserve">
-    <value>Das Verweisen auf das Android Wear-Anwendungsprojekt "{0}" aus einem Android-Anwendungsprojekt ist veraltet und wird in einer zukünftigen Version von .NET Android nicht mehr unterstützt. Entfernen Sie den Verweis auf das Android Wear-Anwendungsprojekt aus dem Android-Anwendungsprojekt, und verteilen Sie die Wear-Anwendung stattdessen als eigenständige Anwendung.</value>
+    <value>Das Verweisen auf das Android Wear-Anwendungsprojekt „{0}“ aus einem Android-Anwendungsprojekt ist veraltet und wird in einer zukünftigen Version von .NET für Android nicht mehr unterstützt. Entfernen Sie den Verweis auf das Android Wear-Anwendungsprojekt aus dem Android-Anwendungsprojekt, und verteilen Sie die Wear-Anwendung stattdessen als eigenständige Anwendung.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
@@ -890,7 +890,7 @@ Weitere Informationen finden Sie unter https://aka.ms/xa5207.</value>
 {2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>Installieren Sie es entweder im Android SDK-Manager (Tools &gt; Android &gt; Android SDK-Manager...), oder ändern Sie das .NET Android-Projekt so, dass es auf eine installierte API-Version abzielt.</value>
+    <value>Installieren Sie es entweder im Android-SDK-Manager (Tools &gt; Android &gt; Android-SDK-Manager...), oder ändern Sie das .NET für Android-Projekt so, dass es auf eine installierte API-Version abzielt.</value>
     <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">

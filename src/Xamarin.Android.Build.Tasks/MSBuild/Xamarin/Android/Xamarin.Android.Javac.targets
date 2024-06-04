@@ -2,7 +2,7 @@
 ***********************************************************************************************
 Xamarin.Android.Javac.targets
 
-This file contains the core MSBuild logic for Xamarin.Android Java Invocations.
+This file contains the core MSBuild logic for .NET for Android Java Invocations.
 
 It is shared between "legacy" binding projects and .NET 7+ projects.
 

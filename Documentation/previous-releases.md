@@ -1,8 +1,16 @@
 Xamarin.Android Previous Releases
 ===============
 
+Support for Xamarin.Android ended on **May 1, 2024** as per the [Xamarin Support Policy][xamarin-support-policy].
+
+[xamarin-support-policy]: https://dotnet.microsoft.com/en-us/platform/support/policy/xamarin
+
+However, the released installers are still available for download.
+
 | Platform        | Link   |
 |-----------------|--------|
+| **Commercial Xamarin.Android 13.2.2 (d17-8)** for Windows+Visual Studio 2022                | [Download][commercial-d17-8-Windows-x86_64] |
+| **Commercial Xamarin.Android 13.2.2 (d17-8)** for VSMac 2022                                | [Download][commercial-d17-8-macOS-x86_64]   |
 | **Commercial Xamarin.Android 13.2 (d17-5)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-5-Windows-x86_64] |
 | **Commercial Xamarin.Android 13.2 (d17-5)** for macOS                                       | [Download][commercial-d17-5-macOS-x86_64]   |
 | **Commercial Xamarin.Android 13.1 (d17-4)** for Windows+Visual Studio 2022                  | [Download][commercial-d17-4-Windows-x86_64] |
@@ -74,3 +82,5 @@ Xamarin.Android Previous Releases
 [commercial-d17-4-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-4-macos
 [commercial-d17-5-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-5-windows
 [commercial-d17-5-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-5-macos
+[commercial-d17-8-Windows-x86_64]:        https://aka.ms/xamarin-android-commercial-d17-8-windows
+[commercial-d17-8-macOS-x86_64]:          https://aka.ms/xamarin-android-commercial-d17-8-macos

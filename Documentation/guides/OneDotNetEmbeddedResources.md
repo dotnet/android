@@ -1,6 +1,6 @@
 # One .NET: Embedded Resources and `.nupkg` Files
 
-Traditionally, a Xamarin.Android class library can contain many types
+Traditionally, a .NET for Android class library can contain many types
 of Android-specific files:
 
 * `@(AndroidAsset)` files in `Assets/`
@@ -65,7 +65,7 @@ There is not a great place where all Android file types would fit
 following this pattern.
 
 In Android Studio, Android libraries are packaged as [`.aar`][aar]
-files. A Xamarin.Android library, `Foo.csproj`, could also generate an
+files. A .NET for Android library, `Foo.csproj`, could also generate an
 [`.aar`][aar] file in its `$(OutputPath)`:
 
     Foo.aar
@@ -75,7 +75,7 @@ files. A Xamarin.Android library, `Foo.csproj`, could also generate an
         libs/*.jar
         jni/[arch]/*.so
 
-Additionally, there is a need for Xamarin.Android-specific files
+Additionally, there is a need for .NET for Android-specific files
 within the [`.aar`][aar]. These are placed in a `.net` directory:
 
     Foo.aar
@@ -95,7 +95,7 @@ projects that consuming the class library.
 The name `.net` would be unlikely to collide with anything Google
 creates in the `.aar` file format in the future. These folders should
 also be completely ignored by Android tooling. The `.net` folder could
-also be used for other Xamarin.Android specific files down the road.
+also be used for other .NET for Android specific files down the road.
 
 So the output of `Foo.csproj` would look like:
 
@@ -114,7 +114,7 @@ If you ran the `Pack` target, you would get a `.nupkg` file with:
         net6.0-android30/Foo.dll
         net6.0-android30/Foo.aar
 
-When consuming the `.nupkg` files, Xamarin.Android will still have to
+When consuming the `.nupkg` files, .NET for Android will still have to
 extract [`.aar`][aar] files on disk for command-line tooling such as
 `javac`, `d8/r8` and `manifestmerger`. If users want to copy around
 loose build output and consume it, there will only be 1 additional
@@ -144,8 +144,8 @@ The `baz.jar` file would be included in the above `Foo.aar` file at:
 ### Native Libraries
 
 Since both `.aar` and `.nupkg` files support native libraries,
-Xamarin.Android should support consuming native libraries from both
-locations. A Xamarin.Android class library, `Foo.csproj` will place
+.NET for Android should support consuming native libraries from both
+locations. A .NET for Android class library, `Foo.csproj` will place
 native libraries in the `Foo.aar` file by default.
 
 Collisions encountered on the same native library should be ignored.
@@ -223,7 +223,7 @@ Things we need for the first public release:
 
 * Item group support for `@(AndroidLibrary)` and `%(Bind)=true`.
 * Support for packing `.aar` files in `$(OutputPath)` for
-  Xamarin.Android class libraries.
+  .NET for Android class libraries.
 * Support for consuming `.nupkg` files that contain `.aar` files.
 
 These should enable us to compile AndroidX for `net6.0-android`. Then
@@ -246,7 +246,7 @@ Things that could happen sometime after .NET 6 Preview 1:
 
 * `<GenerateJavaStubs/>` performance
   * `.aar` files contain `AndroidManifest.xml` files. We could add
-    support for developers to add their own manifest to Xamarin.Android
+    support for developers to add their own manifest to .NET for Android
     class libraries.
   * We could also generate the `AndroidManifest.xml` so attributes
     like `[assembly:UsesPermission]` are done ahead of time.
