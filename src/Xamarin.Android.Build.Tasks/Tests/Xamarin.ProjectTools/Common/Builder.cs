@@ -131,39 +131,6 @@ namespace Xamarin.ProjectTools
 			allFrameworkVersions = allTFVs.ToArray ();
 		}
 
-		public HashSet<string> GetBuildRuntimeIdentifiers ()
-		{
-			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			foreach (string l in LastBuildOutput) {
-				string line = l.Trim ();
-				if (line.Length == 0 || line[0] != 'R') {
-					continue;
-				}
-
-				// Here's hoping MSBuild doesn't change the property reporting format
-				if (!line.StartsWith ("RuntimeIdentifiers =", StringComparison.Ordinal)) {
-					continue;
-				}
-
-				foreach (string r in line.Split ('=')[1].Split (';')) {
-					ret.Add (r.Trim ());
-				}
-				break;
-			}
-
-			return ret;
-		}
-
-		public HashSet<string> GetBuildAbis ()
-		{
-			var ret = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
-			foreach (string rid in GetBuildRuntimeIdentifiers ()) {
-				ret.Add (MonoAndroidHelper.RidToAbi (rid));
-			}
-
-			return ret;
-		}
-
 		static string GetApiInfoElementValue (string androidApiInfo, string elementPath)
 		{
 			if (!File.Exists (androidApiInfo))

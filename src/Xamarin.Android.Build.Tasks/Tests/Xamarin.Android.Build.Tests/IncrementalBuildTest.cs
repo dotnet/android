@@ -438,7 +438,7 @@ namespace Lib2
 					Path.Combine (output, $"{proj.ProjectName}.dll.config"),
 				};
 
-				foreach (string abi in b.GetBuildAbis ()) {
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					filesToTouch.Add (Path.Combine (intermediate, "android", "assets", abi, $"{proj.ProjectName}.dll"));
 				}
 
@@ -647,7 +647,7 @@ namespace Lib2
 
 				var lib2Output = Path.Combine (path, lib2.ProjectName, "bin", "Debug", "netstandard2.0", $"{lib2.ProjectName}.dll");
 
-				foreach (string abi in appBuilder.GetBuildAbis ()) {
+				foreach (string abi in app.GetRuntimeIdentifiersAsAbis ()) {
 					var lib2InAppOutput = Path.Combine (path, app.ProjectName, app.IntermediateOutputPath, "android", "assets", abi, $"{lib2.ProjectName}.dll");
 					FileAssert.AreEqual (lib2Output, lib2InAppOutput, $"new Library2 should have been copied to app output directory for abi '{abi}'");
 				}
@@ -662,8 +662,7 @@ namespace Lib2
 				Assert.IsTrue (b.Build (proj), "build should have succeeded.");
 
 				// Touch an assembly to a timestamp older than build.props
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					var formsViewGroup = b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, "FormsViewGroup.dll"));
 					File.SetLastWriteTimeUtc (formsViewGroup, new DateTime (1970, 1, 1));
 				}

@@ -1207,9 +1207,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
@@ -1223,18 +1221,14 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build failed");
 
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
@@ -1318,8 +1312,8 @@ namespace App1
 					};
 
 					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
-					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
-					foreach (string abi in b.GetBuildAbis ()) {
+					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, proj.GetRuntimeIdentifiers ().ToArray ());
+					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 						foreach ((string fileName, bool existsInBin) in fileNames) {
 							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));
 						}

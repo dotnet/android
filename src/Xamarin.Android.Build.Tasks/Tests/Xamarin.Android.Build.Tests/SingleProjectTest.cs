@@ -85,7 +85,7 @@ namespace Xamarin.Android.Build.Tests
 					$"{versionName}.0.0" :
 					$"{versionName.Substring (0, index)}.0.0";
 
-				foreach (string abi in b.GetBuildAbis ()) {
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					var assemblyPath = b.Output.GetIntermediaryPath ($"android/assets/{abi}/{proj.ProjectName}.dll");
 					FileAssert.Exists (assemblyPath);
 					using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
