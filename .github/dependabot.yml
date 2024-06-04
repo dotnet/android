@@ -17,6 +17,5 @@ updates:
       - dependency-name: "external/constexpr-xxh3"
       - dependency-name: "external/debugger-libs"
       - dependency-name: "external/lz4"
-      - dependency-name: "external/perfetto"
       - dependency-name: "external/robin-map"
       - dependency-name: "external/xxHash"
