@@ -54,6 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
 					StringAssertEx.ContainsText (b.LastBuildOutput, $"_AndroidUseMarshalMethods = {shouldMarshalMethodsBeEnabled}"),
