@@ -147,6 +147,9 @@ namespace Xamarin.Android.ApiMerge {
 							}
 							*/
 
+							// Yes, "constant" values can change between API levels.
+							smember.SetAttributeValue ("value", nmember.Attribute ("value")?.Value);
+
 							UpdateDeprecatedSince (smember, nmember, platform);
 
 #if KEEP_OLD_WRONG_COMPATIBILITY
