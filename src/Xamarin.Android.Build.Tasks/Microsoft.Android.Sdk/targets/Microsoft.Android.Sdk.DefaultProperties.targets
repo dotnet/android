@@ -52,6 +52,9 @@
         When changing this default, change the value of `DefaultZipAlignment` in `src/Xamarin.Android.Build.Tasks/Tasks/AndroidZipAlign.cs` as well
     -->
     <AndroidZipAlignment Condition=" '$(AndroidZipAlignment)' == '' ">16</AndroidZipAlignment>
+
+    <!-- Native runtime -->
+    <_AndroidEnableNativeRuntimeLinking Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == '' and '$(AndroidIncludeDebugSymbols)' != 'true' ">true</_AndroidEnableNativeRuntimeLinking>
   </PropertyGroup>
 
   <!--  User-facing configuration-specific defaults -->
