@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Приложение Android",
-  "description": "Проект для создания приложения .NET для Android",
+  "description": "Проект создания приложения .NET для Android",
   "symbols/packageName/description": "Переопределяет имя пакета в AndroidManifest.xml",
   "symbols/supportedOSVersion/description": "Переопределяет $(SupportedOSPlatformVersion) в файле проекта"
 }

@@ -137,37 +137,16 @@ namespace Xamarin.Android.Build.Tests
 		static object [] DebuggerCustomAppTestCases = new object [] {
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
 				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* activityStarts */     true,
 				/* packageFormat */      "apk",
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     true,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* activityStarts */     false,
-				/* packageFormat */      "apk",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
-				/* activityStarts */     true,
-				/* packageFormat */      "aab",
-			},
-			new object[] {
-				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
 				/* activityStarts */     true,
 				/* packageFormat */      "aab",
 			},
@@ -177,7 +156,7 @@ namespace Xamarin.Android.Build.Tests
 		[Test, Category ("Debugger")]
 		[TestCaseSource (nameof (DebuggerCustomAppTestCases))]
 		[Retry(5)]
-		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool activityStarts, string packageFormat)
+		public void CustomApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool activityStarts, string packageFormat)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -190,7 +169,6 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject () {
 				IsRelease = false,
-				AndroidFastDeploymentType = fastDevType,
 			};
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 			proj.SetProperty ("EmbedAssembliesIntoApk", embedAssemblies.ToString ());
@@ -299,7 +277,6 @@ namespace ${ROOT_NAMESPACE} {
 		static object [] DebuggerTestCases = new object [] {
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
@@ -307,7 +284,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
@@ -315,7 +291,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "apk",
@@ -323,23 +298,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
-				/* allowDeltaInstall */  true,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* allowDeltaInstall */  false,
-				/* user */		 null,
-				/* packageFormat */      "apk",
-				/* useLatestSdk */       true,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
 				/* allowDeltaInstall */  true,
 				/* user */		 null,
 				/* packageFormat */      "apk",
@@ -347,7 +305,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
@@ -355,7 +312,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "apk",
@@ -363,7 +319,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 null,
 				/* packageFormat */      "aab",
@@ -371,7 +326,6 @@ namespace ${ROOT_NAMESPACE} {
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
@@ -383,7 +337,7 @@ namespace ${ROOT_NAMESPACE} {
 		[Test, Category ("Debugger"), Category ("WearOS")]
 		[TestCaseSource (nameof(DebuggerTestCases))]
 		[Retry (5)]
-		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, string fastDevType, bool allowDeltaInstall, string username, string packageFormat, bool useLatestSdk)
+		public void ApplicationRunsWithDebuggerAndBreaks (bool embedAssemblies, bool allowDeltaInstall, string username, string packageFormat, bool useLatestSdk)
 		{
 			AssertCommercialBuild ();
 			SwitchUser ();
@@ -424,7 +378,6 @@ namespace ${ROOT_NAMESPACE} {
 				ProjectName = "App",
 				IsRelease = false,
 				EmbedAssembliesIntoApk = embedAssemblies,
-				AndroidFastDeploymentType = fastDevType
 			};
 			if (!useLatestSdk) {
 				lib.TargetFramework = "net8.0-android";

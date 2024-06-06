@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Java Kitaplığı Bağlaması",
-  "description": "Yerel bir Java kitaplık dosyasını bağlayan bir .NET for Android sınıf kitaplığı oluşturmak için proje.",
+  "description": "Yerel bir Java kitaplık dosyasını bağlayan bir Android için .NET sınıf kitaplığı oluşturmak için proje.",
   "symbols/supportedOSVersion/description": "Projedeki $(SupportedOSPlatformVersion) öğesini geçersiz kılar"
 }

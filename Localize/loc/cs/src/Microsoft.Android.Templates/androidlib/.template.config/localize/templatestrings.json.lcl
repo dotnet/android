@@ -24,6 +24,9 @@
           <Tgt Cat="Text" Stat="Loc" Orig="New">
             <Val><![CDATA[Projekt pro vytvoření knihovny tříd .NET pro Android]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

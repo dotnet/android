@@ -22,8 +22,11 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating a .NET for Android class library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[用于创建 .NET for Android类库的项目]]></Val>
+            <Val><![CDATA[用于创建 .NET for Android 类库的项目]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

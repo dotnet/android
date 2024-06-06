@@ -649,10 +649,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Пропуск файла конфигурации "{0}". Файлы конфигурации .NET не поддерживаются в проектах .NET for Android для .NET 6 и более поздних версий.]]></Val>
+            <Val><![CDATA[Пропуск файла конфигурации "{0}". Файлы конфигурации .NET не поддерживаются в проектах .NET для Android, ориентированных на .NET 6 или более позднюю версию.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in Xamarin.Android projects that target .NET 6 or higher.]]></Val>
+            <Val><![CDATA[Ignoring configuration file '{0}'. .NET configuration files are not supported in .NET Android projects that target .NET 6 or higher.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -679,10 +679,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Using AAPT is not supported in .NET for Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Использование AAPT не поддерживается в проектах .NET for Android для .NET 6 и более поздних версий. Установите параметр "Использование инкрементной системы создания пакетов Android (AAPT2)" на страницах свойств проекта в Visual Studio или откройте файл проекта в текстовом редакторе и задайте значение "true" для свойства MSBuild "AndroidUseAapt2".]]></Val>
+            <Val><![CDATA[Использование AAPT не поддерживается в проектах .NET для Android, ориентированных на .NET 6 или более позднюю версию. Установите параметр "Использование инкрементной системы создания пакетов Android (AAPT2)" на страницах свойств проекта в Visual Studio или откройте файл проекта в текстовом редакторе и задайте значение "true" для свойства MSBuild "AndroidUseAapt2".]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Using AAPT is not supported in Xamarin.Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
+            <Val><![CDATA[Using AAPT is not supported in .NET Android projects that target .NET 6 or higher. Please enable 'Use incremental Android packaging system (aapt2)' in the Visual Studio project property pages or edit the project file in a text editor and set the 'AndroidUseAapt2' MSBuild property to 'true'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -811,10 +811,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[В сборке обнаружено использование AppDomain.CreateDomain(): {0}. .NET 6 и более поздние версии будут поддерживать только один домен AppDomain, поэтому этот API больше не будет доступен в .NET for Android после выпуска .NET 6.]]></Val>
+            <Val><![CDATA[В сборке обнаружено использование AppDomain.CreateDomain(): {0}. .NET 6 и более поздние версии будут поддерживать только один домен приложения, поэтому этот API больше не будет доступен в .NET для Android после выпуска .NET 6.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in Xamarin.Android once .NET 6 is released.]]></Val>
+            <Val><![CDATA[Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET Android once .NET 6 is released.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1165,10 +1165,10 @@
         <Str Cat="Text">
           <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'class-parse'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Значение "{0}" синтаксического анализатора класса Android является устаревшим и будет удалено в будущей версии .NET for Android. Обновите свойства проекта, чтобы использовать "class-parse".]]></Val>
+            <Val><![CDATA[Значение "{0}" синтаксического анализатора класса Android является неподготовленным и будет удалено в будущей версии .NET для Android. Обновите свойства проекта, чтобы использовать "class-parse".]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'class-parse'.]]></Val>
+            <Val><![CDATA[The Android class parser value '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'class-parse'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1177,10 +1177,10 @@
         <Str Cat="Text">
           <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET for Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Целевой объект "{0}" создания кода Android является устаревшим и будет удален в следующей версии .NET for Android. Обновите свойства проекта, чтобы использовать "XAJavaInterop1".]]></Val>
+            <Val><![CDATA[Целевой объект "{0}" создания кода Android является неподготовленным и будет удален в следующей версии .NET для Android. Обновите свойства проекта, чтобы использовать "XAJavaInterop1".]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of Xamarin.Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
+            <Val><![CDATA[The Android code generation target '{0}' is deprecated and will be removed in a future version of .NET Android. Update the project properties to use 'XAJavaInterop1'.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1465,10 +1465,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of .NET for Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Использование ссылки на проект приложения Android Wear "{0}" из проекта приложения Android является нерекомендуемым, и в будущей версии .NET for Android поддержка такой ссылки будет прекращена. Удалите ссылку на проект приложения Android Wear из проекта приложения Android и распространяйте приложение Wear в качестве автономного приложения.]]></Val>
+            <Val><![CDATA[Использование ссылки на проект приложения Android Wear "{0}" из проекта приложения Android является нерекомендуемым, и в будущей версии .NET Android поддержка такой ссылки будет прекращена. Удалите ссылку на проект приложения Android Wear из проекта приложения Android и распространяйте приложение Wear в качестве автономного приложения.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of Xamarin.Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
+            <Val><![CDATA[Referencing the Android Wear application project '{0}' from an Android application project is deprecated and will no longer be supported in a future version of .NET Android. Remove the Android Wear application project reference from the Android application project and distribute the Wear application as a standalone application instead.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />
@@ -1606,10 +1606,10 @@
         <Str Cat="Text">
           <Val><![CDATA[Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...), or change the .NET for Android project to target an API version that is installed.]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Установите его в Диспетчере SDK Android (Инструменты > Android > Диспетчер SDK Android...) или измените проект .NET for Android, выбрав для него в качестве цели установленную версию API.]]></Val>
+            <Val><![CDATA[Установите его в Диспетчере SDK Android (Инструменты > Android > Диспетчер SDK Android...) или измените проект .NET для Android, чтобы он ориентировался на установленную версию API.]]></Val>
           </Tgt>
           <Prev Cat="Text">
-            <Val><![CDATA[Tools > Android > Android SDK Manager...]]></Val>
+            <Val><![CDATA[Either install it in the Android SDK Manager (Tools > Android > Android SDK Manager...), or change the .NET Android project to target an API version that is installed.]]></Val>
           </Prev>
         </Str>
         <Disp Icon="Str" />

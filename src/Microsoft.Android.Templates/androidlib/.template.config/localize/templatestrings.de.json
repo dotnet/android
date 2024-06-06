@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android-Klassenbibliothek",
-  "description": "Ein Projekt zum Erstellen einer .NET for Android-Klassenbibliothek",
+  "description": "Ein Projekt zum Erstellen einer .NET für Android-Klassenbibliothek",
   "symbols/supportedOSVersion/description": "Überschreibt $(SupportedOSPlatformVersion) im Projekt"
 }

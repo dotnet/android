@@ -1,15 +1,11 @@
 using System;
+using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Prepare
 {
 	partial class Configurables
 	{
-		const string AdoptOpenJDKUpdate = "332";
-		const string AdoptOpenJDKBuild = "b09";
-
-		const string JetBrainsOpenJDKOperatingSystem = "osx-x64";
-		const string MicrosoftOpenJDKOperatingSystem = "macOS-x64";
-		const string AdoptOpenJDKOperatingSystem = "x64_mac";
+		static string MicrosoftOpenJDKOperatingSystem = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "macos-aarch64": "macos-x64";
 
 		partial class Defaults
 		{
