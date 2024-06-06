@@ -4,6 +4,7 @@ using Android.Util;
 using Android.Views;
 using Android.Widget;
 using NUnit.Framework;
+using Mono.Android_Test.Library;
 
 namespace Xamarin.Android.RuntimeTests
 {
@@ -13,7 +14,7 @@ namespace Xamarin.Android.RuntimeTests
 		public CustomWidgetTests()
 		{
 			// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
-			new Mono.Android_Test.Library.Foo ();
+			new Foo ();
 		}
 
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23880
