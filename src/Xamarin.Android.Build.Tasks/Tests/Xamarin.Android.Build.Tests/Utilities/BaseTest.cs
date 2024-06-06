@@ -606,7 +606,7 @@ namespace Xamarin.Android.Build.Tests
 				FileSystemUtils.SetDirectoryWriteable (output);
 				try {
 					Directory.Delete (output, recursive: true);
-				} catch (IOException ex) {
+				} catch (Exception ex) {
 					// This happens on CI occasionally, let's not fail the test
 					TestContext.Out.WriteLine ($"Failed to delete '{output}': {ex}");
 				}

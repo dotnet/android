@@ -1029,6 +1029,7 @@ namespace Lib1 {
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, libProj.ProjectName), false, false)) {
+				libBuilder.Verbosity = LoggerVerbosity.Detailed;
 				libBuilder.AutomaticNuGetRestore = false;
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
 				libBuilder.ThrowOnBuildFailure = false;
