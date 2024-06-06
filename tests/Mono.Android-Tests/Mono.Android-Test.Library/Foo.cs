@@ -1,4 +1,4 @@
 namespace Mono.Android_Test.Library;
 
-// NOTE: Type to be used, so there is a reference to this library
+// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
 public class Foo { }

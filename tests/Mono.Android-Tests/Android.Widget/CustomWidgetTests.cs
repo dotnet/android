@@ -12,7 +12,7 @@ namespace Xamarin.Android.RuntimeTests
 	{
 		public CustomWidgetTests()
 		{
-			// NOTE: ensure the C# compiler has a reference to the library
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
 			new Mono.Android_Test.Library.Foo ();
 		}
 
