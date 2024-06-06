@@ -538,6 +538,7 @@ namespace Xamarin.Android.Build.Tests
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
 
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.BuildLogFile = "install.log";
 				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
@@ -653,6 +654,7 @@ public class TestJavaClass {
 				},
 			};
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();

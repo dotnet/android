@@ -8,6 +8,7 @@ using System.Text;
 using System.Xml.Linq;
 using Xamarin.ProjectTools;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -86,6 +87,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 			proj.AndroidClassParser = classParser;
 			using (var b = CreateDllBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				var assemblyPath = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.dll");
@@ -679,6 +681,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			};
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupAfterSuccessfulBuild: false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				libBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
 				var generatedCode = Path.Combine (Root, libBuilder.ProjectDirectory, lib.IntermediateOutputPath,
 					"generated", "src", "Com.Xamarin.Android.Test.Msbuildtest.JavaSourceTestExtension.cs");

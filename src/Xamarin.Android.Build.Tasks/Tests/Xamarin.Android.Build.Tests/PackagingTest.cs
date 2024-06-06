@@ -9,6 +9,7 @@ using System.Xml.Linq;
 using Xamarin.Tools.Zip;
 using Xamarin.Android.Tasks;
 using Xamarin.Android.Tools;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -544,6 +545,7 @@ public class Test
 					Assert.IsTrue (zip.ContainsEntry ($"AndroidManifest.xml"), "Jar should contain AndroidManifest.xml");
 				}
 				using (var b = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+					b.Verbosity = LoggerVerbosity.Detailed;
 					Assert.IsTrue (b.Build (app), "Build of jar should have succeeded.");
 					var jar = "2965D0C9A2D5DB1E.jar";
 					string expected = $"Ignoring jar entry AndroidManifest.xml from {jar}: the same file already exists in the apk";
@@ -561,6 +563,7 @@ public class Test
 			};
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");
@@ -581,6 +584,7 @@ public class Test
 			};
 			proj.PackageReferences.Add (KnownPackages.Xamarin_Kotlin_StdLib_Common);
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				var apk = Path.Combine (Root, b.ProjectDirectory,
 					proj.OutputPath, $"{proj.PackageName}-Signed.apk");

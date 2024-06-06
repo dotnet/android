@@ -9,6 +9,7 @@ using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -392,6 +393,7 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
 				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net8.0-android" ? 34 : null);

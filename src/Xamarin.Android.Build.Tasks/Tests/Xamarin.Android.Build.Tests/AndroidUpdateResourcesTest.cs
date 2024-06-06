@@ -958,6 +958,7 @@ namespace Lib1 {
 			appProj.SetProperty ("AndroidUseManagedDesignTimeResourceGenerator", "True");
 			appProj.SetProperty ("AndroidUseDesignerAssembly", "false");
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (appBuilder.DesignTimeBuild (appProj), "DesignTime Application Build should have succeeded.");
 				Assert.IsFalse (appProj.CreateBuildOutput (appBuilder).IsTargetSkipped ("_ManagedUpdateAndroidResgen"),
 					"Target '_ManagedUpdateAndroidResgen' should have run.");
@@ -1032,6 +1033,7 @@ namespace Lib1 {
 				Assert.IsTrue (libBuilder.RunTarget (libProj, "Restore"), "Library project should have restored.");
 				libBuilder.ThrowOnBuildFailure = false;
 				using (var appBuilder = CreateApkBuilder (Path.Combine (path, appProj.ProjectName), false, false)) {
+					appBuilder.Verbosity = LoggerVerbosity.Detailed;
 					appBuilder.AutomaticNuGetRestore = false;
 					Assert.IsTrue (appBuilder.RunTarget (appProj, "Restore"), "App project should have restored.");
 					appBuilder.ThrowOnBuildFailure = false;
@@ -1209,6 +1211,7 @@ namespace UnnamedProject
 			proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<android.support.design.widget.BottomNavigationView android:id=\"@+id/navigation\" /></LinearLayout>");
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "first build should have succeeded");
 
 				//Add a new android:id
@@ -1237,6 +1240,7 @@ namespace UnnamedProject
 		{
 			var proj = new XamarinFormsAndroidApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
 				string aaptCommand = "Executing link";

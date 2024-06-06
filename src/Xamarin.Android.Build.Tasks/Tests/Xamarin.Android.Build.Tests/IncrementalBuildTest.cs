@@ -750,6 +750,7 @@ namespace Lib2
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), false))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				libBuilder.BuildLogFile = "build.log";
 				Assert.IsTrue (libBuilder.Build (lib), "first library build should have succeeded.");
 				appBuilder.BuildLogFile = "build.log";
@@ -1175,6 +1176,7 @@ namespace Lib2
 			proj.SetProperty ("AndroidUseDesignerAssembly", "true");
 			var builder = CreateApkBuilder ();
 			var parameters = new [] { "BuildingInsideVisualStudio=true"};
+			builder.Verbosity = LoggerVerbosity.Detailed;
 			builder.BuildLogFile = "update.log";
 			Assert.IsTrue (builder.RunTarget (proj, "Compile", parameters: parameters), $"{proj.ProjectName} should succeed");
 			builder.Output.AssertTargetIsNotSkipped ("_GenerateResourceCaseMap", occurrence: 1);

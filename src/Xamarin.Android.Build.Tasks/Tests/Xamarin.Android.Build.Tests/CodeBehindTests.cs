@@ -20,6 +20,7 @@ namespace Xamarin.Android.Build.Tests
 			public LocalBuilder ()
 			{
 				BuildingInsideVisualStudio = false;
+				Verbosity = LoggerVerbosity.Detailed;
 			}
 
 			public bool Build (string projectOrSolution, string target, string [] parameters = null, Dictionary<string, string> environmentVariables = null)
