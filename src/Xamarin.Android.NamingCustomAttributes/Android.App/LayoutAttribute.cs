@@ -70,5 +70,5 @@ public sealed partial class LayoutAttribute : Attribute {
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

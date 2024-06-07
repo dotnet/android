@@ -148,5 +148,5 @@ public partial class ContentProviderAttribute : Attribute, Java.Interop.IJniName
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

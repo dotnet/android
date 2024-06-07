@@ -94,5 +94,5 @@ public sealed partial class InstrumentationAttribute : Attribute, Java.Interop.I
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

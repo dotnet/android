@@ -308,5 +308,5 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

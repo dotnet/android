@@ -46,5 +46,5 @@ public sealed partial class UsesPermissionAttribute : Attribute {
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

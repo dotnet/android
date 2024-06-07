@@ -110,5 +110,5 @@ public partial class BroadcastReceiverAttribute : Attribute, Java.Interop.IJniNa
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

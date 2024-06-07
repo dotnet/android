@@ -62,5 +62,5 @@ public sealed partial class PermissionTreeAttribute : Attribute {
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

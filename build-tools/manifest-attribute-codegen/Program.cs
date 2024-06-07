@@ -1,3 +1,4 @@
+using System.IO;
 using Mono.Options;
 using Xamarin.SourceWriter;
 
@@ -83,7 +84,8 @@ public class Program
 
 		// Generate manifest attributes C# code
 		foreach (var type in metadata.Types.Values.Where (t => !t.Ignore)) {
-			using var w = new StreamWriter (Path.Combine (base_dir, type.OutputFile));
+			var path = Path.Combine (base_dir, type.OutputFile.Replace ('\\', Path.DirectorySeparatorChar));
+			using var w = new StreamWriter (path);
 			using var cw = new CodeWriter (w);
 			var element = merged.Elements.First (_ => _.ActualElementName == type.Name);
 			var writer = AttributeDataClass.Create (element, metadata, type);

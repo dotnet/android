@@ -118,5 +118,5 @@ public sealed partial class ServiceAttribute : Attribute, Java.Interop.IJniNameP
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

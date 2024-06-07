@@ -101,7 +101,7 @@ class AttributeDataClass : ClassWriter
 
 			manual_mapping_partial?.Write (writer);
 
-			writer.WriteLineNoIndent ("#endif");
+			writer.WriteLineNoIndent ("#endif // XABT_MANIFEST_EXTENSIONS");
 		}
 	}
 }

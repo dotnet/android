@@ -441,5 +441,5 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 	}
 
 	static partial void AddManualMapping ();
-#endif
+#endif // XABT_MANIFEST_EXTENSIONS
 }

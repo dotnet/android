@@ -7,7 +7,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputPath>..\..\bin\Build$(Configuration)</OutputPath>
-    <AppendTargetFrameworkToOutputPath >false</AppendTargetFrameworkToOutputPath>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
   </PropertyGroup>
   
   <Import Project="..\..\Configuration.props" />
@@ -28,10 +28,11 @@
       <_ManifestAttributeCodeGen>..\..\bin\Build$(Configuration)\manifest-attribute-codegen.dll</_ManifestAttributeCodeGen>
       <_ConfigurationFile>$(MSBuildThisFileDirectory)metadata.xml</_ConfigurationFile>
       <_RepositoryBaseDirectory>..\..\</_RepositoryBaseDirectory>
+      <_ManifestFile>$(MSBuildThisFileDirectory)manifest-definition.xml</_ManifestFile>
     </PropertyGroup>
 
     <Exec
-        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_ManifestAttributeCodeGen)&quot; -sdk-path=&quot;$(AndroidSdkFullPath)&quot; -base-dir=$(_RepositoryBaseDirectory) -metadata-file=&quot;$(_ConfigurationFile)&quot;" />
+        Command="&quot;$(DotNetPreviewTool)&quot; &quot;$(_ManifestAttributeCodeGen)&quot; &quot;-sdk-path=$(AndroidSdkFullPath)&quot; -base-dir=$(_RepositoryBaseDirectory) &quot;-metadata-file=$(_ConfigurationFile)&quot; &quot;-output-manifest=$(_ManifestFile)&quot;" />
 
   </Target>
 
