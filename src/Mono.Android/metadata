@@ -1948,6 +1948,10 @@
   <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES31']/field[@name='GL_VERTEX_BINDING_DIVISOR']" name="managedName">GlVertexBindingDivisorConst</attr>
   <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES32']/field[@name='GL_PRIMITIVE_BOUNDING_BOX']" name="managedName">GlPrimitiveBoundingBoxConst</attr>
 	
+  <!-- These fields received constant values at some point, but updating them now will change them from properties to consts -->
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='DEBUG']" name="value"></attr>
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='RELEASE']" name="value"></attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
