@@ -66,7 +66,7 @@ if(DEBUG_BUILD)
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 elseif(NOT ANALYZERS_ENABLED)
-  set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
+  set(BUILD_STATIC_LIBRARY ON)
 endif()
 
 # Library directories
@@ -233,7 +233,6 @@ macro(lib_target_options TARGET_NAME)
     ${SHARED_LIB_NAME}
     xa::runtime-base
     xa::java-interop
-    xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
     -llog
