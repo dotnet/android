@@ -8,6 +8,7 @@ using System.Xml.Linq;
 using NUnit.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.ProjectTools;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -45,6 +46,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				using (var b = CreateApkBuilder ()) {
+					b.Verbosity = LoggerVerbosity.Detailed;
 					b.CleanupAfterSuccessfulBuild = false;
 					string defaultTarget = b.Target;
 					b.Target = "InstallAndroidDependencies";
@@ -108,6 +110,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.AotAssemblies = true;
 			proj.SetProperty (property, "true");
 			using (var builder = CreateApkBuilder ()) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Target = "GetAndroidDependencies";
 				Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 				IEnumerable<string> taskOutput = builder.LastBuildOutput
@@ -141,6 +144,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			string buildToolsVersion = GetExpectedBuildToolsVersion ();
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),
@@ -178,6 +182,7 @@ namespace Xamarin.Android.Build.Tests
 
 			string buildToolsVersion = GetExpectedBuildToolsVersion ();
 			using (var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName), cleanupAfterSuccessfulBuild: false, cleanupOnDispose: false)) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.Target = "GetAndroidDependencies";
 				Assert.True (builder.Build (proj, parameters: parameters),

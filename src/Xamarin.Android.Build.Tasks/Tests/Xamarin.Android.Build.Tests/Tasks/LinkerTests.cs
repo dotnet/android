@@ -235,8 +235,7 @@ namespace Xamarin.Android.Build.Tests
 			var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 			FileAssert.Exists (apk);
 			var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
-			foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-				string abi = MonoAndroidHelper.RidToAbi (rid);
+			foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 				Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assemblyName}.dll"), $"{assemblyName}.dll should exist in apk!");
 
 				using var stream = helper.ReadEntry ($"assemblies/{assemblyName}.dll");
@@ -292,8 +291,7 @@ $@"<linker>
 				var apk = Path.Combine (Root, b.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
 				FileAssert.Exists (apk);
 				var helper = new ArchiveAssemblyHelper (apk, useAssemblyStore);
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (helper.Exists ($"assemblies/{abi}/{assembly_name}.dll"), $"{assembly_name}.dll should exist in apk!");
 				}
 				using (var stream = helper.ReadEntry ($"assemblies/{assembly_name}.dll")) {
@@ -432,7 +430,7 @@ namespace UnnamedProject {
 				string projectDir = Path.Combine (proj.Root, b.ProjectDirectory);
 				var assemblyFile = "UnnamedProject.dll";
 				if (!isRelease || setLinkModeNone) {
-					foreach (string abi in b.GetBuildAbis ()) {
+					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 						CheckAssembly (b.Output.GetIntermediaryPath (Path.Combine ("android", "assets", abi, assemblyFile)), projectDir);
 					}
 				} else {
