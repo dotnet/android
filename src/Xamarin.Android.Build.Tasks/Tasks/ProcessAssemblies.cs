@@ -112,9 +112,7 @@ namespace Xamarin.Android.Tasks
 
 		void SetMetadataForAssemblies (List<ITaskItem> output, Dictionary<string, ITaskItem> symbols)
 		{
-			Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: Start of Loop");
 			foreach (ITaskItem assembly in InputAssemblies) {
-				Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: {assembly.ItemSpec}");
 				if (DesignTimeBuild && !File.Exists (assembly.ItemSpec)) {
 					// Designer builds don't produce assemblies, so library and main application DLLs might not
 					// be there and would later cause an error when the `_CopyAssembliesForDesigner` task runs
@@ -132,7 +130,6 @@ namespace Xamarin.Android.Tasks
 				}
 				output.Add (assembly);
 			}
-			Log.LogDebugMessage ($"DEBUG!SetMetadataForAssemblies: End of Loop");
 		}
 
 		static bool IsFromAKnownRuntimePack (ITaskItem assembly)
