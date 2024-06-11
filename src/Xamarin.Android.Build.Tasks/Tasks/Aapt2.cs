@@ -15,7 +15,6 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {

@@ -6,8 +6,6 @@ using System.Diagnostics;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
-using Xamarin.Build;
-
 using Tasks = System.Threading.Tasks;
 
 namespace Xamarin.Android.Tools.BootstrapTasks
