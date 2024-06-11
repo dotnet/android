@@ -6,7 +6,7 @@
   <PropertyGroup>
     <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">17.8.3</MSBuildPackageReferenceVersion>
     <SystemSecurityCryptographyXmlVersion Condition=" '$(SystemSecurityCryptographyXmlVersion)' == '' ">7.0.1</SystemSecurityCryptographyXmlVersion>
-    <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' == '' " >3.1.1</LibZipSharpVersion>
+    <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' == '' " >3.3.0</LibZipSharpVersion>
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
   </PropertyGroup>
 
@@ -17,7 +17,7 @@
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
-    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.4.0" GeneratePathProperty="true" />
+    <PackageReference Include="Xamarin.Build.AsyncTask" Version="0.4.7" GeneratePathProperty="true" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" GeneratePathProperty="true" />
   </ItemGroup>
