@@ -3,6 +3,8 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 
+using Microsoft.Android.Build.Tasks;
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
