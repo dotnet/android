@@ -35,7 +35,7 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
-			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
+			public static Uri BinutilsArchive = new Uri ($"https://github.com/dotnet/android-native-tools/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
 		}
 
 		public static partial class Defaults
