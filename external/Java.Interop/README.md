@@ -9,7 +9,7 @@ This allows one to bridge code running on .NET's CLR and code running on a Java 
 Note this does not mean that one can run Java code on .NET, or vice-versa.
 
 **Java.Interop** currently does not ship independently.  It is shipped as part of Microsoft's
-[Xamarin.Android][xa] product, available via Visual Studio or .NET 6+.  However, it is designed
+[.NET for Android][android] product, available via Visual Studio or .NET 6+.  However, it is designed
 to be fully independent of Android and should be usable by other Java implementations.
 For other uses, please compile and distribute from source.
 
@@ -19,7 +19,7 @@ and [Architecture][architecture] pages.
 [jni]: http://docs.oracle.com/javase/8/docs/technotes/guides/jni/spec/jniTOC.html
 [motivation]: /Documentation/Motivation.md
 [architecture]: /Documentation/Architecture.md
-[xa]: https://github.com/xamarin/xamarin-android
+[android]: https://github.com/xamarin/xamarin-android
 
 ## Building
 
@@ -39,7 +39,7 @@ dotnet build
 ```
 
 [net-7]: https://dotnet.microsoft.com/en-us/download/dotnet/7.0
-[net-6]: https://github.com/xamarin/java.interop/tree/release/6.0.3xx
+[net-6]: https://github.com/dotnet/java-interop/tree/release/6.0.3xx
 
 Additional build options are documented [here][build-configuration].
 
@@ -52,10 +52,6 @@ This project welcomes issues and PRs.
   - File an issue in [GitHub Issues](https://github.com/xamarin/xamarin-android/issues/new/choose).
   - Discuss development and design on [Discord](https://aka.ms/dotnet-discord). [![Discord](https://img.shields.io/badge/chat-on%20discord-brightgreen)](https://aka.ms/dotnet-discord)
   - Coding style is outlined in [Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/).
-
-This project has adopted the code of conduct defined by the Contributor Covenant
-to clarify expected behavior in our community. For more information, see the
-[.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
 
 ## License
 

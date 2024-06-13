@@ -14,7 +14,7 @@ Bring an example of the latter into a Java.Interop sample, using [NativeAOT][3].
 ## Building
 
 Building a native library with NativeAOT requires a Release configuration build.
-For in-repo use, that means that xamarin/Java.Interop itself needs to be built in
+For in-repo use, that means that dotnet/java-interop itself needs to be built in
 Release configuration:
 
 ```sh
@@ -83,7 +83,7 @@ With this sample "done" (-ish), there are some
 ## `Type.GetType()`
 
 Commit 
-[xamarin/java.interop@005c9141](https://github.com/xamarin/java.interop/commit/005c914170a0af9069ff18fd4dd9d45463dd5dc6)
+[dotnet/java-interop@005c9141](https://github.com/dotnet/java-interop/commit/005c914170a0af9069ff18fd4dd9d45463dd5dc6)
 uses JNI Type Signatures to avoid `Type.GetType()` invocations, which continue
 to be used in .NET Android.
 

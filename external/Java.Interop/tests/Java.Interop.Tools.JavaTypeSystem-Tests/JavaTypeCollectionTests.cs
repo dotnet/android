@@ -50,7 +50,7 @@ namespace Java.Interop.Tools.JavaTypeSystem.Tests
 		[Test]
 		public void IntentServiceHack ()
 		{
-			// https://github.com/xamarin/java.interop/issues/717
+			// https://github.com/dotnet/java-interop/issues/717
 			var api = JavaApiTestHelper.GetLoadedApi ();
 
 			// Create "mono.android.app" package

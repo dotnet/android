@@ -3,7 +3,7 @@ set(CMAKE_OSX_ARCHITECTURES x86_64 arm64)
 project(
     java-interop
     DESCRIPTION "Java.Interop native support"
-    HOMEPAGE_URL "https://github.com/xamarin/java.interop/"
+    HOMEPAGE_URL "https://github.com/dotnet/java-interop/"
     LANGUAGES CXX C
 )
 

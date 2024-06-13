@@ -376,7 +376,7 @@ namespace Java.Interop
 						[DynamicallyAccessedMembers (Constructors)]
 						Type type,
 						Type [] arguments) =>
-					// FIXME: https://github.com/xamarin/java.interop/issues/1192
+					// FIXME: https://github.com/dotnet/java-interop/issues/1192
 					#pragma warning disable IL3050
 					type.MakeGenericType (arguments);
 					#pragma warning restore IL3050
@@ -660,7 +660,7 @@ namespace Java.Interop
 
 				[UnconditionalSuppressMessage ("Trimming", "IL2060", Justification = makeGenericMethodMessage)]
 				static MethodInfo MakeGenericMethod (MethodInfo method, Type type) =>
-					// FIXME: https://github.com/xamarin/java.interop/issues/1192
+					// FIXME: https://github.com/dotnet/java-interop/issues/1192
 					#pragma warning disable IL3050
 					method.MakeGenericMethod (type);
 					#pragma warning restore IL3050

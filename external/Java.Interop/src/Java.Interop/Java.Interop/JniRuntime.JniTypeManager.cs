@@ -272,14 +272,14 @@ namespace Java.Interop {
 			const string NotUsedInAndroid = "This code path is not used in Android projects.";
 
 			static Type MakeArrayType (Type type) =>
-				// FIXME: https://github.com/xamarin/java.interop/issues/1192
+				// FIXME: https://github.com/dotnet/java-interop/issues/1192
 				#pragma warning disable IL3050
 				type.MakeArrayType ();
 				#pragma warning restore IL3050
 
 			[UnconditionalSuppressMessage ("Trimming", "IL2055", Justification = NotUsedInAndroid)]
 			static Type MakeGenericType (Type type, Type arrayType) =>
-				// FIXME: https://github.com/xamarin/java.interop/issues/1192
+				// FIXME: https://github.com/dotnet/java-interop/issues/1192
 				#pragma warning disable IL3050
 				type.MakeGenericType (arrayType);
 				#pragma warning restore IL3050

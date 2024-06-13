@@ -437,7 +437,7 @@ namespace generatortests
 		[Test]
 		public void GenerateProperNestedInterfaceSignatures ()
 		{
-			// https://github.com/xamarin/java.interop/issues/661
+			// https://github.com/dotnet/java-interop/issues/661
 			// Ensure that when we write the invoker type for a nested default interface method
 			// we use `/` to denote nested as needed by Type.GetType ()
 			var xml = @"<api>
