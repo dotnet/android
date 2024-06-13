@@ -5,7 +5,7 @@ VisualStudioVersion = 17.1.32104.313
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Java.Interop.BootstrapTasks", "Java.Interop.BootstrapTasks.csproj", "{47C54705-71BA-455D-9F72-780487DE861C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{2F8744CF-C265-440A-B976-DEC021324A3E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "..\..\external\android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{2F8744CF-C265-440A-B976-DEC021324A3E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
