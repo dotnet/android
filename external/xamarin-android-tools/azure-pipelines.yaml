@@ -1,14 +1,12 @@
-name: Xamarin.Android.Tools $(Rev:r)
+name: Android.Tools $(Rev:r)
 
 trigger:
-  - main
-  - d16-*
-  - d17-*
+- main
+- release/*
 
 pr:
-  - main
-  - d16-*
-  - d17-*
+- main
+- release/*
 
 parameters:
 - name: ApiScanSourceBranch
