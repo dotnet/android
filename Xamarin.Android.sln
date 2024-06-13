@@ -67,11 +67,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mono.Android.Export", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Mono.Android.Runtime", "src\Mono.Android.Runtime\Mono.Android.Runtime.csproj", "{43564FB3-0F79-4FF4-A2B0-B1637072FF01}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.BaseTasks", "external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj", "{3DE17662-DCD6-4F49-AF06-D39AACC8649A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Microsoft.Android.Build.BaseTasks", "external\android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj", "{3DE17662-DCD6-4F49-AF06-D39AACC8649A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk", "external\android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj", "{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\xamarin-android-tools\tests\Xamarin.Android.Tools.AndroidSdk-Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.AndroidSdk-Tests", "external\android-tools\tests\Xamarin.Android.Tools.AndroidSdk-Tests\Xamarin.Android.Tools.AndroidSdk-Tests.csproj", "{1E5501E8-49C1-4659-838D-CC9720C5208F}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "r8", "src\r8\r8.csproj", "{1BAFA0CC-0377-46CE-AB7B-7BB2E7B62F63}"
 EndProject

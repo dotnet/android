@@ -12,7 +12,7 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\..\external\android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\..\build-tools\scripts\NUnitReferences.projitems" />
 
   <ItemGroup>

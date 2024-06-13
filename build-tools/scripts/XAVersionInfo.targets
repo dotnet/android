@@ -15,7 +15,7 @@
       <_SubmoduleBranchInfo Include="external/Java.Interop">
         <OutputPropertyName>_BuildInfo_JavaInteropCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
-      <_SubmoduleBranchInfo Include="external/xamarin-android-tools">
+      <_SubmoduleBranchInfo Include="external/android-tools">
         <OutputPropertyName>_BuildInfo_XamarinAndroidToolsCommit</OutputPropertyName>
       </_SubmoduleBranchInfo>
     </ItemGroup>

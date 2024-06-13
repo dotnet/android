@@ -4,6 +4,6 @@
     <_XamarinAndroidCecilVersion>@MonoCecilVersion@</_XamarinAndroidCecilVersion>
     <UtilityOutputFullPath>$(MSBuildThisFileDirectory)..\..\bin\$(Configuration)\lib\xamarin.android\xbuild\Xamarin\Android\</UtilityOutputFullPath>
     <UtilityOutputFullPathCoreApps>@MicrosoftAndroidSdkOutDir@</UtilityOutputFullPathCoreApps>
-    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)..\..\external\xamarin-android-tools</XamarinAndroidToolsDirectory>
+    <XamarinAndroidToolsDirectory>$(MSBuildThisFileDirectory)..\..\external\android-tools</XamarinAndroidToolsDirectory>
   </PropertyGroup>
 </Project>

@@ -10,7 +10,7 @@
     <_IncludeMicrosoftBuildPackage>true</_IncludeMicrosoftBuildPackage>
   </PropertyGroup>
   <Import Project="..\..\..\..\Configuration.props" />
-  <Import Project="..\..\..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\..\..\..\external\android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
   <Import Project="..\..\..\..\build-tools\scripts\NUnitReferences.projitems" />
   <ItemGroup>
     <Compile Remove="Resources\**\*.cs" />
@@ -29,7 +29,7 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Win32.Registry" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
-    <ProjectReference Include="..\..\..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
+    <ProjectReference Include="..\..\..\..\external\android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj">
       <Project>{E34BCFA0-CAA4-412C-AA1C-75DB8D67D157}</Project>
       <Name>Xamarin.Android.Tools.AndroidSdk</Name>
     </ProjectReference>

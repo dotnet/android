@@ -189,7 +189,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string ExternalDir                      = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "external");
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");
 			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
-			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
+			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "android-tools", "Xamarin.Android.Tools.sln");
 			public static readonly string NativeSourcesDir                 = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native");
 
 			// Dynamic locations used throughout the code
