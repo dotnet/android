@@ -1,4 +1,4 @@
-[submodule "external/android-tools"]
-	path = external/android-tools
-	url = https://github.com/dotnet/android-tools/
+[submodule "external/xamarin-android-tools"]
+	path = external/xamarin-android-tools
+	url = https://github.com/xamarin/xamarin-android-tools.git
 	branch = main

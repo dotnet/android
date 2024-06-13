@@ -2,7 +2,7 @@
   "solution": {
     "path": "..\\..\\Java.Interop.sln",
     "projects": [
-      "external\\android-tools\\src\\Xamarin.Android.Tools.AndroidSdk\\Xamarin.Android.Tools.AndroidSdk.csproj",
+      "external\\xamarin-android-tools\\src\\Xamarin.Android.Tools.AndroidSdk\\Xamarin.Android.Tools.AndroidSdk.csproj",
       "src\\Java.Interop.Localization\\Java.Interop.Localization.csproj",
       "src\\Java.Interop.Tools.Cecil\\Java.Interop.Tools.Cecil.csproj",
       "src\\Java.Interop.Tools.Diagnostics\\Java.Interop.Tools.Diagnostics.csproj",
