@@ -9,7 +9,7 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\external\android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
 
   <ItemGroup>
     <PackageReference Include="Microsoft.DotNet.ApiCompat" Version="$(MicrosoftDotNetApiCompatPackageVersion)" IncludeAssets="none" />
@@ -18,7 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\xa-prep-tasks\xa-prep-tasks.csproj" />
-    <ProjectReference Include="..\..\external\android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Xamarin.Android.Tools.AndroidSdk\Xamarin.Android.Tools.AndroidSdk.csproj" />
   </ItemGroup>
 
   <Import Project="Sdk.targets" Sdk="Microsoft.NET.Sdk" />

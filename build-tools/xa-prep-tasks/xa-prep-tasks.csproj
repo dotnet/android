@@ -7,10 +7,10 @@
   </PropertyGroup>
 
   <Import Project="..\..\Configuration.props" />
-  <Import Project="..\..\external\android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
+  <Import Project="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\MSBuildReferences.projitems" />
 
   <ItemGroup>
-    <ProjectReference Include="..\..\external\android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
+    <ProjectReference Include="..\..\external\xamarin-android-tools\src\Microsoft.Android.Build.BaseTasks\Microsoft.Android.Build.BaseTasks.csproj" />
   </ItemGroup>
 
 </Project>

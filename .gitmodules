@@ -26,8 +26,8 @@
     path = external/robin-map
     url = https://github.com/xamarin/robin-map
     branch = master
-[submodule "external/android-tools"]
-    path = external/android-tools
+[submodule "external/xamarin-android-tools"]
+    path = external/xamarin-android-tools
     url = https://github.com/dotnet/android-tools
     branch = main
 [submodule "external/xxHash"]
