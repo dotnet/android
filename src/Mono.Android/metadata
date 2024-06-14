@@ -1693,7 +1693,7 @@
 
   <!-- If you try to implement ICursor in API-30+, we generate an invalid invoker for this method due to the
        generic parameters.  Since this is a default method we can just remove it until that bug is fixed.
-       https://github.com/xamarin/java.interop/issues/699 -->
+       https://github.com/dotnet/java-interop/issues/699 -->
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='setNotificationUris' and count(parameter)=2 and parameter[1][@type='android.content.ContentResolver'] and parameter[2][@type='java.util.List&lt;android.net.Uri&gt;']]" />
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='getNotificationUris']" />
 

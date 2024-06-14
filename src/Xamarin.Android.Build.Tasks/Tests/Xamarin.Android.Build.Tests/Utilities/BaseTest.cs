@@ -270,7 +270,7 @@ namespace Xamarin.Android.Build.Tests
 			return javaPath;
 		}
 
-		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
+		// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L60-L100
 		void CreateFauxJdk (string dir, string releaseVersion, string releaseBuildNumber, string javaVersion, string[] extraPrefix)
 		{
 			Directory.CreateDirectory (dir);
@@ -321,7 +321,7 @@ namespace Xamarin.Android.Build.Tests
 			CreateShellScript (Path.Combine (jre, "jvm.dll"), "");
 		}
 
-		// https://github.com/xamarin/xamarin-android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
+		// https://github.com/dotnet/android-tools/blob/683f37508b56c76c24b3287a5687743438625341/tests/Xamarin.Android.Tools.AndroidSdk-Tests/JdkInfoTests.cs#L108-L132
 		void CreateShellScript (string path, string contents)
 		{
 			if (IsWindows && string.Compare (Path.GetExtension (path), ".dll", StringComparison.OrdinalIgnoreCase) != 0)
