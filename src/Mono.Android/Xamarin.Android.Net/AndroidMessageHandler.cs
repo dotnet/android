@@ -1247,7 +1247,7 @@ namespace Xamarin.Android.Net
 			return trustManagers;
 		}
 
-		static (IKey, Certificate[])? GetKeyEntry (X509Certificate2 clientCertificate)
+		static (IPrivateKey, Certificate[])? GetKeyEntry (X509Certificate2 clientCertificate)
 		{
 			if (!clientCertificate.HasPrivateKey) {
 				return null;
@@ -1267,15 +1267,14 @@ namespace Xamarin.Android.Net
 			}
 
 			var keyFactory = KeyFactory.GetInstance (algorithmName) ?? throw new InvalidOperationException ($"Failed to get the KeyFactory instance for algorithm {algorithmName}");
-			var certificateFactory = CertificateFactory.GetInstance ("X.509") ?? throw new InvalidOperationException ("Failed to get the CertificateFactory instance for X.509");
+			var privateKey = keyFactory.GeneratePrivate (new Java.Security.Spec.PKCS8EncodedKeySpec (key.ExportPkcs8PrivateKey ()));
+			var certificate = Java.Lang.Object.GetObject<Certificate> (clientCertificate.Handle, JniHandleOwnership.DoNotTransfer);
 
-			var javaKey = keyFactory.GeneratePrivate (new Java.Security.Spec.PKCS8EncodedKeySpec (key.ExportPkcs8PrivateKey ())).JavaCast<IKey> ();
-			var javaCert = certificateFactory.GenerateCertificate (new MemoryStream (clientCertificate.Export (X509ContentType.Cert)));
-			if (javaKey is null || javaCert is null) {
+			if (privateKey is null || certificate is null) {
 				return null;
 			}
 
-			return (javaKey, new Certificate [] { javaCert });
+			return (privateKey, new Certificate [] { certificate });
 		}
 
 		void HandlePreAuthentication (HttpURLConnection httpConnection)
