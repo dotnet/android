@@ -6,7 +6,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Documentation for how to troubleshoot issues with binding projects, as well as common issues and how to solve them, is available [here](https://github.com/xamarin/java.interop/wiki/Troubleshooting-Android-Bindings-Issues).
+        Documentation for how to troubleshoot issues with binding projects, as well as common issues and how to solve them, is available [here](https://github.com/dotnet/java-interop/wiki/Troubleshooting-Android-Bindings-Issues).
 
         If you get stuck troubleshooting an issue, please make sure to add as much detail as you can, preferably with a reproduction if possible. This will help us diagnose the issue faster and thus resolve it quicker.
   - type: dropdown
