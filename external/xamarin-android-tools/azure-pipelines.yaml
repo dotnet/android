@@ -1,4 +1,4 @@
-name: Android.Tools $(Rev:r)
+name: android-tools $(Rev:r)
 
 trigger:
 - main
@@ -10,7 +10,7 @@ pr:
 
 parameters:
 - name: ApiScanSourceBranch
-  default: 'refs/heads/main'
+  default: refs/heads/main
 
 # Global variables
 variables:
@@ -21,22 +21,17 @@ jobs:
 - job: build
   displayName: Build and Test
   timeoutInMinutes: 60
-  cancelTimeoutInMinutes: 2
-
   strategy:
     matrix:
       macOS:
-        vmImage: macOS-12
+        vmImage: macOS-13
       windows:
         vmImage: windows-2022
         Codeql.Enabled: true
-
   pool:
     vmImage: $(vmImage)
-
   workspace:
     clean: all
-
   steps:
   - checkout: self
     clean: true
@@ -46,11 +41,14 @@ jobs:
     inputs:
       version: $(DotNetCoreVersion)
 
-  - script: dotnet build Xamarin.Android.Tools.sln -bl:$(Build.ArtifactStagingDirectory)/build.binlog
-    displayName: 'Build solution Xamarin.Android.Tools.sln'
+  - task: DotNetCoreCLI@2
+    displayName: Build solution Xamarin.Android.Tools.sln
+    inputs:
+      projects: Xamarin.Android.Tools.sln
+      arguments: -bl:$(Build.ArtifactStagingDirectory)/build.binlog
 
   - task: DotNetCoreCLI@2
-    displayName: 'Run Tests'
+    displayName: Run Tests
     inputs:
       command: test
       projects: bin/TestDebug-net*/**/*-Tests.dll
@@ -63,8 +61,13 @@ jobs:
       Write-Host "##vso[task.setvariable variable=xat.nuget.version]$version"
     condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
-  - script: dotnet pack src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj -p:Version=$(xat.nuget.version) -p:PackageOutputPath=$(Build.ArtifactStagingDirectory) -bl:$(Build.ArtifactStagingDirectory)/pack.binlog
-    displayName: 'Build NuGet'
+  - task: DotNetCoreCLI@2
+    displayName: Build NuGet
+    inputs:
+      command: custom
+      projects: src/Xamarin.Android.Tools.AndroidSdk/Xamarin.Android.Tools.AndroidSdk.csproj
+      custom: pack
+      arguments: -p:Version=$(xat.nuget.version) -p:PackageOutputPath=$(Build.ArtifactStagingDirectory) -bl:$(Build.ArtifactStagingDirectory)/pack.binlog
     condition: and(succeeded(), eq(variables['agent.os'], 'Windows_NT'))
 
   - task: PublishPipelineArtifact@1

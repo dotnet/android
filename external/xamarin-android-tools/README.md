@@ -1,4 +1,5 @@
 # android-tools
+[![Build Status](https://dev.azure.com/devdiv/DevDiv/_apis/build/status%2FXamarin%2FAndroid%2Fandroid-tools?branchName=main)](https://dev.azure.com/devdiv/DevDiv/_build/latest?definitionId=22338&branchName=main)
 
 **android-tools** is a repo to easily share code between the
 [xamarin-android][android] repo and the .NET for Android commercial tooling,
@@ -6,20 +7,6 @@ such as IDE extensions, without requiring that the IDE extensions
 submodule the entire **android** repo, which is gigantic.
 
 [android]: https://github.com/xamarin/xamarin-android
-
-# Build Status
-
-| Platform              | Status |
-|-----------------------|--------|
-| **macOS**             | [![macOS Build Status][azure-macOS-icon]][azure-macOS-status] |
-| **Windows**           | [![Windows Build Status][azure-Windows-icon]][azure-Windows-status] |
-
-
-[azure-macOS-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin-android-tools
-[azure-macOS-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=3
-[azure-Windows-icon]: https://dev.azure.com/xamarin/public/_apis/build/status/xamarin-android-tools
-[azure-Windows-status]: https://dev.azure.com/xamarin/public/_build/latest?definitionId=3
-
 
 # Build Requirements
 
@@ -71,7 +58,7 @@ The major version in the `nuget.version` file should be updated when a breaking 
 The minor version should be updated when new functionality is added.
 The patch version will be automatically determined by the number of commits since the last version change.
 
-Xamarin.Android.Tools.AndroidSdk nupkg files are produced for every build which occurrs on [Azure Devops](https://dev.azure.com/xamarin/Xamarin/_build?definitionId=2&_a=summary).
+Xamarin.Android.Tools.AndroidSdk nupkg files are produced for every build which occurrs on [Azure Devops](https://devdiv.visualstudio.com/DevDiv/_build?definitionId=22338).
 To download one of these packages, navigate to the build you are interested in and click on the `Artifacts` button.
 
 Alternatively, "unofficial" releases are currently hosted on the [Xamarin.Android](https://dev.azure.com/xamarin/public/_packaging?_a=feed&feed=Xamarin.Android) feed.
@@ -84,8 +71,6 @@ Add the feed to your project's `NuGet.config` to reference these packages:
   </packageSources>
 </configuration>
 ```
-
-An Azure Pipelines [Release ](https://dev.azure.com/xamarin/public/_release?view=mine&_a=releases&definitionId=12) can be manually triggered to push a new version to this feed.
 
 # Mailing Lists
 
