@@ -347,7 +347,7 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
           parameters:
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
 
         - task: NuGetAuthenticate@1
@@ -388,7 +388,7 @@ extends:
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
           inputs:
-            projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
             arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
@@ -404,14 +404,14 @@ extends:
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
           inputs:
-            projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
             arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
             continueOnError: false
 
@@ -430,7 +430,7 @@ extends:
               -f $(DotNetTargetFramework)-android -c Debug
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
@@ -440,7 +440,7 @@ extends:
               -f $(DotNetTargetFramework)-android -c Release
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
 
         - task: CopyFiles@2
