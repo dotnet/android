@@ -38,10 +38,10 @@
       "Size": 72815
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 462707
+      "Size": 462351
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5368
+      "Size": 5366
     },
     "lib/arm64-v8a/lib_mscorlib.dll.so": {
       "Size": 3989
@@ -89,7 +89,7 @@
       "Size": 11962
     },
     "lib/arm64-v8a/lib_System.Formats.Asn1.dll.so": {
-      "Size": 31805
+      "Size": 31761
     },
     "lib/arm64-v8a/lib_System.IO.Compression.Brotli.dll.so": {
       "Size": 11143
@@ -119,7 +119,7 @@
       "Size": 8561
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 878749
+      "Size": 878498
     },
     "lib/arm64-v8a/lib_System.Private.DataContractSerialization.dll.so": {
       "Size": 193452
@@ -152,7 +152,7 @@
       "Size": 3749
     },
     "lib/arm64-v8a/lib_System.Security.Cryptography.dll.so": {
-      "Size": 78755
+      "Size": 60336
     },
     "lib/arm64-v8a/lib_System.Text.RegularExpressions.dll.so": {
       "Size": 161293
@@ -164,7 +164,7 @@
       "Size": 1767
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 5133
+      "Size": 5139
     },
     "lib/arm64-v8a/lib_Xamarin.AndroidX.Activity.dll.so": {
       "Size": 16325
@@ -260,7 +260,7 @@
       "Size": 155568
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 349464
+      "Size": 349360
     },
     "META-INF/androidx.activity_activity.version": {
       "Size": 6
@@ -2483,5 +2483,5 @@
       "Size": 812848
     }
   },
-  "PackageSize": 10357926
+  "PackageSize": 10345638
 }

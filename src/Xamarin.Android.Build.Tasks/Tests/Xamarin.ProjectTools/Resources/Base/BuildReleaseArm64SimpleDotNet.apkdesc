@@ -14,10 +14,10 @@
       "Size": 64656
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 92263
+      "Size": 92265
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5368
+      "Size": 5366
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
       "Size": 6541
@@ -35,7 +35,7 @@
       "Size": 4020
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 3059
+      "Size": 3064
     },
     "lib/arm64-v8a/libarc.bin.so": {
       "Size": 1586
