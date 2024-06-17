@@ -28,6 +28,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty ("AndroidHttpClientHandlerType", handler);
 			using (var b = CreateApkBuilder (path)) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				b.Build (proj);
 				intermediatePath = Path.Combine (path,proj.IntermediateOutputPath);
 				targetSkipped = b.Output.IsTargetSkipped ("_CheckAndroidHttpClientHandlerType");

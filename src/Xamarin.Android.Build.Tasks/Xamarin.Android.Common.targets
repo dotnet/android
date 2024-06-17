@@ -497,10 +497,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidLinkTool)' != '' "
   />
   <AndroidWarning Code="XA0119"
-      ResourceName="XA0119_AAB"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidPackageFormat)' == 'aab' "
-  />
-  <AndroidWarning Code="XA0119"
       ResourceName="XA0119_Interpreter"
       Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />

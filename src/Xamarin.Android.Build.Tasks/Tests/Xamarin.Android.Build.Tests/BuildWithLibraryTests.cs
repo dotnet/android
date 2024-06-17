@@ -427,7 +427,6 @@ namespace Xamarin.Android.Build.Tests
 					}
 				}
 			}
-			Directory.Delete (path, recursive: true);
 		}
 
 		[Test]

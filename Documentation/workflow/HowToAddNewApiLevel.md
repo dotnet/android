@@ -58,6 +58,11 @@ This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
   - Check that new package/namespaces are properly cased
   
+### New AndroidManifest.xml Elements
+
+- See `build-tools/manifest-attribute-codegen/README.md` for instructions on surfacing any new
+  elements or attributes added to `AndroidManifest.xml`.
+
 ### ApiCompat
 
 There may be ApiCompat issues that need to be examined.  Either fix the assembly with metadata or allow

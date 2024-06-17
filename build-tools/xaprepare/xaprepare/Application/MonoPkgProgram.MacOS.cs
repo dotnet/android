@@ -42,8 +42,8 @@ namespace Xamarin.Android.Prepare
 
 		protected override bool CheckWhetherInstalled ()
 		{
-			IgnoreMaximumVersion = Context.Instance.IgnoreMaxMonoVersion;
-			IgnoreMinimumVersion = Context.Instance.IgnoreMinMonoVersion;
+			IgnoreMaximumVersion = true;
+			IgnoreMinimumVersion = false;
 			return base.CheckWhetherInstalled ();
 		}
 
@@ -55,6 +55,7 @@ namespace Xamarin.Android.Prepare
 			return await base.DetermineCurrentVersion ();
 		}
 
+#pragma warning disable 1998
 		protected override async Task AfterDetect (bool installed)
 		{
 			if (!installed)
@@ -62,6 +63,7 @@ namespace Xamarin.Android.Prepare
 
 			AddToInventory ();
 		}
+#pragma warning restore 1998
 
 		public void AddToInventory ()
 		{

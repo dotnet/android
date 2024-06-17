@@ -146,6 +146,7 @@ namespace Xamarin.Android.Tasks
 				// Sometimes .pdb files are not included in @(ResolvedFileToPublish), so add them if they exist
 				if (File.Exists (symbolPath)) {
 					symbols [symbolPath] = symbol = new TaskItem (symbolPath);
+					return symbol;
 				}
 			}
 			return symbol;
@@ -185,6 +186,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string destination = Path.Combine (abi, item.GetMetadata ("DestinationSubDirectory"));
+				//Log.LogDebugMessage ($"DEBUG!!!'{item.ItemSpec}' '{rid}' = '{abi}'. DestinationSubDirectory='{destination}'");
 				item.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
 				item.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (item.ItemSpec)));
 			}

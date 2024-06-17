@@ -9,6 +9,7 @@ using Mono.Debugging.Soft;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
 using System.Collections.Generic;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -147,6 +148,11 @@ namespace Xamarin.Android.Build.Tests
 			},
 			new object[] {
 				/* embedAssemblies */    true,
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
+			},
+			new object[] {
+				/* embedAssemblies */    false,
 				/* activityStarts */     true,
 				/* packageFormat */      "aab",
 			},
@@ -325,7 +331,21 @@ namespace ${ROOT_NAMESPACE} {
 				/* useLatestSdk */       true,
 			},
 			new object[] {
+				/* embedAssemblies */    false,
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
 				/* embedAssemblies */    true,
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
@@ -387,11 +407,13 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis (DeviceAbi);
+			var abis = new [] { DeviceAbi };
+			app.SetRuntimeIdentifiers (abis);
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.True (libBuilder.Build (lib), "Library should have built.");
 
 				SetTargetFrameworkAndManifest (app, appBuilder, app.TargetFramework == "net8.0-android" ? 34 : null);
