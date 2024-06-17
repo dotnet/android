@@ -3546,3 +3546,4 @@ virtual Java.Util.Zip.Inflater.SetDictionary(Java.Nio.ByteBuffer? dictionary) ->
 virtual Java.Util.Zip.Inflater.SetInput(Java.Nio.ByteBuffer? input) -> void
 virtual Java.Util.Zip.ZipEntry.TimeLocal.get -> Java.Time.LocalDateTime?
 virtual Java.Util.Zip.ZipEntry.TimeLocal.set -> void
+static Android.Security.KeyChain.GetCertificateWithPrivateKey(Android.Content.Context! context, string! alias) -> System.Security.Cryptography.X509Certificates.X509Certificate2?

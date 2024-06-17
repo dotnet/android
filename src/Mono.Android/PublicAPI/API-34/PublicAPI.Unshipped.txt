@@ -40,3 +40,4 @@ virtual Android.OS.HardwarePropertiesManager.GetDeviceTemperatures(Android.OS.De
 virtual Android.Telephony.Mbms.DownloadStatusListener.OnStatusUpdated(Android.Telephony.Mbms.DownloadRequest? request, Android.Telephony.Mbms.FileInfo? fileInfo, Android.Telephony.Mbms.DownloadStatus status) -> void
 virtual Android.Telephony.Mbms.StreamingServiceCallback.OnStreamMethodUpdated(Android.Telephony.Mbms.StreamingMethod methodType) -> void
 virtual Android.Telephony.Mbms.StreamingServiceCallback.OnStreamStateUpdated(Android.Telephony.StreamingState state, Android.Telephony.Mbms.StreamingStateChangedReason reason) -> void
+static Android.Security.KeyChain.GetCertificateWithPrivateKey(Android.Content.Context! context, string! alias) -> System.Security.Cryptography.X509Certificates.X509Certificate2?
