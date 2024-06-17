@@ -3,7 +3,7 @@ using System;
 namespace Xamarin.Android.Tasks
 {
 	// Declaration order of fields and their types must correspond *exactly* to that in
-	// src/monodroid/jni/xamarin-app.hh ApplicationConfig structure
+	// src/native/xamarin-app-stub/xamarin-app.hh ApplicationConfig structure
 	//
 	// Type mappings:
 	//
@@ -34,6 +34,7 @@ namespace Xamarin.Android.Tasks
 		public bool   have_runtime_config_blob;
 		public bool   have_assemblies_blob;
 		public bool   marshal_methods_enabled;
+		public bool   ignore_split_configs;
 		public byte   bound_stream_io_exception_type;
 		public uint   package_naming_policy;
 		public uint   environment_variable_count;
