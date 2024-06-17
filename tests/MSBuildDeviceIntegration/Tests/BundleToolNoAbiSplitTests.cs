@@ -10,7 +10,7 @@ using Xamarin.Tools.Zip;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	[Category ("XamarinBuildDownload")]
+	[Category ("UsesDevice")]
 	public class BundleToolNoAbiSplitTests : DeviceTest
 	{
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
