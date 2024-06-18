@@ -3547,3 +3547,5 @@ virtual Java.Util.Zip.Inflater.SetInput(Java.Nio.ByteBuffer? input) -> void
 virtual Java.Util.Zip.ZipEntry.TimeLocal.get -> Java.Time.LocalDateTime?
 virtual Java.Util.Zip.ZipEntry.TimeLocal.set -> void
 static Android.Security.KeyChain.GetCertificateWithPrivateKey(Android.Content.Context! context, string! alias) -> System.Security.Cryptography.X509Certificates.X509Certificate2?
+static Android.Security.KeyChain.ChooseCertificateWithPrivateKey(Android.App.Activity! activity, string![]? keyTypes, Java.Security.IPrincipal![]? issuers, Android.Net.Uri? uri, string? alias) -> System.Threading.Tasks.Task<System.Security.Cryptography.X509Certificates.X509Certificate2?>!
+static Android.Security.KeyChain.ChooseCertificateWithPrivateKey(Android.App.Activity! activity, string![]? keyTypes, Java.Security.IPrincipal![]? issuers, string? host, int port, string? alias) -> System.Threading.Tasks.Task<System.Security.Cryptography.X509Certificates.X509Certificate2?>!
