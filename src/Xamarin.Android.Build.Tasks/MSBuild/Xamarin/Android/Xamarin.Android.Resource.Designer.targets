@@ -203,7 +203,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
 
   So lets remove it. We MUST remove the item from the @ReferencePathWithRefAssemblies
   ItemGroup BEFORE the CollectResolvedCompilationReferencesDesignTime target runs.
-  This is because that target uses the Returns funtionality. It turns out you cannot
+  This is because that target uses the Returns functionality. It turns out you cannot
   modify the ItemGroup that is being returned via a Returns on a target.
 -->
 <Target Name="_RemoveResourceDesignerFromResolvedComilationReferences" BeforeTargets="CollectResolvedCompilationReferencesDesignTime" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
