@@ -196,6 +196,23 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
+<!--
+  The Visual Studio FastUpdate check flags the Resource Designer assembly as
+  newer than the output assembly (which it is). But it causes it to incorrectly
+  think the build is out of date. 
+
+  So lets remove it. We MUST remove the item from the @ReferencePathWithRefAssemblies
+  ItemGroup BEFORE the CollectResolvedCompilationReferencesDesignTime target runs.
+  This is because that target uses the Returns funtionality. It turns out you cannot
+  modify the ItemGroup that is being returned via a Returns on a target.
+-->
+<Target Name="_RemoveResourceDesignerFromResolvedComilationReferences" BeforeTargets="CollectResolvedCompilationReferencesDesignTime" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+  <ItemGroup>
+    <_ResourceDesignerFiles Include="%(ReferencePathWithRefAssemblies.Identity)" Condition="'%(ReferencePathWithRefAssemblies.OriginalPath)' == '$(_GenerateResourceDesignerAssemblyOutput)'" />
+    <ReferencePathWithRefAssemblies Remove="@(_ResourceDesignerFiles)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_BuildResourceDesigner"
     Condition=" '$(AndroidUseDesignerAssembly)' == 'True' "
     DependsOnTargets="$(_BuildResourceDesignerDependsOn)" />
