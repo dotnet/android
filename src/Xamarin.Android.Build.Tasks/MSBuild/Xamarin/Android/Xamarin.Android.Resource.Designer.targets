@@ -206,9 +206,14 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   This is because that target uses the Returns functionality. It turns out you cannot
   modify the ItemGroup that is being returned via a Returns on a target.
 -->
-<Target Name="_RemoveResourceDesignerFromResolvedComilationReferences" BeforeTargets="CollectResolvedCompilationReferencesDesignTime" Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+<Target Name="_RemoveResourceDesignerFromResolvedComilationReferences"
+      BeforeTargets="CollectResolvedCompilationReferencesDesignTime"
+      Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'"
+>
   <ItemGroup>
-    <_ResourceDesignerFiles Include="%(ReferencePathWithRefAssemblies.Identity)" Condition="'%(ReferencePathWithRefAssemblies.OriginalPath)' == '$(_GenerateResourceDesignerAssemblyOutput)'" />
+    <_ResourceDesignerFiles Include="%(ReferencePathWithRefAssemblies.Identity)"
+        Condition="'%(ReferencePathWithRefAssemblies.OriginalPath)' == '$(_GenerateResourceDesignerAssemblyOutput)'"
+    />
     <ReferencePathWithRefAssemblies Remove="@(_ResourceDesignerFiles)" />
   </ItemGroup>
 </Target>
