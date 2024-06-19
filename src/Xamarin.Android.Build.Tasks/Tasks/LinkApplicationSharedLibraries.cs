@@ -129,6 +129,7 @@ namespace Xamarin.Android.Tasks
 				"-soname libxamarin-app.so " +
 				"-z relro " +
 				"-z noexecstack " +
+				"-z max-page-size=4096 " +
 				"--enable-new-dtags " +
 				"--build-id " +
 				"--warn-shared-textrel " +
