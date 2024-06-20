@@ -187,11 +187,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 
-				uint maxPageSize = ZipAlignmentPages switch {
-					4  => 4096,
-					16 => 16384,
-					_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {ZipAlignmentPages}")
-				};
+				uint maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
 				targetLinkerArgs.Add ("-z");
 				targetLinkerArgs.Add ($"max-page-size={maxPageSize}");
 

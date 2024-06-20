@@ -335,12 +335,7 @@ namespace Xamarin.Android.Tasks
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
-			uint zipAlignmentMask = ZipAlignmentPages switch {
-				4  => 3,
-				16 => 15,
-				_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {ZipAlignmentPages}")
-			};
-
+			uint zipAlignmentMask = MonoAndroidHelper.ZipAlignmentToMask (ZipAlignmentPages);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
 				UsesMonoLLVM = EnableLLVM,

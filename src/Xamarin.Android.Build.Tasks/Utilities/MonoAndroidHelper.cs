@@ -712,5 +712,22 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 		}
+
+		public static uint ZipAlignmentToMask (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: true);
+		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
+
+		static uint ZipAlignmentToMaskOrPageSize (int alignment, bool needMask)
+		{
+			const uint pageSize4k = 4096;
+			const uint pageMask4k = 3;
+			const uint pageSize16k = 16384;
+			const uint pageMask16k = 15;
+
+			return alignment switch {
+				4  => needMask ? pageMask4k : pageSize4k,
+				16 => needMask ? pageMask16k : pageSize16k,
+				_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {alignment}")
+			};
+		}
 	}
 }
