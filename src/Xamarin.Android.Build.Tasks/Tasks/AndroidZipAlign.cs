@@ -7,6 +7,10 @@ namespace Xamarin.Android.Tasks
 {
 	public class AndroidZipAlign : AndroidRunToolTask
 	{
+		// Sometime next year the default value should be changed to 16 since it's going to be a Google Play store requirement for
+		// application submissions
+		internal const int DefaultZipAlignment = 4;
+
 		public override string TaskPrefix => "AZA";
 
 		[Required]
@@ -15,7 +19,7 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem DestinationDirectory { get; set; }
 
-		int alignment = 4;
+		int alignment = DefaultZipAlignment;
 		public int Alignment {
 			get {return alignment;}
 			set {alignment = value;}
@@ -53,4 +57,3 @@ namespace Xamarin.Android.Tasks
 		}
 	}
 }
-

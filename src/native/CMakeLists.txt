@@ -374,6 +374,7 @@ set(POTENTIAL_XA_COMMON_COMPILER_ARGS
   -Wformat-security
   -Wformat=2
   -Wno-format-nonliteral
+  -Wno-vla-cxx-extension
   -Wimplicit-fallthrough
   -Wmisleading-indentation
   -Wnull-dereference
