@@ -26,7 +26,7 @@ namespace Android.Security
 		}
 
 		[SupportedOSPlatform("android23.0")]
-		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKey (
+		public static async Task<string?> ChoosePrivateKeyAlias (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -35,8 +35,32 @@ namespace Android.Security
 		{
 			var tcs = new TaskCompletionSource<string?> ();
 			KeyChain.ChoosePrivateKeyAlias (activity, new KeyChainAliasCallback(tcs), keyTypes, issuers, uri, alias);
+			return await tcs.Task;
+		}
 
-			alias = await tcs.Task;
+		[SupportedOSPlatform("android14.0")]
+		public static async Task<string?> ChoosePrivateKeyAlias (
+			Android.App.Activity activity,
+			string[]? keyTypes,
+			Java.Security.IPrincipal[]? issuers,
+			string? host,
+			int port,
+			string? alias)
+		{
+			var tcs = new TaskCompletionSource<string?> ();
+			KeyChain.ChoosePrivateKeyAlias (activity, new KeyChainAliasCallback(tcs), keyTypes, issuers, host, port, alias);
+			return await tcs.Task;
+		}
+
+		[SupportedOSPlatform("android23.0")]
+		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKey (
+			Android.App.Activity activity,
+			string[]? keyTypes,
+			Java.Security.IPrincipal[]? issuers,
+			Android.Net.Uri? uri,
+			string? alias)
+		{
+			alias = await ChoosePrivateKeyAlias (activity, keyTypes, issuers, uri, alias);
 			if (alias is null) {
 				return null;
 			}
@@ -53,10 +77,7 @@ namespace Android.Security
 			int port,
 			string? alias)
 		{
-			var tcs = new TaskCompletionSource<string?> ();
-			KeyChain.ChoosePrivateKeyAlias (activity, new KeyChainAliasCallback(tcs), keyTypes, issuers, host, port, alias);
-
-			alias = await tcs.Task;
+			alias = await ChoosePrivateKeyAlias (activity, keyTypes, issuers, host, port, alias);
 			if (alias is null) {
 				return null;
 			}
