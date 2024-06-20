@@ -44,6 +44,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment;
+
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			return this.WhenAll (GetLinkerConfigs (), RunLinker);
@@ -129,7 +131,6 @@ namespace Xamarin.Android.Tasks
 				"-soname libxamarin-app.so " +
 				"-z relro " +
 				"-z noexecstack " +
-				"-z max-page-size=4096 " +
 				"--enable-new-dtags " +
 				"--build-id " +
 				"--warn-shared-textrel " +
@@ -185,6 +186,14 @@ namespace Xamarin.Android.Tasks
 						targetLinkerArgs.Add (lib);
 					}
 				}
+
+				uint maxPageSize = ZipAlignmentPages switch {
+					4  => 4096,
+					16 => 16384,
+					_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {ZipAlignmentPages}")
+				};
+				targetLinkerArgs.Add ("-z");
+				targetLinkerArgs.Add ($"max-page-size={maxPageSize}");
 
 				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {
