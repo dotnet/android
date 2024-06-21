@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Authors>Microsoft</Authors>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/xamarin/xamarin-android</PackageProjectUrl>
+    <PackageProjectUrl>https://github.com/dotnet/android</PackageProjectUrl>
     <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
     <NuGetLicense Condition=" '$(NuGetLicense)' == '' or '$(PackageId)' != 'Microsoft.Android.Sdk.$(HostOS)' ">$(XamarinAndroidSourcePath)LICENSE.TXT</NuGetLicense>
     <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
