@@ -42,6 +42,7 @@ namespace Xamarin.ProjectTools
 			SetProperty (KnownProperties.OutputType, "Exe");
 			SetProperty (KnownProperties.Nullable, "enable");
 			SetProperty (KnownProperties.ImplicitUsings, "enable");
+			SetProperty ("NuGetAudit", "False");
 			SetProperty ("XamarinAndroidSupportSkipVerifyVersions", "True");
 			SetProperty ("_FastDeploymentDiagnosticLogging", "True");
 			SupportedOSPlatformVersion = "21.0";
