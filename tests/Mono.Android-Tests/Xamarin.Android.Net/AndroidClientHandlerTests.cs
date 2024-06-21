@@ -248,8 +248,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_Without_Protocol_Works()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/xamarin/xamarin-android");
-			var redirectedURI = new Uri ("https://github.com/xamarin/xamarin-android");
+			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
+			var redirectedURI = new Uri ("https://github.com/dotnet/android");
 			using (var c = new HttpClient (CreateHandler ())) {
 				var tr = ConnectIgnoreFailure (() => c.GetAsync (requestURI), out bool connectionFailed);
 				if (connectionFailed)
@@ -267,8 +267,8 @@ namespace Xamarin.Android.NetTests {
 		[Test]
 		public void Redirect_POST_With_Content_Works ()
 		{
-			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/xamarin/xamarin-android");
-			var redirectedURI = new Uri ("https://github.com/xamarin/xamarin-android");
+			var requestURI = new Uri ("https://httpbin.org/redirect-to?url=https://github.com/dotnet/android");
+			var redirectedURI = new Uri ("https://github.com/dotnet/android");
 			using (var c = new HttpClient (CreateHandler ())) {
 				var request = new HttpRequestMessage (HttpMethod.Post, requestURI);
 				request.Content = new StringContent("{}", Encoding.UTF8, "application/json");
