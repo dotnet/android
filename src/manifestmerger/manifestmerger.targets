@@ -9,12 +9,12 @@
       Outputs="$(_Destination)">
     <Exec
         Command="&quot;$(GradleWPath)&quot; build $(GradleArgs) -PjavaSourceVer=$(JavacSourceVersion) -PjavaTargetVer=$(JavacTargetVersion)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Exec
         Command="&quot;$(GradleWPath)&quot; jar $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Copy
@@ -28,7 +28,7 @@
     <Delete Files="$(_Destination)" />
     <Exec
         Command="&quot;$(GradleWPath)&quot; clean $(GradleArgs)"
-        EnvironmentVariables="JAVA_HOME=$(Java8SdkDirectory);APP_HOME=$(GradleHome)"
+        EnvironmentVariables="JAVA_HOME=$(JavaSdkDirectory);APP_HOME=$(GradleHome)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>

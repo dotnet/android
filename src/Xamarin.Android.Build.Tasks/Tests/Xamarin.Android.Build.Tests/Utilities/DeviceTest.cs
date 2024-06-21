@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Xml.Linq;
 using System.Xml.XPath;
 using Xamarin.ProjectTools;
+using System.Runtime.InteropServices;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -77,7 +78,10 @@ namespace Xamarin.Android.Build.Tests
 				}
 				SetAdbLogcatBufferSize (128);
 				CreateGuestUser (GuestUserName);
+				return;
 			}
+			TestContext.Out.WriteLine ($"LOG DeviceSetup: No Device!!!!");
+			DeviceAbi = RuntimeInformation.OSArchitecture == Architecture.Arm64 ? "arm64-v8a" : "x86_64";
 		}
 
 		[OneTimeTearDown]

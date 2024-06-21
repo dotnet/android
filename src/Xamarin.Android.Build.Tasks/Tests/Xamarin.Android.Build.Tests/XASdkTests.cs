@@ -224,6 +224,7 @@ public class JavaSourceTest {
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			dotnet.Verbosity = "detailed";
 			string[] configParam = isRelease ? new [] { "Configuration=Release" } : new [] { "Configuration=Debug" };
 			Assert.IsTrue (dotnet.Publish (parameters: configParam), "first `dotnet publish` should succeed");
 

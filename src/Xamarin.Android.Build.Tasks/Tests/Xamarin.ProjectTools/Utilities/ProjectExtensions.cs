@@ -50,5 +50,21 @@ namespace Xamarin.ProjectTools
 
 			project.SetProperty (KnownProperties.RuntimeIdentifiers, String.Join (";", targetArches.Select (arch => MonoAndroidHelper.ArchToRid (arch))));
 		}
+
+		public static HashSet<string> GetRuntimeIdentifiers (this XamarinProject project)
+		{
+			var ridsPropValue = project.GetProperty (KnownProperties.RuntimeIdentifiers);
+
+			if (string.IsNullOrEmpty (ridsPropValue)) {
+				return new HashSet<string> () { "android-arm64", "android-x64", };
+			}
+
+			return ridsPropValue.Split (';').ToHashSet (StringComparer.OrdinalIgnoreCase);
+		}
+
+		public static HashSet<string> GetRuntimeIdentifiersAsAbis (this XamarinProject project)
+		{
+			return project.GetRuntimeIdentifiers ().Select(r => MonoAndroidHelper.RidToAbi (r)).ToHashSet (StringComparer.OrdinalIgnoreCase);
+		}
 	}
 }

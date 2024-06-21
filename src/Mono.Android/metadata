@@ -1693,7 +1693,7 @@
 
   <!-- If you try to implement ICursor in API-30+, we generate an invalid invoker for this method due to the
        generic parameters.  Since this is a default method we can just remove it until that bug is fixed.
-       https://github.com/xamarin/java.interop/issues/699 -->
+       https://github.com/dotnet/java-interop/issues/699 -->
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='setNotificationUris' and count(parameter)=2 and parameter[1][@type='android.content.ContentResolver'] and parameter[2][@type='java.util.List&lt;android.net.Uri&gt;']]" />
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='getNotificationUris']" />
 
@@ -1925,6 +1925,32 @@
   <!-- These new default interface methods on a Listener interface cause duplicate named EventHandlers to be generated, change to a unique name. -->
   <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpActiveChangedListener']/method[@name='onOpActiveChanged' and count(parameter)=8 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='java.lang.String'] and parameter[5][@type='int'] and parameter[6][@type='boolean'] and parameter[7][@type='int'] and parameter[8][@type='int']]" name="managedName">OnOpActiveChanged2</attr>
   <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpChangedListener']/method[@name='onOpChanged' and count(parameter)=4 and parameter[1][@type='java.lang.String'] and parameter[2][@type='java.lang.String'] and parameter[3][@type='int'] and parameter[4][@type='java.lang.String']]" name="managedName">OnOpChanged2</attr>
+
+  <!-- Once our capitalization changes are applied to these constants they conflict with a method name. -->
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_CLEAR']" name="managedName">GlClearConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_CULL_FACE']" name="managedName">GlCullFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_POINT_SIZE']" name="managedName">GlPointSizeConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_SAMPLE_COVERAGE']" name="managedName">GlSampleCoverageConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_ACTIVE_TEXTURE']" name="managedName">GlActiveTextureConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_BLEND_COLOR']" name="managedName">GlBlendColorConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_BLEND_EQUATION']" name="managedName">GlBlendEquationConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_CULL_FACE']" name="managedName">GlCullFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_DEPTH_FUNC']" name="managedName">GlDepthFuncConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_FRONT_FACE']" name="managedName">GlFrontFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_LINE_WIDTH']" name="managedName">GlLineWidthConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_SAMPLE_COVERAGE']" name="managedName">GlSampleCoverageConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_STENCIL_FUNC']" name="managedName">GlStencilFuncConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_VIEWPORT']" name="managedName">GlViewPortConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_READ_BUFFER']" name="managedName">GlReadBufferConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_TRANSFORM_FEEDBACK_VARYINGS']" name="managedName">GlTransformFeedbackVaryingsConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_UNIFORM_BLOCK_BINDING']" name="managedName">GlUniformBlockBindingConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES31']/field[@name='GL_VERTEX_ATTRIB_BINDING']" name="managedName">GlVertexAttribBindingConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES31']/field[@name='GL_VERTEX_BINDING_DIVISOR']" name="managedName">GlVertexBindingDivisorConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES32']/field[@name='GL_PRIMITIVE_BOUNDING_BOX']" name="managedName">GlPrimitiveBoundingBoxConst</attr>
+	
+  <!-- These fields received constant values at some point, but updating them now will change them from properties to consts -->
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='DEBUG']" name="value"></attr>
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='RELEASE']" name="value"></attr>
 	
   <!--
     ***********************************************************************

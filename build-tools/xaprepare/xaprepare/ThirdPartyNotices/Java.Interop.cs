@@ -23,11 +23,11 @@ namespace Xamarin.Android.Prepare
 
 	class JavaInterop_xamarin_Java_Interop_TPN : ThirdPartyNotice
 	{
-		static readonly Uri    url         = new Uri ("https://github.com/xamarin/Java.Interop/");
+		static readonly Uri    url         = new Uri ("https://github.com/dotnet/java-interop/");
 		static readonly string licenseFile = Path.Combine (Configurables.Paths.ExternalJavaInteropDir, "LICENSE");
 
 		public override string LicenseFile => licenseFile;
-		public override string Name        => "xamarin/Java.Interop";
+		public override string Name        => "dotnet/java-interop";
 		public override Uri    SourceUrl   => url;
 		public override string LicenseText => String.Empty;
 	}
@@ -70,7 +70,7 @@ POSSIBILITY OF SUCH DAMAGE.
 ";
 	}
 
-	// via: https://github.com/xamarin/java.interop/blob/b588ef502d8d3b4c32e0ad731115e1b71fd56b5c/tools/java-source-utils/build.gradle#L33-L34
+	// via: https://github.com/dotnet/java-interop/blob/b588ef502d8d3b4c32e0ad731115e1b71fd56b5c/tools/java-source-utils/build.gradle#L33-L34
 	class JavaInterop_javaparser_javaparser_TPN : ThirdPartyNotice
 	{
 		static readonly Uri    url         = new Uri ("https://github.com/javaparser/javaparser/");

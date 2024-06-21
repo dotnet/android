@@ -1899,7 +1899,7 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		assembliesJava,
 		apiLevel,
 		isEmulator,
-		haveSplitApks
+		application_config.ignore_split_configs ? false : haveSplitApks
 	);
 }
 

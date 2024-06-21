@@ -72,6 +72,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("EnableLLVM", enableLLVM.ToString ());
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 			using var b = CreateApkBuilder ();
+			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			AssertProfiledAotBuildMessages (b);
 		}
@@ -93,6 +94,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAotProfile", "custom.aotprofile") { BinaryContent = () => custom_aot_profile });
 
 			using var b = CreateApkBuilder ();
+			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			AssertProfiledAotBuildMessages (b);
 		}
@@ -106,6 +108,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidUseDefaultAotProfile", "false");
 			using var b = CreateApkBuilder ();
+			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 			StringAssertEx.DoesNotContainRegex (@$"Using profile data file.*dotnet\.aotprofile", b.LastBuildOutput, "Should not use default AOT profile", RegexOptions.IgnoreCase);
 		}

@@ -408,19 +408,7 @@ namespace Xamarin.Android.Tasks
 			var cachedMap = engine?.GetRegisteredTaskObjectAssemblyLocal<Dictionary<string, HashSet<string>>> (mapFile, RegisteredTaskObjectLifetime.Build);
 			if (cachedMap != null)
 				return cachedMap;
-			var map = new Dictionary<string, HashSet<string>> ();
-			if (!File.Exists (mapFile))
-				return map;
-			foreach (var s in File.ReadLines (mapFile)) {
-				var items = s.Split (new char [] { ';' }, count: 2);
-				var key = items [0];
-				var value = items [1];
-				HashSet<string> set;
-				if (!map.TryGetValue (key, out set))
-					map.Add (key, set = new HashSet<string> ());
-				set.Add (value);
-			}
-			return map;
+			return LoadCustomViewMapFile (mapFile);
 		}
 
 		public static bool SaveCustomViewMapFile (IBuildEngine4 engine, string mapFile, Dictionary<string, HashSet<string>> map)
@@ -723,6 +711,23 @@ namespace Xamarin.Android.Tasks
 					Console.WriteLine ($"    {method.DeclaringType.FullName} {method.NativeCallback.FullName}");
 				}
 			}
+		}
+
+		public static uint ZipAlignmentToMask (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: true);
+		public static uint ZipAlignmentToPageSize (int alignment) => ZipAlignmentToMaskOrPageSize (alignment, needMask: false);
+
+		static uint ZipAlignmentToMaskOrPageSize (int alignment, bool needMask)
+		{
+			const uint pageSize4k = 4096;
+			const uint pageMask4k = 3;
+			const uint pageSize16k = 16384;
+			const uint pageMask16k = 15;
+
+			return alignment switch {
+				4  => needMask ? pageMask4k : pageSize4k,
+				16 => needMask ? pageMask16k : pageSize16k,
+				_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {alignment}")
+			};
 		}
 	}
 }
