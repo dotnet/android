@@ -15,7 +15,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CalculateLayoutCodeBehind : AndroidAsyncTask
+	public class CalculateLayoutCodeBehind : AsyncTask
 	{
 		public override string TaskPrefix => "CLC";
 

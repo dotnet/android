@@ -17,7 +17,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Aapt : AndroidAsyncTask
+	public class Aapt : AsyncTask
 	{
 		public override string TaskPrefix => "APT";
 

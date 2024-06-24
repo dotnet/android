@@ -12,7 +12,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CompileNativeAssembly : AndroidAsyncTask
+	public class CompileNativeAssembly : AsyncTask
 	{
 		public override string TaskPrefix => "CNA";
 
