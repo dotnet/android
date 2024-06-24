@@ -46,7 +46,7 @@ steps:
   - bash: >
       DOTNET_ROOT=~/.dotnet/ &&
       (if [[ "${{ parameters.remove_dotnet }}" == "true" ]] ; then rm -rfv $DOTNET_ROOT; fi) &&
-      curl -L https://dot.net/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
+      curl -L https://dotnet.microsoft.com/download/dotnet/scripts/v1/dotnet-install.sh --retry 5 --retry-max-time 300 > dotnet-install.sh &&
       chmod +x dotnet-install.sh &&
       ./dotnet-install.sh --channel ${{ parameters.version }} --quality ${{ parameters.quality }} --install-dir $DOTNET_ROOT --skip-non-versioned-files --verbose &&
       PATH="$DOTNET_ROOT:$PATH" &&
