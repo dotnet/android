@@ -327,7 +327,7 @@ monodroid_dylib_mono_free ([[maybe_unused]] void *mono_imports)
 
 /*
   this function is used from JavaInterop and should be treated as public API
-  https://github.com/xamarin/java.interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
+  https://github.com/dotnet/java-interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
 
   it should also accept libmono_path = nullptr parameter
 */

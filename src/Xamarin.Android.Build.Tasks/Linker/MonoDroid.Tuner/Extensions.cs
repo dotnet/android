@@ -333,7 +333,7 @@ namespace MonoDroid.Tuner {
 			return false;
 		}
 
-		// Keep in sync with: https://github.com/xamarin/java.interop/blob/8ccb8374d242490d8d1b032f2c8ca7a813fd40f3/src/Java.Interop.Export/Java.Interop/MarshalMemberBuilder.cs#L405-L421
+		// Keep in sync with: https://github.com/dotnet/java-interop/blob/8ccb8374d242490d8d1b032f2c8ca7a813fd40f3/src/Java.Interop.Export/Java.Interop/MarshalMemberBuilder.cs#L405-L421
 		public static string GetMarshalMethodName (string name, string signature)
 		{
 			if (name == null)

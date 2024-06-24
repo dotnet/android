@@ -43,6 +43,8 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment;
+
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
 			return this.WhenAll (GetLinkerConfigs (), RunLinker);
@@ -183,6 +185,10 @@ namespace Xamarin.Android.Tasks
 						targetLinkerArgs.Add (lib);
 					}
 				}
+
+				uint maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
+				targetLinkerArgs.Add ("-z");
+				targetLinkerArgs.Add ($"max-page-size={maxPageSize}");
 
 				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {

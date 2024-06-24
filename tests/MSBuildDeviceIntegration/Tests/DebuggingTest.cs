@@ -151,6 +151,11 @@ namespace Xamarin.Android.Build.Tests
 				/* activityStarts */     true,
 				/* packageFormat */      "aab",
 			},
+			new object[] {
+				/* embedAssemblies */    false,
+				/* activityStarts */     true,
+				/* packageFormat */      "aab",
+			},
 		};
 #pragma warning restore 414
 
@@ -326,7 +331,21 @@ namespace ${ROOT_NAMESPACE} {
 				/* useLatestSdk */       true,
 			},
 			new object[] {
+				/* embedAssemblies */    false,
+				/* allowDeltaInstall */  false,
+				/* user */		 null,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
 				/* embedAssemblies */    true,
+				/* allowDeltaInstall */  false,
+				/* user */		 DeviceTest.GuestUserName,
+				/* packageFormat */      "aab",
+				/* useLatestSdk */       true,
+			},
+			new object[] {
+				/* embedAssemblies */    false,
 				/* allowDeltaInstall */  false,
 				/* user */		 DeviceTest.GuestUserName,
 				/* packageFormat */      "aab",
@@ -388,7 +407,8 @@ namespace ${ROOT_NAMESPACE} {
 			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.MainPage = app.MainPage.Replace ("InitializeComponent ();", "InitializeComponent (); new Foo ();");
 			app.AddReference (lib);
-			app.SetAndroidSupportedAbis (DeviceAbi);
+			var abis = new [] { DeviceAbi };
+			app.SetRuntimeIdentifiers (abis);
 			app.SetProperty (KnownProperties._AndroidAllowDeltaInstall, allowDeltaInstall.ToString ());
 			app.SetDefaultTargetDevice ();
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))

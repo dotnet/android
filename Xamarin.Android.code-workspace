@@ -5,6 +5,7 @@
 		}
 	],
 	"settings": {
-		"nxunitExplorer.logpanel": true
+		"nxunitExplorer.logpanel": true,
+		"java.compile.nullAnalysis.mode": "disabled"
 	}
 }
