@@ -1520,6 +1520,7 @@ because xbuild doesn't support framework reference assemblies.
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       Environments="@(_EnvironmentFiles)">
+      EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
   </GenerateJavaStubs>
 
   <ItemGroup>
@@ -1746,6 +1747,7 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />

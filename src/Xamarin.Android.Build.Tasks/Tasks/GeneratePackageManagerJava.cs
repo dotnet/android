@@ -76,6 +76,7 @@ namespace Xamarin.Android.Tasks
 		public string AndroidSequencePointsMode { get; set; }
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
+		public bool EnableNativeRuntimeLinking { get; set; }
 
 		bool _Debug {
 			get {
@@ -381,6 +382,13 @@ namespace Xamarin.Android.Tasks
 						assemblyCount,
 						uniqueAssemblyNames
 					);
+				}
+
+				if (EnableNativeRuntimeLinking) {
+					// var pinfoGen = new PreservePinvokesNativeAssemblyGenerator (
+					// 	Log,
+					// 	targetArch,
+
 				}
 
 				LLVMIR.LlvmIrModule marshalMethodsModule = marshalMethodsAsmGen.Construct ();
