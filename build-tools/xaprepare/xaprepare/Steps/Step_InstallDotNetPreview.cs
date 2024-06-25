@@ -78,23 +78,13 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ("Downloading dotnet-install script...");
 
-			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
-			if (!success) {
-				if (status == HttpStatusCode.NotFound) {
-					Log.WarningLine ($"dotnet-install URL '{dotnetScriptUrl}' not found.");
-				} else {
-					Log.WarningLine ($"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int) status})");
-				}
-
-				if (File.Exists (dotnetScriptPath)) {
-					Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
-					return true;
-				}
+			if (File.Exists (dotnetScriptPath)) {
+				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				return true;
 			}
 
-			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
-			await Download (context, dotnetScriptUrl, tempDotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
+			await Utilities.Download (dotnetScriptUrl, tempDotnetScriptPath, DownloadStatus.Empty);
 
 			if (File.Exists (tempDotnetScriptPath)) {
 				Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);
