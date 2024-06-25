@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class RunParallelCmds : AsyncTask
 	{
+		public override string TaskPrefix => "RPCMD";
+
 		[Required]
 		public ITaskItem[] Commands { get; set; }
 
