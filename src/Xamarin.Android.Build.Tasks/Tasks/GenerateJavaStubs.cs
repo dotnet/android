@@ -208,9 +208,12 @@ namespace Xamarin.Android.Tasks
 					generateSucceeded = false;
 				}
 
-				(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (scanner, arch, state.Resolver);
-				if (!success) {
-					return;
+				if (EnableNativeRuntimeLinking) {
+					(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (scanner, arch, state.Resolver);
+					if (!success) {
+						return;
+					}
+					BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (PinvokeScanner.PinvokesInfoRegisterTaskKey), pinfos, RegisteredTaskObjectLifetime.Build);
 				}
 
 				// If this is the first architecture, we need to store the state for later use
@@ -381,10 +384,10 @@ namespace Xamarin.Android.Tasks
 			return additionalProviders;
 		}
 
-		(bool success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) ScanForUsedPinvokes (PinvokeScanner scanner, AndroidTargetArch arch, XAAssemblyResolver resolver)
+		(bool success, List<PinvokeScanner.PinvokeEntryInfo>? pinfos) ScanForUsedPinvokes (PinvokeScanner scanner, AndroidTargetArch arch, XAAssemblyResolver resolver)
 		{
 			if (!EnableNativeRuntimeLinking) {
-				return;
+				return (true, null);
 			}
 
 			var frameworkAssemblies = new List<ITaskItem> ();
