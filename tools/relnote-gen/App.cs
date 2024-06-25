@@ -15,9 +15,9 @@ enum State {
 
 static class App {
 
-	const string XamarinAndroidCommitBase   = "http://github.com/xamarin/xamarin-android/commit/";
-	const string XamarinAndroidPullBase     = "http://github.com/xamarin/xamarin-android/pull/";
-	const string XamarinAndroidIssuesBase   = "http://github.com/xamarin/xamarin-android/issues/";
+	const string XamarinAndroidCommitBase   = "https://github.com/dotnet/android/commit/";
+	const string XamarinAndroidPullBase     = "https://github.com/dotnet/android/pull/";
+	const string XamarinAndroidIssuesBase   = "https://github.com/dotnet/android/issues/";
 
 	static readonly Regex SummaryParser = new Regex (
 		@"^\s*(\[(?<component>[^]]+)\]\s+)?" +
