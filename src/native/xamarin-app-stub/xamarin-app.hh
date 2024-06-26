@@ -11,7 +11,7 @@
 
 #include "xxhash.hh"
 
-static constexpr uint64_t FORMAT_TAG = 0x00025E6972616D58; // 'Xmari^XY' where XY is the format version
+static constexpr uint64_t FORMAT_TAG = 0x00035E6972616D58; // 'Xmari^XY' where XY is the format version
 static constexpr uint32_t COMPRESSED_DATA_MAGIC = 0x5A4C4158; // 'XALZ', little-endian
 static constexpr uint32_t ASSEMBLY_STORE_MAGIC = 0x41424158; // 'XABA', little-endian
 
@@ -239,6 +239,7 @@ struct ApplicationConfig
 	bool have_runtime_config_blob;
 	bool have_assembly_store;
 	bool marshal_methods_enabled;
+	bool ignore_split_configs;
 	uint8_t bound_exception_type;
 	uint32_t package_naming_policy;
 	uint32_t environment_variable_count;
@@ -252,6 +253,7 @@ struct ApplicationConfig
 	uint32_t jnienv_registerjninatives_method_token;
 	uint32_t jni_remapping_replacement_type_count;
 	uint32_t jni_remapping_replacement_method_index_entry_count;
+	uint32_t zip_alignment_mask; // 3, for 4-byte alignment (4k memory pages); 15, for 16-byte alignment (16k memory pages)
 	MonoComponent mono_components_mask;
 	const char *android_package_name;
 };

@@ -5,7 +5,7 @@
       "Size": 3036
     },
     "classes.dex": {
-      "Size": 19476
+      "Size": 22488
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
       "Size": 1027
@@ -20,19 +20,19 @@
       "Size": 5366
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 6541
+      "Size": 6512
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 8524
+      "Size": 8489
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 571267
+      "Size": 575506
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 2544
+      "Size": 2554
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 4020
+      "Size": 3999
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
       "Size": 3064
@@ -41,13 +41,13 @@
       "Size": 1586
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
-      "Size": 87352
+      "Size": 87432
     },
     "lib/arm64-v8a/libmonodroid.so": {
       "Size": 492296
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
-      "Size": 3154304
+      "Size": 3163208
     },
     "lib/arm64-v8a/libSystem.Globalization.Native.so": {
       "Size": 67248
@@ -56,13 +56,13 @@
       "Size": 723560
     },
     "lib/arm64-v8a/libSystem.Native.so": {
-      "Size": 95296
+      "Size": 95680
     },
     "lib/arm64-v8a/libSystem.Security.Cryptography.Native.Android.so": {
-      "Size": 155568
+      "Size": 159544
     },
     "lib/arm64-v8a/libxamarin-app.so": {
-      "Size": 17976
+      "Size": 17984
     },
     "META-INF/BNDLTOOL.RSA": {
       "Size": 1213
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2681365
+  "PackageSize": 2693653
 }
