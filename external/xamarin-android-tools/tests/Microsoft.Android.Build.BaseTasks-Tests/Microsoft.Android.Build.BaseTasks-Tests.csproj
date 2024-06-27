@@ -4,7 +4,7 @@
     <!-- $(TargetFrameworks) is used to allow the $(TargetFramework) check in Directory.Build.props to work.
         If $(TargetFramework) is declared here instead, it will not be evaluated before Directory.Build.props
         is loaded and the wrong $(TestOutputFullPath) will be used. -->
-    <TargetFrameworks>net6.0</TargetFrameworks>
+    <TargetFrameworks>net8.0</TargetFrameworks>
     <RootNamespace>Microsoft.Android.Build.BaseTasks.Tests</RootNamespace>
     <IsPackable>false</IsPackable>
     <OutputPath>$(TestOutputFullPath)</OutputPath>

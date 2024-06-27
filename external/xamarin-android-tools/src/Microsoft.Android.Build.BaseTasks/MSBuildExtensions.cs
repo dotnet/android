@@ -9,7 +9,6 @@ using System.Text.RegularExpressions;
 
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
-using Xamarin.Build;
 
 namespace Microsoft.Android.Build.Tasks
 {

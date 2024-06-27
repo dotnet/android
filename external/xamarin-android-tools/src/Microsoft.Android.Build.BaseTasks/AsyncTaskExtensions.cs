@@ -3,7 +3,6 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Xamarin.Build;
 
 namespace Microsoft.Android.Build.Tasks
 {

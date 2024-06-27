@@ -41,6 +41,11 @@ jobs:
     inputs:
       version: $(DotNetCoreVersion)
 
+  - task: UseDotNet@2
+    displayName: Use .NET Core 8.0.x
+    inputs:
+      version: 8.0.x
+
   - task: DotNetCoreCLI@2
     displayName: Build solution Xamarin.Android.Tools.sln
     inputs:
