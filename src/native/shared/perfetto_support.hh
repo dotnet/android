@@ -41,7 +41,7 @@ namespace xamarin::android {
 
 	enum class PerfettoTrackId : uint64_t
 	{
-		// We need to start high, so that we don't conflict with the standard Perfetto trakck IDs
+		// We need to start high, so that we don't conflict with the standard Perfetto track IDs
 		AssemblyLoadMonoVM = 0xDEADBEEF,
 		ClassLoadMonoVM,
 		ImageLoadMonoVM,
@@ -56,19 +56,19 @@ namespace xamarin::android {
 
 PERFETTO_DEFINE_CATEGORIES (
 	perfetto::Category (xamarin::android::PerfettoConstants::MonoRuntimeCategory.data ()).SetDescription ("Events from the MonoVM runtime"),
-	perfetto::Category (xamarin::android::PerfettoConstants::MonodroidCategory.data ()).SetDescription ("Events from the .NET Android native runtime")
+	perfetto::Category (xamarin::android::PerfettoConstants::MonodroidCategory.data ()).SetDescription ("Events from the .NET for Android native runtime")
 );
 
 namespace xamarin::android {
 	namespace detail {
 		template<typename TMonoType>
 		concept SupportedMonoType = requires {
-			requires std::same_as<MonoAssembly, TMonoType> ||
-		         std::same_as<MonoImage, TMonoType> ||
-		         std::same_as<MonoClass, TMonoType> ||
-		         std::same_as<MonoVTable, TMonoType> ||
-		         std::same_as<MonoMethod, TMonoType> ||
-		         std::same_as<MonoObject, TMonoType>;
+			std::same_as<MonoAssembly, TMonoType> ||
+		    std::same_as<MonoImage, TMonoType> ||
+		    std::same_as<MonoClass, TMonoType> ||
+		    std::same_as<MonoVTable, TMonoType> ||
+		    std::same_as<MonoMethod, TMonoType> ||
+		    std::same_as<MonoObject, TMonoType>;
 		};
 	}
 
