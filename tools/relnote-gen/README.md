@@ -34,8 +34,8 @@ Then the output of `renote-gen` will be:
 
   - Summary
     ([#NUMBER](URL/NUMBER),
-    [PR #PR](http://github.com/xamarin/xamarin-android/pull/PR),
-    [Commit COMMIT](http://github.com/xamarin/xamarin-android/commit/COMMIT))
+    [PR #PR](https://github.com/dotnet/android/pull/PR),
+    [Commit COMMIT](https://github.com/dotnet/android/commit/COMMIT))
 ```
 
 # API Diffs?

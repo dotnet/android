@@ -10,6 +10,8 @@ namespace Xamarin.Android.Prepare
 		const uint DefaultUpdateInterval = 1000;
 		readonly object updateLock = new object ();
 
+		public static readonly DownloadStatus Empty = new DownloadStatus (0, _ => { });
+
 		ConcurrentQueue<ulong> byteSnapshots;
 		Stopwatch watch;
 		Action<DownloadStatus> updater;
