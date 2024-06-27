@@ -8,7 +8,6 @@ namespace Android.Security
 {
 	public partial class KeyChain
 	{
-		[SupportedOSPlatform("android14.0")]
 		public static X509Certificate2? GetCertificateWithPrivateKey (Android.Content.Context context, string alias)
 		{
 			var privateKey = KeyChain.GetPrivateKey (context, alias);
@@ -22,11 +21,13 @@ namespace Android.Security
 			}
 
 			var privateKeyEntry = new Java.Security.KeyStore.PrivateKeyEntry (privateKey, chain);
-			return new X509Certificate2 (privateKeyEntry.Handle);
+			var certificate = new X509Certificate2 (privateKeyEntry.Handle);
+			GC.KeepAlive (privateKeyEntry);
+			return certificate;
 		}
 
 		[SupportedOSPlatform("android23.0")]
-		public static async Task<string?> ChoosePrivateKeyAlias (
+		public static async Task<string?> ChoosePrivateKeyAliasAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -38,8 +39,7 @@ namespace Android.Security
 			return await tcs.Task;
 		}
 
-		[SupportedOSPlatform("android14.0")]
-		public static async Task<string?> ChoosePrivateKeyAlias (
+		public static async Task<string?> ChoosePrivateKeyAliasAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -53,14 +53,14 @@ namespace Android.Security
 		}
 
 		[SupportedOSPlatform("android23.0")]
-		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKey (
+		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKeyAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
 			Android.Net.Uri? uri,
 			string? alias)
 		{
-			alias = await ChoosePrivateKeyAlias (activity, keyTypes, issuers, uri, alias);
+			alias = await ChoosePrivateKeyAliasAsync (activity, keyTypes, issuers, uri, alias);
 			if (alias is null) {
 				return null;
 			}
@@ -68,8 +68,7 @@ namespace Android.Security
 			return GetCertificateWithPrivateKey (activity, alias);
 		}
 
-		[SupportedOSPlatform("android14.0")]
-		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKey (
+		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKeyAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -77,7 +76,7 @@ namespace Android.Security
 			int port,
 			string? alias)
 		{
-			alias = await ChoosePrivateKeyAlias (activity, keyTypes, issuers, host, port, alias);
+			alias = await ChoosePrivateKeyAliasAsync (activity, keyTypes, issuers, host, port, alias);
 			if (alias is null) {
 				return null;
 			}
