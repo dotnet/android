@@ -497,10 +497,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidLinkTool)' != '' "
   />
   <AndroidWarning Code="XA0119"
-      ResourceName="XA0119_AAB"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidPackageFormat)' == 'aab' "
-  />
-  <AndroidWarning Code="XA0119"
       ResourceName="XA0119_Interpreter"
       Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
@@ -1727,6 +1723,8 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+    CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    ZipAlignmentPages="$(_AndroidZipAlignment)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2013,6 +2011,7 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ZipAlignmentPages="$(_AndroidZipAlignment)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
@@ -2357,6 +2356,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		Source="%(ApkAbiFilesIntermediate.Identity)"
+		Alignment="$(_AndroidZipAlignment)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
@@ -2392,6 +2392,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
 		Source="%(ApkAbiFilesUnaligned.Identity)"
+		Alignment="$(_AndroidZipAlignment)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"

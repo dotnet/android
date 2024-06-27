@@ -3,6 +3,7 @@ using System.IO;
 using System.Linq;
 using NUnit.Framework;
 using Xamarin.ProjectTools;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -138,6 +139,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 			File.WriteAllLines (Path.Combine (Root, b.ProjectDirectory, b.BuildLogFile + ".bak"), b.LastBuildOutput);
 
@@ -182,6 +184,7 @@ namespace Xamarin.Android.Build.Tests
 			if (baseActivityClass != null)
 					proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": " + baseActivityClass);
 			var b = CreateApkBuilder ("temp/SkipFastDevAlreadyInstalledResources");
+			b.Verbosity = LoggerVerbosity.Detailed;
 			Assert.IsTrue (b.Install (proj), "install should have succeeded.");
 
 			// slightly (but significantly) modify the resources that causes packaged_resources changes.
@@ -206,6 +209,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetDefaultTargetDevice ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Install (proj), "install should have succeeded. 0");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||
@@ -237,6 +241,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetDefaultTargetDevice ();
 			proj.AndroidManifest = proj.AndroidManifest.Replace ("<application ", $"<application android:useEmbeddedDex=\"{useEmbeddedDex.ToString ().ToLowerInvariant ()}\" ");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Install (proj), "packaging should have succeeded. 0");
 				var logLines = b.LastBuildOutput;
 				Assert.IsTrue (logLines.Any (l => l.Contains ("Building target \"_BuildApkFastDev\" completely.") ||

@@ -183,10 +183,12 @@ namespace Xamarin.Android.Tasks
 		public int JNIEnvRegisterJniNativesToken { get; set; }
 		public int JniRemappingReplacementTypeCount { get; set; }
 		public int JniRemappingReplacementMethodIndexEntryCount { get; set; }
+		public uint ZipAlignmentMask { get; set; }
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
+		public bool IgnoreSplitConfigs { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (log)
@@ -229,6 +231,7 @@ namespace Xamarin.Android.Tasks
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
 				marshal_methods_enabled = MarshalMethodsEnabled,
+				ignore_split_configs = IgnoreSplitConfigs,
 				bound_stream_io_exception_type = (byte)BoundExceptionType,
 				package_naming_policy = (uint)PackageNamingPolicy,
 				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
@@ -242,6 +245,7 @@ namespace Xamarin.Android.Tasks
 				jnienv_registerjninatives_method_token = (uint)JNIEnvRegisterJniNativesToken,
 				jni_remapping_replacement_type_count = (uint)JniRemappingReplacementTypeCount,
 				jni_remapping_replacement_method_index_entry_count = (uint)JniRemappingReplacementMethodIndexEntryCount,
+				zip_alignment_mask = ZipAlignmentMask,
 				mono_components_mask = (uint)MonoComponents,
 				android_package_name = AndroidPackageName,
 			};

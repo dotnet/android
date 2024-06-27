@@ -11,7 +11,7 @@ namespace Xamarin.ProjectTools
 	{
 		public string BuildLogFile { get; set; }
 		public string ProcessLogFile { get; set; }
-		public string Verbosity { get; set; } = "diag";
+		public string Verbosity { get; set; } = "normal";
 		public string AndroidSdkPath { get; set; } = AndroidSdkResolver.GetAndroidSdkPath ();
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 		public string ProjectDirectory { get; set; }

@@ -1,6 +1,7 @@
 using NUnit.Framework;
 using System.IO;
 using Xamarin.ProjectTools;
+using Microsoft.Build.Framework;
 
 namespace Xamarin.Android.Build.Tests
 {
@@ -19,6 +20,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetProperty ("AndroidUseIntermediateDesignerFile", "True");
 
 			using (var appBuilder = CreateApkBuilder (Path.Combine (path, app.ProjectName))) {
+				appBuilder.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (appBuilder.DesignTimeBuild (app, parameters: new string[]{
 					"BuildingInsideVisualStudio=true",
 					"DeferredBuildSupported=true",

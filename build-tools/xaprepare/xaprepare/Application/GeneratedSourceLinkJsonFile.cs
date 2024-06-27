@@ -33,7 +33,7 @@ namespace Xamarin.Android.Prepare
 
 				json.AppendLine ($"    \"{localPath}/*\": \"{contentUri.Uri}/*\",");
 			}
-			json.AppendLine ($"    \"{BuildPaths.XamarinAndroidSourceRoot}/*\": \"https://raw.githubusercontent.com/xamarin/xamarin-android/{xaCommit}/*\"");
+			json.AppendLine ($"    \"{BuildPaths.XamarinAndroidSourceRoot}/*\": \"https://raw.githubusercontent.com/dotnet/android/{xaCommit}/*\"");
 			json.AppendLine ("  }");
 			json.AppendLine ("}");
 

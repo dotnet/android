@@ -52,10 +52,6 @@ If you are interested in fixing issues and contributing directly to the code bas
   - [Coding Guidelines](http://www.mono-project.com/community/contributing/coding-guidelines/)
   - [Submitting pull requests](https://github.com/xamarin/xamarin-android/wiki/Submitting-Bugs,-Feature-Requests,-and-Pull-Requests#pull-requests)
 
-This project has adopted the code of conduct defined by the Contributor Covenant
-to clarify expected behavior in our community. For more information, see the
-[.NET Foundation Code of Conduct](http://www.dotnetfoundation.org/code-of-conduct).
-
 # Feedback
 
   - Ask a question on [Stack Overflow](https://stackoverflow.com/questions/tagged/xamarin.android) or [Microsoft Q&A](https://docs.microsoft.com/en-us/answers/topics/dotnet-android.html).

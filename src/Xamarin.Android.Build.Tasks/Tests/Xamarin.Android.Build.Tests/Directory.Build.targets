@@ -37,7 +37,7 @@
       Inputs="@(JavaSourceJarTest)"
       Outputs="Resources/javasourcejartest-javadoc.jar">
     <PropertyGroup>
-      <_Javadoc>"$(Java8SdkDirectory)/bin/javadoc"</_Javadoc>
+      <_Javadoc>"$(JavaSdkDirectory)/bin/javadoc"</_Javadoc>
       <_Outdir>$(IntermediateOutputPath)/javadoc</_Outdir>
     </PropertyGroup>
     <MakeDir Directories="$(_Outdir)" />

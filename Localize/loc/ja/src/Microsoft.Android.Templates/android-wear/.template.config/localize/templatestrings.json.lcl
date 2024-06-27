@@ -22,7 +22,7 @@
         <Str Cat="Text">
           <Val><![CDATA[A project for creating a .NET for Android Wear application]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[.NET for Android Wear アプリケーションを作成するためのプロジェクト]]></Val>
+            <Val><![CDATA[Android 用 .NET を使用して Wear OS アプリを作成するためのプロジェクト]]></Val>
           </Tgt>
           <Prev Cat="Text">
             <Val><![CDATA[A project for creating a .NET Android Wear application]]></Val>
