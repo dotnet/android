@@ -242,6 +242,7 @@
     <DocsPlatformId Condition=" '$(DocsPlatformId)' == '' ">$(DocsApiLevel)</DocsPlatformId>
     <DocsFxMoniker Condition=" '$(DocsFxMoniker)' == '' ">net-android-$(DocsApiLevel).0</DocsFxMoniker>
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
+    <_ExternalDocsRoot>$(XamarinAndroidSourcePath)external/android-api-docs/docs/xml</_ExternalDocsRoot>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
     <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net471/mdoc.exe"</_Mdoc>
     <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net471/mdoc.exe"</_Mdoc>
@@ -277,7 +278,7 @@
   <Target Name="_RunMdoc">
     <PropertyGroup>
       <_Libdir>-L "$(DotNetPreviewPath)packs/Microsoft.NETCore.App.Ref"</_Libdir>
-      <_Output>-o "$(MSBuildThisFileDirectory)../../external/android-api-docs/docs/Mono.Android/en"</_Output>
+      <_Output>-o "$(_ExternalDocsRoot)"</_Output>
       <_DocTypeArgs Condition=" '$(DocTypeName)' != '' ">--type=$(DocTypeName)</_DocTypeArgs>
       <_RootFxDir>$(BaseIntermediateOutputPath)docs-gen-temp/</_RootFxDir>
       <_FxConfig>-fx "$(_RootFxDir)"</_FxConfig>
@@ -335,7 +336,7 @@
 
   <Target Name="_FindDocSourceFiles">
     <ItemGroup>
-      <_MsxDocSourceFile Include="$(XamarinAndroidSourcePath)external\android-api-docs\docs\Mono.Android\en\**" />
+      <_MsxDocSourceFile Include="$(_ExternalDocsRoot)\**" />
     </ItemGroup>
   </Target>
 
@@ -344,7 +345,7 @@
       Inputs="@(_MsxDocSourceFile)"
       Outputs="$(DocsExportOutput)">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(XamarinAndroidSourcePath)external/android-api-docs/docs/Mono.Android/en/&quot;"
+        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(_ExternalDocsRoot)&quot;"
     />
   </Target>
 
