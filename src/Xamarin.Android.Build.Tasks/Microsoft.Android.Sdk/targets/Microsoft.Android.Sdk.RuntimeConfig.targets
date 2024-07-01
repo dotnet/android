@@ -46,11 +46,6 @@ See: https://github.com/dotnet/runtime/blob/b13715b6984889a709ba29ea8a1961db469f
         Value="$(AndroidAvoidEmitForPerformance)"
         Trim="true"
     />
-    <!-- https://github.com/dotnet/runtime/commit/3aeefbdd5e975e287effaa8670422837dc661d68 -->
-    <RuntimeHostConfigurationOption Include="System.Diagnostics.Metrics.Meter.IsSupported"
-        Value="$(_SystemDiagnosticsMetricsMeterIsSupported)"
-        Trim="true"
-    />
   </ItemGroup>
 
   <Target Name="_ParseRuntimeConfigFiles"
