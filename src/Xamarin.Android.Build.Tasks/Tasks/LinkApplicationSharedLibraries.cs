@@ -9,12 +9,11 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class LinkApplicationSharedLibraries : AndroidAsyncTask
+	public class LinkApplicationSharedLibraries : AsyncTask
 	{
 		public override string TaskPrefix => "LAS";
 

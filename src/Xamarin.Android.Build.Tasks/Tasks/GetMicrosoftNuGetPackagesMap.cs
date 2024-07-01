@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace Xamarin.Android.Tasks;
 
-public class GetMicrosoftNuGetPackagesMap : AndroidAsyncTask
+public class GetMicrosoftNuGetPackagesMap : AsyncTask
 {
 	static readonly HttpClient http_client = new HttpClient ();
 

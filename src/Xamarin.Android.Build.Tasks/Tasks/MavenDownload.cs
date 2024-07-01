@@ -15,7 +15,7 @@ using Microsoft.Build.Utilities;
 
 namespace Xamarin.Android.Tasks;
 
-public class MavenDownload : AndroidAsyncTask
+public class MavenDownload : AsyncTask
 {
 	public override string TaskPrefix => "MDT";
 

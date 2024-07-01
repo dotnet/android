@@ -15,12 +15,11 @@ using System.Collections.Generic;
 using System.Collections.Concurrent;
 using Xamarin.Android.Tools;
 using ThreadingTasks = System.Threading.Tasks;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks {
 
-	public abstract class Aapt2 : AndroidAsyncTask {
+	public abstract class Aapt2 : AsyncTask {
 
 		private const int MAX_PATH = 260;
 		private const int ASCII_MAX_CHAR = 127;

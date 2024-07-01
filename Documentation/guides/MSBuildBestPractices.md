@@ -612,7 +612,7 @@ public class MyTask : AndroidTask
 The benefit here is that if an unhandled exception is thrown, `MyTask`
 will automatically generate proper error codes.
 
-`AndroidAsyncTask` has an additional override for doing work on a
+`AsyncTask` has an additional override for doing work on a
 background thread:
 
 ```csharp

@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 	/// The <Aot/> task subclasses this in "legacy" Xamarin.Android.
 	/// The <GetAotAssemblies/> task subclasses this in .NET 6+.
 	/// </summary>
-	public abstract class GetAotArguments : AndroidAsyncTask
+	public abstract class GetAotArguments : AsyncTask
 	{
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";

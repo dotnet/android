@@ -8,12 +8,11 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class CompileNativeAssembly : AndroidAsyncTask
+	public class CompileNativeAssembly : AsyncTask
 	{
 		public override string TaskPrefix => "CNA";
 

@@ -13,12 +13,11 @@ using Microsoft.Build.Framework;
 using System.Text.RegularExpressions;
 using System.Collections.Generic;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class Aapt : AndroidAsyncTask
+	public class Aapt : AsyncTask
 	{
 		public override string TaskPrefix => "APT";
 
