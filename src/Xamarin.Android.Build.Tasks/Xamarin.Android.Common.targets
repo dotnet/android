@@ -1615,6 +1615,15 @@ because xbuild doesn't support framework reference assemblies.
     Mode="marshal_methods">
       <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
   </PrepareAbiItems>
+  <PrepareAbiItems
+    Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
+    BuildTargetAbis="@(_BuildTargetAbis)"
+    NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    InstantRunEnabled="$(_InstantRunEnabled)"
+    Debug="$(AndroidIncludeDebugSymbols)"
+    Mode="runtime_linking">
+      <Output TaskParameter="AssemblySources" ItemName="_RuntimeLinkingAssemblySource" />
+  </PrepareAbiItems>
 </Target>
 
 <Target Name="_GenerateEnvironmentFiles">
@@ -1753,6 +1762,8 @@ because xbuild doesn't support framework reference assemblies.
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="@(_MarshalMethodsAssemblySource)" />
+    <FileWrites Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' " Include="@(_RuntimeLinkingAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -1978,6 +1989,9 @@ because xbuild doesn't support framework reference assemblies.
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_RuntimeLinkingAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_RuntimeLinkingAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
   </ItemGroup>
 </Target>
 
@@ -1997,10 +2011,10 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_CompileNativeAssemblySources"
     DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource);@(_RuntimeLinkingAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
