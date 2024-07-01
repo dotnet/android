@@ -8,7 +8,7 @@ namespace Android.Security
 {
 	public partial class KeyChain
 	{
-		public static X509Certificate2? GetCertificateWithPrivateKey (Android.Content.Context context, string alias)
+		public static X509Certificate2? GetX509Certificate2WithPrivateKey (Android.Content.Context context, string alias)
 		{
 			var privateKey = KeyChain.GetPrivateKey (context, alias);
 			if (privateKey is null) {
@@ -53,7 +53,7 @@ namespace Android.Security
 		}
 
 		[SupportedOSPlatform("android23.0")]
-		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKeyAsync (
+		public static async Task<X509Certificate2?> ChooseX509Certificate2WithPrivateKeyAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -65,10 +65,10 @@ namespace Android.Security
 				return null;
 			}
 
-			return GetCertificateWithPrivateKey (activity, alias);
+			return GetX509Certificate2WithPrivateKey (activity, alias);
 		}
 
-		public static async Task<X509Certificate2?> ChooseCertificateWithPrivateKeyAsync (
+		public static async Task<X509Certificate2?> ChooseX509Certificate2WithPrivateKeyAsync (
 			Android.App.Activity activity,
 			string[]? keyTypes,
 			Java.Security.IPrincipal[]? issuers,
@@ -81,7 +81,7 @@ namespace Android.Security
 				return null;
 			}
 
-			return GetCertificateWithPrivateKey (activity, alias);
+			return GetX509Certificate2WithPrivateKey (activity, alias);
 		}
 
 		private sealed class KeyChainAliasCallback(TaskCompletionSource<string?> tcs)
