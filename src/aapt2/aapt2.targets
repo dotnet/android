@@ -7,17 +7,17 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-macosx.zip">
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_macosx.zip">
       <Platform>osx</Platform>
       <HostOS>Darwin</HostOS>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
-    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-linux.zip">
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_linux.zip">
       <Platform>linux</Platform>
       <HostOS>Linux</HostOS>
       <FilesToExtract>aapt2</FilesToExtract>
     </_BuildTools>
-    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)-windows.zip">
+    <_BuildTools Include="build-tools_r$(XABuildToolsVersion)_windows.zip">
       <Platform>windows</Platform>
       <HostOS></HostOS>
       <FilesToExtract>aapt2.exe</FilesToExtract>

@@ -103,7 +103,7 @@ namespace Xamarin.Android.Prepare
 					buildToolName: $"android-ndk-r{AndroidNdkVersion}",
 					buildToolVersion: AndroidPkgRevision
 				),
-				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}-{altOsTag}",
+				new AndroidToolchainComponent ($"{XABuildToolsPackagePrefix}build-tools_r{XABuildToolsVersion}_{altOsTag}",
 					destDir: Path.Combine ("build-tools", XABuildToolsFolder),
 					isMultiVersion: true,
 					buildToolName: "android-sdk-build-tools",

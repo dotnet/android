@@ -121,8 +121,8 @@
     <XABuildToolsPackagePrefixLinux></XABuildToolsPackagePrefixLinux>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' ">$(XABuildToolsPackagePrefixMacOS)</XABuildToolsPackagePrefix>
     <XABuildToolsPackagePrefix Condition=" '$(HostOS)' == 'Windows' ">$(XABuildToolsPackagePrefixWindows)</XABuildToolsPackagePrefix>
-    <XABuildToolsVersion>34</XABuildToolsVersion>
-    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">34.0.0</XABuildToolsFolder>
+    <XABuildToolsVersion>35</XABuildToolsVersion>
+    <XABuildToolsFolder Condition="'$(XABuildToolsFolder)' == ''">35.0.0</XABuildToolsFolder>
     <XAPlatformToolsPackagePrefix Condition=" '$(HostOS)' == 'Darwin' "></XAPlatformToolsPackagePrefix>
     <XAPlatformToolsVersion>34.0.5</XAPlatformToolsVersion>
     <XABundleToolVersion Condition="'$(XABundleToolVersion)' == ''">1.15.1</XABundleToolVersion>
