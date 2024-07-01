@@ -30,7 +30,7 @@ variables:
   1ESWindowsPool: AzurePipelines-EO
   1ESWindowsImage: AzurePipelinesWindows2022compliant
   1ESMacPool: Azure Pipelines
-  1ESMacImage: internal-macos-11
+  1ESMacImage: macOS-13
   DisablePipelineConfigDetector: true
 
 jobs:
