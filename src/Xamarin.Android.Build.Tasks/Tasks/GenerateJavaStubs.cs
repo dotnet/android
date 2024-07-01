@@ -188,7 +188,7 @@ namespace Xamarin.Android.Tasks
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
 			var nativeCodeGenStates = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> ();
 			NativeCodeGenState? templateCodeGenState = null;
-			var scanner = new PinvokeScanner (Log);
+			PinvokeScanner? pinvokeScanner = EnableNativeRuntimeLinking ? new PinvokeScanner (Log) : null;
 
 			var firstArch = allAssembliesPerArch.First ().Key;
 			var generateSucceeded = true;
@@ -208,12 +208,16 @@ namespace Xamarin.Android.Tasks
 					generateSucceeded = false;
 				}
 
-				if (EnableNativeRuntimeLinking) {
-					(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (scanner, arch, state.Resolver);
+				if (!success || state == null) {
+					return;
+				}
+
+				if (pinvokeScanner != null) {
+					(success, List<PinvokeScanner.PinvokeEntryInfo> pinfos) = ScanForUsedPinvokes (pinvokeScanner, arch, state.Resolver);
 					if (!success) {
 						return;
 					}
-					BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (PinvokeScanner.PinvokesInfoRegisterTaskKey), pinfos, RegisteredTaskObjectLifetime.Build);
+					state.PinvokeInfos = pinfos;
 				}
 
 				// If this is the first architecture, we need to store the state for later use
