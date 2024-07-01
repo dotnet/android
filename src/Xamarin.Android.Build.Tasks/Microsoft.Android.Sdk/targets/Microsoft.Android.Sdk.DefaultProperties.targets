@@ -119,7 +119,7 @@
     <NullabilityInfoContextSupport Condition="'$(NullabilityInfoContextSupport)' == ''">false</NullabilityInfoContextSupport>
     <BuiltInComInteropSupport Condition="'$(BuiltInComInteropSupport)' == ''">false</BuiltInComInteropSupport>
     <JsonSerializerIsReflectionEnabledByDefault Condition="'$(JsonSerializerIsReflectionEnabledByDefault)' == '' and '$(TrimMode)' == 'partial'">true</JsonSerializerIsReflectionEnabledByDefault>
-    <_SystemDiagnosticsMetricsMeterIsSupported Condition="'$(_SystemDiagnosticsMetricsMeterIsSupported)' == ''">false</_SystemDiagnosticsMetricsMeterIsSupported>
+    <MetricsSupport Condition="'$(MetricsSupport)' == ''">false</MetricsSupport>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">$(AvoidEmitForPerformance)</AndroidAvoidEmitForPerformance>
     <AndroidAvoidEmitForPerformance Condition="'$(AndroidAvoidEmitForPerformance)' == ''">true</AndroidAvoidEmitForPerformance>
     <!-- Verify DI trimmability at development-time, but turn the validation off for production/trimmed builds. -->
