@@ -4,7 +4,7 @@ parameters:
   stageName: msbuilddevice_tests
   job_name: 'mac_dotnetdevice_tests'
   dependsOn: mac_build
-  agent_count: 8
+  agent_count: 12
   stageCondition: succeeded()
   stagePrefix: ''
   xaSourcePath: $(System.DefaultWorkingDirectory)
@@ -88,7 +88,6 @@ stages:
       avdAbi: x86
       avdType: android-wear
       deviceName: wear_square
-      androidSdkPlatforms: 34
     pool:
       name: Azure Pipelines
       vmImage: $(HostedMacImage)

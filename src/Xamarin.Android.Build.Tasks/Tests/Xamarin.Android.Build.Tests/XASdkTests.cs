@@ -42,12 +42,7 @@ namespace Xamarin.Android.Build.Tests
 
 			// Release build
 			Assert.IsTrue (dotnet.Build (parameters: new [] { "Configuration=Release", "TrimmerSingleWarn=false" }), "`dotnet build` should succeed");
-			// FIXME: https://github.com/dotnet/runtime/issues/100256
-			if (template.Contains ("lib")) {
-				dotnet.AssertHasNoWarnings ();
-			} else {
-				Assert.IsTrue (StringAssertEx.ContainsText (dotnet.LastBuildOutput, " 4 Warning(s)"), $"{dotnet.BuildLogFile} should have 4 MSBuild warnings.");
-			}
+			dotnet.AssertHasNoWarnings ();
 		}
 
 		static readonly object[] DotNetPackTargetFrameworks = new object[] {
@@ -229,6 +224,7 @@ public class JavaSourceTest {
 			var projBuilder = CreateDllBuilder ();
 			projBuilder.Save (proj);
 			var dotnet = new DotNetCLI (Path.Combine (Root, projBuilder.ProjectDirectory, proj.ProjectFilePath));
+			dotnet.Verbosity = "detailed";
 			string[] configParam = isRelease ? new [] { "Configuration=Release" } : new [] { "Configuration=Debug" };
 			Assert.IsTrue (dotnet.Publish (parameters: configParam), "first `dotnet publish` should succeed");
 

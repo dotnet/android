@@ -54,6 +54,7 @@ namespace Xamarin.Android.Build.Tests
 			bool shouldMarshalMethodsBeEnabled = isRelease && marshalMethodsEnabled;
 
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Diagnostic;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsTrue (
 					StringAssertEx.ContainsText (b.LastBuildOutput, $"_AndroidUseMarshalMethods = {shouldMarshalMethodsBeEnabled}"),
@@ -260,16 +261,31 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("TrimmerSingleWarn", "false");
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				// FIXME: https://github.com/dotnet/runtime/issues/100256
-				if (!xamarinForms && isRelease) {
-					Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, " 4 Warning(s)"), $"{b.BuildLogFile} should have 4 MSBuild warnings.");
-				} else {
-					b.AssertHasNoWarnings ();
-				}
+				b.AssertHasNoWarnings ();
 				Assert.IsFalse (StringAssertEx.ContainsText (b.LastBuildOutput, "Warning: end of file not at end of a line"),
 					"Should not get a warning from the <CompileNativeAssembly/> task.");
 				var lockFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, ".__lock");
 				FileAssert.DoesNotExist (lockFile);
+			}
+		}
+
+		[Test]
+		[TestCase ("AndroidFastDeploymentType", "Assemblies", true, false)]
+		[TestCase ("AndroidFastDeploymentType", "Assemblies", false, false)]
+		[TestCase ("_AndroidUseJavaLegacyResolver", "true", false, true)]
+		[TestCase ("_AndroidUseJavaLegacyResolver", "true", true, true)]
+		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", false, true)]
+		[TestCase ("_AndroidEmitLegacyInterfaceInvokers", "true", true, true)]
+		public void XA1037PropertyDeprecatedWarning (string property, string value, bool isRelease, bool isBindingProject)
+		{
+			XamarinAndroidProject proj = isBindingProject ? new XamarinAndroidBindingProject () : new XamarinAndroidApplicationProject ();
+			proj.IsRelease = isRelease;
+			proj.SetProperty (property, value);
+			
+			using (ProjectBuilder b = isBindingProject ? CreateDllBuilder (Path.Combine ("temp", TestName)) : CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+				Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"The '{property}' MSBuild property is deprecated and will be removed"),
+					$"Should not get a warning about the {property} property");
 			}
 		}
 
@@ -440,6 +456,7 @@ class MemTest {
 				WebContent = "https://repo1.maven.org/maven2/com/balysv/material-menu/1.1.0/material-menu-1.1.0.aar"
 			});
 			using (var b = CreateApkBuilder (Path.Combine ("temp", TestName))) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not be skipped.");
 
@@ -745,9 +762,9 @@ namespace UnamedProject
 				start = DateTime.UtcNow;
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
 
-				// These files won't exist in OSS Xamarin.Android, thus the existence check and
+				// These files won't exist in OSS .NET for Android, thus the existence check and
 				// Assert.Ignore below. They will also not exist in the commercial version of
-				// Xamarin.Android unless fastdev is enabled.
+				// .NET for Android unless fastdev is enabled.
 				foreach (var file in new [] { "typemap.mj", "typemap.jm" }) {
 					var info = new FileInfo (Path.Combine (intermediate, "android", file));
 					if (info.Exists) {
@@ -1088,9 +1105,11 @@ namespace UnamedProject
 		}
 
 		[Test]
-		public void CustomApplicationClassAndMultiDex ()
+		public void CustomApplicationClassAndMultiDex ([Values (true, false)] bool isRelease)
 		{
 			var proj = CreateMultiDexRequiredApplication ();
+			proj.IsRelease = isRelease;
+			proj.TrimModeRelease = TrimMode.Full;
 			proj.SetProperty ("AndroidEnableMultiDex", "True");
 			proj.Sources.Add (new BuildItem ("Compile", "CustomApp.cs") { TextContent = () => @"
 using System;
@@ -1113,7 +1132,7 @@ namespace UnnamedProject {
         }
     }
 }" });
-			using (var b = CreateApkBuilder ("temp/CustomApplicationClassAndMultiDex")) {
+			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				Assert.IsFalse (b.LastBuildOutput.ContainsText ("Duplicate zip entry"), "Should not get warning about [META-INF/MANIFEST.MF]");
 				var customAppContent = File.ReadAllText (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "android", "src", "com", "foxsports", "test", "CustomApp.java"));
@@ -1190,9 +1209,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
@@ -1206,18 +1223,14 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
 
 				Assert.IsTrue (b.Build (proj), "second build failed");
 
-				foreach (string rid in b.GetBuildRuntimeIdentifiers ()) {
-					string abi = MonoAndroidHelper.RidToAbi (rid);
-
+				foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 					Assert.IsTrue (File.Exists (Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, $"android/assets/{abi}/UnnamedProject.pdb")),
 					               $"UnnamedProject.pdb must be copied to the Intermediate directory for ABI {abi}");
 				}
@@ -1301,8 +1314,8 @@ namespace App1
 					};
 
 					string apkPath = Path.Combine (outputPath, proj.PackageName + "-Signed.apk");
-					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, b.GetBuildRuntimeIdentifiers ().ToArray ());
-					foreach (string abi in b.GetBuildAbis ()) {
+					var helper = new ArchiveAssemblyHelper (apkPath, useAssemblyStores: false, proj.GetRuntimeIdentifiers ().ToArray ());
+					foreach (string abi in proj.GetRuntimeIdentifiersAsAbis ()) {
 						foreach ((string fileName, bool existsInBin) in fileNames) {
 							EnsureFilesAreTheSame (intermediate, existsInBin ? outputPath : null, fileName, abi, helper, uncompressIfNecessary: fileName.EndsWith (".dll", StringComparison.Ordinal));
 						}

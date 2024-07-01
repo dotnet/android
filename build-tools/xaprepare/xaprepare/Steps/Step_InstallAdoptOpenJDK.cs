@@ -199,19 +199,19 @@ namespace Xamarin.Android.Prepare
 			string xaVersionFile = Path.Combine (installDir, XAVersionInfoFile);
 			if (!File.Exists (xaVersionFile)) {
 				installedVersion = cv;
-				Log.DebugLine ($"Unable to find Xamarin.Android version file {xaVersionFile}");
+				Log.DebugLine ($"Unable to find .NET for Android version file {xaVersionFile}");
 				return false;
 			}
 
 			lines = File.ReadAllLines (xaVersionFile);
 			if (lines == null || lines.Length == 0) {
-				Log.DebugLine ($"Xamarin.Android version file {xaVersionFile} is empty, cannot determine release version");
+				Log.DebugLine ($".NET for Android version file {xaVersionFile} is empty, cannot determine release version");
 				return false;
 			}
 
 			string rv = lines[0].Trim ();
 			if (String.IsNullOrEmpty (rv)) {
-				Log.DebugLine ($"Xamarin.Android version file {xaVersionFile} does not contain release version information");
+				Log.DebugLine ($".NET for Android version file {xaVersionFile} does not contain release version information");
 				return false;
 			}
 
@@ -267,30 +267,12 @@ namespace Xamarin.Android.Prepare
 		}
 	}
 
-	class Step_InstallAdoptOpenJDK8 : Step_InstallOpenJDK {
-
-		const string _ProductName = "AdoptOpenJDK";
-
-		public Step_InstallAdoptOpenJDK8 ()
-			: base ($"Installing {_ProductName} 1.8")
-		{
-		}
-
-		protected   override    string  ProductName      => _ProductName;
-		protected   override    string  JdkInstallDir    => Configurables.Paths.OpenJDK8InstallDir;
-		protected   override    Version JdkVersion       => Configurables.Defaults.AdoptOpenJDK8Version;
-		protected   override    Version JdkRelease       => Configurables.Defaults.AdoptOpenJDK8Release;
-		protected   override    Uri     JdkUrl           => Configurables.Urls.AdoptOpenJDK8;
-		protected   override    string  JdkCacheDir      => Configurables.Paths.OpenJDK8CacheDir;
-		protected   override    string  RootDirName      => Configurables.Defaults.AdoptOpenJDK8RootDirName;
-	}
-
-	class Step_InstallMicrosoftOpenJDK11 : Step_InstallOpenJDK {
+	class Step_InstallMicrosoftOpenJDK : Step_InstallOpenJDK {
 
 		const string _ProductName = "Microsoft OpenJDK";
 
-		public Step_InstallMicrosoftOpenJDK11 ()
-			: base ($"Installing {_ProductName} 11")
+		public Step_InstallMicrosoftOpenJDK ()
+			: base ($"Installing {_ProductName}")
 		{
 		}
 

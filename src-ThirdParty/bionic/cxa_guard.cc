@@ -1,5 +1,5 @@
 //
-// Ported to Xamarin.Android from: https://android.googlesource.com/platform/bionic/+/refs/tags/android-11.0.0_r31/libc/bionic/__cxa_guard.cpp
+// Ported to .NET for Android from: https://android.googlesource.com/platform/bionic/+/refs/tags/android-11.0.0_r31/libc/bionic/__cxa_guard.cpp
 //
 
 /*

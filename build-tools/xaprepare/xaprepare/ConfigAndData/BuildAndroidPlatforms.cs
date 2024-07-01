@@ -5,8 +5,8 @@ namespace Xamarin.Android.Prepare
 {
 	class BuildAndroidPlatforms
 	{
-		public const string AndroidNdkVersion = "26c";
-		public const string AndroidNdkPkgRevision = "26.2.11394342";
+		public const string AndroidNdkVersion = "26d";
+		public const string AndroidNdkPkgRevision = "26.3.11579264";
 		public const int NdkMinimumAPI = 21;
 		public const int NdkMinimumAPILegacy32 = 21;
 
@@ -45,6 +45,7 @@ namespace Xamarin.Android.Prepare
 			new AndroidPlatform (apiName: "Sv2",                    apiLevel: 32, platformID: "32",  include: "v12.1"),
 			new AndroidPlatform (apiName: "Tiramisu",               apiLevel: 33, platformID: "33",  include: "v13.0",   framework: "v13.0"),
 			new AndroidPlatform (apiName: "UpsideDownCake",         apiLevel: 34, platformID: "34",  include: "v14.0",   framework: "v14.0"),
+			new AndroidPlatform (apiName: "VanillaIceCream",        apiLevel: 35, platformID: "VanillaIceCream",  include: "v14.0.99",   framework: "v14.0.99", stable: false),
 		};
 
 	}

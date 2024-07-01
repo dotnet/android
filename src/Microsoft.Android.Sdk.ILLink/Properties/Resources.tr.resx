@@ -118,7 +118,7 @@
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
   <data name="XA2000" xml:space="preserve">
-    <value>{0} bütünleştirilmiş kodunda AppDomain.CreateDomain() metodunun kullanıldığı saptandı. .NET 6 üstünde yalnızca tek bir AppDomain destekleneceğinden bu API, .NET 6 yayımlandıktan sonra artık Xamarin.Android içinde bulunmayacaktır.</value>
+    <value>Derlemede AppDomain.CreateDomain() kullanımı algılandı: {0}. .NET 6 ve üzeri yalnızca tek bir AppDomain'i desteklediğinden, bu API artık kullanılamaz.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>

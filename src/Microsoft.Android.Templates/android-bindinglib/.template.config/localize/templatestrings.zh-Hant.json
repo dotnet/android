@@ -1,6 +1,6 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Java 程式庫繫結",
-  "description": "用於建立繫結至原生 Java 程式庫的 .NET Android 類別庫的專案",
+  "description": "用於建立繫結至原生 Java 程式庫的 Android 版 .NET 類別庫的專案",
   "symbols/supportedOSVersion/description": "覆寫專案中的 $(SupportedOSPlatformVersion)"
 }

@@ -27,8 +27,7 @@ namespace Xamarin.Android.Prepare
 			public string? Configuration       { get; set; }
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
-			public bool IgnoreMaxMonoVersion   { get; set; }
-			public bool IgnoreMinMonoVersion   { get; set; }
+			public bool AutoProvisionSkipMono  { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
 			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = new [] { "latest" };
 		}
@@ -80,12 +79,11 @@ namespace Xamarin.Android.Prepare
 			ParsedOptions parsedOptions = new ParsedOptions {
 				AutoProvision         = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.AutoProvision)),
 				AutoProvisionUsesSudo = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.AutoProvisionUsesSudo)),
-				IgnoreMaxMonoVersion  = ParseBoolean (Context.Instance.Properties.GetValue (KnownProperties.IgnoreMaxMonoVersion)),
 			};
 
 			var opts = new OptionSet {
 				"Usage: xaprepare [OPTIONS]",
-				$"Xamarin.Android v{BuildInfo.XAVersion} preparation utility",
+				$".NET for Android v{BuildInfo.XAVersion} preparation utility",
 				"",
 				{"p|property={=}", "Set a {PROPERTY} to a {VALUE}", (string p, string v) => Context.Instance.Properties.Set (p, v) },
 				{"d|dump-properties", "Dump values of all the defined properties to the screen", v => parsedOptions.DumpProps = true },
@@ -101,10 +99,9 @@ namespace Xamarin.Android.Prepare
 				{"c|configuration=", $"Build {{CONFIGURATION}}. Default: {Context.Instance.Configuration}", v => parsedOptions.Configuration = v?.Trim ()},
 				{"refresh:", "[sdk,ndk] Comma separated list of components which should be reinstalled. Defaults to all supported components if no value is provided.", v => parsedOptions.RefreshList = ParseRefreshableComponents (v?.Trim () ?? String.Empty)},
 				"",
-				{"auto-provision=", $"Automatically install software required by Xamarin.Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
+				{"auto-provision=", $"Automatically install software required by .NET for Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
-				{"ignore-max-mono-version=", $"Ignore the maximum supported Mono version restriction", v => parsedOptions.IgnoreMaxMonoVersion = ParseBoolean (v)},
-				{"ignore-min-mono-version=", $"Ignore the minimum supported Mono version restriction", v => parsedOptions.IgnoreMinMonoVersion = ParseBoolean (v)},
+				{"auto-provision-skip-mono=", $"Do not automatically install the Mono MDK", v => parsedOptions.AutoProvisionSkipMono = ParseBoolean (v)},
 				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed or 'latest' or 'all'. Defaults to 'latest' if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
@@ -135,8 +132,7 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.DebugFileExtension    = parsedOptions.DebugFileExtension;
 			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
-			Context.Instance.IgnoreMaxMonoVersion  = parsedOptions.IgnoreMaxMonoVersion;
-			Context.Instance.IgnoreMinMonoVersion  = parsedOptions.IgnoreMinMonoVersion;
+			Context.Instance.AutoProvisionSkipMono = parsedOptions.AutoProvisionSkipMono;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 			Context.Instance.AndroidSdkPlatforms   = parsedOptions.AndroidSdkPlatforms;
 

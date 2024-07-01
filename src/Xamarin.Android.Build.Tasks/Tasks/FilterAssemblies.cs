@@ -10,7 +10,7 @@ using Microsoft.Android.Build.Tasks;
 namespace Xamarin.Android.Tasks
 {
 	/// <summary>
-	/// Filters a set of assemblies to be known as "Xamarin.Android" assemblies through various checks:
+	/// Filters a set of assemblies to be known as ".NET for Android" assemblies through various checks:
 	/// * The presence of [assembly: System.Runtime.Versioning.TargetFramework("MonoAndroid,Version=v9.0")]
 	/// * A Mono.Android.dll reference
 	/// * An EmbeddedResource ending with *.jar

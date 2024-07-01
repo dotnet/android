@@ -1,4 +1,4 @@
-# Xamarin.Android Pipeline
+# .NET for Android Pipeline
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
@@ -220,16 +220,6 @@ extends:
             artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
             artifactFolder: $(DotNetTargetFramework)-Default
 
-        - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
-          parameters:
-            configuration: $(XA.Build.Configuration)
-            testName: Xamarin.Android.JcwGen_Tests_FastDev
-            project: tests/CodeGen-Binding/Xamarin.Android.JcwGen-Tests/Xamarin.Android.JcwGen-Tests.csproj
-            testResultsFiles: TestResult-Xamarin.Android.JcwGen_Tests-$(XA.Build.Configuration).xml
-            artifactSource: bin/Test$(XA.Build.Configuration)/$(DotNetTargetFramework)-android/Xamarin.Android.JcwGen_Tests-Signed.apk
-            artifactFolder: $(DotNetTargetFramework)-FastDev_Assemblies_Dexes
-            extraBuildArgs: /p:AndroidFastDeploymentType=Assemblies:Dexes
-
         - template: /build-tools/automation/yaml-templates/run-nunit-tests.yaml@self
           parameters:
             testRunTitle: Xamarin.Android.Tools.Aidl-Tests - macOS
@@ -350,8 +340,10 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml@self
           parameters:
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             androidSdkPlatforms: $(DefaultTestSdkPlatforms)
+            dotnetVersion: 9.0
+            dotnetQuality: preview
 
         - task: NuGetAuthenticate@1
           displayName: authenticate with azure artifacts
@@ -391,7 +383,7 @@ extends:
         - task: DotNetCoreCLI@2
           displayName: Update Android SDK band in Workloads.csproj
           inputs:
-            projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
             arguments: -t:UpdateMauiWorkloadsProj -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/update-maui-workloadsproj.binlog
 
         - pwsh: ./build.ps1 --target=dotnet --configuration="$(XA.Build.Configuration)" --nugetsource="$(Build.StagingDirectory)\android-packs" --verbosity=diagnostic
@@ -407,14 +399,14 @@ extends:
           displayName: Install MAUI workload packs
           retryCountOnTaskFailure: 3
           inputs:
-            projects: $(Build.SourcesDirectory)/xamarin-android/Xamarin.Android.sln
+            projects: $(Build.SourcesDirectory)/android/Xamarin.Android.sln
             arguments: -t:InstallMaui -p:MauiUseLocalPacks=true -p:MauiWorkloadToInstall=maui -c $(XA.Build.Configuration) --no-restore -v:n -bl:$(Build.StagingDirectory)/logs/install-maui.binlog
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
           parameters:
             command: new
             arguments: maui -o $(Build.StagingDirectory)/MauiTestProj
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Create MAUI template
             continueOnError: false
 
@@ -433,7 +425,7 @@ extends:
               -f $(DotNetTargetFramework)-android -c Debug
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Debug.binlog
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Debug
 
         - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
@@ -443,7 +435,7 @@ extends:
               -f $(DotNetTargetFramework)-android -c Release
               --configfile $(Build.SourcesDirectory)/maui/NuGet.config
               -bl:$(Build.StagingDirectory)/logs/MauiTestProj-Release.binlog
-            xaSourcePath: $(Build.SourcesDirectory)/xamarin-android
+            xaSourcePath: $(Build.SourcesDirectory)/android
             displayName: Build MAUI template - Release
 
         - task: CopyFiles@2
@@ -531,23 +523,19 @@ extends:
         - sign_net_linux
         condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
         timeoutInMinutes: 60
-        pool: $(VSEngMicroBuildPool)
+        pool:
+          name: AzurePipelines-EO
+          image: $(WindowsPoolImage1ESPT)
+          os: windows
         workspace:
           clean: all
         variables:
         - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
           - group: Publish-Build-Assets
-        templateContext:
-          outputs:
-          - output: nuget
-            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
-            useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
-            packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
-            packageParentPath: $(Build.StagingDirectory)\nuget-signed
-            nuGetFeedType: external
-            publishFeedCredentials: $(DotNetFeedCredential)
         steps:
         - checkout: self
+          clean: true
+          submodules: recursive
 
         - task: DownloadPipelineArtifact@2
           inputs:
@@ -606,22 +594,30 @@ extends:
                 artifactName: vsdrop-multitarget-signed
                 downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
 
-        - powershell: >-
-            & dotnet build -v:n -c $(XA.Build.Configuration)
-            -t:PushManifestToBuildAssetRegistry
-            -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-            -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-            $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-            -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+        - task: DotNetCoreCLI@2
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          inputs:
+            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+
+        - task: DotNetCoreCLI@2
           displayName: generate and publish BAR manifest
+          inputs:
+            projects: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+            arguments: >-
+              -t:PushManifestToBuildAssetRegistry
+              -p:BuildAssetRegistryToken=$(MaestroAccessToken)
+              -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
+              -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - powershell: |
-            $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
+            $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
             $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
             $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
             & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
           displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 

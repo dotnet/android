@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Aplikace Android Wear",
-  "description": "Projekt pro vytvoření aplikace .NET Android Wear",
+  "description": "A project for creating a Wear OS app using .NET for Android",
   "symbols/packageName/description": "Přepíše název balíčku v souboru AndroidManifest.xml.",
   "symbols/supportedOSVersion/description": "Přepíše $(SupportedOSPlatformVersion) v projektu."
 }

@@ -1,6 +1,6 @@
-# Tracing .NET Android Applications
+# Tracing .NET for Android Applications
 
-Attaching `dotnet-trace` to a .NET Android application, allows you to
+Attaching `dotnet-trace` to a .NET for Android application, allows you to
 get profiling information in formats like `.nettrace` and
 `.speedscope`. These give you CPU sampling information about the time
 spent in each method in your application. This is quite useful for
@@ -161,7 +161,7 @@ Unix by uploading them to [https://speedscope.app/][speedscope].
 
 [speedscope]: https://speedscope.app/
 
-### Running the .NET Android Application
+### Running the .NET for Android Application
 
 `$(AndroidEnableProfiler)` must be set to `true` as it includes the
 Mono diagnostic component in the application. This component is the

@@ -1465,7 +1465,7 @@
   <!-- Until API Level 26, android.graphics.Color was static. In API Level 26,
   it became instantiable and got instance members.
 
-  Xamarin.Android had wrong premise that android.graphics.Color can be totally
+  .NET for Android had wrong premise that android.graphics.Color can be totally
   different thing and thus introduced completely different API with the same
   type name. Wrong wrong wrong. It was wrong decision made back in 2010.
 
@@ -1693,7 +1693,7 @@
 
   <!-- If you try to implement ICursor in API-30+, we generate an invalid invoker for this method due to the
        generic parameters.  Since this is a default method we can just remove it until that bug is fixed.
-       https://github.com/xamarin/java.interop/issues/699 -->
+       https://github.com/dotnet/java-interop/issues/699 -->
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='setNotificationUris' and count(parameter)=2 and parameter[1][@type='android.content.ContentResolver'] and parameter[2][@type='java.util.List&lt;android.net.Uri&gt;']]" />
   <remove-node api-since="30" path="/api/package[@name='android.database']/interface[@name='Cursor']/method[@name='getNotificationUris']" />
 
@@ -1884,7 +1884,74 @@
   <!-- These methods are hand-bound in HardwareBuffer.cs because they have a long enum type, which generator doesn't support. -->
   <remove-node api-since="26" path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='create' and count(parameter)=5 and parameter[1][@type='int'] and parameter[2][@type='int'] and parameter[3][@type='int'] and parameter[4][@type='int'] and parameter[5][@type='long']]" />
   <remove-node api-since="26" path="/api/package[@name='android.hardware']/class[@name='HardwareBuffer']/method[@name='getUsage' and count(parameter)=0]" />
+	
+  <!-- These are new abstract methods in existing classes, so they must be converted to virtual compatible method for back-compat. -->
+  <attr api-since="35" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='compact' and count(parameter)=0]" name="managedOverride">override</attr>
+  <attr api-since="35" path="/api/package[@name='java.nio']/class[@name='MappedByteBuffer']/method[@name='compact' and count(parameter)=0]" name="compatVirtualMethod">true</attr>
 
+  <!-- Rename Namespaces -->
+  <attr api-since="35" path="/api/package[@name='android.adservices.ondevicepersonalization']" name="managedName">Android.AdServices.OnDevicePersonalization</attr>
+  <attr api-since="35" path="/api/package[@name='android.adservices.signals']" name="managedName">Android.AdServices.Signals</attr>
+  <attr api-since="35" path="/api/package[@name='java.util.random']" name="managedName">Java.Util.RandomGenerators</attr>
+
+  <!-- API-35 adds new java.util.Sequenced[Collection|Map] interfaces that existing interfaces/classes now implement. -->
+  <!-- Fix covariant return types for new 'reversed ()' method. -->	
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='List']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='Deque']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='NavigableSet']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SortedSet']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='NavigableMap']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedMap</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SortedMap']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedMap</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/class[@name='LinkedHashSet']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/class[@name='LinkedList']/method[@name='reversed' and count(parameter)=0]" name="managedReturn">Java.Util.ISequencedCollection</attr>
+
+  <!-- Removed because it simply narrows the method return type, which we cannot change anyways. (SequencedCollection -> SequencedSet) -->
+  <remove-node api-since="35" path="/api/package[@name='java.util']/interface[@name='SequencedSet']/method[@name='reversed' and count(parameter)=0]" />
+
+  <!-- Manually bound because they get generated incorrectly -->
+  <remove-node api-since="35" path="/api/package[@name='java.util']/interface[@name='List']/method[@name='reversed' and count(parameter)=0]" />
+  <remove-node api-since="35" path="/api/package[@name='java.util']/interface[@name='SortedMap']/method[@name='reversed' and count(parameter)=0]" />
+
+  <!-- New getFirst/getLast methods cannot be made into properties, or they conflict with existing First/Last methods. -->
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SortedSet']/method[@name='getFirst' and count(parameter)=0]" name="propertyName"></attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SortedSet']/method[@name='getLast' and count(parameter)=0]" name="propertyName"></attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SequencedCollection']/method[@name='getFirst' and count(parameter)=0]" name="propertyName"></attr>
+  <attr api-since="35" path="/api/package[@name='java.util']/interface[@name='SequencedCollection']/method[@name='getLast' and count(parameter)=0]" name="propertyName"></attr>
+
+  <!-- In API-34 only the setter existed so we didn't make it a property. Now it also has a getter but we cannot make it a property due to back-compat. -->
+  <attr api-since="35" path="/api/package[@name='android.media']/class[@name='MediaRouter2']/method[@name='getRouteListingPreference' and count(parameter)=0]" name="propertyName"></attr>
+  <attr api-since="35" path="/api/package[@name='android.media']/class[@name='MediaRouter2']/method[@name='setRouteListingPreference' and count(parameter)=1 and parameter[1][@type='android.media.RouteListingPreference']]" name="propertyName"></attr>
+
+  <!-- These new default interface methods on a Listener interface cause duplicate named EventHandlers to be generated, change to a unique name. -->
+  <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpActiveChangedListener']/method[@name='onOpActiveChanged' and count(parameter)=8 and parameter[1][@type='java.lang.String'] and parameter[2][@type='int'] and parameter[3][@type='java.lang.String'] and parameter[4][@type='java.lang.String'] and parameter[5][@type='int'] and parameter[6][@type='boolean'] and parameter[7][@type='int'] and parameter[8][@type='int']]" name="managedName">OnOpActiveChanged2</attr>
+  <attr api-since="35" path="/api/package[@name='android.app']/interface[@name='AppOpsManager.OnOpChangedListener']/method[@name='onOpChanged' and count(parameter)=4 and parameter[1][@type='java.lang.String'] and parameter[2][@type='java.lang.String'] and parameter[3][@type='int'] and parameter[4][@type='java.lang.String']]" name="managedName">OnOpChanged2</attr>
+
+  <!-- Once our capitalization changes are applied to these constants they conflict with a method name. -->
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_CLEAR']" name="managedName">GlClearConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_CULL_FACE']" name="managedName">GlCullFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_POINT_SIZE']" name="managedName">GlPointSizeConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES10']/field[@name='GL_SAMPLE_COVERAGE']" name="managedName">GlSampleCoverageConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_ACTIVE_TEXTURE']" name="managedName">GlActiveTextureConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_BLEND_COLOR']" name="managedName">GlBlendColorConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_BLEND_EQUATION']" name="managedName">GlBlendEquationConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_CULL_FACE']" name="managedName">GlCullFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_DEPTH_FUNC']" name="managedName">GlDepthFuncConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_FRONT_FACE']" name="managedName">GlFrontFaceConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_LINE_WIDTH']" name="managedName">GlLineWidthConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_SAMPLE_COVERAGE']" name="managedName">GlSampleCoverageConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_STENCIL_FUNC']" name="managedName">GlStencilFuncConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES20']/field[@name='GL_VIEWPORT']" name="managedName">GlViewPortConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_READ_BUFFER']" name="managedName">GlReadBufferConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_TRANSFORM_FEEDBACK_VARYINGS']" name="managedName">GlTransformFeedbackVaryingsConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES30']/field[@name='GL_UNIFORM_BLOCK_BINDING']" name="managedName">GlUniformBlockBindingConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES31']/field[@name='GL_VERTEX_ATTRIB_BINDING']" name="managedName">GlVertexAttribBindingConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES31']/field[@name='GL_VERTEX_BINDING_DIVISOR']" name="managedName">GlVertexBindingDivisorConst</attr>
+  <attr api-since="35" path="/api/package[@name='android.opengl']/class[@name='GLES32']/field[@name='GL_PRIMITIVE_BOUNDING_BOX']" name="managedName">GlPrimitiveBoundingBoxConst</attr>
+	
+  <!-- These fields received constant values at some point, but updating them now will change them from properties to consts -->
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='DEBUG']" name="value"></attr>
+  <attr api-since="35" path="/api/package[@name='android.util']/class[@name='Config']/field[@name='RELEASE']" name="value"></attr>
+	
   <!--
     ***********************************************************************
     THE FOLLOWING LINES MUST BE CREATED FOR ANY NEW PLATFORM THAT IS ADDED.
@@ -1905,6 +1972,10 @@
   <attr api-since="33" path="/api/package/interface[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-34.xml.in')]" name="no-alternatives">true</attr>
   <attr api-since="34" path="/api/package/interface[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="35" path="/api/package/interface[contains(@merge.SourceFile,'api-35.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="35" path="/api/package/interface[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="no-alternatives">true</attr>
+  <attr api-since="35" path="/api/package[contains(@merge.SourceFile,'api-35.xml.in')]/interface" name="no-alternatives">true</attr>
+  <attr api-since="35" path="/api/package[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]/interface" name="no-alternatives">true</attr>
 
   <!-- Set ApiSince based on merge sourcefile. -->
   <attr api-since="22" path="/api//*[contains(@merge.SourceFile,'api-22.xml.in')]" name="api-since">22</attr>
@@ -1925,6 +1996,8 @@
   <attr api-since="33" path="/api//*[contains(@merge.SourceFile,'api-Tiramisu.xml.in')]" name="api-since">33</attr>
   <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-34.xml.in')]" name="api-since">34</attr>
   <attr api-since="34" path="/api//*[contains(@merge.SourceFile,'api-UpsideDownCake.xml.in')]" name="api-since">34</attr>
+  <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-35.xml.in')]" name="api-since">35</attr>
+  <attr api-since="35" path="/api//*[contains(@merge.SourceFile,'api-VanillaIceCream.xml.in')]" name="api-since">35</attr>
 
   <!-- Erase some 'api-since' attributes (This has to be done after they are set above) -->
 

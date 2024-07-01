@@ -49,7 +49,7 @@ configuration:
           days: 14
       actions:
       - addReply:
-          reply: This issue will now be closed since it had been marked `possibly-stale` but received no further activity in the past 14 days. It is still possible to reopen or comment on the issue, but please note that the issue will be locked if it remains inactive for another 30 days.
+          reply: This issue will now be closed since it had been marked "possibly-stale" but received no further activity in the past 14 days. It is still possible to reopen or comment on the issue, but please note that the issue will be locked if it remains inactive for another 30 days.
       - closeIssue
     eventResponderTasks:
     - if:

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <PackageType>Template</PackageType>
     <PackageId>Microsoft.Android.Templates</PackageId>
-    <Title>.NET Android Templates</Title>
+    <Title>.NET for Android Templates</Title>
     <Description>Templates for Android platforms.</Description>
     <IncludeContentInPack>true</IncludeContentInPack>
     <IncludeBuildOutput>false</IncludeBuildOutput>

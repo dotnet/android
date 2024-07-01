@@ -13,11 +13,6 @@ namespace Xamarin.Android.Prepare
 			new HomebrewProgram ("make"),
 			new HomebrewProgram ("ninja"),
 			new HomebrewProgram ("p7zip", "7za"),
-
-			new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
-				MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),
-				MaximumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMaximumVersion),
-			},
 		};
 
 		static readonly HomebrewProgram git = new HomebrewProgram ("git") {
@@ -28,10 +23,19 @@ namespace Xamarin.Android.Prepare
 		{
 			Dependencies.AddRange (programs);
 
+			if (!Context.Instance.AutoProvisionSkipMono) {
+				Dependencies.Add (
+					new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
+						MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),
+						MaximumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMaximumVersion),
+					}
+				);
+			}
+
 			// Allow using git from $PATH if it has the right version
 			(bool success, string bv) = Utilities.GetProgramVersion (git.Name);
-			if (success && Version.TryParse (bv, out Version gitVersion) &&
-					Version.TryParse (git.MinimumVersion, out Version gitMinVersion)) {
+			if (success && Version.TryParse (bv, out Version? gitVersion) &&
+					Version.TryParse (git.MinimumVersion, out Version? gitMinVersion)) {
 				if (gitVersion < gitMinVersion)
 					Dependencies.Add (git);
 

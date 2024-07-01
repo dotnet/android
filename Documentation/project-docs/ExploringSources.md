@@ -1,4 +1,4 @@
-# Xamarin.Android Directory Structure
+# .NET for Android Directory Structure
 
 There are two project configurations, `Debug` and `Release`. The project
 configuration is controlled by the `$(Configuration)` MSBuild property.

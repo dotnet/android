@@ -29,11 +29,11 @@
     <AndroidLatestStablePlatformId Condition="'$(AndroidLatestStablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestStablePlatformId>
     <AndroidLatestStableFrameworkVersion Condition="'$(AndroidLatestStableFrameworkVersion)'==''">v14.0</AndroidLatestStableFrameworkVersion>
     <!-- *Latest* *unstable* API level binding that we support; this can be the same as *stable* -->
-    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">34</AndroidLatestUnstableApiLevel>
-    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">$(AndroidLatestStableApiLevel)</AndroidLatestUnstablePlatformId>
-    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v14.0</AndroidLatestUnstableFrameworkVersion>
+    <AndroidLatestUnstableApiLevel Condition="'$(AndroidLatestUnstableApiLevel)' == ''">35</AndroidLatestUnstableApiLevel>
+    <AndroidLatestUnstablePlatformId Condition="'$(AndroidLatestUnstablePlatformId)' == ''">VanillaIceCream</AndroidLatestUnstablePlatformId>
+    <AndroidLatestUnstableFrameworkVersion Condition="'$(AndroidLatestUnstableFrameworkVersion)'==''">v14.0.99</AndroidLatestUnstableFrameworkVersion>
     <!-- The default API level used for $(TargetPlatformVersion) -->
-    <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">34</AndroidDefaultTargetDotnetApiLevel>
+    <AndroidDefaultTargetDotnetApiLevel Condition=" '$(AndroidDefaultTargetDotnetApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidDefaultTargetDotnetApiLevel>
     <!-- The API level and TargetFrameworkVersion for the default Mono.Android.dll build -->
     <AndroidApiLevel Condition=" '$(AndroidApiLevel)' == '' ">$(AndroidLatestStableApiLevel)</AndroidApiLevel>
     <AndroidPlatformId Condition=" '$(AndroidPlatformId)' == '' ">$(AndroidLatestStablePlatformId)</AndroidPlatformId>
@@ -43,7 +43,7 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.79</AndroidNetPreviousVersion>
+    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.113</AndroidNetPreviousVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>
@@ -104,6 +104,9 @@
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' ">True</IgnoreMaxMonoVersion>
     <OpenTKSourceDirectory>$(MSBuildThisFileDirectory)external\opentk</OpenTKSourceDirectory>
     <SqliteSourceDirectory Condition=" '$(SqliteSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\sqlite</SqliteSourceDirectory>
+    <LibUnwindSourceDirectory Condition=" '$(LibUnwindSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\libunwind</LibUnwindSourceDirectory>
+    <LibUnwindGeneratedHeadersDirectory Condition=" '$(LibUnwindGeneratedHeadersDirectory)' == '' ">$(BootstrapOutputDirectory)\libunwind</LibUnwindGeneratedHeadersDirectory>
+    <LZ4SourceDirectory Condition=" '$(LZ4SourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\lz4</LZ4SourceDirectory>
     <XamarinAndroidSourcePath>$(MSBuildThisFileDirectory)</XamarinAndroidSourcePath>
     <ThirdPartySourcePath>$(MSBuildThisFileDirectory)src-ThirdParty\</ThirdPartySourcePath>
     <AllSupported32BitTargetAndroidAbis>armeabi-v7a;x86</AllSupported32BitTargetAndroidAbis>
@@ -134,9 +137,6 @@
   <PropertyGroup>
     <JavacSourceVersion>1.8</JavacSourceVersion>
     <JavacTargetVersion>1.8</JavacTargetVersion>
-    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists($(JAVA_HOME_8_X64)) ">$(JAVA_HOME_8_X64)</Java8SdkDirectory>
-    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' and Exists('$(JavaSdkDirectory)\..\jdk-1.8') ">$([System.IO.Path]::GetFullPath ('$(JavaSdkDirectory)\..\jdk-1.8'))</Java8SdkDirectory>
-    <Java8SdkDirectory Condition=" '$(Java8SdkDirectory)' == '' ">$(JavaSdkDirectory)</Java8SdkDirectory>
   </PropertyGroup>
   <PropertyGroup>
     <AndroidNdkFullPath>$([System.IO.Path]::GetFullPath ('$(AndroidNdkDirectory)'))</AndroidNdkFullPath>
@@ -144,6 +144,9 @@
     <JavaInteropFullPath>$([System.IO.Path]::GetFullPath ('$(JavaInteropSourceDirectory)'))</JavaInteropFullPath>
     <MonoSourceFullPath>$([System.IO.Path]::GetFullPath ('$(MonoSourceDirectory)'))</MonoSourceFullPath>
     <SqliteSourceFullPath>$([System.IO.Path]::GetFullPath ('$(SqliteSourceDirectory)'))</SqliteSourceFullPath>
+    <LibUnwindSourceFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindSourceDirectory)'))</LibUnwindSourceFullPath>
+    <LibUnwindGeneratedHeadersFullPath>$([System.IO.Path]::GetFullPath ('$(LibUnwindGeneratedHeadersDirectory)'))</LibUnwindGeneratedHeadersFullPath>
+    <LZ4SourceFullPath>$([System.IO.Path]::GetFullPath ('$(LZ4SourceDirectory)'))</LZ4SourceFullPath>
     <OpenTKSourceFullPath>$([System.IO.Path]::GetFullPath ('$(OpenTKSourceDirectory)'))</OpenTKSourceFullPath>
     <JavaInteropTargetFrameworkVersion>net8.0</JavaInteropTargetFrameworkVersion>
   </PropertyGroup>

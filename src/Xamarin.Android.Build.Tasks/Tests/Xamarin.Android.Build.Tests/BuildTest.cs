@@ -38,10 +38,10 @@ namespace Xamarin.Android.Build.Tests
 				PackageReferences = {
 					new Package { Id = "Xamarin.AndroidX.AppCompat", Version = "1.3.1.1" },
 					// Using * here, so we explicitly get newer packages
-					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "6.0.0-*" },
-					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "6.0.0-*" },
-					new Package { Id = "Microsoft.JSInterop", Version = "6.0.0-*" },
-					new Package { Id = "System.Text.Json", Version = "6.0.0-*" },
+					new Package { Id = "Microsoft.AspNetCore.Components.WebView", Version = "8.0.*" },
+					new Package { Id = "Microsoft.Extensions.FileProviders.Embedded", Version = "8.0.*" },
+					new Package { Id = "Microsoft.JSInterop", Version = "8.0.*" },
+					new Package { Id = "System.Text.Json", Version = "8.0.*" },
 				},
 				Sources = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
@@ -363,6 +363,7 @@ namespace Xamarin.Android.Build.Tests
 			mainAxml.MetadataValues = "CustomData=ResourceMetaDataOK";
 
 			using (var builder = CreateApkBuilder (string.Format ("temp/CheckItemMetadata_{0}", isRelease))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.Build (proj);
 				StringAssertEx.Contains ("AssetMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidAsset");
 				StringAssertEx.Contains ("ResourceMetaDataOK", builder.LastBuildOutput, "Metadata was not copied for AndroidResource");
@@ -698,6 +699,7 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 				//[TearDown] will still delete if test outcome successful, I need logs if assertions fail but build passes
 				b.CleanupAfterSuccessfulBuild =
 					b.CleanupOnDispose = false;
+				b.Verbosity = LoggerVerbosity.Detailed;
 				var projectDir = Path.Combine (Root, b.ProjectDirectory);
 				if (Directory.Exists (projectDir))
 					Directory.Delete (projectDir, true);

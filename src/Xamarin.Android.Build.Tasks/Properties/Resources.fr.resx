@@ -430,7 +430,7 @@ The capitalized word "Portable" that appears earlier in the message is plain tex
   <data name="XA1019" xml:space="preserve">
     <value>Le fichier 'LibraryProjectProperties' '{0}' se trouve dans un répertoire parent du répertoire de sortie intermédiaire du projet de liaisons. Modifiez le chemin pour utiliser le fichier 'project.properties' d'origine directement à partir du répertoire du projet de bibliothèque Android.</value>
     <comment>The following are literal names and should not be translated: LibraryProjectProperties, project.properties, Android
-In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET Android project written in C# or F#.
+In this message, the term "binding" means a piece of generated code that makes it easy to access an Android API written in Java from a .NET for Android project written in C# or F#.
 {0} - The path of the LibraryProjectProperties file</comment>
   </data>
   <data name="XA1020" xml:space="preserve">
@@ -452,8 +452,8 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: DX, DEX, d8, AndroidDexTool.</comment>
   </data>
   <data name="XA1024" xml:space="preserve">
-    <value>Fichier de configuration «{0}» ignoré. Les fichiers de configuration .NET ne sont pas pris en charge dans les projets Android .NET qui ciblent .NET 6 ou une version ultérieure.</value>
-    <comment>The following are literal names and should not be translated: .NET, .NET Android.
+    <value>Fichier de configuration «{0}» ignoré. Les fichiers de configuration .NET ne sont pas pris en charge dans .NET pour les projets Android qui ciblent .NET 6 ou version ultérieure.</value>
+    <comment>The following are literal names and should not be translated: .NET, .NET for Android.
 {0} - The file name such as 'Foo.dll.config'</comment>
   </data>
   <data name="XA1025" xml:space="preserve">
@@ -465,7 +465,7 @@ In this message, the term "binding" means a piece of generated code that makes i
     <comment>The following are literal names and should not be translated: AAPT, AAPT2, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1026_dotnet" xml:space="preserve">
-    <value>L’utilisation d’AAPT n’est pas prise en charge dans les projets Android .NET qui ciblent .NET 6 ou une version ultérieure. Activez 'Utiliser le système d'empaquetage Android incrémentiel (aapt2)' dans les pages de propriétés de projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte, puis affectez la valeur 'true' à la propriété MSBuild 'AndroidUseAapt2'.</value>
+    <value>L’utilisation d’AAPT n’est pas prise en charge dans .NET pour les projets Android qui ciblent .NET 6 ou une version ultérieure. Activez 'Utiliser le système d'empaquetage Android incrémentiel (aapt2)' dans les pages de propriétés de projet Visual Studio, ou modifiez le fichier projet dans un éditeur de texte, puis affectez la valeur 'true' à la propriété MSBuild 'AndroidUseAapt2'.</value>
     <comment>The following are literal names and should not be translated: AAPT, Android, AndroidUseAapt2, true.</comment>
   </data>
   <data name="XA1027" xml:space="preserve">
@@ -525,7 +525,7 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {1} - The SupportedOSPlatformVersion property value</comment>
   </data>
   <data name="XA2000" xml:space="preserve">
-    <value>Utilisation d’AppDomain.CreateDomain() détectée dans l’assembly : {0}. .NET 6 et versions ultérieures ne prennent en charge qu’un seul AppDomain. Cette API ne sera donc plus disponible dans .NET Android une fois .NET 6 publié.</value>
+    <value>Utilisation d’AppDomain.CreateDomain() détectée dans l’assembly : {0}. .NET 6 et versions ultérieures ne prennent en charge qu’un seul AppDomain. Cette API ne sera donc plus disponible dans .NET pour Android une fois .NET 6 publié.</value>
     <comment>The following are literal names and should not be translated: AppDomain.CreateDomain(), AppDomain
 {0} - The name of the assembly</comment>
   </data>
@@ -562,11 +562,11 @@ Modifiez la valeur dans AndroidManifest.xml pour qu’elle corresponde à la val
 {0} - The assembly name</comment>
   </data>
   <data name="APT2264" xml:space="preserve">
-    <value>Cela peut être dû au fait que le projet dépasse la limite de longueur maximale du chemin d’accès Windows. Pour plus d’informations, consultez https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2264.</value>
+    <value>Cela peut être dû au fait que le projet dépasse la limite de longueur maximale du chemin d’accès Windows. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2264.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="APT2265" xml:space="preserve">
-    <value>Cela peut être dû au fait que le projet contient des caractères non-ASCII dans son nom de fichier ou son chemin d’accès. Pour plus d’informations, consultez https://learn.microsoft.com/xamarin/android/errors-and-warnings/apt2265.</value>
+    <value>Cela peut être dû au fait que le projet contient des caractères non-ASCII dans son nom de fichier ou son chemin d’accès. Pour en savoir plus, consultez https://learn.microsoft.com/dotnet/android/messages/apt2265.</value>
     <comment>The following are literal names and should not be translated:</comment>
   </data>
   <data name="XA3001" xml:space="preserve">
@@ -724,12 +724,12 @@ In this message, "root element" refers to the root element of an XML file.
     <comment>{0} - The exception message and stack trace of the associated exception</comment>
   </data>
   <data name="XA4231" xml:space="preserve">
-    <value>La valeur de l’analyseur de classe Android «{0}» est déconseillée et sera supprimée dans une future version de .NET Android. Mettez à jour les propriétés du projet pour utiliser 'class-parse'.</value>
+    <value>La valeur de l’analyseur de classe Android «{0}» est déconseillée et sera supprimée dans une future version de .NET pour Android. Mettez à jour les propriétés du projet pour utiliser 'class-parse'.</value>
     <comment>The following are literal names and should not be translated: class-parse
 {0} - The name of the current class parser value</comment>
   </data>
   <data name="XA4232" xml:space="preserve">
-    <value>La cible de génération de code Android «{0}» est déconseillée et sera supprimée dans une future version de .NET Android. Mettez à jour les propriétés du projet pour utiliser 'XAJavaInterop1'.</value>
+    <value>La cible de génération de code Android «{0}» est déconseillée et sera supprimée dans une future version de .NET pour Android. Mettez à jour les propriétés du projet pour utiliser 'XAJavaInterop1'.</value>
     <comment>The following are literal names and should not be translated: XAJavaInterop1
 {0} - The name of the current code generation target</comment>
   </data>
@@ -810,7 +810,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 "Wear" is a short version of the full product name "Wear OS" and so should not be translated.</comment>
   </data>
   <data name="XA4312" xml:space="preserve">
-    <value>Le référencement du projet d’application Android Wear «{0}» à partir d’un projet d’application Android est déconseillé et ne sera plus pris en charge dans une future version de .NET Android. Supprimez la référence du projet d’application Android Wear du projet d’application Android et distribuez l’application Wear en tant qu’application autonome à la place.</value>
+    <value>Le référencement du projet d’application Android Wear «{0}» à partir d’un projet d’application Android est déconseillé et ne sera plus pris en charge dans une future version de .NET pour Android. Supprimez la référence du projet d’application Android Wear du projet d’application Android et distribuez l’application Wear en tant qu’application autonome à la place.</value>
     <comment>The following are literal names and should not be translated: Android Wear, Android, Wear.
 {0} - The referenced Android Wear project.</comment>
   </data>
@@ -890,7 +890,7 @@ Pour plus d’informations, consultez https://aka.ms/xa5207.</value>
 {2} - The instructions to install the missing component</comment>
   </data>
   <data name="XA5207_SDK_Manager_Windows" xml:space="preserve">
-    <value>Installez-le dans le Gestionnaire SDK Android (Outils &gt; Android &gt; Gestionnaire SDK Android...), ou modifiez le projet Android .NET pour cibler une version d’API installée.</value>
+    <value>Installez-le dans le Gestionnaire SDK Android (Outils &gt; Android &gt; Gestionnaire SDK Android...), ou modifiez le projet .NET pour Android pour cibler une version d’API installée.</value>
     <comment>This string is the instrucitons to install the component</comment>
   </data>
   <data name="XA5207_SDK_Manager_CLI" xml:space="preserve">
@@ -1010,7 +1010,7 @@ Pour utiliser un chemin JDK personnalisé pour une build de ligne de commande, d
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
-    <value>Les bibliothèques Android Support ne sont pas prises en charge dans .NET 9 et les versions ultérieures, veuillez migrer vers AndroidX. Pour plus d’informations, consultez https://aka.ms/xamarin/androidx.</value>
+    <value>Les bibliothèques Android Support ne sont pas prises en charge dans .NET 9 et les versions ultérieures. Veuillez migrer vers AndroidX. Pour en savoir plus, consultez https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>
   </data>
   <data name="XA4241" xml:space="preserve">

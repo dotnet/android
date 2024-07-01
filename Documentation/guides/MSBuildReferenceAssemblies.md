@@ -15,7 +15,7 @@ The developer makes a change to something within `Referenced.csproj`.
 
 Question: Does `Referencer.csproj` need to be rebuilt?
 
-In the "original" MSBuild world -- the world that Xamarin.Android
+In the "original" MSBuild world -- the world that .NET for Android
 still lives in -- the answer is *yes*, `Referencer.csproj` *must
 **always*** be rebuilt, because the change to `Referenced.csproj`
 *may* contain an API breaking change which would prevent

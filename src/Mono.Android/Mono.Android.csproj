@@ -18,7 +18,7 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
     <JavaCallableWrapperAfterTargets>CoreBuild</JavaCallableWrapperAfterTargets>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <!-- @(Compile) ordering matters! See https://github.com/xamarin/java.interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
+    <!-- @(Compile) ordering matters! See https://github.com/dotnet/java-interop/commit/d7dfa0bb7b03261d5eceb51ac22cd33aa15fa865 -->
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <Nullable>enable</Nullable>
@@ -79,6 +79,11 @@
     <Compile Include="..\..\external\Java.Interop\src\Java.Interop.Tools.JavaCallableWrappers\Java.Interop.Tools.JavaCallableWrappers\Crc64.Table.cs">
       <Link>Crc64.Table.cs</Link>
     </Compile>
+    <Compile Include="Android.App\IntentFilterAttribute.Partial.cs" />
+    <Compile Include="Android.App\MetaDataAttribute.Partial.cs" />
+    <Compile Include="Android.App\UsesFeatureAttribute.Partial.cs" />
+    <Compile Include="Android.App\UsesLibraryAttribute.Partial.cs" />
+    <Compile Include="Android.App\UsesPermissionAttribute.Partial.cs" />
     <Compile Include="Android.Content.PM\PackageManager.cs" />
     <Compile Include="Android.Graphics\PathIterator.cs" />
     <Compile Include="Android.Hardware\HardwareBuffer.cs" />
@@ -97,6 +102,8 @@
     <Compile Include="Java.Time\ZonedDateTime.cs" />
     <Compile Include="Java.Time\LocalDateTime.cs" />
     <Compile Include="Java.Time\LocalDate.cs" />
+    <Compile Include="Java.Util\ISortedMap.cs" />
+    <Compile Include="Java.Util\IList.cs" />
   </ItemGroup>
 
   <Import Project="..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems" Label="Shared" Condition="Exists('..\Xamarin.Android.NamingCustomAttributes\Xamarin.Android.NamingCustomAttributes.projitems')" />

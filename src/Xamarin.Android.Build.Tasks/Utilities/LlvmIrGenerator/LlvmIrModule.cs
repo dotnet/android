@@ -53,7 +53,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			flags.AddReferenceField (metadataManager.AddNumbered (LlvmIrModuleMergeBehavior.Max, "PIC Level", 2));
 
 			LlvmIrMetadataItem ident = metadataManager.Add (LlvmIrKnownMetadata.LlvmIdent);
-			LlvmIrMetadataItem identValue = metadataManager.AddNumbered ($"Xamarin.Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
+			LlvmIrMetadataItem identValue = metadataManager.AddNumbered ($".NET for Android {XABuildConfig.XamarinAndroidBranch} @ {XABuildConfig.XamarinAndroidCommitHash}");
 			ident.AddReferenceField (identValue.Name);
 
 			tbaaAnyPointer = metadataManager.AddNumbered ();

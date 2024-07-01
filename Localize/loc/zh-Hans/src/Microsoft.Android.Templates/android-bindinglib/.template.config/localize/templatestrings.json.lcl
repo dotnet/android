@@ -20,10 +20,13 @@
       </Item>
       <Item ItemId=";description" ItemType="0" PsrId="306" Leaf="true">
         <Str Cat="Text">
-          <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          <Val><![CDATA[A project for creating a .NET for Android class library that binds to a native Java library]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[用于创建绑定到本机 Java 库的 .NET Android 类库的项目]]></Val>
+            <Val><![CDATA[用于创建绑定到本机 Java 库的 .NET for Android 类库的项目]]></Val>
           </Tgt>
+          <Prev Cat="Text">
+            <Val><![CDATA[A project for creating a .NET Android class library that binds to a native Java library]]></Val>
+          </Prev>
         </Str>
         <Disp Icon="Str" />
       </Item>

@@ -37,7 +37,7 @@ items.
 Changes for One .NET should have neither label for now because they are not yet
 user-facing.
 
-PRs that bump Java.Interop, xamarin-android-tools, or monodroid generally don't
+PRs that bump Java.Interop, android-tools, or monodroid generally don't
 need to be labeled, but Mono bumps that include changes that could affect
 Android users should be labeled.
 
@@ -88,7 +88,7 @@ any custom release notes.
   - `### Android API bindings`
   - `### Bindings projects`
   - `### Design-time build process`
-  - `### Xamarin.Android SDK installation`
+  - `### .NET for Android SDK installation`
   - `### IDE compatibility`
 
 - Write a list item to go under the heading.  Start the item with one of the
@@ -123,7 +123,7 @@ Examples:
 ```markdown
 ### Build and deployment performance
 
-- [Java.Interop GitHub PR 596](https://github.com/xamarin/java.interop/pull/596):
+- [Java.Interop GitHub PR 596](https://github.com/dotnet/java-interop/pull/596):
   Use `File.Exists()` instead of `DirectoryGetFile()` in a few places.  This
   reduced the time for the `LinkAssembliesNoShrink` task from about 710
   milliseconds to about 430 milliseconds for a small test Xamarin.Forms app on
@@ -191,19 +191,19 @@ Example showing multiple release notes sections for a Java.Interop bump:
 ```markdown
 ### Build and deployment performance
 
-- [Java.Interop GitHub PR 440](https://github.com/xamarin/java.interop/pull/440),
-  [Java.Interop GitHub PR 441](https://github.com/xamarin/java.interop/pull/441),
-  [Java.Interop GitHub PR 442](https://github.com/xamarin/java.interop/pull/442),
-  [Java.Interop GitHub PR 448](https://github.com/xamarin/java.interop/pull/448),
-  [Java.Interop GitHub PR 449](https://github.com/xamarin/java.interop/pull/449),
-  [Java.Interop GitHub PR 452](https://github.com/xamarin/java.interop/pull/452):
+- [Java.Interop GitHub PR 440](https://github.com/dotnet/java-interop/pull/440),
+  [Java.Interop GitHub PR 441](https://github.com/dotnet/java-interop/pull/441),
+  [Java.Interop GitHub PR 442](https://github.com/dotnet/java-interop/pull/442),
+  [Java.Interop GitHub PR 448](https://github.com/dotnet/java-interop/pull/448),
+  [Java.Interop GitHub PR 449](https://github.com/dotnet/java-interop/pull/449),
+  [Java.Interop GitHub PR 452](https://github.com/dotnet/java-interop/pull/452):
   Optimize several of the build steps for bindings projects.  For a large
   binding like _Mono.Android.dll_ itself, this reduced the total build time in a
   test environment by about 50 seconds.
 
 #### Bindings projects
 
-- [Java.Interop GitHub PR 458](https://github.com/xamarin/java.interop/pull/458):
+- [Java.Interop GitHub PR 458](https://github.com/dotnet/java-interop/pull/458):
   Bindings projects did not yet automatically generate event handlers for Java
   listener interfaces where the _add_ or _set_ method of the interface took two
   arguments instead of just one.
@@ -381,8 +381,7 @@ added to `Documentation/release-notes/images/`.
 
    (For versions before 11.2, the milestone had a slightly different format.)
 
-   Complete this step for xamarin-android, Java.Interop, and
-   xamarin-android-tools.
+   Complete this step for xamarin-android, Java.Interop, and android-tools.
 
    See also the [_How to make bulk changes on pull requests and issues_][bulk-change]
    section for tips on how to complete this step.

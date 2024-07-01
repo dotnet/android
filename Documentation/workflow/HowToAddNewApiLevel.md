@@ -1,8 +1,8 @@
 # HowTo: Add a new Android API Level
 
-## Developer Preview
+## Unstable Previews
 
-The first developer preview generally ships in late February or early March.  At this early
+The first unstable preview generally ships in late February or early March.  At this early
 stage for the APIs, we simply add literal bindings for them.  We do not spend resources on
 the more manual parts like enumification that will likely change as the APIs mature.
 
@@ -13,23 +13,32 @@ the more manual parts like enumification that will likely change as the APIs mat
 - Add new level to `/build-tools/xaprepare/xaprepare/ConfigAndData/Dependencies/AndroidToolchain.cs`:
   - `new AndroidPlatformComponent ("platform-S_r01", apiLevel: "S", pkgRevision: "1"),`
   
-At this point, you can run `Xamarin.Android.sln /t:Prepare` using your usual mechanism, and
+At this point, you can run `Xamarin.Android.sln -t:Prepare` using your usual mechanism, and
 the new platform will be downloaded to your local Android SDK.
+
+### Build Xamarin.Android
+
+Build `Xamarin.Android.sln` using your usual mechanism. This will not use the new platform yet,
+but will build the tools like `param-name-importer` and `class-parse` that will be needed
+in the next steps.
 
 ### Generate `params.txt` File
 
-- In `/external/Java.Interop/tools/param-name-importer`:
-  - Add new level to `generate.sh` and run
-  - *or* run manually: `param-name-importer.exe -source-stub-zip C:/Users/USERNAME/android-toolchain/sdk/platforms/android-S/android-stubs-src.jar -output-text api-S.params.txt -output-xml api-S.params.xml -verbose -framework-only`
-- Copy the produced `api-X.params.txt` file to `/src/Mono.Android/Profiles/`
+Build the `params.txt` file for the desired level:
+
+- Unstable: `dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=VanillaIceCream`
+- Stable: `dotnet-local.cmd build build-tools/create-android-api -t:GenerateParamsFile -p:ParamApiLevel=35`
+
+This will create a `api-XX.params.txt` file in `/src/Mono.Android/Profiles/` that needs to be committed.
 
 ### Generate `api.xml` File
 
 - Run `xaprepare android-sdk-platforms=all` to download all Android SDK platforms
 - Add level to `/build-tools/api-merge/merge-configuration.xml` to create `api-S.xml.class-parse`
 - Run the following command to create a merged `api.xml`:
-  - `dotnet-local.cmd build build-tools\create-android-api -t:GenerateApiDescription`
-- Copy the `bin\BuildDebug\api\api-xx.xml` file to `src\Mono.Android\Profiles`
+  - `dotnet-local.cmd build build-tools/create-android-api -t:GenerateApiDescription`
+  
+This will create a `api-XX.xml` file in `/src/Mono.Android/Profiles/` that needs to be committed.
 
 ### Other Infrastructure Changes
 
@@ -49,6 +58,11 @@ the new platform will be downloaded to your local Android SDK.
 - Add required metadata fixes in `/src/Mono.Android/metadata` until `Mono.Android.csproj` builds
   - Check that new package/namespaces are properly cased
   
+### New AndroidManifest.xml Elements
+
+- See `build-tools/manifest-attribute-codegen/README.md` for instructions on surfacing any new
+  elements or attributes added to `AndroidManifest.xml`.
+
 ### ApiCompat
 
 There may be ApiCompat issues that need to be examined.  Either fix the assembly with metadata or allow

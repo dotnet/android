@@ -455,7 +455,9 @@ namespace Xamarin.Android.Build.Tests
 
 		// https://xamarin.github.io/bugzilla-archives/31/31705/bug.html
 		[Test]
-		public void LocalizedAssemblies_ShouldBeFastDeployed ()
+		[TestCase ("apk")]
+		[TestCase ("aab")]
+		public void LocalizedAssemblies_ShouldBeFastDeployed (string packageFormat)
 		{
 			AssertCommercialBuild ();
 
@@ -468,7 +470,8 @@ namespace Xamarin.Android.Build.Tests
 			var app = new XamarinAndroidApplicationProject {
 				EmbedAssembliesIntoApk = false,
 			};
-			InlineData.AddCultureResourcesToProject (lib, "Foo", "CancelButton");
+			InlineData.AddCultureResourcesToProject (app, "Foo", "CancelButton");
+			app.SetProperty ("AndroidPackageFormat", packageFormat);
 			app.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName)))
@@ -494,12 +497,14 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void IncrementalFastDeployment ()
+		[TestCase ("apk")]
+		[TestCase ("aab")]
+		public void IncrementalFastDeployment (string packageFormat)
 		{
 			AssertCommercialBuild ();
 
 			var class1src = new BuildItem.Source ("Class1.cs") {
-				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 0; } }"
+				TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 500; } }"
 			};
 			var lib1 = new XamarinAndroidLibraryProject () {
 				ProjectName = "Library1",
@@ -509,7 +514,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 
 			var class2src = new BuildItem.Source ("Class2.cs") {
-				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 0; } }"
+				TextContent = () => "namespace Library2 { public class Class2 { public static int foo = 40; } }"
 			};
 			var lib2 = new DotNetStandard {
 				ProjectName = "Library2",
@@ -527,17 +532,23 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem ("ProjectReference", "..\\Library2\\Library2.csproj"),
 				},
 			};
+			app.SetProperty ("AndroidPackageFormat", packageFormat);
 
 			// Set up library projects
 			var rootPath = Path.Combine (Root, "temp", TestName);
-			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
+			using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
+				lb1.BuildLogFile = "build.log";
 				Assert.IsTrue (lb1.Build (lib1), "First library build should have succeeded.");
-			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName)))
+			}
+			using (var lb2 = CreateDllBuilder (Path.Combine (rootPath, lib2.ProjectName))) {
+				lb2.BuildLogFile = "build.log";
 				Assert.IsTrue (lb2.Build (lib2), "Second library build should have succeeded.");
+			}
 
 			long lib1FirstBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-
+			
 			using (var builder = CreateApkBuilder (Path.Combine (rootPath, app.ProjectName))) {
+				builder.Verbosity = LoggerVerbosity.Detailed;
 				builder.ThrowOnBuildFailure = false;
 				builder.BuildLogFile = "install.log";
 				Assert.IsTrue (builder.Install (app), "First install should have succeeded.");
@@ -559,13 +570,15 @@ namespace Xamarin.Android.Build.Tests
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 
-				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 100; } }";
+				class1src.TextContent = () => "namespace Library1 { public class Class1 { public static int foo = 1; } }";
 				class1src.Timestamp = DateTime.UtcNow.AddSeconds(1);
-				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName)))
+				using (var lb1 = CreateDllBuilder (Path.Combine (rootPath, lib1.ProjectName))) {
+					lb1.BuildLogFile = "build2.log";
 					Assert.IsTrue (lb1.Build (lib1), "Second library build should have succeeded.");
+				}
 
 				long lib1SecondBuildSize = new FileInfo (Path.Combine (rootPath, lib1.ProjectName, lib1.OutputPath, "Library1.dll")).Length;
-				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library2.dll was not the same size.");
+				Assert.AreEqual (lib1FirstBuildSize, lib1SecondBuildSize, "Library1.dll was not the same size.");
 
 				builder.BuildLogFile = "install3.log";
 				Assert.IsTrue (builder.Install (app, doNotCleanupOnUpdate: true, saveProject: false), "Third install should have succeeded.");
@@ -653,6 +666,7 @@ public class TestJavaClass {
 				},
 			};
 			using (var b = CreateApkBuilder ()) {
+				b.Verbosity = LoggerVerbosity.Detailed;
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
 				b.AssertHasNoWarnings ();

@@ -9,7 +9,7 @@
 
 # Build Configuration
 
-The Xamarin.Android build is heavily dependent on MSBuild, with the *intention*
+The .NET for Android build is heavily dependent on MSBuild, with the *intention*
 that it should (eventually?) be possible to build the project simply by
 checking out the repo, loading `Xamarin.Android.sln` into an IDE, and Building
 the solution. (This isn't currently possible, and may never be, but it's

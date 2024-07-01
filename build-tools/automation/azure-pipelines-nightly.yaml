@@ -1,4 +1,4 @@
-# Xamarin.Android Nightly Pipeline
+# .NET for Android Nightly Pipeline
 
 name: $(Build.SourceBranchName)-$(Build.SourceVersion)-$(Rev:r)
 
@@ -55,6 +55,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+      path: s/xamarin-android
 
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:

@@ -11,6 +11,7 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
 ***********************************************************************************************
 -->
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.AndroidAdb" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <UsingTask TaskName="Xamarin.Android.Tasks.GetAndroidActivityName" AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
   <Target Name="StartAndroidActivity"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName">
@@ -19,11 +20,23 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
         ManifestFile="$(IntermediateOutputPath)android\AndroidManifest.xml">
       <Output TaskParameter="ActivityName" PropertyName="AndroidLaunchActivity" />
     </GetAndroidActivityName>
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell"
+      Arguments="am start -S -n &quot;$(_AndroidPackage)/$(AndroidLaunchActivity)&quot;"
+    />
   </Target>
   <Target Name="StopAndroidPackage"
       DependsOnTargets="_ResolveMonoAndroidSdks;_GetAndroidPackageName">
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell am force-stop &quot;$(_AndroidPackage)&quot;" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell"
+      Arguments="am force-stop &quot;$(_AndroidPackage)&quot;"
+    />
   </Target>
   <PropertyGroup>
     <AndroidAotCustomProfilePath Condition=" '$(AndroidAotCustomProfilePath)' == '' ">custom.aprof</AndroidAotCustomProfilePath>
@@ -42,14 +55,26 @@ Copyright (C) 2019 Microsoft Corporation. All rights reserved.
     </PropertyGroup>
   </Target>
   <Target Name="_SetAotProfilingPropsOnDevice">
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) shell setprop debug.mono.profile aot:port=$(AndroidAotProfilerPort)" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="shell"
+      Arguments="setprop debug.mono.profile aot:port=$(AndroidAotProfilerPort)"
+    />
   </Target>
   <Target Name="BuildAndStartAotProfiling"
       DependsOnTargets="$(_BeginAotProfilingDependsOnTargets)">
   </Target>
   <Target Name="FinishAotProfiling"
       DependsOnTargets="_ResolveSdks;_ResolveMonoAndroidSdks">
-    <Exec Command="&quot;$(AdbToolPath)adb&quot; $(AdbTarget) forward tcp:$(AndroidAotProfilerPort) tcp:$(AndroidAotProfilerPort)" />
+    <AndroidAdb
+      ToolExe="$(AdbToolExe)"
+      ToolPath="$(AdbToolPath)"
+      AdbTarget="$(AdbTarget)"
+      Command="forward"
+      Arguments="tcp:$(AndroidAotProfilerPort) tcp:$(AndroidAotProfilerPort)"
+    />
     <Exec Command="&quot;$(AProfUtilToolPath)aprofutil&quot; $(AProfUtilExtraOptions) -s -v -p $(AndroidAotProfilerPort) -o &quot;$(AndroidAotCustomProfilePath)&quot;" />
   </Target>
 </Project>

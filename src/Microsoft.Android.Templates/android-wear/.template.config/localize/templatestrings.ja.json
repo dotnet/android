@@ -1,7 +1,7 @@
 ﻿{
   "author": "Microsoft",
   "name": "Android Wear アプリケーション",
-  "description": ".NET Android Wear アプリケーションを作成するためのプロジェクト",
+  "description": "A project for creating a Wear OS app using .NET for Android",
   "symbols/packageName/description": "AndroidManifest.xml のパッケージ名をオーバーライドします",
   "symbols/supportedOSVersion/description": "プロジェクト ファイルの $(SupportedOSPlatformVersion) をオーバーライドします"
 }

@@ -19,27 +19,18 @@ namespace Xamarin.Android.Build.Tests
 		static object [] MonoAndroidExportTestCases = new object [] {
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies",
 				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies",
 				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "Assemblies:Dexes",
-				/* isRelease */          false,
-			},
-			new object[] {
-				/* embedAssemblies */    false,
-				/* fastDevType */        "Assemblies:Dexes",
 				/* isRelease */          false,
 			},
 			new object[] {
 				/* embedAssemblies */    true,
-				/* fastDevType */        "",
 				/* isRelease */          true,
 			},
 		};
@@ -47,7 +38,7 @@ namespace Xamarin.Android.Build.Tests
 
 		[Test]
 		[TestCaseSource (nameof (MonoAndroidExportTestCases))]
-		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, string fastDevType, bool isRelease)
+		public void MonoAndroidExportReferencedAppStarts (bool embedAssemblies, bool isRelease)
 		{
 			AssertCommercialBuild ();
 			var proj = new XamarinAndroidApplicationProject () {
@@ -56,8 +47,6 @@ namespace Xamarin.Android.Build.Tests
 					new BuildItem.Reference ("Mono.Android.Export"),
 				},
 			};
-			if (!string.IsNullOrEmpty (fastDevType))
-				proj.AndroidFastDeploymentType = fastDevType;
 			proj.Sources.Add (new BuildItem.Source ("ContainsExportedMethods.cs") {
 				TextContent = () => @"using System;
 using Java.Interop;

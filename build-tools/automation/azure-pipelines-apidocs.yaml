@@ -1,4 +1,4 @@
-# Pipeline for updating and uploading android-api-docs/docs/Mono.Android/en/*
+# Pipeline for updating and uploading android-api-docs/docs/xml/*
 # https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15262
 
 # This pipeline can be manually ran against a given branch to generate a new set of Mono.Android docs.

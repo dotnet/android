@@ -330,7 +330,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
@@ -496,10 +497,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidLinkTool)' != '' "
   />
   <AndroidWarning Code="XA0119"
-      ResourceName="XA0119_AAB"
-      Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AndroidPackageFormat)' == 'aab' "
-  />
-  <AndroidWarning Code="XA0119"
       ResourceName="XA0119_Interpreter"
       Condition=" '$(AndroidUseInterpreter)' == 'True' And '$(AotAssemblies)' == 'True' "
   />
@@ -534,6 +531,11 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidWarning Code="XA1035"
       ResourceName="XA1035"
       Condition=" '$(BundleAssemblies)' == 'true' "
+  />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="AndroidFastDeploymentType;9"
+      Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
 </Target>
 
@@ -1721,6 +1723,8 @@ because xbuild doesn't support framework reference assemblies.
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+    CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    ZipAlignmentPages="$(_AndroidZipAlignment)"
   >
     <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
@@ -2007,6 +2011,7 @@ because xbuild doesn't support framework reference assemblies.
       ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      ZipAlignmentPages="$(_AndroidZipAlignment)"
   />
   <ItemGroup>
     <FileWrites Include="@(_ApplicationSharedLibrary)" />
@@ -2351,6 +2356,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="%(ApkAbiFilesSigned.FullPath)" Condition=" '$(AndroidUseApkSigner)' == 'true' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' == 'true' "
 		Source="%(ApkAbiFilesIntermediate.Identity)"
+		Alignment="$(_AndroidZipAlignment)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
@@ -2386,6 +2392,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Message Text="Unaligned android package '%(ApkAbiFilesUnaligned.FullPath)'"  Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "/>
 	<AndroidZipAlign Condition=" '$(AndroidUseApkSigner)' != 'True' And '$(AndroidPackageFormat)' != 'aab' "
 		Source="%(ApkAbiFilesUnaligned.Identity)"
+		Alignment="$(_AndroidZipAlignment)"
 		DestinationDirectory="$(OutDir)"
 		ToolPath="$(ZipAlignToolPath)"
 		ToolExe="$(ZipalignToolExe)"
@@ -2583,9 +2590,6 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_DeployApk"
     Condition=" '$(AndroidPackageFormat)' != 'aab' ">
-  <PropertyGroup>
-    <_DeployCommand>&quot;$(AdbToolPath)adb&quot; $(AdbTarget) install -r &quot;$(ApkFileSigned)&quot;</_DeployCommand>
-  </PropertyGroup>
   <AndroidAdb
       ToolExe="$(AdbToolExe)"
       ToolPath="$(AdbToolPath)"
@@ -2620,9 +2624,6 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_DeployAppBundle"
     Condition=" '$(AndroidPackageFormat)' == 'aab' "
     DependsOnTargets="_BuildApkSet">
-  <PropertyGroup>
-    <_UninstallCommand>&quot;$(AdbToolPath)adb&quot; $(AdbTarget) uninstall -k &quot;$(_AndroidPackage)&quot;</_UninstallCommand>
-  </PropertyGroup>
   <AndroidAdb
       Condition=" '$(EmbedAssembliesIntoApk)' == 'true' "
       ContinueOnError="True"

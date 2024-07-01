@@ -7,7 +7,7 @@ namespace Xamarin.Android.Prepare
 	// This class exists so that nobody has to jump around the source in order to find an URL to modify, a setting to
 	// tweak etc. Code that uses those configurables is all over the place, but the source of the data is here and only
 	// here it has to be changed if need be. The entries should be something that might have to be changed by somebody
-	// not familiar with the entirety of Xamarin.Android or a developer not usually involved in build system
+	// not familiar with the entirety of .NET for Android or a developer not usually involved in build system
 	// maintenance/development.
 	//
 	// When adding entries here, try to make their names clear and unambiguous. Don't hesitate using comments (doc
@@ -15,29 +15,19 @@ namespace Xamarin.Android.Prepare
 	//
 	partial class Configurables
 	{
-		const string BinutilsVersion                = "L_17.0.6-7.2.1";
+		const string BinutilsVersion                = "L_18.1.6-8.0.0";
 
-		const string MicrosoftOpenJDK17Version      = "17.0.8";
-		const string MicrosoftOpenJDK17Release      = "17.0.8.7";
-		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.8+7";
-
-		const string AdoptOpenJDKRelease = "8.0"; // build_number.0
-		static readonly string AdoptOpenJDKUrlVersion = $"8u{AdoptOpenJDKUpdate}{AdoptOpenJDKBuild}";
-		static readonly string AdoptOpenJDKTag = $"jdk8u{AdoptOpenJDKUpdate}-{AdoptOpenJDKBuild}";
-		static readonly string AdoptOpenJDKVersion = $"1.8.0.{AdoptOpenJDKUpdate}";
+		const string MicrosoftOpenJDK17Version      = "17.0.11";
+		const string MicrosoftOpenJDK17Release      = "17.0.11.9";
+		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.11+9";
 
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
 		{
-			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_linux_hotspot_8u345b01.tar.gz
-			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u332-b09/OpenJDK8U-jdk_x64_mac_hotspot_8u332b09.tar.gz
-			// https://github.com/adoptium/temurin8-binaries/releases/download/jdk8u345-b01/OpenJDK8U-jdk_x64_windows_hotspot_8u345b01.zip
-			public static readonly Uri AdoptOpenJDK8 = new Uri ($"https://github.com/adoptium/temurin8-binaries/releases/download/{AdoptOpenJDKTag}/OpenJDK8U-jdk_{AdoptOpenJDKOperatingSystem}_hotspot_{AdoptOpenJDKUrlVersion}.{AdoptOpenJDKArchiveExtension}");
-
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-linux-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-macOS-x64.tar.gz
-			// https://aka.ms/download-jdk/microsoft-jdk-17.0.8-windows-x64.zip
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-linux-x64.tar.gz
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macOS-x64.tar.gz or https://aka.ms/download-jdk/microsoft-jdk-17.0.11-macos-aarch64.pkg
+			// https://aka.ms/download-jdk/microsoft-jdk-17.0.11-windows-x64.zip
 			public static readonly Uri MicrosoftOpenJDK17 = new Uri ($"https://aka.ms/download-jdk/microsoft-jdk-{MicrosoftOpenJDK17Version}-{MicrosoftOpenJDKOperatingSystem}.{MicrosoftOpenJDKFileExtension}");
 
 			/// <summary>
@@ -45,9 +35,7 @@ namespace Xamarin.Android.Prepare
 			/// </summary>
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
-			public static Uri MonoArchive_BaseUri = new Uri ("https://xamjenkinsartifact.azureedge.net/mono-sdks/");
-
-			public static Uri BinutilsArchive = new Uri ($"https://github.com/xamarin/xamarin-android-binutils/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
+			public static Uri BinutilsArchive = new Uri ($"https://github.com/dotnet/android-native-tools/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
 		}
 
 		public static partial class Defaults
@@ -60,10 +48,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version MicrosoftOpenJDK17Version       = new Version (Configurables.MicrosoftOpenJDK17Version);
 			public static readonly Version MicrosoftOpenJDK17Release       = new Version (Configurables.MicrosoftOpenJDK17Release);
 			public static readonly string  MicrosoftOpenJDK17RootDirName   = Configurables.MicrosoftOpenJDK17RootDirName;
-
-			public static readonly Version AdoptOpenJDK8Version     = new Version (Configurables.AdoptOpenJDKVersion);
-			public static readonly Version AdoptOpenJDK8Release     = new Version (Configurables.AdoptOpenJDKRelease);
-			public static readonly string  AdoptOpenJDK8RootDirName = Configurables.AdoptOpenJDKTag;
 
 			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
@@ -206,6 +190,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly string ExternalGitDepsFilePath          = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, ".external");
 			public static readonly string ExternalGitDepsDestDir           = ExternalDir;
 			public static readonly string ExternalXamarinAndroidToolsSln   = Path.Combine (ExternalDir, "xamarin-android-tools", "Xamarin.Android.Tools.sln");
+			public static readonly string NativeSourcesDir                 = Path.Combine (BuildPaths.XamarinAndroidSourceRoot, "src", "native");
 
 			// Dynamic locations used throughout the code
 			public static string ExternalJavaInteropDir              => GetCachedPath (ref externalJavaInteropDir, ()              => ctx.Properties.GetRequiredValue (KnownProperties.JavaInteropFullPath));
@@ -217,11 +202,8 @@ namespace Xamarin.Android.Prepare
 			public static string MonoAndroidFrameworksRootDir        => GetCachedPath (ref monoAndroidFrameworksRootDir, ()        => Path.Combine (XAInstallPrefix, MonoAndroidFrameworksSubDir));
 			public static string InstallMSBuildDir                   => GetCachedPath (ref installMSBuildDir, ()                   => ctx.Properties.GetRequiredValue (KnownProperties.MicrosoftAndroidSdkOutDir));
 
-			// AdoptOpenJDK
-			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk"));
-			public static string OpenJDK8InstallDir                  => GetCachedPath (ref openJDK8InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
-			public static string OpenJDK8CacheDir                    => GetCachedPath (ref openJDK8CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
-
+			// OpenJDK
+			public static string OldOpenJDKInstallDir                => GetCachedPath (ref oldOpenJDKInstallDir, ()                => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-1.8"));
 			public static string OpenJDK17InstallDir                 => GetCachedPath (ref openJDK17InstallDir, ()                   => Path.Combine (ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainDirectory), "jdk-17"));
 			public static string OpenJDK17CacheDir                   => GetCachedPath (ref openJDK17CacheDir, ()                     => ctx.Properties.GetRequiredValue (KnownProperties.AndroidToolchainCacheDirectory));
 
@@ -303,8 +285,8 @@ namespace Xamarin.Android.Prepare
 			static string? installMSBuildDir;
 			static string? monoAndroidFrameworksRootDir;
 			static string? externalJavaInteropDir;
-			static string? openJDK8InstallDir,  openJDK17InstallDir;
-			static string? openJDK8CacheDir,    openJDK17CacheDir;
+			static string? openJDK17InstallDir;
+			static string? openJDK17CacheDir;
 			static string? oldOpenJDKInstallDir;
 			static string? configurationPropsGeneratedPath;
 			static string? windowsBinutilsInstallDir;

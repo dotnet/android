@@ -138,14 +138,9 @@ namespace Xamarin.Android.Prepare
 		public bool AutoProvisionUsesSudo              { get; set; }
 
 		/// <summary>
-		///   Do not terminate session when Mono is newer than specified in the dependencies
+		///   Skip automatic provision of the Mono MDK if missing
 		/// </summary>
-		public bool IgnoreMaxMonoVersion               { get; set; } = true;
-
-		/// <summary>
-		///   Do not terminate session when Mono is older than specified in the dependencies
-		/// </summary>
-		public bool IgnoreMinMonoVersion               { get; set; } = false;
+		public bool AutoProvisionSkipMono              { get; set; } = false;
 
 		/// <summary>
 		///   Current session execution mode. See <see cref="t:ExecutionMode" />
@@ -183,7 +178,7 @@ namespace Xamarin.Android.Prepare
 		public Characters Characters                      => characters ?? throw new InvalidOperationException ("Context not initialized properly (was .Init called?)");
 
 		/// <summary>
-		///   Xamarin.Android version
+		///   .NET for Android version
 		/// </summary>
 		public string ProductVersion                      => productVersion;
 
@@ -259,14 +254,14 @@ namespace Xamarin.Android.Prepare
 		}
 
 		/// <summary>
-		///   Prefix where Xamarin.Android is installed
+		///   Prefix where .NET for Android is installed
 		/// </summary>
 		public string XAInstallPrefix {
 			get {
 				if (String.IsNullOrEmpty (xaInstallPrefix)) {
 					xaInstallPrefix = Properties.GetRequiredValue (KnownProperties.XAInstallPrefix);
 					if (String.IsNullOrEmpty (xaInstallPrefix))
-						throw new InvalidOperationException ("Xamarin.Android install prefix property has an empty value or is absent");
+						throw new InvalidOperationException (".NET for Android install prefix property has an empty value or is absent");
 				}
 				return xaInstallPrefix!;
 			}

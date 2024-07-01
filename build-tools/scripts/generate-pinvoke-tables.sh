@@ -2,7 +2,8 @@
 MY_DIR="$(dirname $0)"
 HOST="$(uname | tr A-Z a-z)"
 
-MONODROID_SOURCE_DIR="${MY_DIR}/../../src/monodroid/jni"
+NATIVE_DIR="${MY_DIR}/../../src/native"
+MONODROID_SOURCE_DIR="${NATIVE_DIR}/monodroid"
 GENERATOR_SOURCE="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables.cc"
 GENERATOR_BINARY="${MONODROID_SOURCE_DIR}/generate-pinvoke-tables"
 TARGET_FILE="${MONODROID_SOURCE_DIR}/pinvoke-tables.include"
@@ -23,7 +24,7 @@ Usage: ${MY_NAME} [OPTIONS]
 
 where OPTIONS are one or more of:
 
-   -c|--ci                  indicates that the script runs on one of the Xamarin.Android CI build
+   -c|--ci                  indicates that the script runs on one of the .NET for Android CI build
                             servers. This affects selection of the compiler
    -t|--test-only           indicate that the script should not replace the target file but merely
                             test whether the file is different to the newly generated one
@@ -63,7 +64,7 @@ case ${HOST} in
 	*) die Unsupported OS ;;
 esac
 
-${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 "${GENERATOR_SOURCE}" -o "${GENERATOR_BINARY}"
+${COMPILER} -O2 -std=c++20 -I${EXTERNAL_DIR} -I${EXTERNAL_DIR}/constexpr-xxh3 -I${NATIVE_DIR}/shared "${GENERATOR_SOURCE}" -o "${GENERATOR_BINARY}"
 "${GENERATOR_BINARY}" "${GENERATED_FILE}"
 
 FILES_DIFFER="no"

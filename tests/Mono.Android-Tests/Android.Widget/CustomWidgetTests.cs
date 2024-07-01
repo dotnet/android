@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using Android.App;
+﻿using Android.App;
 using Android.Content;
 using Android.Util;
 using Android.Views;
@@ -12,9 +11,14 @@ namespace Xamarin.Android.RuntimeTests
 	[TestFixture]
 	public class CustomWidgetTests
 	{
+		public CustomWidgetTests()
+		{
+			// FIXME: https://github.com/xamarin/xamarin-android/issues/9008
+			new Foo ();
+		}
+
 		// https://bugzilla.xamarin.com/show_bug.cgi?id=23880
 		[Test]
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (CustomTextView))]
 		public void UpperCaseCustomWidget_ShouldNotThrowInflateException ()
 		{
 			Assert.DoesNotThrow (() => {
@@ -24,7 +28,6 @@ namespace Xamarin.Android.RuntimeTests
 		}
 
 		[Test]
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (CustomTextView))]
 		public void LowerCaseCustomWidget_ShouldNotThrowInflateException ()
 		{
 			Assert.DoesNotThrow (() => {
@@ -34,7 +37,6 @@ namespace Xamarin.Android.RuntimeTests
 		}
 
 		[Test]
-		[DynamicDependency (DynamicallyAccessedMemberTypes.All, typeof (CustomTextView))]
 		public void UpperAndLowerCaseCustomWidget_FromLibrary_ShouldNotThrowInflateException ()
 		{
 			Assert.DoesNotThrow (() => {
