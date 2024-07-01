@@ -32,7 +32,7 @@ stages:
         name: VSEng-VSMac-Xamarin-Shared
         demands:
         - macOS.Name -equals Ventura
-        - macOS.Architecture -equals arm64
+        - macOS.Architecture -equals x64
       ${{ else }}:
         name: Azure Pipelines
         vmImage: $(HostedMacImage)
