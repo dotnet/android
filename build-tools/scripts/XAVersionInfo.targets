@@ -75,7 +75,7 @@
       <Output TaskParameter="Branch"                  PropertyName="XAVersionBranch"        Condition=" '$(XAVersionBranch)' == '' " />
     </GitBranch>
     <PropertyGroup>
-      <XARepositoryName Condition=" '$(XARepositoryName)' == '' ">xamarin-android</XARepositoryName>
+      <XARepositoryName Condition=" '$(XARepositoryName)' == '' ">dotnet/android</XARepositoryName>
       <!-- See Azure Pipelines predefined variables. -->
       <_AndroidPackLabel Condition=" '$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER)' != '' ">ci.pr.gh$(SYSTEM_PULLREQUEST_PULLREQUESTNUMBER).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
