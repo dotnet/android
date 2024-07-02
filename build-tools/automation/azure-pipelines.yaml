@@ -77,12 +77,12 @@ variables:
   - name: MacBuildPoolName
     value: Azure Pipelines
   - name: MacBuildPoolImage
-    value: internal-macos12
+    value: macOS-13
 - ${{ if or(and(ne(variables['Build.DefinitionName'],'Xamarin.Android'), ne(variables['Build.DefinitionName'], 'Xamarin.Android-Private')), eq(variables['Build.Reason'], 'PullRequest')) }}:
   - name: MicroBuildSignType
     value: Test
   - name: MacBuildPoolName
-    value: VSEng-Xamarin-RedmondMac-Android-Untrusted
+    value: VSEng-VSMac-Xamarin-Shared
   - name: MacBuildPoolImage
     value: ''
   - name: DisablePipelineConfigDetector
@@ -98,10 +98,14 @@ stages:
   - job: mac_build_create_installers
     displayName: macOS > Build
     pool:
-      name: $(MacBuildPoolName)
-      vmImage: $(MacBuildPoolImage)
-      ${{ if eq(variables['MacBuildPoolName'], 'VSEng-Xamarin-RedmondMac-Android-Untrusted') }}:
-        demands: macOS.Name -equals Monterey
+      name: Azure Pipelines
+      value: macOS-13
+      #name: $(MacBuildPoolName)
+      #vmImage: $(MacBuildPoolImage)
+      #${{ if eq(variables['MacBuildPoolName'], 'VSEng-VSMac-Xamarin-Shared') }}:
+      #  demands:
+      #  - macOS.Name -equals Ventura
+      #  - macOS.Architecture -equals x64
     timeoutInMinutes: 240
     cancelTimeoutInMinutes: 5
     workspace:
