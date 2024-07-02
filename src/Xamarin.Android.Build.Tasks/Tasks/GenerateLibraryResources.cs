@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -13,7 +12,7 @@ namespace Xamarin.Android.Tasks
 	/// <summary>
 	/// We used to invoke aapt/aapt2 per library (many times!), this task does the work to generate R.java for libraries without calling aapt/aapt2.
 	/// </summary>
-	public partial class GenerateLibraryResources : AndroidAsyncTask
+	public partial class GenerateLibraryResources : AsyncTask
 	{
 		public override string TaskPrefix => "GLR";
 

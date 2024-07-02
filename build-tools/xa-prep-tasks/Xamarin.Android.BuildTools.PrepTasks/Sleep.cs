@@ -9,7 +9,7 @@ using TPLTask = System.Threading.Tasks.Task;
 
 namespace Xamarin.Android.BuildTools.PrepTasks
 {
-	public class XASleepInternal : AndroidAsyncTask
+	public class XASleepInternal : AsyncTask
 	{
 		public override string TaskPrefix => "XASI";
 		public int Milliseconds { get; set; }
