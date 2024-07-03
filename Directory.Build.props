@@ -43,7 +43,7 @@
   <PropertyGroup>
     <LibZipSharpVersion>3.3.0</LibZipSharpVersion>
     <MicroBuildCoreVersion>1.0.0</MicroBuildCoreVersion>
-    <MonoCecilVersion>0.11.4</MonoCecilVersion>
+    <MonoCecilVersion>0.11.5</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
     <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
