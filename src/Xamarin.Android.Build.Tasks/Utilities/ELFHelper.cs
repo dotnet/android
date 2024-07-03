@@ -1,11 +1,14 @@
 using System;
 using System.Collections.Concurrent;
 using System.IO;
+using System.Text;
 
 using ELFSharp;
 using ELFSharp.ELF;
 using ELFSharp.ELF.Sections;
+using ELFSharp.ELF.Segments;
 using Microsoft.Android.Build.Tasks;
+using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using ELFSymbolType = global::ELFSharp.ELF.Sections.SymbolType;
@@ -15,6 +18,85 @@ namespace Xamarin.Android.Tasks
 {
 	static class ELFHelper
 	{
+		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
+		{
+			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {
+				return;
+			}
+
+			log.LogDebugMessage ($"Checking alignment to {alignmentInPages}k page boundary in shared library {path}");
+			try {
+				AssertValidLibraryAlignment (log, MonoAndroidHelper.ZipAlignmentToPageSize (alignmentInPages), path, ELFReader.Load (path), item);
+			} catch (Exception ex) {
+				log.LogWarning ($"Attempt to check whether '{path}' is a correctly aligned ELF file failed with exception, ignoring alignment check for the file.");
+				log.LogWarningFromException (ex, showStackTrace: true);
+			}
+		}
+
+		static void AssertValidLibraryAlignment (TaskLoggingHelper log, uint pageSize, string path, IELF elf, ITaskItem? item)
+		{
+			if (elf.Class == Class.Bit32 || elf.Class == Class.NotELF) {
+				log.LogDebugMessage ($"  Not a 64-bit ELF image.  Ignored.");
+				return;
+			}
+
+			var elf64 = elf as ELF<ulong>;
+			if (elf64 == null) {
+				throw new InvalidOperationException ($"Internal error: {elf} is not ELF<ulong>");
+			}
+
+			// We need to find all segments of Load type and make sure their alignment is as expected.
+			foreach (ISegment segment in elf64.Segments) {
+				if (segment.Type != SegmentType.Load) {
+					continue;
+				}
+
+				var segment64 = segment as Segment<ulong>;
+				if (segment64 == null) {
+					throw new InvalidOperationException ($"Internal error: {segment} is not Segment<ulong>");
+				}
+
+				// TODO: what happens if the library is aligned at, say, 64k while 16k is required? Should we erorr out?
+				//       We will need more info about that, have to wait till Google formally announce the requirement.
+				//       At this moment the script https://developer.android.com/guide/practices/page-sizes#test they
+				//       provide suggests it's a strict requirement, so we test for equality below.
+				if (segment64.Alignment == pageSize) {
+					continue;
+				}
+				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
+
+				// TODO: turn into a coded warning and, eventually, error. Need better wording.
+				//       Until dotnet runtime produces properly aligned libraries, this should be a plain message as a warning
+				//       would break all the tests that require no warnings to be produced during build.
+				log.LogMessage ($"Native {elf64.Machine} shared library '{Path.GetFileName (path)}', from NuGet package {GetNugetPackageInfo ()} isn't properly aligned.");
+				break;
+			}
+
+			string GetNugetPackageInfo ()
+			{
+				const string Unknown = "<unknown>";
+
+				if (item == null) {
+					return Unknown;
+				}
+
+				var sb = new StringBuilder ();
+				string? metaValue = item.GetMetadata ("NuGetPackageId");
+				if (String.IsNullOrEmpty (metaValue)) {
+					return Unknown;
+				}
+
+				sb.Append (metaValue);
+				metaValue = item.GetMetadata ("NuGetPackageVersion");
+				if (!String.IsNullOrEmpty (metaValue)) {
+					sb.Append (" version ");
+					sb.Append (metaValue);
+				}
+
+				return sb.ToString ();
+			}
+		}
+
 		public static bool IsEmptyAOTLibrary (TaskLoggingHelper log, string path)
 		{
 			if (String.IsNullOrEmpty (path) || !File.Exists (path)) {

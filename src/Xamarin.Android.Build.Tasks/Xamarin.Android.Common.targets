@@ -2092,6 +2092,7 @@ because xbuild doesn't support framework reference assemblies.
     IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
+    ZipAlignmentPages="$(AndroidZipAlignment)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
@@ -2129,6 +2130,7 @@ because xbuild doesn't support framework reference assemblies.
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
+      ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
