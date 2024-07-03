@@ -50,7 +50,7 @@ namespace Android.Runtime
 		internal static IntPtr java_class_loader;
 		internal static JniMethodInfo? mid_Class_forName;
 
-		static AndroidRuntime? androidRuntime;
+		internal static AndroidRuntime? androidRuntime;
 
 		[UnmanagedCallersOnly]
 		static unsafe void RegisterJniNatives (IntPtr typeName_ptr, int typeName_len, IntPtr jniClass, IntPtr methods_ptr, int methods_len)
