@@ -131,7 +131,7 @@ namespace Xamarin.Android.Build.Tests
 				impl.Interfaces.Add (new InterfaceImplementation (iface));
 
 				var explicit_method = new MethodDefinition ("MyNamespace.IMyInterface.MyMethod", MethodAttributes.Abstract, void_type);
-				explicit_method.Overrides.Add (new MethodReference (iface_method.Name, void_type, iface));
+				explicit_method.Overrides.Add (iface_method);
 				impl.Methods.Add (explicit_method);
 
 				assm.MainModule.Types.Add (impl);
