@@ -270,6 +270,48 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		[TestCase ("", new string [0], false)]
+		[TestCase ("", new string [0], true)]
+		[TestCase ("SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2)]
+		[TestCase ("TrimMode=full", new string [0], false)]
+		[TestCase ("TrimMode=full", new string [] { "IL2055" }, true, 2)]
+		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false)]
+		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3)]
+		public void BuildHasTrimmerWarnings (string properties, string [] codes, bool isRelease, int? totalWarnings = null)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = isRelease,
+			};
+			proj.SetRuntimeIdentifier ("arm64-v8a");
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${FIELDS}", "Type type = typeof (List<>);")
+				.Replace ("//${AFTER_ONCREATE}", "Console.WriteLine (type.MakeGenericType (typeof (object)));");
+			proj.SetProperty ("TrimmerSingleWarn", "false");
+
+			if (!string.IsNullOrEmpty (properties)) {
+				foreach (var property in properties.Split (';')) {
+					int index = property.IndexOf ('=');
+					if (index != -1) {
+						proj.SetProperty (property [..index], property [(index + 1)..]);
+					}
+				}
+			}
+
+			using var b = CreateApkBuilder (Path.Combine ("temp", TestName));
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			if (codes.Length == 0) {
+				b.AssertHasNoWarnings ();
+			} else {
+				totalWarnings ??= codes.Length;
+				Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, $"{totalWarnings} Warning(s)"), $"Should receive {totalWarnings} warnings");
+				foreach (var code in codes) {
+					Assert.True (StringAssertEx.ContainsText (b.LastBuildOutput, code), $"Should receive {code} warning");
+				}
+			}
+		}
+
+		[Test]
 		[TestCase ("AndroidFastDeploymentType", "Assemblies", true, false)]
 		[TestCase ("AndroidFastDeploymentType", "Assemblies", false, false)]
 		[TestCase ("_AndroidUseJavaLegacyResolver", "true", false, true)]
