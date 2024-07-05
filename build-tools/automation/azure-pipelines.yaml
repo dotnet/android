@@ -97,11 +97,11 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
-    - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+    #- template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
-    - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
+    #- template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 
-    - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
+    #- template: /build-tools/automation/yaml-templates/build-linux.yaml@self
 
     - stage: smoke_tests
       displayName: Package Tests
@@ -459,36 +459,95 @@ extends:
 
     - stage: dotnet_prepare_release
       displayName: Prepare .NET Release
-      dependsOn:
-      - mac_build
-      - linux_build
-      condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
+      dependsOn: []
+      #- mac_build
+      #- linux_build
+      # condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
       jobs:
+      - job: sign_net_mac_win
+        displayName: test artifact setup
+        pool:
+          name: Azure Pipelines
+          vmImage: $(HostedMacImage)
+          os: macOS
+        timeoutInMinutes: 180
+        workspace:
+          clean: all
+        templateContext:
+          outputs:
+          - output: pipelineArtifact
+            artifactName: nuget-unsigned
+            targetPath: $(Build.StagingDirectory)\nuget-unsigned
+            sbomEnabled: false
+          - output: pipelineArtifact
+            artifactName: nuget-signed
+            targetPath: $(Build.StagingDirectory)\nuget-signed
+            sbomEnabled: false
+          - output: pipelineArtifact
+            artifactName: nuget-linux-signed
+            targetPath: $(Build.StagingDirectory)\nuget-linux-signed
+            sbomEnabled: false
+        steps:
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            buildType: specific
+            project: DevDiv
+            definition: 11410
+            buildVersionToDownload: latestFromBranch
+            branchName: refs/heads/main
+            allowPartiallySucceededBuilds: true
+            allowFailedBuilds: true
+            artifactName: nuget-unsigned
+            downloadPath: $(Build.StagingDirectory)\nuget-unsigned
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            buildType: specific
+            project: DevDiv
+            definition: 11410
+            buildVersionToDownload: latestFromBranch
+            branchName: refs/heads/main
+            allowPartiallySucceededBuilds: true
+            allowFailedBuilds: true
+            artifactName: nuget-signed
+            downloadPath: $(Build.StagingDirectory)\nuget-signed
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            buildType: specific
+            project: DevDiv
+            definition: 11410
+            buildVersionToDownload: latestFromBranch
+            branchName: refs/heads/main
+            allowPartiallySucceededBuilds: true
+            allowFailedBuilds: true
+            artifactName: nuget-linux-signed
+            downloadPath: $(Build.StagingDirectory)\nuget-linux-signed
+
+
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
-        parameters:
-          name: sign_net_mac_win
-          poolName: $(VSEngMicroBuildPool)
-          artifactName: $(NuGetArtifactName)
-          signType: $(MicroBuildSignType)
-          signedArtifactName: nuget-signed
-          usePipelineArtifactTasks: true
-          use1ESTemplate: true
+      #- template: sign-artifacts/jobs/v2.yml@yaml-templates
+      #  parameters:
+      #    name: sign_net_mac_win
+      #    poolName: $(VSEngMicroBuildPool)
+      #    artifactName: $(NuGetArtifactName)
+      #    signType: $(MicroBuildSignType)
+      #    signedArtifactName: nuget-signed
+      #    usePipelineArtifactTasks: true
+      #    use1ESTemplate: true
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
-        parameters:
-          name: sign_net_linux
-          displayName: Sign Linux Archive
-          poolName: $(VSEngMicroBuildPool)
-          artifactName: $(LinuxNuGetArtifactName)
-          signType: $(MicroBuildSignType)
-          signedArtifactName: nuget-linux-signed
-          usePipelineArtifactTasks: true
-          use1ESTemplate: true
+      #- template: sign-artifacts/jobs/v2.yml@yaml-templates
+      #  parameters:
+      #    name: sign_net_linux
+      #    displayName: Sign Linux Archive
+      #    poolName: $(VSEngMicroBuildPool)
+      #    artifactName: $(LinuxNuGetArtifactName)
+      #    signType: $(MicroBuildSignType)
+      #    signedArtifactName: nuget-linux-signed
+      #    usePipelineArtifactTasks: true
+      #    use1ESTemplate: true
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v3.yml@yaml-templates
+      - template: nuget-msi-convert/job/v4.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
@@ -497,7 +556,17 @@ extends:
             !*Darwin*
           propsArtifactName: $(NuGetArtifactName)
           signType: $(MicroBuildSignType)
-          use1ESTemplate: true
+          preConvertSteps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-signed
+              artifactPatterns: |
+                *Darwin*
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-linux-signed
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
           postConvertSteps:
           - task: DownloadPipelineArtifact@2
             inputs:
@@ -505,7 +574,6 @@ extends:
               downloadPath: $(Build.StagingDirectory)\sign-verify
               patterns: |
                 **/SignVerifyIgnore.txt
-
           - task: MicroBuildCodesignVerify@3
             displayName: verify signed msi content
             inputs:
@@ -521,7 +589,8 @@ extends:
         dependsOn:
         - nuget_convert
         - sign_net_linux
-        condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
+        #condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
+        condition: false
         timeoutInMinutes: 60
         pool:
           name: AzurePipelines-EO
