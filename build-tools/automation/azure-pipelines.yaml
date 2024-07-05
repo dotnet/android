@@ -18,7 +18,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/pjc/reldrop
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -97,11 +97,11 @@ extends:
     settings:
       skipBuildTagsForGitHubPullRequests: true
     stages:
-    #- template: /build-tools/automation/yaml-templates/build-macos.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
 
-    #- template: /build-tools/automation/yaml-templates/build-windows.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
 
-    #- template: /build-tools/automation/yaml-templates/build-linux.yaml@self
+    - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
 
     - stage: smoke_tests
       displayName: Package Tests
