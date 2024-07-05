@@ -75,6 +75,7 @@ extends:
         scanOutputDirectoryOnly: true
       codeql:
         runSourceLanguagesInSourceAnalysis: true
+        enabledOnNonDefaultBranches: false
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -493,8 +494,8 @@ extends:
             buildType: specific
             project: DevDiv
             definition: 11410
-            buildVersionToDownload: latestFromBranch
-            branchName: refs/heads/main
+            buildVersionToDownload: specific
+            pipelineId: 9807028
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-unsigned
@@ -504,8 +505,8 @@ extends:
             buildType: specific
             project: DevDiv
             definition: 11410
-            buildVersionToDownload: latestFromBranch
-            branchName: refs/heads/main
+            buildVersionToDownload: specific
+            pipelineId: 9807028
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-signed
@@ -515,8 +516,8 @@ extends:
             buildType: specific
             project: DevDiv
             definition: 11410
-            buildVersionToDownload: latestFromBranch
-            branchName: refs/heads/main
+            buildVersionToDownload: specific
+            pipelineId: 9807028
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-linux-signed
