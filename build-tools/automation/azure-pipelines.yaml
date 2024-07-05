@@ -556,7 +556,7 @@ extends:
           artifactPatterns: |
             !*Darwin*
           propsArtifactName: $(NuGetArtifactName)
-          signType: $(MicroBuildSignType)
+          #signType: $(MicroBuildSignType)
           preConvertSteps:
           - task: DownloadPipelineArtifact@2
             inputs:
