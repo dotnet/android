@@ -3,10 +3,10 @@ using System.IO;
 using System.Text;
 using System.Diagnostics;
 
+using Microsoft.Android.Build.Tasks;
+
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
-
-using Xamarin.Build;
 
 using Tasks = System.Threading.Tasks;
 
@@ -14,6 +14,8 @@ namespace Xamarin.Android.Tools.BootstrapTasks
 {
 	public class RunParallelCmds : AsyncTask
 	{
+		public override string TaskPrefix => "RPCMD";
+
 		[Required]
 		public ITaskItem[] Commands { get; set; }
 
