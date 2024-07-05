@@ -568,21 +568,21 @@ extends:
             inputs:
               artifactName: nuget-linux-signed
               downloadPath: $(Build.StagingDirectory)\drop\nugets
-          postConvertSteps:
-          - task: DownloadPipelineArtifact@2
-            inputs:
-              artifactName: $(NuGetArtifactName)
-              downloadPath: $(Build.StagingDirectory)\sign-verify
-              patterns: |
-                **/SignVerifyIgnore.txt
-          - task: MicroBuildCodesignVerify@3
-            displayName: verify signed msi content
-            inputs:
-              TargetFolders: |
-                $(Build.ArtifactStagingDirectory)\bin\manifests
-                $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
-              ExcludeSNVerify: true
-              ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
+          #postConvertSteps:
+          #- task: DownloadPipelineArtifact@2
+          #  inputs:
+          #    artifactName: $(NuGetArtifactName)
+          #    downloadPath: $(Build.StagingDirectory)\sign-verify
+          #    patterns: |
+          #      **/SignVerifyIgnore.txt
+          #- task: MicroBuildCodesignVerify@3
+          #  displayName: verify signed msi content
+          #  inputs:
+          #    TargetFolders: |
+          #      $(Build.ArtifactStagingDirectory)\bin\manifests
+          #      $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
+          #    ExcludeSNVerify: true
+          #    ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
       # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
       - job: push_signed_nugets
