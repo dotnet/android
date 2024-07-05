@@ -586,9 +586,9 @@ extends:
       # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
       - job: push_signed_nugets
         displayName: Push Internal
-        dependsOn:
-        - nuget_convert
-        - sign_net_linux
+        #dependsOn:
+        #- nuget_convert
+        #- sign_net_linux
         #condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
         condition: false
         timeoutInMinutes: 60
