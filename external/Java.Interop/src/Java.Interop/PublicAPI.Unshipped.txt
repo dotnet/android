@@ -1,1 +1,3 @@
 #nullable enable
+static Java.Interop.JavaPeerableExtensions.TryJavaCast<TResult>(this Java.Interop.IJavaPeerable? self, out TResult? result) -> bool
+static Java.Interop.JavaPeerableExtensions.JavaAs<TResult>(this Java.Interop.IJavaPeerable? self) -> TResult?

@@ -264,12 +264,23 @@ namespace Java.InteropTests
 	interface IAndroidInterface : IJavaPeerable {
 		internal            const       string          JniTypeName    = "net/dot/jni/test/AndroidInterface";
 
-		private static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
+		internal static JniPeerMembers _members = new JniPeerMembers (JniTypeName, typeof (IAndroidInterface), isInterface: true);
 
 		public static unsafe string getClassName ()
 		{
 			var s = _members.StaticMethods.InvokeObjectMethod ("getClassName.()Ljava/lang/String;", null);
 			return JniEnvironment.Strings.ToString (ref s, JniObjectReferenceOptions.CopyAndDispose);
+		}
+	}
+
+	[JniTypeSignature (IAndroidInterface.JniTypeName, GenerateJavaPeer=false)]
+	internal class IAndroidInterfaceInvoker : JavaObject, IAndroidInterface {
+
+		public override JniPeerMembers JniPeerMembers => IAndroidInterface._members;
+
+		public IAndroidInterfaceInvoker (ref JniObjectReference reference, JniObjectReferenceOptions options)
+			: base (ref reference, options)
+		{
 		}
 	}
 #endif  // NET

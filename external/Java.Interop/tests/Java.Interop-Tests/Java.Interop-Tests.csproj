@@ -41,6 +41,8 @@
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorBase.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\CallVirtualFromConstructorDerived.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\GetThis.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\JavaInterface.java" />
+    <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\MyJavaInterfaceImpl.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\ObjectHelper.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassBase1.java" />
     <JavaInteropTestJar Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\RenameClassBase2.java" />

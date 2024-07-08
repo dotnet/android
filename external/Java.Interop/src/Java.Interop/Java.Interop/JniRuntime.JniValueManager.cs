@@ -276,16 +276,45 @@ namespace Java.Interop
 				if (disposed)
 					throw new ObjectDisposedException (GetType ().Name);
 
+				if (!reference.IsValid) {
+					return null;
+				}
+
 				targetType  = targetType ?? typeof (JavaObject);
 				targetType  = GetPeerType (targetType);
 
 				if (!typeof (IJavaPeerable).IsAssignableFrom (targetType))
 					throw new ArgumentException ($"targetType `{targetType.AssemblyQualifiedName}` must implement IJavaPeerable!", nameof (targetType));
 
-				var ctor = GetPeerConstructor (reference, targetType);
-				if (ctor == null)
+				var targetSig  = Runtime.TypeManager.GetTypeSignature (targetType);
+				if (!targetSig.IsValid || targetSig.SimpleReference == null) {
+					throw new ArgumentException ($"Could not determine Java type corresponding to `{targetType.AssemblyQualifiedName}`.", nameof (targetType));
+				}
+
+				var refClass    = JniEnvironment.Types.GetObjectClass (reference);
+				JniObjectReference targetClass;
+				try {
+					targetClass = JniEnvironment.Types.FindClass (targetSig.SimpleReference);
+				} catch (Exception e) {
+					JniObjectReference.Dispose (ref refClass);
+					throw new ArgumentException ($"Could not find Java class `{targetSig.SimpleReference}`.",
+							nameof (targetType),
+							e);
+				}
+
+				if (!JniEnvironment.Types.IsAssignableFrom (refClass, targetClass)) {
+					JniObjectReference.Dispose (ref refClass);
+					JniObjectReference.Dispose (ref targetClass);
+					return null;
+				}
+
+				JniObjectReference.Dispose (ref targetClass);
+
+				var ctor = GetPeerConstructor (ref refClass, targetType);
+				if (ctor == null) {
 					throw new NotSupportedException (string.Format ("Could not find an appropriate constructable wrapper type for Java type '{0}', targetType='{1}'.",
 							JniEnvironment.Types.GetJniTypeNameFromInstance (reference), targetType));
+				}
 
 				var acts = new object[] {
 					reference,
@@ -303,11 +332,10 @@ namespace Java.Interop
 			static  readonly    Type    ByRefJniObjectReference = typeof (JniObjectReference).MakeByRefType ();
 
 			ConstructorInfo? GetPeerConstructor (
-					JniObjectReference instance,
+					ref JniObjectReference klass,
 					[DynamicallyAccessedMembers (Constructors)]
 					Type fallbackType)
 			{
-				var klass       = JniEnvironment.Types.GetObjectClass (instance);
 				var jniTypeName = JniEnvironment.Types.GetJniTypeNameFromClass (klass);
 
 				Type? type = null;
