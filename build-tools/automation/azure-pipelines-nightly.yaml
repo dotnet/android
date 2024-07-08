@@ -51,6 +51,7 @@ stages:
     steps:
     - checkout: self
       submodules: recursive
+      path: s/xamarin-android
 
     - template: /build-tools/automation/yaml-templates/commercial-build.yaml
       parameters:
