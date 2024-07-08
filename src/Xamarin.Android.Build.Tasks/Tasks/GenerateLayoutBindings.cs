@@ -11,14 +11,13 @@ using System.Xml.XPath;
 using Microsoft.Build.Utilities;
 using Microsoft.Build.Framework;
 
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
 	// TODO: add doc comments to the generated properties
 	//
-	public partial class GenerateLayoutBindings : AndroidAsyncTask
+	public partial class GenerateLayoutBindings : AsyncTask
 	{
 		public override string TaskPrefix => "GLB";
 

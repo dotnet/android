@@ -4,6 +4,7 @@ namespace ${ROOT_NAMESPACE}
 	[Android.Runtime.Register ("${JAVA_PACKAGENAME}.MainActivity"), Activity (Label = "${PROJECT_NAME}", MainLauncher = true, Icon = "@drawable/icon")]
 	public class MainActivity : Activity
 	{
+		//${FIELDS}
 		int count = 1;
 
 		protected override void OnCreate (Bundle? bundle)
