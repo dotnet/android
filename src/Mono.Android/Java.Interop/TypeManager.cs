@@ -267,7 +267,7 @@ namespace Java.Interop {
 
 		[UnconditionalSuppressMessage ("Trimming", "IL2067", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
 		[UnconditionalSuppressMessage ("Trimming", "IL2072", Justification = "TypeManager.CreateProxy() does not statically know the value of the 'type' local variable.")]
-		internal static IJavaPeerable CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
+		internal static IJavaPeerable? CreateInstance (IntPtr handle, JniHandleOwnership transfer, Type? targetType)
 		{
 			Type? type = null;
 			IntPtr class_ptr = JNIEnv.GetObjectClass (handle);
@@ -318,6 +318,26 @@ namespace Java.Interop {
 				type = invokerType;
 			}
 
+			var typeSig  = JNIEnvInit.androidRuntime?.TypeManager.GetTypeSignature (type) ?? default;
+			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
+				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
+			}
+			JniObjectReference typeClass;
+			try {
+				typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
+			} catch (Exception e) {
+				throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
+						nameof (targetType),
+						e);
+			}
+
+			var handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+			if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
+				Logger.Log (LogLevel.Info, "*jonp*", $"# jonp: can't assign `{GetClassName(handleClass.Handle)}` to `{GetClassName(typeClass.Handle)}`");
+				JniObjectReference.Dispose (ref handleClass);
+				JniObjectReference.Dispose (ref typeClass);
+				return null;
+			}
 
 			IJavaPeerable? result = null;
 
