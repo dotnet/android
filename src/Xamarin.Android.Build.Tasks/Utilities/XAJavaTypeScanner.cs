@@ -50,8 +50,10 @@ class XAJavaTypeScanner
 			}
 
 			AssemblyDefinition? asmdef = resolver.Load (asmItem.ItemSpec);
-			if (asmdef == null)
+			if (asmdef == null) {
+				log.LogDebugMessage ($"[{targetArch}] Unable to load assembly '{asmItem.ItemSpec}'");
 				continue;
+			}
 
 			foreach (ModuleDefinition md in asmdef.Modules) {
 				foreach (TypeDefinition td in md.Types) {
