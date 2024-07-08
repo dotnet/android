@@ -52,7 +52,7 @@
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
-    <ELFSharpVersion>2.13.1</ELFSharpVersion>
+    <ELFSharpVersion>2.17.3</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
     <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.2.4</MdocPackageVersion>
   </PropertyGroup>
