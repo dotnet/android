@@ -1082,7 +1082,7 @@ file to generate. The default template sets this to
 ## AndroidResourceDesignerClassModifier
 
 Specifies the class modifier for the intermediate `Resource` class which is
-generated. Valid values are `public`, `internal` and `private`.
+generated. Valid values are `public` and `internal`.
 
 By default this will be `public`.
 
