@@ -18,7 +18,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/main
+    ref: refs/heads/dev/mattleibow/macdev
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -474,6 +474,7 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          handleUnmappedFiles: fail
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v2.yml@yaml-templates
