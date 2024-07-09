@@ -9,7 +9,7 @@ using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks;
 
-public class LinkNativeRuntime : AndroidAsyncTask
+public class LinkNativeRuntime : AsyncTask
 {
 	public override string TaskPrefix => "LNR";
 
