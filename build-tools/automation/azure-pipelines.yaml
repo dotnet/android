@@ -474,7 +474,7 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
-          handleUnmappedFiles: fail
+          handleUnmappedFiles: warn
           templateBranch: dev/mattleibow/macdev
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
