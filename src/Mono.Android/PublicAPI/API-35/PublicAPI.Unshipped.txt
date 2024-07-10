@@ -728,6 +728,13 @@ Android.App.Notification.TvExtender.TvExtender(Android.App.Notification! notif) 
 Android.App.NotificationChannel.VibrationEffect.get -> Android.OS.VibrationEffect?
 Android.App.NotificationChannel.VibrationEffect.set -> void
 Android.App.PictureInPictureUiState.IsTransitioningToPip.get -> bool
+Android.App.PropertyAttribute
+Android.App.PropertyAttribute.Name.get -> string!
+Android.App.PropertyAttribute.PropertyAttribute(string! name) -> void
+Android.App.PropertyAttribute.Resource.get -> string?
+Android.App.PropertyAttribute.Resource.set -> void
+Android.App.PropertyAttribute.Value.get -> string?
+Android.App.PropertyAttribute.Value.set -> void
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.AppOwnedSdkSandboxInterface(string! name, long version, Android.OS.IBinder! binder) -> void
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.DescribeContents() -> int
