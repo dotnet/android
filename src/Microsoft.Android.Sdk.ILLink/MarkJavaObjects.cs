@@ -4,9 +4,9 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-using Mono.Tuner;
 using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tasks;
+using Profile = Microsoft.Android.Sdk.ILLink.Profile;
 
 namespace MonoDroid.Tuner {
 
@@ -27,7 +27,14 @@ namespace MonoDroid.Tuner {
 
 		bool IsActiveFor (AssemblyDefinition assembly)
 		{
-			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") || assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
+			if (Profile.IsSdkAssembly (assembly))
+				return false;
+			if (Profile.IsProductAssembly (assembly))
+				return false;
+
+			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
+				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
+				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
 		}
 
 		public void ProcessAssembly (AssemblyDefinition assembly, string androidHttpClientHandlerType, Dictionary<string, HashSet<string>> customViewMap)
@@ -47,14 +54,38 @@ namespace MonoDroid.Tuner {
 					}
 				}
 
-				// Custom views in Android .xml files
+				// Continue if not an IJavaObject
 				if (!type.ImplementsIJavaObject (cache))
 					continue;
+
+				// Custom views in Android .xml files
 				if (customViewMap.ContainsKey (type.FullName)) {
 					Annotations.Mark (type);
 					PreserveJavaObjectImplementation (type);
+					continue;
+				}
+
+				// Types with Java.Interop.IJniNameProviderAttribute attributes
+				if (ShouldPreserveBasedOnAttributes (type)) {
+					Annotations.Mark (type);
+					PreserveJavaObjectImplementation (type);
+					continue;
 				}
 			}
+		}
+
+		bool ShouldPreserveBasedOnAttributes (TypeDefinition type)
+		{
+			if (!type.HasCustomAttributes)
+				return false;
+
+			foreach (var attr in type.CustomAttributes) {
+				if (attr.AttributeType.Implements ("Java.Interop.IJniNameProviderAttribute", cache)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public void ProcessType (TypeDefinition type)
