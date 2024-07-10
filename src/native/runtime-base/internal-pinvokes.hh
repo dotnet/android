@@ -4,6 +4,7 @@
 
 #include <mono/utils/mono-publib.h>
 #include <java-interop-logger.h>
+<<<<<<< HEAD
 #include <java-interop.h>
 #include <jni.h>
 
@@ -14,6 +15,14 @@
 
 int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
 void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
+=======
+#include <jni.h>
+
+#include "log_types.hh"
+
+// int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
+// void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
+>>>>>>> c594b73b0 (Prepare for new p/invoke code, step #3)
 
 mono_bool _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up);
 mono_bool _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast);
@@ -39,8 +48,13 @@ void monodroid_clear_gdb_wait ();
 void* _monodroid_get_identity_hash_code (JNIEnv *env, void *v);
 void* _monodroid_timezone_get_default_id ();
 void _monodroid_counters_dump ([[maybe_unused]] const char *format, [[maybe_unused]] va_list args);
+<<<<<<< HEAD
 xamarin::android::managed_timing_sequence* monodroid_timing_start (const char *message);
 void monodroid_timing_stop (xamarin::android::managed_timing_sequence *sequence, const char *message);
+=======
+//managed_timing_sequence* monodroid_timing_start (const char *message);
+//void monodroid_timing_stop (managed_timing_sequence *sequence, const char *message)
+>>>>>>> c594b73b0 (Prepare for new p/invoke code, step #3)
 char** monodroid_strsplit (const char *str, const char *delimiter, size_t max_tokens);
 void monodroid_strfreev (char **str_array);
 char* monodroid_strdup_printf (const char *format, ...);
@@ -57,6 +71,11 @@ void monodroid_dylib_mono_free ([[maybe_unused]] void *mono_imports);
 int monodroid_dylib_mono_init (void *mono_imports, [[maybe_unused]] const char *libmono_path);
 void* monodroid_get_dylib ();
 const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
+<<<<<<< HEAD
 const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
 void monodroid_log_traces (uint32_t kind, const char *first_line);
 void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
+=======
+// const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
+void monodroid_log_traces (uint32_t kind, const char *first_line);
+>>>>>>> c594b73b0 (Prepare for new p/invoke code, step #3)
