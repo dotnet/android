@@ -59,6 +59,7 @@ https://github.com/dotnet/designs/blob/4703666296f5e59964961464c25807c727282cae/
     <AndroidJavaSource    Include="**\*.java" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <ProguardConfiguration Include="**\proguard.cfg" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
     <ProguardConfiguration Include="**\proguard.txt" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+    <ProguardConfiguration Include="**\proguard-rules.pro" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
   </ItemGroup>
 
   <ItemGroup>
