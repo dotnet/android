@@ -24,13 +24,21 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 
 	public bool AllowClearUserData { get; set; }
 
+	public bool AllowCrossUidActivitySwitchFromBelow { get; set; }
+
+	public bool AllowNativeHeapPointerTagging { get; set; }
+
 	public bool AllowTaskReparenting { get; set; }
+
+	public Android.Content.PM.ApplicationCategories AppCategory { get; set; }
 
 	public Type? BackupAgent { get; set; }
 
 	public bool BackupInForeground { get; set; }
 
 	public string? Banner { get; set; }
+
+	public string? DataExtractionRules { get; set; }
 
 	public bool Debuggable { get; set; }
 
@@ -46,9 +54,13 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 
 	public bool FullBackupOnly { get; set; }
 
+	public Android.Content.PM.GwpAsan GwpAsanMode { get; set; }
+
 	public bool HardwareAccelerated { get; set; }
 
 	public bool HasCode { get; set; }
+
+	public bool HasFragileUserData { get; set; }
 
 	public string? Icon { get; set; }
 
@@ -72,6 +84,8 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 
 	public string? Process { get; set; }
 
+	public bool RequestLegacyExternalStorage { get; set; }
+
 	public string? RequiredAccountType { get; set; }
 
 	public bool ResizeableActivity { get; set; }
@@ -85,6 +99,8 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 	public bool SupportsRtl { get; set; }
 
 	public string? TaskAffinity { get; set; }
+
+	public bool TestOnly { get; set; }
 
 	public string? Theme { get; set; }
 
@@ -112,10 +128,28 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			setter: (self, value) => self.AllowClearUserData = (bool) value
 		);
 		mapping.Add (
+			member: "AllowCrossUidActivitySwitchFromBelow",
+			attributeName: "allowCrossUidActivitySwitchFromBelow",
+			getter: self => self.AllowCrossUidActivitySwitchFromBelow,
+			setter: (self, value) => self.AllowCrossUidActivitySwitchFromBelow = (bool) value
+		);
+		mapping.Add (
+			member: "AllowNativeHeapPointerTagging",
+			attributeName: "allowNativeHeapPointerTagging",
+			getter: self => self.AllowNativeHeapPointerTagging,
+			setter: (self, value) => self.AllowNativeHeapPointerTagging = (bool) value
+		);
+		mapping.Add (
 			member: "AllowTaskReparenting",
 			attributeName: "allowTaskReparenting",
 			getter: self => self.AllowTaskReparenting,
 			setter: (self, value) => self.AllowTaskReparenting = (bool) value
+		);
+		mapping.Add (
+			member: "AppCategory",
+			attributeName: "appCategory",
+			getter: self => self.AppCategory,
+			setter: (self, value) => self.AppCategory = (Android.Content.PM.ApplicationCategories) value
 		);
 		mapping.Add (
 			member: "BackupInForeground",
@@ -128,6 +162,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			attributeName: "banner",
 			getter: self => self.Banner,
 			setter: (self, value) => self.Banner = (string?) value
+		);
+		mapping.Add (
+			member: "DataExtractionRules",
+			attributeName: "dataExtractionRules",
+			getter: self => self.DataExtractionRules,
+			setter: (self, value) => self.DataExtractionRules = (string?) value
 		);
 		mapping.Add (
 			member: "Debuggable",
@@ -172,6 +212,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			setter: (self, value) => self.FullBackupOnly = (bool) value
 		);
 		mapping.Add (
+			member: "GwpAsanMode",
+			attributeName: "gwpAsanMode",
+			getter: self => self.GwpAsanMode,
+			setter: (self, value) => self.GwpAsanMode = (Android.Content.PM.GwpAsan) value
+		);
+		mapping.Add (
 			member: "HardwareAccelerated",
 			attributeName: "hardwareAccelerated",
 			getter: self => self.HardwareAccelerated,
@@ -182,6 +228,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			attributeName: "hasCode",
 			getter: self => self.HasCode,
 			setter: (self, value) => self.HasCode = (bool) value
+		);
+		mapping.Add (
+			member: "HasFragileUserData",
+			attributeName: "hasFragileUserData",
+			getter: self => self.HasFragileUserData,
+			setter: (self, value) => self.HasFragileUserData = (bool) value
 		);
 		mapping.Add (
 			member: "Icon",
@@ -238,6 +290,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			setter: (self, value) => self.Process = (string?) value
 		);
 		mapping.Add (
+			member: "RequestLegacyExternalStorage",
+			attributeName: "requestLegacyExternalStorage",
+			getter: self => self.RequestLegacyExternalStorage,
+			setter: (self, value) => self.RequestLegacyExternalStorage = (bool) value
+		);
+		mapping.Add (
 			member: "RequiredAccountType",
 			attributeName: "requiredAccountType",
 			getter: self => self.RequiredAccountType,
@@ -278,6 +336,12 @@ public sealed partial class ApplicationAttribute : Attribute, Java.Interop.IJniN
 			attributeName: "taskAffinity",
 			getter: self => self.TaskAffinity,
 			setter: (self, value) => self.TaskAffinity = (string?) value
+		);
+		mapping.Add (
+			member: "TestOnly",
+			attributeName: "testOnly",
+			getter: self => self.TestOnly,
+			setter: (self, value) => self.TestOnly = (bool) value
 		);
 		mapping.Add (
 			member: "Theme",
