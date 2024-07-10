@@ -19,7 +19,11 @@ namespace xamarin::android::internal
 {
 	class MonodroidDl
 	{
+<<<<<<< HEAD
 		static inline xamarin::android::mutex   dso_handle_write_lock;
+=======
+		static inline std::mutex   dso_handle_write_lock;
+>>>>>>> 0c9fc0626 (Prepare for new p/invoke code, step #2)
 
 		static unsigned int convert_dl_flags (int flags) noexcept
 		{
