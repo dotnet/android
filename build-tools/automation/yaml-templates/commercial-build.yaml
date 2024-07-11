@@ -66,14 +66,13 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- task: MSBuild@1
+- task: DotNetCoreCLI@2
   displayName: macOS signing - add runtime entitlements
   condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
-    solution: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    configuration: $(XA.Build.Configuration)
-    msbuildArguments: >-
-      /t:AddMachOEntitlements
+    projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
+    arguments: >-
+      /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
