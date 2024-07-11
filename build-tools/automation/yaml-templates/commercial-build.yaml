@@ -76,7 +76,7 @@ steps:
   condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    arguments: /t:Restore /p:Configuration=$(XA.Build.Configuration) /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
+    arguments: /t:Restore /p:Configuration=$(XA.Build.Configuration) -v:n /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
 
 - task: DotNetCoreCLI@2
   displayName: PKG signing - add entitlements and sign
@@ -85,7 +85,7 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     arguments: >-
       /t:AddMachOEntitlements;AddMSBuildFilesUnixSign;AddMSBuildFilesUnixSignAndHarden;Build
-      /p:Configuration=$(XA.Build.Configuration)
+      /p:Configuration=$(XA.Build.Configuration) -v:n
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
@@ -97,7 +97,7 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     arguments: >-
       /t:AddBinUtilsFilesUnixSign;Build
-      /p:Configuration=$(XA.Build.Configuration)
+      /p:Configuration=$(XA.Build.Configuration) -v:n
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-lib.binlog
@@ -109,7 +109,7 @@ steps:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     arguments: >-
       /t:AddBinUtilsFilesUnixSignAndHarden;Build
-      /p:Configuration=$(XA.Build.Configuration)
+      /p:Configuration=$(XA.Build.Configuration) -v:n
       /p:SignType=$(MicroBuildSignType)
       /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-ex.binlog
