@@ -611,10 +611,10 @@ namespace UnnamedProject {
 			proj.MainActivity = proj.DefaultMainActivity
 				.Replace ("//${FIELDS}",
 					"""
-					protected override void OnNewIntent(Android.Content.Intent? intent)
+					protected override void OnNewIntent (Android.Content.Intent? intent)
 					{
-						base.OnNewIntent(intent);
-						Plugin.Firebase.CloudMessaging.FirebaseCloudMessagingImplementation.OnNewIntent(intent);
+						base.OnNewIntent (intent);
+						Plugin.Firebase.CloudMessaging.FirebaseCloudMessagingImplementation.OnNewIntent (intent);
 					}
 					""")
 				.Replace ("//${AFTER_ONCREATE}", "Plugin.Firebase.Core.Platforms.Android.CrossFirebase.Initialize (this);");
