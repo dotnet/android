@@ -80,6 +80,10 @@ namespace MonoDroid.Tuner {
 				return false;
 
 			foreach (var attr in type.CustomAttributes) {
+				// Ignore Android.Runtime.RegisterAttribute
+				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute") {
+					continue;
+				}
 				if (attr.AttributeType.Implements ("Java.Interop.IJniNameProviderAttribute", cache)) {
 					return true;
 				}
