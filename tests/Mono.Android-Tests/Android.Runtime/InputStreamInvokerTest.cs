@@ -12,6 +12,15 @@ namespace Android.RuntimeTests
         [TestFixture]
         public class InputStreamInvokerTest
         {
+		[Test]
+		public void Disposing_Shared_Data_Does_Not_Throw_IOE ()
+		{
+			var javaInputStream = new Java.IO.ByteArrayInputStream (new byte[]{0x1, 0x2, 0x3, 0x4});
+			var invoker = new InputStreamInvoker (javaInputStream);
+			javaInputStream.Dispose ();
+			invoker.Dispose ();
+		}
+
                 [Test]
                 public void InputStreamTest ()
                 {

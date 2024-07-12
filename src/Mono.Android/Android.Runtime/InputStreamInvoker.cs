@@ -37,7 +37,9 @@ namespace Android.Runtime
 			if (disposing && BaseInputStream != null) {
 				try {
 					BaseFileChannel = null;
-					BaseInputStream.Close ();
+					if (BaseInputStream.PeerReference.IsValid) {
+						BaseInputStream.Close ();
+					}
 					BaseInputStream.Dispose ();
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new IOException (ex.Message, ex);
@@ -58,11 +60,7 @@ namespace Android.Runtime
 		//
 		public override void Close ()
 		{
-			try {
-				BaseInputStream.Close ();
-			} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new IOException (ex.Message, ex);
-			}
+			base.Close ();
 		}
 
 		public override void Flush ()
