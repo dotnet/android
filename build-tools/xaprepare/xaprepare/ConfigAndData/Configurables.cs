@@ -85,7 +85,7 @@ namespace Xamarin.Android.Prepare
 			public const bool UseEmoji                                     = true;
 			public const bool DullMode                                     = false;
 
-			public const string MonoSdksConfiguration                     => "release";
+			public const string MonoSdksConfiguration                      => "release";
 
 			public const string ZipCompressionFormatName = "zip";
 			public const string SevenZipCompressionFormatName = "7z";
