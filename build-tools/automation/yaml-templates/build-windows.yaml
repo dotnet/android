@@ -27,6 +27,11 @@ stages:
       image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
+    templateContext:
+      sdl:
+        codeql:
+          compiled:
+            enabled: true
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:
