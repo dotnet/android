@@ -74,7 +74,9 @@ extends:
       binskim:
         scanOutputDirectoryOnly: true
       codeql:
-        runSourceLanguagesInSourceAnalysis: true
+        compiled:
+          enabled: false
+          justificationForDisabling: CodeQL tasks run during the nightly build pipeline
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
