@@ -41,6 +41,11 @@ stages:
       clean: all
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
+        sdl:
+          codeql:
+            compiled:
+              enabled: false
+              justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build
         outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
         outputs:
         - output: pipelineArtifact
