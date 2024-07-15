@@ -73,8 +73,6 @@ extends:
         enableAllTools: false
       binskim:
         scanOutputDirectoryOnly: true
-      codeql:
-        runSourceLanguagesInSourceAnalysis: true
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
