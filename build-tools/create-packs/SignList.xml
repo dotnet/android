@@ -27,11 +27,11 @@
     <!-- First and third party .jar files use the same Authenticode -->
     <FirstParty Include="*.jar" />
     <MacDeveloperSign Include="*.dylib" />
-    <MacDeveloperSignHarden Include="aapt2" />
-    <MacDeveloperSignHarden Include="*as" />
-    <MacDeveloperSignHarden Include="*ld" />
-    <MacDeveloperSignHarden Include="llc" />
-    <MacDeveloperSignHarden Include="llvm-mc" />
-    <MacDeveloperSignHarden Include="*strip" />
+    <MacDeveloperSignHarden Include="Darwin/aapt2" />
+    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*as" />
+    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*ld" />
+    <MacDeveloperSignHarden Include="Darwin/binutils/bin/llc" />
+    <MacDeveloperSignHarden Include="Darwin/binutils/bin/llvm-mc" />
+    <MacDeveloperSignHarden Include="Darwin/binutils/bin/*strip" />
   </ItemGroup>
 </Project>

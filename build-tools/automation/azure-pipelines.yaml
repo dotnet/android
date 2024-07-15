@@ -477,8 +477,8 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          handleUnmappedFiles: fail
           timeoutInMinutes: 240
-          handleUnmappedFiles: warn
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v3.yml@yaml-templates
@@ -491,6 +491,7 @@ extends:
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          handleUnmappedFiles: fail
           timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
