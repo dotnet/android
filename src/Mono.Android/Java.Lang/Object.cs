@@ -82,7 +82,6 @@ namespace Java.Lang {
 
 		// Note: must be internal so that e.g. DataContractJsonSerializer will find it
 		[OnDeserialized]
-		[Preserve]
 		internal void SetHandleOnDeserialized (StreamingContext context)
 		{
 			if (Handle != IntPtr.Zero)
