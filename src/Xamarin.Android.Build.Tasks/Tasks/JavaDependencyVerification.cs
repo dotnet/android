@@ -149,15 +149,12 @@ class DependencyResolver
 	{
 		foreach (var task in tasks.OrEmpty ()) {
 			var id = task.GetMetadataOrDefault ("JavaArtifact", string.Empty);
-			var version = task.GetMetadataOrDefault ("JavaVersion", string.Empty);
 
-			// TODO: Should raise an error if JavaArtifact is specified but JavaVersion is not
-			if (!id.HasValue () || !version.HasValue ())
-				continue;
-
-			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
-				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from AndroidLibrary '{3}'", art.GroupId, art.Id, art.Version, task.ItemSpec);
-				artifacts.Add (art.ArtifactString, art);
+			if (MavenExtensions.TryParseArtifacts (id, log, out var parsed)) {
+				foreach (var art in parsed) {
+					log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from AndroidLibrary '{3}'", art.GroupId, art.Id, art.Version, task.ItemSpec);
+					artifacts.Add (art.ArtifactString, art);
+				}
 			}
 		}
 	}
@@ -166,20 +163,22 @@ class DependencyResolver
 	{
 		foreach (var task in tasks.OrEmpty ()) {
 
-			// See if JavaArtifact/JavaVersion overrides were used
-			if (task.TryParseJavaArtifactAndJavaVersion ("PackageReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
+			// See if JavaArtifact override was used
+			if (task.TryParseJavaArtifacts ("PackageReference", log, out var explicit_artifacts, out var attributes_specified)) {
+				foreach (var explicit_artifact in explicit_artifacts)
+					artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
+
 				continue;
 			}
 
-			// If user tried to specify JavaArtifact or JavaVersion, but did it incorrectly, we do not perform any fallback
+			// If user tried to specify JavaArtifact, but did it incorrectly, we do not perform any fallback
 			if (attributes_specified)
 				continue;
 
 			// Try parsing the NuGet metadata for Java version information instead
-			var artifact = finder?.GetJavaInformation (task.ItemSpec, task.GetMetadataOrDefault ("Version", string.Empty), log);
+			var metadata_artifacts = finder?.GetArtifactsInNugetPackage (task.ItemSpec, task.GetMetadataOrDefault ("Version", string.Empty), log);
 
-			if (artifact != null) {
+			foreach (var artifact in metadata_artifacts ?? []) {
 				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from PackageReference '{3}'", artifact.GroupId, artifact.Id, artifact.Version, task.ItemSpec);
 				artifacts.Add (artifact.ArtifactString, artifact);
 
@@ -193,13 +192,15 @@ class DependencyResolver
 	public void AddProjectReferences (ITaskItem []? tasks)
 	{
 		foreach (var task in tasks.OrEmpty ()) {
-			// See if JavaArtifact/JavaVersion overrides were used
-			if (task.TryParseJavaArtifactAndJavaVersion ("ProjectReference", log, out var explicit_artifact, out var attributes_specified)) {
-				artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
+			// See if JavaArtifact override was used
+			if (task.TryParseJavaArtifacts ("ProjectReference", log, out var explicit_artifacts, out var attributes_specified)) {
+				foreach (var explicit_artifact in explicit_artifacts)
+					artifacts.Add (explicit_artifact.ArtifactString, explicit_artifact);
+
 				continue;
 			}
 
-			// If user tried to specify JavaArtifact or JavaVersion, but did it incorrectly, we do not perform any fallback
+			// If user tried to specify JavaArtifact, but did it incorrectly, we do not perform any fallback
 			if (attributes_specified)
 				continue;
 
@@ -212,14 +213,12 @@ class DependencyResolver
 	{
 		foreach (var task in tasks.OrEmpty ()) {
 			var id = task.ItemSpec;
-			var version = task.GetRequiredMetadata ("AndroidIgnoredJavaDependency", "Version", log);
 
-			if (version is null)
-				continue;
-
-			if (version != null && MavenExtensions.TryParseArtifactWithVersion (id, version, log, out var art)) {
-				log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
-				artifacts.Add (art.ArtifactString, art);
+			if (MavenExtensions.TryParseArtifacts (id, log, out var parsed)) {
+				foreach (var art in parsed) {
+					log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
+					artifacts.Add (art.ArtifactString, art);
+				}
 			}
 		}
 	}
@@ -263,7 +262,7 @@ class MSBuildLoggingPomResolver : IProjectResolver
 
 	Artifact? RegisterFromTaskItem (ITaskItem item, string itemName, string filename)
 	{
-		item.TryParseJavaArtifactAndJavaVersion (itemName, logger, out var artifact, out var _);
+		item.TryParseJavaArtifact (itemName, logger, out var artifact, out var _);
 
 		if (!File.Exists (filename)) {
 			logger.LogCodedError ("XA4245", Properties.Resources.XA4245, filename);
@@ -349,7 +348,6 @@ class MicrosoftNuGetPackageFinder
 public class NuGetPackageVersionFinder
 {
 	readonly LockFile lock_file;
-	readonly Dictionary<string, Artifact> cache = new Dictionary<string, Artifact> ();
 	readonly Regex tag = new Regex ("artifact_versioned=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
 	readonly Regex tag2 = new Regex ("artifact=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
 
@@ -370,59 +368,59 @@ public class NuGetPackageVersionFinder
 		}
 	}
 
-	public Artifact? GetJavaInformation (string library, string version, TaskLoggingHelper log)
+	public List<Artifact> GetArtifactsInNugetPackage (string library, string version, TaskLoggingHelper log)
 	{
-		// Check if we already have this one in the cache
-		var dictionary_key = $"{library.ToLowerInvariant ()}:{version}";
-
-		if (cache.TryGetValue (dictionary_key, out var artifact))
-			return artifact;
+		var artifacts = new List<Artifact> ();
 
 		// Find the LockFileLibrary
 		var nuget = lock_file.GetLibrary (library, new NuGet.Versioning.NuGetVersion (version));
 
 		if (nuget is null) {
 			log.LogCodedError ("XA4248", Properties.Resources.XA4248, library, version);
-			return null;
+			return artifacts;
 		}
 
 		foreach (var path in lock_file.PackageFolders)
-			if (CheckFilePath (path.Path, nuget) is Artifact art) {
-				cache.Add (dictionary_key, art);
-				return art;
-			}
+			AddArtifactsFromNuspec (artifacts, path.Path, nuget);
 
-		return null;
+		return artifacts;
 	}
 
-	Artifact? CheckFilePath (string nugetPackagePath, LockFileLibrary package)
+	void AddArtifactsFromNuspec (List<Artifact> artifacts, string nugetPackagePath, LockFileLibrary package)
 	{
 		// Check NuGet tags
 		var nuspec = package.Files.FirstOrDefault (f => f.EndsWith (".nuspec", StringComparison.OrdinalIgnoreCase));
 
 		if (nuspec is null)
-			return null;
+			return;
 
 		nuspec = Path.Combine (nugetPackagePath, package.Path, nuspec);
 
 		if (!File.Exists (nuspec))
-			return null;
+			return;
 
 		var reader = new NuGet.Packaging.NuspecReader (nuspec);
 		var tags = reader.GetTags ();
 
 		// Try the first tag format
-		var match = tag.Match (tags);
+		AddMatchesToCollection (artifacts, tag.Matches (tags));
 
 		// Try the second tag format
-		if (!match.Success)
-			match = tag2.Match (tags);
-
-		if (!match.Success)
-			return null;
+		AddMatchesToCollection (artifacts, tag2.Matches (tags));
 
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
+	}
 
-		return new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
+	void AddMatchesToCollection (List<Artifact> list, MatchCollection? matches)
+	{
+		if (matches is null || matches.Count == 0)
+			return;
+
+		foreach (Match match in matches) {
+			var artifact = new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
+
+			if (!list.Any (a => a.VersionedArtifactString == artifact.VersionedArtifactString))
+				list.Add (artifact);
+		}
 	}
 }

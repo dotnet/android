@@ -1,6 +1,7 @@
 #nullable enable
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.IO;
 using System.Linq;
@@ -17,6 +18,7 @@ namespace Xamarin.Android.Tasks;
 static class MavenExtensions
 {
 	static readonly char [] separator = [':'];
+	static readonly char [] artifacts_separators = [';', ',', '\r', '\n'];
 
 	/// <summary>
 	/// Shortcut for !string.IsNullOrWhiteSpace (s)
@@ -54,9 +56,51 @@ static class MavenExtensions
 		return true;
 	}
 
-	public static bool TryParseJavaArtifactAndJavaVersion (this ITaskItem task, string type, TaskLoggingHelper log, [NotNullWhen (true)] out Artifact? artifact, out bool attributesSpecified)
+	public static bool TryParseArtifacts (string id, TaskLoggingHelper log, out List<Artifact> artifacts)
 	{
-		artifact = null;
+		artifacts = new List<Artifact> ();
+		var result = true;
+
+		var arts = id.Split (artifacts_separators, StringSplitOptions.RemoveEmptyEntries);
+
+		foreach (var art in arts) {
+
+			if (Artifact.TryParse (art, out var a)) {
+				artifacts.Add (a);
+				continue;
+			}
+
+			log.LogCodedError ("XA4249", Properties.Resources.XA4249, art);
+			result = false;
+		}
+
+		return result;
+	}
+
+	public static bool TryParseJavaArtifact (this ITaskItem task, string type, TaskLoggingHelper log, [NotNullWhen (true)]out Artifact? artifact, out bool attributesSpecified)
+	{
+		var result = TryParseJavaArtifacts (task, type, log, out var artifacts, out attributesSpecified);
+
+		if (!result) {
+			artifact = null;
+			return false;
+		}
+
+		// TODO: Need a new message saying that only one JavaArtifact is allowed
+		if (artifacts.Count > 1) {
+			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaArtifact", type, task.ItemSpec);
+			artifact = null;
+			return false;
+		}
+
+		artifact = artifacts.FirstOrDefault ();
+
+		return artifact is not null;
+	}
+
+	public static bool TryParseJavaArtifacts (this ITaskItem task, string type, TaskLoggingHelper log, out List<Artifact> artifacts, out bool attributesSpecified)
+	{
+		artifacts = new List<Artifact> ();
 		var item_name = task.ItemSpec;
 
 		// Convert "../../src/blah/Blah.csproj" to "Blah.csproj"
@@ -64,37 +108,24 @@ static class MavenExtensions
 			item_name = Path.GetFileName (item_name);
 
 		var has_artifact = task.HasMetadata ("JavaArtifact");
-		var has_version = task.HasMetadata ("JavaVersion");
 
-		// Lets callers know if user attempted to specify JavaArtifact or JavaVersion, even if they did it incorrectly
-		attributesSpecified = has_artifact || has_version;
+		// Lets callers know if user attempted to specify JavaArtifact, even if they did it incorrectly
+		attributesSpecified = has_artifact;
 
-		if (has_artifact && !has_version) {
-			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaVersion", "JavaArtifact", type, item_name);
-			return false;
-		}
-
-		if (!has_artifact && has_version) {
-			log.LogCodedError ("XA4243", Properties.Resources.XA4243, "JavaArtifact", "JavaVersion", type, item_name);
-			return false;
-		}
-
-		if (has_artifact && has_version) {
+		if (has_artifact) {
 			var id = task.GetMetadata ("JavaArtifact");
-			var version = task.GetMetadata ("JavaVersion");
 
 			if (string.IsNullOrWhiteSpace (id)) {
 				log.LogCodedError ("XA4244", Properties.Resources.XA4244, "JavaArtifact", type, item_name);
 				return false;
 			}
 
-			if (string.IsNullOrWhiteSpace (version)) {
-				log.LogCodedError ("XA4244", Properties.Resources.XA4244, "JavaVersion", type, item_name);
-				return false;
-			}
+			if (TryParseArtifacts (id, log, out var parsed)) {
+				foreach (var art in parsed) {
+					log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from {3} '{4}' (JavaArtifact)", art.GroupId, art.Id, art.Version, type, item_name);
+					artifacts.Add (art);
+				}
 
-			if (TryParseArtifactWithVersion (id, version, log, out artifact)) {
-				log.LogMessage ("Found Java dependency '{0}:{1}' version '{2}' from {3} '{4}' (JavaArtifact)", artifact.GroupId, artifact.Id, artifact.Version, type, item_name);
 				return true;
 			}
 		}
