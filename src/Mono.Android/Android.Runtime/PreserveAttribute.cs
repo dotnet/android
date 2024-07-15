@@ -32,7 +32,7 @@ using System;
 
 namespace Android.Runtime {
 
-	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]")]
+	[Obsolete ("Please use [System.Diagnostics.CodeAnalysis.DynamicDependencyAttribute]. https://learn.microsoft.com/dotnet/core/deploying/trimming/prepare-libraries-for-trimming#dynamicdependency", error: true)]
 	[AttributeUsage (
 		AttributeTargets.Class
 		| AttributeTargets.Struct
