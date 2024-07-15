@@ -478,7 +478,7 @@ extends:
           handleUnmappedFiles: warn
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
+      - template: sign-artifacts/jobs/v3.yml@yaml-templates
         parameters:
           name: sign_net_linux
           displayName: Sign Linux Archive
