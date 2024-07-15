@@ -1059,4 +1059,9 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
 {0} - NuGet package id
 {1} - NuGet package version</comment>
   </data>
+  <data name="XA4249" xml:space="preserve">
+    <value>Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id:version'.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
 </root>
