@@ -599,6 +599,40 @@ namespace UnnamedProject {
 		}
 
 		[Test]
+		public void PreserveServices ()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				IsRelease = true,
+				TrimModeRelease = TrimMode.Full,
+				PackageReferences = {
+					new Package { Id = "Plugin.Firebase.CloudMessaging", Version = "3.0.0" },
+				}
+			};
+			proj.MainActivity = proj.DefaultMainActivity
+				.Replace ("//${FIELDS}",
+					"""
+					protected override void OnNewIntent (Android.Content.Intent? intent)
+					{
+						base.OnNewIntent (intent);
+						Plugin.Firebase.CloudMessaging.FirebaseCloudMessagingImplementation.OnNewIntent (intent);
+					}
+					""")
+				.Replace ("//${AFTER_ONCREATE}", "Plugin.Firebase.Core.Platforms.Android.CrossFirebase.Initialize (this);");
+
+			using var b = CreateApkBuilder ();
+			Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
+
+			var assemblyPath = BuildTest.GetLinkedPath (b, isRelease: true, "Plugin.Firebase.CloudMessaging.dll");
+			FileAssert.Exists (assemblyPath);
+			using var assembly = AssemblyDefinition.ReadAssembly (assemblyPath);
+			var types = new [] { "Plugin.Firebase.CloudMessaging.Platforms.Android.MyFirebaseMessagingService" };
+			foreach (var typeName in types) {
+				var td = assembly.MainModule.GetType (typeName);
+				Assert.IsNotNull (td, $"{typeName} should not have been linked out!");
+			}
+		}
+
+		[Test]
 		public void DoNotErrorOnPerArchJavaTypeDuplicates ([Values(true, false)] bool enableMarshalMethods)
 		{
 			var path = Path.Combine (Root, "temp", TestName);

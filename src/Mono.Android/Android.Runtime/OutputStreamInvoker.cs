@@ -28,11 +28,7 @@ namespace Android.Runtime
 		//
 		public override void Close ()
 		{
-			try {
-				BaseOutputStream.Close ();
-			} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
-				throw new IOException (ex.Message, ex);
-			}
+			base.Close ();
 		}
 
 		//
@@ -50,7 +46,9 @@ namespace Android.Runtime
 		{
 			if (disposing && BaseOutputStream != null) {
 				try {
-					BaseOutputStream.Close ();
+					if (BaseOutputStream.PeerReference.IsValid) {
+						BaseOutputStream.Close ();
+					}
 					BaseOutputStream.Dispose ();
 				} catch (Java.IO.IOException ex) when (JNIEnv.ShouldWrapJavaException (ex)) {
 					throw new IOException (ex.Message, ex);
