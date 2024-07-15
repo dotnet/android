@@ -18,7 +18,7 @@ resources:
   - repository: yaml-templates
     type: github
     name: xamarin/yaml-templates
-    ref: refs/heads/dev/mattleibow/macdev
+    ref: refs/heads/main
     endpoint: xamarin
   - repository: sdk-insertions
     type: github
@@ -476,7 +476,6 @@ extends:
           use1ESTemplate: true
           timeoutInMinutes: 240
           handleUnmappedFiles: warn
-          templateBranch: dev/mattleibow/macdev
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
       - template: sign-artifacts/jobs/v2.yml@yaml-templates
@@ -490,7 +489,6 @@ extends:
           usePipelineArtifactTasks: true
           use1ESTemplate: true
           timeoutInMinutes: 120
-          templateBranch: dev/mattleibow/macdev
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
       - template: nuget-msi-convert/job/v3.yml@yaml-templates
