@@ -10,6 +10,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 		[Output]
 		public                  int         CommitCount     { get; set; }
 
+		[Required]
 		public                  string      StartCommit     { get; set; }
 
 		public                  string      EndCommit       { get; set; }
@@ -29,12 +30,7 @@ namespace Xamarin.Android.BuildTools.PrepTasks
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (EndCommit)}: {EndCommit}");
 			Log.LogMessage (MessageImportance.Low, $"  {nameof (WorkingDirectory)}: {WorkingDirectory.ItemSpec}");
 
-			// Only run if non-empty
-			if (!string.IsNullOrEmpty (StartCommit)) {
-				base.Execute ();
-			} else {
-				CommitCount = 0;
-			}
+			base.Execute ();
 
 			Log.LogMessage (MessageImportance.Low, $"  [Output] {nameof (CommitCount)}: {CommitCount}");
 
