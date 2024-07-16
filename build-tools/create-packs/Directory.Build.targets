@@ -104,7 +104,7 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(PackageVersion)\" />
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
     <!-- Parse NuGet.config -->
