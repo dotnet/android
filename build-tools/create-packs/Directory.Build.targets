@@ -88,7 +88,7 @@
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks" >
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
     <ItemGroup>
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
@@ -104,7 +104,7 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(PackageVersion)\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
     <!-- Parse NuGet.config -->
@@ -132,7 +132,7 @@
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
-    <MakeDir Directories="$(_TempDirectory)" />
+    <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
