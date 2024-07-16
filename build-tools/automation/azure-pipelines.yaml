@@ -477,6 +477,7 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-mac-win
           handleUnmappedFiles: fail
           timeoutInMinutes: 240
 
@@ -491,6 +492,7 @@ extends:
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-linux
           handleUnmappedFiles: fail
           timeoutInMinutes: 120
 
