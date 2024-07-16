@@ -495,7 +495,7 @@ extends:
             project: DevDiv
             definition: 11410
             buildVersionToDownload: specific
-            pipelineId: 9791931
+            pipelineId: 9889091
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-unsigned
@@ -506,7 +506,7 @@ extends:
             project: DevDiv
             definition: 11410
             buildVersionToDownload: specific
-            pipelineId: 9791931
+            pipelineId: 9889091
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-signed
@@ -517,7 +517,7 @@ extends:
             project: DevDiv
             definition: 11410
             buildVersionToDownload: specific
-            pipelineId: 9791931
+            pipelineId: 9889091
             allowPartiallySucceededBuilds: true
             allowFailedBuilds: true
             artifactName: nuget-linux-signed
