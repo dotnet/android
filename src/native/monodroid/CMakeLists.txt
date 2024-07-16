@@ -185,6 +185,7 @@ macro(lib_target_options TARGET_NAME)
     ${SHARED_LIB_NAME}
     xa::runtime-base
     xa::java-interop
+    xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
     -llog
