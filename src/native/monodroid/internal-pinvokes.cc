@@ -15,14 +15,23 @@ monodroid_get_log_categories ()
 int
 monodroid_get_system_property (const char *name, char **value)
 {
+<<<<<<< HEAD
     return AndroidSystem::monodroid_get_system_property (name, value);
+=======
+        return AndroidSystem::monodroid_get_system_property (name, value);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 int
 monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix)
 {
+<<<<<<< HEAD
     embeddedAssemblies.set_assemblies_prefix (prefix);
     return 0;
+=======
+        embeddedAssemblies.set_assemblies_prefix (prefix);
+        return 0;
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
@@ -62,13 +71,21 @@ monodroid_log (LogLevel level, LogCategories category, const char *message)
 void
 monodroid_free (void *ptr)
 {
+<<<<<<< HEAD
     free (ptr);
+=======
+        free (ptr);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 int
 _monodroid_max_gref_get ()
 {
+<<<<<<< HEAD
     return static_cast<int>(AndroidSystem::get_max_gref_count ());
+=======
+        return static_cast<int>(AndroidSystem::get_max_gref_count ());
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 int
@@ -81,19 +98,31 @@ _monodroid_gref_get ()
 void
 _monodroid_gref_log (const char *message)
 {
+<<<<<<< HEAD
     osBridge._monodroid_gref_log (message);
+=======
+        osBridge._monodroid_gref_log (message);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 int
 _monodroid_gref_log_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     return osBridge._monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+=======
+        return osBridge._monodroid_gref_log_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
 _monodroid_gref_log_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     osBridge._monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
+=======
+        osBridge._monodroid_gref_log_delete (handle, type, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 int
@@ -105,44 +134,86 @@ _monodroid_weak_gref_get ()
 void
 _monodroid_weak_gref_new (jobject curHandle, char curType, jobject newHandle, char newType, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     osBridge._monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+=======
+        osBridge._monodroid_weak_gref_new (curHandle, curType, newHandle, newType, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
 _monodroid_weak_gref_delete (jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     osBridge._monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
+=======
+        osBridge._monodroid_weak_gref_delete (handle, type, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
 _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     osBridge._monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
+=======
+        osBridge._monodroid_lref_log_new (lrefc, handle, type, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
 _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char *from, int from_writable)
 {
+<<<<<<< HEAD
     osBridge._monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+=======
+        osBridge._monodroid_lref_log_delete (lrefc, handle, type, threadName, threadId, from, from_writable);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void
 _monodroid_gc_wait_for_bridge_processing ()
 {
+<<<<<<< HEAD
     mono_gc_wait_for_bridge_processing ();
+=======
+        mono_gc_wait_for_bridge_processing ();
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
+<<<<<<< HEAD
+=======
+int
+_monodroid_get_android_api_level ()
+{
+<<<<<<< HEAD
+    return monodroidRuntime.get_android_api_level ();
+=======
+        return monodroidRuntime.get_android_api_level ();
+>>>>>>> 13ba4b152 (Let's see what breaks)
+}
+
+>>>>>>> badc53112 (Let's see what breaks)
 void
 monodroid_clear_gdb_wait ()
 {
+<<<<<<< HEAD
     monodroidRuntime.set_monodroid_gdb_wait (false);
+=======
+        monodroidRuntime.set_monodroid_gdb_wait (false);
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void*
 _monodroid_get_identity_hash_code (JNIEnv *env, void *v)
 {
+<<<<<<< HEAD
     intptr_t rv = env->CallStaticIntMethod (monodroidRuntime.get_java_class_System (), monodroidRuntime.get_java_class_method_System_identityHashCode (), v);
     return (void*) rv;
+=======
+        intptr_t rv = env->CallStaticIntMethod (monodroidRuntime.get_java_class_System (), monodroidRuntime.get_java_class_method_System_identityHashCode (), v);
+        return (void*) rv;
+>>>>>>> 13ba4b152 (Let's see what breaks)
 }
 
 void*
@@ -300,7 +371,11 @@ monodroid_dylib_mono_free ([[maybe_unused]] void *mono_imports)
   https://github.com/dotnet/java-interop/blob/master/src/java-interop/java-interop-gc-bridge-mono.c#L266
 
   it should also accept libmono_path = nullptr parameter
+<<<<<<< HEAD
  */
+=======
+*/
+>>>>>>> 13ba4b152 (Let's see what breaks)
 int
 monodroid_dylib_mono_init (void *mono_imports, [[maybe_unused]] const char *libmono_path)
 {

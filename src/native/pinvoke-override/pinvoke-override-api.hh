@@ -78,14 +78,21 @@ namespace xamarin::android {
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 
 	private:
+<<<<<<< HEAD
 		static xamarin::android::mutex  pinvoke_map_write_lock;
+=======
+		static std::mutex             pinvoke_map_write_lock;
+>>>>>>> 13ba4b152 (Let's see what breaks)
 		static pinvoke_library_map    other_pinvoke_map;
 
 #if defined(PRECOMPILED)
 		static inline void *system_native_library_handle = nullptr;
 		static inline void *system_security_cryptography_native_android_library_handle = nullptr;
 		static inline void *system_io_compression_native_library_handle = nullptr;
+<<<<<<< HEAD
 		static inline void *system_globalization_native_library_handle = nullptr;
+=======
+>>>>>>> 13ba4b152 (Let's see what breaks)
 #endif
 	};
 }
