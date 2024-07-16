@@ -1,7 +1,8 @@
 #ifndef __STARTUP_AWARE_LOCK_HH
 #define __STARTUP_AWARE_LOCK_HH
 
-#include "globals.hh"
+#include "cppcompat.hh"
+#include "monodroid-state.hh"
 
 namespace xamarin::android::internal
 {
@@ -11,7 +12,7 @@ namespace xamarin::android::internal
 		explicit StartupAwareLock (xamarin::android::mutex &m)
 			: lock (m)
 		{
-			if (MonodroidRuntime::is_startup_in_progress ()) {
+			if (MonodroidState::is_startup_in_progress ()) {
 				// During startup we run without threads, do nothing
 				return;
 			}
@@ -21,7 +22,7 @@ namespace xamarin::android::internal
 
 		~StartupAwareLock ()
 		{
-			if (MonodroidRuntime::is_startup_in_progress ()) {
+			if (MonodroidState::is_startup_in_progress ()) {
 				return;
 			}
 

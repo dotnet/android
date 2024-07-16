@@ -1,12 +1,10 @@
 // Dear Emacs, this is a -*- C++ -*- header
-#if !defined (__SEARCH_HH)
-#define __SEARCH_HH
+#pragma once
 
 #include <sys/types.h>
 
 #include "platform-compat.hh"
 #include "xxhash.hh"
-#include "logger.hh"
 
 namespace xamarin::android::internal {
 	class Search final
@@ -58,4 +56,3 @@ namespace xamarin::android::internal {
 		}
 	};
 }
-#endif // ndef __SEARCH_HH

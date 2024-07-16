@@ -145,7 +145,7 @@ file(REAL_PATH "../../" REPO_ROOT_DIR)
 set(EXTERNAL_DIR "${REPO_ROOT_DIR}/external")
 set(JAVA_INTEROP_SRC_PATH "${EXTERNAL_DIR}/Java.Interop/src/java-interop")
 set(LIBUNWIND_SOURCE_DIR "${EXTERNAL_DIR}/libunwind")
-
+set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
 
 #
 # Include directories
@@ -449,6 +449,7 @@ add_subdirectory(java-interop)
 add_subdirectory(xamarin-app-stub)
 add_subdirectory(runtime-base)
 add_subdirectory(tracing)
+add_subdirectory(pinvoke-override)
 
 if(DEBUG_BUILD)
   add_subdirectory(xamarin-debug-app-helper)

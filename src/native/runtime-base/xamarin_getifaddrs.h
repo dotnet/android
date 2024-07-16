@@ -1,7 +1,7 @@
 #ifndef __XAMARIN_GETIFADDRS_H
 #define __XAMARIN_GETIFADDRS_H
 
-#include "monodroid.h"
+#include <mono/utils/mono-publib.h>
 
 /* We're implementing getifaddrs behavior, this is the structure we use. It is exactly the same as
  * struct ifaddrs defined in ifaddrs.h but since bionics doesn't have it we need to mirror it here.
