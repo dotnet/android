@@ -85,6 +85,7 @@ namespace xamarin::android {
 		static inline void *system_native_library_handle = nullptr;
 		static inline void *system_security_cryptography_native_android_library_handle = nullptr;
 		static inline void *system_io_compression_native_library_handle = nullptr;
+		static inline void *system_globalization_native_library_handle = nullptr;
 #endif
 	};
 }
