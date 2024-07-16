@@ -181,7 +181,6 @@ namespace Xamarin.Android.JcwGenTests {
 		}
 
 		[Test]
-		[Ignore("https://github.com/dotnet/runtime/issues/103987")]
 		[RequiresUnreferencedCode ("Tests trimming unsafe features")]
 		public void JavaAbstractMethodTest ()
 		{
