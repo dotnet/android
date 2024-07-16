@@ -833,9 +833,9 @@ AAMMAAABzYW1wbGUvSGVsbG8uY2xhc3NQSwUGAAAAAAMAAwC9AAAA1gEAAAAA") });
 		}
 
 		[Test]
-		public void InvalidTargetPlatformVersion ([Values ("android33", "android99.0")] string platformVersion)
+		public void InvalidTargetPlatformVersion ([Values ("android99.0")] string platformVersion)
 		{
-			const string targetFramework = "net9.0";
+			const string targetFramework = "net8.0";
 			var project = new XamarinAndroidApplicationProject {
 				TargetFramework = $"{targetFramework}-{platformVersion}",
 			};
