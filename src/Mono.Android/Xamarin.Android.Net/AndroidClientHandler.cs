@@ -312,7 +312,7 @@ namespace Xamarin.Android.Net
 		[DynamicDependency (DynamicallyAccessedMemberTypes.PublicParameterlessConstructor, typeof (AndroidMessageHandler))]
 		object? GetUnderlyingHandler ()
 		{
-			var fieldName = "_nativeHandler";
+			var fieldName = "_nativeUnderlyingHandler";
 			const BindingFlags flags = BindingFlags.Instance | BindingFlags.NonPublic;
 			FieldInfo? field = typeof (HttpClientHandler).GetField (fieldName, flags) ??
 				typeof (HttpMessageHandler).GetField (fieldName, flags);
