@@ -227,6 +227,9 @@ enum class MonoComponent : uint32_t
 	Tracing   = 0x04,
 };
 
+// Keep in strict sync with:
+//   src/Xamarin.Android.Build.Tasks/Utilities/ApplicationConfig.cs
+//   src/Xamarin.Android.Build.Tasks/Tests/Xamarin.Android.Build.Tests/Utilities/EnvironmentHelper.cs
 struct ApplicationConfig
 {
 	bool uses_mono_llvm;
@@ -247,6 +250,7 @@ struct ApplicationConfig
 	uint32_t number_of_assemblies_in_apk;
 	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
+	uint32_t number_of_aot_cache_entries;
 	uint32_t number_of_shared_libraries;
 	uint32_t android_runtime_jnienv_class_token;
 	uint32_t jnienv_initialize_method_token;
