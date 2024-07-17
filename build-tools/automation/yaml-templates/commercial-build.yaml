@@ -66,57 +66,14 @@ steps:
   displayName: CodeQL 3000 Finalize
   condition: and(succeededOrFailed(), eq(variables['Codeql.Enabled'], 'true'), eq(variables['Build.SourceBranch'], 'refs/heads/main'))
 
-- template: /build-tools/automation/yaml-templates/install-microbuild-tooling.yaml
-  parameters:
-    condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-
-# Restore needs to be executed first or MicroBuild targets won't be imported in time
 - task: DotNetCoreCLI@2
-  displayName: msbuild /t:Restore sign-content.proj
-  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    arguments: /t:Restore /p:Configuration=$(XA.Build.Configuration) -v:n /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/restore-sign-content.binlog
-
-- task: DotNetCoreCLI@2
-  displayName: PKG signing - add entitlements and sign
+  displayName: macOS signing - add runtime entitlements
   condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
   inputs:
     projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
     arguments: >-
-      /t:AddMachOEntitlements;AddMSBuildFilesUnixSign;AddMSBuildFilesUnixSignAndHarden;Build
-      /p:Configuration=$(XA.Build.Configuration) -v:n
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
+      /t:AddMachOEntitlements /p:Configuration=$(XA.Build.Configuration)
       /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-content.binlog
-
-- task: DotNetCoreCLI@2
-  displayName: PKG signing - sign binutils libraries
-  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    arguments: >-
-      /t:AddBinUtilsFilesUnixSign;Build
-      /p:Configuration=$(XA.Build.Configuration) -v:n
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-lib.binlog
-
-- task: DotNetCoreCLI@2
-  displayName: PKG signing - sign binutils executables
-  condition: and(succeeded(), eq(variables['MicroBuildSignType'], 'Real'))
-  inputs:
-    projects: ${{ parameters.xaSourcePath }}/build-tools/installers/sign-content.proj
-    arguments: >-
-      /t:AddBinUtilsFilesUnixSignAndHarden;Build
-      /p:Configuration=$(XA.Build.Configuration) -v:n
-      /p:SignType=$(MicroBuildSignType)
-      /p:MicroBuildOverridePluginDirectory=$(Build.StagingDirectory)/MicroBuild/Plugins
-      /bl:${{ parameters.xaSourcePath }}/bin/Build$(XA.Build.Configuration)/sign-bu-ex.binlog
-
-- template: /build-tools/automation/yaml-templates/remove-microbuild-tooling.yaml
-  parameters:
-    condition: and(succeededOrFailed(), eq(variables['MicroBuildSignType'], 'Real'))
 
 - script: make create-installers CONFIGURATION=$(XA.Build.Configuration) MSBUILD_ARGS='${{ parameters.makeMSBuildArgs }}'
   workingDirectory: ${{ parameters.xaSourcePath }}

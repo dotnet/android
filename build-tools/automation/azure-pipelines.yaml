@@ -468,7 +468,7 @@ extends:
       condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
+      - template: sign-artifacts/jobs/v3.yml@yaml-templates
         parameters:
           name: sign_net_mac_win
           poolName: $(VSEngMicroBuildPool)
@@ -477,9 +477,12 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-mac-win
+          handleUnmappedFiles: fail
+          timeoutInMinutes: 240
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
+      - template: sign-artifacts/jobs/v3.yml@yaml-templates
         parameters:
           name: sign_net_linux
           displayName: Sign Linux Archive
@@ -489,6 +492,9 @@ extends:
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-linux
+          handleUnmappedFiles: fail
+          timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
       - template: nuget-msi-convert/job/v4.yml@yaml-templates
