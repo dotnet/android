@@ -530,6 +530,7 @@ extends:
               TargetFolders: |
                 $(Build.ArtifactStagingDirectory)\bin\manifests
                 $(Build.ArtifactStagingDirectory)\bin\manifests-packs
+                $(Build.ArtifactStagingDirectory)\bin\msi-nupkgs
               ExcludeSNVerify: true
               ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
