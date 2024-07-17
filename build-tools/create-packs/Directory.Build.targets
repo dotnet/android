@@ -150,6 +150,7 @@
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
       <!-- Current baseline manifest -->
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(VersionBand)-preview.6\microsoft.net.sdk.android" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm" />
