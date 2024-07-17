@@ -42,6 +42,7 @@ namespace Xamarin.Android.Tasks
 		public uint   number_of_assemblies_in_apk;
 		public uint   bundled_assembly_name_width;
 		public uint   number_of_dso_cache_entries;
+		public uint   number_of_aot_cache_entries;
 		public uint   number_of_shared_libraries;
 
 		[NativeAssembler (NumberFormat = LLVMIR.LlvmIrVariableNumberFormat.Hexadecimal)]
