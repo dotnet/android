@@ -529,7 +529,7 @@ extends:
             inputs:
               TargetFolders: |
                 $(Build.ArtifactStagingDirectory)\bin\manifests
-                $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
+                $(Build.ArtifactStagingDirectory)\bin\manifests-packs
               ExcludeSNVerify: true
               ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
@@ -564,6 +564,7 @@ extends:
           clean: true
           submodules: recursive
 
+        # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(WindowsToolchainPdbArtifactName)
