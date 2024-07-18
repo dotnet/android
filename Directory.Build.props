@@ -39,6 +39,8 @@
     <AndroidPackVersionMajorMinor>$(AndroidPackVersion.Substring(0,$(AndroidPackVersionPatchIndex)))</AndroidPackVersionMajorMinor>
     <AndroidPackVersionPatch>$(AndroidPackVersion.Substring($([MSBuild]::Add($(AndroidPackVersionPatchIndex), 1))))</AndroidPackVersionPatch>
     <AndroidPackVersionSuffix>rtm</AndroidPackVersionSuffix>
+    <IsStableBuild>false</IsStableBuild>
+    <IsStableBuild Condition=" '$(AndroidPackVersionSuffix)' == 'rtm' ">true</IsStableBuild>
   </PropertyGroup>
 
   <!-- Common <PackageReference/> versions -->
