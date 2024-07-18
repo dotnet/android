@@ -208,7 +208,6 @@ namespace Library1 {
 
 		public void WasThisMethodPreserved (string arg1) { }
 
-		[Android.Runtime.Preserve]
 		public void PreserveAttribMethod () { }
 	}
 }",
