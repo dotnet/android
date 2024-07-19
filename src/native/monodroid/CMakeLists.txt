@@ -133,6 +133,7 @@ target_compile_options(
   ${XAMARIN_MONO_ANDROID_LIB}
   PRIVATE
   ${XA_DEFAULT_SYMBOL_VISIBILITY}
+  ${XA_COMMON_CXX_ARGS}
 )
 
 target_include_directories(
