@@ -1,8 +1,8 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="VS.Tools.Net.Core.SDK.Resolver" Version="9.0.100-preview.7.24368.3">
+    <Dependency Name="VS.Tools.Net.Core.SDK.Resolver" Version="9.0.100-preview.7.24368.5">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>ef5d32d5c89a04dda85d4510a0643165bc9f6e20</Sha>
+      <Sha>a8758549c2c45b3eb553b9f9e3aef638eba6e770</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-preview.7.24366.18" CoherentParentDependency="VS.Tools.Net.Core.SDK.Resolver">
       <Uri>https://github.com/dotnet/runtime</Uri>
