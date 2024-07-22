@@ -43,6 +43,7 @@ stages:
       clean: all
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
+        sdl: ${{ parameters.stageName }}.templateContext.sdl
         outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
         outputs:
         - output: pipelineArtifact

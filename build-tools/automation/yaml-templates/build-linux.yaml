@@ -35,6 +35,7 @@ stages:
       CC: gcc-10
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
+        sdl: ${{ parameters.stageName }}.templateContext.sdl
         outputs:
         - output: pipelineArtifact
           displayName: upload linux sdk
