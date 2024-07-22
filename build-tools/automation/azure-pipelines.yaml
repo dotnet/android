@@ -96,30 +96,10 @@ extends:
       skipBuildTagsForGitHubPullRequests: true
     stages:
     - template: /build-tools/automation/yaml-templates/build-macos.yaml@self
-      parameters:
-        templateContextSdl:
-          codeql:
-            compiled:
-              enabled: false
-              justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
 
     - template: /build-tools/automation/yaml-templates/build-windows.yaml@self
-      parameters:
-        templateContext:
-          sdl:
-            ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/cql-disable-fix') }}:
-              codeql:
-                compiled:
-                  enabled: false
-                  justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
 
     - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
-      parameters:
-        templateContextSdl:
-          codeql:
-            compiled:
-              enabled: false
-              justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
 
     - stage: smoke_tests
       displayName: Package Tests

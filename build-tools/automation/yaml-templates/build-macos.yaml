@@ -16,7 +16,6 @@ parameters:
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   use1ESTemplate: true
-  templateContextSdl: []
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -44,7 +43,11 @@ stages:
       clean: all
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
-        sdl: ${{ parameters.templateContextSdl }}
+        sdl:
+          codeql:
+            compiled:
+              enabled: false
+              justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build
         outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
         outputs:
         - output: pipelineArtifact
