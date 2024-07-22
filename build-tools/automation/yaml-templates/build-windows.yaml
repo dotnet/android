@@ -10,7 +10,6 @@ parameters:
   repositoryAlias: self
   stageName: win_build_test
   stageDisplayName: Windows
-  use1ESTemplate: true
 
 # This stage ensures Windows specific build steps continue to work, and runs unit tests.
 stages:
@@ -28,14 +27,6 @@ stages:
       image: $(WindowsPoolImage1ESPT)
       os: windows
     timeoutInMinutes: 240
-    ${{ if eq(parameters.use1ESTemplate, true) }}:
-      templateContext:
-        sdl:
-          ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/dev/pjc/cql-disable-fix') }}:
-            codeql:
-              compiled:
-                enabled: false
-                justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
     steps:
     - template: sdk-unified/steps/checkout/v1.yml@yaml-templates
       parameters:

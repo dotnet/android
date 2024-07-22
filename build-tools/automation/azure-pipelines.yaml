@@ -73,6 +73,10 @@ extends:
         enableAllTools: false
       binskim:
         scanOutputDirectoryOnly: true
+      codeql:
+        compiled:
+          enabled: false
+          justificationForDisabling: CodeQL runs against the nightly build
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
