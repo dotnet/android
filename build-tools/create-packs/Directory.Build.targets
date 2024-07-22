@@ -265,11 +265,12 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
-  <Target Name="InstallManifestAndDependencies">
+  <Target Name="InstallManifestAndDependencies"
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
     <PropertyGroup>
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
-      <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\</_LocalAndroidManifestFolder>
-      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\</_EmptyWorkloadDir>
+      <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
+      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
       <_EmptyWorkloadJsonContent>
 <![CDATA[
 {"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ] } } }
