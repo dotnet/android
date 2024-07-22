@@ -74,10 +74,9 @@ extends:
       binskim:
         scanOutputDirectoryOnly: true
       codeql:
-        ${{ if ne(variables['Build.SourceBranch'], 'refs/heads/main') }}:
-          compiled:
-            enabled: false
-            justificationForDisabling: CodeQL disabled for non-main branch builds
+        compiled:
+          enabled: false
+          justificationForDisabling: CodeQL runs against the nightly build
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
