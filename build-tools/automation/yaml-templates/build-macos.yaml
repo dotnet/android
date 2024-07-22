@@ -16,6 +16,7 @@ parameters:
   testAssembliesArtifactName: $(TestAssembliesArtifactName)
   windowsToolchainPdbArtifactName: $(WindowsToolchainPdbArtifactName)
   use1ESTemplate: true
+  templateContextSdl: []
 
 stages:
 - stage: ${{ parameters.stageName }}
@@ -43,7 +44,7 @@ stages:
       clean: all
     ${{ if eq(parameters.use1ESTemplate, true) }}:
       templateContext:
-        sdl: ${{ parameters.stageName }}.templateContext.sdl
+        sdl: ${{ parameters.templateContextSdl }}
         outputParentDirectory: ${{ parameters.xaSourcePath }}/bin
         outputs:
         - output: pipelineArtifact
