@@ -34,6 +34,7 @@ stages:
       CXX: g++-10
       CC: gcc-10
     ${{ if eq(parameters.use1ESTemplate, true) }}:
+      templateContext:
         outputs:
         - output: pipelineArtifact
           displayName: upload linux sdk
