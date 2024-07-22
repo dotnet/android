@@ -73,7 +73,6 @@ extends:
         enableAllTools: false
       binskim:
         scanOutputDirectoryOnly: true
-
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -117,12 +116,12 @@ extends:
 
     - template: /build-tools/automation/yaml-templates/build-linux.yaml@self
       parameters:
-          templateContext:
-            sdl:
-              codeql:
-                compiled:
-                  enabled: false
-                  justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
+        templateContext:
+          sdl:
+            codeql:
+              compiled:
+                enabled: false
+                justificationForDisabling: CodeQL runs against the Windows build and nightly macOS build on main
 
     - stage: smoke_tests
       displayName: Package Tests
