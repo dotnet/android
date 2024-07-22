@@ -65,35 +65,34 @@ namespace Xamarin.Android.Tasks
 				}
 				log.LogDebugMessage ($"    expected segment alignment of 0x{pageSize:x}, found 0x{segment64.Alignment:x}");
 
-				// TODO: turn into a coded warning and, eventually, error. Need better wording.
-				//       Until dotnet runtime produces properly aligned libraries, this should be a plain message as a warning
-				//       would break all the tests that require no warnings to be produced during build.
-				log.LogMessage ($"Native {elf64.Machine} shared library '{Path.GetFileName (path)}', from NuGet package {GetNugetPackageInfo ()} isn't properly aligned.");
+				(string packageId, string packageVersion) = GetNugetPackageInfo ();
+				log.LogCodedWarning ("XA0141", packageId, packageVersion, Path.GetFileName (path));
 				break;
 			}
 
-			string GetNugetPackageInfo ()
+			(string packageId, string packageVersion) GetNugetPackageInfo ()
 			{
 				const string Unknown = "<unknown>";
 
 				if (item == null) {
-					return Unknown;
+					return (Unknown, Unknown);
 				}
 
-				var sb = new StringBuilder ();
 				string? metaValue = item.GetMetadata ("NuGetPackageId");
 				if (String.IsNullOrEmpty (metaValue)) {
-					return Unknown;
+					return (Unknown, Unknown);
 				}
 
-				sb.Append (metaValue);
+				string id = metaValue;
+				string version;
 				metaValue = item.GetMetadata ("NuGetPackageVersion");
 				if (!String.IsNullOrEmpty (metaValue)) {
-					sb.Append (" version ");
-					sb.Append (metaValue);
+					version = metaValue;
+				} else {
+					version = Unknown;
 				}
 
-				return sb.ToString ();
+				return (id, version);
 			}
 		}
 
