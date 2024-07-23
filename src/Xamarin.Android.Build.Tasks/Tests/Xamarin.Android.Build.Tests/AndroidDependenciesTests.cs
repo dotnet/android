@@ -22,7 +22,7 @@ namespace Xamarin.Android.Build.Tests
 		{
 			// Set to true when we are marking a new Android API level as stable, but it has not
 			// been added to the Xamarin manifest yet.
-			var xamarin_manifest_needs_updating = true;
+			var xamarin_manifest_needs_updating = false;
 
 			AssertCommercialBuild ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
