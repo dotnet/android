@@ -132,6 +132,7 @@ macro(set_common_monodroid_properties TARGET)
     ${TARGET}
     PRIVATE
     ${XA_DEFAULT_SYMBOL_VISIBILITY}
+    ${XA_COMMON_CXX_ARGS}
   )
 
   target_include_directories(
@@ -148,6 +149,7 @@ macro(set_common_monodroid_properties TARGET)
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${MONO_RUNTIME_INCLUDE_DIR}
+    ${NATIVE_TRACING_INCLUDE_DIRS}
     ${LIBUNWIND_INCLUDE_DIRS}
   )
 
@@ -215,3 +217,4 @@ else()
     -llog
   )
 endif()
+

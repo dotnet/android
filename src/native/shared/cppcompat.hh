@@ -19,7 +19,7 @@
 //
 // When/if we have any STL implementation available on standard Android
 // we can remove this file.
-namespace std
+namespace xamarin::android
 {
 	template<typename TMutex>
 	class lock_guard

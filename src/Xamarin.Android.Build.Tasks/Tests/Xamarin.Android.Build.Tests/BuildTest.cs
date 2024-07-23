@@ -208,7 +208,8 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				b.AssertHasNoWarnings ();
+				//FIXME: https://github.com/dotnet/runtime/issues/105044
+				//b.AssertHasNoWarnings ();
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
