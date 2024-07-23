@@ -1059,4 +1059,12 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {0} - NuGet package id
 {1} - NuGet package version</comment>
   </data>
+  <data name="XA0141" xml:space="preserve">
+    <value>NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details</value>
+    <comment>The following is a literal name and should not be translated: NuGet
+{0} - NuGet package id
+{1} - NuGet package version
+{2} - shared library file name
+    </comment>
+  </data>
 </root>
