@@ -376,7 +376,7 @@ namespace xamarin::android::internal
 		jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
-		static xamarin::android::mutex             pinvoke_map_write_lock;
+		static mutex_t                pinvoke_map_write_lock;
 		static pinvoke_library_map    other_pinvoke_map;
 		static MonoCoreRuntimeProperties monovm_core_properties;
 		MonovmRuntimeConfigArguments  runtime_config_args;
@@ -384,7 +384,7 @@ namespace xamarin::android::internal
 		static void *system_native_library_handle;
 		static void *system_security_cryptography_native_android_library_handle;
 		static void *system_io_compression_native_library_handle;
-		static xamarin::android::mutex   dso_handle_write_lock;
+		static mutex_t dso_handle_write_lock;
 	};
 }
 #endif

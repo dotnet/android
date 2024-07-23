@@ -4,6 +4,13 @@
 
 #if defined(USES_LIBSTDCPP)
 #include <mutex>
+
+namespace xamarin::android {
+	using mutex_t = std::mutex;
+
+	template<typename T>
+	using lock_guard_t = std::lock_guard<T>;
+}
 #else // def USES_LIBSTDCPP
 #include <pthread.h>
 
@@ -65,6 +72,11 @@ namespace xamarin::android
 	private:
 		pthread_mutex_t _pmutex = PTHREAD_MUTEX_INITIALIZER;
 	};
+
+	using mutex_t = mutex;
+
+	template<typename T>
+	using lock_guard_t = lock_guard<T>;
 }
 #endif // ndef USES_LIBSTDCPP
 

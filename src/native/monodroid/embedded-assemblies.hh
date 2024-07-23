@@ -389,7 +389,7 @@ namespace xamarin::android::internal {
 		bool                   need_to_scan_more_apks = true;
 
 		AssemblyStoreIndexEntry *assembly_store_hashes;
-		xamarin::android::mutex  assembly_decompress_mutex;
+		mutex_t                assembly_decompress_mutex;
 	};
 }
 
