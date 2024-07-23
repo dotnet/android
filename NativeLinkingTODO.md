@@ -19,6 +19,10 @@
     a bit more complicated to implement but would give us much faster code, thus it's the preferred
     solution.
 
+# Helpers
+
+  * linker can output a list of pinvokes, see https://github.com/dotnet/android/issues/7114
+
 # Ideas
 
   * Use [mold](https://github.com/rui314/mold) which has recently been re-licensed under `MIT/X11`
