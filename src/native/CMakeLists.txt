@@ -69,6 +69,10 @@ if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
   message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
 endif()
 
+if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
+  message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
+endif()
+
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   if(ENABLE_PERFETTO)
     message(FATAL_ERROR "Perfetto and analyzer builds cannot be enabled at the same time")
