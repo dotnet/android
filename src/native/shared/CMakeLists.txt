@@ -35,12 +35,16 @@ add_library(
 )
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
+set_static_library_suffix(${LIB_NAME})
+
 add_library(
   ${LIB_NAME_NO_ABI}
   STATIC
   ${XA_SHARED_SOURCES}
 )
 add_library(${LIB_ALIAS_NO_ABI} ALIAS ${LIB_NAME_NO_ABI})
+
+set_static_library_suffix(${LIB_NAME_NO_ABI})
 
 macro(lib_target_options TARGET_NAME)
   target_include_directories(

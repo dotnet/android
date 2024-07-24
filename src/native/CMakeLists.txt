@@ -65,6 +65,10 @@ option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
 option(ENABLE_PERFETTO "Enable use of perfetto." OFF)
 
+if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
+  message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
+endif()
+
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
   if(ENABLE_PERFETTO)
     message(FATAL_ERROR "Perfetto and analyzer builds cannot be enabled at the same time")
@@ -84,6 +88,14 @@ option(STRIP_DEBUG "Strip debugging information when linking" ${STRIP_DEBUG_DEFA
 option(DISABLE_DEBUG "Disable the built-in debugging code" OFF)
 option(USE_CCACHE "Use ccache, if found, to speed up recompilation" ON)
 option(DONT_INLINE "Do not inline any functions which are usually inlined, to get better stack traces" ${DONT_INLINE_DEFAULT})
+
+if(ENABLE_CLANG_ASAN)
+  set(STATIC_LIB_NAME_SUFFIX "-asan")
+elseif(ENABLE_CLANG_UBSAN)
+  set(STATIC_LIB_NAME_SUFFIX "-ubsan")
+elseif(ENABLE_PERFETTO)
+  set(STATIC_LIB_NAME_SUFFIX "-perfetto")
+endif()
 
 if(USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
@@ -462,6 +474,19 @@ add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
 
 add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
 add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
+
+#
+# Helper macros
+#
+macro(set_static_library_suffix TARGET_NAME)
+  if(STATIC_LIB_NAME_SUFFIX)
+    set_target_properties(
+      ${TARGET_NAME}
+      PROPERTIES
+      SUFFIX "${STATIC_LIB_NAME_SUFFIX}.a"
+    )
+  endif()
+endmacro()
 
 add_subdirectory(libunwind)
 add_subdirectory(lz4)
