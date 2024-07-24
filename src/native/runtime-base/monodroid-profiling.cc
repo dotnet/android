@@ -19,7 +19,7 @@
 using namespace xamarin::android;
 
 void
-MonodroidProfiling::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
+MonodroidProfiling::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoAssembly *assembly) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::AssemblyLoadMonoVM> ();
@@ -31,7 +31,7 @@ MonodroidProfiling::prof_assembly_loading ([[maybe_unused]] MonoProfiler *prof, 
 }
 
 void
-MonodroidProfiling::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, MonoAssembly *assembly) noexcept
+MonodroidProfiling::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoAssembly *assembly) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::AssemblyLoadMonoVM> ();
@@ -42,7 +42,7 @@ MonodroidProfiling::prof_assembly_loaded ([[maybe_unused]] MonoProfiler *prof, M
 }
 
 void
-MonodroidProfiling::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
+MonodroidProfiling::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoImage *image) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::ImageLoadMonoVM> ();
@@ -55,7 +55,7 @@ MonodroidProfiling::prof_image_loading ([[maybe_unused]] MonoProfiler *prof, Mon
 }
 
 void
-MonodroidProfiling::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, MonoImage *image) noexcept
+MonodroidProfiling::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoImage *image) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::ImageLoadMonoVM> ();
@@ -66,7 +66,7 @@ MonodroidProfiling::prof_image_loaded ([[maybe_unused]] MonoProfiler *prof, Mono
 }
 
 void
-MonodroidProfiling::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
+MonodroidProfiling::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoClass *klass) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::ClassLoadMonoVM> ();
@@ -79,7 +79,7 @@ MonodroidProfiling::prof_class_loading ([[maybe_unused]] MonoProfiler *prof, Mon
 }
 
 void
-MonodroidProfiling::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, MonoClass *klass) noexcept
+MonodroidProfiling::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoClass *klass) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::ClassLoadMonoVM> ();
@@ -90,7 +90,7 @@ MonodroidProfiling::prof_class_loaded ([[maybe_unused]] MonoProfiler *prof, Mono
 }
 
 void
-MonodroidProfiling::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
+MonodroidProfiling::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoVTable *vtable) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::VTableLoadMonoVM> ();
@@ -103,7 +103,7 @@ MonodroidProfiling::prof_vtable_loading ([[maybe_unused]] MonoProfiler *prof, Mo
 }
 
 void
-MonodroidProfiling::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, MonoVTable *vtable) noexcept
+MonodroidProfiling::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoVTable *vtable) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::VTableLoadMonoVM> ();
@@ -114,7 +114,7 @@ MonodroidProfiling::prof_vtable_loaded ([[maybe_unused]] MonoProfiler *prof, Mon
 }
 
 void
-MonodroidProfiling::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+MonodroidProfiling::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoMethod *method) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MethodInvokeMonoVM> ();
@@ -127,7 +127,7 @@ MonodroidProfiling::prof_method_begin_invoke ([[maybe_unused]] MonoProfiler *pro
 }
 
 void
-MonodroidProfiling::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method) noexcept
+MonodroidProfiling::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoMethod *method) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MethodInvokeMonoVM> ();
@@ -138,7 +138,7 @@ MonodroidProfiling::prof_method_end_invoke ([[maybe_unused]] MonoProfiler *prof,
 }
 
 void
-MonodroidProfiling::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+MonodroidProfiling::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MethodInnerMonoVM> ();
@@ -151,7 +151,7 @@ MonodroidProfiling::prof_method_enter ([[maybe_unused]] MonoProfiler *prof, Mono
 }
 
 void
-MonodroidProfiling::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
+MonodroidProfiling::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoMethod *method, [[maybe_unused]] MonoProfilerCallContext *context) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MethodInnerMonoVM> ();
@@ -162,7 +162,7 @@ MonodroidProfiling::prof_method_leave ([[maybe_unused]] MonoProfiler *prof, Mono
 }
 
 void
-MonodroidProfiling::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
+MonodroidProfiling::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoObject *object) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonitorContentionMonoVM> ();
@@ -175,7 +175,7 @@ MonodroidProfiling::prof_monitor_contention ([[maybe_unused]] MonoProfiler *prof
 }
 
 void
-MonodroidProfiling::prof_monitor_acquired ([[maybe_unused]] MonoProfiler *prof, MonoObject *object) noexcept
+MonodroidProfiling::prof_monitor_acquired ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] MonoObject *object) noexcept
 {
 #if defined(PERFETTO_ENABLED)
 	auto track = PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonitorContentionMonoVM> ();
