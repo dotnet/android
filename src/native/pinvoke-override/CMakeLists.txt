@@ -35,11 +35,8 @@ macro(create_library _libname _alias _sources)
 
   add_library(${_alias} ALIAS ${_libname})
 
-<<<<<<< HEAD
   set_static_library_suffix(${_libname})
 
-=======
->>>>>>> 13ba4b152 (Let's see what breaks)
   target_compile_definitions(
     ${_libname}
     PRIVATE
