@@ -447,6 +447,15 @@
         </Str>
         <Disp Icon="Str" />
       </Item>
+      <Item ItemId=";XA0141" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
+        <Str Cat="Text">
+          <Val><![CDATA[NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[Le paquet NuGet « {0} » version « {1} » contient une bibliothèque partagée « {2} » qui n'est pas correctement alignée. Pour plus d’informations, consultez https://developer.android.com/guide/practices/page-sizes]]></Val>
+          </Tgt>
+        </Str>
+        <Disp Icon="Str" />
+      </Item>
       <Item ItemId=";XA1000" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}]]></Val>
