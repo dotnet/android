@@ -78,11 +78,7 @@ namespace xamarin::android {
 		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 
 	private:
-<<<<<<< HEAD
 		static xamarin::android::mutex  pinvoke_map_write_lock;
-=======
-		static xamarin::android::mutex pinvoke_map_write_lock;
->>>>>>> da87011a5 (Fix post-rebase issues and conflicts)
 		static pinvoke_library_map    other_pinvoke_map;
 
 #if defined(PRECOMPILED)
