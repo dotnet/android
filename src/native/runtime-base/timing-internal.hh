@@ -14,6 +14,7 @@
 #include "util.hh"
 #include "monodroid-profiling.hh"
 #include "shared-constants.hh"
+#include "monodroid-state.hh"
 
 namespace xamarin::android::internal
 {
@@ -170,7 +171,7 @@ namespace xamarin::android::internal
 			TimingEvent &ev = events[index];
 			mark (ev.start);
 			ev.kind = kind;
-			ev.before_managed = MonodroidRuntime::is_startup_in_progress ();
+			ev.before_managed = MonodroidState::is_startup_in_progress ();
 			ev.more_info = nullptr;
 
 			return index;

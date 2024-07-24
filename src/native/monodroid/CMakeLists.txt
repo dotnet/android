@@ -8,7 +8,7 @@ include(CheckCXXSymbolExists)
 # Paths
 
 set(BIONIC_SOURCES_DIR "${REPO_ROOT_DIR}/src-ThirdParty/bionic")
-set(ROBIN_MAP_DIR "${EXTERNAL_DIR}/robin-map")
+set(BUILD_STATIC_LIBRARY OFF)
 
 if(DEBUG_BUILD)
   # Convince NDK to really optimize our Debug builds. Without this, NDK's cmake toolchain definition
@@ -17,6 +17,8 @@ if(DEBUG_BUILD)
   set(XA_COMPILER_FLAGS_DEBUG "-fno-limit-debug-info -O2")
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
+elseif(NOT ANALYZERS_ENABLED)
+  set(BUILD_STATIC_LIBRARY ON)
 endif()
 
 # Library directories
@@ -42,6 +44,7 @@ endif()
 # Sources
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
+set(XAMARIN_MONO_ANDROID_STATIC_LIB "${XAMARIN_MONO_ANDROID_LIB}-static")
 set(XAMARIN_MONO_ANDROID_PERFETTO_LIB "mono-android-perfetto.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
 list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
@@ -50,6 +53,7 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   embedded-assemblies-zip.cc
   embedded-assemblies.cc
   globals.cc
+  internal-pinvokes.cc
   jni-remapping.cc
   mono-log-adapter.cc
   monodroid-glue.cc
@@ -60,9 +64,7 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   osbridge.cc
   pinvoke-override-api.cc
   runtime-util.cc
-  timing.cc
   timezones.cc
-  timing-internal.cc
   xamarin_getifaddrs.cc
 )
 
@@ -99,9 +101,22 @@ add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 # Build
 configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
 
-macro(set_common_monodroid_properties TARGET)
+add_library(
+  ${XAMARIN_MONO_ANDROID_LIB}
+  SHARED ${XAMARIN_MONODROID_SOURCES}
+)
+
+if(BUILD_STATIC_LIBRARY)
+  add_library(
+    ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+    STATIC
+    ${XAMARIN_MONODROID_SOURCES}
+  )
+endif()
+
+macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
-    ${TARGET}
+    ${TARGET_NAME}
     PRIVATE
     HAVE_CONFIG_H
     HAVE_LZ4
@@ -114,7 +129,7 @@ macro(set_common_monodroid_properties TARGET)
 
   if(DONT_INLINE)
     target_compile_definitions(
-      ${TARGET}
+      ${TARGET_NAME}
       PRIVATE
       NO_INLINE
     )
@@ -122,30 +137,37 @@ macro(set_common_monodroid_properties TARGET)
 
   if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
     target_compile_definitions(
-      ${TARGET}
+      ${TARGET_NAME}
       PRIVATE
       DEBUG
     )
   endif()
 
+  if (ENABLE_TIMING)
+    target_compile_definitions(
+      ${TARGET_NAME}
+      PRIVATE
+      MONODROID_TIMING
+    )
+  endif()
+
   target_compile_options(
-    ${TARGET}
+    ${TARGET_NAME}
     PRIVATE
     ${XA_DEFAULT_SYMBOL_VISIBILITY}
     ${XA_COMMON_CXX_ARGS}
   )
 
   target_include_directories(
-    ${TARGET} BEFORE
+    ${TARGET_NAME} BEFORE
     PRIVATE
-    ${CMAKE_CURRENT_BINARY_DIR}/include/
-    ${NATIVE_TRACING_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_BINARY_DIR}/include
     ${EXTERNAL_DIR}
     ${ROBIN_MAP_DIR}/include
   )
 
   target_include_directories(
-    ${TARGET}
+    ${TARGET_NAME}
     SYSTEM PRIVATE
     ${SYSROOT_CXX_INCLUDE_DIR}
     ${MONO_RUNTIME_INCLUDE_DIR}
@@ -154,19 +176,30 @@ macro(set_common_monodroid_properties TARGET)
   )
 
   target_link_directories(
-    ${TARGET}
+    ${TARGET_NAME}
     PRIVATE
     ${NET_RUNTIME_DIR}/native
   )
 
   target_link_options(
-    ${TARGET}
+    ${TARGET_NAME}
     PRIVATE
     ${XA_DEFAULT_SYMBOL_VISIBILITY}
     ${XA_COMMON_CXX_LINKER_ARGS}
     ${XA_CXX_DSO_LINKER_ARGS}
   )
-endmacro()
+
+  target_link_libraries(
+    ${TARGET_NAME}
+    ${LINK_LIBS}
+    xa::xamarin-app
+    xa::runtime-base
+    xa::java-interop
+    xa::lz4
+    -lmonosgen-2.0
+    -llog
+  )
+endmacro ()
 
 if(NOT ENABLE_PERFETTO)
   add_library(
@@ -174,27 +207,26 @@ if(NOT ENABLE_PERFETTO)
     SHARED ${XAMARIN_MONODROID_SOURCES}
   )
 
-  set_common_monodroid_properties(${XAMARIN_MONO_ANDROID_LIB})
-  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
+  if(BUILD_STATIC_LIBRARY)
+    lib_target_options(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+    xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_STATIC_LIB})
 
-  if (ENABLE_TIMING)
-    target_compile_definitions(
-      ${XAMARIN_MONO_ANDROID_LIB}
-      PRIVATE
-      MONODROID_TIMING
+    target_link_libraries(
+      ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+      ${LINK_LIBS}
+      ${SHARED_LIB_NAME}
+      xa::pinvoke-override-precompiled
     )
   endif()
+
+  lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
+  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
 
   target_link_libraries(
     ${XAMARIN_MONO_ANDROID_LIB}
     ${LINK_LIBS}
-    xa::xamarin-app
     ${SHARED_LIB_NAME}
-    xa::runtime-base
-    xa::java-interop
-    xa::lz4
-    -lmonosgen-2.0
-    -llog
+    xa::pinvoke-override-precompiled
   )
 else()
   add_library(
@@ -202,19 +234,13 @@ else()
     SHARED ${XAMARIN_MONODROID_PERFETTO_SOURCES}
   )
 
-  set_common_monodroid_properties(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
+  lib_target_options(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
   xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
 
   target_link_libraries(
     ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
     ${LINK_LIBS}
-    xa::xamarin-app
     xa::shared-no-abi
-    xa::runtime-base
-    xa::java-interop
-    xa::lz4
-    -lmonosgen-2.0
-    -llog
+    xa::pinvoke-override-precompiled
   )
 endif()
-

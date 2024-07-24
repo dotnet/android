@@ -3,6 +3,7 @@
 
 #include <string_view>
 #include "cpp-util.hh"
+#include "xxhash.hh"
 
 namespace xamarin::android::internal
 {
@@ -121,6 +122,18 @@ namespace xamarin::android::internal
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETWORK  { "monodroid-network" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID_NETLINK  { "monodroid-netlink" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_ERROR              { "*error*" };
+
+		static constexpr std::string_view mono_component_debugger_name  { "libmono-component-debugger.so" };
+		static constexpr hash_t mono_component_debugger_hash            = xxhash::hash (mono_component_debugger_name);
+
+		static constexpr std::string_view mono_component_hot_reload_name { "libmono-component-hot_reload.so" };
+		static constexpr hash_t mono_component_hot_reload_hash          = xxhash::hash (mono_component_hot_reload_name);
+
+		static constexpr std::string_view mono_component_diagnostics_tracing_name { "libmono-component-diagnostics_tracing.so" };
+		static constexpr hash_t mono_component_diagnostics_tracing_hash = xxhash::hash (mono_component_diagnostics_tracing_name);
+
+		static constexpr std::string_view xamarin_native_tracing_name { "libxamarin-native-tracing.so" };
+		static constexpr hash_t xamarin_native_tracing_name_hash = xxhash::hash (xamarin_native_tracing_name);
 	};
 }
 #endif // __SHARED_CONSTANTS_HH
