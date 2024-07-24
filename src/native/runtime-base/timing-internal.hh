@@ -7,6 +7,7 @@
 #include <string_view>
 #include <vector>
 
+#include "android-system.hh"
 #include "cpp-util.hh"
 #include "logger.hh"
 #include "startup-aware-lock.hh"

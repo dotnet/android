@@ -1416,14 +1416,14 @@ MonodroidRuntime::perfetto_init () noexcept
 void
 MonodroidRuntime::timing_init_extended () noexcept
 {
-	mono_profiler_set_assembly_loading_callback (profiler_handle, prof_assembly_loading);
-	mono_profiler_set_assembly_loaded_callback (profiler_handle, prof_assembly_loaded);
+	mono_profiler_set_assembly_loading_callback (profiler_handle, MonodroidProfiling::prof_assembly_loading);
+	mono_profiler_set_assembly_loaded_callback (profiler_handle, MonodroidProfiling::prof_assembly_loaded);
 
-	mono_profiler_set_class_loading_callback (profiler_handle, prof_class_loading);
-	mono_profiler_set_class_loaded_callback (profiler_handle, prof_class_loaded);
+	mono_profiler_set_class_loading_callback (profiler_handle, MonodroidProfiling::prof_class_loading);
+	mono_profiler_set_class_loaded_callback (profiler_handle, MonodroidProfiling::prof_class_loaded);
 
-	mono_profiler_set_method_begin_invoke_callback (profiler_handle, prof_method_begin_invoke);
-	mono_profiler_set_method_end_invoke_callback (profiler_handle, prof_method_end_invoke);
+	mono_profiler_set_method_begin_invoke_callback (profiler_handle, MonodroidProfiling::prof_method_begin_invoke);
+	mono_profiler_set_method_end_invoke_callback (profiler_handle, MonodroidProfiling::prof_method_end_invoke);
 }
 
 void
@@ -1433,18 +1433,18 @@ MonodroidRuntime::timing_init_verbose () noexcept
 	mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
 	mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
 
-	mono_profiler_set_monitor_contention_callback (profiler_handle, prof_monitor_contention);
-	mono_profiler_set_monitor_acquired_callback (profiler_handle, prof_monitor_acquired);
+	mono_profiler_set_monitor_contention_callback (profiler_handle, MonodroidProfiling::prof_monitor_contention);
+	mono_profiler_set_monitor_acquired_callback (profiler_handle, MonodroidProfiling::prof_monitor_acquired);
 }
 
 void
 MonodroidRuntime::timing_init_extreme () noexcept
 {
-	mono_profiler_set_vtable_loading_callback (profiler_handle, prof_vtable_loading);
-	mono_profiler_set_vtable_loaded_callback (profiler_handle, prof_vtable_loaded);
+	mono_profiler_set_vtable_loading_callback (profiler_handle, MonodroidProfiling::prof_vtable_loading);
+	mono_profiler_set_vtable_loaded_callback (profiler_handle, MonodroidProfiling::prof_vtable_loaded);
 
-	mono_profiler_set_image_loading_callback (profiler_handle, prof_image_loading);
-	mono_profiler_set_image_loaded_callback (profiler_handle, prof_image_loaded);
+	mono_profiler_set_image_loading_callback (profiler_handle, MonodroidProfiling::prof_image_loading);
+	mono_profiler_set_image_loaded_callback (profiler_handle, MonodroidProfiling::prof_image_loaded);
 }
 
 [[gnu::flatten]] void

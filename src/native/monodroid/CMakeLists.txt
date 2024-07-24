@@ -58,7 +58,6 @@ list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   mono-log-adapter.cc
   monodroid-glue.cc
   monodroid-networkinfo.cc
-  monodroid-profiling.cc
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
@@ -100,19 +99,6 @@ add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
 
 # Build
 configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
-
-add_library(
-  ${XAMARIN_MONO_ANDROID_LIB}
-  SHARED ${XAMARIN_MONODROID_SOURCES}
-)
-
-if(BUILD_STATIC_LIBRARY)
-  add_library(
-    ${XAMARIN_MONO_ANDROID_STATIC_LIB}
-    STATIC
-    ${XAMARIN_MONODROID_SOURCES}
-  )
-endif()
 
 macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
@@ -207,7 +193,23 @@ if(NOT ENABLE_PERFETTO)
     SHARED ${XAMARIN_MONODROID_SOURCES}
   )
 
+  lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
+  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
+
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    ${LINK_LIBS}
+    ${SHARED_LIB_NAME}
+    xa::pinvoke-override-precompiled
+  )
+
   if(BUILD_STATIC_LIBRARY)
+    add_library(
+      ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+      STATIC
+      ${XAMARIN_MONODROID_SOURCES}
+    )
+
     lib_target_options(${XAMARIN_MONO_ANDROID_STATIC_LIB})
     xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_STATIC_LIB})
 
@@ -218,16 +220,6 @@ if(NOT ENABLE_PERFETTO)
       xa::pinvoke-override-precompiled
     )
   endif()
-
-  lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
-  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
-
-  target_link_libraries(
-    ${XAMARIN_MONO_ANDROID_LIB}
-    ${LINK_LIBS}
-    ${SHARED_LIB_NAME}
-    xa::pinvoke-override-precompiled
-  )
 else()
   add_library(
     ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
