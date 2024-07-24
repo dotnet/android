@@ -1,0 +1,27 @@
+<Project>
+  <!-- Extensions for signing nested .jar files for https://github.com/xamarin/yaml-templates/blob/e295a06c70f6c847853a262172b66ca938a7eec5/sign-artifacts/steps/v3-SignFiles.proj -->
+  <Target Name="_UnzipNestedZips"
+      BeforeTargets="_CalculateItemsToSign" >
+    <PropertyGroup>
+      <_JarPath Condition=" '$(JAVA_HOME_17_X64)' != '' ">$(JAVA_HOME_17_X64)/bin/jar</_JarPath>
+      <_JarPath Condition=" '$(_JarPath)' == '' ">jar</_JarPath>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <_NestedBundleTool Include="$(_WorkingDir)**\bundletool.jar" />
+    </ItemGroup>
+
+    <RemoveDir Directories="@(_NestedBundleTool->'%(RootDir)%(Directory)%(Filename)-unzip')" />
+    <MakeDir Directories="@(_NestedBundleTool->'%(RootDir)%(Directory)%(Filename)-unzip')" />
+    <Exec WorkingDirectory="@(_NestedBundleTool->'%(RootDir)%(Directory)%(Filename)-unzip')" Command="$(_JarPath) -xf &quot;%(_NestedBundleTool.Identity)&quot;" />
+    <Delete Files="@(_NestedBundleTool)" Condition="'@(_NestedBundleTool->Count())' != '0'" />
+  </Target>
+
+  <Target Name="_ZipNestedZips"
+      DependsOnTargets="_UnzipNestedZips"
+      AfterTargets="SignFiles" >
+    <Exec WorkingDirectory="@(_NestedBundleTool->'%(RootDir)%(Directory)%(Filename)-unzip')" Command="$(_JarPath) -cmf META-INF/MANIFEST.MF &quot;%(_NestedBundleTool.Identity)&quot; ." />
+    <RemoveDir Directories="@(_NestedBundleTool->'%(RootDir)%(Directory)%(Filename)-unzip')" />
+  </Target>
+
+</Project>
