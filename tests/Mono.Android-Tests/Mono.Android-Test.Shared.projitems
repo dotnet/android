@@ -18,6 +18,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Android.App\ApplicationTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content.Res\AssetManagerTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Content\IntentTest.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Android.Content\SharedPreferencesTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Graphics\NinePatchTests.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\AndroidEnvironmentTest.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Android.Runtime\CharSequenceTest.cs" />
