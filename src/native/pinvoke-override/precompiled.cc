@@ -19,15 +19,7 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 	hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
 
 	if (library_name_hash == java_interop_library_hash || library_name_hash == xa_internal_api_library_hash) {
-<<<<<<< HEAD
-<<<<<<< HEAD
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
-=======
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes, internal_pinvokes_count);
->>>>>>> 13ba4b152 (Let's see what breaks)
-=======
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, internal_pinvokes.data (), internal_pinvokes_count);
->>>>>>> a67d780fc (Update the list of p/invokes, slight generated code changes)
 
 		if (entry == nullptr) [[unlikely]] {
 			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' (hash: 0x%zx) not found in compile-time map.", library_name, entrypoint_name, entrypoint_hash);
@@ -60,30 +52,14 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 		dotnet_dso_handle = &system_security_cryptography_native_android_library_handle;
 	} else if (library_name_hash == system_io_compression_native_library_hash) {
 		dotnet_dso_handle = &system_io_compression_native_library_handle;
-<<<<<<< HEAD
-<<<<<<< HEAD
 	} else if (library_name_hash == system_globalization_native_library_hash) {
 		dotnet_dso_handle = &system_globalization_native_library_handle;
-=======
->>>>>>> 13ba4b152 (Let's see what breaks)
-=======
-	} else if (library_name_hash == system_globalization_native_library_hash) {
-		dotnet_dso_handle = &system_globalization_native_library_handle;
->>>>>>> a67d780fc (Update the list of p/invokes, slight generated code changes)
 	} else {
 		dotnet_dso_handle = nullptr;
 	}
 
 	if (dotnet_dso_handle != nullptr) {
-<<<<<<< HEAD
-<<<<<<< HEAD
 		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, dotnet_pinvokes.data (), dotnet_pinvokes_count);
-=======
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, dotnet_pinvokes, dotnet_pinvokes_count);
->>>>>>> 13ba4b152 (Let's see what breaks)
-=======
-		PinvokeEntry *entry = find_pinvoke_address (entrypoint_hash, dotnet_pinvokes.data (), dotnet_pinvokes_count);
->>>>>>> a67d780fc (Update the list of p/invokes, slight generated code changes)
 		if (entry != nullptr) {
 			if (entry->func != nullptr) {
 				return entry->func;
