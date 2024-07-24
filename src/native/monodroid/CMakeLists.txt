@@ -18,7 +18,7 @@ if(DEBUG_BUILD)
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 elseif(NOT ANALYZERS_ENABLED)
-  set(BUILD_STATIC_LIBRARY ON)
+  set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
 endif()
 
 # Library directories
@@ -101,6 +101,7 @@ if(BUILD_STATIC_LIBRARY)
     STATIC
     ${XAMARIN_MONODROID_SOURCES}
   )
+  set_static_library_suffix(${XAMARIN_MONO_ANDROID_STATIC_LIB})
 endif()
 
 macro(lib_target_options TARGET_NAME)
