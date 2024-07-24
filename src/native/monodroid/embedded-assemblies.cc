@@ -33,6 +33,7 @@
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
 #include "monodroid-glue-internal.hh"
+#include "monodroid-state.hh"
 #include "startup-aware-lock.hh"
 #include "timing-internal.hh"
 #include "search.hh"
@@ -179,7 +180,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		close (fd);
 	}
 
-	if (MonodroidRuntime::is_startup_in_progress ()) {
+	if (MonodroidState::is_startup_in_progress ()) {
 		file.data = static_cast<uint8_t*>(map_info.area);
 	} else {
 		uint8_t *expected_null = nullptr;

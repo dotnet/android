@@ -11,6 +11,7 @@
 #include "timing.hh"
 #include "cpp-util.hh"
 #include "xxhash.hh"
+#include "monodroid-dl.hh"
 
 #include <mono/utils/mono-counters.h>
 #include <mono/metadata/profiler.h>
@@ -49,21 +50,6 @@ extern mono_bool mono_opt_aot_lazy_assembly_load;
 
 namespace xamarin::android::internal
 {
-	struct PinvokeEntry
-	{
-		hash_t      hash;
-		const char *name;
-		void       *func;
-	};
-
-	struct string_hash
-	{
-		force_inline xamarin::android::hash_t operator() (std::string const& s) const noexcept
-		{
-			return xamarin::android::xxhash::hash (s.c_str (), s.length ());
-		}
-	};
-
 	// Values must be identical to those in src/Mono.Android/Android.Runtime/RuntimeNativeMethods.cs
 	enum class TraceKind : uint32_t
 	{
@@ -75,27 +61,7 @@ namespace xamarin::android::internal
 
 	class MonodroidRuntime
 	{
-		using pinvoke_api_map = tsl::robin_map<
-			std::string,
-			void*,
-			string_hash,
-			std::equal_to<std::string>,
-			std::allocator<std::pair<std::string, void*>>,
-			true
-		>;
-
-		using pinvoke_api_map_ptr = pinvoke_api_map*;
-		using pinvoke_library_map = tsl::robin_map<
-			std::string,
-			pinvoke_api_map_ptr,
-			string_hash,
-			std::equal_to<std::string>,
-			std::allocator<std::pair<std::string, pinvoke_api_map_ptr>>,
-			true
-		>;
-
 		using load_assemblies_context_type = MonoAssemblyLoadContextGCHandle;
-		static constexpr pinvoke_library_map::size_type LIBRARY_MAP_INITIAL_BUCKET_COUNT = 1;
 
 #if defined (DEBUG)
 		struct RuntimeOptions {
@@ -146,18 +112,6 @@ namespace xamarin::android::internal
 		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
 		static constexpr bool is_running_on_desktop = false;
 
-		static constexpr std::string_view mono_component_debugger_name  { "libmono-component-debugger.so" };
-		static constexpr hash_t mono_component_debugger_hash            = xxhash::hash (mono_component_debugger_name);
-
-		static constexpr std::string_view mono_component_hot_reload_name { "libmono-component-hot_reload.so" };
-		static constexpr hash_t mono_component_hot_reload_hash          = xxhash::hash (mono_component_hot_reload_name);
-
-		static constexpr std::string_view mono_component_diagnostics_tracing_name { "libmono-component-diagnostics_tracing.so" };
-		static constexpr hash_t mono_component_diagnostics_tracing_hash = xxhash::hash (mono_component_diagnostics_tracing_name);
-
-		static constexpr std::string_view xamarin_native_tracing_name { "libxamarin-native-tracing.so" };
-		static constexpr hash_t xamarin_native_tracing_name_hash = xxhash::hash (xamarin_native_tracing_name);
-
 	public:
 		static constexpr int XA_LOG_COUNTERS = MONO_COUNTER_JIT | MONO_COUNTER_METADATA | MONO_COUNTER_GC | MONO_COUNTER_GENERICS | MONO_COUNTER_INTERP;
 
@@ -169,11 +123,6 @@ namespace xamarin::android::internal
 		                                             jboolean haveSplitApks);
 
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
-
-		static bool is_startup_in_progress () noexcept
-		{
-			return startup_in_progress;
-		}
 
 		int get_android_api_level () const
 		{
@@ -215,19 +164,12 @@ namespace xamarin::android::internal
 		unsigned int convert_dl_flags (int flags);
 
 		static void  cleanup_runtime_config (MonovmRuntimeConfigArguments *args, void *user_data);
-		static void* load_library_symbol (const char *library_name, const char *symbol_name, void **dso_handle = nullptr) noexcept;
-		static void* load_library_entry (std::string const& library_name, std::string const& entrypoint_name, pinvoke_api_map_ptr api_map) noexcept;
-		static void  load_library_entry (const char *library_name, const char *entrypoint_name, PinvokeEntry &entry, void **dso_handle) noexcept;
-		static void* fetch_or_create_pinvoke_map_entry (std::string const& library_name, std::string const& entrypoint_name, hash_t entrypoint_name_hash, pinvoke_api_map_ptr api_map, bool need_lock) noexcept;
-		static PinvokeEntry* find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept;
-		static void* handle_other_pinvoke_request (const char *library_name, hash_t library_name_hash, const char *entrypoint_name, hash_t entrypoint_name_hash) noexcept;
-		static void* monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name);
 
 		template<typename TFunc>
 		static void load_symbol (void *handle, const char *name, TFunc*& fnptr) noexcept
 		{
 			char *err = nullptr;
-			void *symptr = monodroid_dlsym (handle, name, &err, nullptr);
+			void *symptr = MonodroidDl::monodroid_dlsym (handle, name, &err, nullptr);
 
 			if (symptr == nullptr) {
 				log_warn (LOG_DEFAULT, "Failed to load symbol '%s' library with handle %p. %s", name, handle, err == nullptr ? "Unknown error" : err);
@@ -237,13 +179,6 @@ namespace xamarin::android::internal
 
 			fnptr = reinterpret_cast<TFunc*>(symptr);
 		}
-
-		static void* monodroid_dlopen_ignore_component_or_load (hash_t hash, const char *name, int flags, char **err) noexcept;
-		static void* monodroid_dlopen (const char *name, int flags, char **err) noexcept;
-		static void* monodroid_dlopen (const char *name, int flags, char **err, void *user_data) noexcept;
-		static void* monodroid_dlsym (void *handle, const char *name, char **err, void *user_data);
-		static void* monodroid_dlopen_log_and_return (void *handle, char **err, const char *full_name, bool free_memory, bool need_api_init = false);
-		static DSOCacheEntry* find_dso_cache_entry (hash_t hash) noexcept;
 
 		int LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version);
 		void create_xdg_directory (jstring_wrapper& home, size_t home_len, std::string_view const& relative_path, std::string_view const& environment_variable_name) noexcept;
@@ -341,20 +276,12 @@ namespace xamarin::android::internal
 		 * able to switch our different contexts from different threads.
 		 */
 		int                 current_context_id = -1;
-		static bool         startup_in_progress;
 
 		jnienv_register_jni_natives_fn jnienv_register_jni_natives = nullptr;
 		MonoAssemblyLoadContextGCHandle default_alc = nullptr;
 
-		static xamarin::android::mutex             pinvoke_map_write_lock;
-		static pinvoke_library_map    other_pinvoke_map;
 		static MonoCoreRuntimeProperties monovm_core_properties;
 		MonovmRuntimeConfigArguments  runtime_config_args;
-
-		static void *system_native_library_handle;
-		static void *system_security_cryptography_native_android_library_handle;
-		static void *system_io_compression_native_library_handle;
-		static xamarin::android::mutex   dso_handle_write_lock;
 	};
 }
 #endif
