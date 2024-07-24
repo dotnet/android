@@ -71,7 +71,6 @@ core workload SDK packs imported by WorkloadManifest.targets.
           Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' and Exists('$(_MonoAndroidNETOutputRoot)$(AndroidLatestUnstableApiLevel)\AndroidApiInfo.xml') "
       />
       <None Include="$(MSBuildThisFileDirectory)SignList.xml" CopyToOutputDirectory="PreserveNewest" />
-      <None Include="$(MSBuildThisFileDirectory)SignList.targets" CopyToOutputDirectory="PreserveNewest" />
       <None Include="$(MSBuildThisFileDirectory)SignVerifyIgnore.txt" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
   </Target>

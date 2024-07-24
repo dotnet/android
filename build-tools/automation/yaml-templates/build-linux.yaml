@@ -87,8 +87,6 @@ stages:
         $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux &&
         ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-unsigned/SignList.xml
         $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
-        ln $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-unsigned/SignList.targets
-        $(System.DefaultWorkingDirectory)/xamarin-android/bin/Build$(XA.Build.Configuration)/nuget-linux
       workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
       displayName: copy linux sdk
 

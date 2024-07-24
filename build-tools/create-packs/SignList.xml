@@ -19,8 +19,6 @@
     <ThirdParty Include="arm-linux-androideabi-ld.exe" />
     <ThirdParty Include="i686-linux-android-ld.exe" />
     <ThirdParty Include="x86_64-linux-android-ld.exe" />
-    <!-- bundletool.jar -->
-    <ThirdParty Include="jnidispatch.dll" />
   </ItemGroup>
 
   <ItemGroup>
@@ -36,7 +34,4 @@
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/llvm-mc" />
     <MacDeveloperSignHarden Include="Darwin/binutils/bin/*strip" />
   </ItemGroup>
-
-  <Import Project="$(MSBuildThisFileDirectory)SignList.targets" />
-
 </Project>
