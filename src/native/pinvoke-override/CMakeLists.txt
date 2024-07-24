@@ -35,6 +35,8 @@ macro(create_library _libname _alias _sources)
 
   add_library(${_alias} ALIAS ${_libname})
 
+  set_static_library_suffix(${_libname})
+
   target_compile_definitions(
     ${_libname}
     PRIVATE
