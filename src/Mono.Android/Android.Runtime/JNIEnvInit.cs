@@ -22,7 +22,6 @@ namespace Android.Runtime
 			public IntPtr          Class_forName;
 			public uint            logCategories;
 			public int             version; // TODO: remove, not needed anymore
-			public int             androidSdkVersion;
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
 			public int             isRunningOnDesktop;
@@ -36,7 +35,6 @@ namespace Android.Runtime
 #pragma warning restore 0649
 
 		internal static AndroidValueManager? AndroidValueManager;
-		internal static bool AllocObjectSupported;
 		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
 		internal static bool LogAssemblyCategory;
@@ -94,12 +92,10 @@ namespace Android.Runtime
 
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
 
-			bool androidNewerThan10 = args->androidSdkVersion > 10;
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;
-			androidRuntime = new AndroidRuntime (args->env, args->javaVm, androidNewerThan10, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
+			androidRuntime = new AndroidRuntime (args->env, args->javaVm, args->grefLoader, args->Loader_loadClass, args->jniAddNativeMethodRegistrationAttributePresent != 0);
 			AndroidValueManager = (AndroidValueManager) androidRuntime.ValueManager;
 
-			AllocObjectSupported = androidNewerThan10;
 			IsRunningOnDesktop = args->isRunningOnDesktop == 1;
 
 			grefIGCUserPeer_class = args->grefIGCUserPeer;

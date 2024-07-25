@@ -91,7 +91,6 @@ namespace xamarin::android::internal
 			jmethodID       Class_forName;
 			unsigned int    logCategories;
 			int             version;
-			int             androidSdkVersion;
 			int             grefGcThreshold;
 			jobject         grefIGCUserPeer;
 			int             isRunningOnDesktop;
@@ -118,15 +117,10 @@ namespace xamarin::android::internal
 		void Java_mono_android_Runtime_register (JNIEnv *env, jstring managedType, jclass nativeClass, jstring methods);
 		void Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
 		                                             jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
-		                                             jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+		                                             jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
 		                                             jboolean haveSplitApks);
 
 		jint Java_JNI_OnLoad (JavaVM *vm, void *reserved);
-
-		int get_android_api_level () const
-		{
-			return android_api_level;
-		}
 
 		jclass get_java_class_System () const
 		{
@@ -252,7 +246,6 @@ namespace xamarin::android::internal
 #endif
 	private:
 		MonoMethod         *registerType          = nullptr;
-		int                 android_api_level     = 0;
 		volatile bool       monodroid_gdb_wait    = true;
 		jclass              java_System;
 		jmethodID           java_System_identityHashCode;

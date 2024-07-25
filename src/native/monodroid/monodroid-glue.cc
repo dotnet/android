@@ -819,7 +819,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.env                    = env;
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
-	init.androidSdkVersion      = android_api_level;
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
@@ -1353,7 +1352,7 @@ MonodroidRuntime::install_logging_handlers ()
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
-                                                          jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                                          jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
 	char *mono_log_mask_raw = nullptr;
@@ -1394,7 +1393,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		);
 	}
 
-	android_api_level = apiLevel;
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 
@@ -1548,7 +1546,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		0,
 		loader,
 		assembliesJava,
-		apiLevel,
 		/* isEmulator */ JNI_FALSE,
 		/* haveSplitApks */ JNI_FALSE
 	);
@@ -1557,7 +1554,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                jobjectArray assembliesJava, jboolean isEmulator,
                                 jboolean haveSplitApks)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
@@ -1570,7 +1567,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		localDateTimeOffset,
 		loader,
 		assembliesJava,
-		apiLevel,
 		isEmulator,
 		application_config.ignore_split_configs ? false : haveSplitApks
 	);
