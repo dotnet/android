@@ -204,6 +204,8 @@ extends:
             artifactFolder: $(DotNetTargetFramework)-NoAot
 
         - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
+          # FIXME: https://github.com/dotnet/runtime/issues/105516
+          condition: false
           parameters:
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-AotLlvm
