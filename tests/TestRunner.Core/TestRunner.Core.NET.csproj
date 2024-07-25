@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <OutputType>Library</OutputType>
     <RootNamespace>Xamarin.Android.UnitTests</RootNamespace>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
