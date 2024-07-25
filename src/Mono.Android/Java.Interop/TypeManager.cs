@@ -322,21 +322,26 @@ namespace Java.Interop {
 			if (!typeSig.IsValid || typeSig.SimpleReference == null) {
 				throw new ArgumentException ($"Could not determine Java type corresponding to `{type.AssemblyQualifiedName}`.", nameof (targetType));
 			}
-			JniObjectReference typeClass;
-			try {
-				typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
-			} catch (Exception e) {
-				throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
-						nameof (targetType),
-						e);
-			}
 
-			var handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
-			if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-				Logger.Log (LogLevel.Info, "*jonp*", $"# jonp: can't assign `{GetClassName(handleClass.Handle)}` to `{GetClassName(typeClass.Handle)}`");
+			JniObjectReference typeClass = default;
+			JniObjectReference handleClass = default;
+			try {
+				try {
+					typeClass = JniEnvironment.Types.FindClass (typeSig.SimpleReference);
+				} catch (Exception e) {
+					throw new ArgumentException ($"Could not find Java class `{typeSig.SimpleReference}`.",
+							nameof (targetType),
+							e);
+				}
+
+				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
+				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
+					Logger.Log (LogLevel.Info, "*jonp*", $"# jonp: can't assign `{GetClassName(handleClass.Handle)}` to `{GetClassName(typeClass.Handle)}`");
+					return null;
+				}
+			} finally {
 				JniObjectReference.Dispose (ref handleClass);
 				JniObjectReference.Dispose (ref typeClass);
-				return null;
 			}
 
 			IJavaPeerable? result = null;
