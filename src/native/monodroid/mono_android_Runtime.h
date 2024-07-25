@@ -87,6 +87,14 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_propagateUncaughtException
 JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
   (JNIEnv *, jclass);
 
+/*
+ * Class:     mono_android_Runtime
+ * Method:    dumpTracingData
+ * Signature: ()V
+ */
+JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTracingData
+  (JNIEnv *, jclass);
+
 #ifdef __cplusplus
 }
 #endif

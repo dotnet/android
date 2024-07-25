@@ -1615,6 +1615,12 @@ JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, 
 }
 
 JNIEXPORT void
+JNICALL Java_mono_android_Runtime_dumpTracingData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
+{
+	// TODO: implement
+}
+
+JNIEXPORT void
 JNICALL Java_mono_android_Runtime_register (JNIEnv *env, [[maybe_unused]] jclass klass, jstring managedType, jclass nativeClass, jstring methods)
 {
 	monodroidRuntime.Java_mono_android_Runtime_register (env, managedType, nativeClass, methods);

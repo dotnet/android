@@ -34,6 +34,7 @@ public class Runtime {
 	public static native void destroyContexts (int[] contextIDs);
 	public static native void propagateUncaughtException (Thread javaThread, Throwable javaException);
 	public static native void dumpTimingData ();
+	public static native void dumpTracingData ();
 }
 
 final class XamarinUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {

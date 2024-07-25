@@ -160,6 +160,9 @@
     <None Include="ManifestOverlays\Timing.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Include="ManifestOverlays\Tracing.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <_SharedRuntimeAssemblies Include="@(MonoProfileAssembly->'$(_SharedRuntimeBuildPath)v1.0\%(Identity)')" />
