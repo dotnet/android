@@ -1,5 +1,5 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the xamarin-android-tools repo. -->
+	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the android-tools repo. -->
 	<Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Tools.Versions.props" />
 	<PropertyGroup>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>

@@ -56,12 +56,18 @@ namespace Xamarin.Android.Prepare
 			// Copy the WorkloadManifest.* files from the latest Microsoft.NET.Workload.* listed in package-download.proj
 			var dotnets = new [] { "net6", "net7", "net8", "current" };
 			foreach (var dotnet in dotnets) {
-				var destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand), $"microsoft.net.workload.mono.toolchain.{dotnet}");
+				var destination = Path.Combine (sdk_manifests,
+					context.Properties.GetRequiredValue (KnownProperties.DotNetMonoManifestVersionBand),
+					$"microsoft.net.workload.mono.toolchain.{dotnet}",
+					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETCoreAppRefPackageVersion));
 				Utilities.DeleteDirectory (destination, recurse: true);
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadMonoToolChainDir, dotnet), "*")) {
 					Utilities.CopyFileToDir (file, destination);
 				}
-				destination = Path.Combine (sdk_manifests, context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand), $"microsoft.net.workload.emscripten.{dotnet}");
+				destination = Path.Combine (sdk_manifests,
+					context.Properties.GetRequiredValue (KnownProperties.DotNetEmscriptenManifestVersionBand),
+					$"microsoft.net.workload.emscripten.{dotnet}",
+					context.Properties.GetRequiredValue (KnownProperties.MicrosoftNETWorkloadEmscriptenPackageVersion));
 				Utilities.DeleteDirectory (destination, recurse: true);
 				foreach (var file in Directory.GetFiles (string.Format (Configurables.Paths.MicrosoftNETWorkloadEmscriptenDir, dotnet), "*")) {
 					Utilities.CopyFileToDir (file, destination);
@@ -78,23 +84,13 @@ namespace Xamarin.Android.Prepare
 
 			Log.StatusLine ("Downloading dotnet-install script...");
 
-			(bool success, ulong size, HttpStatusCode status) = await Utilities.GetDownloadSizeWithStatus (dotnetScriptUrl);
-			if (!success) {
-				if (status == HttpStatusCode.NotFound) {
-					Log.WarningLine ($"dotnet-install URL '{dotnetScriptUrl}' not found.");
-				} else {
-					Log.WarningLine ($"Failed to obtain dotnet-install script size from URL '{dotnetScriptUrl}'. HTTP status code: {status} ({(int) status})");
-				}
-
-				if (File.Exists (dotnetScriptPath)) {
-					Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
-					return true;
-				}
+			if (File.Exists (dotnetScriptPath)) {
+				Log.WarningLine ($"Using cached installation script found in '{dotnetScriptPath}'");
+				return true;
 			}
 
-			DownloadStatus downloadStatus = Utilities.SetupDownloadStatus (context, size, context.InteractiveSession);
 			Log.StatusLine ($"  {context.Characters.Link} {dotnetScriptUrl}", ConsoleColor.White);
-			await Download (context, dotnetScriptUrl, tempDotnetScriptPath, "dotnet-install", Path.GetFileName (dotnetScriptUrl.LocalPath), downloadStatus);
+			await Utilities.Download (dotnetScriptUrl, tempDotnetScriptPath, DownloadStatus.Empty);
 
 			if (File.Exists (tempDotnetScriptPath)) {
 				Utilities.CopyFile (tempDotnetScriptPath, dotnetScriptPath);

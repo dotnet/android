@@ -88,7 +88,7 @@
   </Target>
 
   <Target Name="ExtractWorkloadPacks"
-      DependsOnTargets="DeleteExtractedWorkloadPacks" >
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
     <ItemGroup>
       <_WLManifest Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.NET.Sdk.Android.Manifest-*.nupkg" />
     </ItemGroup>
@@ -104,7 +104,7 @@
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\LICENSE.TXT" />
       <_WLExtractedFiles Include="$(_SdkManifestsFolder)temp\data\*" />
     </ItemGroup>
-    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android" />
+    <Move SourceFiles="@(_WLExtractedFiles)" DestinationFolder="$(_SdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\" />
     <RemoveDir Directories="$(_SdkManifestsFolder)temp\" />
 
     <!-- Parse NuGet.config -->
@@ -132,7 +132,7 @@
       <_InstallArguments Include="--source &quot;%(_NuGetSources.Identity)&quot;" />
       <_InstallArguments Include="--temp-dir &quot;$(_TempDirectory)&quot;" />
     </ItemGroup>
-    <MakeDir Directories="$(_TempDirectory)" />
+    <MakeDir Directories="$(_TempDirectory);$(BuildOutputDirectory)lib\sdk-manifests" />
     <Exec
         Command="&quot;$(DotNetPreviewTool)&quot; workload install @(_InstallArguments, ' ')"
         WorkingDirectory="$(_TempDirectory)"
@@ -148,8 +148,8 @@
     </ItemGroup>
     <ItemGroup>
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)metadata" />
+      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\workloadsets" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.sdk.android" />
-      <_PackFoldersToDelete Include="$(DotNetPreviewPath)sdk-manifests\$(DotNetSdkManifestsFolder)\microsoft.net.workload.android" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Ref.%(_PackApiLevels.Identity)" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm" />
       <_PackFoldersToDelete Include="$(DotNetPreviewPath)packs\Microsoft.Android.Runtime.%(_PackApiLevels.Identity).android-arm64" />
@@ -194,6 +194,7 @@
 
     <PushToAzureDevOpsArtifacts
         ItemsToPush="@(ItemsToPush)"
+        IsStableBuild="$(IsStableBuild)"
         ManifestBuildData="@(ManifestBuildData)"
         ManifestRepoUri="$(BUILD_REPOSITORY_NAME)"
         ManifestBranch="$(BUILD_SOURCEBRANCH)"
@@ -264,11 +265,12 @@
     <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
   </Target>
 
-  <Target Name="InstallManifestAndDependencies">
+  <Target Name="InstallManifestAndDependencies"
+      DependsOnTargets="DeleteExtractedWorkloadPacks;_GetDefaultPackageVersion">
     <PropertyGroup>
       <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
-      <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\</_LocalAndroidManifestFolder>
-      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\</_EmptyWorkloadDir>
+      <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
+      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
       <_EmptyWorkloadJsonContent>
 <![CDATA[
 {"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ "microsoft-net-runtime-android", "microsoft-net-runtime-android-aot" ] } } }

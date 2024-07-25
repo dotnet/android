@@ -9,12 +9,11 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Xamarin.Android.Tools;
-using Xamarin.Build;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
-	public class LinkApplicationSharedLibraries : AndroidAsyncTask
+	public class LinkApplicationSharedLibraries : AsyncTask
 	{
 		public override string TaskPrefix => "LAS";
 
@@ -43,6 +42,8 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
+
+		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		public override System.Threading.Tasks.Task RunTaskAsync ()
 		{
@@ -144,10 +145,12 @@ namespace Xamarin.Android.Tasks
 
 				targetLinkerArgs.Clear ();
 				string elf_arch;
+				uint maxPageSize;
 				switch (abi) {
 					case "armeabi-v7a":
 						targetLinkerArgs.Add ("-X");
 						elf_arch = "armelf_linux_eabi";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
 						break;
 
 					case "arm64":
@@ -155,14 +158,17 @@ namespace Xamarin.Android.Tasks
 					case "aarch64":
 						targetLinkerArgs.Add ("--fix-cortex-a53-843419");
 						elf_arch = "aarch64linux";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
 						break;
 
 					case "x86":
 						elf_arch = "elf_i386";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
 						break;
 
 					case "x86_64":
 						elf_arch = "elf_x86_64";
+						maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
 						break;
 
 					default:
@@ -184,6 +190,9 @@ namespace Xamarin.Android.Tasks
 						targetLinkerArgs.Add (lib);
 					}
 				}
+
+				targetLinkerArgs.Add ("-z");
+				targetLinkerArgs.Add ($"max-page-size={maxPageSize}");
 
 				string targetArgs = String.Join (" ", targetLinkerArgs);
 				yield return new Config {

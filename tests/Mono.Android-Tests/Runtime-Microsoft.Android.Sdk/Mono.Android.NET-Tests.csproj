@@ -5,7 +5,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
-    <SupportedOSPlatformVersion>21</SupportedOSPlatformVersion>
+    <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <RootNamespace>Xamarin.Android.RuntimeTests</RootNamespace>
     <OutputType>Exe</OutputType>
     <SignAssembly>true</SignAssembly>

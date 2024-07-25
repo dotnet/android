@@ -1,4 +1,4 @@
-# Pipeline for updating and uploading android-api-docs/docs/Mono.Android/en/*
+# Pipeline for updating and uploading android-api-docs/docs/xml/*
 # https://dev.azure.com/devdiv/DevDiv/_build?definitionId=15262
 
 # This pipeline can be manually ran against a given branch to generate a new set of Mono.Android docs.
@@ -58,8 +58,10 @@ stages:
   - job: mac_build_update_docs
     displayName: Update API Docs
     pool:
-      name: VSEng-Xamarin-RedmondMac-Android-Untrusted
-      demands: macOS.Name -equals Monterey
+      name: VSEng-VSMac-Xamarin-Shared
+      demands:
+      - macOS.Name -equals Ventura
+      - macOS.Architecture -equals x64
     timeoutInMinutes: 120
     workspace:
       clean: all

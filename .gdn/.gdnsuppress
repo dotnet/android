@@ -13,41 +13,41 @@
     }
   },
   "results": {
-    "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274": {
-      "signature": "28e1a7a1157c8739dce8ac1bbd828a471e477444ec50d2656d0440948b58a274",
+    "900efdc86dc2e568955f256c15344038d504db1c7cc819beee79a0e83e729285": {
+      "signature": "900efdc86dc2e568955f256c15344038d504db1c7cc819beee79a0e83e729285",
       "alternativeSignatures": [],
       "memberOf": [
         "default"
       ],
       "justification": "FillEventHistory+Event API documentation with generic example password.",
-      "createdDate": "2024-02-21 20:58:02Z"
+      "createdDate": "2024-06-27 20:43:25Z"
     },
-    "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e": {
-      "signature": "0b7cc0b28f27b0eeb2a415f10e62c32675dd2d4edcffe35600eae35f8064004e",
+    "546ee3b1e3df455989e1689c68bd5bebabe5b191c680b15ba02ee5f71bf4354c": {
+      "signature": "546ee3b1e3df455989e1689c68bd5bebabe5b191c680b15ba02ee5f71bf4354c",
       "alternativeSignatures": [],
       "memberOf": [
         "default"
       ],
       "justification": "Android.Service.Autofill.FillEventHistory+Event API documentation with generic example password.",
-      "createdDate": "2024-02-21 20:58:02Z"
+      "createdDate": "2024-06-27 20:43:25Z"
     },
-    "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d": {
-      "signature": "e57727a14a28f6fd8f4aa87cd3c4b33401dfea1078ce32fb3cbdf342e8adf63d",
+    "dc29fa2c200acb75acd13ef4da8a4139fb37618e4072f5ee06a40e07e3b31b95": {
+      "signature": "dc29fa2c200acb75acd13ef4da8a4139fb37618e4072f5ee06a40e07e3b31b95",
       "alternativeSignatures": [],
       "memberOf": [
         "default"
       ],
       "justification": "Javax.Crypto.ISecretKey API documentation with generic example password.",
-      "createdDate": "2024-02-21 20:58:02Z"
+      "createdDate": "2024-06-27 20:43:25Z"
     },
-    "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4": {
-      "signature": "15c51590a2e2bb503a7277448e05357f5fd8d4cb2f9b9b7446e41c872cceaac4",
+    "85ecf4cad9f76c3946ce6105b708ca822142bd1f1ac4092164f48af5923ca1f1": {
+      "signature": "85ecf4cad9f76c3946ce6105b708ca822142bd1f1ac4092164f48af5923ca1f1",
       "alternativeSignatures": [],
       "memberOf": [
         "default"
       ],
       "justification": "Javax.Security.Auth.Callback.PasswordCallback API documentation with generic example password.",
-      "createdDate": "2024-02-21 20:58:02Z"
+      "createdDate": "2024-06-27 20:43:25Z"
     },
     "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee": {
       "signature": "1ccf925aa704efd1035bac38e94d2e629fb5b0d1784d5473e4a52e6d13db16ee",
@@ -57,6 +57,69 @@
       ],
       "justification": "Dummy test.keystore file used for testing.",
       "createdDate": "2024-02-21 20:58:02Z"
+    },
+    "ad733d624486984da63461d2a23f266714f76e1788c271d90d45687579f51099": {
+      "signature": "ad733d624486984da63461d2a23f266714f76e1788c271d90d45687579f51099",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "release.keystore file created during test run.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "e10f89d02383ffef3bdbf9c048a9e0f3bdab956a8e6e49817780b0c837a5bd6d": {
+      "signature": "e10f89d02383ffef3bdbf9c048a9e0f3bdab956a8e6e49817780b0c837a5bd6d",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "e73b15633b7cb1e9e735ce0fe78a6ce3c95c11a8888181eb3b0cb50c191da19e": {
+      "signature": "e73b15633b7cb1e9e735ce0fe78a6ce3c95c11a8888181eb3b0cb50c191da19e",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "e622e6a9a73c1856d399e753105be517d62ec1e62d13a15ab9ecef43e15590a9": {
+      "signature": "e622e6a9a73c1856d399e753105be517d62ec1e62d13a15ab9ecef43e15590a9",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "df428be5ce5ef90685e15981cf49e2af10de6d87544f437aa1722f84516d6fef": {
+      "signature": "df428be5ce5ef90685e15981cf49e2af10de6d87544f437aa1722f84516d6fef",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "247325bc1f0ff6899ae09b13e006ac35c7cae4ffee0749f139fd5100f85a162f": {
+      "signature": "247325bc1f0ff6899ae09b13e006ac35c7cae4ffee0749f139fd5100f85a162f",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
+    },
+    "6d53f09942503c3f7eeccf23af43ae976431e8dbf2ad3d32be8af5bd37068d4d": {
+      "signature": "6d53f09942503c3f7eeccf23af43ae976431e8dbf2ad3d32be8af5bd37068d4d",
+      "alternativeSignatures": [],
+      "memberOf": [
+        "default"
+      ],
+      "justification": "False positive in linker-dependencies.xml file.",
+      "createdDate": "2024-06-14 18:52:00Z"
     }
   }
 }

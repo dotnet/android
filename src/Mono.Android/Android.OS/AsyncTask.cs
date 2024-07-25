@@ -64,7 +64,6 @@ namespace Android.OS {
 			JNIEnv.FinishCreateInstance (Handle, class_ref, id_ctor);
 		}
 
-		[Preserve (Conditional = true)]
 		protected override Java.Lang.Object? DoInBackground (params Java.Lang.Object[]? native_parms)
 		{
 			TParams[] parms = new TParams[native_parms?.Length ?? 0];

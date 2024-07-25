@@ -2,8 +2,8 @@
 ***********************************************************************************************
 sign-content.proj
 
-This project file is used to sign and harden all relevent files included in our legacy .vsix
-and .pkg installers.  ESRP signing does not yet support passing a runtime entitlements
+This project file is used to add runtime entitlements to any file that requires macOS signing
+and runtime hardening. ESRP signing does not yet support passing a runtime entitlements
 file alongside a file that needs runtime hardening, so we have to apply the entitlements
 ourself (using an empty signing identity) before passing these files to ESRP.
 ***********************************************************************************************
@@ -12,7 +12,6 @@ ourself (using an empty signing identity) before passing these files to ESRP.
 
   <Import Project="..\..\Configuration.props" />
   <Import Project="create-installers.targets" />
-  <Import Project="$(XamarinAndroidSourcePath)\build-tools\create-packs\SignList.xml" />
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
@@ -20,110 +19,11 @@ ourself (using an empty signing identity) before passing these files to ESRP.
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <!-- NOTE: Any file you want to sign must be under either $(OutDir) or $(IntermediateOutputPath). -->
     <OutDir Condition=" '$(OutDir)' == '' ">$(MicrosoftAndroidSdkOutDir)</OutDir>
-    <UnzippedVsixDir>$(OutDir)vsix-unzip\</UnzippedVsixDir>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.VisualStudioEng.MicroBuild.Core" Version="$(MicroBuildCoreVersion)">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-    </PackageReference>
-  </ItemGroup>
 
   <Target Name="AddMachOEntitlements" >
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_MSBuildFilesUnixSignAndHarden.Identity)&quot;" />
     <Exec Command="codesign -vvvv -f -s - -o runtime --entitlements &quot;$(DefaultRuntimeEntitlementsPath)&quot; &quot;%(_BinUtilsFilesUnixSignAndHarden.Identity)&quot;" />
-  </Target>
-
-  <Target Name="AddMSBuildFilesUnixSign" >
-    <ItemGroup>
-      <FilesToSign Include="@(_MSBuildFilesUnixSign)">
-        <Authenticode>MacDeveloperVNext</Authenticode>
-        <Zip>true</Zip>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddMSBuildFilesUnixSignAndHarden" >
-    <ItemGroup>
-      <FilesToSign Include="@(_MSBuildFilesUnixSignAndHarden)">
-        <Authenticode>MacDeveloperVNextHarden</Authenticode>
-        <Zip>true</Zip>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddBinUtilsFilesUnixSign" >
-    <ItemGroup>
-      <FilesToSign Include="@(_BinUtilsFilesUnixSign)">
-        <Authenticode>MacDeveloperVNext</Authenticode>
-        <Zip>true</Zip>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddBinUtilsFilesUnixSignAndHarden" >
-    <ItemGroup>
-      <FilesToSign Include="@(_BinUtilsFilesUnixSignAndHarden)">
-        <Authenticode>MacDeveloperVNextHarden</Authenticode>
-        <Zip>true</Zip>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="AddVsixContent" >
-    <RemoveDir Directories="$(UnzippedVsixDir)" />
-    <MakeDir Directories="$(UnzippedVsixDir)" />
-    <Unzip
-        SourceFiles="$(VsixPath)"
-        DestinationFolder="$(UnzippedVsixDir)"
-    />
-    <CreateItem Include="@(ThirdParty -> '$(UnzippedVsixDir)**\%(Identity)')">
-      <Output TaskParameter="Include" ItemName="_ThirdPartyAssemblies" />
-    </CreateItem>
-    <CreateItem Include="@(Skip -> '$(UnzippedVsixDir)**\%(Identity)')">
-      <Output TaskParameter="Include" ItemName="_SkipAssemblies" />
-    </CreateItem>
-    <!-- Allow full wildcards in @(FirstParty) by removing any explicitly listed @(ThirdParty) and @(Skip) content -->
-    <CreateItem Include="@(FirstParty -> '$(UnzippedVsixDir)**\%(Identity)')" Exclude="@(_ThirdPartyAssemblies);@(_SkipAssemblies)">
-      <Output TaskParameter="Include" ItemName="_FirstPartyAssemblies" />
-    </CreateItem>
-    <ItemGroup>
-      <FilesToSign Include="@(_FirstPartyAssemblies)" Condition="%(Extension) == '.dll' or %(Extension) == '.exe'">
-        <Authenticode>Microsoft400</Authenticode>
-      </FilesToSign>
-      <FilesToSign Include="@(_FirstPartyAssemblies)" Condition="%(Extension) == '.jar'">
-        <Authenticode>MicrosoftJARSHA2</Authenticode>
-      </FilesToSign>
-      <FilesToSign Include="@(_ThirdPartyAssemblies)" Condition="%(Extension) == '.dll' or %(Extension) == '.exe'">
-        <Authenticode>3PartySHA2</Authenticode>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="ZipVsixContent" >
-    <Delete Files="$(VsixPath)" />
-    <ZipDirectory
-        SourceDirectory="$(UnzippedVsixDir)"
-        DestinationFile="$(VsixPath)"
-    />
-  </Target>
-
-  <Target Name="SignVsix" >
-    <ItemGroup>
-      <FilesToSign Include="$(OutDir)\Xamarin.Android.Sdk-*.vsix">
-        <Authenticode>VsixSHA2</Authenticode>
-      </FilesToSign>
-    </ItemGroup>
-  </Target>
-
-  <Target Name="SignPkg" >
-    <ItemGroup>
-      <FilesToSign Include="$(OutDir)\xamarin.android-*.pkg">
-        <Authenticode>MacDeveloperVNext</Authenticode>
-        <Zip>true</Zip>
-      </FilesToSign>
-    </ItemGroup>
   </Target>
 
 </Project>

@@ -20,6 +20,10 @@ namespace Xamarin.Android.Build.Tests
 		[NonParallelizable] // Do not run environment modifying tests in parallel.
 		public void InstallAndroidDependenciesTest ([Values ("GoogleV2", "Xamarin")] string manifestType)
 		{
+			// Set to true when we are marking a new Android API level as stable, but it has not
+			// been added to the Xamarin manifest yet.
+			var xamarin_manifest_needs_updating = false;
+
 			AssertCommercialBuild ();
 			var oldSdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_SDK_PATH");
 			var oldJdkPath = Environment.GetEnvironmentVariable ("TEST_ANDROID_JDK_PATH");
@@ -57,6 +61,17 @@ namespace Xamarin.Android.Build.Tests
 					//    Dependency `platform-tools` should have been installed but could not be resolved.
 					var depFailedMessage = "should have been installed but could not be resolved";
 					bool failedToInstall = b.LastBuildOutput.ContainsText (depFailedMessage);
+
+					// If we don't think the Xamarin manifest has been updated to contain the new API level:
+					// - Don't error if we got the expected failure
+					// - Error if didn't get a failure, because we need to update this test
+					if (manifestType == "Xamarin" && xamarin_manifest_needs_updating) {
+						if (!failedToInstall)
+							Assert.Fail ("We didn't expect the Xamarin manifest to have the requested component. If the manifest has been updated, change 'InstallAndroidDependenciesTest.xamarin_manifest_needs_updating' to be 'false'. ");
+
+						return;
+					}
+
 					if (failedToInstall) {
 						var sb = new StringBuilder ();
 						foreach (var line in b.LastBuildOutput) {

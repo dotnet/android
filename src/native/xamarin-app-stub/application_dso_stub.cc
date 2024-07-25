@@ -51,6 +51,8 @@ const ApplicationConfig application_config = {
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
 	.have_assembly_store = false,
+	.marshal_methods_enabled = false,
+	.ignore_split_configs = false,
 	.bound_exception_type = 0, // System
 	.package_naming_policy = 0,
 	.environment_variable_count = 0,
@@ -58,6 +60,7 @@ const ApplicationConfig application_config = {
 	.number_of_assemblies_in_apk = 2,
 	.bundled_assembly_name_width = 0,
 	.number_of_dso_cache_entries = 2,
+	.number_of_shared_libraries = 2,
 	.android_runtime_jnienv_class_token = 1,
 	.jnienv_initialize_method_token = 2,
 	.jnienv_registerjninatives_method_token = 3,
@@ -79,6 +82,7 @@ static char second_assembly_name[AssemblyNameWidth];
 XamarinAndroidBundledAssembly bundled_assemblies[] = {
 	{
 		.file_fd = -1,
+		.file_name = nullptr,
 		.data_offset = 0,
 		.data_size = 0,
 		.data = nullptr,
@@ -88,6 +92,7 @@ XamarinAndroidBundledAssembly bundled_assemblies[] = {
 
 	{
 		.file_fd = -1,
+		.file_name = nullptr,
 		.data_offset = 0,
 		.data_size = 0,
 		.data = nullptr,
@@ -115,6 +120,7 @@ AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[] = {
 AssemblyStoreRuntimeData assembly_store = {
 	.data_start = nullptr,
 	.assembly_count = 0,
+	.index_entry_count = 0,
 	.assemblies = nullptr,
 };
 

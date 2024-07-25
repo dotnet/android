@@ -18,6 +18,8 @@ add_library(
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
+set_static_library_suffix(${LIB_NAME})
+
 target_include_directories(
   ${LIB_NAME}
   PUBLIC
@@ -37,10 +39,12 @@ target_compile_options(
   ${XA_COMMON_CXX_ARGS}
 )
 
-set_target_properties(
-  ${LIB_NAME}
-  PROPERTIES
-  ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-)
+if(DEBUG_BUILD)
+  set_target_properties(
+    ${LIB_NAME}
+    PROPERTIES
+    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  )
+endif()
 
 xa_add_compile_definitions(${LIB_NAME})

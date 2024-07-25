@@ -1059,4 +1059,12 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - NuGet package id
 {1} - NuGet package version</comment>
   </data>
+  <data name="XA0141" xml:space="preserve">
+    <value>Pakiet NuGet „{0}” w wersji „{1}” zawiera bibliotekę udostępnioną „{2}”, która nie jest poprawnie wyrównana. Zobacz https://developer.android.com/guide/practices/page-sizes for more details</value>
+    <comment>The following is a literal name and should not be translated: NuGet
+{0} - NuGet package id
+{1} - NuGet package version
+{2} - shared library file name
+    </comment>
+  </data>
 </root>

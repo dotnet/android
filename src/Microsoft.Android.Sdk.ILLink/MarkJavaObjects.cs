@@ -4,8 +4,9 @@ using System.Linq;
 using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
-using Mono.Tuner;
+using Java.Interop.Tools.Cecil;
 using Xamarin.Android.Tasks;
+using Profile = Microsoft.Android.Sdk.ILLink.Profile;
 
 namespace MonoDroid.Tuner {
 
@@ -16,7 +17,79 @@ namespace MonoDroid.Tuner {
 		public override void Initialize (LinkContext context, MarkContext markContext)
 		{
 			base.Initialize (context, markContext);
+			context.TryGetCustomData ("AndroidHttpClientHandlerType", out string androidHttpClientHandlerType);
+			context.TryGetCustomData ("AndroidCustomViewMapFile", out string androidCustomViewMapFile);
+			var customViewMap = MonoAndroidHelper.LoadCustomViewMapFile (androidCustomViewMapFile);
+
+			markContext.RegisterMarkAssemblyAction (assembly => ProcessAssembly (assembly, androidHttpClientHandlerType, customViewMap));
 			markContext.RegisterMarkTypeAction (type => ProcessType (type));
+		}
+
+		bool IsActiveFor (AssemblyDefinition assembly)
+		{
+			if (Profile.IsSdkAssembly (assembly))
+				return false;
+			if (Profile.IsProductAssembly (assembly))
+				return false;
+
+			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
+				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
+				assembly.MainModule.HasTypeReference ("Android.Util.IAttributeSet");
+		}
+
+		public void ProcessAssembly (AssemblyDefinition assembly, string androidHttpClientHandlerType, Dictionary<string, HashSet<string>> customViewMap)
+		{
+			if (!IsActiveFor (assembly))
+				return;
+
+			foreach (var type in assembly.MainModule.Types) {
+				// Custom HttpMessageHandler
+				if (!string.IsNullOrEmpty (androidHttpClientHandlerType) &&
+					androidHttpClientHandlerType.StartsWith (type.Name, StringComparison.Ordinal)) {
+					var assemblyQualifiedName = type.GetPartialAssemblyQualifiedName (Context);
+					if (assemblyQualifiedName == androidHttpClientHandlerType) {
+						Annotations.Mark (type);
+						PreservePublicParameterlessConstructors (type);
+						continue;
+					}
+				}
+
+				// Continue if not an IJavaObject
+				if (!type.ImplementsIJavaObject (cache))
+					continue;
+
+				// Custom views in Android .xml files
+				if (customViewMap.ContainsKey (type.FullName)) {
+					Annotations.Mark (type);
+					PreserveJavaObjectImplementation (type);
+					continue;
+				}
+
+				// Types with Java.Interop.IJniNameProviderAttribute attributes
+				if (ShouldPreserveBasedOnAttributes (type)) {
+					Annotations.Mark (type);
+					PreserveJavaObjectImplementation (type);
+					continue;
+				}
+			}
+		}
+
+		bool ShouldPreserveBasedOnAttributes (TypeDefinition type)
+		{
+			if (!type.HasCustomAttributes)
+				return false;
+
+			foreach (var attr in type.CustomAttributes) {
+				// Ignore Android.Runtime.RegisterAttribute
+				if (attr.AttributeType.FullName == "Android.Runtime.RegisterAttribute") {
+					continue;
+				}
+				if (attr.AttributeType.Implements ("Java.Interop.IJniNameProviderAttribute", cache)) {
+					return true;
+				}
+			}
+
+			return false;
 		}
 
 		public void ProcessType (TypeDefinition type)
@@ -46,6 +119,21 @@ namespace MonoDroid.Tuner {
 			PreserveAttributeSetConstructor (type);
 			PreserveInvoker (type);
 			PreserveInterfaces (type);
+		}
+
+		void PreservePublicParameterlessConstructors (TypeDefinition type)
+		{
+			if (!type.HasMethods)
+				return;
+
+			foreach (var constructor in type.Methods)
+			{
+				if (!constructor.IsConstructor || constructor.IsStatic || !constructor.IsPublic || constructor.HasParameters)
+					continue;
+
+				PreserveMethod (type, constructor);
+				break; // We can stop when found
+			}
 		}
 
 		void PreserveAttributeSetConstructor (TypeDefinition type)

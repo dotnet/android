@@ -15,7 +15,7 @@ namespace Xamarin.Android.Tasks
 	/// The <Aot/> task subclasses this in "legacy" Xamarin.Android.
 	/// The <GetAotAssemblies/> task subclasses this in .NET 6+.
 	/// </summary>
-	public abstract class GetAotArguments : AndroidAsyncTask
+	public abstract class GetAotArguments : AsyncTask
 	{
 		[Required]
 		public string AndroidApiLevel { get; set; } = "";
@@ -53,6 +53,8 @@ namespace Xamarin.Android.Tasks
 		public string AndroidSequencePointsMode { get; set; } = "";
 
 		public ITaskItem [] Profiles { get; set; } = Array.Empty<ITaskItem> ();
+
+		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		[Required, Output]
 		public ITaskItem [] ResolvedAssemblies { get; set; } = Array.Empty<ITaskItem> ();
@@ -324,6 +326,29 @@ namespace Xamarin.Android.Tasks
 				}
 				ldFlags.Append ("-s");
 			}
+
+			uint maxPageSize;
+			switch (arch) {
+				case AndroidTargetArch.Arm64:
+				case AndroidTargetArch.X86_64:
+					maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (ZipAlignmentPages);
+					break;
+
+				case AndroidTargetArch.Arm:
+				case AndroidTargetArch.X86:
+					maxPageSize = MonoAndroidHelper.ZipAlignmentToPageSize (AndroidZipAlign.ZipAlignment32Bit);
+					break;
+
+				default:
+					throw new InvalidOperationException ($"Internal error: unsupported target architecture {arch}");
+			}
+
+			if (ldFlags.Length > 0) {
+				ldFlags.Append (' ');
+			}
+
+			ldFlags.Append ("-z ");
+			ldFlags.Append ($"max-page-size={maxPageSize}");
 
 			return ldFlags.ToString ();
 		}
