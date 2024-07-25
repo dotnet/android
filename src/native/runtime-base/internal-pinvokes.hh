@@ -35,7 +35,6 @@ void _monodroid_weak_gref_delete (jobject handle, char type, const char *threadN
 void _monodroid_lref_log_new (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 void _monodroid_lref_log_delete (int lrefc, jobject handle, char type, const char *threadName, int threadId, const char  *from, int from_writable);
 void _monodroid_gc_wait_for_bridge_processing ();
-int _monodroid_get_android_api_level ();
 void monodroid_clear_gdb_wait ();
 void* _monodroid_get_identity_hash_code (JNIEnv *env, void *v);
 void* _monodroid_timezone_get_default_id ();

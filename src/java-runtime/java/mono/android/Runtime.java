@@ -23,7 +23,6 @@ public class Runtime {
 		int localDateTimeOffset,
 		ClassLoader loader,
 		String[] assemblies,
-		int apiLevel,
 		boolean isEmulator,
 		boolean haveSplitApks
 	);
