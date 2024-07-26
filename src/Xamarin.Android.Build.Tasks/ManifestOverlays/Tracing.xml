@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
   <application>
-    <receiver android:name="mono.android.app.DumpTracingData" tools:node="replace" android:exported="true">
+    <receiver android:name="mono.android.app.StopTracingAndDumpData" tools:node="replace" android:exported="true">
         <intent-filter>
-          <action android:name="mono.android.app.DUMP_TRACING_DATA"/>
+          <action android:name="mono.android.app.STOP_TRACING_AND_DUMP_DATA"/>
         </intent-filter>
       </receiver>
   </application>
