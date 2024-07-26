@@ -794,21 +794,6 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 	return domain;
 }
 
-inline int
-MonodroidRuntime::LocalRefsAreIndirect (JNIEnv *env, jclass runtimeClass, int version)
-{
-	if (version < 14) {
-		java_System = nullptr;
-		java_System_identityHashCode = 0;
-		return 0;
-	}
-
-	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
-	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
-
-	return 1;
-}
-
 force_inline void
 MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJavaGCBridgeType *type, OSBridge::MonoJavaGCBridgeInfo *info)
 {
@@ -873,7 +858,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
 	init.androidSdkVersion      = android_api_level;
-	init.localRefsAreIndirect   = LocalRefsAreIndirect (env, runtimeClass, init.androidSdkVersion);
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
@@ -881,6 +865,9 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.jniAddNativeMethodRegistrationAttributePresent = application_config.jni_add_native_method_registration_attribute_present ? 1 : 0;
 	init.jniRemappingInUse = application_config.jni_remapping_replacement_type_count > 0 || application_config.jni_remapping_replacement_method_index_entry_count > 0;
 	init.marshalMethodsEnabled  = application_config.marshal_methods_enabled;
+
+	java_System = RuntimeUtil::get_class_from_runtime_field (env, runtimeClass, "java_lang_System", true);
+	java_System_identityHashCode = env->GetStaticMethodID (java_System, "identityHashCode", "(Ljava/lang/Object;)I");
 
 	// GC threshold is 90% of the max GREF count
 	init.grefGcThreshold        = static_cast<int>(AndroidSystem::get_gref_gc_threshold ());

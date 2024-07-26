@@ -451,7 +451,7 @@
         <Str Cat="Text">
           <Val><![CDATA[NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details]]></Val>
           <Tgt Cat="Text" Stat="Loc" Orig="New">
-            <Val><![CDATA[Pakiet NuGet „{0}” w wersji „{1}” zawiera bibliotekę udostępnioną „{2}”, która nie jest poprawnie wyrównana. Zobacz https://developer.android.com/guide/practices/page-sizes for more details]]></Val>
+            <Val><![CDATA[Pakiet NuGet „{0}” w wersji „{1}” zawiera bibliotekę udostępnioną „{2}”, która nie jest poprawnie wyrównana. Zobacz https://developer.android.com/guide/practices/page-sizes, aby uzyskać więcej szczegółów]]></Val>
           </Tgt>
         </Str>
         <Disp Icon="Str" />

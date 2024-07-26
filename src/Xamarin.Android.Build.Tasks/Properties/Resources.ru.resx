@@ -1060,7 +1060,7 @@ In this message, the term "handheld app" means "app for handheld devices."
 {1} - NuGet package version</comment>
   </data>
   <data name="XA0141" xml:space="preserve">
-    <value>NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details</value>
+    <value>Пакет NuGet "{0}" версии "{1}" содержит общую библиотеку "{2}", которая сопоставлена неправильно. Дополнительные сведения см. на странице https://developer.android.com/guide/practices/page-sizes</value>
     <comment>The following is a literal name and should not be translated: NuGet
 {0} - NuGet package id
 {1} - NuGet package version
