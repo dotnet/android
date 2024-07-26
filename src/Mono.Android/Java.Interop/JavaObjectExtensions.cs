@@ -81,41 +81,9 @@ namespace Java.Interop {
 			if (instance.Handle == IntPtr.Zero)
 				throw new ObjectDisposedException (instance.GetType ().FullName);
 
-			Type resultType = typeof (TResult);
-			if (resultType.IsClass) {
-				return (TResult) CastClass (instance, resultType);
-			}
-			else if (resultType.IsInterface) {
-				return (TResult?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
-			}
-			else
-				throw new NotSupportedException (FormattableString.Invariant ($"Unable to convert type '{instance.GetType ().FullName}' to '{resultType.FullName}'."));
-		}
-
-		static IJavaObject CastClass (
-				IJavaObject instance,
-				[DynamicallyAccessedMembers (Constructors)]
-				Type resultType)
-		{
-			var klass = JNIEnv.FindClass (resultType);
-			try {
-				if (klass == IntPtr.Zero)
-					throw new ArgumentException ("Unable to determine JNI class for '" + resultType.FullName + "'.", "TResult");
-				if (!JNIEnv.IsInstanceOf (instance.Handle, klass))
-					throw new InvalidCastException (
-							FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{resultType.FullName}'."));
-			} finally {
-				JNIEnv.DeleteGlobalRef (klass);
-			}
-
-			if (resultType.IsAbstract) {
-				// TODO: keep in sync with TypeManager.CreateInstance() algorithm
-				var invokerType = GetInvokerType (resultType);
-				if (invokerType == null)
-					throw new ArgumentException ("Unable to get Invoker for abstract type '" + resultType.FullName + "'.", "TResult");
-				resultType = invokerType;
-			}
-			return (IJavaObject) TypeManager.CreateProxy (resultType, instance.Handle, JniHandleOwnership.DoNotTransfer);
+			return (TResult) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, typeof (TResult)) ??
+				throw new InvalidCastException (
+					FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{typeof (TResult).FullName}'."));
 		}
 
 		internal static IJavaObject? JavaCast (
@@ -132,14 +100,9 @@ namespace Java.Interop {
 			if (resultType.IsAssignableFrom (instance.GetType ()))
 				return instance;
 
-			if (resultType.IsClass) {
-				return CastClass (instance, resultType);
-			}
-			else if (resultType.IsInterface) {
-				return (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType);
-			}
-			else
-				throw new NotSupportedException (FormattableString.Invariant ($"Unable to convert type '{instance.GetType ().FullName}' to '{resultType.FullName}'."));
+			return (IJavaObject?) Java.Lang.Object.GetObject (instance.Handle, JniHandleOwnership.DoNotTransfer, resultType) ??
+				throw new InvalidCastException (
+					FormattableString.Invariant ($"Unable to convert instance of type '{instance.GetType ().FullName}' to type '{resultType.FullName}'."));
 		}
 
 		// typeof(Foo) -> FooInvoker
