@@ -108,20 +108,29 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to This could be caused by the project exceeding the Windows maximum path length limitation. See https://learn.microsoft.com/dotnet/android/messages/apt2264 for details..
+        /// </summary>
+        public static string APT2264 {
+            get {
+                return ResourceManager.GetString("APT2264", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in its filename or path. See https://learn.microsoft.com/dotnet/android/messages/apt2265 for details..
+        /// </summary>
+        public static string APT2265 {
+            get {
+                return ResourceManager.GetString("APT2265", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to Directory &apos;{0}&apos; is from &apos;{1}&apos;..
         /// </summary>
         public static string XA_Directory_Is_From {
             get {
                 return ResourceManager.GetString("XA_Directory_Is_From", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Could not find an 'AndroidResource' for 'anim'.
-        /// </summary>
-        public static string XA8000 {
-            get {
-                return ResourceManager.GetString("XA8000", resourceCulture);
             }
         }
 
@@ -486,6 +495,42 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to %(AndroidAsset.AssetPack) and %(AndroidAsset.AssetPack) item metadata are only supported when `$(AndroidApplication)` is `true`..
+        /// </summary>
+        public static string XA0138 {
+            get {
+                return ResourceManager.GetString("XA0138", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to `@(AndroidAsset)` `{0}` has an invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`..
+        /// </summary>
+        public static string XA0139 {
+            get {
+                return ResourceManager.GetString("XA0139", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The AssetPack value defined for `{0}` has invalid characters. `{1}` should only contain A-z, a-z, 0-9 or an underscore..
+        /// </summary>
+        public static string XA0140 {
+            get {
+                return ResourceManager.GetString("XA0140", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to NuGet package &apos;{0}&apos; version &apos;{1}&apos; contains a shared library &apos;{2}&apos; which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details.
+        /// </summary>
+        public static string XA0141 {
+            get {
+                return ResourceManager.GetString("XA0141", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -684,7 +729,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher.
+        ///   Looks up a localized string similar to Ignoring configuration file &apos;{0}&apos;. .NET configuration files are not supported in .NET for Android projects that target .NET 6 or higher..
         /// </summary>
         public static string XA1024 {
             get {
@@ -711,7 +756,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Using AAPT is deprecated in favor of AAPT2. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
+        ///   Looks up a localized string similar to Using AAPT is not supported in .NET for Android projects that target .NET 6 or higher. Please enable &apos;Use incremental Android packaging system (aapt2)&apos; in the Visual Studio project property pages or edit the project file in a text editor and set the &apos;AndroidUseAapt2&apos; MSBuild property to &apos;true&apos;..
         /// </summary>
         public static string XA1026_dotnet {
             get {
@@ -738,6 +783,90 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to The &apos;AotAssemblies&apos; MSBuild property is deprecated. Edit the project file in a text editor to remove this property, and use the &apos;RunAOTCompilation&apos; MSBuild property instead..
+        /// </summary>
+        public static string XA1029 {
+            get {
+                return ResourceManager.GetString("XA1029", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;RunAOTCompilation&apos; MSBuild property is only supported when trimming is enabled. Edit the project file in a text editor to set &apos;PublishTrimmed&apos; to &apos;true&apos; for this build configuration..
+        /// </summary>
+        public static string XA1030 {
+            get {
+                return ResourceManager.GetString("XA1030", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must derive from &apos;{1}&apos;.
+        ///Please change the value to an assembly-qualifed type name which inherits from &apos;{1}&apos; or remove the property completely..
+        /// </summary>
+        public static string XA1031 {
+            get {
+                return ResourceManager.GetString("XA1031", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;AndroidHttpClientHandlerType&apos; property value &apos;{0}&apos; must not derive from &apos;System.Net.Htt.HttpClientHandler&apos;.
+        ///Please change the value to an assembly-qualifed type name which inherits from &apos;System.Net.Http.HttpMessageHandler&apos; or remove the property completely..
+        /// </summary>
+        public static string XA1031_HCH {
+            get {
+                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Failed to resolve &apos;{0}&apos; from &apos;{1}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
+        /// </summary>
+        public static string XA1032 {
+            get {
+                return ResourceManager.GetString("XA1032", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Could not resolve &apos;{0}&apos;. Please check your `AndroidHttpClientHandlerType` setting..
+        /// </summary>
+        public static string XA1033 {
+            get {
+                return ResourceManager.GetString("XA1033", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Your project references &apos;{0}&apos; which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file..
+        /// </summary>
+        public static string XA1034 {
+            get {
+                return ResourceManager.GetString("XA1034", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to The &apos;BundleAssemblies&apos; property is deprecated and it has no effect on the application build. Equivalent functionality is implemented by the &apos;AndroidUseAssemblyStore&apos; and &apos;AndroidEnableAssemblyCompression&apos; properties..
+        /// </summary>
+        public static string XA1035 {
+            get {
+                return ResourceManager.GetString("XA1035", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; does not match the $(SupportedOSPlatformVersion) value &apos;{1}&apos; in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
+        ///Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn&apos;t already exist)..
+        /// </summary>
+        public static string XA1036 {
+            get {
+                return ResourceManager.GetString("XA1036", resourceCulture);
+            }
+        }
+
+        /// <summary>
         ///   Looks up a localized string similar to The &apos;{0}&apos; MSBuild property is deprecated and will be removed in .NET {1}. See https://aka.ms/net-android-deprecations for more details..
         /// </summary>
         public static string XA1037 {
@@ -745,9 +874,18 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA1037", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released.
+        ///   Looks up a localized string similar to The Android Support libraries are not supported in .NET 9 and later, please migrate to AndroidX. See https://aka.ms/net-android/androidx for more details..
+        /// </summary>
+        public static string XA1039 {
+            get {
+                return ResourceManager.GetString("XA1039", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Use of AppDomain.CreateDomain() detected in assembly: {0}. .NET 6 and higher will only support a single AppDomain, so this API will no longer be available in .NET for Android once .NET 6 is released..
         /// </summary>
         public static string XA2000 {
             get {
@@ -819,24 +957,6 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to This is probably caused by the project exceeding the Max Path length. Please move your entire project closer to the Root of the drive..
-        /// </summary>
-        public static string APT2264 {
-            get {
-                return ResourceManager.GetString("APT2264", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to This could be caused by the project having non-ASCII characters in it path.
-        /// </summary>
-        public static string APT2265 {
-            get {
-                return ResourceManager.GetString("APT2265", resourceCulture);
-            }
-        }
-
-        /// <summary>
         ///   Looks up a localized string similar to Could not AOT the assembly: {0}.
         /// </summary>
         public static string XA3001 {
@@ -882,7 +1002,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Could not compile native assembly file: {0}.
+        ///   Looks up a localized string similar to Could not compile native assembly file: {0}{1}.
         /// </summary>
         public static string XA3006 {
             get {
@@ -891,7 +1011,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Could not link native shared library: {0}.
+        ///   Looks up a localized string similar to Could not link native shared library: {0}{1}.
         /// </summary>
         public static string XA3007 {
             get {
@@ -972,7 +1092,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml..
+        ///   Looks up a localized string similar to The deployment target &apos;{0}&apos; is not supported (the minimum is &apos;{1}&apos;). Please increase (or remove) the //uses-sdk/@android:minSdkVersion value in your AndroidManifest.xml..
         /// </summary>
         public static string XA4216_MinSdkVersion {
             get {
@@ -981,7 +1101,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The deployment target &apos;{1}&apos; is not supported (the minimum is &apos;{2}&apos;). Please increase the $(SupportedOSPlatformVersion) property value in your project file..
+        ///   Looks up a localized string similar to The deployment target &apos;{0}&apos; is not supported (the minimum is &apos;{1}&apos;). Please increase the $(SupportedOSPlatformVersion) property value in your project file..
         /// </summary>
         public static string XA4216_SupportedOSPlatformVersion {
             get {
@@ -1132,16 +1252,16 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4233", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to &apos;&lt;{0}&gt;&apos; item &apos;{1}&apos; is missing required metadata &apos;{2}&apos;.
+        ///   Looks up a localized string similar to &apos;&lt;{0}&gt;&apos; item &apos;{1}&apos; is missing required attribute &apos;{2}&apos;..
         /// </summary>
         public static string XA4234 {
             get {
                 return ResourceManager.GetString("XA4234", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Maven artifact specification &apos;{0}&apos; is invalid. The correct format is &apos;group_id:artifact_id&apos;..
         /// </summary>
@@ -1150,7 +1270,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4235", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Cannot download Maven artifact &apos;{0}:{1}&apos;.
         ///- {2}: {3}
@@ -1161,27 +1281,17 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4236", resourceCulture);
             }
         }
-        
+
         /// <summary>
-        ///   Looks up a localized string similar to Cannot download POM file for Maven artifact &apos;{0}:{1}&apos;.
-        ///- {2}: {3}.
+        ///   Looks up a localized string similar to Cannot download POM file for Maven artifact &apos;{0}&apos;.
+        ///- {1}.
         /// </summary>
         public static string XA4237 {
             get {
                 return ResourceManager.GetString("XA4237", resourceCulture);
             }
         }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to Cannot download parent POM file for Maven artifact &apos;{0}:{1}&apos;.
-        ///- {2}: {3}.
-        /// </summary>
-        public static string XA4238 {
-            get {
-                return ResourceManager.GetString("XA4238", resourceCulture);
-            }
-        }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Unknown Maven repository: &apos;{0}&apos;..
         /// </summary>
@@ -1190,7 +1300,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4239", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied..
         /// </summary>
@@ -1199,7 +1309,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4241", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Java dependency &apos;{0}&apos; is not satisfied. Microsoft maintains the NuGet package &apos;{1}&apos; that could fulfill this dependency..
         /// </summary>
@@ -1208,7 +1318,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4242", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Attribute &apos;{0}&apos; is required when using &apos;{1}&apos; for &apos;{2}&apos; item &apos;{3}&apos;..
         /// </summary>
@@ -1217,7 +1327,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4243", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Attribute &apos;{0}&apos; cannot be empty for &apos;{1}&apos; item &apos;{2}&apos;..
         /// </summary>
@@ -1226,7 +1336,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4244", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Specified POM file &apos;{0}&apos; does not exist..
         /// </summary>
@@ -1235,7 +1345,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4245", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Could not parse POM file &apos;{0}&apos;.
         ///- {1}.
@@ -1245,7 +1355,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4246", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Could not resolve POM file for artifact &apos;{0}&apos;..
         /// </summary>
@@ -1254,7 +1364,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4247", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Could not find NuGet package &apos;{0}&apos; version &apos;{1}&apos; in lock file. Ensure NuGet Restore has run since this &lt;PackageReference&gt; was added..
         /// </summary>
@@ -1263,7 +1373,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4248", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
@@ -1528,7 +1638,9 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed. {2} See https://aka.ms/xa5207 for more details.
+        ///   Looks up a localized string similar to Could not find android.jar for API level {0}. This means the Android SDK platform for API level {0} is not installed; it was expected to be in `{1}`.
+        ///{2}
+        ///See https://aka.ms/xa5207 for more details..
         /// </summary>
         public static string XA5207 {
             get {
@@ -1537,20 +1649,20 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to Tools &gt; Android &gt; Android SDK Manager....
-        /// </summary>
-        public static string XA5207_SDK_Manager_Windows {
-            get {
-                return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Tools &gt; Open Android SDK Manager....
+        ///   Looks up a localized string similar to You can install the missing API level by running `dotnet build -t:InstallAndroidDependencies -f {0} &quot;-p:AndroidSdkDirectory={1}&quot;`, or change the project to target an API version that is installed..
         /// </summary>
         public static string XA5207_SDK_Manager_CLI {
             get {
                 return ResourceManager.GetString("XA5207_SDK_Manager_CLI", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Either install it in the Android SDK Manager (Tools &gt; Android &gt; Android SDK Manager...), or change the .NET for Android project to target an API version that is installed..
+        /// </summary>
+        public static string XA5207_SDK_Manager_Windows {
+            get {
+                return ResourceManager.GetString("XA5207_SDK_Manager_Windows", resourceCulture);
             }
         }
 
@@ -1582,7 +1694,8 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Android SDK directory could not be found. Check that the Android SDK Manager in Visual Studio shows a valid installation. To use a custom SDK path for a command line build, set the &apos;AndroidSdkDirectory&apos; MSBuild property to the custom path..
+        ///   Looks up a localized string similar to The Android SDK directory could not be found. Install the Android SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk
+        ///To use a custom SDK path for a command line build, set the &apos;AndroidSdkDirectory&apos; MSBuild property to the custom path..
         /// </summary>
         public static string XA5300_Android_SDK {
             get {
@@ -1591,7 +1704,8 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The Java SDK directory could not be found. Ensure that the Android section of the Visual Studio options has a valid Java SDK directory configured. To use a custom SDK path for a command line build, set the &apos;JavaSdkDirectory&apos; MSBuild property to the custom path..
+        ///   Looks up a localized string similar to The Java SDK directory could not be found. Install the Java SDK by following the instructions at: https://aka.ms/dotnet-android-install-sdk
+        ///To use a custom JDK path for a command line build, set the &apos;JavaSdkDirectory&apos; MSBuild property to the custom path..
         /// </summary>
         public static string XA5300_Java_SDK {
             get {
@@ -1618,69 +1732,11 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must derive from '{1}'.
-        ///Please change the value to an assembly-qualifed type name which inherits from '{1}' or remove the property completely.
+        ///   Looks up a localized string similar to Could not find Android Resource &apos;{0}&apos;. Please update @(AndroidResource) to add the missing resource..
         /// </summary>
-        public static string XA1031 {
+        public static string XA8000 {
             get {
-                return ResourceManager.GetString("XA1031", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to The 'AndroidHttpClientHandlerType' property value '{0}' must not derive from 'System.Net.Htt.HttpClientHandler'.
-        ///Please change the value to an assembly-qualifed type name which inherits from 'System.Net.Http.HttpMessageHandler' or remove the property completely.
-        /// </summary>
-        public static string XA1031_HCH {
-            get {
-                return ResourceManager.GetString("XA1031_HCH", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
-        /// </summary>
-        public static string XA1032 {
-            get {
-                return ResourceManager.GetString("XA1032", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Two processes may be building this project at once. Lock file exists at path: {0}.
-        /// </summary>
-        public static string XA1033 {
-            get {
-                return ResourceManager.GetString("XA1033", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to Your project references '{0}' which uses the `_Microsoft.Android.Resource.Designer` assembly, but you do not have this feature enabled. Please set the `AndroidUseDesignerAssembly` MSBuild property to `true` in your project file.
-        /// </summary>
-        public static string XA1034 {
-            get {
-                return ResourceManager.GetString("XA1034", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; does not match the $(SupportedOSPlatformVersion) value &apos;{1}&apos; in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
-        ///Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn&apos;t already exist)..
-        /// </summary>
-        public static string XA1036 {
-            get {
-                return ResourceManager.GetString("XA1036", resourceCulture);
-            }
-        }
-
-        /// <summary>
-        ///   Looks up a localized string similar to AndroidManifest.xml //uses-sdk/@android:minSdkVersion &apos;{0}&apos; does not match the $(SupportedOSPlatformVersion) value &apos;{1}&apos; in the project file (if there is no $(SupportedOSPlatformVersion) value in the project file, then a default value has been assumed).
-        ///Either change the value in the AndroidManifest.xml to match the $(SupportedOSPlatformVersion) value, or remove the value in the AndroidManifest.xml (and add a $(SupportedOSPlatformVersion) value to the project file if it doesn&apos;t already exist)..
-        /// </summary>
-        public static string XA1039 {
-            get {
-                return ResourceManager.GetString("XA1039", resourceCulture);
+                return ResourceManager.GetString("XA8000", resourceCulture);
             }
         }
     }
