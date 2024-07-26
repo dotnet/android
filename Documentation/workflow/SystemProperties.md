@@ -171,6 +171,17 @@ categories:
     method execution timing which is written to a file named
     `methods.txt`.  `timing=bare` should be used in preference to this
     category.
+  * `native-tracing`
+    Enable built-in tracing capabilities, using default settings.
+    Tracing settings can be tuned using the [debug.mono.native-tracing](#debugmononative-tracing)
+    property.
+
+### debug.mono.native-tracing
+
+[Full documentation](../guides/native-tracing.md)
+
+Available options:
+
 
 #### Timing events format
 

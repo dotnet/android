@@ -1,4 +1,5 @@
 #include <array>
+#include <charconv>
 #include <cctype>
 #include <cerrno>
 #include <cstdarg>
@@ -1040,13 +1041,115 @@ MonodroidRuntime::set_debug_env_vars (void)
 #endif /* DEBUG */
 
 inline void
-MonodroidRuntime::set_trace_options (void)
+MonodroidRuntime::set_mono_jit_trace_options (void)
 {
 	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_TRACE_PROPERTY, value) == 0)
 		return;
 
 	mono_jit_set_trace_options (value.get ());
+}
+
+inline void
+MonodroidRuntime::initialize_native_tracing ()
+{
+	if (!Logger::native_tracing_enabled ()) [[likely]] {
+		return;
+	}
+
+	dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> value;
+	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_NATIVE_TRACING, value) == 0 || value.empty ()) {
+		tracing_auto_start_mode = TracingAutoStartMode::Startup;
+		tracing_auto_stop_mode = TracingAutoStopMode::DelayFromStart;
+		tracing_stop_delay_ms = TracingConstants::DEFAULT_STOP_DELAY_MS;
+		return;
+	}
+
+	constexpr std::string_view param_start_mode_startup  { "start-mode=startup" };
+	constexpr std::string_view param_start_mode_delay    { "start-mode=delay" };
+	constexpr std::string_view param_start_mode_justinit { "start-mode=just-init" };
+
+	constexpr std::string_view param_stop_mode_delay     { "stop-mode=delay" };
+	constexpr std::string_view param_stop_mode_absolute_delay  { "stop-mode=absolute-delay" };
+
+	constexpr std::string_view param_start_delay         { "start-delay=" };
+	constexpr std::string_view param_stop_delay          { "stop-delay=" };
+
+	string_segment param;
+	while (value.next_token (',', param)) {
+		if (param.equal (param_start_mode_startup)) {
+			tracing_auto_start_mode = TracingAutoStartMode::Startup;
+			continue;
+		}
+
+		if (param.equal (param_start_mode_delay)) {
+			tracing_auto_start_mode = TracingAutoStartMode::Delay;
+			tracing_start_delay_ms = TracingConstants::DEFAULT_START_DELAY_MS;
+			continue;
+		}
+
+		if (param.equal (param_start_mode_justinit)) {
+			tracing_auto_start_mode = TracingAutoStartMode::JustInit;
+			continue;
+		}
+
+		if (param.equal (param_stop_mode_delay)) {
+			tracing_auto_stop_mode = TracingAutoStopMode::DelayFromStart;
+			tracing_stop_delay_ms = TracingConstants::DEFAULT_STOP_DELAY_MS;
+			continue;
+		}
+
+		if (param.equal (param_stop_mode_absolute_delay)) {
+			tracing_auto_stop_mode = TracingAutoStopMode::AbsoluteDelay;
+			tracing_stop_delay_ms = TracingConstants::DEFAULT_STOP_DELAY_MS;
+			continue;
+		}
+
+		auto convert_delay = [](string_segment const& s, size_t start, size_t default_value) {
+			if (s.length () <= start) {
+				log_warn (
+					LOG_DEFAULT,
+					"Expected value in tracing setting '%s', using the default value of %zums",
+					s.start (),
+					default_value
+				);
+				return default_value;
+			}
+
+			size_t ret{};
+			auto [ptr, errorc] = std::from_chars (s.start () + start, s.start () + s.length (), ret);
+			if (errorc == std::errc ()) {
+				return ret;
+			}
+
+			if (errorc == std::errc::invalid_argument) {
+				log_warn (
+					LOG_DEFAULT,
+					"Tracing setting value is not a decimal integer: %s.  Using the default value of %zums",
+					s.start (),
+					default_value
+				);
+			} else if (errorc == std::errc::result_out_of_range) {
+				log_warn (
+					LOG_DEFAULT,
+					"Tracing setting value exceeds the maximum allowed one (%zu): %s.  Using the default value of %zums",
+					std::numeric_limits<size_t>::max (),
+					s.start (),
+					default_value
+				);
+			}
+
+			return default_value;
+		};
+
+		if (param.starts_with (param_start_delay)) {
+			tracing_start_delay_ms = convert_delay (param, param_start_delay.length () + 1, TracingConstants::DEFAULT_START_DELAY_MS);
+		}
+
+		if (param.starts_with (param_stop_delay)) {
+			tracing_stop_delay_ms = convert_delay (param, param_stop_delay.length () + 1, TracingConstants::DEFAULT_STOP_DELAY_MS);
+		}
+	}
 }
 
 inline void
@@ -1428,6 +1531,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		mono_trace_set_level_string (mono_log_level.get ());
 	}
 
+	initialize_native_tracing ();
 	setup_mono_tracing (mono_log_mask, have_log_assembly, have_log_gc);
 	install_logging_handlers ();
 
@@ -1442,7 +1546,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	set_profile_options ();
 
-	set_trace_options ();
+	set_mono_jit_trace_options ();
 
 #if defined (DEBUG)
 	debug.start_debugging_and_profiling ();
@@ -1615,7 +1719,7 @@ JNICALL Java_mono_android_Runtime_dumpTimingData ([[maybe_unused]] JNIEnv *env, 
 }
 
 JNIEXPORT void
-JNICALL Java_mono_android_Runtime_dumpTracingData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
+JNICALL Java_mono_android_Runtime_stopTracingAndDumpData ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] jclass klass)
 {
 	// TODO: implement
 }

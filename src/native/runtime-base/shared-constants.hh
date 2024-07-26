@@ -61,6 +61,7 @@ namespace xamarin::android::internal
 		static inline constexpr std::string_view DEBUG_MONO_SOFT_BREAKPOINTS      { "debug.mono.soft_breakpoints" };
 		static inline constexpr std::string_view DEBUG_MONO_TRACE_PROPERTY        { "debug.mono.trace" };
 		static inline constexpr std::string_view DEBUG_MONO_WREF_PROPERTY         { "debug.mono.wref" };
+		static inline constexpr std::string_view DEBUG_MONO_NATIVE_TRACING        { "debug.mono.native-tracing" };
 
 #if __arm__
 		static constexpr std::string_view android_abi        { "armeabi_v7a" };

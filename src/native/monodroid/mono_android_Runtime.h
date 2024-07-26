@@ -92,7 +92,7 @@ JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTimingData
  * Method:    dumpTracingData
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_mono_android_Runtime_dumpTracingData
+JNIEXPORT void JNICALL Java_mono_android_Runtime_stopTracingAndDumpData
   (JNIEnv *, jclass);
 
 #ifdef __cplusplus
