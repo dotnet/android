@@ -1,5 +1,10 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the android-tools repo. -->
+	<PropertyGroup>
+		<AndroidSdkBuildToolsVersion Condition=" '$(AndroidSdkBuildToolsVersion)' == '' ">@SDK_BUILD_TOOLS_VERSION@</AndroidSdkBuildToolsVersion>
+		<AndroidSdkPlatformVersion Condition=" '$(AndroidSdkPlatformVersion)' == '' ">@SDK_PLATFORM_VERSION@</AndroidSdkPlatformVersion>
+		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">@SDK_PLATFORM_TOOLS_VERSION@</AndroidSdkPlatformToolsVersion>
+	</PropertyGroup>
+	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the dotnet/android-tools repo. -->
 	<Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Tools.Versions.props" />
 	<PropertyGroup>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>

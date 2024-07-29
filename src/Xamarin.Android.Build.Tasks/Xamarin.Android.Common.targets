@@ -125,6 +125,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props"
+	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props')"/>
+
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.props"
 	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.props')" />
 
