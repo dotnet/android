@@ -482,6 +482,9 @@ add_subdirectory(pinvoke-override)
 
 if(DEBUG_BUILD)
   add_subdirectory(xamarin-debug-app-helper)
+else()
+  # We need to build this only once per target architecture
+  add_subdirectory(archive-dso-stub)
 endif()
 
 add_subdirectory(monodroid)
