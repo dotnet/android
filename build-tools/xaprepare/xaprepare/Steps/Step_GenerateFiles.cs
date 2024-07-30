@@ -185,6 +185,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ().ToString () },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ().ToString () },
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
+				{ "@SDK_BUILD_TOOLS_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.XABuildToolsFolder) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel) },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel) },
