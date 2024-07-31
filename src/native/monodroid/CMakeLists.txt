@@ -1,6 +1,12 @@
 option(ENABLE_TIMING "Build with timing support" OFF)
 
 # First generate some code
+
+#
+# Must be the same value as DSOWrapperGenerator.PayloadSectionAlignment in src/Xamarin.Android.Build.Tasks/Utilities/DSOWrapperGenerator.cs
+#
+set(ARCHIVE_DSO_STUB_PAYLOAD_SECTION_ALIGNMENT 0x4000)
+
 file(COPY "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${ARCHIVE_DSO_STUB_LIB_FILE_NAME}" DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 set(ARCHIVE_DSO_STUB_LIB_PATH "${CMAKE_CURRENT_BINARY_DIR}/${ARCHIVE_DSO_STUB_LIB_FILE_NAME}")
 
@@ -15,7 +21,7 @@ execute_process(
 )
 
 execute_process(
-  COMMAND ${CMAKE_OBJCOPY} --set-section-flags payload=readonly,data --set-section-alignment payload=0x4000 ${ARCHIVE_DSO_STUB_LIB_PATH}
+  COMMAND ${CMAKE_OBJCOPY} --set-section-flags payload=readonly,data --set-section-alignment payload=${ARCHIVE_DSO_STUB_PAYLOAD_SECTION_ALIGNMENT} ${ARCHIVE_DSO_STUB_LIB_PATH}
   WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
   ECHO_ERROR_VARIABLE
   COMMAND_ERROR_IS_FATAL ANY
@@ -35,10 +41,10 @@ math(EXPR PAYLOAD_SECTION_INDEX "${SECTION_HEADER_ENTRY_COUNT} - 1")
 string(JSON PAYLOAD_SECTION_OFFSET GET "${ARCHIVE_DSO_STUB_HEADER_JSON}" 0 "Sections" ${PAYLOAD_SECTION_INDEX} "Section" "Offset")
 file(REMOVE ${ARCHIVE_DSO_STUB_LIB_PATH})
 
-message(STATUS "Header entry size: ${SECTION_HEADER_ENTRY_SIZE}; count: ${SECTION_HEADER_ENTRY_COUNT}; payload offset: ${PAYLOAD_SECTION_OFFSET}")
+message(STATUS "Archive DSO stub header entry size: ${SECTION_HEADER_ENTRY_SIZE}; section count: ${SECTION_HEADER_ENTRY_COUNT}; payload offset: ${PAYLOAD_SECTION_OFFSET}")
 configure_file(
   archive-dso-stub-config.hh.in
-  ${CMAKE_CURRENT_BINARY_DIR}/archive-dso-stub-config.hh
+  ${CMAKE_CURRENT_BINARY_DIR}/include/archive-dso-stub-config.hh
   USE_SOURCE_PERMISSIONS
 )
 

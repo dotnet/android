@@ -19,7 +19,7 @@ target_compile_options(
   PRIVATE
   ${XA_DEFAULT_SYMBOL_VISIBILITY}
   ${XA_COMMON_CXX_ARGS}
-  -nostdlib -fno-exceptions -fno-rtti -s
+  -nostdlib -fno-exceptions -fno-rtti
 )
 
 target_link_options(
