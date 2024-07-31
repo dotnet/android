@@ -18,7 +18,7 @@ if(DEBUG_BUILD)
   set(CMAKE_C_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
   set(CMAKE_CXX_FLAGS_DEBUG ${XA_COMPILER_FLAGS_DEBUG})
 elseif(NOT ANALYZERS_ENABLED)
-  set(BUILD_STATIC_LIBRARY OFF) # Turn off for now, until we implement dynamic runtime linking at app build time
+  set(BUILD_STATIC_LIBRARY ON)
 endif()
 
 # Library directories
@@ -60,7 +60,6 @@ set(XAMARIN_MONODROID_SOURCES
   monodroid-tracing.cc
   monovm-properties.cc
   osbridge.cc
-  pinvoke-override-api.cc
   runtime-util.cc
   timezones.cc
   xamarin_getifaddrs.cc

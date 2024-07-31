@@ -15,6 +15,16 @@
 int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
 void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
 
+#include <jni.h>
+
+#include "log_types.hh"
+#include "timing.hh"
+#include "xamarin-app.hh"
+#include "xamarin_getifaddrs.h"
+
+int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
+void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
+
 mono_bool _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up);
 mono_bool _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast);
 int _monodroid_get_dns_servers (void **dns_servers_array);
@@ -61,3 +71,4 @@ const char* _monodroid_lookup_replacement_type (const char *jniSimpleReference);
 const JniRemappingReplacementMethod* _monodroid_lookup_replacement_method_info (const char *jniSourceType, const char *jniMethodName, const char *jniMethodSignature);
 void monodroid_log_traces (uint32_t kind, const char *first_line);
 void _monodroid_detect_cpu_and_architecture (unsigned short *built_for_cpu, unsigned short *running_on_cpu, unsigned char *is64bit);
+
