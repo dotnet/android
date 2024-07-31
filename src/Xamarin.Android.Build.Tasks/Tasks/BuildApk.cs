@@ -448,7 +448,8 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
-				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, GetCompressionMethod (inArchivePath));
+				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), BuildEngine4, Log);
+				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -469,11 +470,11 @@ namespace Xamarin.Android.Tasks
 
 				foreach (var kvp in perArchAssemblies) {
 					Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
-					DoAddAssembliesFromArchCollection (kvp.Value);
+					DoAddAssembliesFromArchCollection (kvp.Key, kvp.Value);
 				}
 			}
 
-			void DoAddAssembliesFromArchCollection (Dictionary<string, ITaskItem> assemblies)
+			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
 			{
 				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
@@ -492,7 +493,8 @@ namespace Xamarin.Android.Tasks
 					if (UseAssemblyStore) {
 						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assembly);
 					} else {
-						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
+						string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), BuildEngine4, Log);
+						AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
 					}
 
 					// Try to add config if exists
@@ -519,9 +521,10 @@ namespace Xamarin.Android.Tasks
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
 								string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
+								string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbolsPath, Path.GetFileName (archiveSymbolsPath), BuildEngine4, Log);
 								AddFileToArchiveIfNewer (
 									apk,
-									symbolsPath,
+									wrappedSymbolsPath,
 									archiveSymbolsPath,
 									compressionMethod: GetCompressionMethod (archiveSymbolsPath)
 								);

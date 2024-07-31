@@ -5,6 +5,7 @@
 namespace xamarin::android {
 	struct ArchiveDSOStubConfig
 	{
+		static inline constexpr size_t PayloadSectionAlignment = @ARCHIVE_DSO_STUB_PAYLOAD_SECTION_ALIGNMENT@;
 		static inline constexpr size_t SectionHeaderEntrySize = @SECTION_HEADER_ENTRY_SIZE@;
 		static inline constexpr size_t SectionHeaderEntryCount = @SECTION_HEADER_ENTRY_COUNT@;
 		static inline constexpr size_t PayloadSectionOffset = @PAYLOAD_SECTION_OFFSET@;
