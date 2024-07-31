@@ -172,10 +172,7 @@ namespace Android.Runtime {
 
 		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
-			if (JNIEnvInit.AllocObjectSupported) {
-				return AllocObject (jclass);
-			}
-			return NewObject (jclass, constructorId, constructorParameters);
+			return AllocObject (jclass);
 		}
 
 		public static unsafe IntPtr StartCreateInstance (IntPtr jclass, IntPtr constructorId, params JValue[] constructorParameters)
@@ -186,8 +183,6 @@ namespace Android.Runtime {
 
 		public static unsafe void FinishCreateInstance (IntPtr instance, IntPtr jclass, IntPtr constructorId, JValue* constructorParameters)
 		{
-			if (!JNIEnvInit.AllocObjectSupported)
-				return;
 			CallNonvirtualVoidMethod (instance, jclass, constructorId, constructorParameters);
 		}
 
@@ -199,10 +194,7 @@ namespace Android.Runtime {
 
 		public static unsafe IntPtr StartCreateInstance (Type type, string jniCtorSignature, JValue* constructorParameters)
 		{
-			if (JNIEnvInit.AllocObjectSupported) {
-				return AllocObject (type);
-			}
-			return CreateInstance (type, jniCtorSignature, constructorParameters);
+			return AllocObject (type);
 		}
 
 		public static unsafe IntPtr StartCreateInstance (Type type, string jniCtorSignature, params JValue[] constructorParameters)
@@ -213,9 +205,7 @@ namespace Android.Runtime {
 
 		public static unsafe IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, JValue* constructorParameters)
 		{
-			if (JNIEnvInit.AllocObjectSupported)
-				return AllocObject (jniClassName);
-			return CreateInstance (jniClassName, jniCtorSignature, constructorParameters);
+			return AllocObject (jniClassName);
 		}
 
 		public static unsafe IntPtr StartCreateInstance (string jniClassName, string jniCtorSignature, params JValue[] constructorParameters)
@@ -226,8 +216,6 @@ namespace Android.Runtime {
 
 		public static unsafe void FinishCreateInstance (IntPtr instance, string jniCtorSignature, JValue* constructorParameters)
 		{
-			if (!JNIEnvInit.AllocObjectSupported)
-				return;
 			InvokeConstructor (instance, jniCtorSignature, constructorParameters);
 		}
 

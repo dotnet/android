@@ -120,7 +120,6 @@ public class MonoPackageManager {
 						localDateTimeOffset,
 						loader,
 						MonoPackageManager_Resources.Assemblies,
-						Build.VERSION.SDK_INT,
 						isEmulator (),
 						haveSplitApks
 					);
