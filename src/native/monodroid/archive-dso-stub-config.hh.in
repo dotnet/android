@@ -8,6 +8,10 @@ namespace xamarin::android {
 		static inline constexpr size_t PayloadSectionAlignment = @ARCHIVE_DSO_STUB_PAYLOAD_SECTION_ALIGNMENT@;
 		static inline constexpr size_t SectionHeaderEntrySize = @SECTION_HEADER_ENTRY_SIZE@;
 		static inline constexpr size_t SectionHeaderEntryCount = @SECTION_HEADER_ENTRY_COUNT@;
-		static inline constexpr size_t PayloadSectionOffset = @PAYLOAD_SECTION_OFFSET@;
+		static inline constexpr uint32_t PayloadSectionOffset = @PAYLOAD_SECTION_OFFSET@;
+
+		// We know that payload section is the last one in the binary, this is an index into
+		// the section header table.
+		static inline constexpr size_t PayloadSectionIndex = SectionHeaderEntryCount - 1;
 	};
 }

@@ -53,6 +53,21 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
+	static Config EnsureConfig (IBuildEngine4 buildEngine)
+	{
+		var config = buildEngine.GetRegisteredTaskObjectAssemblyLocal<Config> (RegisteredConfigKey, RegisteredTaskObjectLifetime.Build);
+		if (config == null) {
+			throw new InvalidOperationException ("Internal error: no registered config found");
+		}
+
+		return config;
+	}
+
+	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config)
+	{
+		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
+	}
+
 	/// <summary>
 	/// Puts the indicated file (<paramref name="payloadFilePath"/>) inside an ELF shared library and returns
 	/// path to the wrapped file.
@@ -60,13 +75,10 @@ class DSOWrapperGenerator
 	public static string WrapIt (AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, IBuildEngine4 buildEngine, TaskLoggingHelper log)
 	{
 		log.LogDebugMessage ($"[{targetArch}] Putting '{payloadFilePath}' inside ELF shared library '{outputFileName}'");
-		var config = buildEngine.GetRegisteredTaskObjectAssemblyLocal<Config> (RegisteredConfigKey, RegisteredTaskObjectLifetime.Build);
-		if (config == null) {
-			throw new InvalidOperationException ("Internal error: no registered config found");
-		}
-
-		string outputDir = Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
+		Config config = EnsureConfig (buildEngine);
+		string outputDir = GetArchOutputPath (targetArch, config);
 		Directory.CreateDirectory (outputDir);
+
 		string outputFile = Path.Combine (outputDir, outputFileName);
 		log.LogDebugMessage ($"  output file path: {outputFile}");
 
@@ -74,7 +86,7 @@ class DSOWrapperGenerator
 			throw new InvalidOperationException ($"Internal error: archive DSO stub location not known for architecture '{targetArch}'");
 		}
 
-		File.Copy (stubItem.ItemSpec, outputFile);
+		File.Copy (stubItem.ItemSpec, outputFile, overwrite: true);
 
 		string quotedOutputFile = MonoAndroidHelper.QuoteFileNameArgument (outputFile);
 		string objcopy = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-objcopy"));
@@ -99,7 +111,22 @@ class DSOWrapperGenerator
 		return outputFile;
 	}
 
+	/// <summary>
+	/// Call when all packaging is done.  The method will remove all the wrapper shared libraries that were previously
+	/// created by this class.  The reason to do so is to ensure that we don't package any "stale" content and those
+	/// wrapper files aren't part of any dependency chain so it's hard to check their up to date state.
+	/// </summary>
 	public static void CleanUp (IBuildEngine4 buildEngine, TaskLoggingHelper log)
 	{
+		Config config = EnsureConfig (buildEngine);
+
+		foreach (var kvp in config.DSOStubPaths) {
+			string outputDir = GetArchOutputPath (kvp.Key, config);
+			if (!Directory.Exists (outputDir)) {
+				continue;
+			}
+
+			Directory.Delete (outputDir, recursive: true);
+		}
 	}
 }
