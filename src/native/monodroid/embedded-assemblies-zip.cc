@@ -53,8 +53,12 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-			runtime_config_blob_found = true;
 			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
+			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (runtime_config_blob_mmap.area);
+			log_debug (LOG_ASSEMBLY, "Runtime config: payload pointer %p ; size %zu", payload_start, payload_size);
+			runtime_config_data = payload_start;
+			runtime_config_data_size = payload_size;
+			runtime_config_blob_found = true;
 			return false;
 		}
 	}
@@ -182,11 +186,14 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 		close_fd = false;
 	}
 
+	const auto [offset, size] = get_adjusted_wrapped_entry_offset_and_size (state);
 	md_mmap_info assembly_store_map = md_mmap_apk_file (fd, state.data_offset, state.file_size, entry_name.get ());
 	if (close_fd) {
 		close (fd);
 	}
-	auto header = static_cast<AssemblyStoreHeader*>(assembly_store_map.area);
+	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map.area);
+	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
+	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
 		log_fatal (LOG_ASSEMBLY, "Assembly store '%s' is not a valid .NET for Android assembly store file", entry_name.get ());
@@ -200,7 +207,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
 
-	assembly_store.data_start = static_cast<uint8_t*>(assembly_store_map.area);
+	assembly_store.data_start = static_cast<uint8_t*>(payload_start);
 	assembly_store.assembly_count = header->entry_count;
 	assembly_store.index_entry_count = header->index_entry_count;
 	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);

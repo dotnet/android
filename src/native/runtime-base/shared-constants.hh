@@ -124,6 +124,8 @@ namespace xamarin::android::internal
 
 		static constexpr std::string_view xamarin_native_tracing_name { "libxamarin-native-tracing.so" };
 		static constexpr hash_t xamarin_native_tracing_name_hash = xxhash::hash (xamarin_native_tracing_name);
+
+		static constexpr bool is_64_bit_target = __SIZEOF_POINTER__ == 8;
 	};
 }
 #endif // __SHARED_CONSTANTS_HH
