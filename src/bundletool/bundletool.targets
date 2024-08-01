@@ -21,12 +21,14 @@
       DependsOnTargets="_DownloadBundleTool"
       Inputs="$(_BundleToolDownloadLocation)"
       Outputs="$(_Destination)bundletool.jar" >
-    <!-- Strip aapt2 from bundletool.jar, as we pass it our own path to aapt2.
-      This simplifies macOS signing/hardening and reduces our installation footprint slightly. -->
+    <!-- Strip jna content from bundletool.jar.
+      This simplifies signing/hardening and reduces our installation footprint slightly. -->
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <MakeDir Directories="$(_BundleToolExtractLocation)" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -xf &quot;$(_BundleToolDownloadLocation)&quot;" />
-    <Delete Files="$(_BundleToolDownloadLocation);$(_BundleToolExtractLocation)\linux\aapt2;$(_BundleToolExtractLocation)\macos\aapt2;$(_BundleToolExtractLocation)\windows\aapt2.exe" />
+    <Delete Files="$(_BundleToolDownloadLocation)" />
+    <Delete Files="$(_BundleToolExtractLocation)\linux\aapt2;$(_BundleToolExtractLocation)\macos\aapt2;$(_BundleToolExtractLocation)\windows\aapt2.exe" />
+    <RemoveDir Directories="$(_BundleToolExtractLocation)\com\sun\jna" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -cmf META-INF/MANIFEST.MF &quot;$(_BundleToolDownloadLocation)&quot; ." />
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <Copy
