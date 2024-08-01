@@ -21,8 +21,8 @@
       DependsOnTargets="_DownloadBundleTool"
       Inputs="$(_BundleToolDownloadLocation)"
       Outputs="$(_Destination)bundletool.jar" >
-    <!-- Strip jna content from bundletool.jar.
-      This simplifies signing/hardening and reduces our installation footprint slightly. -->
+    <!-- Strip unused jna content and aapt2 from bundletool.jar, as we pass it our own path to aapt2.
+          This simplifies signing/hardening and reduces our installation footprint slightly. -->
     <RemoveDir Directories="$(_BundleToolExtractLocation)" />
     <MakeDir Directories="$(_BundleToolExtractLocation)" />
     <Exec WorkingDirectory="$(_BundleToolExtractLocation)" Command="$(_JarPath) -xf &quot;$(_BundleToolDownloadLocation)&quot;" />
