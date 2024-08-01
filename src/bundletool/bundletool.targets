@@ -14,7 +14,6 @@
     <DownloadUri
         SourceUris="https://github.com/google/bundletool/releases/download/$(XABundleToolVersion)/bundletool-all-$(XABundleToolVersion).jar"
         DestinationFiles="$(_BundleToolDownloadLocation)"
-        HashHeader="TESTARA"
     />
   </Target>
 
