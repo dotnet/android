@@ -324,8 +324,7 @@ namespace xamarin::android::internal {
 		static constexpr size_t get_mangled_prefix_length ()
 		{
 			if constexpr (IsSatelliteAssembly) {
-				// +1 for the extra `-` char in the culture portion of satellite assembly's name;
-				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.length () + 1;
+				return SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.length ();
 			} else {
 				return SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.length ();
 			}
