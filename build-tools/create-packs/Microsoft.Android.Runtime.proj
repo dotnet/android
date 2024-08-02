@@ -42,6 +42,7 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-native-tracing.so" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libarchive-dso-stub.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind_xamarin.a" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
