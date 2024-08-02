@@ -277,13 +277,28 @@ namespace xamarin::android::internal {
 
 		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
-		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (const void* const mapped_elf) noexcept
+		[[gnu::always_inline]]
+		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info) noexcept
 		{
 			using Elf_Header = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Ehdr, Elf32_Ehdr>;
 			using Elf_SHeader = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Shdr, Elf32_Shdr>;
 
+			const void* const mapped_elf = map_info.area;
 			auto elf_bytes = static_cast<const uint8_t* const>(mapped_elf);
 			auto elf_header = reinterpret_cast<const Elf_Header*const>(mapped_elf);
+
+			if constexpr (SharedConstants::debug_build) {
+				// In debug mode we might be dealing with plain data, without DSO wrapper
+				if (elf_header->e_ident[0] != EI_MAG0 ||
+					elf_header->e_ident[1] != EI_MAG1 ||
+					elf_header->e_ident[2] != EI_MAG2 ||
+					elf_header->e_ident[3] != EI_MAG3) {
+						log_debug (LOG_ASSEMBLY, "Not an ELF image");
+						// Not an ELF image, just return what we mmapped before
+						return { map_info.area, map_info.size };
+				}
+			}
+
 			auto section_header = reinterpret_cast<const Elf_SHeader*const>(elf_bytes + elf_header->e_shoff);
 			Elf_SHeader const& payload_hdr = section_header[ArchiveDSOStubConfig::PayloadSectionIndex];
 
@@ -293,12 +308,14 @@ namespace xamarin::android::internal {
 			};
 		}
 
-		static std::tuple<uint32_t, size_t> get_adjusted_wrapped_entry_offset_and_size (ZipEntryLoadState const& state) noexcept
+		[[gnu::always_inline]]
+		void store_mapped_runtime_config_data (md_mmap_info const& map_info) noexcept
 		{
-			return {
-				state.data_offset + ArchiveDSOStubConfig::PayloadSectionOffset,
-				state.file_size - dso_size_overhead
-			};
+			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info);
+			log_debug (LOG_ASSEMBLY, "Runtime config: payload pointer %p ; size %zu", payload_start, payload_size);
+			runtime_config_data = payload_start;
+			runtime_config_data_size = payload_size;
+			runtime_config_blob_found = true;
 		}
 
 		std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () const noexcept
