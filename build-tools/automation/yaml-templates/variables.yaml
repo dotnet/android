@@ -56,6 +56,3 @@ variables:
   value: 'cat != SystemApplication & cat != TimeZoneInfo & cat != Localization'
 - name: RunMAUITestJob
   value: true
-# Workaround: https://github.com/dotnet/msbuild/issues/10378
-- name: MSBUILDDISABLEFEATURESFROMVERSION
-  value: 17.12
