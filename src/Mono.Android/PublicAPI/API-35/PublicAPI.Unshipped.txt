@@ -502,12 +502,34 @@ Android.AdServices.Topics.EncryptedTopic.KeyIdentifier.get -> string!
 Android.AdServices.Topics.GetTopicsResponse.Builder.Builder(System.Collections.Generic.IList<Android.AdServices.Topics.Topic!>! topics, System.Collections.Generic.IList<Android.AdServices.Topics.EncryptedTopic!>! encryptedTopics) -> void
 Android.AdServices.Topics.GetTopicsResponse.EncryptedTopics.get -> System.Collections.Generic.IList<Android.AdServices.Topics.EncryptedTopic!>!
 Android.App.Activity.RequestPermissions(string![]! permissions, int requestCode, int deviceId) -> void
+Android.App.ActivityAttribute.CanDisplayOnRemoteDevices.get -> bool
+Android.App.ActivityAttribute.CanDisplayOnRemoteDevices.set -> void
+Android.App.ActivityAttribute.EnableOnBackInvokedCallback.get -> bool
+Android.App.ActivityAttribute.EnableOnBackInvokedCallback.set -> void
+Android.App.ActivityAttribute.RequireContentUriPermissionFromCaller.get -> Android.App.RequiredContentUriPermission
+Android.App.ActivityAttribute.RequireContentUriPermissionFromCaller.set -> void
 Android.App.Admin.ContentProtectionPolicy
 Android.App.Admin.ContentProtectionPolicy.Disabled = 1 -> Android.App.Admin.ContentProtectionPolicy
 Android.App.Admin.ContentProtectionPolicy.Enabled = 2 -> Android.App.Admin.ContentProtectionPolicy
 Android.App.Admin.ContentProtectionPolicy.NotControlledByPolicy = 0 -> Android.App.Admin.ContentProtectionPolicy
 Android.App.Admin.HeadlessDeviceOwnerMode.SingleUser = 2 -> Android.App.Admin.HeadlessDeviceOwnerMode
 Android.App.Admin.SecurityLogTags.BackupServiceToggled = 210044 -> Android.App.Admin.SecurityLogTags
+Android.App.ApplicationAttribute.AllowCrossUidActivitySwitchFromBelow.get -> bool
+Android.App.ApplicationAttribute.AllowCrossUidActivitySwitchFromBelow.set -> void
+Android.App.ApplicationAttribute.AllowNativeHeapPointerTagging.get -> bool
+Android.App.ApplicationAttribute.AllowNativeHeapPointerTagging.set -> void
+Android.App.ApplicationAttribute.AppCategory.get -> Android.Content.PM.ApplicationCategories
+Android.App.ApplicationAttribute.AppCategory.set -> void
+Android.App.ApplicationAttribute.DataExtractionRules.get -> string?
+Android.App.ApplicationAttribute.DataExtractionRules.set -> void
+Android.App.ApplicationAttribute.GwpAsanMode.get -> Android.Content.PM.GwpAsan
+Android.App.ApplicationAttribute.GwpAsanMode.set -> void
+Android.App.ApplicationAttribute.HasFragileUserData.get -> bool
+Android.App.ApplicationAttribute.HasFragileUserData.set -> void
+Android.App.ApplicationAttribute.RequestLegacyExternalStorage.get -> bool
+Android.App.ApplicationAttribute.RequestLegacyExternalStorage.set -> void
+Android.App.ApplicationAttribute.TestOnly.get -> bool
+Android.App.ApplicationAttribute.TestOnly.set -> void
 Android.App.ApplicationStartInfo
 Android.App.ApplicationStartInfo.DefiningUid.get -> int
 Android.App.ApplicationStartInfo.DescribeContents() -> int
@@ -735,6 +757,12 @@ Android.App.PropertyAttribute.Resource.get -> string?
 Android.App.PropertyAttribute.Resource.set -> void
 Android.App.PropertyAttribute.Value.get -> string?
 Android.App.PropertyAttribute.Value.set -> void
+Android.App.RequiredContentUriPermission
+Android.App.RequiredContentUriPermission.None = 0 -> Android.App.RequiredContentUriPermission
+Android.App.RequiredContentUriPermission.Read = 1 -> Android.App.RequiredContentUriPermission
+Android.App.RequiredContentUriPermission.ReadAndWrite = 4 -> Android.App.RequiredContentUriPermission
+Android.App.RequiredContentUriPermission.ReadOrWrite = 3 -> Android.App.RequiredContentUriPermission
+Android.App.RequiredContentUriPermission.Write = 2 -> Android.App.RequiredContentUriPermission
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.AppOwnedSdkSandboxInterface(string! name, long version, Android.OS.IBinder! binder) -> void
 Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.DescribeContents() -> int
@@ -746,6 +774,8 @@ Android.App.SdkSandbox.AppOwnedSdkSandboxInterface.WriteToParcel(Android.OS.Parc
 Android.App.SdkSandbox.SdkSandboxManager.AppOwnedSdkSandboxInterfaces.get -> System.Collections.Generic.IList<Android.App.SdkSandbox.AppOwnedSdkSandboxInterface!>!
 Android.App.SdkSandbox.SdkSandboxManager.RegisterAppOwnedSdkSandboxInterface(Android.App.SdkSandbox.AppOwnedSdkSandboxInterface! appOwnedSdkSandboxInterface) -> void
 Android.App.SdkSandbox.SdkSandboxManager.UnregisterAppOwnedSdkSandboxInterface(string! name) -> void
+Android.App.ServiceAttribute.Description.get -> string?
+Android.App.ServiceAttribute.Description.set -> void
 Android.App.Usage.StorageStats.GetAppBytesByDataType(Android.App.Usage.StorageStatsAppDataType dataType) -> long
 Android.App.Usage.StorageStatsAppDataType
 Android.App.Usage.StorageStatsAppDataType.FileTypeApk = 3 -> Android.App.Usage.StorageStatsAppDataType

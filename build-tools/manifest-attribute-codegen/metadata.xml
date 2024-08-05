@@ -73,16 +73,13 @@
   <type name="uses-split" ignore="true" />
   <type name="uses-static-library" ignore="true" />
 
-  <!-- <activity> -->
+  <!-- <activity> - https://developer.android.com/guide/topics/manifest/activity-element -->
   <element path="activity.allowEmbedded" type="bool" />
   <element path="activity.allowTaskReparenting" type="bool" />
-  <element path="activity.allowUntrustedActivityEmbedding" visible="false" />
-  <element path="activity.alwaysFocusable" visible="false" />
   <element path="activity.alwaysRetainTaskState" type="bool" />
-  <element path="activity.attributionTags" visible="false" />
   <element path="activity.autoRemoveFromRecents" type="bool" />
   <element path="activity.banner" visible="true" />
-  <element path="activity.canDisplayOnRemoteDevices" visible="false" />
+  <element path="activity.canDisplayOnRemoteDevices" type="bool" />
   <element path="activity.clearTaskOnLaunch" type="bool" />
   <element path="activity.colorMode" visible="true" />
   <element path="activity.configChanges" name="ConfigurationChanges" type="Android.Content.PM.ConfigChanges" />
@@ -90,52 +87,42 @@
   <element path="activity.directBootAware" type="bool" />
   <element path="activity.documentLaunchMode" type="Android.Content.PM.DocumentLaunchMode" />
   <element path="activity.enabled" type="bool" />
-  <element path="activity.enableOnBackInvokedCallback" visible="false" />
+  <element path="activity.enableOnBackInvokedCallback" type="bool" />
   <element path="activity.enableVrMode" visible="true" />
   <element path="activity.excludeFromRecents" type="bool" />
   <element path="activity.exported" type="bool" />
   <element path="activity.finishOnCloseSystemDialogs" type="bool" />
   <element path="activity.finishOnTaskLaunch" type="bool" />
-  <element path="activity.forceQueryable" visible="false" />
   <element path="activity.hardwareAccelerated" type="bool" />
   <element path="activity.icon" visible="true" />
   <element path="activity.immersive" type="bool" />
-  <element path="activity.inheritShowWhenLocked" visible="false" />
-  <element path="activity.knownActivityEmbeddingCerts" visible="false" />
   <element path="activity.label" visible="true" />
   <element path="activity.launchMode" type="Android.Content.PM.LaunchMode" />
   <element path="activity.lockTaskMode" visible="true" />
   <element path="activity.logo" visible="true" />
   <element path="activity.maxAspectRatio" type="float" />
   <element path="activity.maxRecents" type="int" />
-  <element path="activity.minAspectRatio" visible="false" />
   <element path="activity.multiprocess" name="MultiProcess" type="bool" />
   <element path="activity.name" visible="true" />
   <element path="activity.noHistory" type="bool" />
   <element path="activity.parentActivityName" name="ParentActivity" type="Type?" manualMap="true" />
   <element path="activity.permission" visible="true" />
   <element path="activity.persistableMode" type="Android.Content.PM.ActivityPersistableMode" />
-  <element path="activity.playHomeTransitionSound" visible="false" />
-  <element path="activity.preferMinimalPostProcessing" visible="false" />
-  <element path="activity.primaryUserOnly" visible="false" />
   <element path="activity.process" visible="true" />
-  <element path="activity.requiredDisplayCategory" visible="false" />
   <element path="activity.recreateOnConfigChanges" type="Android.Content.PM.ConfigChanges" />
   <element path="activity.relinquishTaskIdentity" type="bool" />
-  <element path="activity.requireContentUriPermissionFromCaller" visible="false" />
+  <element path="activity.requireContentUriPermissionFromCaller" type="Android.App.RequiredContentUriPermission" />
   <element path="activity.resizeableActivity" type="bool" />
   <element path="activity.resumeWhilePausing" type="bool" />
   <element path="activity.rotationAnimation" type="Android.Views.WindowRotationAnimation" />
   <element path="activity.roundIcon" visible="true" />
   <element path="activity.showForAllUsers" type="bool" />
   <element path="activity.showOnLockScreen" type="bool" obsolete="Please use ShowForAllUsers instead." />
-  <element path="activity.splitName" visible="false" />
   <element path="activity.supportsPictureInPicture" type="bool" />
   <element path="activity.screenOrientation" type="Android.Content.PM.ScreenOrientation" />
   <element path="activity.showWhenLocked" type="bool" />
   <element path="activity.singleUser" type="bool" />
   <element path="activity.stateNotNeeded" type="bool" />
-  <element path="activity.systemUserOnly" visible="false" />
   <element path="activity.taskAffinity" visible="true" />
   <element path="activity.theme" visible="true" />
   <element path="activity.turnScreenOn" type="bool" />
@@ -143,235 +130,274 @@
   <element path="activity.visibleToInstantApps" type="bool" />
   <element path="activity.windowSoftInputMode" type="Android.Views.SoftInput" />
 
-  <!-- <application> -->
-  <element path="application.allowAudioPlaybackCapture" visible="false" />
-  <element path="application.allowAutoRevokePermissionsExemption" visible="false" />
+  <!-- Undocumented attributes -->
+  <element path="activity.allowUntrustedActivityEmbedding" visible="false" />
+  <element path="activity.alwaysFocusable" visible="false" />
+  <element path="activity.attributionTags" visible="false" />
+  <element path="activity.forceQueryable" visible="false" />
+  <element path="activity.inheritShowWhenLocked" visible="false" />
+  <element path="activity.knownActivityEmbeddingCerts" visible="false" />
+  <element path="activity.minAspectRatio" visible="false" />
+  <element path="activity.playHomeTransitionSound" visible="false" />
+  <element path="activity.preferMinimalPostProcessing" visible="false" />
+  <element path="activity.primaryUserOnly" visible="false" />
+  <element path="activity.requiredDisplayCategory" visible="false" />
+  <element path="activity.splitName" visible="false" />
+  <element path="activity.systemUserOnly" visible="false" />
+
+  <!-- <application> - https://developer.android.com/guide/topics/manifest/application-element -->
   <element path="application.allowBackup" type="bool" />
   <element path="application.allowClearUserData" type="bool" />
-  <element path="application.allowClearUserDataOnFailedRestore" visible="false" />
-  <element path="application.allowCrossUidActivitySwitchFromBelow" visible="false" />
-  <element path="application.allowNativeHeapPointerTagging" visible="false" />
+  <element path="application.allowCrossUidActivitySwitchFromBelow" type="bool" />
+  <element path="application.allowNativeHeapPointerTagging" type="bool" />
   <element path="application.allowTaskReparenting" type="bool" />
-  <element path="application.appCategory" visible="false" />
-  <element path="application.appComponentFactory" visible="false" />
-  <element path="application.attributionsAreUserVisible" visible="false" />
-  <element path="application.autoRevokePermissions" visible="false" />
   <element path="application.banner" visible="true" />
-  <element path="application.cantSaveState" visible="false" />
   <element path="application.backupAgent" type="Type?" manualMap="true" />
   <element path="application.backupInForeground" type="bool" />
-  <element path="application.classLoader" visible="false" />
-  <element path="application.crossProfile" visible="false" />
-  <element path="application.dataExtractionRules" visible="false" />
+  <element path="application.dataExtractionRules" visible="true" />
   <element path="application.debuggable" type="bool" />
-  <element path="application.defaultToDeviceProtectedStorage" visible="false" />
   <element path="application.description" visible="true" />
   <element path="application.directBootAware" type="bool" />
   <element path="application.enabled" type="bool" />
-  <element path="application.enableOnBackInvokedCallback" visible="false" />
   <element path="application.extractNativeLibs" type="bool" />
-  <element path="application.forceQueryable" visible="false" />
   <element path="application.fullBackupContent" type="bool" />
   <element path="application.fullBackupOnly" type="bool" />
-  <element path="application.gwpAsanMode" visible="false" />
+  <element path="application.gwpAsanMode" type="Android.Content.PM.GwpAsan" />
   <element path="application.hardwareAccelerated" type="bool" />
   <element path="application.hasCode" visible="true" />
-  <element path="application.hasFragileUserData" visible="false" />
+  <element path="application.hasFragileUserData" type="bool" />
   <element path="application.icon" visible="true" />
-  <element path="application.isGame" visible="false" />
   <element path="application.killAfterRestore" type="bool" />
-  <element path="application.knownActivityEmbeddingCerts" visible="false" />
   <element path="application.label" visible="true" />
   <element path="application.largeHeap" visible="true" />
-  <element path="application.localeConfig" visible="false" />
   <element path="application.logo" visible="true" />
   <element path="application.manageSpaceActivity" type="Type?" manualMap="true" />
+  <element path="application.name" manualMap="true" />
+  <element path="application.networkSecurityConfig" visible="true" />
+  <element path="application.permission" visible="true" />
+  <element path="application.persistent" type="bool" />
+  <element path="application.process" visible="true" />
+  <element path="application.requestLegacyExternalStorage" type="bool" />
+  <element path="application.requiredAccountType" visible="true" />
+  <element path="application.resizeableActivity" type="bool" />
+  <element path="application.restoreAnyVersion" type="bool" />
+  <element path="application.restrictedAccountType" visible="true" />
+  <element path="application.roundIcon" visible="true" />
+  <element path="application.supportsRtl" visible="true" />
+  <element path="application.taskAffinity" visible="true" />
+  <element path="application.testOnly" type="bool" />
+  <element path="application.theme" visible="true" />
+  <element path="application.uiOptions" type="Android.Content.PM.UiOptions" />
+  <element path="application.usesCleartextTraffic" type="bool" />
+  <element path="application.vmSafeMode" name="VMSafeMode" type="bool" />
+
+  <!-- Undocumented attributes -->
+  <element path="application.allowAudioPlaybackCapture" visible="false" />
+  <element path="application.allowAutoRevokePermissionsExemption" visible="false" />
+  <element path="application.allowClearUserDataOnFailedRestore" visible="false" />
+  <element path="application.appCategory" type="Android.Content.PM.ApplicationCategories" />
+  <element path="application.appComponentFactory" visible="false" />
+  <element path="application.attributionsAreUserVisible" visible="false" />
+  <element path="application.autoRevokePermissions" visible="false" />
+  <element path="application.cantSaveState" visible="false" />
+  <element path="application.classLoader" visible="false" />
+  <element path="application.crossProfile" visible="false" />
+  <element path="application.defaultToDeviceProtectedStorage" visible="false" />
+  <element path="application.enableOnBackInvokedCallback" visible="false" />
+  <element path="application.forceQueryable" visible="false" />
+  <element path="application.knownActivityEmbeddingCerts" visible="false" />
+  <element path="application.localeConfig" visible="false" />
   <element path="application.maxAspectRatio" visible="false" />
   <element path="application.memtagMode" visible="false" />
   <element path="application.minAspectRatio" visible="false" />
   <element path="application.multiArch" visible="false" />
-  <element path="application.name" manualMap="true" />
   <element path="application.nativeHeapZeroInitialized" visible="false" />
-  <element path="application.networkSecurityConfig" visible="true" />
   <element path="application.neverEncrypt" visible="false" />
-  <element path="application.permission" visible="true" />
-  <element path="application.persistent" type="bool" />
   <element path="application.persistentWhenFeatureAvailable" visible="false" />
   <element path="application.preserveLegacyExternalStorage" visible="false" />
-  <element path="application.process" visible="true" />
-  <element path="application.restoreAnyVersion" type="bool" />
   <element path="application.requestForegroundServiceExemption" visible="false" />
-  <element path="application.requestLegacyExternalStorage" visible="false" />
   <element path="application.requestRawExternalStorageAccess" visible="false" />
-  <element path="application.requiredAccountType" visible="true" />
   <element path="application.requiredForAllUsers" visible="false" />
   <element path="application.resetEnabledSettingsOnAppDataCleared" visible="false" />
-  <element path="application.resizeableActivity" type="bool" />
   <element path="application.restoreNeedsApplication" visible="false" />
-  <element path="application.restrictedAccountType" visible="true" />
   <element path="application.rollbackDataPolicy" visible="false" />
-  <element path="application.roundIcon" visible="true" />
-  <element path="application.supportsRtl" visible="true" />
-  <element path="application.taskAffinity" visible="true" />
-  <element path="application.testOnly" visible="false" />
-  <element path="application.theme" visible="true" />
-  <element path="application.uiOptions" type="Android.Content.PM.UiOptions" />
   <element path="application.useEmbeddedDex" visible="false" />
-  <element path="application.usesCleartextTraffic" type="bool" />
   <element path="application.usesNonSdkApi" visible="false" />
-  <element path="application.vmSafeMode" name="VMSafeMode" type="bool" />
   <element path="application.zygotePreloadName" visible="false" />
+  
+  <!-- Documented as deprecated -->
+  <element path="application.isGame" visible="false" />
 
-  <!-- <grant-uri-permission> -->
+  <!-- <grant-uri-permission> - https://developer.android.com/guide/topics/manifest/grant-uri-permission-element -->
   <element path="grant-uri-permission.path" visible="true" />
-  <element path="grant-uri-permission.pathAdvancedPattern" visible="false" />
   <element path="grant-uri-permission.pathPattern" visible="true" />
   <element path="grant-uri-permission.pathPrefix" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="grant-uri-permission.pathAdvancedPattern" visible="false" />
   <element path="grant-uri-permission.pathSuffix" visible="false" />
 
-  <!-- <instrumentation> -->
-  <element path="instrumentation.banner" visible="false" />
+  <!-- <instrumentation> - https://developer.android.com/guide/topics/manifest/instrumentation-element -->
   <element path="instrumentation.functionalTest" type="bool" />
   <element path="instrumentation.handleProfiling" type="bool" />
   <element path="instrumentation.icon" visible="true" />
   <element path="instrumentation.label" visible="true" />
-  <element path="instrumentation.logo" visible="false" />
   <element path="instrumentation.name" visible="true" />
   <element path="instrumentation.roundIcon" visible="true" />
   <element path="instrumentation.targetPackage" visible="true" />
   <element path="instrumentation.targetProcesses" visible="true" />
 
-  <!-- <intent-filter> -->
+  <!-- Undocumented attributes -->
+  <element path="instrumentation.banner" visible="false" />
+  <element path="instrumentation.logo" visible="false" />
+
+  <!-- <intent-filter> - https://developer.android.com/guide/topics/manifest/intent-filter-element -->
   <!-- XABT uses a fully custom map for IntentFilterAttribute, you will need to add any new visible fields there yourself -->
-  <element path="intent-filter.banner" visible="false" />
   <element path="intent-filter.icon" visible="true" />
   <element path="intent-filter.label" visible="true" />
-  <element path="intent-filter.logo" visible="false" />
-  <element path="intent-filter.order" visible="false" />
   <element path="intent-filter.autoVerify" type="bool" />
   <element path="intent-filter.priority" type="int" />
   <element path="intent-filter.roundIcon" visible="true" />
 
-  <!-- <layout> -->
+  <!-- Undocumented attributes -->
+  <element path="intent-filter.banner" visible="false" />
+  <element path="intent-filter.logo" visible="false" />
+  <element path="intent-filter.order" visible="false" />
+
+  <!-- <layout> - https://developer.android.com/guide/topics/manifest/layout-element -->
   <element path="layout.defaultHeight" visible="true" />
   <element path="layout.defaultWidth" visible="true" />
   <element path="layout.gravity" visible="true" />
   <element path="layout.minHeight" visible="true" />
+  <element path="layout.minWidth" visible="true" />
+
+  <!-- Undocumented attributes -->
   <element path="layout.minimalHeight" visible="false" />
   <element path="layout.minimalWidth" visible="false" />
-  <element path="layout.minWidth" visible="true" />
   <element path="layout.windowLayoutAffinity" visible="false" />
 
-  <!-- <meta-data> -->
+  <!-- <meta-data> - https://developer.android.com/guide/topics/manifest/meta-data-element -->
   <element path="meta-data.name" type="string" readonly="true" />
   <element path="meta-data.resource" visible="true" />
   <element path="meta-data.value" visible="true" />
 
-  <!-- <permission> -->
-  <element path="permission.backgroundPermission" visible="false" />
-  <element path="permission.banner" visible="false" />
+  <!-- <permission> - https://developer.android.com/guide/topics/manifest/permission-element -->
   <element path="permission.description" visible="true" />
   <element path="permission.icon" visible="true" />
-  <element path="permission.knownCerts" visible="false" />
   <element path="permission.label" visible="true" />
-  <element path="permission.logo" visible="false" />
-  <element path="permission.maxSdkVersion" visible="false" />
   <element path="permission.name" visible="true" />
-  <element path="permission.permissionFlags" visible="false" />
   <element path="permission.permissionGroup" visible="true" />
   <element path="permission.protectionLevel" type="Android.Content.PM.Protection" />
   <element path="permission.roundIcon" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="permission.backgroundPermission" visible="false" />
+  <element path="permission.banner" visible="false" />
+  <element path="permission.knownCerts" visible="false" />
+  <element path="permission.logo" visible="false" />
+  <element path="permission.maxSdkVersion" visible="false" />
+  <element path="permission.permissionFlags" visible="false" />
   <element path="permission.request" visible="false" />
 
-  <!-- <permission-group> -->
-  <element path="permission-group.backgroundRequest" visible="false" />
-  <element path="permission-group.backgroundRequestDetail" visible="false" />
-  <element path="permission-group.banner" visible="false" />
+  <!-- <permission-group> - https://developer.android.com/guide/topics/manifest/permission-group-element -->
   <element path="permission-group.description" visible="true" />
   <element path="permission-group.icon" visible="true" />
   <element path="permission-group.label" visible="true" />
-  <element path="permission-group.logo" visible="false" />
   <element path="permission-group.name" visible="true" />
+  <element path="permission-group.roundIcon" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="permission-group.backgroundRequest" visible="false" />
+  <element path="permission-group.backgroundRequestDetail" visible="false" />
+  <element path="permission-group.banner" visible="false" />
+  <element path="permission-group.logo" visible="false" />
   <element path="permission-group.permissionGroupFlags" visible="false" />
   <element path="permission-group.priority" visible="false" />
   <element path="permission-group.request" visible="false" />
   <element path="permission-group.requestDetail" visible="false" />
-  <element path="permission-group.roundIcon" visible="true" />
 
-  <!-- <permission-tree> -->
-  <element path="permission-tree.banner" visible="false" />
+  <!-- <permission-tree> - https://developer.android.com/guide/topics/manifest/permission-tree-element -->
   <element path="permission-tree.icon" visible="true" />
   <element path="permission-tree.label" visible="true" />
-  <element path="permission-tree.logo" visible="false" />
   <element path="permission-tree.name" visible="true" />
   <element path="permission-tree.roundIcon" visible="true" />
 
-  <!-- <property> -->
+  <!-- Undocumented attributes -->
+  <element path="permission-tree.banner" visible="false" />
+  <element path="permission-tree.logo" visible="false" />
+
+  <!-- <property> - https://developer.android.com/guide/topics/manifest/property-element -->
   <element path="property.name" type="string" readonly="true" />
   <element path="property.resource" visible="true" />
   <element path="property.value" visible="true" />
 
-  <!-- <provider> -->
-  <element path="provider.attributionTags" visible="false" />
+  <!-- <provider> - https://developer.android.com/guide/topics/manifest/provider-element -->
   <element path="provider.authorities" type="string[]" readonly="true" manualMap="true" />
-  <element path="provider.banner" visible="false" />
-  <element path="provider.description" visible="false" />
   <element path="provider.directBootAware" type="bool" />
   <element path="provider.enabled" type="bool" />
   <element path="provider.exported" type="bool" />
-  <element path="provider.forceUriPermissions" visible="false" />
   <element path="provider.grantUriPermissions" type="bool" />
   <element path="provider.icon" visible="true" />
   <element path="provider.initOrder" type="int" />
   <element path="provider.label" visible="true" />
-  <element path="provider.logo" visible="false" />
   <element path="provider.multiprocess" name="MultiProcess" type="bool" />
   <element path="provider.name" visible="true" />
   <element path="provider.permission" visible="true" />
   <element path="provider.process" visible="true" />
   <element path="provider.readPermission" visible="true" />
   <element path="provider.roundIcon" visible="true" />
-  <element path="provider.singleUser" visible="false" />
-  <element path="provider.splitName" visible="false" />
   <element path="provider.syncable" type="bool" />
-  <element path="provider.systemUserOnly" visible="false" />
-  <element path="provider.visibleToInstantApps" visible="false" />
   <element path="provider.writePermission" visible="true" />
 
-  <!-- <receiver> -->
-  <element path="receiver.attributionTags" visible="false" />
-  <element path="receiver.banner" visible="false" />
+  <!-- Undocumented attributes -->
+  <element path="provider.attributionTags" visible="false" />
+  <element path="provider.banner" visible="false" />
+  <element path="provider.description" visible="false" />
+  <element path="provider.forceUriPermissions" visible="false" />
+  <element path="provider.logo" visible="false" />
+  <element path="provider.singleUser" visible="false" />
+  <element path="provider.splitName" visible="false" />
+  <element path="provider.systemUserOnly" visible="false" />
+  <element path="provider.visibleToInstantApps" visible="false" />
+
+  <!-- <receiver> - https://developer.android.com/guide/topics/manifest/receiver-element -->
   <element path="receiver.description" visible="true" />
   <element path="receiver.directBootAware" type="bool" />
   <element path="receiver.enabled" type="bool" />
   <element path="receiver.exported" type="bool" />
   <element path="receiver.icon" visible="true" />
   <element path="receiver.label" visible="true" />
-  <element path="receiver.logo" visible="false" />
   <element path="receiver.name" visible="true" />
   <element path="receiver.permission" visible="true" />
   <element path="receiver.process" visible="true" />
   <element path="receiver.roundIcon" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="receiver.attributionTags" visible="false" />
+  <element path="receiver.banner" visible="false" />
+  <element path="receiver.logo" visible="false" />
   <element path="receiver.singleUser" visible="false" />
 
-  <!-- <service> -->
-  <element path="service.allowSharedIsolatedProcess" visible="false" />
-  <element path="service.attributionTags" visible="false" />
-  <element path="service.banner" visible="false" />
-  <element path="service.description" visible="false" />
+  <!-- <service> - https://developer.android.com/guide/topics/manifest/service-element -->
   <element path="service.directBootAware" type="bool" />
   <element path="service.enabled" type="bool" />
   <element path="service.exported" type="bool" />
-  <element path="service.externalService" visible="false" />
   <element path="service.foregroundServiceType" type="Android.Content.PM.ForegroundService" />
   <element path="service.icon" visible="true" />
   <element path="service.isolatedProcess" visible="true" />
   <element path="service.label" visible="true" />
-  <element path="service.logo" visible="false" />
   <element path="service.name" visible="true" />
   <element path="service.permission" visible="true" />
   <element path="service.process" visible="true" />
   <element path="service.roundIcon" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="service.allowSharedIsolatedProcess" visible="false" />
+  <element path="service.attributionTags" visible="false" />
+  <element path="service.banner" visible="false" />
+  <element path="service.description" visible="true" />
+  <element path="service.externalService" visible="false" />
+  <element path="service.logo" visible="false" />
   <element path="service.singleUser" visible="false" />
   <element path="service.splitName" visible="false" />
   <element path="service.stopWithTask" visible="false" />
@@ -379,28 +405,31 @@
   <element path="service.useAppZygote" visible="false" />
   <element path="service.visibleToInstantApps" visible="false" />
 
-  <!-- <uses-configuration> -->
+  <!-- <uses-configuration> - https://developer.android.com/guide/topics/manifest/uses-configuration-element -->
   <element path="uses-configuration.reqFiveWayNav" type="bool" />
   <element path="uses-configuration.reqHardKeyboard" type="bool" />
   <element path="uses-configuration.reqKeyboardType" visible="true" />
   <element path="uses-configuration.reqNavigation" visible="true" />
   <element path="uses-configuration.reqTouchScreen" visible="true" />
 
-  <!-- <uses-feature> -->
+  <!-- <uses-feature> https://developer.android.com/guide/topics/manifest/uses-feature-element -->
   <element path="uses-feature.glEsVersion" name="GLESVersion" manualMap="true" />
   <element path="uses-feature.name" readonly="true" />
   <element path="uses-feature.required" visible="true" />
   <element path="uses-feature.version" readonly="true" />
 
-  <!-- <uses-library> -->
+  <!-- <uses-library> - https://developer.android.com/guide/topics/manifest/uses-library-element -->
   <element path="uses-library.name" visible="true" />
   <element path="uses-library.required" type="bool" />
 
-  <!-- <uses-permission> -->
+  <!-- <uses-permission> - https://developer.android.com/guide/topics/manifest/uses-permission-element -->
   <element path="uses-permission.maxSdkVersion" visible="true" />
-  <element path="uses-permission.minSdkVersion" visible="false" />
   <element path="uses-permission.name" visible="true" />
+
+  <!-- Undocumented attributes -->
+  <element path="uses-permission.minSdkVersion" visible="false" />
   <element path="uses-permission.requiredFeature" visible="false" />
   <element path="uses-permission.requiredNotFeature" visible="false" />
   <element path="uses-permission.usesPermissionFlags" visible="false" />
+
 </metadata>
