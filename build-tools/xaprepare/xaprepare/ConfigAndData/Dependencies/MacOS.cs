@@ -23,7 +23,7 @@ namespace Xamarin.Android.Prepare
 		{
 			Dependencies.AddRange (programs);
 
-			if (!Context.Instance.AutoProvisionSkipMono) {
+			if (Context.Instance.CheckCondition (KnownConditions.AllowMonoUpdate)) {
 				Dependencies.Add (
 					new MonoPkgProgram ("Mono", "com.xamarin.mono-MDK.pkg", new Uri (Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoDarwinPackageUrl))) {
 						MinimumVersion = Context.Instance.Properties.GetRequiredValue (KnownProperties.MonoRequiredMinimumVersion),

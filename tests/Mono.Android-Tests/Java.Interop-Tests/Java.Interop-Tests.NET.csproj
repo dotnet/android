@@ -4,6 +4,7 @@
 
   <PropertyGroup>
     <TargetFramework>$(DotNetAndroidTargetFramework)</TargetFramework>
+    <SupportedOSPlatformVersion>$(AndroidMinimumDotNetApiLevel)</SupportedOSPlatformVersion>
     <RootNamespace>Java.Interop_Tests</RootNamespace>
     <AssemblyName>Java.Interop-Tests</AssemblyName>
     <OutputType>Library</OutputType>

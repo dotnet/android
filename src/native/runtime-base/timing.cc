@@ -1,3 +1,4 @@
+#include "timing.hh"
 #include "timing-internal.hh"
 
 using namespace xamarin::android;

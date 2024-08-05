@@ -74,7 +74,9 @@ extends:
       binskim:
         scanOutputDirectoryOnly: true
       codeql:
-        runSourceLanguagesInSourceAnalysis: true
+        compiled:
+          enabled: false
+          justificationForDisabling: CodeQL runs against the nightly build
       policheck:
         enabled: false
         justification: Built in task does not support multi-language scanning
@@ -465,7 +467,7 @@ extends:
       condition: and(eq(dependencies.mac_build.result, 'Succeeded'), eq(dependencies.linux_build.result, 'Succeeded'), eq(variables['MicroBuildSignType'], 'Real'))
       jobs:
       # Check - "Xamarin.Android (Prepare .NET Release Sign Archives)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
+      - template: sign-artifacts/jobs/v3.yml@yaml-templates
         parameters:
           name: sign_net_mac_win
           poolName: $(VSEngMicroBuildPool)
@@ -474,9 +476,12 @@ extends:
           signedArtifactName: nuget-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-mac-win
+          handleUnmappedFiles: fail
+          timeoutInMinutes: 240
 
       # Check - "Xamarin.Android (Prepare .NET Release Sign Linux Archive)"
-      - template: sign-artifacts/jobs/v2.yml@yaml-templates
+      - template: sign-artifacts/jobs/v3.yml@yaml-templates
         parameters:
           name: sign_net_linux
           displayName: Sign Linux Archive
@@ -486,9 +491,12 @@ extends:
           signedArtifactName: nuget-linux-signed
           usePipelineArtifactTasks: true
           use1ESTemplate: true
+          uploadPrefix: sign-linux
+          handleUnmappedFiles: fail
+          timeoutInMinutes: 120
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v3.yml@yaml-templates
+      - template: nuget-msi-convert/job/v4.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
@@ -497,7 +505,17 @@ extends:
             !*Darwin*
           propsArtifactName: $(NuGetArtifactName)
           signType: $(MicroBuildSignType)
-          use1ESTemplate: true
+          preConvertSteps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-signed
+              artifactPatterns: |
+                *Darwin*
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-linux-signed
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
           postConvertSteps:
           - task: DownloadPipelineArtifact@2
             inputs:
@@ -505,24 +523,24 @@ extends:
               downloadPath: $(Build.StagingDirectory)\sign-verify
               patterns: |
                 **/SignVerifyIgnore.txt
-
           - task: MicroBuildCodesignVerify@3
             displayName: verify signed msi content
             inputs:
               TargetFolders: |
                 $(Build.ArtifactStagingDirectory)\bin\manifests
-                $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
+                $(Build.ArtifactStagingDirectory)\bin\manifests-packs
+                $(Build.ArtifactStagingDirectory)\bin\msi-nupkgs
               ExcludeSNVerify: true
               ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
-      # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
+      # Check - "Xamarin.Android (Prepare .NET Release Publish symbols and Push to Maestro)"
       - job: push_signed_nugets
-        displayName: Push Internal
+        displayName: Publish symbols and Push to Maestro
         dependsOn:
         - nuget_convert
         - sign_net_linux
         condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
-        timeoutInMinutes: 60
+        timeoutInMinutes: 90
         pool:
           name: AzurePipelines-EO
           image: $(WindowsPoolImage1ESPT)
@@ -532,67 +550,45 @@ extends:
         variables:
         - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
           - group: Publish-Build-Assets
+        templateContext:
+          outputs:
+          - output: artifactsDrop
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+            buildNumber: $(ReleaseDropPrefix)/symbols
+            dropMetadataContainerName: DropMetadata-$(Build.BuildId)-symbols-$(System.JobAttempt)
+            sourcePath: $(Build.StagingDirectory)\symbols
+            retentionDays: 120
+            toLowerCase: false
         steps:
         - checkout: self
           clean: true
           submodules: recursive
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-signed
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-linux-signed
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: vs-msi-nugets
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
-
+        # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+            downloadPath: $(Build.StagingDirectory)\symbols
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(NupkgCommitStatusName)
-            blobName: $(NupkgCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\nuget-signed
-            yamlResourceName: yaml-templates
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: DropMetadata-$(Build.BuildId)-nugets-$(System.JobAttempt)
+            downloadPath: $(Build.StagingDirectory)\metadata
+          displayName: Download nugets drop metadata
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(VSDropCommitStatusName)
-            blobName: $(VSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-signed
-                downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
+        - powershell: |
+            $jsonContent = Get-Content -Path "$(Build.StagingDirectory)\metadata\VSTSDrop.json" -Raw | ConvertFrom-Json
+            $dropPrefix = $jsonContent.VstsDropBuildArtifact.VstsDropUrl -replace 'https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/drop/drops/' -replace '/nugets'
+            Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
+          displayName: Set variable ReleaseDropPrefix
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(MultiTargetVSDropCommitStatusName)
-            blobName: $(MultiTargetVSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-multitarget-signed
-                downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
+        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+        - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
+          displayName: Download $(ReleaseDropPrefix)/nugets
+          inputs:
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+            buildNumber: $(ReleaseDropPrefix)/nugets
+            destinationPath: $(Build.StagingDirectory)\nuget-signed
 
         - task: DotNetCoreCLI@2
           displayName: build Xamarin.Android.Tools.BootstrapTasks.sln

@@ -138,11 +138,6 @@ namespace Xamarin.Android.Prepare
 		public bool AutoProvisionUsesSudo              { get; set; }
 
 		/// <summary>
-		///   Skip automatic provision of the Mono MDK if missing
-		/// </summary>
-		public bool AutoProvisionSkipMono              { get; set; } = false;
-
-		/// <summary>
 		///   Current session execution mode. See <see cref="t:ExecutionMode" />
 		/// </summary>
 		public ExecutionMode ExecutionMode             { get; set; } = Configurables.Defaults.ExecutionMode;

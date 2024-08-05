@@ -84,6 +84,44 @@ const std::vector<std::string> internal_pinvoke_names = {
 };
 
 const std::vector<std::string> dotnet_pinvoke_names = {
+	// libSystem.Globalization.Native.so
+	"GlobalizationNative_ChangeCase",
+	"GlobalizationNative_ChangeCaseInvariant",
+	"GlobalizationNative_ChangeCaseTurkish",
+	"GlobalizationNative_CloseSortHandle",
+	"GlobalizationNative_CompareString",
+	"GlobalizationNative_EndsWith",
+	"GlobalizationNative_EnumCalendarInfo",
+	"GlobalizationNative_GetCalendarInfo",
+	"GlobalizationNative_GetCalendars",
+	"GlobalizationNative_GetDefaultLocaleName",
+	"GlobalizationNative_GetICUVersion",
+	"GlobalizationNative_GetJapaneseEraStartDate",
+	"GlobalizationNative_GetLatestJapaneseEra",
+	"GlobalizationNative_GetLocaleInfoGroupingSizes",
+	"GlobalizationNative_GetLocaleInfoInt",
+	"GlobalizationNative_GetLocaleInfoString",
+	"GlobalizationNative_GetLocaleName",
+	"GlobalizationNative_GetLocales",
+	"GlobalizationNative_GetLocaleTimeFormat",
+	"GlobalizationNative_GetSortHandle",
+	"GlobalizationNative_GetSortKey",
+	"GlobalizationNative_GetSortVersion",
+	"GlobalizationNative_GetTimeZoneDisplayName",
+	"GlobalizationNative_IanaIdToWindowsId",
+	"GlobalizationNative_IndexOf",
+	"GlobalizationNative_InitICUFunctions",
+	"GlobalizationNative_InitOrdinalCasingPage",
+	"GlobalizationNative_IsNormalized",
+	"GlobalizationNative_IsPredefinedLocale",
+	"GlobalizationNative_LastIndexOf",
+	"GlobalizationNative_LoadICU",
+	"GlobalizationNative_NormalizeString",
+	"GlobalizationNative_StartsWith",
+	"GlobalizationNative_ToAscii",
+	"GlobalizationNative_ToUnicode",
+	"GlobalizationNative_WindowsIdToIanaId",
+
 	// libSystem.IO.Compression.Native.so
 	"BrotliDecoderCreateInstance",
 	"BrotliDecoderDecompress",
@@ -117,11 +155,9 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"CompressionNative_Deflate",
 	"CompressionNative_DeflateEnd",
 	"CompressionNative_DeflateInit2_",
-	"CompressionNative_DeflateReset",
 	"CompressionNative_Inflate",
 	"CompressionNative_InflateEnd",
 	"CompressionNative_InflateInit2_",
-	"CompressionNative_InflateReset",
 
 	// libSystem.Native.so
 	"SystemNative_Abort",
@@ -140,6 +176,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_CloseSocketEventPort",
 	"SystemNative_ConfigureTerminalForChildProcess",
 	"SystemNative_Connect",
+	"SystemNative_Connectx",
 	"SystemNative_ConvertErrorPalToPlatform",
 	"SystemNative_ConvertErrorPlatformToPal",
 	"SystemNative_CopyFile",
@@ -210,7 +247,6 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_GetHostName",
 	"SystemNative_GetIcmpv4GlobalStatistics",
 	"SystemNative_GetIcmpv6GlobalStatistics",
-	"SystemNative_GetIPSocketAddressSizes",
 	"SystemNative_GetIPv4Address",
 	"SystemNative_GetIPv4GlobalStatistics",
 	"SystemNative_GetIPv4MulticastOption",
@@ -227,7 +263,6 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_GetOSArchitecture",
 	"SystemNative_GetPeerID",
 	"SystemNative_GetPeerName",
-	"SystemNative_GetPeerUserName",
 	"SystemNative_GetPid",
 	"SystemNative_GetPlatformSignalNumber",
 	"SystemNative_GetPort",
@@ -241,6 +276,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_GetRLimit",
 	"SystemNative_GetSid",
 	"SystemNative_GetSignalForBreak",
+	"SystemNative_GetSocketAddressSizes",
 	"SystemNative_GetSocketErrorOption",
 	"SystemNative_GetSocketType",
 	"SystemNative_GetSockName",
@@ -249,7 +285,9 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_GetSystemTimeAsTicks",
 	"SystemNative_GetTcpGlobalStatistics",
 	"SystemNative_GetTimestamp",
+	"SystemNative_GetTimeZoneData",
 	"SystemNative_GetUdpGlobalStatistics",
+	"SystemNative_GetUInt64OSThreadId",
 	"SystemNative_GetUnixRelease",
 	"SystemNative_GetUnixVersion",
 	"SystemNative_GetWindowSize",
@@ -289,6 +327,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_MkNod",
 	"SystemNative_MksTemps",
 	"SystemNative_MMap",
+	"SystemNative_MProtect",
 	"SystemNative_MSync",
 	"SystemNative_MUnmap",
 	"SystemNative_Open",
@@ -312,6 +351,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_RealPath",
 	"SystemNative_Receive",
 	"SystemNative_ReceiveMessage",
+	"SystemNative_ReceiveSocketError",
 	"SystemNative_RegisterForSigChld",
 	"SystemNative_Rename",
 	"SystemNative_RmDir",
@@ -348,6 +388,8 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_ShmUnlink",
 	"SystemNative_Shutdown",
 	"SystemNative_SNPrintF",
+	"SystemNative_SNPrintF_1I",
+	"SystemNative_SNPrintF_1S",
 	"SystemNative_Socket",
 	"SystemNative_Stat",
 	"SystemNative_StdinReady",
@@ -359,6 +401,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"SystemNative_SysLog",
 	"SystemNative_TryChangeSocketEventRegistration",
 	"SystemNative_TryGetIPPacketInformation",
+	"SystemNative_TryGetUInt32OSThreadId",
 	"SystemNative_UninitializeConsoleAfterRead",
 	"SystemNative_Unlink",
 	"SystemNative_UTimensat",
@@ -434,6 +477,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"AndroidCryptoNative_GetECKeyParameters",
 	"AndroidCryptoNative_GetRsaParameters",
 	"AndroidCryptoNative_NewGlobalReference",
+	"AndroidCryptoNative_Pbkdf2",
 	"AndroidCryptoNative_RegisterRemoteCertificateValidationCallback",
 	"AndroidCryptoNative_RsaCreate",
 	"AndroidCryptoNative_RsaDestroy",
@@ -448,6 +492,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"AndroidCryptoNative_SSLGetSupportedProtocols",
 	"AndroidCryptoNative_SSLStreamCreate",
 	"AndroidCryptoNative_SSLStreamCreateWithCertificates",
+	"AndroidCryptoNative_SSLStreamCreateWithKeyStorePrivateKeyEntry",
 	"AndroidCryptoNative_SSLStreamGetApplicationProtocol",
 	"AndroidCryptoNative_SSLStreamGetCipherSuite",
 	"AndroidCryptoNative_SSLStreamGetPeerCertificate",
@@ -479,13 +524,17 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"AndroidCryptoNative_X509DecodeCollection",
 	"AndroidCryptoNative_X509Encode",
 	"AndroidCryptoNative_X509ExportPkcs7",
+	"AndroidCryptoNative_X509GetCertificateForPrivateKeyEntry",
 	"AndroidCryptoNative_X509GetContentType",
+	"AndroidCryptoNative_X509IsKeyStorePrivateKeyEntry",
 	"AndroidCryptoNative_X509PublicKey",
 	"AndroidCryptoNative_X509StoreAddCertificate",
 	"AndroidCryptoNative_X509StoreAddCertificateWithPrivateKey",
 	"AndroidCryptoNative_X509StoreContainsCertificate",
+	"AndroidCryptoNative_X509StoreDeleteEntry",
 	"AndroidCryptoNative_X509StoreEnumerateCertificates",
 	"AndroidCryptoNative_X509StoreEnumerateTrustedCertificates",
+	"AndroidCryptoNative_X509StoreGetPrivateKeyEntry",
 	"AndroidCryptoNative_X509StoreOpenDefault",
 	"AndroidCryptoNative_X509StoreRemoveCertificate",
 	"CryptoNative_EnsureOpenSslInitialized",
@@ -501,6 +550,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"CryptoNative_EvpDigestReset",
 	"CryptoNative_EvpDigestUpdate",
 	"CryptoNative_EvpMd5",
+	"CryptoNative_EvpMdCtxCopyEx",
 	"CryptoNative_EvpMdCtxCreate",
 	"CryptoNative_EvpMdCtxDestroy",
 	"CryptoNative_EvpMdSize",
@@ -517,6 +567,7 @@ const std::vector<std::string> dotnet_pinvoke_names = {
 	"CryptoNative_HmacOneShot",
 	"CryptoNative_HmacReset",
 	"CryptoNative_HmacUpdate",
+	"Java_net_dot_android_crypto_DotnetProxyTrustManager_verifyRemoteCertificate",
 };
 
 template<typename Hash>
@@ -541,14 +592,14 @@ struct PinvokeEntry
 
 void print (std::ostream& os, std::string comment, std::string variable_name, auto const& seq)
 {
-	os << "//" << comment << '\n';
-	os << "static PinvokeEntry " << variable_name << "[] = {" << std::endl;
+	os << "\t//" << comment << '\n';
+	os << "\tstd::array<PinvokeEntry, " << std::dec << seq.size () << "> " << variable_name << " {{" << std::endl;
 
 	for (auto const& elem : seq) {
-		os << "\t{" << elem << "}," << std::endl;
+		os << "\t\t{" << elem << "}," << std::endl;
 	}
 
-	os << "};" << std::endl;
+	os << "\t}};" << std::endl << std::endl;
 }
 
 template<typename Hash>
@@ -601,6 +652,7 @@ void write_library_name_hashes (Hash (*hasher)(const char*, size_t), std::ostrea
 	write_library_name_hash (hasher, output, "libSystem.Native", "system_native");
 	write_library_name_hash (hasher, output, "libSystem.IO.Compression.Native", "system_io_compression_native");
 	write_library_name_hash (hasher, output, "libSystem.Security.Cryptography.Native.Android", "system_security_cryptography_native_android");
+	write_library_name_hash (hasher, output, "libSystem.Globalization.Native", "system_globalization_native");
 }
 
 int main (int argc, char **argv)
@@ -655,8 +707,10 @@ int main (int argc, char **argv)
 	output << "// A compiler with support for C++20 ranges is required" << std::endl;
 	output << "//" << std::endl << std::endl;
 
+	output << "#include <array>" << std::endl;
 	output << "#include <cstdint>" << std::endl << std::endl;
 
+	output << "namespace {" << std::endl;
 	output << "#if INTPTR_MAX == INT64_MAX" << std::endl;
 	print (output, "64-bit internal p/invoke table", "internal_pinvokes", internal_pinvokes64);
 	print (output, "64-bit DotNet p/invoke table", "dotnet_pinvokes", dotnet_pinvokes64);
@@ -674,6 +728,7 @@ int main (int argc, char **argv)
 
 	output << "constexpr size_t internal_pinvokes_count = " << std::dec << std::noshowbase << internal_pinvoke_names.size () << ";" << std::endl;
 	output << "constexpr size_t dotnet_pinvokes_count = " << std::dec << std::noshowbase << dotnet_pinvoke_names.size () << ";" << std::endl;
+	output << "} // end of anonymous namespace" << std::endl;
 
 	return have_collisions ? 1 : 0;
 }

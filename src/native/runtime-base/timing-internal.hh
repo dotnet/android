@@ -12,6 +12,7 @@
 #include "strings.hh"
 #include "util.hh"
 #include "shared-constants.hh"
+#include "monodroid-state.hh"
 
 namespace xamarin::android::internal
 {
@@ -150,7 +151,7 @@ namespace xamarin::android::internal
 			TimingEvent &ev = events[index];
 			mark (ev.start);
 			ev.kind = kind;
-			ev.before_managed = MonodroidRuntime::is_startup_in_progress ();
+			ev.before_managed = MonodroidState::is_startup_in_progress ();
 			ev.more_info = nullptr;
 
 			return index;
@@ -440,7 +441,7 @@ namespace xamarin::android::internal
 
 	private:
 		std::atomic_size_t next_event_index = 0;
-		std::mutex event_vector_realloc_mutex;
+		xamarin::android::mutex event_vector_realloc_mutex;
 		std::vector<TimingEvent> events;
 
 		static TimingEvent init_time;

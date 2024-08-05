@@ -15,7 +15,6 @@ PREPARE_SCENARIO =
 PREPARE_CI_PR ?= 0
 PREPARE_CI ?= 0
 PREPARE_AUTOPROVISION ?= 0
-PREPARE_AUTOPROVISION_SKIP_MONO ?= 0
 
 _PREPARE_CI_MODE_PR_ARGS = --no-emoji --run-mode=CI
 _PREPARE_CI_MODE_ARGS = $(_PREPARE_CI_MODE_PR_ARGS) -a
@@ -57,10 +56,6 @@ endif
 
 ifneq ($(PREPARE_AUTOPROVISION),0)
 _PREPARE_ARGS += --auto-provision=yes --auto-provision-uses-sudo=yes
-endif
-
-ifneq ($(PREPARE_AUTOPROVISION_SKIP_MONO),0)
-_PREPARE_ARGS += --auto-provision-skip-mono=yes
 endif
 
 ifneq ($(PREPARE_SCENARIO),)

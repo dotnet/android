@@ -184,11 +184,14 @@ namespace Xamarin.Android.Manifest {
 			{ typeof (float),               (value, p, r, v, c) => value.ToString () },
 			{ typeof (string),              (value, p, r, v, c) => value.ToString () },
 			{ typeof (ActivityPersistableMode),     (value, p, r, v, c) => ToString ((ActivityPersistableMode) value) },
+			{ typeof (ApplicationCategories),     (value, p, r, v, c) => ToString ((ApplicationCategories) value) },
 			{ typeof (ConfigChanges),       (value, p, r, v, c) => ToString ((ConfigChanges) value) },
 			{ typeof (DocumentLaunchMode),  (value, p, r, v, c) => ToString ((DocumentLaunchMode) value) },
 			{ typeof (ForegroundService),   (value, p, r, v, c) => ToString ((ForegroundService) value) },
+			{ typeof (GwpAsan),   (value, p, r, v, c) => ToString ((GwpAsan) value) },
 			{ typeof (LaunchMode),          (value, p, r, v, c) => ToString ((LaunchMode) value) },
 			{ typeof (Protection),          (value, p, r, v, c) => ToString ((Protection) value) },
+			{ typeof (RequiredContentUriPermission),        (value, p, r, v, c) => ToString ((RequiredContentUriPermission) value) },
 			{ typeof (ScreenOrientation),   (value, p, r, v, c) => ToString ((ScreenOrientation) value, v) },
 			{ typeof (SoftInput),           (value, p, r, v, c) => ToString ((SoftInput) value) },
 			{ typeof (UiOptions),           (value, p, r, v, c) => ToString ((UiOptions) value) },
@@ -406,6 +409,44 @@ namespace Xamarin.Android.Manifest {
 			//	values.Add ("newValue");
 
 			return string.Join ("|", values.ToArray ());
+		}
+
+		static string ToString (ApplicationCategories value)
+		{
+			return value switch {
+				ApplicationCategories.Accessibility => "accessibility",
+				ApplicationCategories.Audio => "audio",
+				ApplicationCategories.Game => "game",
+				ApplicationCategories.Image => "image",
+				ApplicationCategories.Maps => "maps",
+				ApplicationCategories.News => "news",
+				ApplicationCategories.Productivity => "productivity",
+				ApplicationCategories.Social => "social",
+				ApplicationCategories.Video => "video",
+				_ => throw new ArgumentException ($"Unsupported ApplicationCategories value '{value}'."),
+			};
+		}
+
+		static string ToString (RequiredContentUriPermission value)
+		{
+			return value switch {
+				RequiredContentUriPermission.None => "none",
+				RequiredContentUriPermission.Read => "read",
+				RequiredContentUriPermission.Write => "write",
+				RequiredContentUriPermission.ReadOrWrite => "readOrWrite",
+				RequiredContentUriPermission.ReadAndWrite => "readAndWrite",
+				_ => throw new ArgumentException ($"Unsupported RequiredContentUriPermission value '{value}'."),
+			};
+		}
+
+		static string ToString (GwpAsan value)
+		{
+			return value switch {
+				GwpAsan.Always => "always",
+				GwpAsan.Default => "never",
+				GwpAsan.Never => "never",
+				_ => throw new ArgumentException ($"Unsupported GwpAsan value '{value}'."),
+			};
 		}
 
 		IEnumerator<string> IEnumerable<string>.GetEnumerator ()

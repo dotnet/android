@@ -7,6 +7,7 @@ set(LIB_ALIAS_NO_ABI ${LIB_ALIAS}-no-abi)
 set(XA_SHARED_CXX_ABI_SOURCES
   cxx-abi/string.cc
   cxx-abi/terminate.cc
+  ${REPO_ROOT_DIR}/src-ThirdParty/llvm/verbose_abort.cpp
 )
 
 set(XA_SHARED_SOURCES
@@ -27,12 +28,16 @@ add_library(
 )
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
 
+set_static_library_suffix(${LIB_NAME})
+
 add_library(
   ${LIB_NAME_NO_ABI}
   STATIC
   ${XA_SHARED_SOURCES}
 )
 add_library(${LIB_ALIAS_NO_ABI} ALIAS ${LIB_NAME_NO_ABI})
+
+set_static_library_suffix(${LIB_NAME_NO_ABI})
 
 macro(lib_target_options TARGET_NAME)
   target_include_directories(
@@ -64,11 +69,13 @@ macro(lib_target_options TARGET_NAME)
     ${XA_COMMON_CXX_ARGS}
   )
 
-  set_target_properties(
-    ${TARGET_NAME}
-    PROPERTIES
-    ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-  )
+  if(DEBUG_BUILD)
+    set_target_properties(
+      ${TARGET_NAME}
+      PROPERTIES
+      ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+    )
+  endif()
 
   xa_add_compile_definitions(${TARGET_NAME})
 endmacro()

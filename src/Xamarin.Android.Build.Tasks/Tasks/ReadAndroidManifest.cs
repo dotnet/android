@@ -64,11 +64,15 @@ namespace Xamarin.Android.Tasks
 				foreach (var uses_library in app.Elements ("uses-library")) {
 					var attribute = uses_library.Attribute (androidNs + "name");
 					if (attribute != null && !string.IsNullOrEmpty (attribute.Value)) {
+						var required = uses_library.Attribute (androidNs + "required")?.Value;
 						var path = Path.Combine (AndroidSdkDirectory, "platforms", $"android-{AndroidApiLevel}", "optional", $"{attribute.Value}.jar");
 						if (File.Exists (path)) {
 							libraries.Add (new TaskItem (path));
 						} else {
-							Log.LogWarningForXmlNode ("XA4218", ManifestFile, attribute, Properties.Resources.XA4218, path);
+							if (!bool.TryParse (required, out bool isRequired))
+								isRequired = true;
+							if (isRequired)
+								Log.LogWarningForXmlNode ("XA4218", ManifestFile, attribute, Properties.Resources.XA4218, path);
 						}
 					}
 				}

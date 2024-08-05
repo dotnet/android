@@ -9,7 +9,6 @@ namespace Android.Runtime
 {
 	public class XmlReaderResourceParser : XmlReaderPullParser, IXmlResourceParser
 	{
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)
@@ -127,7 +126,6 @@ namespace Android.Runtime
 
 	public class XmlReaderPullParser : Java.Lang.Object, IXmlPullParser
 	{
-		[Preserve (Conditional=true)]
 		public static IntPtr ToLocalJniHandle (XmlReader? value)
 		{
 			if (value == null)

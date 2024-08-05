@@ -142,8 +142,7 @@ namespace Xamarin.Android.Tasks
 		{
 			var match = CodeErrorRegEx.Match (singleLine);
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
-			var lp = lpRegex.Match (singleLine);
-			if (lp.Success) {
+			foreach (Match lp in lpRegex.Matches (singleLine)) {
 				var id = lp.Groups["identifier"].Value;
 				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
 				if (!string.IsNullOrEmpty (asmName)) {

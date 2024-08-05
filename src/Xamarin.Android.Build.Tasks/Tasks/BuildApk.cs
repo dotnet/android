@@ -107,6 +107,8 @@ namespace Xamarin.Android.Tasks
 
 		public string ZipFlushSizeLimit { get; set; }
 
+		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
+
 		[Required]
 		public string ProjectFullPath { get; set; }
 
@@ -683,6 +685,7 @@ namespace Xamarin.Android.Tasks
 			public string Link;
 			public string Abi;
 			public string ArchiveFileName;
+			public ITaskItem Item;
 		}
 
 		CompressionMethod GetCompressionMethod (string fileName)
@@ -690,7 +693,7 @@ namespace Xamarin.Android.Tasks
 			return uncompressedFileExtensions.Contains (Path.GetExtension (fileName)) ? UncompressedMethod : CompressionMethod.Default;
 		}
 
-		void AddNativeLibraryToArchive (ZipArchiveEx apk, string abi, string filesystemPath, string inArchiveFileName)
+		void AddNativeLibraryToArchive (ZipArchiveEx apk, string abi, string filesystemPath, string inArchiveFileName, ITaskItem taskItem)
 		{
 			string archivePath = MakeArchiveLibPath (abi, inArchiveFileName);
 			existingEntries.Remove (archivePath);
@@ -700,6 +703,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 			Log.LogDebugMessage ($"Adding native library: {filesystemPath} (APK path: {archivePath})");
+			ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, filesystemPath, taskItem);
 			apk.AddEntryAndFlush (archivePath, File.OpenRead (filesystemPath), compressionMethod);
 		}
 
@@ -709,7 +713,7 @@ namespace Xamarin.Android.Tasks
 				foreach (ITaskItem item in ApplicationSharedLibraries) {
 					if (String.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
 						continue;
-					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec));
+					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec), item);
 				}
 			}
 		}
@@ -762,7 +766,8 @@ namespace Xamarin.Android.Tasks
 				Path = v.ItemSpec,
 				Link = v.GetMetadata ("Link"),
 				Abi = GetNativeLibraryAbi (v),
-				ArchiveFileName = GetArchiveFileName (v)
+				ArchiveFileName = GetArchiveFileName (v),
+				Item = v,
 			});
 
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
@@ -773,7 +778,8 @@ namespace Xamarin.Android.Tasks
 						Path = v.ItemSpec,
 						Link = v.GetMetadata ("Link"),
 						Abi = GetNativeLibraryAbi (v),
-						ArchiveFileName = GetArchiveFileName (v)
+						ArchiveFileName = GetArchiveFileName (v),
+						Item = v,
 					}
 				);
 
@@ -854,8 +860,9 @@ namespace Xamarin.Android.Tasks
 						string.Join (", ", libs.Where (lib => lib.Abi == null).Select (lib => lib.Path)));
 			libs = libs.Where (lib => lib.Abi != null);
 			libs = libs.Where (lib => supportedAbis.Contains (lib.Abi));
-			foreach (var info in libs)
-				AddNativeLibrary (files, info.Path, info.Abi, info.ArchiveFileName);
+			foreach (var info in libs) {
+				AddNativeLibrary (files, info.Path, info.Abi, info.ArchiveFileName, info.Item);
+			}
 		}
 
 		private void AddAdditionalNativeLibraries (ArchiveFileList files, string [] supportedAbis)
@@ -868,12 +875,13 @@ namespace Xamarin.Android.Tasks
 					Path = l.ItemSpec,
 					Abi = AndroidRidAbiHelper.GetNativeLibraryAbi (l),
 					ArchiveFileName = l.GetMetadata ("ArchiveFileName"),
+					Item = l,
 				});
 
 			AddNativeLibraries (files, supportedAbis, libs);
 		}
 
-		void AddNativeLibrary (ArchiveFileList files, string path, string abi, string archiveFileName)
+		void AddNativeLibrary (ArchiveFileList files, string path, string abi, string archiveFileName, ITaskItem? taskItem = null)
 		{
 			string fileName = string.IsNullOrEmpty (archiveFileName) ? Path.GetFileName (path) : archiveFileName;
 			var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));
@@ -882,6 +890,7 @@ namespace Xamarin.Android.Tasks
 				return;
 			}
 
+			ELFHelper.AssertValidLibraryAlignment (Log, ZipAlignmentPages, path, taskItem);
 			if (!ELFHelper.IsEmptyAOTLibrary (Log, item.filePath)) {
 				files.Add (item);
 			} else {

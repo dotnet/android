@@ -25,7 +25,6 @@ namespace Android.Runtime
 			source.Close ();
 		}
 
-		[Preserve (Conditional=true)]
 		public static XmlResourceParserReader? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return FromNative (handle, transfer);
@@ -387,7 +386,6 @@ namespace Android.Runtime
 			}
 		}
 
-		[Preserve (Conditional=true)]
 		public static XmlReader? FromJniHandle (IntPtr handle, JniHandleOwnership transfer)
 		{
 			return FromNative (handle, transfer);

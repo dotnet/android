@@ -30,6 +30,8 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 
 	public string? Banner { get; set; }
 
+	public bool CanDisplayOnRemoteDevices { get; set; }
+
 	public bool ClearTaskOnLaunch { get; set; }
 
 	public string? ColorMode { get; set; }
@@ -43,6 +45,8 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 	public Android.Content.PM.DocumentLaunchMode DocumentLaunchMode { get; set; }
 
 	public bool Enabled { get; set; }
+
+	public bool EnableOnBackInvokedCallback { get; set; }
 
 	public string? EnableVrMode { get; set; }
 
@@ -89,6 +93,8 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 	public Android.Content.PM.ConfigChanges RecreateOnConfigChanges { get; set; }
 
 	public bool RelinquishTaskIdentity { get; set; }
+
+	public Android.App.RequiredContentUriPermission RequireContentUriPermissionFromCaller { get; set; }
 
 	public bool ResizeableActivity { get; set; }
 
@@ -161,6 +167,12 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 			setter: (self, value) => self.Banner = (string?) value
 		);
 		mapping.Add (
+			member: "CanDisplayOnRemoteDevices",
+			attributeName: "canDisplayOnRemoteDevices",
+			getter: self => self.CanDisplayOnRemoteDevices,
+			setter: (self, value) => self.CanDisplayOnRemoteDevices = (bool) value
+		);
+		mapping.Add (
 			member: "ClearTaskOnLaunch",
 			attributeName: "clearTaskOnLaunch",
 			getter: self => self.ClearTaskOnLaunch,
@@ -201,6 +213,12 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 			attributeName: "enabled",
 			getter: self => self.Enabled,
 			setter: (self, value) => self.Enabled = (bool) value
+		);
+		mapping.Add (
+			member: "EnableOnBackInvokedCallback",
+			attributeName: "enableOnBackInvokedCallback",
+			getter: self => self.EnableOnBackInvokedCallback,
+			setter: (self, value) => self.EnableOnBackInvokedCallback = (bool) value
 		);
 		mapping.Add (
 			member: "EnableVrMode",
@@ -333,6 +351,12 @@ public sealed partial class ActivityAttribute : Attribute, Java.Interop.IJniName
 			attributeName: "relinquishTaskIdentity",
 			getter: self => self.RelinquishTaskIdentity,
 			setter: (self, value) => self.RelinquishTaskIdentity = (bool) value
+		);
+		mapping.Add (
+			member: "RequireContentUriPermissionFromCaller",
+			attributeName: "requireContentUriPermissionFromCaller",
+			getter: self => self.RequireContentUriPermissionFromCaller,
+			setter: (self, value) => self.RequireContentUriPermissionFromCaller = (Android.App.RequiredContentUriPermission) value
 		);
 		mapping.Add (
 			member: "ResizeableActivity",
