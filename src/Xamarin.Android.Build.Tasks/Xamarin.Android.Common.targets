@@ -1444,7 +1444,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1691,7 +1691,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
