@@ -28,7 +28,10 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
+		[TestCase (true, true)]
+		[TestCase (true, false)]
+		[TestCase (false, false)]
+		public void NativeAssemblyCacheWithSatelliteAssemblies (bool isRelease, bool enableMarshalMethods)
 		{
 			// TODO: enable when marshal methods are fixed
 			if (enableMarshalMethods) {
@@ -37,7 +40,18 @@ namespace Xamarin.Android.Build.Tests
 
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
+				IsRelease = isRelease,
 				ProjectName = "Localization",
+				PackageReferences = {
+					new Package {
+						Id = "Humanizer.Core",
+						Version = "2.14.1",
+					},
+					new Package {
+						Id = "Humanizer.Core.es",
+						Version = "2.14.1",
+					},
+				},
 				OtherBuildItems = {
 					new BuildItem ("EmbeddedResource", "Foo.resx") {
 						TextContent = () => InlineData.ResxWithContents ("<data name=\"CancelButton\"><value>Cancel</value></data>")
@@ -55,10 +69,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 
 			proj = new XamarinAndroidApplicationProject {
-				IsRelease = true,
-				EnableMarshalMethods = enableMarshalMethods,
+				IsRelease = isRelease,
+				EnableMarshalMethods = isRelease && enableMarshalMethods,
 			};
-			proj.References.Add (new BuildItem.ProjectReference ($"..\\{lib.ProjectName}\\{lib.ProjectName}.csproj", lib.ProjectName, lib.ProjectGuid));
+			proj.AddReference (lib);
 			proj.SetAndroidSupportedAbis ("armeabi-v7a", "arm64-v8a", "x86", "x86_64");
 
 			using (var libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName))) {
@@ -66,11 +80,13 @@ namespace Xamarin.Android.Build.Tests
 				Assert.IsTrue (libBuilder.Build (lib), "Library Build should have succeeded.");
 				Assert.IsTrue (builder.Install (proj), "Install should have succeeded.");
 
-				var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
-				var helper = new ArchiveAssemblyHelper (apk);
+				if (isRelease) {
+					var apk = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.PackageName}-Signed.apk");
+					var helper = new ArchiveAssemblyHelper (apk);
 
-				foreach (string lang in languages) {
-					Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					foreach (string lang in languages) {
+						Assert.IsTrue (helper.Exists ($"assemblies/{lang}/{lib.ProjectName}.resources.dll"), $"Apk should contain satellite assembly for language '{lang}'!");
+					}
 				}
 
 				RunProjectAndAssert (proj, builder);
