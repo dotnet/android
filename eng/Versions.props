@@ -2,10 +2,10 @@
   <!--Package versions-->
   <PropertyGroup>
     <!-- NOTE: $(VSToolsNetCoreSDKResolverPackageVersion) may be temporary -->
-    <VSToolsNetCoreSDKResolverPackageVersion>9.0.100-preview.7.24402.8</VSToolsNetCoreSDKResolverPackageVersion>
+    <VSToolsNetCoreSDKResolverPackageVersion>9.0.100-preview.7.24406.3</VSToolsNetCoreSDKResolverPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(VSToolsNetCoreSDKResolverPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-preview.7.24401.8</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-preview.7.24401.8</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-preview.7.24405.7</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-preview.7.24405.7</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>8.0.0-beta.24225.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>9.0.0-preview.7.24373.5</MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>
