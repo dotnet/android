@@ -435,7 +435,7 @@ namespace Microsoft.Android.Build.Tasks
 
 		public static string HashFile (string filename, HashAlgorithm hashAlg)
 		{
-			using (Stream file = new FileStream (filename, FileMode.Open, FileAccess.Read)) {
+			using (Stream file = new FileStream (filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 				byte[] hash = hashAlg.ComputeHash (file);
 				return ToHexString (hash);
 			}
@@ -479,7 +479,7 @@ namespace Microsoft.Android.Build.Tasks
 		public static bool IsPortablePdb (string filename)
 		{
 			try {
-				using (var fs = new FileStream (filename, FileMode.Open, FileAccess.Read)) {
+				using (var fs = new FileStream (filename, FileMode.Open, FileAccess.Read, FileShare.Read)) {
 					using (var br = new BinaryReader (fs)) {
 						return br.ReadUInt32 () == ppdb_signature;
 					}
