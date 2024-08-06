@@ -1655,5 +1655,36 @@ public class ToolbarEx {
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
 		}
+
+		[Test]
+		public void IncrementalBuildDifferentDevice()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = {
+					new Import (() => "MockPrimaryCpuAbi.targets") {
+						TextContent = () =>
+"""
+<Project>
+	<!-- This target "mocks" what _GetPrimaryCpuAbi does -->
+	<Target Name="_MockPrimaryCpuAbi" BeforeTargets="_CreatePropertiesCache">
+		<PropertyGroup>
+			<RuntimeIdentifier>$(_SingleRID)</RuntimeIdentifier>
+			<RuntimeIdentifiers></RuntimeIdentifiers>
+			<AndroidSupportedAbis>$(_SingleABI)</AndroidSupportedAbis>
+		</PropertyGroup>
+	</Target>
+</Project>
+"""
+					},
+				},
+			};
+			using var builder = CreateApkBuilder ();
+			builder.Target = "Build";
+			builder.BuildingInsideVisualStudio = false;
+			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-arm64", "_SingleABI=arm64-v8a" ]),
+				"first build should have succeeded.");
+			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-x64", "_SingleABI=x86_64" ], doNotCleanupOnUpdate: true),
+				"second build should have succeeded.");
+		}
 	}
 }
