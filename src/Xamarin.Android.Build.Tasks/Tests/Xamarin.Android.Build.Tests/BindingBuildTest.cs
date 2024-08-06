@@ -888,14 +888,9 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 			var collection = new XamarinAndroidBindingProject ();
 
 			// Dependencies ignored by <AndroidIgnoredJavaDependency>
-			var concurrent = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.concurrent:concurrent-futures");
-			concurrent.Metadata.Add ("Version", "1.1.0");
-
-			var lifecycle = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.lifecycle:lifecycle-runtime");
-			lifecycle.Metadata.Add ("Version", "2.6.2");
-
-			var parcelable = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.versionedparcelable:versionedparcelable");
-			parcelable.Metadata.Add ("Version", "1.2.0");
+			var concurrent = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.concurrent:concurrent-futures:1.1.0");
+			var lifecycle = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.lifecycle:lifecycle-runtime:2.6.2");
+			var parcelable = new BuildItem ("AndroidIgnoredJavaDependency", "androidx.versionedparcelable:versionedparcelable:1.2.0");
 
 			var proj = new XamarinAndroidBindingProject {
 				Jars = { item, annotations_experimental_androidlib },
@@ -905,8 +900,7 @@ VNZXRob2RzLmphdmFQSwUGAAAAAAcABwDOAQAAVgMAAAAA
 
 			proj.AddReference (collection);
 			var collection_proj = proj.References.First ();
-			collection_proj.Metadata.Add ("JavaArtifact", "androidx.collection:collection");
-			collection_proj.Metadata.Add ("JavaVersion", "1.3.0");
+			collection_proj.Metadata.Add ("JavaArtifact", "androidx.collection:collection:1.3.0");
 
 			using var a = CreateDllBuilder ();
 			using var b = CreateDllBuilder ();

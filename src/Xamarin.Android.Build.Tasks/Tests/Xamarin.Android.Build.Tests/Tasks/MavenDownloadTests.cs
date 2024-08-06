@@ -136,8 +136,7 @@ public class MavenDownloadTests
 
 			var output_item = task.ResolvedAndroidMavenLibraries! [0];
 
-			Assert.AreEqual ("com.google.auto.value:auto-value-annotations", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual ("1.10.4", output_item.GetMetadata ("JavaVersion"));
+			Assert.AreEqual ("com.google.auto.value:auto-value-annotations:1.10.4", output_item.GetMetadata ("JavaArtifact"));
 			Assert.AreEqual (Path.Combine (temp_cache_dir, "central", "com.google.auto.value", "auto-value-annotations", "1.10.4", "auto-value-annotations-1.10.4.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
@@ -164,8 +163,7 @@ public class MavenDownloadTests
 
 			var output_item = task.ResolvedAndroidMavenLibraries! [0];
 
-			Assert.AreEqual ("androidx.core:core", output_item.GetMetadata ("JavaArtifact"));
-			Assert.AreEqual ("1.12.0", output_item.GetMetadata ("JavaVersion"));
+			Assert.AreEqual ("androidx.core:core:1.12.0", output_item.GetMetadata ("JavaArtifact"));
 			Assert.AreEqual (Path.Combine (temp_cache_dir, "google", "androidx.core", "core", "1.12.0", "core-1.12.0.pom"), output_item.GetMetadata ("Manifest"));
 		} finally {
 			DeleteTempDirectory (temp_cache_dir);
