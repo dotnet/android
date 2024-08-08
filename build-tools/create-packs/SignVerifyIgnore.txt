@@ -1,3 +1,2 @@
 **\*.xml,ignore unsigned xml
 **\cab*.cab.cab,ignore unsigned .cab
-**\com\sun\jna\win32-*\jnidispatch.dll, ignore external bundletool.jar content
