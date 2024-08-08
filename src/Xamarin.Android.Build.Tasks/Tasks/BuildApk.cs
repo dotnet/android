@@ -597,7 +597,7 @@ namespace Xamarin.Android.Tasks
 
 		bool AddFileToArchiveIfNewer (ZipArchiveEx apk, string file, string inArchivePath, CompressionMethod compressionMethod = CompressionMethod.Default)
 		{
-			existingEntries.Remove (inArchivePath);
+			existingEntries.Remove (inArchivePath.Replace (Path.DirectorySeparatorChar, '/'));
 			if (apk.SkipExistingFile (file, inArchivePath, compressionMethod)) {
 				Log.LogDebugMessage ($"Skipping {file} as the archive file is up to date.");
 				return false;
