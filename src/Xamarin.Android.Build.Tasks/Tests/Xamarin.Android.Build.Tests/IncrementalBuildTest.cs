@@ -105,6 +105,11 @@ namespace Xamarin.Android.Build.Tests
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
+				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
+				var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
+				FileAssert.Exists (stampFiles, $"{stampFiles} should exists!");
+				var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
+				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exists!");
 
 				//No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
@@ -827,6 +832,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
 				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
 				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec).OrderBy (j => j),
@@ -867,6 +873,22 @@ namespace Lib2
 				foreach (var targetName in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
 				}
+
+				var filesToTouch = new [] {
+ 					Path.Combine (intermediate, "build.props"),
+ 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
+ 				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+				}
+
+				b.BuildLogFile = "build5.log";
+				Assert.IsTrue (b.Build (proj), "fifth build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
+				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
+				FileAssert.Exists (cacheFile);
+				FileAssert.Exists (stamp);
 			}
 		}
 
