@@ -45,8 +45,9 @@ endif()
 string(TOLOWER ${CMAKE_BUILD_TYPE} XAMARIN_MONO_ANDROID_SUFFIX)
 set(XAMARIN_MONO_ANDROID_LIB "mono-android${CHECKED_BUILD_INFIX}.${XAMARIN_MONO_ANDROID_SUFFIX}")
 set(XAMARIN_MONO_ANDROID_STATIC_LIB "${XAMARIN_MONO_ANDROID_LIB}-static")
+set(XAMARIN_MONO_ANDROID_PERFETTO_LIB "mono-android-perfetto.${XAMARIN_MONO_ANDROID_SUFFIX}")
 
-set(XAMARIN_MONODROID_SOURCES
+list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
   debug-constants.cc
   debug.cc
   embedded-assemblies-zip.cc
@@ -67,11 +68,11 @@ set(XAMARIN_MONODROID_SOURCES
 )
 
 list(APPEND LOCAL_CLANG_CHECK_SOURCES
-  ${XAMARIN_MONODROID_SOURCES}
+  ${XAMARIN_MONODROID_COMMON_SOURCES}
 )
 
 if(NOT DEBUG_BUILD)
-  list(APPEND XAMARIN_MONODROID_SOURCES
+  list(APPEND XAMARIN_MONODROID_COMMON_SOURCES
     xamarin-android-app-context.cc
   )
 
@@ -79,7 +80,14 @@ if(NOT DEBUG_BUILD)
     xamarin-android-app-context.cc
   )
 endif()
-add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
+
+list(APPEND XAMARIN_MONODROID_SOURCES
+  ${XAMARIN_MONODROID_COMMON_SOURCES}
+)
+
+list(APPEND XAMARIN_MONODROID_PERFETTO_SOURCES
+  ${XAMARIN_MONODROID_COMMON_SOURCES}
+)
 
 if(NOT USES_LIBSTDCPP)
   list(APPEND XAMARIN_MONODROID_SOURCES
@@ -87,22 +95,10 @@ if(NOT USES_LIBSTDCPP)
   )
 endif()
 
+add_clang_check_sources("${LOCAL_CLANG_CHECK_SOURCES}")
+
 # Build
 configure_file(host-config.h.in ${CMAKE_CURRENT_BINARY_DIR}/include/host-config.h)
-
-add_library(
-  ${XAMARIN_MONO_ANDROID_LIB}
-  SHARED ${XAMARIN_MONODROID_SOURCES}
-)
-
-if(BUILD_STATIC_LIBRARY)
-  add_library(
-    ${XAMARIN_MONO_ANDROID_STATIC_LIB}
-    STATIC
-    ${XAMARIN_MONODROID_SOURCES}
-  )
-  set_static_library_suffix(${XAMARIN_MONO_ANDROID_STATIC_LIB})
-endif()
 
 macro(lib_target_options TARGET_NAME)
   target_compile_definitions(
@@ -183,20 +179,61 @@ macro(lib_target_options TARGET_NAME)
     ${TARGET_NAME}
     ${LINK_LIBS}
     xa::xamarin-app
-    ${SHARED_LIB_NAME}
     xa::runtime-base
     xa::java-interop
-    xa::pinvoke-override-precompiled
     xa::lz4
     -lmonosgen-2.0
     -llog
   )
 endmacro ()
 
-lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
-xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
+if(NOT ENABLE_PERFETTO)
+  add_library(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    SHARED ${XAMARIN_MONODROID_SOURCES}
+  )
 
-if(BUILD_STATIC_LIBRARY)
-  lib_target_options(${XAMARIN_MONO_ANDROID_STATIC_LIB})
-  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+  lib_target_options(${XAMARIN_MONO_ANDROID_LIB})
+  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_LIB})
+
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_LIB}
+    ${LINK_LIBS}
+    ${SHARED_LIB_NAME}
+    xa::pinvoke-override-precompiled
+  )
+
+  if(BUILD_STATIC_LIBRARY)
+    add_library(
+      ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+      STATIC
+      ${XAMARIN_MONODROID_SOURCES}
+    )
+    set_static_library_suffix(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+
+    lib_target_options(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+    xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+
+    target_link_libraries(
+      ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+      ${LINK_LIBS}
+      ${SHARED_LIB_NAME}
+      xa::pinvoke-override-precompiled
+    )
+  endif()
+else()
+  add_library(
+    ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
+    SHARED ${XAMARIN_MONODROID_PERFETTO_SOURCES}
+  )
+
+  lib_target_options(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
+  xa_add_compile_definitions(${XAMARIN_MONO_ANDROID_PERFETTO_LIB})
+
+  target_link_libraries(
+    ${XAMARIN_MONO_ANDROID_PERFETTO_LIB}
+    ${LINK_LIBS}
+    xa::shared-no-abi
+    xa::pinvoke-override-precompiled
+  )
 endif()

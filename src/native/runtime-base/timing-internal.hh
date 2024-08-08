@@ -4,13 +4,16 @@
 #include <atomic>
 #include <concepts>
 #include <ctime>
+#include <string_view>
 #include <vector>
 
+#include "android-system.hh"
 #include "cpp-util.hh"
 #include "logger.hh"
 #include "startup-aware-lock.hh"
 #include "strings.hh"
 #include "util.hh"
+#include "monodroid-profiling.hh"
 #include "shared-constants.hh"
 #include "monodroid-state.hh"
 
@@ -38,7 +41,7 @@ namespace xamarin::android::internal
 		RuntimeConfigBlob         = 9,
 		RuntimeRegister           = 10,
 		TotalRuntimeInit          = 11,
-		Unspecified               = 12,
+		Unspecified               = std::numeric_limits<std::underlying_type_t<TimingEventKind>>::max (),
 	};
 
 	struct TimingEventPoint
@@ -87,6 +90,19 @@ namespace xamarin::android::internal
 		static constexpr uint32_t ms_in_second = 1000;
 		static constexpr uint32_t ns_in_second = ms_in_second * ns_in_millisecond;
 
+		// Defaults
+#if defined(PERFETTO_ENABLED)
+		static constexpr ProfilingMode default_profiling_mode = ProfilingMode::Extended;
+#else
+		static constexpr ProfilingMode default_profiling_mode = ProfilingMode::Bare;
+#endif
+		// Parameters in the debug.mono.{timing,perfetto} properties
+		static constexpr std::string_view OPT_MODE          { "mode=" };
+		static constexpr std::string_view OPT_MODE_BARE     { "bare" };
+		static constexpr std::string_view OPT_MODE_EXTENDED { "extended" };
+		static constexpr std::string_view OPT_MODE_VERBOSE  { "verbose" };
+		static constexpr std::string_view OPT_MODE_EXTREME  { "extreme" };
+
 	protected:
 		FastTiming () noexcept
 		{
@@ -94,6 +110,11 @@ namespace xamarin::android::internal
 		}
 
 	public:
+		force_inline static ProfilingMode mode () noexcept
+		{
+			return profiling_mode;
+		}
+
 		force_inline static bool enabled () noexcept
 		{
 			return is_enabled;
@@ -236,6 +257,7 @@ namespace xamarin::android::internal
 
 	private:
 		static void really_initialize (bool log_immediately) noexcept;
+		static void parse_options (dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN> const& value) noexcept;
 		static void* timing_signal_thread (void *arg) noexcept;
 
 		force_inline static void mark (TimingEventPoint &point) noexcept
@@ -441,12 +463,13 @@ namespace xamarin::android::internal
 
 	private:
 		std::atomic_size_t next_event_index = 0;
-		xamarin::android::mutex event_vector_realloc_mutex;
+		mutex_t event_vector_realloc_mutex;
 		std::vector<TimingEvent> events;
 
 		static TimingEvent init_time;
 		static bool is_enabled;
 		static bool immediate_logging;
+		static inline ProfilingMode profiling_mode = default_profiling_mode;
 	};
 
 	extern FastTiming *internal_timing;
