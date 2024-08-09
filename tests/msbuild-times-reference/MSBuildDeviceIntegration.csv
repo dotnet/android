@@ -3,15 +3,12 @@
 Test Name,Time in ms (int)
 # Data
 Build_From_Clean_DontIncludeRestore,13000
-Build_No_Changes,2500
-Build_CSharp_Change,4000
-Build_AndroidResource_Change,3250
-Build_AndroidAsset_Change,10000
+Build_No_Changes,2250
+Build_CSharp_Change,3500
+Build_AndroidResource_Change,2250
+Build_AndroidAsset_Change,6500
 Build_AndroidManifest_Change,4500
-Build_Designer_Change,3000
-Build_JLO_Change,10000
-Build_CSProj_Change,12500
-Build_XAML_Change,7400
-Build_XAML_Change_RefAssembly,4000
-Install_CSharp_Change,4500
-Install_XAML_Change,5000
+Build_JLO_Change,4500
+Build_XAML_Change,3000
+Install_CSharp_Change,4000
+Install_XAML_Change,3750
