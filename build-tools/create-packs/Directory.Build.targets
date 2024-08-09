@@ -163,7 +163,7 @@
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
-  <!-- https://github.com/dotnet/arcade/blob/efc3da96e5ac110513e92ebd9ef87c73f44d8540/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
+  <!-- https://github.com/dotnet/arcade/blob/00d6decc59f5030c2399a64fd3e4f6e8e11bacca/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
   <Target Name="PushManifestToBuildAssetRegistry" 
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
@@ -192,7 +192,7 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
-    <PushToAzureDevOpsArtifacts
+    <PushToBuildStorage
         ItemsToPush="@(ItemsToPush)"
         IsStableBuild="$(IsStableBuild)"
         ManifestBuildData="@(ManifestBuildData)"
