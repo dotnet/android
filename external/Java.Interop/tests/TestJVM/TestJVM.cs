@@ -24,20 +24,33 @@ namespace Java.InteropTests
 		public  ICollection<string>         JarFilePaths    {get;}      = new List<string> ();
 		public  Assembly                    CallingAssembly {get; set;}
 		public  Dictionary<string, Type>?   TypeMappings    {get; set;}
+
+		internal    JdkInfo?                JdkInfo         {get; set;}
 	}
 
 	public class TestJVM : JreRuntime {
 
+#if !__ANDROID__
+		public JdkInfo? JdkInfo { get; private set; }
+#endif  // !__ANDROID__
+
 		public TestJVM (TestJVMOptions builder)
 			: base (OverrideOptions (builder))
 		{
+#if !__ANDROID__
+			this.JdkInfo    = builder.JdkInfo;
+#endif  // !__ANDROID__
+
 		}
 
 		static TestJVMOptions OverrideOptions (TestJVMOptions builder)
 		{
 			var dir = GetOutputDirectoryName ();
 
-			builder.JvmLibraryPath                                  = GetJvmLibraryPath ();
+			var info = GetJdkInfo ();
+
+			builder.JvmLibraryPath                                  = info.JdkJvmPath;
+			builder.JdkInfo                                         = info.JdkInfo;
 			builder.JniAddNativeMethodRegistrationAttributePresent  = true;
 			builder.JniGlobalReferenceLogWriter                     = GetLogOutput ("JAVA_INTEROP_GREF_LOG", "g-", builder.CallingAssembly);
 			builder.JniLocalReferenceLogWriter                      = GetLogOutput ("JAVA_INTEROP_LREF_LOG", "l-", builder.CallingAssembly);
@@ -67,27 +80,29 @@ namespace Java.InteropTests
 			return new StreamWriter (path, append: false, encoding: new UTF8Encoding (encoderShouldEmitUTF8Identifier: false));
 		}
 
-		public static string? GetJvmLibraryPath ()
+		public static string? GetJvmLibraryPath () => GetJdkInfo ().JdkJvmPath;
+
+		static (JdkInfo? JdkInfo, string? JdkJvmPath) GetJdkInfo ()
 		{
-			var jdkDir  = ReadJavaSdkDirectoryFromJdkInfoProps ();
-			if (jdkDir != null) {
-				return jdkDir;
+			var info    = ReadJavaSdkDirectoryFromJdkInfoProps ();
+			if (info.JdkJvmPath != null) {
+				return (JdkInfo: info.JavaSdkDirectory == null ? null : new JdkInfo (info.JavaSdkDirectory), JdkJvmPath: info.JdkJvmPath);
 			}
 			var jdk = JdkInfo.GetKnownSystemJdkInfos ()
 				.FirstOrDefault ();
-			return jdk?.JdkJvmPath;
+			return (jdk, jdk?.JdkJvmPath);
 		}
 
-		static string? ReadJavaSdkDirectoryFromJdkInfoProps ()
+		static (string? JavaSdkDirectory, string? JdkJvmPath) ReadJavaSdkDirectoryFromJdkInfoProps ()
 		{
 			var location    = typeof (TestJVM).Assembly.Location;
 			var binDir      = Path.GetDirectoryName (Path.GetDirectoryName (location)) ?? Environment.CurrentDirectory;
 			var testDir     = Path.GetFileName (Path.GetDirectoryName (location));
 			if (testDir == null) {
-				return null;
+				return (null, null);
 			}
 			if (!testDir.StartsWith ("Test", StringComparison.OrdinalIgnoreCase)) {
-				return null;
+				return (null, null);
 			}
 			var buildName   = testDir.Replace ("Test", "Build");
 			if (buildName.Contains ('-')) {
@@ -95,7 +110,7 @@ namespace Java.InteropTests
 			}
 			var jdkPropFile = Path.Combine (binDir, buildName, "JdkInfo.props");
 			if (!File.Exists (jdkPropFile)) {
-				return null;
+				return (null, null);
 			}
 
 			var msbuild     = XNamespace.Get ("http://schemas.microsoft.com/developer/msbuild/2003");
@@ -108,9 +123,14 @@ namespace Java.InteropTests
 				.Elements (msbuild + "JdkJvmPath")
 				.FirstOrDefault ();
 			if (jdkJvmPath == null) {
-				return null;
+				return (null, null);
 			}
-			return jdkJvmPath.Value;
+			var jdkPath     = jdkProps.Elements ()
+				.Elements (msbuild + "PropertyGroup")
+				.Elements (msbuild + "JavaSdkDirectory")
+				.FirstOrDefault ();
+
+			return (JavaSdkDirectory: jdkPath?.Value, JdkJvmPath: jdkJvmPath.Value);
 		}
 
 		public TestJVM (string[]? jars = null, Dictionary<string, Type>? typeMappings = null)

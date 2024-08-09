@@ -28,7 +28,7 @@ and [Architecture][architecture] pages.
 
 `Java.Interop.sln` must first run some "preparatory" tasks before it can be built:
 
-```
+```console
 dotnet build -t:Prepare
 ```
 

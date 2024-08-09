@@ -1,7 +1,7 @@
 <Project>
 
   <Target Name="_CreateMonoInfoProps"
-      Condition=" $([MSBuild]::IsOSPlatform ('linux')) Or $([MSBuild]::IsOSPlatform ('osx')) "
+      Condition=" ($([MSBuild]::IsOSPlatform ('linux')) Or $([MSBuild]::IsOSPlatform ('osx'))) And '$(_MonoPath)' != '' "
       AfterTargets="AfterBuild"
       DependsOnTargets="_GetLinuxMonoPaths;_GetMacOSMonoPaths"
       Inputs="$(MSBuildThisFileFullPath);$(MSBuildThisFileDirectory)Java.Interop.BootstrapTasks.csproj"
@@ -45,13 +45,19 @@
     <Touch Files="$(_OutputPath)mono.mk" />
   </Target>
 
-  <Target Name="_GetLinuxMonoPaths"
+  <Target Name="_GetLinuxMonoPath"
       Condition=" $([MSBuild]::IsOSPlatform ('linux')) ">
     <Exec
         Command="which mono"
-        ConsoleToMsBuild="True">
+        ConsoleToMsBuild="true"
+        IgnoreExitCode="true">
       <Output TaskParameter="ConsoleOutput" PropertyName="_MonoPath" />
     </Exec>
+  </Target>
+
+  <Target Name="_GetLinuxMonoPaths"
+      DependsOnTargets="_GetLinuxMonoPath"
+      Condition=" $([MSBuild]::IsOSPlatform ('linux')) And '$(_MonoPath)' != '' ">
     <Exec
         Command="pkg-config --variable=libdir mono-2"
         ConsoleToMsBuild="True">

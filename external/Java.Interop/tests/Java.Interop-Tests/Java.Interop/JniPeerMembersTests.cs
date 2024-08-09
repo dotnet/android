@@ -142,6 +142,11 @@ namespace Java.InteropTests
 			if (Environment.GetEnvironmentVariable ("CPUTYPE") is string cpu && cpu == "arm64") {
 				Assert.Ignore ("nope!");
 			}
+			if (VM.JdkInfo.Version is Version v && v >= new Version (17, 0)) {
+				// JDK-17 now crashes on this test as well:
+				// FATAL ERROR in native method: Wrong object class or methodID passed to JNI call
+				Assert.Ignore ("nope!");
+			}
 			var iface   = new JniType ("net/dot/jni/test/AndroidInterface");
 			var desugar = new JniType ("net/dot/jni/test/DesugarAndroidInterface$_CC");
 			var m       = desugar.GetStaticMethod ("getClassName", "()Ljava/lang/String;");
