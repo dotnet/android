@@ -35,7 +35,7 @@ This file is used by all project types, including binding projects.
   <Target Name="_ResolveLibraryProjectImports"
       DependsOnTargets="$(CoreResolveReferencesDependsOn)"
       Inputs="$(ProjectAssetsFile);$(MSBuildProjectFullPath);@(_MonoAndroidReferencePath);@(_MonoAndroidReferenceDependencyPaths);@(AndroidAarLibrary);$(_AndroidBuildPropertiesCache)"
-      Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp;$(_AndroidLibraryProjectImportsCache)">
+      Outputs="$(_AndroidStampDirectory)_ResolveLibraryProjectImports.stamp">
     <ResolveLibraryProjectImports
         ContinueOnError="$(DesignTimeBuild)"
         AndroidApplication="$(AndroidApplication)"
