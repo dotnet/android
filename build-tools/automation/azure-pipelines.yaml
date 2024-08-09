@@ -549,9 +549,6 @@ extends:
           os: windows
         workspace:
           clean: all
-        variables:
-        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-          - group: Publish-Build-Assets
         templateContext:
           outputs:
           - output: artifactsDrop
@@ -565,6 +562,12 @@ extends:
         - checkout: self
           clean: true
           submodules: recursive
+
+        - task: UseDotNet@2
+          displayName: Install .NET 9.x
+          inputs:
+            version: 9.x
+            includePreviewVersions: true
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
