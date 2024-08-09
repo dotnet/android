@@ -84,13 +84,13 @@ namespace Test.ME {
 			}
 		}
 
-		static Delegate cb_getSpanFlags_Ljava_lang_Object_;
+		static Delegate cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I;
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
-			if (cb_getSpanFlags_Ljava_lang_Object_ == null)
-				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_));
-			return cb_getSpanFlags_Ljava_lang_Object_;
+			if (cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I == null)
+				cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_));
+			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I;
 		}
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_tag)
@@ -106,13 +106,13 @@ namespace Test.ME {
 		[Register ("getSpanFlags", "(Ljava/lang/Object;)I", "GetGetSpanFlags_Ljava_lang_Object_Handler")]
 		public abstract int GetSpanFlags (global::Java.Lang.Object tag);
 
-		static Delegate cb_append_Ljava_lang_CharSequence_;
+		static Delegate cb_append_Append_Ljava_lang_CharSequence__V;
 #pragma warning disable 0169
 		static Delegate GetAppend_Ljava_lang_CharSequence_Handler ()
 		{
-			if (cb_append_Ljava_lang_CharSequence_ == null)
-				cb_append_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_Append_Ljava_lang_CharSequence_));
-			return cb_append_Ljava_lang_CharSequence_;
+			if (cb_append_Append_Ljava_lang_CharSequence__V == null)
+				cb_append_Append_Ljava_lang_CharSequence__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_Append_Ljava_lang_CharSequence_));
+			return cb_append_Append_Ljava_lang_CharSequence__V;
 		}
 
 		static void n_Append_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)
@@ -134,13 +134,13 @@ namespace Test.ME {
 			jls_value?.Dispose ();
 		}
 
-		static Delegate cb_identity_Ljava_lang_CharSequence_;
+		static Delegate cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_;
 #pragma warning disable 0169
 		static Delegate GetIdentity_Ljava_lang_CharSequence_Handler ()
 		{
-			if (cb_identity_Ljava_lang_CharSequence_ == null)
-				cb_identity_Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_L (n_Identity_Ljava_lang_CharSequence_));
-			return cb_identity_Ljava_lang_CharSequence_;
+			if (cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_ == null)
+				cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_L (n_Identity_Ljava_lang_CharSequence_));
+			return cb_identity_Identity_Ljava_lang_CharSequence__Ljava_lang_CharSequence_;
 		}
 
 		static IntPtr n_Identity_Ljava_lang_CharSequence_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)

@@ -46,13 +46,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_irrelevant;
+		static Delegate cb_irrelevant_Irrelevant_V;
 #pragma warning disable 0169
 		static Delegate GetIrrelevantHandler ()
 		{
-			if (cb_irrelevant == null)
-				cb_irrelevant = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Irrelevant));
-			return cb_irrelevant;
+			if (cb_irrelevant_Irrelevant_V == null)
+				cb_irrelevant_Irrelevant_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Irrelevant));
+			return cb_irrelevant_Irrelevant_V;
 		}
 
 		static void n_Irrelevant (IntPtr jnienv, IntPtr native__this)
@@ -73,13 +73,13 @@ namespace Xamarin.Test {
 			}
 		}
 
-		static Delegate cb_close;
+		static Delegate cb_close_Close_V;
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
-			return cb_close;
+			if (cb_close_Close_V == null)
+				cb_close_Close_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
+			return cb_close_Close_V;
 		}
 
 		static void n_Close (IntPtr jnienv, IntPtr native__this)

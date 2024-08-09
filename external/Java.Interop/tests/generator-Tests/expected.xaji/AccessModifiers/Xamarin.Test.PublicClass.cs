@@ -57,13 +57,13 @@ namespace Xamarin.Test {
 			{
 			}
 
-			static Delegate cb_foo;
+			static Delegate cb_foo_Foo_V;
 #pragma warning disable 0169
 			static Delegate GetFooHandler ()
 			{
-				if (cb_foo == null)
-					cb_foo = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
-				return cb_foo;
+				if (cb_foo_Foo_V == null)
+					cb_foo_Foo_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
+				return cb_foo_Foo_V;
 			}
 
 			static void n_Foo (IntPtr jnienv, IntPtr native__this)
@@ -129,13 +129,13 @@ namespace Xamarin.Test {
 			}
 		}
 
-		static Delegate cb_foo;
+		static Delegate cb_foo_Foo_V;
 #pragma warning disable 0169
 		static Delegate GetFooHandler ()
 		{
-			if (cb_foo == null)
-				cb_foo = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
-			return cb_foo;
+			if (cb_foo_Foo_V == null)
+				cb_foo_Foo_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
+			return cb_foo_Foo_V;
 		}
 
 		static void n_Foo (IntPtr jnienv, IntPtr native__this)

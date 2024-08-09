@@ -46,13 +46,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_usePartial_I;
+		static Delegate cb_usePartial_UsePartial_I_Ljava_lang_String_;
 #pragma warning disable 0169
 		static Delegate GetUsePartial_IHandler ()
 		{
-			if (cb_usePartial_I == null)
-				cb_usePartial_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_UsePartial_I));
-			return cb_usePartial_I;
+			if (cb_usePartial_UsePartial_I_Ljava_lang_String_ == null)
+				cb_usePartial_UsePartial_I_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_UsePartial_I));
+			return cb_usePartial_UsePartial_I_Ljava_lang_String_;
 		}
 
 		static IntPtr n_UsePartial_I (IntPtr jnienv, IntPtr native__this, int partial)

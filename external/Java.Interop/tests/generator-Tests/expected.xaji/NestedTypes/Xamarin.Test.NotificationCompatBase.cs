@@ -60,13 +60,13 @@ namespace Xamarin.Test {
 				{
 				}
 
-				static Delegate cb_build_I;
+				static Delegate cb_build_Build_I_Lxamarin_test_NotificationCompatBase_Action_;
 #pragma warning disable 0169
 				static Delegate GetBuild_IHandler ()
 				{
-					if (cb_build_I == null)
-						cb_build_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_Build_I));
-					return cb_build_I;
+					if (cb_build_Build_I_Lxamarin_test_NotificationCompatBase_Action_ == null)
+						cb_build_Build_I_Lxamarin_test_NotificationCompatBase_Action_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_Build_I));
+					return cb_build_Build_I_Lxamarin_test_NotificationCompatBase_Action_;
 				}
 
 				static IntPtr n_Build_I (IntPtr jnienv, IntPtr native__this, int p0)

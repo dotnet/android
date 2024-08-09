@@ -62,13 +62,13 @@ internal partial class IMyInterface2Invoker : global::Java.Lang.Object, IMyInter
 		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
-	static Delegate cb_DoSomething;
+	static Delegate cb_DoSomething_DoSomething_V;
 #pragma warning disable 0169
 	static Delegate GetDoSomethingHandler ()
 	{
-		if (cb_DoSomething == null)
-			cb_DoSomething = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
-		return cb_DoSomething;
+		if (cb_DoSomething_DoSomething_V == null)
+			cb_DoSomething_DoSomething_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
+		return cb_DoSomething_DoSomething_V;
 	}
 
 	static void n_DoSomething (IntPtr jnienv, IntPtr native__this)

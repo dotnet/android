@@ -50,13 +50,13 @@ namespace Xamarin.Test {
 			{
 			}
 
-			static Delegate cb_setCustomDimension_I;
+			static Delegate cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_;
 #pragma warning disable 0169
 			static Delegate GetSetCustomDimension_IHandler ()
 			{
-				if (cb_setCustomDimension_I == null)
-					cb_setCustomDimension_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_SetCustomDimension_I));
-				return cb_setCustomDimension_I;
+				if (cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_ == null)
+					cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_SetCustomDimension_I));
+				return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_A_B_;
 			}
 
 			static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)
@@ -110,13 +110,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_getHandle;
+		static Delegate cb_getHandle_GetHandle_I;
 #pragma warning disable 0169
 		static Delegate GetGetHandleHandler ()
 		{
-			if (cb_getHandle == null)
-				cb_getHandle = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetHandle));
-			return cb_getHandle;
+			if (cb_getHandle_GetHandle_I == null)
+				cb_getHandle_GetHandle_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetHandle));
+			return cb_getHandle_GetHandle_I;
 		}
 
 		static int n_GetHandle (IntPtr jnienv, IntPtr native__this)

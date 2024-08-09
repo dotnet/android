@@ -46,13 +46,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_getSomeInteger;
+		static Delegate cb_getSomeInteger_GetSomeInteger_I;
 #pragma warning disable 0169
 		static Delegate GetGetSomeIntegerHandler ()
 		{
-			if (cb_getSomeInteger == null)
-				cb_getSomeInteger = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetSomeInteger));
-			return cb_getSomeInteger;
+			if (cb_getSomeInteger_GetSomeInteger_I == null)
+				cb_getSomeInteger_GetSomeInteger_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetSomeInteger));
+			return cb_getSomeInteger_GetSomeInteger_I;
 		}
 
 		static int n_GetSomeInteger (IntPtr jnienv, IntPtr native__this)
@@ -62,13 +62,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_setSomeInteger_I;
+		static Delegate cb_setSomeInteger_SetSomeInteger_I_V;
 #pragma warning disable 0169
 		static Delegate GetSetSomeInteger_IHandler ()
 		{
-			if (cb_setSomeInteger_I == null)
-				cb_setSomeInteger_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_SetSomeInteger_I));
-			return cb_setSomeInteger_I;
+			if (cb_setSomeInteger_SetSomeInteger_I_V == null)
+				cb_setSomeInteger_SetSomeInteger_I_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_SetSomeInteger_I));
+			return cb_setSomeInteger_SetSomeInteger_I_V;
 		}
 
 		static void n_SetSomeInteger_I (IntPtr jnienv, IntPtr native__this, int newvalue)
@@ -88,13 +88,13 @@ namespace Xamarin.Test {
 			set; 
 		}
 
-		static Delegate cb_getSomeObjectProperty;
+		static Delegate cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_;
 #pragma warning disable 0169
 		static Delegate GetGetSomeObjectPropertyHandler ()
 		{
-			if (cb_getSomeObjectProperty == null)
-				cb_getSomeObjectProperty = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetSomeObjectProperty));
-			return cb_getSomeObjectProperty;
+			if (cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_ == null)
+				cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetSomeObjectProperty));
+			return cb_getSomeObjectProperty_GetSomeObjectProperty_Ljava_lang_Object_;
 		}
 
 		static IntPtr n_GetSomeObjectProperty (IntPtr jnienv, IntPtr native__this)
@@ -104,13 +104,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_setSomeObjectProperty_Ljava_lang_Object_;
+		static Delegate cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V;
 #pragma warning disable 0169
 		static Delegate GetSetSomeObjectProperty_Ljava_lang_Object_Handler ()
 		{
-			if (cb_setSomeObjectProperty_Ljava_lang_Object_ == null)
-				cb_setSomeObjectProperty_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetSomeObjectProperty_Ljava_lang_Object_));
-			return cb_setSomeObjectProperty_Ljava_lang_Object_;
+			if (cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V == null)
+				cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetSomeObjectProperty_Ljava_lang_Object_));
+			return cb_setSomeObjectProperty_SetSomeObjectProperty_Ljava_lang_Object__V;
 		}
 
 		static void n_SetSomeObjectProperty_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)
@@ -131,13 +131,13 @@ namespace Xamarin.Test {
 			set; 
 		}
 
-		static Delegate cb_getSomeString;
+		static Delegate cb_getSomeString_GetSomeString_Ljava_lang_String_;
 #pragma warning disable 0169
 		static Delegate GetGetSomeStringHandler ()
 		{
-			if (cb_getSomeString == null)
-				cb_getSomeString = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetSomeString));
-			return cb_getSomeString;
+			if (cb_getSomeString_GetSomeString_Ljava_lang_String_ == null)
+				cb_getSomeString_GetSomeString_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetSomeString));
+			return cb_getSomeString_GetSomeString_Ljava_lang_String_;
 		}
 
 		static IntPtr n_GetSomeString (IntPtr jnienv, IntPtr native__this)
@@ -147,13 +147,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_setSomeString_Ljava_lang_String_;
+		static Delegate cb_setSomeString_SetSomeString_Ljava_lang_String__V;
 #pragma warning disable 0169
 		static Delegate GetSetSomeString_Ljava_lang_String_Handler ()
 		{
-			if (cb_setSomeString_Ljava_lang_String_ == null)
-				cb_setSomeString_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetSomeString_Ljava_lang_String_));
-			return cb_setSomeString_Ljava_lang_String_;
+			if (cb_setSomeString_SetSomeString_Ljava_lang_String__V == null)
+				cb_setSomeString_SetSomeString_Ljava_lang_String__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetSomeString_Ljava_lang_String_));
+			return cb_setSomeString_SetSomeString_Ljava_lang_String__V;
 		}
 
 		static void n_SetSomeString_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_newvalue)

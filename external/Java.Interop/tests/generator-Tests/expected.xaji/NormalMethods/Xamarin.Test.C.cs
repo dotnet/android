@@ -47,13 +47,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_setCustomDimension_I;
+		static Delegate cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_C_;
 #pragma warning disable 0169
 		static Delegate GetSetCustomDimension_IHandler ()
 		{
-			if (cb_setCustomDimension_I == null)
-				cb_setCustomDimension_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_SetCustomDimension_I));
-			return cb_setCustomDimension_I;
+			if (cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_C_ == null)
+				cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_C_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_L (n_SetCustomDimension_I));
+			return cb_setCustomDimension_SetCustomDimension_I_Lxamarin_test_C_;
 		}
 
 		static IntPtr n_SetCustomDimension_I (IntPtr jnienv, IntPtr native__this, int index)

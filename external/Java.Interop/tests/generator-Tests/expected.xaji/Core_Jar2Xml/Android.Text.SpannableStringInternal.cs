@@ -46,13 +46,13 @@ namespace Android.Text {
 		{
 		}
 
-		static Delegate cb_getSpanFlags_Ljava_lang_Object_;
+		static Delegate cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I;
 #pragma warning disable 0169
 		static Delegate GetGetSpanFlags_Ljava_lang_Object_Handler ()
 		{
-			if (cb_getSpanFlags_Ljava_lang_Object_ == null)
-				cb_getSpanFlags_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_));
-			return cb_getSpanFlags_Ljava_lang_Object_;
+			if (cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I == null)
+				cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_GetSpanFlags_Ljava_lang_Object_));
+			return cb_getSpanFlags_GetSpanFlags_Ljava_lang_Object__I;
 		}
 
 		static int n_GetSpanFlags_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)

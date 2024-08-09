@@ -46,13 +46,13 @@ namespace Java.IO {
 		{
 		}
 
-		static Delegate cb_printStackTrace;
+		static Delegate cb_printStackTrace_PrintStackTrace_V;
 #pragma warning disable 0169
 		static Delegate GetPrintStackTraceHandler ()
 		{
-			if (cb_printStackTrace == null)
-				cb_printStackTrace = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_PrintStackTrace));
-			return cb_printStackTrace;
+			if (cb_printStackTrace_PrintStackTrace_V == null)
+				cb_printStackTrace_PrintStackTrace_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_PrintStackTrace));
+			return cb_printStackTrace_PrintStackTrace_V;
 		}
 
 		static void n_PrintStackTrace (IntPtr jnienv, IntPtr native__this)

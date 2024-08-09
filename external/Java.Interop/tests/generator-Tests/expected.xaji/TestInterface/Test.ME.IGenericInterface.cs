@@ -45,13 +45,13 @@ namespace Test.ME {
 		{
 		}
 
-		static Delegate cb_SetObject_Ljava_lang_Object_;
+		static Delegate cb_SetObject_SetObject_Ljava_lang_Object__V;
 #pragma warning disable 0169
 		static Delegate GetSetObject_Ljava_lang_Object_Handler ()
 		{
-			if (cb_SetObject_Ljava_lang_Object_ == null)
-				cb_SetObject_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_Ljava_lang_Object_));
-			return cb_SetObject_Ljava_lang_Object_;
+			if (cb_SetObject_SetObject_Ljava_lang_Object__V == null)
+				cb_SetObject_SetObject_Ljava_lang_Object__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_Ljava_lang_Object_));
+			return cb_SetObject_SetObject_Ljava_lang_Object__V;
 		}
 
 		static void n_SetObject_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)

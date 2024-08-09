@@ -46,13 +46,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_getAdapter;
+		static Delegate cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_;
 #pragma warning disable 0169
 		static Delegate GetGetAdapterHandler ()
 		{
-			if (cb_getAdapter == null)
-				cb_getAdapter = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetAdapter));
-			return cb_getAdapter;
+			if (cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_ == null)
+				cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetAdapter));
+			return cb_getAdapter_GetAdapter_Lxamarin_test_SpinnerAdapter_;
 		}
 
 		static IntPtr n_GetAdapter (IntPtr jnienv, IntPtr native__this)
@@ -62,13 +62,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_setAdapter_Lxamarin_test_SpinnerAdapter_;
+		static Delegate cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V;
 #pragma warning disable 0169
 		static Delegate GetSetAdapter_Lxamarin_test_SpinnerAdapter_Handler ()
 		{
-			if (cb_setAdapter_Lxamarin_test_SpinnerAdapter_ == null)
-				cb_setAdapter_Lxamarin_test_SpinnerAdapter_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_SpinnerAdapter_));
-			return cb_setAdapter_Lxamarin_test_SpinnerAdapter_;
+			if (cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V == null)
+				cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetAdapter_Lxamarin_test_SpinnerAdapter_));
+			return cb_setAdapter_SetAdapter_Lxamarin_test_SpinnerAdapter__V;
 		}
 
 		static void n_SetAdapter_Lxamarin_test_SpinnerAdapter_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)

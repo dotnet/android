@@ -47,13 +47,13 @@ namespace Java.Util {
 		{
 		}
 
-		static Delegate cb_add_Ljava_lang_Object_;
+		static Delegate cb_add_Add_Ljava_lang_Object__Z;
 #pragma warning disable 0169
 		static Delegate GetAdd_Ljava_lang_Object_Handler ()
 		{
-			if (cb_add_Ljava_lang_Object_ == null)
-				cb_add_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_Add_Ljava_lang_Object_));
-			return cb_add_Ljava_lang_Object_;
+			if (cb_add_Add_Ljava_lang_Object__Z == null)
+				cb_add_Add_Ljava_lang_Object__Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_Add_Ljava_lang_Object_));
+			return cb_add_Add_Ljava_lang_Object__Z;
 		}
 
 		static bool n_Add_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_e)
@@ -80,13 +80,13 @@ namespace Java.Util {
 			}
 		}
 
-		static Delegate cb_clear;
+		static Delegate cb_clear_Clear_V;
 #pragma warning disable 0169
 		static Delegate GetClearHandler ()
 		{
-			if (cb_clear == null)
-				cb_clear = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Clear));
-			return cb_clear;
+			if (cb_clear_Clear_V == null)
+				cb_clear_Clear_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Clear));
+			return cb_clear_Clear_V;
 		}
 
 		static void n_Clear (IntPtr jnienv, IntPtr native__this)

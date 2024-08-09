@@ -63,13 +63,13 @@ namespace Test.ME {
 			}
 		}
 
-		static Delegate cb_SetObject_arrayLjava_lang_String_;
+		static Delegate cb_SetObject_SetObject_arrayLjava_lang_String__V;
 #pragma warning disable 0169
 		static Delegate GetSetObject_arrayLjava_lang_String_Handler ()
 		{
-			if (cb_SetObject_arrayLjava_lang_String_ == null)
-				cb_SetObject_arrayLjava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_arrayLjava_lang_String_));
-			return cb_SetObject_arrayLjava_lang_String_;
+			if (cb_SetObject_SetObject_arrayLjava_lang_String__V == null)
+				cb_SetObject_SetObject_arrayLjava_lang_String__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_arrayLjava_lang_String_));
+			return cb_SetObject_SetObject_arrayLjava_lang_String__V;
 		}
 
 		static void n_SetObject_arrayLjava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_value)

@@ -44,13 +44,13 @@ namespace Com.Google.Android.Exoplayer.Drm {
 		{
 		}
 
-		static Delegate cb_requiresSecureDecoderComponent_Ljava_lang_String_;
+		static Delegate cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z;
 #pragma warning disable 0169
 		static Delegate GetRequiresSecureDecoderComponent_Ljava_lang_String_Handler ()
 		{
-			if (cb_requiresSecureDecoderComponent_Ljava_lang_String_ == null)
-				cb_requiresSecureDecoderComponent_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_));
-			return cb_requiresSecureDecoderComponent_Ljava_lang_String_;
+			if (cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z == null)
+				cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_Z (n_RequiresSecureDecoderComponent_Ljava_lang_String_));
+			return cb_requiresSecureDecoderComponent_RequiresSecureDecoderComponent_Ljava_lang_String__Z;
 		}
 
 		static bool n_RequiresSecureDecoderComponent_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)

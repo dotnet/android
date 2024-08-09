@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using generator.SourceWriters;
@@ -1197,6 +1198,16 @@ namespace generatortests
 			Assert.AreEqual (11, gens.Single (g => g.Name == "MyClass").Methods.Single (m => m.Name == "DoStuff").DeprecatedSince);
 		}
 
+		protected static IEnumerable<string> GetLinesThatStartWith (string source, string value)
+		{
+			using (var reader = new StringReader (source)) {
+				string line;
+				while ((line = reader.ReadLine ()) != null) {
+					if (line.TrimStart ().StartsWith (value, StringComparison.Ordinal))
+						yield return line;
+				}
+			}
+		}
 		static string StripRegisterAttributes (string str)
 		{
 			// It is hard to test if the [Obsolete] is on the setter/etc due to the [Register], so remove all [Register]s
@@ -1417,6 +1428,40 @@ namespace generatortests
 			if (jls != null) jls.Dispose ();
 		}"), $"was: `{writer}`");
 			}
+		}
+
+		[Test]
+		public void CallbackVariableNamesShouldntCollide ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='Object2' static='false' visibility='public' jni-signature='Ljava/lang/Object2;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <class abstract='false' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyClass;'>
+			      <method abstract=""false"" deprecated=""not deprecated"" final=""false"" name=""setDetectorMode"" jni-signature=""(I)Ljava/lang/Object;"" bridge=""false"" native=""false"" return=""java.lang.Object"" jni-return=""Ljava/lang/Object;"" static=""false"" synchronized=""false"" synthetic=""false"" visibility=""public"" return-not-null=""true"">
+			        <parameter name=""detectorMode"" type=""int"" jni-type=""I"" />
+			      </method>
+			      <method abstract=""false"" deprecated=""not deprecated"" final=""false"" name=""setDetectorMode"" jni-signature=""(I)Ljava/lang/Object2;"" bridge=""false"" native=""false"" return=""java.lang.Object2"" jni-return=""Ljava/lang/Object2;"" static=""false"" synchronized=""false"" synthetic=""false"" visibility=""public"" return-not-null=""true"" managedName=""SetDetectorMode2"">
+			        <parameter name=""p0"" type=""int"" jni-type=""I"" />
+			      </method>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "MyClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+			var a = writer.ToString ();
+			var lines = GetLinesThatStartWith (writer.ToString (), "static Delegate cb_");
+
+			// Ensure that 2 cb_ delegates got written, and they do not have the same name
+			Assert.AreEqual (2, lines.Count ());
+			Assert.AreNotEqual (lines.ElementAt (0), lines.ElementAt (1));
 		}
 	}
 

@@ -66,13 +66,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_getSomeColor;
+		static Delegate cb_getSomeColor_GetSomeColor_I;
 #pragma warning disable 0169
 		static Delegate GetGetSomeColorHandler ()
 		{
-			if (cb_getSomeColor == null)
-				cb_getSomeColor = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetSomeColor));
-			return cb_getSomeColor;
+			if (cb_getSomeColor_GetSomeColor_I == null)
+				cb_getSomeColor_GetSomeColor_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_GetSomeColor));
+			return cb_getSomeColor_GetSomeColor_I;
 		}
 
 		static int n_GetSomeColor (IntPtr jnienv, IntPtr native__this)
@@ -82,13 +82,13 @@ namespace Xamarin.Test {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_setSomeColor_I;
+		static Delegate cb_setSomeColor_SetSomeColor_I_V;
 #pragma warning disable 0169
 		static Delegate GetSetSomeColor_IHandler ()
 		{
-			if (cb_setSomeColor_I == null)
-				cb_setSomeColor_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_SetSomeColor_I));
-			return cb_setSomeColor_I;
+			if (cb_setSomeColor_SetSomeColor_I_V == null)
+				cb_setSomeColor_SetSomeColor_I_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_SetSomeColor_I));
+			return cb_setSomeColor_SetSomeColor_I_V;
 		}
 
 		static void n_SetSomeColor_I (IntPtr jnienv, IntPtr native__this, int native_newvalue)

@@ -45,13 +45,13 @@ namespace Java.Lang {
 		{
 		}
 
-		static Delegate cb_compareTo_Ljava_lang_Object_;
+		static Delegate cb_compareTo_CompareTo_Ljava_lang_Object__I;
 #pragma warning disable 0169
 		static Delegate GetCompareTo_Ljava_lang_Object_Handler ()
 		{
-			if (cb_compareTo_Ljava_lang_Object_ == null)
-				cb_compareTo_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_CompareTo_Ljava_lang_Object_));
-			return cb_compareTo_Ljava_lang_Object_;
+			if (cb_compareTo_CompareTo_Ljava_lang_Object__I == null)
+				cb_compareTo_CompareTo_Ljava_lang_Object__I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_CompareTo_Ljava_lang_Object_));
+			return cb_compareTo_CompareTo_Ljava_lang_Object__I;
 		}
 
 		static int n_CompareTo_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_another)

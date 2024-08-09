@@ -68,13 +68,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_write_I;
+		static Delegate cb_write_Write_I_V;
 #pragma warning disable 0169
 		static Delegate GetWrite_IHandler ()
 		{
-			if (cb_write_I == null)
-				cb_write_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Write_I));
-			return cb_write_I;
+			if (cb_write_Write_I_V == null)
+				cb_write_Write_I_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Write_I));
+			return cb_write_Write_I_V;
 		}
 
 		static void n_Write_I (IntPtr jnienv, IntPtr native__this, int oneByte)

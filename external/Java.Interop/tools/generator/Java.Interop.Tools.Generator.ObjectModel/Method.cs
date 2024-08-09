@@ -165,7 +165,7 @@ namespace MonoDroid.Generation
 
 		public string ConnectorName => $"Get{Name}{IDSignature}Handler";
 
-		public string EscapedCallbackName => IdentifierValidator.CreateValidIdentifier ($"cb_{JavaName}{IDSignature}", true);
+		public string EscapedCallbackName => IdentifierValidator.CreateValidIdentifier ($"cb_{JavaName}_{Name}{IDSignatureWithReturnType}", true);
 
 		public string EscapedIdName => IdentifierValidator.CreateValidIdentifier ($"id_{JavaName}{IDSignature}", true);
 

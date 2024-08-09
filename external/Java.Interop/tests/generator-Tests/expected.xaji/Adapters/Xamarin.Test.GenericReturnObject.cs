@@ -46,13 +46,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_GenericReturn;
+		static Delegate cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_;
 #pragma warning disable 0169
 		static Delegate GetGenericReturnHandler ()
 		{
-			if (cb_GenericReturn == null)
-				cb_GenericReturn = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GenericReturn));
-			return cb_GenericReturn;
+			if (cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_ == null)
+				cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GenericReturn));
+			return cb_GenericReturn_GenericReturn_Lxamarin_test_AdapterView_;
 		}
 
 		static IntPtr n_GenericReturn (IntPtr jnienv, IntPtr native__this)

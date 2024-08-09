@@ -63,13 +63,13 @@ namespace Test.ME {
 			}
 		}
 
-		static Delegate cb_getObject;
+		static Delegate cb_getObject_GetObject_Ljava_lang_String_;
 #pragma warning disable 0169
 		static Delegate GetGetObjectHandler ()
 		{
-			if (cb_getObject == null)
-				cb_getObject = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetObject));
-			return cb_getObject;
+			if (cb_getObject_GetObject_Ljava_lang_String_ == null)
+				cb_getObject_GetObject_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetObject));
+			return cb_getObject_GetObject_Ljava_lang_String_;
 		}
 
 		static IntPtr n_GetObject (IntPtr jnienv, IntPtr native__this)
@@ -79,13 +79,13 @@ namespace Test.ME {
 		}
 #pragma warning restore 0169
 
-		static Delegate cb_SetObject_Ljava_lang_String_;
+		static Delegate cb_SetObject_SetObject_Ljava_lang_String__V;
 #pragma warning disable 0169
 		static Delegate GetSetObject_Ljava_lang_String_Handler ()
 		{
-			if (cb_SetObject_Ljava_lang_String_ == null)
-				cb_SetObject_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_Ljava_lang_String_));
-			return cb_SetObject_Ljava_lang_String_;
+			if (cb_SetObject_SetObject_Ljava_lang_String__V == null)
+				cb_SetObject_SetObject_Ljava_lang_String__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_Ljava_lang_String_));
+			return cb_SetObject_SetObject_Ljava_lang_String__V;
 		}
 
 		static void n_SetObject_Ljava_lang_String_ (IntPtr jnienv, IntPtr native__this, IntPtr native__object)

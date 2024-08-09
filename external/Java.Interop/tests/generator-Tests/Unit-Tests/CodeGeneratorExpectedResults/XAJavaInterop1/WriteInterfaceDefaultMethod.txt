@@ -3,13 +3,13 @@
 public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	private static readonly JniPeerMembers _members = new XAPeerMembers ("java/code/IMyInterface", typeof (IMyInterface), isInterface: true);
 
-	private static Delegate cb_DoSomething;
+	private static Delegate cb_DoSomething_DoSomething_V;
 #pragma warning disable 0169
 	private static Delegate GetDoSomethingHandler ()
 	{
-		if (cb_DoSomething == null)
-			cb_DoSomething = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
-		return cb_DoSomething;
+		if (cb_DoSomething_DoSomething_V == null)
+			cb_DoSomething_DoSomething_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoSomething));
+		return cb_DoSomething_DoSomething_V;
 	}
 
 	private static void n_DoSomething (IntPtr jnienv, IntPtr native__this)

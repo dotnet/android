@@ -57,13 +57,13 @@ namespace Android.Views {
 			{
 			}
 
-			static Delegate cb_onClick_Landroid_view_View_;
+			static Delegate cb_onClick_OnClick_Landroid_view_View__V;
 #pragma warning disable 0169
 			static Delegate GetOnClick_Landroid_view_View_Handler ()
 			{
-				if (cb_onClick_Landroid_view_View_ == null)
-					cb_onClick_Landroid_view_View_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_OnClick_Landroid_view_View_));
-				return cb_onClick_Landroid_view_View_;
+				if (cb_onClick_OnClick_Landroid_view_View__V == null)
+					cb_onClick_OnClick_Landroid_view_View__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_OnClick_Landroid_view_View_));
+				return cb_onClick_OnClick_Landroid_view_View__V;
 			}
 
 			static void n_OnClick_Landroid_view_View_ (IntPtr jnienv, IntPtr native__this, IntPtr native_v)
@@ -146,13 +146,13 @@ namespace Android.Views {
 		{
 		}
 
-		static Delegate cb_setOnClickListener_Landroid_view_View_OnClickListener_;
+		static Delegate cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V;
 #pragma warning disable 0169
 		static Delegate GetSetOnClickListener_Landroid_view_View_OnClickListener_Handler ()
 		{
-			if (cb_setOnClickListener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOnClickListener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetOnClickListener_Landroid_view_View_OnClickListener_));
-			return cb_setOnClickListener_Landroid_view_View_OnClickListener_;
+			if (cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V == null)
+				cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetOnClickListener_Landroid_view_View_OnClickListener_));
+			return cb_setOnClickListener_SetOnClickListener_Landroid_view_View_OnClickListener__V;
 		}
 
 		static void n_SetOnClickListener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
@@ -177,13 +177,13 @@ namespace Android.Views {
 			}
 		}
 
-		static Delegate cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+		static Delegate cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V;
 #pragma warning disable 0169
 		static Delegate GetSetOn123Listener_Landroid_view_View_OnClickListener_Handler ()
 		{
-			if (cb_setOn123Listener_Landroid_view_View_OnClickListener_ == null)
-				cb_setOn123Listener_Landroid_view_View_OnClickListener_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetOn123Listener_Landroid_view_View_OnClickListener_));
-			return cb_setOn123Listener_Landroid_view_View_OnClickListener_;
+			if (cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V == null)
+				cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetOn123Listener_Landroid_view_View_OnClickListener_));
+			return cb_setOn123Listener_SetOn123Listener_Landroid_view_View_OnClickListener__V;
 		}
 
 		static void n_SetOn123Listener_Landroid_view_View_OnClickListener_ (IntPtr jnienv, IntPtr native__this, IntPtr native_l)
@@ -208,13 +208,13 @@ namespace Android.Views {
 			}
 		}
 
-		static Delegate cb_addTouchables_Ljava_util_ArrayList_;
+		static Delegate cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V;
 #pragma warning disable 0169
 		static Delegate GetAddTouchables_Ljava_util_ArrayList_Handler ()
 		{
-			if (cb_addTouchables_Ljava_util_ArrayList_ == null)
-				cb_addTouchables_Ljava_util_ArrayList_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_AddTouchables_Ljava_util_ArrayList_));
-			return cb_addTouchables_Ljava_util_ArrayList_;
+			if (cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V == null)
+				cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_AddTouchables_Ljava_util_ArrayList_));
+			return cb_addTouchables_AddTouchables_Ljava_util_ArrayList__V;
 		}
 
 		static void n_AddTouchables_Ljava_util_ArrayList_ (IntPtr jnienv, IntPtr native__this, IntPtr native_views)

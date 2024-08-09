@@ -63,13 +63,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_available;
+		static Delegate cb_available_Available_I;
 #pragma warning disable 0169
 		static Delegate GetAvailableHandler ()
 		{
-			if (cb_available == null)
-				cb_available = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Available));
-			return cb_available;
+			if (cb_available_Available_I == null)
+				cb_available_Available_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Available));
+			return cb_available_Available_I;
 		}
 
 		static int n_Available (IntPtr jnienv, IntPtr native__this)
@@ -91,13 +91,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_close;
+		static Delegate cb_close_Close_V;
 #pragma warning disable 0169
 		static Delegate GetCloseHandler ()
 		{
-			if (cb_close == null)
-				cb_close = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
-			return cb_close;
+			if (cb_close_Close_V == null)
+				cb_close_Close_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Close));
+			return cb_close_Close_V;
 		}
 
 		static void n_Close (IntPtr jnienv, IntPtr native__this)
@@ -118,13 +118,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_mark_I;
+		static Delegate cb_mark_Mark_I_V;
 #pragma warning disable 0169
 		static Delegate GetMark_IHandler ()
 		{
-			if (cb_mark_I == null)
-				cb_mark_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Mark_I));
-			return cb_mark_I;
+			if (cb_mark_Mark_I_V == null)
+				cb_mark_Mark_I_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_V (n_Mark_I));
+			return cb_mark_Mark_I_V;
 		}
 
 		static void n_Mark_I (IntPtr jnienv, IntPtr native__this, int readlimit)
@@ -147,13 +147,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_markSupported;
+		static Delegate cb_markSupported_MarkSupported_Z;
 #pragma warning disable 0169
 		static Delegate GetMarkSupportedHandler ()
 		{
-			if (cb_markSupported == null)
-				cb_markSupported = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_Z (n_MarkSupported));
-			return cb_markSupported;
+			if (cb_markSupported_MarkSupported_Z == null)
+				cb_markSupported_MarkSupported_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_Z (n_MarkSupported));
+			return cb_markSupported_MarkSupported_Z;
 		}
 
 		static bool n_MarkSupported (IntPtr jnienv, IntPtr native__this)
@@ -175,13 +175,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_read;
+		static Delegate cb_read_Read_I;
 #pragma warning disable 0169
 		static Delegate GetReadHandler ()
 		{
-			if (cb_read == null)
-				cb_read = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Read));
-			return cb_read;
+			if (cb_read_Read_I == null)
+				cb_read_Read_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_I (n_Read));
+			return cb_read_Read_I;
 		}
 
 		static int n_Read (IntPtr jnienv, IntPtr native__this)
@@ -195,13 +195,13 @@ namespace Java.IO {
 		[Register ("read", "()I", "GetReadHandler")]
 		public abstract int Read ();
 
-		static Delegate cb_read_arrayB;
+		static Delegate cb_read_Read_arrayB_I;
 #pragma warning disable 0169
 		static Delegate GetRead_arrayBHandler ()
 		{
-			if (cb_read_arrayB == null)
-				cb_read_arrayB = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_Read_arrayB));
-			return cb_read_arrayB;
+			if (cb_read_Read_arrayB_I == null)
+				cb_read_Read_arrayB_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_I (n_Read_arrayB));
+			return cb_read_Read_arrayB_I;
 		}
 
 		static int n_Read_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer)
@@ -235,13 +235,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_read_arrayBII;
+		static Delegate cb_read_Read_arrayBII_I;
 #pragma warning disable 0169
 		static Delegate GetRead_arrayBIIHandler ()
 		{
-			if (cb_read_arrayBII == null)
-				cb_read_arrayBII = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLII_I (n_Read_arrayBII));
-			return cb_read_arrayBII;
+			if (cb_read_Read_arrayBII_I == null)
+				cb_read_Read_arrayBII_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPLII_I (n_Read_arrayBII));
+			return cb_read_Read_arrayBII_I;
 		}
 
 		static int n_Read_arrayBII (IntPtr jnienv, IntPtr native__this, IntPtr native_buffer, int byteOffset, int byteCount)
@@ -277,13 +277,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_reset;
+		static Delegate cb_reset_Reset_V;
 #pragma warning disable 0169
 		static Delegate GetResetHandler ()
 		{
-			if (cb_reset == null)
-				cb_reset = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Reset));
-			return cb_reset;
+			if (cb_reset_Reset_V == null)
+				cb_reset_Reset_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Reset));
+			return cb_reset_Reset_V;
 		}
 
 		static void n_Reset (IntPtr jnienv, IntPtr native__this)
@@ -304,13 +304,13 @@ namespace Java.IO {
 			}
 		}
 
-		static Delegate cb_skip_J;
+		static Delegate cb_skip_Skip_J_J;
 #pragma warning disable 0169
 		static Delegate GetSkip_JHandler ()
 		{
-			if (cb_skip_J == null)
-				cb_skip_J = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPJ_J (n_Skip_J));
-			return cb_skip_J;
+			if (cb_skip_Skip_J_J == null)
+				cb_skip_Skip_J_J = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPJ_J (n_Skip_J));
+			return cb_skip_Skip_J_J;
 		}
 
 		static long n_Skip_J (IntPtr jnienv, IntPtr native__this, long byteCount)

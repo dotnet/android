@@ -50,13 +50,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_extendedMethod;
+		static Delegate cb_extendedMethod_ExtendedMethod_V;
 #pragma warning disable 0169
 		static Delegate GetExtendedMethodHandler ()
 		{
-			if (cb_extendedMethod == null)
-				cb_extendedMethod = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_ExtendedMethod));
-			return cb_extendedMethod;
+			if (cb_extendedMethod_ExtendedMethod_V == null)
+				cb_extendedMethod_ExtendedMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_ExtendedMethod));
+			return cb_extendedMethod_ExtendedMethod_V;
 		}
 
 		static void n_ExtendedMethod (IntPtr jnienv, IntPtr native__this)
@@ -75,13 +75,13 @@ namespace Xamarin.Test {
 			}
 		}
 
-		static Delegate cb_baseMethod;
+		static Delegate cb_baseMethod_BaseMethod_V;
 #pragma warning disable 0169
 		static Delegate GetBaseMethodHandler ()
 		{
-			if (cb_baseMethod == null)
-				cb_baseMethod = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
-			return cb_baseMethod;
+			if (cb_baseMethod_BaseMethod_V == null)
+				cb_baseMethod_BaseMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
+			return cb_baseMethod_BaseMethod_V;
 		}
 
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)

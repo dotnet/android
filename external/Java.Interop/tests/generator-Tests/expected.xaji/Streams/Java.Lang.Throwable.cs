@@ -24,13 +24,13 @@ namespace Java.Lang {
 			get { return _members.JniPeerType.PeerReference.Handle; }
 		}
 
-		static Delegate cb_getMessage;
+		static Delegate cb_getMessage_GetMessage_Ljava_lang_String_;
 #pragma warning disable 0169
 		static Delegate GetGetMessageHandler ()
 		{
-			if (cb_getMessage == null)
-				cb_getMessage = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetMessage));
-			return cb_getMessage;
+			if (cb_getMessage_GetMessage_Ljava_lang_String_ == null)
+				cb_getMessage_GetMessage_Ljava_lang_String_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_L (n_GetMessage));
+			return cb_getMessage_GetMessage_Ljava_lang_String_;
 		}
 
 		static IntPtr n_GetMessage (IntPtr jnienv, IntPtr native__this)

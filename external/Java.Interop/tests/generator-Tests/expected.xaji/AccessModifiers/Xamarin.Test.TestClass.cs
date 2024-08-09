@@ -63,13 +63,13 @@ namespace Xamarin.Test {
 			}
 		}
 
-		static Delegate cb_baseMethod;
+		static Delegate cb_baseMethod_BaseMethod_V;
 #pragma warning disable 0169
 		static Delegate GetBaseMethodHandler ()
 		{
-			if (cb_baseMethod == null)
-				cb_baseMethod = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
-			return cb_baseMethod;
+			if (cb_baseMethod_BaseMethod_V == null)
+				cb_baseMethod_BaseMethod_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_BaseMethod));
+			return cb_baseMethod_BaseMethod_V;
 		}
 
 		static void n_BaseMethod (IntPtr jnienv, IntPtr native__this)

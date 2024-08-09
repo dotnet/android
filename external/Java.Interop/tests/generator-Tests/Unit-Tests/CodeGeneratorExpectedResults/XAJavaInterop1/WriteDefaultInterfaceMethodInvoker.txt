@@ -7,13 +7,13 @@ public partial interface IMyInterface : IJavaObject, IJavaPeerable {
 	[Register ("DoDeclaration", "()V", "GetDoDeclarationHandler:java.code.IMyInterfaceInvoker, MyAssembly")]
 	void DoDeclaration ();
 
-	private static Delegate cb_DoDefault;
+	private static Delegate cb_DoDefault_DoDefault_V;
 #pragma warning disable 0169
 	private static Delegate GetDoDefaultHandler ()
 	{
-		if (cb_DoDefault == null)
-			cb_DoDefault = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDefault));
-		return cb_DoDefault;
+		if (cb_DoDefault_DoDefault_V == null)
+			cb_DoDefault_DoDefault_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDefault));
+		return cb_DoDefault_DoDefault_V;
 	}
 
 	private static void n_DoDefault (IntPtr jnienv, IntPtr native__this)
@@ -91,13 +91,13 @@ internal partial class IMyInterfaceInvoker : global::Java.Lang.Object, IMyInterf
 		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
-	static Delegate cb_DoDeclaration;
+	static Delegate cb_DoDeclaration_DoDeclaration_V;
 #pragma warning disable 0169
 	static Delegate GetDoDeclarationHandler ()
 	{
-		if (cb_DoDeclaration == null)
-			cb_DoDeclaration = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDeclaration));
-		return cb_DoDeclaration;
+		if (cb_DoDeclaration_DoDeclaration_V == null)
+			cb_DoDeclaration_DoDeclaration_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_DoDeclaration));
+		return cb_DoDeclaration_DoDeclaration_V;
 	}
 
 	static void n_DoDeclaration (IntPtr jnienv, IntPtr native__this)

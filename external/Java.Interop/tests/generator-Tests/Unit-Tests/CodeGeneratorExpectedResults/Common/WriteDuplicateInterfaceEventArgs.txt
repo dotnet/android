@@ -66,13 +66,13 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		JNIEnv.DeleteLocalRef (local_ref);
 	}
 
-	static Delegate cb_OnAnimationEnd_I;
+	static Delegate cb_OnAnimationEnd_OnAnimationEnd_I_Z;
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IHandler ()
 	{
-		if (cb_OnAnimationEnd_I == null)
-			cb_OnAnimationEnd_I = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_Z (n_OnAnimationEnd_I));
-		return cb_OnAnimationEnd_I;
+		if (cb_OnAnimationEnd_OnAnimationEnd_I_Z == null)
+			cb_OnAnimationEnd_OnAnimationEnd_I_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPI_Z (n_OnAnimationEnd_I));
+		return cb_OnAnimationEnd_OnAnimationEnd_I_Z;
 	}
 
 	static bool n_OnAnimationEnd_I (IntPtr jnienv, IntPtr native__this, int param1)
@@ -92,13 +92,13 @@ internal partial class AnimatorListenerInvoker : global::Java.Lang.Object, Anima
 		return JNIEnv.CallBooleanMethod (((global::Java.Lang.Object) this).Handle, id_OnAnimationEnd_I, __args);
 	}
 
-	static Delegate cb_OnAnimationEnd_II;
+	static Delegate cb_OnAnimationEnd_OnAnimationEnd_II_Z;
 #pragma warning disable 0169
 	static Delegate GetOnAnimationEnd_IIHandler ()
 	{
-		if (cb_OnAnimationEnd_II == null)
-			cb_OnAnimationEnd_II = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPII_Z (n_OnAnimationEnd_II));
-		return cb_OnAnimationEnd_II;
+		if (cb_OnAnimationEnd_OnAnimationEnd_II_Z == null)
+			cb_OnAnimationEnd_OnAnimationEnd_II_Z = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPII_Z (n_OnAnimationEnd_II));
+		return cb_OnAnimationEnd_OnAnimationEnd_II_Z;
 	}
 
 	static bool n_OnAnimationEnd_II (IntPtr jnienv, IntPtr native__this, int param1, int param2)

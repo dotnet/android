@@ -84,7 +84,11 @@ namespace MonoDroid.Generation
 			return sb.ToString ();
 		}
 
-		internal string IDSignature => Parameters.Count > 0 ? "_" + Parameters.JniSignature.Replace ("/", "_").Replace ("`", "_").Replace (";", "_").Replace ("$", "_").Replace ("[", "array") : string.Empty;
+		internal string IDSignature => Parameters.Count > 0 ? "_" + EscapeSignature (Parameters.JniSignature) : string.Empty;
+
+		internal string IDSignatureWithReturnType => IDSignature + (this is Method method ? "_" + EscapeSignature (method.RetVal.JniName) : "");
+
+		internal string EscapeSignature (string value) => value.Replace ("/", "_").Replace ("`", "_").Replace (";", "_").Replace ("$", "_").Replace ("[", "array");
 
 		public virtual bool IsGeneric => Parameters.HasGeneric;
 

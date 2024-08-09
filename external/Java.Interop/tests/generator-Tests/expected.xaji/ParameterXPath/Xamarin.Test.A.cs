@@ -47,13 +47,13 @@ namespace Xamarin.Test {
 		{
 		}
 
-		static Delegate cb_setA_Ljava_lang_Object_;
+		static Delegate cb_setA_SetA_Ljava_lang_Object__V;
 #pragma warning disable 0169
 		static Delegate GetSetA_Ljava_lang_Object_Handler ()
 		{
-			if (cb_setA_Ljava_lang_Object_ == null)
-				cb_setA_Ljava_lang_Object_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetA_Ljava_lang_Object_));
-			return cb_setA_Ljava_lang_Object_;
+			if (cb_setA_SetA_Ljava_lang_Object__V == null)
+				cb_setA_SetA_Ljava_lang_Object__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetA_Ljava_lang_Object_));
+			return cb_setA_SetA_Ljava_lang_Object__V;
 		}
 
 		static void n_SetA_Ljava_lang_Object_ (IntPtr jnienv, IntPtr native__this, IntPtr native_adapter)
@@ -80,13 +80,13 @@ namespace Xamarin.Test {
 			}
 		}
 
-		static Delegate cb_listTest_Ljava_util_List_;
+		static Delegate cb_listTest_ListTest_Ljava_util_List__V;
 #pragma warning disable 0169
 		static Delegate GetListTest_Ljava_util_List_Handler ()
 		{
-			if (cb_listTest_Ljava_util_List_ == null)
-				cb_listTest_Ljava_util_List_ = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_ListTest_Ljava_util_List_));
-			return cb_listTest_Ljava_util_List_;
+			if (cb_listTest_ListTest_Ljava_util_List__V == null)
+				cb_listTest_ListTest_Ljava_util_List__V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_ListTest_Ljava_util_List_));
+			return cb_listTest_ListTest_Ljava_util_List__V;
 		}
 
 		static void n_ListTest_Ljava_util_List_ (IntPtr jnienv, IntPtr native__this, IntPtr native_p0)

@@ -63,13 +63,13 @@ namespace Test.ME {
 			}
 		}
 
-		static Delegate cb_SetObject_arrayB;
+		static Delegate cb_SetObject_SetObject_arrayB_V;
 #pragma warning disable 0169
 		static Delegate GetSetObject_arrayBHandler ()
 		{
-			if (cb_SetObject_arrayB == null)
-				cb_SetObject_arrayB = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_arrayB));
-			return cb_SetObject_arrayB;
+			if (cb_SetObject_SetObject_arrayB_V == null)
+				cb_SetObject_SetObject_arrayB_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PPL_V (n_SetObject_arrayB));
+			return cb_SetObject_SetObject_arrayB_V;
 		}
 
 		static void n_SetObject_arrayB (IntPtr jnienv, IntPtr native__this, IntPtr native_value)

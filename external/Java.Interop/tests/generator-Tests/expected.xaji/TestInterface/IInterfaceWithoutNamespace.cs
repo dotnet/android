@@ -42,13 +42,13 @@ internal partial class IInterfaceWithoutNamespaceInvoker : global::Java.Lang.Obj
 	{
 	}
 
-	static Delegate cb_Foo;
+	static Delegate cb_Foo_Foo_V;
 #pragma warning disable 0169
 	static Delegate GetFooHandler ()
 	{
-		if (cb_Foo == null)
-			cb_Foo = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
-		return cb_Foo;
+		if (cb_Foo_Foo_V == null)
+			cb_Foo_Foo_V = JNINativeWrapper.CreateDelegate (new _JniMarshal_PP_V (n_Foo));
+		return cb_Foo_Foo_V;
 	}
 
 	static void n_Foo (IntPtr jnienv, IntPtr native__this)
