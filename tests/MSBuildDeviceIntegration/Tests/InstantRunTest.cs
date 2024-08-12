@@ -155,8 +155,10 @@ namespace Xamarin.Android.Build.Tests
 				"Xamarin.AndroidX.AppCompat.dll",
 				"Xamarin.AndroidX.Core.dll",
 			};
+			var logLines = b.LastBuildOutput;
+			Assert.IsFalse (logLines.Any (l => l.Contains ("Remove redundant file")), "No redundant files should be deleted");
 			foreach (var assembly in assemblies) {
-				Assert.IsTrue (b.LastBuildOutput.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")), $"{assembly} should be skipped, but no relevant log line");
+				Assert.IsTrue (logLines.Any (l => l.Contains (assembly) && l.Contains ("NotifySync SkipCopyFile")), $"{assembly} should be skipped, but no relevant log line");
 			}
 
 			Assert.IsTrue (b.Uninstall (proj), "uninstall should have succeeded.");
