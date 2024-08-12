@@ -186,9 +186,10 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string destination = Path.Combine (abi, item.GetMetadata ("DestinationSubDirectory"));
-				if (!destination.EndsWith (Path.DirectorySeparatorChar.ToString ())) {
-					item.SetMetadata ("DestinationSubDirectory", destination + Path.DirectorySeparatorChar);
+				if (destination.Length > 0 && destination [destination.Length - 1] != Path.DirectorySeparatorChar) {
+					destination += Path.DirectorySeparatorChar;
 				}
+				item.SetMetadata ("DestinationSubDirectory", destination);
 				item.SetMetadata ("DestinationSubPath", Path.Combine (destination, Path.GetFileName (item.ItemSpec)));
 			}
 		}
