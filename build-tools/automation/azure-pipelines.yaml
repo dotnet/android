@@ -606,7 +606,7 @@ extends:
           displayName: generate and publish BAR manifest
           inputs:
             azureSubscription: "Darc: Maestro Production"
-            scriptType: pscore
+            scriptType: ps
             scriptLocation: inlineScript
             inlineScript: >-
               dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
@@ -625,9 +625,11 @@ extends:
         - task: AzureCLI@2
           inputs:
             azureSubscription: "Darc: Maestro Production"
-            scriptType: pscore
+            scriptType: ps
             scriptLocation: inlineScript
             inlineScript: |
+              Write-Host "Adding build to default darc channel"
+              & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --help
               & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
           displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
