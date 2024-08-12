@@ -18,7 +18,7 @@ namespace Xamarin.Android.Tasks;
 static class MavenExtensions
 {
 	static readonly char [] separator = [':'];
-	static readonly char [] artifacts_separators = [';', ',', '\r', '\n'];
+	static readonly char [] artifacts_separators = [';', ',', '\r', '\n', '\t', ' '];
 
 	/// <summary>
 	/// Shortcut for !string.IsNullOrWhiteSpace (s)

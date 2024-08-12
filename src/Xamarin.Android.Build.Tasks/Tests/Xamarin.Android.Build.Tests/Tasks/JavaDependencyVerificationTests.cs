@@ -212,7 +212,7 @@ public class JavaDependencyVerificationTests
 			],
 			ProjectReferences = [
 				CreateAndroidLibraryTaskItem ("Google.Material.Core.csproj", null, "com.google.android:material-core:1.0"),
-				CreateAndroidLibraryTaskItem ("Google.Material.Foo.csproj", null, "org.jetbrains.kotlin:kotlin-stdlib:2.0.0,com.google.android:material-foo:1.0"),
+				CreateAndroidLibraryTaskItem ("Google.Material.Foo.csproj", null, "org.jetbrains.kotlin:kotlin-stdlib:2.0.0;com.google.android:material-foo:1.0"),
 			],
 		};
 
@@ -238,7 +238,7 @@ public class JavaDependencyVerificationTests
 			],
 			PackageReferences = [
 				CreateAndroidLibraryTaskItem ("Xamarin.Google.Material.Core", null, "com.google.android:material-core:1.0"),
-				CreateAndroidLibraryTaskItem ("Xamarin.Google.Material.Foo", null, "org.jetbrains.kotlin:kotlin-stdlib:2.0.0,com.google.android:material-foo:1.0"),
+				CreateAndroidLibraryTaskItem ("Xamarin.Google.Material.Foo", null, "org.jetbrains.kotlin:kotlin-stdlib:2.0.0 com.google.android:material-foo:1.0"),
 			],
 		};
 
@@ -264,7 +264,7 @@ public class JavaDependencyVerificationTests
 			],
 			IgnoredDependencies = [
 				CreateAndroidLibraryTaskItem ("com.google.android:material-core:1.0"),
-				CreateAndroidLibraryTaskItem ("org.jetbrains.kotlin:kotlin-stdlib:2.0.0,com.google.android:material-foo:1.0"),
+				CreateAndroidLibraryTaskItem ("org.jetbrains.kotlin:kotlin-stdlib:2.0.0\r\ncom.google.android:material-foo:1.0"),
 			],
 		};
 
@@ -318,6 +318,26 @@ public class JavaDependencyVerificationTests
 		Assert.False (result);
 		Assert.AreEqual (1, engine.Errors.Count);
 		Assert.AreEqual ("Java dependency 'com.google.android:material-core' is not satisfied.", engine.Errors [0].Message);
+	}
+
+	[TestCase ("artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]
+	[TestCase ("artifact_versioned=androidx.core:core", "")] // Invalid specification
+	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.core:core:1.2.0", "androidx.core:core:1.2.0")]  // Duplicates are ignored
+	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact_versioned=androidx.window.extensions.core:core:1.0.0", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.0.0")]
+	[TestCase ("artifact_versioned=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
+	[TestCase ("artifact=androidx.core:core:1.2.0 artifact=androidx.window.extensions.core:core:1.13.1", "androidx.core:core:1.2.0|androidx.window.extensions.core:core:1.13.1")]
+	public void AddArtifactsFromNuspecTagsTests (string tags, string expected)
+	{
+		var results = new List<Artifact> ();
+
+		NuGetPackageVersionFinder.AddArtifactsFromNuspecTags (results, tags);
+
+		if (!expected.HasValue ()) {
+			Assert.IsEmpty (results);
+			return;
+		}
+
+		Assert.AreEqual (expected, string.Join ("|", results.Select (p => p.VersionedArtifactString)));
 	}
 
 	TaskItem CreateAndroidLibraryTaskItem (string name, string? manifest = null, string? javaArtifact = null)

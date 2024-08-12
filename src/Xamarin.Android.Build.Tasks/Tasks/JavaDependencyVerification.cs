@@ -348,8 +348,7 @@ class MicrosoftNuGetPackageFinder
 public class NuGetPackageVersionFinder
 {
 	readonly LockFile lock_file;
-	readonly Regex tag = new Regex ("artifact_versioned=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
-	readonly Regex tag2 = new Regex ("artifact=(?<GroupId>.+)?:(?<ArtifactId>.+?):(?<Version>.+)\\s?", RegexOptions.Compiled);
+	readonly static Regex tag = new Regex (@"artifact(?:_versioned)?=(?<GroupId>[^:\s;,]+):(?<ArtifactId>[^:\s;,]+):(?<Version>[^:\s;,]+)", RegexOptions.Compiled, TimeSpan.FromSeconds (5));
 
 	NuGetPackageVersionFinder (LockFile lockFile)
 	{
@@ -402,25 +401,28 @@ public class NuGetPackageVersionFinder
 		var reader = new NuGet.Packaging.NuspecReader (nuspec);
 		var tags = reader.GetTags ();
 
-		// Try the first tag format
-		AddMatchesToCollection (artifacts, tag.Matches (tags));
-
-		// Try the second tag format
-		AddMatchesToCollection (artifacts, tag2.Matches (tags));
+		AddArtifactsFromNuspecTags (artifacts, tags);
 
 		// TODO: Define a well-known file that can be included in the package like "java-package.txt"
 	}
 
-	void AddMatchesToCollection (List<Artifact> list, MatchCollection? matches)
+	public static void AddArtifactsFromNuspecTags (List<Artifact> artifacts, string tags)
 	{
-		if (matches is null || matches.Count == 0)
+		// Try the first tag format
+		try {
+			var matches = tag.Matches (tags);
+
+			if (matches is null || matches.Count == 0)
+				return;
+
+			foreach (Match match in matches) {
+				var artifact = new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
+
+				if (!artifacts.Any (a => a.VersionedArtifactString == artifact.VersionedArtifactString))
+					artifacts.Add (artifact);
+			}
+		} catch (RegexMatchTimeoutException) {
 			return;
-
-		foreach (Match match in matches) {
-			var artifact = new Artifact (match.Groups ["GroupId"].Value, match.Groups ["ArtifactId"].Value, match.Groups ["Version"].Value);
-
-			if (!list.Any (a => a.VersionedArtifactString == artifact.VersionedArtifactString))
-				list.Add (artifact);
 		}
 	}
 }
