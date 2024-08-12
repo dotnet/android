@@ -336,7 +336,6 @@ namespace Java.Interop {
 
 				handleClass = JniEnvironment.Types.GetObjectClass (new JniObjectReference (handle));
 				if (!JniEnvironment.Types.IsAssignableFrom (handleClass, typeClass)) {
-					Logger.Log (LogLevel.Info, "*jonp*", $"# jonp: can't assign `{GetClassName(handleClass.Handle)}` to `{GetClassName(typeClass.Handle)}`");
 					return null;
 				}
 			} finally {

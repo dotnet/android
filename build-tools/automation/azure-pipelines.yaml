@@ -205,6 +205,8 @@ extends:
 
         - template: /build-tools/automation/yaml-templates/apk-instrumentation.yaml@self
           parameters:
+            # FIXME: https://github.com/dotnet/runtime/issues/105516
+            condition: false
             configuration: $(XA.Build.Configuration)
             testName: Mono.Android.NET_Tests-AotLlvm
             project: tests/Mono.Android-Tests/Runtime-Microsoft.Android.Sdk/Mono.Android.NET-Tests.csproj
@@ -555,7 +557,7 @@ extends:
           - output: artifactsDrop
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
             buildNumber: $(ReleaseDropPrefix)/symbols
-            dropMetadataContainerName: DropMetadata-$(Build.BuildId)-symbols-$(System.JobAttempt)
+            dropMetadataContainerName: DropMetadata-shipping-symbols
             sourcePath: $(Build.StagingDirectory)\symbols
             retentionDays: 120
             toLowerCase: false
@@ -572,7 +574,7 @@ extends:
 
         - task: DownloadPipelineArtifact@2
           inputs:
-            artifactName: DropMetadata-$(Build.BuildId)-nugets-$(System.JobAttempt)
+            artifactName: DropMetadata-shipping-nugets
             downloadPath: $(Build.StagingDirectory)\metadata
           displayName: Download nugets drop metadata
 

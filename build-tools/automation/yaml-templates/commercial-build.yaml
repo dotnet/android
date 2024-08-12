@@ -20,10 +20,6 @@ steps:
   inputs:
     forceReinstallCredentialProvider: true
 
-- script: make prepare-update-mono CONFIGURATION=$(XA.Build.Configuration) PREPARE_CI=1 PREPARE_AUTOPROVISION=1
-  workingDirectory: ${{ parameters.xaSourcePath }}
-  displayName: make prepare-update-mono
-
 # Always checkout a second resource to ensure we are using multi-repo checkout behavior
 #  https://learn.microsoft.com/en-us/azure/devops/pipelines/repos/multi-repo-checkout?view=azure-devops#checkout-path
 - checkout: maui

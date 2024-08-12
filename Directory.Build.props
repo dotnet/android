@@ -36,7 +36,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>35.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>preview.7</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition=" '$(AndroidPackVersionSuffix)' == 'rtm' ">true</IsStableBuild>
   </PropertyGroup>
@@ -48,13 +48,13 @@
     <MonoCecilVersion>0.11.5</MonoCecilVersion>
     <NewtonsoftJsonPackageVersion>13.0.3</NewtonsoftJsonPackageVersion>
     <NuGetApiPackageVersion>5.4.0</NuGetApiPackageVersion>
-    <LZ4PackageVersion>1.1.11</LZ4PackageVersion>
+    <LZ4PackageVersion>1.3.6</LZ4PackageVersion>
     <MonoOptionsVersion>6.12.0.148</MonoOptionsVersion>
     <SystemCollectionsImmutableVersion>8.0.0</SystemCollectionsImmutableVersion>
     <SystemRuntimeCompilerServicesUnsafeVersion>6.0.0</SystemRuntimeCompilerServicesUnsafeVersion>
     <ELFSharpVersion>2.17.3</ELFSharpVersion>
     <HumanizerVersion>2.14.1</HumanizerVersion>
-    <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.2.4</MdocPackageVersion>
+    <MdocPackageVersion Condition=" '$(MdocPackageVersion)' == '' ">5.9.3</MdocPackageVersion>
   </PropertyGroup>
 
 </Project>

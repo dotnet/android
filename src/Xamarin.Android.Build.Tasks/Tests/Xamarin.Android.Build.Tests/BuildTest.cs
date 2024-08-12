@@ -208,8 +208,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");
-				//FIXME: https://github.com/dotnet/runtime/issues/105044
-				//b.AssertHasNoWarnings ();
+				b.AssertHasNoWarnings ();
 				string objPath = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 
 				List<EnvironmentHelper.EnvironmentFile> envFiles = EnvironmentHelper.GatherEnvironmentFiles (objPath, String.Join (";", abis), true);
@@ -1655,6 +1654,37 @@ public class ToolbarEx {
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", "AndroidX.CustomView.PoolingContainer.PoolingContainer.IsPoolingContainer (null);");
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+		}
+
+		[Test]
+		public void IncrementalBuildDifferentDevice()
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				Imports = {
+					new Import (() => "MockPrimaryCpuAbi.targets") {
+						TextContent = () =>
+"""
+<Project>
+	<!-- This target "mocks" what _GetPrimaryCpuAbi does -->
+	<Target Name="_MockPrimaryCpuAbi" BeforeTargets="_CreatePropertiesCache">
+		<PropertyGroup>
+			<RuntimeIdentifier>$(_SingleRID)</RuntimeIdentifier>
+			<RuntimeIdentifiers></RuntimeIdentifiers>
+			<AndroidSupportedAbis>$(_SingleABI)</AndroidSupportedAbis>
+		</PropertyGroup>
+	</Target>
+</Project>
+"""
+					},
+				},
+			};
+			using var builder = CreateApkBuilder ();
+			builder.Target = "Build";
+			builder.BuildingInsideVisualStudio = false;
+			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-arm64", "_SingleABI=arm64-v8a" ]),
+				"first build should have succeeded.");
+			Assert.IsTrue (builder.Build (proj, parameters: [ "_SingleRID=android-x64", "_SingleABI=x86_64" ], doNotCleanupOnUpdate: true),
+				"second build should have succeeded.");
 		}
 	}
 }

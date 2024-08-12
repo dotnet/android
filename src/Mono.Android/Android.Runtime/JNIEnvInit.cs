@@ -23,7 +23,6 @@ namespace Android.Runtime
 			public uint            logCategories;
 			public int             version; // TODO: remove, not needed anymore
 			public int             androidSdkVersion;
-			public int             localRefsAreIndirect;
 			public int             grefGcThreshold;
 			public IntPtr          grefIGCUserPeer;
 			public int             isRunningOnDesktop;
@@ -40,7 +39,6 @@ namespace Android.Runtime
 		internal static bool AllocObjectSupported;
 		internal static bool IsRunningOnDesktop;
 		internal static bool jniRemappingInUse;
-		internal static bool LocalRefsAreIndirect;
 		internal static bool LogAssemblyCategory;
 		internal static bool MarshalMethodsEnabled;
 		internal static bool PropagateExceptions;
@@ -95,8 +93,6 @@ namespace Android.Runtime
 			java_class_loader = args->grefLoader;
 
 			mid_Class_forName = new JniMethodInfo (args->Class_forName, isStatic: true);
-
-			LocalRefsAreIndirect = args->localRefsAreIndirect == 1;
 
 			bool androidNewerThan10 = args->androidSdkVersion > 10;
 			BoundExceptionType = (BoundExceptionType)args->ioExceptionType;

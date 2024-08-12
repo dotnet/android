@@ -27,7 +27,6 @@ namespace Xamarin.Android.Prepare
 			public string? Configuration       { get; set; }
 			public bool AutoProvision          { get; set; }
 			public bool AutoProvisionUsesSudo  { get; set; }
-			public bool AutoProvisionSkipMono  { get; set; }
 			public RefreshableComponent RefreshList { get; set; }
 			public IEnumerable<string> AndroidSdkPlatforms { get; set; } = new [] { "latest" };
 		}
@@ -101,7 +100,6 @@ namespace Xamarin.Android.Prepare
 				"",
 				{"auto-provision=", $"Automatically install software required by .NET for Android", v => parsedOptions.AutoProvision = ParseBoolean (v)},
 				{"auto-provision-uses-sudo=", $"Allow use of sudo(1) when provisioning", v => parsedOptions.AutoProvisionUsesSudo = ParseBoolean (v)},
-				{"auto-provision-skip-mono=", $"Do not automatically install the Mono MDK", v => parsedOptions.AutoProvisionSkipMono = ParseBoolean (v)},
 				{"android-sdk-platforms=", "Comma separated list of Android SDK platform levels to be installed or 'latest' or 'all'. Defaults to 'latest' if no value is provided.", v => parsedOptions.AndroidSdkPlatforms = ParseAndroidSdkPlatformLevels (v?.Trim () ?? String.Empty) },
 				"",
 				{"h|help", "Show this help message", v => parsedOptions.ShowHelp = true },
@@ -132,7 +130,6 @@ namespace Xamarin.Android.Prepare
 			Context.Instance.DebugFileExtension    = parsedOptions.DebugFileExtension;
 			Context.Instance.AutoProvision         = parsedOptions.AutoProvision;
 			Context.Instance.AutoProvisionUsesSudo = parsedOptions.AutoProvisionUsesSudo;
-			Context.Instance.AutoProvisionSkipMono = parsedOptions.AutoProvisionSkipMono;
 			Context.Instance.ComponentsToRefresh   = parsedOptions.RefreshList;
 			Context.Instance.AndroidSdkPlatforms   = parsedOptions.AndroidSdkPlatforms;
 

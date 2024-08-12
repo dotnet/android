@@ -90,6 +90,12 @@ elseif(ENABLE_CLANG_UBSAN)
   set(STATIC_LIB_NAME_SUFFIX "-ubsan")
 endif()
 
+if(DEBUG_BUILD)
+  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-debug")
+else()
+  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-release")
+endif()
+
 if(USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
     message(STATUS "ccache: compiler already uses ccache")
