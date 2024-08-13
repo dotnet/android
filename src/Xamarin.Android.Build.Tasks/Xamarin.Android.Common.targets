@@ -2508,7 +2508,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="@(_OutputDeploymentFiles)"/>
 </Target>
 
-<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive">
+<Target Name="_CleanMonoAndroidIntermediateDir" DependsOnTargets="_CleanGeneratedDeploymentFiles;_CleanMsymArchive;_CleanDesignTimeIntermediateDir">
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)android" Condition="Exists ('$(IntermediateOutputPath)android')" />
 	<!-- FIXME: remove this extraneous rmdir after a few release cycles since we release the one we killed it. -->
 	<RemoveDirFixed Directories="$(IntermediateOutputPath)assemblies" Condition="Exists ('$(IntermediateOutputPath)assemblies')" />
