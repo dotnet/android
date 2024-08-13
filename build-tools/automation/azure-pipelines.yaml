@@ -625,7 +625,7 @@ extends:
               $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
               $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
               & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-              & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --no-wait --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
+              & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
           displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
