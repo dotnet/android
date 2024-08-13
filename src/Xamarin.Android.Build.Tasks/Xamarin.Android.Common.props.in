@@ -1,11 +1,15 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 	<PropertyGroup>
 		<AndroidSdkBuildToolsVersion Condition=" '$(AndroidSdkBuildToolsVersion)' == '' ">@SDK_BUILD_TOOLS_VERSION@</AndroidSdkBuildToolsVersion>
-		<AndroidSdkPlatformVersion Condition=" '$(AndroidSdkPlatformVersion)' == '' ">@SDK_PLATFORM_VERSION@</AndroidSdkPlatformVersion>
 		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">@SDK_PLATFORM_TOOLS_VERSION@</AndroidSdkPlatformToolsVersion>
+		<AndroidSdkPlatformVersion Condition=" '$(AndroidSdkPlatformVersion)' == '' ">@SDK_PLATFORM_VERSION@</AndroidSdkPlatformVersion>
+
+		<AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">@COMMAND_LINE_TOOLS_VERSION@</AndroidCommandLineToolsVersion>
+		<AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
+		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">@NDK_PKG_REVISION@</AndroidNdkVersion>
+		<JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">@JAVA_SDK_VERSION@</JavaSdkVersion>
+
 	</PropertyGroup>
-	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the dotnet/android-tools repo. -->
-	<Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Tools.Versions.props" />
 	<PropertyGroup>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
 		<Debugger Condition=" '$(Debugger)' == '' ">Xamarin</Debugger>
