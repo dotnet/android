@@ -13,18 +13,12 @@ This file is used by all project types, including binding projects.
 
   <PropertyGroup>
     <_AndroidIntermediateDesignTimeBuildDirectory>$(IntermediateOutputPath)designtime\</_AndroidIntermediateDesignTimeBuildDirectory>
+    <_AndroidIntermediateDesignTimeStampDirectory>$(_AndroidIntermediateDesignTimeBuildDirectory)stamp\</_AndroidIntermediateDesignTimeStampDirectory>
     <_AndroidDesignTimeBuildPropertiesCache>$(_AndroidIntermediateDesignTimeBuildDirectory)build.props</_AndroidDesignTimeBuildPropertiesCache>
     <_AndroidLibraryImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryimports.cache</_AndroidLibraryImportsDesignTimeCache>
     <_AndroidLibraryProjectImportsDesignTimeCache>$(_AndroidIntermediateDesignTimeBuildDirectory)libraryprojectimports.cache</_AndroidLibraryProjectImportsDesignTimeCache>
     <_AndroidManagedResourceDesignerFile>$(_AndroidIntermediateDesignTimeBuildDirectory)$(_AndroidResourceDesigner)</_AndroidManagedResourceDesignerFile>
   </PropertyGroup>
-
-  <Target Name="_CreateStampDirectory">
-    <MakeDir
-        Condition=" '$(_AndroidStampDirectory)' != '' And !Exists('$(_AndroidStampDirectory)') "
-        Directories="$(_AndroidStampDirectory)"
-    />
-  </Target>
 
   <Target Name="_SetupMSBuildAllProjects">
     <ItemGroup>
@@ -32,25 +26,35 @@ This file is used by all project types, including binding projects.
     </ItemGroup>
   </Target>
 
-  <Target Name="_SetupDesignTimeBuildForBuild" DependsOnTargets="_CreateStampDirectory">
+  <Target Name="_SetupDesignTimeBuildForBuild">
     <PropertyGroup>
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">false</DesignTimeBuild>
     </PropertyGroup>
+    <MakeDir
+        Condition=" '$(_AndroidStampDirectory)' != '' And !Exists('$(_AndroidStampDirectory)') "
+        Directories="$(_AndroidStampDirectory)"
+    />
   </Target>
 
-  <Target Name="_SetupDesignTimeBuildForCompile" DependsOnTargets="_CreateStampDirectory">
+  <Target Name="_SetupDesignTimeBuildForCompile">
     <PropertyGroup>
       <DesignTimeBuild Condition=" '$(DesignTimeBuild)' == '' ">true</DesignTimeBuild>
       <ManagedDesignTimeBuild Condition=" '$(AndroidGenerateResourceDesigner)' == 'True' And '$(AndroidUseManagedDesignTimeResourceGenerator)' == 'true' And '$(DesignTimeBuild)' == 'true' And '$(BuildingInsideVisualStudio)' == 'true' ">true</ManagedDesignTimeBuild>
       <ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' And '$(DesignTimeBuild)' == 'True' And '$(AndroidUseDesignerAssembly)' == 'True' " >True</ManagedDesignTimeBuild>
       <ManagedDesignTimeBuild Condition=" '$(ManagedDesignTimeBuild)' == '' ">False</ManagedDesignTimeBuild>
+      <_AndroidStampDirectory Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)</_AndroidStampDirectory>
       <_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
       <_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
       <_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
+      <_GeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)generator.stamp</_GeneratorStampFile>
     </PropertyGroup>
     <MakeDir
         Condition=" '$(_AndroidIsBindingProject)' != 'true' And !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') "
         Directories="$(_AndroidIntermediateDesignTimeBuildDirectory)"
+    />
+    <MakeDir
+        Condition=" '$(_AndroidStampDirectory)' != '' And !Exists('$(_AndroidStampDirectory)') "
+        Directories="$(_AndroidStampDirectory)"
     />
   </Target>
 
