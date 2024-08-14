@@ -93,7 +93,7 @@ namespace UnnamedProject
 				libb.Save (lib);
 				appb.BuildLogFile = "build1.log";
 				appb.Target = target;
-				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (appb.DesignTimeBuild (proj), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				var customViewPath = Path.Combine (Root, appb.ProjectDirectory, proj.IntermediateOutputPath, "res", "layout", "custom_text.xml");
@@ -107,7 +107,7 @@ namespace UnnamedProject
 				Assert.IsTrue (libb.Build (lib, doNotCleanupOnUpdate: true), "library build should have succeeded.");
 				appb.Target = "Build";
 				appb.BuildLogFile = "build2.log";
-				Assert.IsTrue (appb.Build (proj, doNotCleanupOnUpdate: true), "app build should have succeeded.");
+				Assert.IsTrue (appb.Build (proj, doNotCleanupOnUpdate: true, saveProject:false), "app build should have succeeded.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have run completely.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
@@ -117,7 +117,7 @@ namespace UnnamedProject
 					"unnamedproject.CustomTextView should have been replaced with a $(Hash).CustomTextView");
 				appb.Target = target;
 				appb.BuildLogFile = "build3.log";
-				Assert.IsTrue (appb.Build (proj, parameters: DesignerParameters, doNotCleanupOnUpdate: true), $"build should have succeeded for target `{target}`");
+				Assert.IsTrue (appb.DesignTimeBuild (proj, doNotCleanupOnUpdate: true), $"build should have succeeded for target `{target}`");
 				Assert.IsTrue (appb.Output.AreTargetsAllSkipped ("_UpdateAndroidResgen"), "_UpdateAndroidResgen should have been skipped.");
 				Assert.IsTrue (appb.Output.AreTargetsAllBuilt ("_Foo"), "_Foo should have run completely");
 				doc = XDocument.Load (customViewPath);
