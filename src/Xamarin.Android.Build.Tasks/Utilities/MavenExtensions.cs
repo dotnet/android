@@ -103,10 +103,6 @@ static class MavenExtensions
 		artifacts = new List<Artifact> ();
 		var item_name = task.ItemSpec;
 
-		// Convert "../../src/blah/Blah.csproj" to "Blah.csproj"
-		if (type == "ProjectReference")
-			item_name = Path.GetFileName (item_name);
-
 		var has_artifact = task.HasMetadata ("JavaArtifact");
 
 		// Lets callers know if user attempted to specify JavaArtifact, even if they did it incorrectly

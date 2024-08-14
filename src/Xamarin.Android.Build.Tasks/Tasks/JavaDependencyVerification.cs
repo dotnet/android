@@ -216,7 +216,7 @@ class DependencyResolver
 
 			if (MavenExtensions.TryParseArtifacts (id, log, out var parsed)) {
 				foreach (var art in parsed) {
-					log.LogMessage ("Ignoring Java dependency '{0}:{1}' version '{2}'", art.GroupId, art.Id, art.Version);
+					log.LogMessage ("Ignoring Java dependency '{0}'", art.VersionedArtifactString);
 					artifacts.Add (art.ArtifactString, art);
 				}
 			}
