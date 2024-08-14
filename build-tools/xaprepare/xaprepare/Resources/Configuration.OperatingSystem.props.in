@@ -6,7 +6,7 @@
         <HostOsRelease Condition=" '$(HostOsRelease)' == '' ">@OS_RELEASE@</HostOsRelease>
         <HostCpuCount Condition=" '$(HostCpuCount)' == '' ">@HOST_CPUS@</HostCpuCount>
         <HostBits Condition=" '$(HostBits)' == '' ">@ARCHITECTURE_BITS@</HostBits>
-        <JavaSdkVersion>@JAVA_PACKAGE_VERSION@</JavaSdkVersion>
+        <JavaSdkVersion>@JAVA_SDK_VERSION@</JavaSdkVersion>
         <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">@JavaSdkDirectory@</JavaSdkDirectory>
         <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
