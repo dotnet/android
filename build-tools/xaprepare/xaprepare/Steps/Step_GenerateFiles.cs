@@ -156,7 +156,7 @@ namespace Xamarin.Android.Prepare
 				{ "@OS_RELEASE@",           context.OS.Release ?? String.Empty },
 				{ "@HOST_CPUS@",            context.OS.CPUCount.ToString () },
 				{ "@ARCHITECTURE_BITS@",    context.OS.Is64Bit ? "64" : "32" },
-				{ "@JAVA_SDK_VERSION@",     Configurables.Defaults.MicrosoftOpenJDK17Release.ToString () },
+				{ "@JAVA_SDK_VERSION@",     Configurables.Defaults.MicrosoftOpenJDK17Version.ToString () },
 				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
