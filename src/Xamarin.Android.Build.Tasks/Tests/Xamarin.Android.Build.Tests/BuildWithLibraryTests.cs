@@ -242,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
 			// Check environment variable
-			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86", required: true);
+			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
 			Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 			Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");
