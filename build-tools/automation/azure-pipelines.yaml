@@ -501,7 +501,7 @@ extends:
       - template: nuget-msi-convert/job/v4.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
-          dependsOn: sign_net_mac_win
+          dependsOn: [ sign_net_mac_win, sign_net_linux ]
           artifactName: nuget-signed
           artifactPatterns: |
             !*Darwin*
