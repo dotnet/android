@@ -23,30 +23,18 @@ namespace MonoDroid.Tuner
 	/// <summary>
 	/// NOTE: this step is subclassed so it can be called directly from Xamarin.Android.Build.Tasks
 	/// </summary>
-	public class FixAbstractMethodsStep :
-#if ILLINK
-	BaseMarkHandler
-#else   // !ILLINK
-	BaseStep
-#endif  // !ILLINK
+	public class FixAbstractMethodsStep : BaseStep
 	{
+		readonly IMetadataResolver cache;
 
 #if ILLINK
-		public override void Initialize (LinkContext context, MarkContext markContext)
-		{
-			this.cache = context;
-			base.Initialize (context, markContext);
-			markContext.RegisterMarkTypeAction (type => ProcessType (type));
-		}
-#else   // !ILLINK
+		readonly List<AssemblyDefinition> assemblies = new ();
+#endif  // ILLINK
+
 		public FixAbstractMethodsStep (IMetadataResolver cache)
 		{
 			this.cache = cache;
 		}
-
-		readonly
-#endif  // !ILLINK
-		IMetadataResolver cache;
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -74,6 +62,49 @@ namespace MonoDroid.Tuner
 		}
 
 #if ILLINK
+		protected override void ProcessAssembly (AssemblyDefinition assembly)
+		{
+			assemblies.Add (assembly);
+		}
+
+		protected override void EndProcess ()
+		{
+			foreach (var assembly in GetReferencedAssemblies().ToList()) {
+				ProcessAssembly_Actual(assembly);
+			}
+
+			IEnumerable<AssemblyDefinition> GetReferencedAssemblies ()
+			{
+				var loaded = new HashSet<AssemblyDefinition> (assemblies);
+				var toProcess = new Queue<AssemblyDefinition> (assemblies);
+
+				while (toProcess.Count > 0) {
+					var assembly = toProcess.Dequeue ();
+					foreach (var reference in ResolveReferences (assembly)) {
+						if (!loaded.Add (reference))
+							continue;
+						yield return reference;
+						toProcess.Enqueue (reference);
+					}
+				}
+			}
+
+			ICollection<AssemblyDefinition> ResolveReferences (AssemblyDefinition assembly)
+			{
+				List<AssemblyDefinition> references = new List<AssemblyDefinition> ();
+				if (assembly == null)
+					return references;
+
+				foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
+					AssemblyDefinition? definition = cache.Resolve (reference);
+					if (definition != null)
+						references.Add (definition);
+				}
+
+				return references;
+			}
+		}
+
 		protected void ProcessType (TypeDefinition type)
 		{
 			var assembly = type.Module.Assembly;
@@ -89,8 +120,13 @@ namespace MonoDroid.Tuner
 			UpdateAssemblyAction (assembly);
 			MarkAbstractMethodErrorType ();
 		}
-#else   // !ILLINK
+#endif  // ILLINK
+
+#if ILLINK
+		void ProcessAssembly_Actual (AssemblyDefinition assembly)
+#else  // !ILLINK
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
+#endif  // !ILLINK
 		{
 			if (!CheckShouldProcessAssembly (assembly))
 				return;
@@ -111,7 +147,6 @@ namespace MonoDroid.Tuner
 			}
 			return changed;
 		}
-#endif  // !ILLINK
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
 

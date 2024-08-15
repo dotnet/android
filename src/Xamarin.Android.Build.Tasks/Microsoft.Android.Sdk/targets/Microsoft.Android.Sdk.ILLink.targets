@@ -50,6 +50,7 @@ This file contains the .NET 5-specific targets to customize ILLink
       <!-- add our custom steps -->
       <!-- Custom steps that run before MarkStep -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" BeforeStep="MarkStep" Type="Microsoft.Android.Sdk.ILLink.SetupStep" />
+      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" BeforeStep="MarkStep" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom MarkHandlers that run during MarkStep -->
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveSubStepDispatcher" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.MarkJavaObjects" />
@@ -57,7 +58,6 @@ This file contains the .NET 5-specific targets to customize ILLink
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.PreserveApplications" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveRegistrations" />
       <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="Microsoft.Android.Sdk.ILLink.PreserveJavaInterfaces" />
-      <_TrimmerCustomSteps Include="$(_AndroidLinkerCustomStepAssembly)" Type="MonoDroid.Tuner.FixAbstractMethodsStep" />
       <!-- Custom steps that run after MarkStep -->
       <_TrimmerCustomSteps
           Condition=" '$(_ProguardProjectConfiguration)' != '' "
