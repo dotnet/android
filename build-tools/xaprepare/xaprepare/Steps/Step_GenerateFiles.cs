@@ -156,6 +156,7 @@ namespace Xamarin.Android.Prepare
 				{ "@OS_RELEASE@",           context.OS.Release ?? String.Empty },
 				{ "@HOST_CPUS@",            context.OS.CPUCount.ToString () },
 				{ "@ARCHITECTURE_BITS@",    context.OS.Is64Bit ? "64" : "32" },
+				{ "@JAVA_SDK_VERSION@",     Configurables.Defaults.MicrosoftOpenJDK17Version.ToString () },
 				{ "@JavaSdkDirectory@",     context.OS.JavaHome },
 				{ "@javac@",                context.OS.JavaCPath },
 				{ "@java@",                 context.OS.JavaPath },
@@ -185,6 +186,7 @@ namespace Xamarin.Android.Prepare
 				{ "@NDK_X86_API@",               BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString ().ToString () },
 				{ "@NDK_X86_64_API@",            BuildAndroidPlatforms.NdkMinimumAPI.ToString ().ToString () },
 				{ "@XA_SUPPORTED_ABIS@",         context.Properties.GetRequiredValue (KnownProperties.AndroidSupportedTargetJitAbis).Replace (':', ';') },
+				{ "@SDK_BUILD_TOOLS_VERSION@",   context.Properties.GetRequiredValue (KnownProperties.XABuildToolsFolder) },
 				{ "@ANDROID_DEFAULT_MINIMUM_DOTNET_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidMinimumDotNetApiLevel) },
 				{ "@ANDROID_DEFAULT_TARGET_DOTNET_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidDefaultTargetDotnetApiLevel) },
 				{ "@ANDROID_LATEST_STABLE_API_LEVEL@", context.Properties.GetRequiredValue (KnownProperties.AndroidLatestStableApiLevel) },
@@ -207,6 +209,7 @@ namespace Xamarin.Android.Prepare
 
 			var replacements = new Dictionary<string, string> (StringComparer.Ordinal) {
 				{ "@NDK_RELEASE@",               BuildAndroidPlatforms.AndroidNdkVersion },
+				{ "@NDK_PKG_REVISION@",          BuildAndroidPlatforms.AndroidNdkPkgRevision },
 				{ "@NDK_ARMEABI_V7_API@",        BuildAndroidPlatforms.NdkMinimumAPILegacy32.ToString () },
 				{ "@NDK_ARMEABI_V7_API_NET@",    BuildAndroidPlatforms.NdkMinimumAPI.ToString () },
 				{ "@NDK_ARM64_V8A_API@",         BuildAndroidPlatforms.NdkMinimumAPI.ToString ()  },
