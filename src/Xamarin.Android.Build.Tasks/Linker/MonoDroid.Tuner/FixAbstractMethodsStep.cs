@@ -96,7 +96,7 @@ namespace MonoDroid.Tuner
 					return references;
 
 				foreach (AssemblyNameReference reference in assembly.MainModule.AssemblyReferences) {
-					AssemblyDefinition? definition = cache.Resolve (reference);
+					AssemblyDefinition? definition = Context.Resolve (reference);
 					if (definition != null)
 						references.Add (definition);
 				}
@@ -132,7 +132,9 @@ namespace MonoDroid.Tuner
 				return;
 
 			if (FixAbstractMethods (assembly)) {
+#if !ILLINK
 				Context.SafeReadSymbols (assembly);
+#endif  // !ILLINK
 				UpdateAssemblyAction (assembly);
 				MarkAbstractMethodErrorType ();
 			}
