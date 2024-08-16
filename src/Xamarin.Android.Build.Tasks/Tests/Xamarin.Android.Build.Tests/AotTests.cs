@@ -282,14 +282,6 @@ namespace Xamarin.Android.Build.Tests
 			app1.Imports.Add (new Import ("foo.targets") {
 				TextContent = () => @"<?xml version=""1.0"" encoding=""utf-16""?>
 <Project ToolsVersion=""4.0"" xmlns=""http://schemas.microsoft.com/developer/msbuild/2003"">
-<Target Name=""_CheckAbis"" BeforeTargets=""_DefineBuildTargetAbis"">
-	<PropertyGroup>
-		<AndroidSupportedAbis>armeabi-v7a;x86</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\arm64-v8a\libmono-android.release.so')"">$(AndroidSupportedAbis);arm64-v8a</AndroidSupportedAbis>
-		<AndroidSupportedAbis Condition=""Exists('$(MSBuildThisFileDirectory)..\..\..\..\Debug\lib\xamarin.android\xbuild\Xamarin\Android\lib\x86_64\libmono-android.release.so')"">$(AndroidSupportedAbis);x86_64</AndroidSupportedAbis>
-	</PropertyGroup>
-	<Message Text=""$(AndroidSupportedAbis)"" />
-</Target>
 <Target Name=""_Foo"" AfterTargets=""_SetLatestTargetFrameworkVersion"">
 	<PropertyGroup>
 		<AotAssemblies Condition=""!Exists('$(MonoAndroidBinDirectory)" + Path.DirectorySeparatorChar + @"cross-arm')"">False</AotAssemblies>
