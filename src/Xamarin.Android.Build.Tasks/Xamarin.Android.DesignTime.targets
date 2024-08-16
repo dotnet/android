@@ -46,8 +46,8 @@ This file is used by all project types, including binding projects.
       <_AndroidLibraryImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryImportsCache)') ">$(_AndroidLibraryImportsDesignTimeCache)</_AndroidLibraryImportsCache>
       <_AndroidLibraryProjectImportsCache Condition=" '$(DesignTimeBuild)' == 'true' And !Exists ('$(_AndroidLibraryProjectImportsCache)') ">$(_AndroidLibraryProjectImportsDesignTimeCache)</_AndroidLibraryProjectImportsCache>
       <_AndroidBuildPropertiesCache Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidDesignTimeBuildPropertiesCache)</_AndroidBuildPropertiesCache>
-      <_GeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeStampDirectory)generator.stamp</_GeneratorStampFile>
-      <_AndroidResgenFlagFile Condition=" '$(DesignTimeBuild)' == 'true' ">$(_AndroidIntermediateDesignTimeBuildDirectory)R.cs.flag</_AndroidResgenFlagFile>
+      <_GeneratorStampFile Condition=" '$(DesignTimeBuild)' == 'true' And !Exists('$(_GeneratorStampFile)') ">$(_AndroidIntermediateDesignTimeStampDirectory)generator.stamp</_GeneratorStampFile>
+      <_AndroidResgenFlagFile Condition=" '$(DesignTimeBuild)' == 'true' And !Exists('$(_AndroidResgenFlagFile)') ">$(_AndroidIntermediateDesignTimeBuildDirectory)R.cs.flag</_AndroidResgenFlagFile>
     </PropertyGroup>
     <MakeDir
         Condition=" '$(_AndroidIsBindingProject)' != 'true' And !Exists ('$(_AndroidIntermediateDesignTimeBuildDirectory)') "
