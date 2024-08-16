@@ -16,6 +16,8 @@ using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 using Java.Interop.Tools.JavaCallableWrappers.Adapters;
+using System.Threading.Tasks;
+using System.Collections.Concurrent;
 
 namespace Xamarin.Android.Tasks
 {
@@ -183,26 +185,36 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Now that "never" never happened, we can proceed knowing that at least the assembly sets are the same for each architecture
-			var nativeCodeGenStates = new Dictionary<AndroidTargetArch, NativeCodeGenState> ();
-			bool generateJavaCode = true;
+			var nativeCodeGenStates = new ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> ();
 			NativeCodeGenState? templateCodeGenState = null;
 
-			foreach (var kvp in allAssembliesPerArch) {
+			var firstArch = allAssembliesPerArch.First ().Key;
+			var generateSucceeded = true;
+
+			// Generate Java sources in parallel
+			Parallel.ForEach (allAssembliesPerArch, (kvp) => {
 				AndroidTargetArch arch = kvp.Key;
 				Dictionary<string, ITaskItem> archAssemblies = kvp.Value;
+
+				// We only need to generate Java code for one ABI, as the Java code is ABI-agnostic
+				// Pick the "first" one as the one to generate Java code for
+				var generateJavaCode = arch == firstArch;
+
 				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, MaybeGetArchAssemblies (userAssembliesPerArch, arch), useMarshalMethods, generateJavaCode);
 
-				if (!success) {
-					return;
-				}
+				if (!success)
+					generateSucceeded = false;
 
-				if (generateJavaCode) {
+				// If this is the first architecture, we need to store the state for later use
+				if (generateJavaCode)
 					templateCodeGenState = state;
-					generateJavaCode = false;
-				}
 
-				nativeCodeGenStates.Add (arch, state);
-			}
+				nativeCodeGenStates.TryAdd (arch, state);
+			});
+
+			// If we hit an error generating the Java code, we should bail out now
+			if (!generateSucceeded)
+				return;
 
 			if (templateCodeGenState == null) {
 				throw new InvalidOperationException ($"Internal error: no native code generator state defined");

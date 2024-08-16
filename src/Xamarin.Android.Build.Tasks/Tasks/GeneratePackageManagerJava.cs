@@ -13,6 +13,7 @@ using Microsoft.Build.Utilities;
 using Java.Interop.Tools.TypeNameMappings;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
+using System.Collections.Concurrent;
 
 namespace Xamarin.Android.Tasks
 {
@@ -324,9 +325,9 @@ namespace Xamarin.Android.Tasks
 				}
 			}
 
-			Dictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
+			ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>? nativeCodeGenStates = null;
 			if (enableMarshalMethods) {
-				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<Dictionary<AndroidTargetArch, NativeCodeGenState>> (
+				nativeCodeGenStates = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState>> (
 					ProjectSpecificTaskObjectKey (GenerateJavaStubs.NativeCodeGenStateRegisterTaskKey),
 					RegisteredTaskObjectLifetime.Build
 				);
