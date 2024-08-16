@@ -25,16 +25,16 @@ namespace MonoDroid.Tuner
 	/// </summary>
 	public class FixAbstractMethodsStep : BaseStep
 	{
-		readonly IMetadataResolver cache;
-
 #if ILLINK
-		readonly List<AssemblyDefinition> assemblies = new ();
-#endif  // ILLINK
+		IMetadataResolver cache => Context;
+#else   // !ILLINK
+		readonly IMetadataResolver cache;
 
 		public FixAbstractMethodsStep (IMetadataResolver cache)
 		{
 			this.cache = cache;
 		}
+#endif  // !ILLINK
 
 		bool CheckShouldProcessAssembly (AssemblyDefinition assembly)
 		{
@@ -62,6 +62,8 @@ namespace MonoDroid.Tuner
 		}
 
 #if ILLINK
+		readonly List<AssemblyDefinition> assemblies = new ();
+
 		protected override void ProcessAssembly (AssemblyDefinition assembly)
 		{
 			assemblies.Add (assembly);
