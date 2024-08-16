@@ -7,10 +7,9 @@
 
   <Import Project="License.targets" />
   <Import Project="..\..\build-tools\installers\create-installers.targets" />
-  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="$(MicrosoftDotNetBuildTasksFeedPackageVersion)" />
+  <Import Project="Sdk.props" Sdk="Microsoft.DotNet.SharedFramework.Sdk" Version="8.0.0-beta.24413.2" />
 
   <UsingTask TaskName="CreateFrameworkListFile" AssemblyFile="$(DotNetSharedFrameworkTaskFile)"/>
-  <UsingTask TaskName="GenerateBuildManifest" AssemblyFile="$(_MicrosoftDotNetBuildTasksFeedTaskDir)Microsoft.DotNet.Build.Tasks.Feed.dll" />
   <UsingTask TaskName="Xamarin.Android.BuildTools.PrepTasks.ReplaceFileContents" AssemblyFile="$(PrepTasksAssembly)" />
 
   <!-- https://github.com/dotnet/runtime/blob/0647ec314948904319da5eb15e9931f7c85ed1e2/src/installer/pkg/projects/Directory.Build.targets#L281 -->
@@ -164,15 +163,27 @@
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
-  <Target Name="PushManifestToBuildAssetRegistry" >
+  <!-- https://github.com/dotnet/arcade/blob/00d6decc59f5030c2399a64fd3e4f6e8e11bacca/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
+  <Target Name="PushManifestToBuildAssetRegistry" 
+      DependsOnTargets="GetXAVersionInfo" >
+    <PropertyGroup>
+      <ArtifactsLogDir>$(OutputPath)</ArtifactsLogDir>
+      <AssetManifestFileName>Assets.xml</AssetManifestFileName>
+      <AssetManifestPath>$(ArtifactsLogDir)AssetManifest\$(AssetManifestFileName)</AssetManifestPath>
+    </PropertyGroup>
+
+    <Error Condition="Exists($(AssetManifestPath))" Text="The manifest file '$(AssetManifestPath)' already exists." />
+
     <ItemGroup>
-      <BuildArtifacts Include="$(OutputPath)*.nupkg" />
+      <ItemsToPush Include="$(OutputPath)*.nupkg" />
     </ItemGroup>
 
-    <Error Condition="'@(BuildArtifacts)' == ''" Text="No packages to create manifest from." />
+    <Error Condition="'@(ItemsToPush)' == ''" Text="No packages to push." />
+
+    <Message Text="Publishing %(ItemsToPush.Identity)" Importance="normal" />
 
     <ItemGroup>
-      <ManifestBuildData Include="InitialAssetsLocation=https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
+      <ManifestBuildData Include="InitialAssetsLocation=" />
       <ManifestBuildData Include="AzureDevOpsBuildId=$(BUILD_BUILDID)" />
       <ManifestBuildData Include="AzureDevOpsBuildDefinitionId=$(SYSTEM_DEFINITIONID)" />
       <ManifestBuildData Include="AzureDevOpsProject=$(SYSTEM_TEAMPROJECT)" />
@@ -181,25 +192,26 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
-    <GenerateBuildManifest
-        Artifacts="@(BuildArtifacts)"
-        OutputPath="$(OutputPath)bar-manifests\AssetManifest.xml"
-        BuildId="$(BUILD_BUILDNUMBER)"
-        BuildData="@(ManifestBuildData)"
-        RepoUri="$(BUILD_REPOSITORY_URI)"
-        RepoBranch="$(BUILD_SOURCEBRANCH)"
-        RepoCommit="$(BUILD_SOURCEVERSION)"
+    <PushToBuildStorage
+        ItemsToPush="@(ItemsToPush)"
+        IsStableBuild="$(IsStableBuild)"
+        ManifestBuildData="@(ManifestBuildData)"
+        ManifestRepoUri="$(BUILD_REPOSITORY_NAME)"
+        ManifestBranch="$(BUILD_SOURCEBRANCH)"
+        ManifestBuildId="$(BUILD_BUILDNUMBER)"
+        ManifestCommit="$(BUILD_SOURCEVERSION)"
+        AssetManifestPath="$(AssetManifestPath)"
         PublishingVersion="3" />
 
     <MSBuild
         Targets="Restore"
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion)"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersionLong)"
     />
 
     <MSBuild
         Projects="$(PkgMicrosoft_DotNet_Arcade_Sdk)\tools\SdkTasks\PublishBuildAssets.proj"
-        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersion);ManifestsPath=$(OutputPath)bar-manifests;MaestroApiEndpoint=https://maestro-prod.westus2.cloudapp.azure.com"
+        Properties="Configuration=$(Configuration);RepoRoot=$(XamarinAndroidSourcePath);VersionPrefix=$(AndroidPackVersionLong);ManifestsPath=$(ArtifactsLogDir)AssetManifest;MaestroApiEndpoint=https://maestro.dot.net"
     />
   </Target>
 

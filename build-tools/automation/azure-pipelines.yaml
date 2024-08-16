@@ -496,7 +496,7 @@ extends:
           use1ESTemplate: true
 
       # Check - "Xamarin.Android (Prepare .NET Release Convert NuGet to MSI)"
-      - template: nuget-msi-convert/job/v3.yml@yaml-templates
+      - template: nuget-msi-convert/job/v4.yml@yaml-templates
         parameters:
           yamlResourceName: yaml-templates
           dependsOn: sign_net_mac_win
@@ -505,7 +505,17 @@ extends:
             !*Darwin*
           propsArtifactName: $(NuGetArtifactName)
           signType: $(MicroBuildSignType)
-          use1ESTemplate: true
+          preConvertSteps:
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-signed
+              artifactPatterns: |
+                *Darwin*
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
+          - task: DownloadPipelineArtifact@2
+            inputs:
+              artifactName: nuget-linux-signed
+              downloadPath: $(Build.StagingDirectory)\drop\nugets
           postConvertSteps:
           - task: DownloadPipelineArtifact@2
             inputs:
@@ -513,118 +523,107 @@ extends:
               downloadPath: $(Build.StagingDirectory)\sign-verify
               patterns: |
                 **/SignVerifyIgnore.txt
-
           - task: MicroBuildCodesignVerify@3
             displayName: verify signed msi content
             inputs:
               TargetFolders: |
                 $(Build.ArtifactStagingDirectory)\bin\manifests
-                $(Build.ArtifactStagingDirectory)\bin\manifests-multitarget
+                $(Build.ArtifactStagingDirectory)\bin\manifests-packs
+                $(Build.ArtifactStagingDirectory)\bin\msi-nupkgs
               ExcludeSNVerify: true
               ApprovalListPathForCerts: $(Build.StagingDirectory)\sign-verify\SignVerifyIgnore.txt
 
-      # Check - "Xamarin.Android (Prepare .NET Release Push Internal)"
+      # Check - "Xamarin.Android (Prepare .NET Release Publish symbols and Push to Maestro)"
       - job: push_signed_nugets
-        displayName: Push Internal
+        displayName: Publish symbols and Push to Maestro
         dependsOn:
         - nuget_convert
         - sign_net_linux
         condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
-        timeoutInMinutes: 60
+        timeoutInMinutes: 90
         pool:
           name: AzurePipelines-EO
           image: $(WindowsPoolImage1ESPT)
           os: windows
         workspace:
           clean: all
-        variables:
-        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-          - group: Publish-Build-Assets
         templateContext:
           outputs:
-          - output: nuget
-            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
-            useDotNetTask: false # The default is false to use the NuGetCommand task. Set to true to use the DotNetCoreCLI task to publish packages.
-            packagesToPush: $(Build.StagingDirectory)\nuget-signed\*.nupkg
-            packageParentPath: $(Build.StagingDirectory)\nuget-signed
-            nuGetFeedType: external
-            publishFeedCredentials: $(DotNetFeedCredential)
+          - output: artifactsDrop
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+            buildNumber: $(ReleaseDropPrefix)/symbols
+            dropMetadataContainerName: DropMetadata-shipping-symbols
+            sourcePath: $(Build.StagingDirectory)\symbols
+            retentionDays: 120
+            toLowerCase: false
         steps:
         - checkout: self
+          clean: true
+          submodules: recursive
 
-        - task: DownloadPipelineArtifact@2
+        - task: UseDotNet@2
+          displayName: Install .NET 9.x
           inputs:
-            artifactName: nuget-signed
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+            version: 9.x
+            includePreviewVersions: true
 
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: nuget-linux-signed
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
-
-        - task: DownloadPipelineArtifact@2
-          inputs:
-            artifactName: vs-msi-nugets
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
-
+        # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
           inputs:
             artifactName: $(WindowsToolchainPdbArtifactName)
-            downloadPath: $(Build.StagingDirectory)\nuget-signed
+            downloadPath: $(Build.StagingDirectory)\symbols
 
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(NupkgCommitStatusName)
-            blobName: $(NupkgCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\nuget-signed
-            yamlResourceName: yaml-templates
-
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(VSDropCommitStatusName)
-            blobName: $(VSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-signed
-                downloadPath: $(Build.StagingDirectory)\$(VSDropCommitStatusName)
-
-        - template: templates\common\upload-vs-insertion-artifacts.yml@sdk-insertions
-          parameters:
-            githubToken: $(GitHub.Token)
-            githubContext: $(MultiTargetVSDropCommitStatusName)
-            blobName: $(MultiTargetVSDropCommitStatusName)
-            packagePrefix: xamarin-android
-            artifactsPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
-            yamlResourceName: yaml-templates
-            downloadSteps:
-            - task: DownloadPipelineArtifact@2
-              inputs:
-                artifactName: vsdrop-multitarget-signed
-                downloadPath: $(Build.StagingDirectory)\$(MultiTargetVSDropCommitStatusName)
-
-        - powershell: >-
-            & dotnet build -v:n -c $(XA.Build.Configuration)
-            -t:PushManifestToBuildAssetRegistry
-            -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-            -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-            $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-            -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
-          displayName: generate and publish BAR manifest
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+        - task: DownloadPipelineArtifact@2
+          inputs:
+            artifactName: DropMetadata-shipping-nugets
+            downloadPath: $(Build.StagingDirectory)\metadata
+          displayName: Download nugets drop metadata
 
         - powershell: |
-            $versionEndpoint = 'https://maestro-prod.westus2.cloudapp.azure.com/api/assets/darc-version?api-version=2019-01-16'
-            $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-            $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-            & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --skip-assets-publishing --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
+            $jsonContent = Get-Content -Path "$(Build.StagingDirectory)\metadata\VSTSDrop.json" -Raw | ConvertFrom-Json
+            $dropPrefix = $jsonContent.VstsDropBuildArtifact.VstsDropUrl -replace 'https://devdiv.artifacts.visualstudio.com/DefaultCollection/_apis/drop/drops/' -replace '/nugets'
+            Write-Host "##vso[task.setvariable variable=ReleaseDropPrefix]$dropPrefix"
+          displayName: Set variable ReleaseDropPrefix
+
+        # Download nugets drop created by nuget-msi-convert/job/v4.yml and publish to maestro
+        - task: ms-vscs-artifact.build-tasks.artifactDropDownloadTask-1.artifactDropDownloadTask@1
+          displayName: Download $(ReleaseDropPrefix)/nugets
+          inputs:
+            dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
+            buildNumber: $(ReleaseDropPrefix)/nugets
+            destinationPath: $(Build.StagingDirectory)\nuget-signed
+
+        - task: DotNetCoreCLI@2
+          displayName: build Xamarin.Android.Tools.BootstrapTasks.sln
+          inputs:
+            projects: $(System.DefaultWorkingDirectory)\Xamarin.Android.BootstrapTasks.sln
+            arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+
+        - task: AzureCLI@2
+          displayName: generate and publish BAR manifest
+          inputs:
+            azureSubscription: "Darc: Maestro Production"
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: >-
+              dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+              -t:PushManifestToBuildAssetRegistry
+              -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
+              -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+
+        - task: AzureCLI@2
+          inputs:
+            azureSubscription: "Darc: Maestro Production"
+            scriptType: ps
+            scriptLocation: inlineScript
+            inlineScript: |
+              $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
+              $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+              $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+              & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+              & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
           displayName: add build to default darc channel
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 

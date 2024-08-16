@@ -6,7 +6,7 @@
     <MicrosoftNETILLinkTasksPackageVersion>8.0.8</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>8.0.8</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
-    <MicrosoftDotNetBuildTasksFeedPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetBuildTasksFeedPackageVersion>
+    <MicrosoftDotNetBuildTasksFeedPackageVersion>9.0.0-beta.24408.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>8.0.8</MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
