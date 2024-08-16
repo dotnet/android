@@ -245,39 +245,20 @@ class JCWGenerator
 	{
 		logger.LogDebugMessage ($"Ensuring Java type collection in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 
-		List<TypeDefinition> templateTypes = templateState.AllJavaTypes;
-		List<TypeDefinition> types = state.AllJavaTypes;
+		var templateSet = new SortedSet<string> (templateState.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
+		var typesSet = new SortedSet<string> (state.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
 
-		if (types.Count != templateTypes.Count) {
-			throw new InvalidOperationException ($"Internal error: architecture '{state.TargetArch}' has a different number of types ({types.Count}) than the template architecture '{templateState.TargetArch}' ({templateTypes.Count})");
+		if (typesSet.Count != templateSet.Count) {
+			throw new InvalidOperationException ($"Internal error: architecture '{state.TargetArch}' has a different number of types ({typesSet.Count}) than the template architecture '{templateState.TargetArch}' ({templateSet.Count})");
 		}
 
-		var matchedTemplateTypes = new HashSet<TypeDefinition> ();
-		var mismatchedTypes = new List<TypeDefinition> ();
-
-		foreach (TypeDefinition type in types) {
-			TypeDefinition? matchedType = null;
-
-			foreach (TypeDefinition templateType in templateTypes) {
-				if (matchedTemplateTypes.Contains (templateType) || !CheckWhetherTypesMatch (templateType, type)) {
-					continue;
-				}
-
-				matchedTemplateTypes.Add (templateType);
-				matchedType = templateType;
-				break;
-			}
-
-			if (matchedType == null) {
-				mismatchedTypes.Add (type);
-			}
-		}
-
-		if (mismatchedTypes.Count > 0) {
+		if (!typesSet.SetEquals (templateSet)) {
 			logger.LogError ($"Architecture '{state.TargetArch}' has Java types which have no counterparts in template architecture '{templateState.TargetArch}':");
-			foreach (TypeDefinition td in mismatchedTypes) {
-				logger.LogError ($"  {td.FullName}");
-			}
+
+			typesSet.ExceptWith (templateSet);
+
+			foreach (var type in typesSet)
+				logger.LogError ($"  {type}");
 		}
 	}
 
