@@ -8,6 +8,12 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
+  parameters:
+    toolName: dotnet-symbol
+
+- script: dotnet-symbol --help
+
 - script: echo "##vso[task.setvariable variable=JI_JAVA_HOME]$HOME/android-toolchain/jdk-17"
   displayName: set JI_JAVA_HOME
 
