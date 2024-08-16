@@ -16,6 +16,7 @@ steps:
 - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
   parameters:
     toolName: dotnet-symbol
+    version: "8.*"
 
 - script: dotnet-symbol --help
 
