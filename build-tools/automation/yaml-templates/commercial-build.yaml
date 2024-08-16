@@ -8,6 +8,11 @@ parameters:
   use1ESTemplate: true
 
 steps:
+- task: UseDotNet@2
+  displayName: Install .NET 8.x
+  inputs:
+    version: 8.x
+
 - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
   parameters:
     toolName: dotnet-symbol
