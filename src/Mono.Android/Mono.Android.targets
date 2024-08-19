@@ -244,8 +244,8 @@
     <DocsExportOutput Condition=" '$(DocsExportOutput)' == '' ">$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml</DocsExportOutput>
     <_ExternalDocsRoot>$(XamarinAndroidSourcePath)external/android-api-docs/docs/xml</_ExternalDocsRoot>
     <_LogPrefix>$(MSBuildThisFileDirectory)../../bin/Build$(Configuration)/UpdateApiDocs-$([System.DateTime]::Now.ToString ("yyyyMMddTHHmmss"))</_LogPrefix>
-    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net471/mdoc.exe"</_Mdoc>
-    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net471/mdoc.exe"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' != '' ">"$(Pkgmdoc)/tools/net6.0/mdoc.dll"</_Mdoc>
+    <_Mdoc Condition=" '$(Pkgmdoc)' == '' ">"$(XAPackagesDir)/mdoc/$(MdocPackageVersion)/tools/net6.0/mdoc.dll"</_Mdoc>
   </PropertyGroup>
 
   <!-- Generate documentation using MDoc -->
@@ -310,11 +310,11 @@
         Lines="$(FrameworksXmlContent)"
     />
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) fx-bootstrap -fx $(_RootFxDir) -importContent true"
+        Command="dotnet $(_Mdoc) fx-bootstrap -fx $(_RootFxDir) -importContent true"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
+        Command="dotnet $(_Mdoc) update $(_Libdir) $(_Output) $(_DocTypeArgs) $(_FxConfig) $(_ExtraMdocArgs)"
         WorkingDirectory="$(MSBuildThisFileDirectory)"
     />
   </Target>
@@ -345,7 +345,7 @@
       Inputs="@(_MsxDocSourceFile)"
       Outputs="$(DocsExportOutput)">
     <Exec
-        Command="$(ManagedRuntime) $(ManagedRuntimeArgs) $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(_ExternalDocsRoot)&quot;"
+        Command="dotnet $(_Mdoc) --debug export-msxdoc -o &quot;$(DocsExportOutput)&quot; &quot;$(_ExternalDocsRoot)&quot;"
     />
   </Target>
 
