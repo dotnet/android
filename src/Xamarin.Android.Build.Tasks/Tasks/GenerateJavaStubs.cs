@@ -202,12 +202,14 @@ namespace Xamarin.Android.Tasks
 
 				(bool success, NativeCodeGenState? state) = GenerateJavaSourcesAndMaybeClassifyMarshalMethods (arch, archAssemblies, MaybeGetArchAssemblies (userAssembliesPerArch, arch), useMarshalMethods, generateJavaCode);
 
-				if (!success)
+				if (!success) {
 					generateSucceeded = false;
+				}
 
 				// If this is the first architecture, we need to store the state for later use
-				if (generateJavaCode)
+				if (generateJavaCode) {
 					templateCodeGenState = state;
+				}
 
 				nativeCodeGenStates.TryAdd (arch, state);
 			});
