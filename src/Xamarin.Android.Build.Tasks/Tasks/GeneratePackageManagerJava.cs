@@ -22,8 +22,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "GPM";
 
-		Guid buildId = Guid.NewGuid ();
-
 		[Required]
 		public ITaskItem[] ResolvedAssemblies { get; set; }
 
@@ -81,9 +79,6 @@ namespace Xamarin.Android.Tasks
 		public bool EnableSGenConcurrent { get; set; }
 		public string? CustomBundleConfigFile { get; set; }
 
-		[Output]
-		public string BuildId { get; set; }
-
 		bool _Debug {
 			get {
 				return string.Equals (Debug, "true", StringComparison.OrdinalIgnoreCase);
@@ -92,9 +87,6 @@ namespace Xamarin.Android.Tasks
 
 		public override bool RunTask ()
 		{
-			BuildId = buildId.ToString ();
-			Log.LogDebugMessage ("  [Output] BuildId: {0}", BuildId);
-
 			var doc = AndroidAppManifest.Load (Manifest, MonoAndroidHelper.SupportedVersions);
 			int minApiVersion = doc.MinSdkVersion == null ? 4 : (int) doc.MinSdkVersion;
 			// We need to include any special assemblies in the Assemblies list
@@ -190,9 +182,6 @@ namespace Xamarin.Android.Tasks
 			if (sequencePointsMode != SequencePointsMode.None && !environmentParser.HaveMonoDebug) {
 				AddEnvironmentVariable (defaultMonoDebug[0], defaultMonoDebug[1]);
 			}
-
-			if (!environmentParser.HavebuildId)
-				AddEnvironmentVariable ("XAMARIN_BUILD_ID", BuildId);
 
 			if (!environmentParser.HaveHttpMessageHandler) {
 				if (HttpClientHandlerType == null)
