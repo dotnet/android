@@ -3,7 +3,7 @@
   <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>8.0.402-servicing.24415.36</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>8.0.9-servicing.24408.9</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>8.0.9-servicing.24413.16</MicrosoftNETILLinkPackageVersion>
     <MicrosoftNETILLinkTasksPackageVersion>8.0.9</MicrosoftNETILLinkTasksPackageVersion>
     <MicrosoftNETCoreAppRefPackageVersion>8.0.9</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
