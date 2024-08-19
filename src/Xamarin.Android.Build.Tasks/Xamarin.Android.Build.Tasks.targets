@@ -28,7 +28,6 @@
     <_MultiDexAarInAndroidSdk>extras\android\m2repository\com\android\support\multidex\1.0.1\multidex-1.0.1.aar</_MultiDexAarInAndroidSdk>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\NOTICE.txt</_SupportLicense>
     <_SupportLicense Condition="Exists('$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt')">$(_AndroidSdkLocation)\extras\android\m2repository\m2repository\NOTICE.txt</_SupportLicense>
-    <_ILRepackEnabled Condition=" '$(_ILRepackEnabled)' == '' ">true</_ILRepackEnabled>
   </PropertyGroup>
   <ItemGroup>
     <None
@@ -288,42 +287,6 @@
         DestinationFiles="@(_MonoScriptDestination)"
     />
     <Exec Command="chmod +x @(_MonoScriptDestination->'%(Identity)', ' ')" />
-  </Target>
-
-  <ItemGroup>
-    <InputAssemblies Include="$(OutputPath)Newtonsoft.Json.dll" />
-    <InputAssemblies Include="$(OutputPath)System.Collections.Immutable.dll" />
-    <InputAssemblies Include="$(OutputPath)System.Reflection.Metadata.dll" />
-  </ItemGroup>
-
-  <Target Name="ILRepacker"
-      Condition=" '$(_ILRepackEnabled)' == 'true' "
-      BeforeTargets="CopyFilesToOutputDirectory"
-      Inputs="$(MSBuildAllProjects);@(IntermediateAssembly);@(InputAssemblies)"
-      Outputs="$(IntermediateOutputPath)ILRepacker.stamp" >
-    <ItemGroup>
-      <_InputAssembliesThatExist Include="@(InputAssemblies)" Condition="Exists('%(Identity)')" />
-      <_NetstandardPath Include="@(ReferencePath->'%(RootDir)%(Directory)')" Condition="'%(FileName)%(Extension)' == 'netstandard.dll'" />
-    </ItemGroup>
-    <PropertyGroup>
-      <_NetstandardDir>@(_NetstandardPath)</_NetstandardDir>
-      <_ILRepackArgs>/out:&quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot; /internalize</_ILRepackArgs>
-      <_ILRepackArgs>$(_ILRepackArgs) /keyfile:&quot;$(XamarinAndroidSourcePath)product.snk&quot;</_ILRepackArgs>
-      <_ILRepackArgs>$(_ILRepackArgs) &quot;$(MSBuildThisFileDirectory)$(IntermediateOutputPath)$(AssemblyName).dll&quot;</_ILRepackArgs>
-      <_ILRepackArgs>$(_ILRepackArgs) @(_InputAssembliesThatExist->'&quot;%(Identity)&quot;', ' ')</_ILRepackArgs>
-      <_ILRepackArgs>$(_ILRepackArgs) /lib:&quot;$(_NetstandardDir.TrimEnd('\'))&quot;</_ILRepackArgs> <!-- Path to netstandard.dll -->
-    </PropertyGroup>
-    <Exec
-      Command="$(ManagedRuntime) $(ManagedRuntimeArgs) &quot;$(ILRepack)&quot; $(_ILRepackArgs)"
-      WorkingDirectory="$(OutputPath)"
-    />
-    <Touch
-      Files="$(IntermediateOutputPath)ILRepacker.stamp"
-      AlwaysCreate="True"
-    />
-    <ItemGroup>
-      <FileWrites Include="$(IntermediateOutputPath)ILRepacker.stamp" />
-    </ItemGroup>
   </Target>
 
   <ItemGroup>
