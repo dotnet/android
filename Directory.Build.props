@@ -36,7 +36,7 @@
          * Bump first digit of the patch version for feature releases (and reset the first two digits to 0)
     -->
     <AndroidPackVersion>35.0.0</AndroidPackVersion>
-    <AndroidPackVersionSuffix>rc.1</AndroidPackVersionSuffix>
+    <AndroidPackVersionSuffix>rc.2</AndroidPackVersionSuffix>
     <IsStableBuild>false</IsStableBuild>
     <IsStableBuild Condition=" '$(AndroidPackVersionSuffix)' == 'rtm' ">true</IsStableBuild>
   </PropertyGroup>
