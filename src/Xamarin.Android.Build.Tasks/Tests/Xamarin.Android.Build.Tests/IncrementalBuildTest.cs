@@ -107,6 +107,11 @@ namespace Xamarin.Android.Build.Tests
 					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
 				}
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Second should have succeeded");
+				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
+				var stampFiles = Path.Combine (intermediate, "stamp", "_ResolveLibraryProjectImports.stamp");
+				FileAssert.Exists (stampFiles, $"{stampFiles} should exists!");
+				var libraryProjectImports = Path.Combine (intermediate, "libraryprojectimports.cache");
+				FileAssert.Exists (libraryProjectImports, $"{libraryProjectImports} should exists!");
 
 				//No changes
 				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "Third should have succeeded");
@@ -850,6 +855,7 @@ namespace Lib2
 
 				b.BuildLogFile = "build2.log";
 				Assert.IsTrue (b.Build (proj), "second build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
 				FileAssert.Exists (cacheFile);
 				var actual = ReadCache (cacheFile);
 				CollectionAssert.AreEqual (actual.Jars.Select (j => j.ItemSpec),
@@ -892,6 +898,22 @@ namespace Lib2
 				foreach (var targetName in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (targetName), $"`{targetName}` should be skipped!");
 				}
+
+				var filesToTouch = new [] {
+ 					Path.Combine (intermediate, "build.props"),
+ 					Path.Combine (intermediate, $"{proj.ProjectName}.pdb"),
+ 				};
+				foreach (var file in filesToTouch) {
+					FileAssert.Exists (file);
+					File.SetLastWriteTimeUtc (file, DateTime.UtcNow);
+				}
+
+				b.BuildLogFile = "build5.log";
+				Assert.IsTrue (b.Build (proj), "fifth build should have succeeded.");
+				b.Output.AssertTargetIsNotSkipped ("_CleanMonoAndroidIntermediateDir");
+				b.Output.AssertTargetIsNotSkipped ("_ResolveLibraryProjectImports");
+				FileAssert.Exists (cacheFile);
+				FileAssert.Exists (stamp);
 			}
 		}
 
@@ -1184,13 +1206,16 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder (Path.Combine ("temp", $"{nameof (IncrementalBuildTest)}{TestName}"))) {
 				Assert.IsTrue (b.DesignTimeBuild (proj), "first dtb should have succeeded.");
+				var target = "_ResolveLibraryProjectImports";
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
 				// DesignTimeBuild=true lowercased
 				var parameters = new [] { "DesignTimeBuild=true" };
 				Assert.IsTrue (b.RunTarget (proj, "Compile", doNotCleanupOnUpdate: true, parameters: parameters), "second dtb should have succeeded.");
-				var target = "_ResolveLibraryProjectImports";
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
 				Assert.IsTrue (b.RunTarget (proj, "UpdateGeneratedFiles", doNotCleanupOnUpdate: true, parameters: parameters), "UpdateGeneratedFiles should have succeeded.");
 				Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should have been skipped.");
+				Assert.IsTrue (b.Build (proj, doNotCleanupOnUpdate: true, saveProject: false), "full build should have succeeded.");
+				Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should not have been skipped.");
 			}
 		}
 
