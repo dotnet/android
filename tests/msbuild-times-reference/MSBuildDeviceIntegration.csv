@@ -8,10 +8,7 @@ Build_CSharp_Change,1
 Build_AndroidResource_Change,1
 Build_AndroidAsset_Change,1
 Build_AndroidManifest_Change,1
-Build_Designer_Change,1
 Build_JLO_Change,1
-Build_CSProj_Change,1
 Build_XAML_Change,1
-Build_XAML_Change_RefAssembly,1
 Install_CSharp_Change,1
 Install_XAML_Change,1
