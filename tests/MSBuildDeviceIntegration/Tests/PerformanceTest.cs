@@ -50,9 +50,6 @@ namespace Xamarin.Android.Build.Tests
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 
-			//TODO: Update baselines in MSBuildDeviceIntegration.csv, there is currently a slight performance regression in .NET 6
-			expected += 500;
-
 			action (builder);
 			var actual = GetDurationFromBinLog (builder);
 			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {actual}ms");
