@@ -15,6 +15,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Mono.Cecil;
 using Xamarin.Android.Tools;
+using System.Collections.Concurrent;
 
 namespace Xamarin.Android.Tasks;
 
@@ -220,7 +221,7 @@ class JCWGenerator
 		return builder.ToString ();
 	}
 
-	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, Dictionary<AndroidTargetArch, NativeCodeGenState> javaStubStates)
+	public static void EnsureAllArchitecturesAreIdentical (TaskLoggingHelper logger, ConcurrentDictionary<AndroidTargetArch, NativeCodeGenState> javaStubStates)
 	{
 		if (javaStubStates.Count <= 1) {
 			return;
