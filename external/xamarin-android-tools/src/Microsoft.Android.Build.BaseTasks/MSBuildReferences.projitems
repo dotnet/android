@@ -4,8 +4,7 @@
 <Project>
   <!--Import this file in projects needing to reference Microsoft.Build.*.dll -->
   <PropertyGroup>
-    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">17.9.5</MSBuildPackageReferenceVersion>
-    <SystemSecurityCryptographyXmlVersion Condition=" '$(SystemSecurityCryptographyXmlVersion)' == '' ">7.0.1</SystemSecurityCryptographyXmlVersion>
+    <MSBuildPackageReferenceVersion Condition=" '$(MSBuildPackageReferenceVersion)' == '' ">17.10.4</MSBuildPackageReferenceVersion>
     <LibZipSharpVersion Condition=" '$(LibZipSharpVersion)' == '' " >3.3.0</LibZipSharpVersion>
     <MonoUnixVersion>7.1.0-final.1.21458.1</MonoUnixVersion>
   </PropertyGroup>
@@ -15,7 +14,8 @@
     <PackageReference Include="Microsoft.Build.Framework"      Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Tasks.Core"     Version="$(MSBuildPackageReferenceVersion)" />
     <PackageReference Include="Microsoft.Build.Utilities.Core" Version="$(MSBuildPackageReferenceVersion)" />
-    <PackageReference Include="System.Security.Cryptography.Xml" Version="$(SystemSecurityCryptographyXmlVersion)" />
+    <!-- Explicitly update the System.Formats.Asn1 transitive dependency of Microsoft.Build to address https://github.com/advisories/GHSA-447r-wph3-92pm -->
+    <PackageReference Include="System.Formats.Asn1" Version="8.0.1" />
     <PackageReference Include="K4os.Compression.LZ4" Version="1.1.11" />
     <PackageReference Include="Xamarin.LibZipSharp" Version="$(LibZipSharpVersion)" GeneratePathProperty="true" />
     <PackageReference Include="Mono.Unix" Version="$(MonoUnixVersion)" GeneratePathProperty="true" />
