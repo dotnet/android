@@ -238,26 +238,10 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
-		static object [] XAML_Change = new object [] {
-			new object [] {
-				/* produceReferenceAssembly */ false,
-				/* install */                  false,
-			},
-			new object [] {
-				/* produceReferenceAssembly */ true,
-				/* install */                  false,
-			},
-			new object [] {
-				/* produceReferenceAssembly */ true,
-				/* install */                  true,
-			},
-		};
-
 		[Test]
-		[TestCaseSource (nameof (XAML_Change))]
 		[Category ("UsesDevice")]
 		[Retry (Retry)]
-		public void Build_XAML_Change (bool install)
+		public void Build_XAML_Change ([Values (true, false)] bool install)
 		{
 			if (install) {
 				AssertCommercialBuild (); // This test will fail without Fast Deployment
