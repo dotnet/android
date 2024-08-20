@@ -139,7 +139,6 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       AndroidPackageName="$(_AndroidPackage)"
       EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
       InstantRunEnabled="$(_InstantRunEnabled)">
-    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
 </Target>
 

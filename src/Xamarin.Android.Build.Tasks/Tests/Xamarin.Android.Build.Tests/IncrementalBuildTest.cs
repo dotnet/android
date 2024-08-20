@@ -942,8 +942,6 @@ namespace Lib2
 			var targets = new [] {
 				"_GenerateJavaStubs",
 				"_GeneratePackageManagerJava",
-				"_CompileNativeAssemblySources",
-				"_CreateApplicationSharedLibraries",
 			};
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,

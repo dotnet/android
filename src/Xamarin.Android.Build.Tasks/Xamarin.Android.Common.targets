@@ -1728,17 +1728,9 @@ because xbuild doesn't support framework reference assemblies.
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
   >
-    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
-  <WriteLinesToFile
-      File="$(_AndroidBuildIdFile)"
-      Lines="$(_XamarinBuildId)"
-      Overwrite="true"
-      WriteOnlyWhenDifferent="true"
-  />
   <ItemGroup>
-    <FileWrites Include="$(_AndroidBuildIdFile)" />
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
   </ItemGroup>
 </Target>
@@ -2547,7 +2539,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidAapt2VersionFile)" />
 	<Delete Files="$(IntermediateOutputPath)R.txt" />
 	<Delete Files="$(_AndroidMainDexListFile)" />
-	<Delete Files="$(_AndroidBuildIdFile)" />
 	<Delete Files="$(_ResolvedUserAssembliesHashFile)" />
 </Target>
 
