@@ -2,7 +2,8 @@
   <PropertyGroup>
     <RestoreAdditionalProjectSources>
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-ed13b351/nuget/v3/index.json;
-      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-064a36d9/nuget/v3/index.json
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-064a36d9/nuget/v3/index.json;
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-aspnetcore-b59c22b0/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
 </Project>
