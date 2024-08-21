@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using ELFSharp.ELF;
+using ELFSharp.ELF.Sections;
+
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks;
 
@@ -31,6 +34,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	readonly HashSet<uint> supportedVersions;
 
 	Header? header;
+	ulong elfOffset = 0;
 
 	static StoreReader_V2 ()
 	{
@@ -89,6 +93,14 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		using var reader = CreateReader ();
 
 		uint magic = reader.ReadUInt32 ();
+		if (magic == Utils.ELF_MAGIC) {
+			elfOffset = FindELFPayloadSectionOffset ();
+			if (elfOffset >= 0) {
+				StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
+				magic = reader.ReadUInt32 ();
+			}
+		}
+
 		if (magic != Utils.ASSEMBLY_STORE_MAGIC) {
 			Log.Debug ($"Store '{StorePath}' has invalid header magic number.");
 			return false;
@@ -106,6 +118,65 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 		header = new Header (magic, version, entry_count, index_entry_count, index_size);
 		return true;
+	}
+
+	ulong FindELFPayloadSectionOffset ()
+	{
+		StoreStream.Seek (0, SeekOrigin.Begin);
+		Class elfClass = ELFReader.CheckELFType (StoreStream);
+		if (elfClass == Class.NotELF) {
+			Log.Debug ($"Store '{StorePath}' is not a valid ELF binary");
+			return 0;
+		}
+
+		if (!ELFReader.TryLoad (StoreStream, shouldOwnStream: false, out IELF? elf)) {
+			return LogErrorAndReturn ($"Store '{StorePath}' could not be loaded", elf);
+		}
+
+		if (elf.Type != FileType.SharedObject) {
+			return LogErrorAndReturn ($"Store '{StorePath}' is not a shared ELF library", elf);
+		}
+
+		if (elf.Endianess != ELFSharp.Endianess.LittleEndian) {
+			return LogErrorAndReturn ($"Store '{StorePath}' is not a little-endian ELF image", elf);
+		}
+
+		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
+			return LogErrorAndReturn ($"Store '{StorePath}' does not contain the 'payload' section", elf);
+		}
+
+		bool is64 = elf.Machine switch {
+			Machine.ARM      => false,
+			Machine.Intel386 => false,
+
+			Machine.AArch64  => true,
+			Machine.AMD64    => true,
+
+			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}'")
+		};
+
+		ulong offset;
+		if (is64) {
+			offset = GetDataOffset<ulong> ((Section<ulong>)payloadSection);
+		} else {
+			offset = GetDataOffset<uint> ((Section<uint>)payloadSection);
+		}
+
+		elf.Dispose ();
+		return offset;
+
+		ulong GetDataOffset<T> (Section<T> payload) where T: struct
+		{
+			return (ulong)(object)payload.Offset;
+		}
+
+		ulong LogErrorAndReturn (string message, IELF? elf)
+		{
+			Log.Debug (message);
+			elf?.Dispose ();
+
+			return 0;
+		}
 	}
 
 	protected override void Prepare ()
@@ -126,7 +197,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		AssemblyCount = header.entry_count;
 		IndexEntryCount = header.index_entry_count;
 
-		StoreStream.Seek (Header.NativeSize, SeekOrigin.Begin);
+		StoreStream.Seek ((long)elfOffset + Header.NativeSize, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
 		var index = new List<IndexEntry> ();

@@ -23,6 +23,7 @@ static class Utils
 
 	public const uint ZIP_MAGIC = 0x4034b50;
 	public const uint ASSEMBLY_STORE_MAGIC = 0x41424158;
+	public const uint ELF_MAGIC = 0x464c457f;
 
 	public static readonly ArrayPool<byte> BytePool = ArrayPool<byte>.Shared;
 
@@ -42,6 +43,7 @@ static class Utils
 		// ATM, all formats we recognize have 4-byte magic at the start
 		FileFormat format = reader.ReadUInt32 () switch {
 			Utils.ZIP_MAGIC            => FileFormat.Zip,
+			Utils.ELF_MAGIC            => FileFormat.ELF,
 			Utils.ASSEMBLY_STORE_MAGIC => FileFormat.AssemblyStore,
 			_                          => FileFormat.Unknown
 		};

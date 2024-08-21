@@ -10,8 +10,8 @@ namespace Xamarin.Android.Tasks;
 
 /// <summary>
 /// Registers a state object used by the DSOWrapperGenerator class later on during
-/// the build.  This is to avoid having to pask parameters to some tasks (esp. BuildApk)
-/// which not necessarily need those parameters directly.  Registering the state here
+/// the build.  This is to avoid having to pass parameters to some tasks (esp. BuildApk)
+/// which do not necessarily need those parameters directly.  Registering the state here
 /// also avoids having to update monodroid whenever any required parameter is added to
 /// BuildApk.
 /// </summary>
