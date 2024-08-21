@@ -1,4 +1,4 @@
-[Register ("com/xamarin/android/Parent", DoNotGenerateAcw=true)]
+[Register ("mono/internal/com/xamarin/android/Parent", DoNotGenerateAcw=true)]
 [global::System.Obsolete (@"Use the 'Com.Xamarin.Android.IParent' type. This class will be removed in a future release.")]
 public abstract class Parent : Java.Lang.Object {
 	internal Parent ()

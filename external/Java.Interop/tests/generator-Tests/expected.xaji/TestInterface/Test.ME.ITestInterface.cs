@@ -5,7 +5,7 @@ using Java.Interop;
 
 namespace Test.ME {
 
-	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
+	[Register ("mono/internal/test/me/TestInterface", DoNotGenerateAcw=true)]
 	public abstract class TestInterface : Java.Lang.Object {
 		internal TestInterface ()
 		{
@@ -31,7 +31,7 @@ namespace Test.ME {
 
 	}
 
-	[Register ("test/me/TestInterface", DoNotGenerateAcw=true)]
+	[Register ("mono/internal/test/me/TestInterface", DoNotGenerateAcw=true)]
 	[global::System.Obsolete (@"Use the 'TestInterface' type. This type will be removed in a future release.", error: true)]
 	public abstract class TestInterfaceConsts : TestInterface {
 		private TestInterfaceConsts ()

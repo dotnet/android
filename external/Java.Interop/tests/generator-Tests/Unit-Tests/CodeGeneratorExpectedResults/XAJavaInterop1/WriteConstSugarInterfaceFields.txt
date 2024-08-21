@@ -1,4 +1,4 @@
-[Register ("java/code/IMyInterface", DoNotGenerateAcw=true)]
+[Register ("mono/internal/java/code/IMyInterface", DoNotGenerateAcw=true)]
 public abstract class MyInterface : Java.Lang.Object {
 	internal MyInterface ()
 	{
