@@ -1067,4 +1067,9 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {2} - shared library file name
     </comment>
   </data>
+  <data name="XA4249" xml:space="preserve">
+    <value>Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id:version'.</value>
+    <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
+{0} - A Maven artifact specification</comment>
+  </data>
 </root>
