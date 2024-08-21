@@ -50,6 +50,7 @@ namespace Java.Interop
 			public  bool                        DestroyRuntimeOnDispose     {get; set;}
 
 			// Prefer JNIEnv::NewObject() over JNIEnv::AllocObject() + JNIEnv::CallNonvirtualVoidMethod()
+			[Obsolete ("No longer supported")]
 			public  bool                        NewObjectRequired           {get; set;}
 
 			public  JniVersion                  JniVersion                  {get; set;}
@@ -158,7 +159,6 @@ namespace Java.Interop
 		public      JniVersion                          JniVersion          {get; private set;}
 
 		internal    bool                                TrackIDs            {get; private set;}
-		internal    bool                                NewObjectRequired   {get; private set;}
 		internal    bool                                JniAddNativeMethodRegistrationAttributePresent { get; }
 
 		protected JniRuntime (CreationOptions options)
@@ -171,8 +171,6 @@ namespace Java.Interop
 			TrackIDs     = options.TrackIDs;
 			DestroyRuntimeOnDispose     = options.DestroyRuntimeOnDispose;
 			JniAddNativeMethodRegistrationAttributePresent = options.JniAddNativeMethodRegistrationAttributePresent;
-
-			NewObjectRequired   = options.NewObjectRequired;
 
 			JniVersion          = options.JniVersion;
 

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 
 namespace Java.Interop.GenericMarshaler {
 
@@ -14,9 +14,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -52,9 +49,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value);
 		}
 
@@ -90,9 +84,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -132,9 +123,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2);
 		}
 
@@ -174,9 +162,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -220,9 +205,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3);
 		}
 
@@ -266,9 +248,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -316,9 +295,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4);
 		}
 
@@ -366,9 +342,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -420,9 +393,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5);
 		}
 
@@ -474,9 +444,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -532,9 +499,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6);
 		}
 
@@ -590,9 +554,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -652,9 +613,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7);
 		}
 
@@ -714,9 +672,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -780,9 +735,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8);
 		}
 
@@ -846,9 +798,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -916,9 +865,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9);
 		}
 
@@ -986,9 +932,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1060,9 +1003,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10);
 		}
 
@@ -1134,9 +1074,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1212,9 +1149,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11);
 		}
 
@@ -1290,9 +1224,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1372,9 +1303,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12);
 		}
 
@@ -1454,9 +1382,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1540,9 +1465,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13);
 		}
 
@@ -1626,9 +1548,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1716,9 +1635,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14);
 		}
 
@@ -1806,9 +1722,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -1900,9 +1813,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15);
 		}
 
@@ -1994,9 +1904,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -2092,9 +1999,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, value1, value2, value3, value4, value5, value6, value7, value8, value9, value10, value11, value12, value13, value14, value15, value16);
 		}
 

@@ -159,14 +159,15 @@ namespace Java.Interop
 
 		public unsafe JniObjectReference StartCreateInstance (string constructorSignature, Type declaringType, JniArgumentValue* parameters)
 		{
+			#pragma warning disable CS1717
+			parameters = parameters;    // Silence CA1801
+			#pragma warning restore CS1717
+
 			if (constructorSignature == null)
 				throw new ArgumentNullException (nameof (constructorSignature));
 			if (declaringType == null)
 				throw new ArgumentNullException (nameof (declaringType));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (constructorSignature, declaringType, parameters);
-			}
 			var r   = GetConstructorsForType (declaringType)
 				.JniPeerType
 				.AllocObject ();
@@ -197,9 +198,6 @@ namespace Java.Interop
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			var methods = GetConstructorsForType (self.GetType ());
 			var ctor    = methods.GetConstructor (constructorSignature);
 			JniEnvironment.InstanceMethods.CallNonvirtualVoidMethod (self.PeerReference, methods.JniPeerType.PeerReference, ctor, parameters);

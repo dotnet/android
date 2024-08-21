@@ -55,9 +55,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (peer == null)
 				throw new ArgumentNullException (nameof (peer));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return NewObject (peer, constructorSignature, declaringType, <#= methodArgs #>);
-			}
 			return peer.AllocObject (declaringType);
 		}
 
@@ -110,9 +107,6 @@ namespace Java.Interop.GenericMarshaler {
 			if (self == null)
 				throw new ArgumentNullException (nameof (self));
 
-			if (JniEnvironment.Runtime.NewObjectRequired) {
-				return;
-			}
 			_InvokeConstructor (peer, constructorSignature, self, <#= methodArgs #>);
 		}
 
