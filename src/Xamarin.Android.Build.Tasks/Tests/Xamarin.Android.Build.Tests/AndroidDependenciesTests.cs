@@ -194,12 +194,7 @@ namespace Xamarin.Android.Build.Tests
 
 		static string GetExpectedBuildToolsVersion ()
 		{
-			var propsPath = Path.Combine (XABuildPaths.TopDirectory, "src", "Xamarin.Android.Build.Tasks", "Xamarin.Android.Common.props.in");
-			var props = XElement.Load (propsPath);
-			var AndroidSdkBuildToolsVersion = props.Elements (MSBuildXmlns + "PropertyGroup")
-				.Elements (MSBuildXmlns + "AndroidSdkBuildToolsVersion")
-				.FirstOrDefault ();
-			return AndroidSdkBuildToolsVersion?.Value?.Trim ();
+			return XABuildConfig.AndroidSdkBuildToolsVersion;
 		}
 	}
 }
