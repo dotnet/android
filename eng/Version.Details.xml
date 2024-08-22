@@ -4,7 +4,7 @@
       <Uri>https://github.com/dotnet/sdk</Uri>
       <Sha>e9ed5742b22d3625f6625bde3e433e5557ec5830</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rc.1.24421.1" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rc.1.24421.1">
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>c4a79875fcb2c76b2e92ff50940d4ea9264e2eeb</Sha>
     </Dependency>
