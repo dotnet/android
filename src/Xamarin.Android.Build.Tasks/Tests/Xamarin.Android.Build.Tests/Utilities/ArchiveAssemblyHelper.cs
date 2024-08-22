@@ -64,8 +64,44 @@ namespace Xamarin.Android.Build.Tests
 				ret = ReadZipEntry (path, arch, uncompressIfNecessary);
 			}
 
-			ret?.Seek (0, SeekOrigin.Begin);
-			return ret;
+			if (ret == null) {
+				return null;
+			}
+
+			ret.Seek (0, SeekOrigin.Begin);
+			(ulong elfPayloadOffset, ulong elfPayloadSize, ELFPayloadError error) = Xamarin.Android.AssemblyStore.Utils.FindELFPayloadSectionOffsetAndSize (ret);
+
+			if (error != ELFPayloadError.None) {
+				string message = error switch {
+					ELFPayloadError.NotELF           => $"Entry '{path}' is not a valid ELF binary",
+					ELFPayloadError.LoadFailed       => $"Entry '{path}' could not be loaded",
+					ELFPayloadError.NotSharedLibrary => $"Entry '{path}' is not a shared ELF library",
+					ELFPayloadError.NotLittleEndian  => $"Entry '{path}' is not a little-endian ELF image",
+					ELFPayloadError.NoPayloadSection => $"Entry '{path}' does not contain the 'payload' section",
+					_                                => $"Unknown ELF payload section error for entry '{path}': {error}"
+				};
+				Console.WriteLine (message);
+			} else {
+				Console.WriteLine ($"Extracted content from ELF image '{path}'");
+			}
+
+			ret.Seek (0, SeekOrigin.Begin);
+			if (elfPayloadOffset == 0) {
+				return ret;
+			}
+
+			// Make a copy of JUST the payload section, so that it contains only the data the tests expect and support
+			var payload = new MemoryStream ();
+			var data = buffers.Rent (16384);
+			int nRead = 0;
+
+			while ((nRead = ret.Read (data, 0, data.Length)) > 0) {
+				payload.Write (data, 0, nRead);
+			}
+			payload.Flush ();
+			ret.Dispose ();
+
+			return payload;
 		}
 
 		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)

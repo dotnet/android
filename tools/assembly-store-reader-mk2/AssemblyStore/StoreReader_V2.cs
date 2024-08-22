@@ -3,9 +3,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-using ELFSharp.ELF;
-using ELFSharp.ELF.Sections;
-
 using Xamarin.Android.Tools;
 using Xamarin.Android.Tasks;
 
@@ -94,8 +91,20 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 		uint magic = reader.ReadUInt32 ();
 		if (magic == Utils.ELF_MAGIC) {
-			elfOffset = FindELFPayloadSectionOffset ();
-			if (elfOffset >= 0) {
+			ELFPayloadError error;
+			(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
+
+			if (error != ELFPayloadError.None) {
+				string message = error switch {
+					ELFPayloadError.NotELF           => $"Store '{StorePath}' is not a valid ELF binary",
+					ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
+					ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
+					ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
+					ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
+					_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
+				};
+				Log.Debug (message);
+			} else if (elfOffset >= 0) {
 				StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
 				magic = reader.ReadUInt32 ();
 			}
@@ -118,70 +127,6 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 		header = new Header (magic, version, entry_count, index_entry_count, index_size);
 		return true;
-	}
-
-	ulong FindELFPayloadSectionOffset ()
-	{
-		StoreStream.Seek (0, SeekOrigin.Begin);
-		Class elfClass = ELFReader.CheckELFType (StoreStream);
-		if (elfClass == Class.NotELF) {
-			Log.Debug ($"Store '{StorePath}' is not a valid ELF binary");
-			return 0;
-		}
-
-		if (!ELFReader.TryLoad (StoreStream, shouldOwnStream: false, out IELF? elf)) {
-			return LogErrorAndReturn ($"Store '{StorePath}' could not be loaded", elf);
-		}
-
-		if (elf.Type != FileType.SharedObject) {
-			return LogErrorAndReturn ($"Store '{StorePath}' is not a shared ELF library", elf);
-		}
-
-		if (elf.Endianess != ELFSharp.Endianess.LittleEndian) {
-			return LogErrorAndReturn ($"Store '{StorePath}' is not a little-endian ELF image", elf);
-		}
-
-		if (!elf.TryGetSection ("payload", out ISection? payloadSection)) {
-			return LogErrorAndReturn ($"Store '{StorePath}' does not contain the 'payload' section", elf);
-		}
-
-		bool is64 = elf.Machine switch {
-			Machine.ARM      => false,
-			Machine.Intel386 => false,
-
-			Machine.AArch64  => true,
-			Machine.AMD64    => true,
-
-			_                => throw new NotSupportedException ($"Unsupported ELF architecture '{elf.Machine}'")
-		};
-
-		ulong offset;
-		if (is64) {
-			offset = GetDataOffset64 ((Section<ulong>)payloadSection);
-		} else {
-			offset = GetDataOffset32 ((Section<uint>)payloadSection);
-		}
-
-		elf.Dispose ();
-		return offset;
-
-		ulong GetDataOffset64 (Section<ulong> payload)
-		{
-			return payload.Offset;
-		}
-
-		ulong GetDataOffset32 (Section<uint> payload)
-		{
-			return (ulong)payload.Offset;
-		}
-
-		ulong LogErrorAndReturn (string message, IELF? elf)
-		{
-			Log.Debug (message);
-			elf?.Dispose ();
-
-			return 0;
-		}
 	}
 
 	protected override void Prepare ()
