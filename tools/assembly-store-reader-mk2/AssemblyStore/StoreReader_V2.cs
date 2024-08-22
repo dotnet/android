@@ -157,17 +157,22 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 		ulong offset;
 		if (is64) {
-			offset = GetDataOffset<ulong> ((Section<ulong>)payloadSection);
+			offset = GetDataOffset64 ((Section<ulong>)payloadSection);
 		} else {
-			offset = GetDataOffset<uint> ((Section<uint>)payloadSection);
+			offset = GetDataOffset32 ((Section<uint>)payloadSection);
 		}
 
 		elf.Dispose ();
 		return offset;
 
-		ulong GetDataOffset<T> (Section<T> payload) where T: struct
+		ulong GetDataOffset64 (Section<ulong> payload)
 		{
-			return (ulong)(object)payload.Offset;
+			return payload.Offset;
+		}
+
+		ulong GetDataOffset32 (Section<uint> payload)
+		{
+			return (ulong)payload.Offset;
 		}
 
 		ulong LogErrorAndReturn (string message, IELF? elf)
