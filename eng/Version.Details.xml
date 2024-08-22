@@ -20,6 +20,11 @@
       <Uri>https://github.com/dotnet/cecil</Uri>
       <Sha>b9d928a9d65ed39b9257846e1b8e853cea609c00</Sha>
     </Dependency>
+    <!-- Previous .NET Android version -->
+    <Dependency Name="Microsoft.Android.Sdk.Windows" Version="1">
+      <Uri>https://github.com/dotnet/android</Uri>
+      <Sha></Sha>
+    </Dependency>
   </ProductDependencies>
   <ToolsetDependencies>
     <Dependency Name="Microsoft.DotNet.ApiCompat" Version="7.0.0-beta.22103.1">

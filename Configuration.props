@@ -43,8 +43,6 @@
     <DebugType Condition=" '$(DebugType)' == '' ">portable</DebugType>
     <Deterministic Condition=" '$(Deterministic)' == '' ">True</Deterministic>
     <LangVersion Condition=" '$(LangVersion)' == '' ">latest</LangVersion>
-    <AndroidNetPreviousVersion Condition=" '$(AndroidNetPreviousVersion)' == '' ">34.0.137</AndroidNetPreviousVersion>
-    <AndroidNetPreviousFeed Condition=" '$(AndroidNetPreviousFeed)' == '' ">https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-android-b0fd0113/nuget/v3/index.json</AndroidNetPreviousFeed>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(HostOS)' == '' ">
     <HostOS Condition="$([MSBuild]::IsOSPlatform('windows'))">Windows</HostOS>

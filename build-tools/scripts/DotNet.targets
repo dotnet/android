@@ -106,8 +106,6 @@
     <!-- dotnet workload install maui-android -->
     <ItemGroup>
       <_NuGetSources Condition=" '$(MauiUseLocalPacks)' == 'true' " Include="$(MauiPackagePath.TrimEnd('\'))" />
-      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet8/nuget/v3/index.json" />
-      <_NuGetSources Include="$(AndroidNetPreviousFeed)" />
       <_InstallArguments Include="--skip-manifest-update" />
       <_InstallArguments Include="--skip-sign-check" />
       <_InstallArguments Include="--verbosity diag" />
