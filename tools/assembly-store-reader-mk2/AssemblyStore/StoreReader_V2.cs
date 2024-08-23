@@ -84,6 +84,8 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
 
+	protected override ulong GetStoreStartDataOffset () => elfOffset;
+
 	protected override bool IsSupported ()
 	{
 		StoreStream.Seek (0, SeekOrigin.Begin);

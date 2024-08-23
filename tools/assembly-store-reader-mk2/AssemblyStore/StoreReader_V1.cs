@@ -31,4 +31,6 @@ class StoreReader_V1 : AssemblyStoreReader
 	protected override void Prepare ()
 	{
 	}
+
+	protected override ulong GetStoreStartDataOffset () => 0;
 }

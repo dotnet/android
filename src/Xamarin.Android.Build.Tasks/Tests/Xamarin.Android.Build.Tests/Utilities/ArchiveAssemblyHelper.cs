@@ -68,6 +68,7 @@ namespace Xamarin.Android.Build.Tests
 				return null;
 			}
 
+			ret.Flush ();
 			ret.Seek (0, SeekOrigin.Begin);
 			(ulong elfPayloadOffset, ulong elfPayloadSize, ELFPayloadError error) = Xamarin.Android.AssemblyStore.Utils.FindELFPayloadSectionOffsetAndSize (ret);
 
@@ -85,22 +86,34 @@ namespace Xamarin.Android.Build.Tests
 				Console.WriteLine ($"Extracted content from ELF image '{path}'");
 			}
 
-			ret.Seek (0, SeekOrigin.Begin);
 			if (elfPayloadOffset == 0) {
+				ret.Seek (0, SeekOrigin.Begin);
 				return ret;
 			}
 
 			// Make a copy of JUST the payload section, so that it contains only the data the tests expect and support
 			var payload = new MemoryStream ();
 			var data = buffers.Rent (16384);
+			int toRead = data.Length;
 			int nRead = 0;
+			ulong remaining = elfPayloadSize;
 
-			while ((nRead = ret.Read (data, 0, data.Length)) > 0) {
+			ret.Seek ((long)elfPayloadOffset, SeekOrigin.Begin);
+			while (remaining > 0 && (nRead = ret.Read (data, 0, toRead)) > 0) {
 				payload.Write (data, 0, nRead);
+				remaining -= (ulong)nRead;
+
+				if (remaining < (ulong)data.Length) {
+					// Make sure the last chunk doesn't gobble in more than we need
+					toRead = (int)remaining;
+				}
 			}
+			buffers.Return (data);
+
 			payload.Flush ();
 			ret.Dispose ();
 
+			payload.Seek (0, SeekOrigin.Begin);
 			return payload;
 		}
 
