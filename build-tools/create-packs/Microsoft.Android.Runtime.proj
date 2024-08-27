@@ -42,13 +42,15 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-native-tracing.so" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind_xamarin.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libruntime-base.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-java-interop.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-lz4.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-shared-bits.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release-static.a" />
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libpinvoke-override-dynamic.a" />
+
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libarchive-dso-stub.so" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind_xamarin-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libruntime-base-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-java-interop-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-lz4-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxa-shared-bits-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release-static-release.a" />
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libpinvoke-override-dynamic-release.a" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>

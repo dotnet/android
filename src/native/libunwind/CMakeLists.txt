@@ -324,6 +324,7 @@ add_library(
 )
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
+set_static_library_suffix(${LIB_NAME})
 
 list(APPEND LIBUNWIND_INCLUDE_DIRS
   ${LIBUNWIND_SOURCE_DIR}/include/tdep
