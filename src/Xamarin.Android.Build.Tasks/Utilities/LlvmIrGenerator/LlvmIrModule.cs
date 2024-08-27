@@ -43,9 +43,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		LlvmIrFunction? puts;
 		LlvmIrFunction? abort;
 
-		public LlvmIrModule ()
+		public readonly LlvmIrTypeCache TypeCache;
+
+		public LlvmIrModule (LlvmIrTypeCache cache)
 		{
-			metadataManager = new LlvmIrMetadataManager ();
+			TypeCache = cache;
+			metadataManager = new LlvmIrMetadataManager (cache);
 
 			// Only model agnostic items can be added here
 			LlvmIrMetadataItem flags = metadataManager.Add (LlvmIrKnownMetadata.LlvmModuleFlags);
@@ -330,7 +333,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		void PrepareStructure (StructureInstance structure)
 		{
 			foreach (StructureMemberInfo smi in structure.Info.Members) {
-				if (smi.IsIRStruct ()) {
+				if (smi.IsIRStruct (TypeCache)) {
 					object? instance = structure.Obj == null ? null : smi.GetValue (structure.Obj);
 					if (instance == null) {
 						continue;
@@ -341,7 +344,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					continue;
 				}
 
-				if (smi.Info.IsNativePointerToPreallocatedBuffer (out ulong bufferSize)) {
+				if (smi.Info.IsNativePointerToPreallocatedBuffer (TypeCache, out ulong bufferSize)) {
 					if (bufferSize == 0) {
 						bufferSize = structure.Info.GetBufferSizeFromProvider (smi, structure);
 					}
@@ -658,7 +661,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return (StructureInfo)sinfo;
 			}
 
-			var ret = new StructureInfo (this, t);
+			var ret = new StructureInfo (this, t, TypeCache);
 			structures.Add (t, ret);
 
 			return ret;

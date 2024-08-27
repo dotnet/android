@@ -46,15 +46,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				type != typeof (object);
 		}
 
-		public static bool IsIRStruct (this StructureMemberInfo smi)
+		public static bool IsIRStruct (this StructureMemberInfo smi, LlvmIrTypeCache cache)
 		{
 			Type type = smi.MemberType;
 
 			// type.IsStructure() handles checks for primitive types, enums etc
 			return
 				type != typeof(string) &&
-				!smi.Info.IsInlineArray () &&
-				!smi.Info.IsNativePointer () &&
+				!smi.Info.IsInlineArray (cache) &&
+				!smi.Info.IsNativePointer (cache) &&
 				(type.IsStructure () || type.IsClass);
 		}
 

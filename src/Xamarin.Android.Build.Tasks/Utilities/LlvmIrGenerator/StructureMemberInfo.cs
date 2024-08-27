@@ -27,7 +27,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool IsInlineArray   { get; }
 		public bool NeedsPadding    { get; }
 
-		public StructureMemberInfo (MemberInfo mi, LlvmIrModule module)
+		public StructureMemberInfo (MemberInfo mi, LlvmIrModule module, LlvmIrTypeCache cache)
 		{
 			Info = mi;
 
@@ -43,12 +43,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				IRType = $"%struct.{MemberType.GetShortName ()}";
 				// TODO: figure out how to get structure size if it isn't a pointer
 			} else {
-				IRType = LlvmIrGenerator.MapToIRType (MemberType, out size, out isPointer);
+				IRType = LlvmIrGenerator.MapToIRType (MemberType, cache, out size, out isPointer);
 			}
 			IsNativePointer = isPointer;
 
 			if (!IsNativePointer) {
-				IsNativePointer = mi.IsNativePointer ();
+				IsNativePointer = mi.IsNativePointer (cache);
 				if (IsNativePointer) {
 					IRType = LlvmIrGenerator.IRPointerType;
 				}
@@ -62,15 +62,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (IsNativePointer) {
 				size = 0; // Real size will be determined when code is generated and we know the target architecture
-			} else if (mi.IsInlineArray ()) {
+			} else if (mi.IsInlineArray (cache)) {
 				if (!MemberType.IsArray) {
 					throw new InvalidOperationException ($"Internal error: member {mi.Name} of structure {mi.DeclaringType.Name} is marked as inline array, but is not of an array type.");
 				}
 
 				IsInlineArray = true;
 				IsNativeArray = true;
-				NeedsPadding = mi.InlineArrayNeedsPadding ();
-				int arrayElements = mi.GetInlineArraySize ();
+				NeedsPadding = mi.InlineArrayNeedsPadding (cache);
+				int arrayElements = mi.GetInlineArraySize (cache);
 				if (arrayElements < 0) {
 					arrayElements = GetArraySizeFromProvider (MemberType.GetDataProvider (), mi.Name);
 				}
@@ -81,7 +81,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 				IRType = $"[{arrayElements} x {IRType}]";
 				ArrayElements = (ulong)arrayElements;
-			} else if (this.IsIRStruct ()) {
+			} else if (this.IsIRStruct (cache)) {
 				StructureInfo si = module.GetStructureInfo (MemberType);
 				size = si.Size;
 				Alignment = (ulong)si.MaxFieldAlignment;
