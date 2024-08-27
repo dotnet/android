@@ -62,13 +62,16 @@
         var jsonContent = File.ReadAllText(JsonFilePath);
         var startElement = "\"extends\" : [";
         var startIndex = jsonContent.IndexOf(startElement);
+        var endIndex = jsonContent.IndexOf("]");
         if (startIndex != -1) {
             startIndex += startElement.Length;
-            var endIndex = jsonContent.IndexOf("]", startIndex);
+            endIndex = jsonContent.IndexOf("]", startIndex);
             if (endIndex != -1) {
                 ExtendsElement = jsonContent.Substring(startIndex, endIndex - startIndex)?.Trim();
             }
         }
+        if (startIndex == -1 || endIndex == -1 || string.IsNullOrEmpty(ExtendsElement))
+            Log.LogError($"Failed to find extends element in workload json '{JsonFilePath}'");
         ]]>
       </Code>
     </Task>
@@ -102,6 +105,7 @@
     </PropertyGroup>
 
     <!-- Create empty workload to install dotnet/runtime dependencies, and then clean up the workload and metadata files from install -->
+    <Error Condition=" '$(AndroidWorkloadExtendsElement)' == '' " Text="Failed to find extends element in workload json" />
     <MakeDir Directories="$(_EmptyWorkloadDir)" />
     <WriteLinesToFile
         File="$(_EmptyWorkloadDir)WorkloadManifest.json"
