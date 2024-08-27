@@ -1068,7 +1068,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">
-    <value>Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id:version'.</value>
+    <value>A especificação do artefato Maven ''{0}'' é inválida. O formato correto é "group_id:artifact_id:version".</value>
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
