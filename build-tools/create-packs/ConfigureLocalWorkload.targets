@@ -1,0 +1,124 @@
+<Project>
+
+  <ItemGroup>
+    <_FrameworkListInputs  Include="$(MicrosoftAndroidRefPackDir)**" />
+    <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidDefaultTargetDotnetApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
+    <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidLatestStableApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
+    <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
+    <_RuntimeListInputs  Include="$(MicrosoftAndroidArmPackDir)**" />
+    <_RuntimeListInputs  Include="$(MicrosoftAndroidArm64PackDir)**" />
+    <_RuntimeListInputs  Include="$(MicrosoftAndroidx86PackDir)**" />
+    <_RuntimeListInputs  Include="$(MicrosoftAndroidx64PackDir)**" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidDefaultTargetDotnetApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestStableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_RuntimeListOutputs Include="@(AndroidSupportedTargetJitAbi->'$(BuildOutputDirectory)lib\packs\Microsoft.Android.Runtime.$(AndroidLatestUnstableApiLevel).%(AndroidRID)\$(AndroidPackVersion)\data\RuntimeList.xml')" AndroidRID="%(AndroidRID)" />
+    <_TemplatesInputs Include="$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\**" />
+    <_TemplatesOutputs Include="$(BuildOutputDirectory)lib\template-packs\microsoft.android.templates.$(AndroidPackVersion).nupkg" />
+  </ItemGroup>
+
+  <Target Name="CreateLocalRuntimeLists"
+      Inputs="$(MSBuildThisFile);@(_RuntimeListInputs)"
+      Outputs="@(_RuntimeListOutputs)">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj"
+        Properties="FrameworkListFile=%(_RuntimeListOutputs.Identity);AndroidRID=%(_RuntimeListOutputs.AndroidRID)"
+        Targets="_GetRuntimePackItems;_GenerateFrameworkListFile"
+    />
+  </Target>
+
+  <Target Name="CreateLocalFrameworkLists"
+      Inputs="$(MSBuildThisFile);@(_FrameworkListInputs)"
+      Outputs="@(_FrameworkListOutputs)">
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj"
+        Properties="FrameworkListFile=%(_FrameworkListOutputs.Identity)"
+        Targets="_GetTargetingPackItems;_GenerateFrameworkListFile"
+    />
+  </Target>
+
+  <Target Name="PackLocalTemplates"
+      Inputs="@(_TemplatesInputs)"
+      Outputs="@(_TemplatesOutputs)">
+    <ItemGroup>
+      <_PackProps Include="-v:n -c $(Configuration)" />
+      <_PackProps Include="-p:IncludeSymbols=False" />
+      <_PackProps Include="-p:OutputPath=$(BuildOutputDirectory)lib\template-packs" />
+      <_PackProps Include="-p:TemplatePackVersion=$(AndroidPackVersion)" />
+      <_PackProps Include="-p:PackageId=microsoft.android.templates" />
+    </ItemGroup>
+    <Exec Command="&quot;$(DotNetPreviewTool)&quot; pack @(_PackProps, ' ') &quot;$(XamarinAndroidSourcePath)src\Microsoft.Android.Templates\Microsoft.Android.Templates.csproj&quot;" />
+  </Target>
+
+  <UsingTask TaskName="GetAndroidWorkloadExtends" TaskFactory="RoslynCodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
+    <ParameterGroup>
+      <JsonFilePath ParameterType="System.String" Required="true" />
+      <ExtendsElement Output="true" ParameterType="System.String" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System" />
+      <Using Namespace="System.IO" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+        var jsonContent = File.ReadAllText(JsonFilePath);
+        var startElement = "\"extends\" : [";
+        var startIndex = jsonContent.IndexOf(startElement);
+        if (startIndex != -1) {
+            startIndex += startElement.Length;
+            var endIndex = jsonContent.IndexOf("]", startIndex);
+            if (endIndex != -1) {
+                ExtendsElement = jsonContent.Substring(startIndex, endIndex - startIndex)?.Trim();
+            }
+        }
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="InstallManifestAndDependencies"
+      DependsOnTargets="_GetDefaultPackageVersion">
+    <PropertyGroup>
+      <_LocalSdkManifestsFolder>$(BuildOutputDirectory)lib\sdk-manifests\$(DotNetSdkManifestsFolder)\</_LocalSdkManifestsFolder>
+      <_LocalAndroidManifestFolder>$(_LocalSdkManifestsFolder)microsoft.net.sdk.android\$(AndroidPackVersionLong)\</_LocalAndroidManifestFolder>
+      <_EmptyWorkloadDir>$(_LocalSdkManifestsFolder)android.deps.workload\0.0.1\</_EmptyWorkloadDir>
+    </PropertyGroup>
+
+    <MakeDir Directories="$(_LocalAndroidManifestFolder)" />
+    <MSBuild
+        Projects="$(MSBuildThisFileDirectory)Microsoft.NET.Sdk.Android.proj"
+        Properties="WorkloadManifestJsonPath=$(_LocalAndroidManifestFolder)WorkloadManifest.json;WorkloadManifestTargetsPath=$(_LocalAndroidManifestFolder)WorkloadManifest.targets;WorkloadVersion=$(AndroidPackVersion)"
+        Targets="_GenerateXAWorkloadContent"
+    />
+
+    <GetAndroidWorkloadExtends JsonFilePath="$(_LocalAndroidManifestFolder)WorkloadManifest.json">
+      <Output TaskParameter="ExtendsElement" PropertyName="AndroidWorkloadExtendsElement" />
+    </GetAndroidWorkloadExtends>
+
+    <PropertyGroup>
+      <_EmptyWorkloadJsonContent>
+<![CDATA[
+{"version": "0.0.1", "workloads": { "android-deps": { "extends" : [ $(AndroidWorkloadExtendsElement) ] } } }
+]]>
+      </_EmptyWorkloadJsonContent>
+    </PropertyGroup>
+
+    <!-- Create empty workload to install dotnet/runtime dependencies, and then clean up the workload and metadata files from install -->
+    <MakeDir Directories="$(_EmptyWorkloadDir)" />
+    <WriteLinesToFile
+        File="$(_EmptyWorkloadDir)WorkloadManifest.json"
+        Lines="$(_EmptyWorkloadJsonContent)"
+        Overwrite="true"
+    />
+    <Exec
+        Command="&quot;$(DotNetPreviewTool)&quot; workload install android-deps --configfile &quot;$(XamarinAndroidSourcePath)NuGet.config&quot; --skip-manifest-update --skip-sign-check --verbosity diag"
+        EnvironmentVariables="DOTNETSDK_WORKLOAD_MANIFEST_ROOTS=$(BuildOutputDirectory)lib\sdk-manifests"
+        WorkingDirectory="$(XamarinAndroidSourcePath)"
+    />
+     <RemoveDir Directories="$(_EmptyWorkloadDir)" />
+  </Target>
+
+  <PropertyGroup>
+    <ConfigureLocalWorkloadDependsOn Condition="'$(RunningOnCI)' != 'true'">CreateLocalFrameworkLists;CreateLocalRuntimeLists;InstallManifestAndDependencies;DeleteExtractedWorkloadPacks;PackLocalTemplates</ConfigureLocalWorkloadDependsOn>
+  </PropertyGroup>
+  <Target Name="ConfigureLocalWorkload" DependsOnTargets="$(ConfigureLocalWorkloadDependsOn)" />
+
+</Project>

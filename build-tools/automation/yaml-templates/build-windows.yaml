@@ -53,12 +53,12 @@ stages:
         projects: Xamarin.Android.sln
         arguments: '-c $(XA.Build.Configuration) -t:Prepare --no-restore -p:AutoProvision=true -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build-prepare.binlog'
 
-    # Build, pack .nupkgs, and extract workload packs to dotnet preview test directory
+    # Build Xamarin.Android and configure local workloads to test improved local build loop
     - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
       parameters:
         project: Xamarin.Android.sln
         arguments: >-
-          -t:BuildDotNet,PackDotNet -c $(XA.Build.Configuration) -v:n
+          -t:BuildDotNet -c $(XA.Build.Configuration) -v:n
           -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-build.binlog
         displayName: Build Solution
         continueOnError: false
@@ -75,10 +75,25 @@ stages:
         dotNetTestExtraArgs: --filter "TestCategory = SmokeTests"
 
     - task: BatchScript@1
-      displayName: Test dotnet-local.cmd
+      displayName: Test dotnet-local.cmd - create template
       inputs:
         filename: dotnet-local.cmd
-        arguments: build samples\HelloWorld\HelloWorld\HelloWorld.DotNet.csproj
+        arguments: new android -o $(Build.StagingDirectory)/LocalWorkloadTest
+
+    - task: BatchScript@1
+      displayName: Test dotnet-local.cmd - build template
+      inputs:
+        filename: dotnet-local.cmd
+        arguments: build -v:n $(Build.StagingDirectory)/LocalWorkloadTest
+
+    # Pack .nupkgs and extract workload packs to dotnet preview test directory
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: >-
+          -t:PackDotNet -c $(XA.Build.Configuration) -v:n
+          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\dotnet-pack.binlog
+        displayName: Test PackDotNet
 
     - template: /build-tools/automation/yaml-templates/upload-results.yaml
       parameters:
