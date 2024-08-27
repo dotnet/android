@@ -63,6 +63,15 @@ stages:
         displayName: Build Solution
         continueOnError: false
 
+    - template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
+      parameters:
+        project: Xamarin.Android.sln
+        arguments: >-
+          -t:ConfigureLocalWorkload -c $(XA.Build.Configuration) -v:n -p:RunningOnCI=false
+          -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\local-workload.binlog
+        displayName: Run ConfigureLocalWorkload target
+        continueOnError: false
+
     - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
       parameters:
         toolName: apkdiff
