@@ -1069,7 +1069,7 @@ In this message, the term "handheld app" means "app for handheld devices."
     </comment>
   </data>
   <data name="XA4249" xml:space="preserve">
-    <value>Maven artifact specification '{0}' is invalid. The correct format is 'group_id:artifact_id:version'.</value>
+    <value>Maven 成果物の仕様 '{0}' が無効です。正しい形式は 'group_id:artifact_id:version' です。</value>
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
