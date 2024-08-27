@@ -5,6 +5,7 @@ set(XA_RUNTIME_BASE_SOURCES
   android-system.cc
   cpu-arch-detect.cc
   logger.cc
+  monodroid-profiling.cc
   shared-constants.cc
   timing.cc
   timing-internal.cc

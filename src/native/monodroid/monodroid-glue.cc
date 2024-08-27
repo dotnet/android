@@ -1,6 +1,7 @@
 #include <array>
 #include <cctype>
 #include <cerrno>
+#include <concepts>
 #include <cstdarg>
 #include <cstdint>
 #include <cstdio>
@@ -40,6 +41,11 @@
 
 #include "mono_android_Runtime.h"
 
+#if defined (PERFETTO_ENABLED)
+#include <perfetto.h>
+#include "perfetto_support.hh"
+#endif
+
 #if defined (DEBUG)
 #include <arpa/inet.h>
 #include <sys/socket.h>
@@ -52,6 +58,7 @@
 #include "embedded-assemblies.hh"
 #include "monodroid-glue.hh"
 #include "monodroid-glue-internal.hh"
+#include "monodroid-profiling.hh"
 #include "globals.hh"
 #include "xamarin-app.hh"
 #include "timing.hh"
@@ -78,7 +85,7 @@ MonoCoreRuntimeProperties MonodroidRuntime::monovm_core_properties = {
 void
 MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
-	JNIEnv* env;
+	JNIEnv* env = nullptr;
 	int r = osBridge.get_jvm ()->AttachCurrentThread (&env, nullptr);
 
 	if (r != JNI_OK) {
@@ -92,6 +99,10 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 void
 MonodroidRuntime::thread_end ([[maybe_unused]] MonoProfiler *prof, [[maybe_unused]] uintptr_t tid)
 {
+#if defined(PERFETTO_ENABLED)
+	perfetto::TrackEvent::Flush ();
+#endif
+
 	int r = osBridge.get_jvm ()->DetachCurrentThread ();
 	if (r != JNI_OK) {
 #if DEBUG
@@ -521,6 +532,14 @@ MonodroidRuntime::set_debug_options (void)
 void
 MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unused]] dynamic_local_string<PROPERTY_VALUE_BUFFER_LEN>& runtime_args)
 {
+#if defined(PERFETTO_ENABLED)
+	log_info (LOG_DEFAULT, "Trace event for mono_runtime_init");
+	TRACE_EVENT_BEGIN(
+		PerfettoConstants::MonoRuntimeCategory.data (),
+		"mono_runtime_init",
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
+	);
+#endif
 #if defined (DEBUG)
 	RuntimeOptions options{};
 	int64_t cur_time;
@@ -635,10 +654,6 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		Util::set_world_accessable (jit_log_path.get ());
 	}
 
-	profiler_handle = mono_profiler_create (nullptr);
-	mono_profiler_set_thread_started_callback (profiler_handle, thread_start);
-	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
-
 	if (log_methods) [[unlikely]]{
 		jit_time.mark_start ();
 		mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
@@ -695,6 +710,13 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		xamarin_app_init (env, get_function_pointer_at_startup);
 	}
 #endif // def RELEASE && def ANDROID && def NET
+
+#if defined(PERFETTO_ENABLED)
+	TRACE_EVENT_END(
+		PerfettoConstants::MonoRuntimeCategory.data (),
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
+	);
+#endif
 }
 
 void
@@ -1366,12 +1388,95 @@ MonodroidRuntime::install_logging_handlers ()
 	mono_trace_set_printerr_handler (mono_log_standard_streams_handler);
 }
 
+#if defined(PERFETTO_ENABLED)
+void
+MonodroidRuntime::perfetto_init () noexcept
+{
+	perfetto::TracingInitArgs args;
+	args.backends = perfetto::kSystemBackend;
+
+	perfetto::Tracing::Initialize (args);
+	perfetto::TrackEvent::Register ();
+}
+#endif // def PERFETTO_ENABLED
+
+void
+MonodroidRuntime::timing_init_extended () noexcept
+{
+	mono_profiler_set_assembly_loading_callback (profiler_handle, MonodroidProfiling::prof_assembly_loading);
+	mono_profiler_set_assembly_loaded_callback (profiler_handle, MonodroidProfiling::prof_assembly_loaded);
+
+	mono_profiler_set_class_loading_callback (profiler_handle, MonodroidProfiling::prof_class_loading);
+	mono_profiler_set_class_loaded_callback (profiler_handle, MonodroidProfiling::prof_class_loaded);
+
+	mono_profiler_set_method_begin_invoke_callback (profiler_handle, MonodroidProfiling::prof_method_begin_invoke);
+	mono_profiler_set_method_end_invoke_callback (profiler_handle, MonodroidProfiling::prof_method_end_invoke);
+}
+
+void
+MonodroidRuntime::timing_init_verbose () noexcept
+{
+	mono_profiler_set_jit_begin_callback (profiler_handle, jit_begin);
+	mono_profiler_set_jit_done_callback (profiler_handle, jit_done);
+	mono_profiler_set_jit_failed_callback (profiler_handle, jit_failed);
+
+	mono_profiler_set_monitor_contention_callback (profiler_handle, MonodroidProfiling::prof_monitor_contention);
+	mono_profiler_set_monitor_acquired_callback (profiler_handle, MonodroidProfiling::prof_monitor_acquired);
+}
+
+void
+MonodroidRuntime::timing_init_extreme () noexcept
+{
+	mono_profiler_set_vtable_loading_callback (profiler_handle, MonodroidProfiling::prof_vtable_loading);
+	mono_profiler_set_vtable_loaded_callback (profiler_handle, MonodroidProfiling::prof_vtable_loaded);
+
+	mono_profiler_set_image_loading_callback (profiler_handle, MonodroidProfiling::prof_image_loading);
+	mono_profiler_set_image_loaded_callback (profiler_handle, MonodroidProfiling::prof_image_loaded);
+}
+
+[[gnu::flatten]] void
+MonodroidRuntime::timing_init () noexcept
+{
+#if !defined(PERFETTO_ENABLED)
+	if (!FastTiming::enabled () || FastTiming::mode () == ProfilingMode::Bare) {
+	    return;
+	}
+#endif
+	switch (FastTiming::mode ()) {
+		case ProfilingMode::Extreme:
+			timing_init_extreme ();
+			[[fallthrough]];
+
+		case ProfilingMode::Verbose:
+			timing_init_verbose ();
+			[[fallthrough]];
+
+#if defined(PERFETTO_ENABLED)
+		case ProfilingMode::Bare:
+#endif
+		case ProfilingMode::Extended:
+			timing_init_extended ();
+			break;
+
+		default:
+			// ignored
+			break;
+	}
+}
+
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
                                                           jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
+#if defined(PERFETTO_ENABLED)
+	TRACE_EVENT_BEGIN(
+		PerfettoConstants::MonoRuntimeCategory.data (),
+		"initInternal",
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
+	);
+#endif
 	char *mono_log_mask_raw = nullptr;
 	char *mono_log_level_raw = nullptr;
 
@@ -1382,6 +1487,11 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	// If fast logging is disabled, log messages immediately
 	FastTiming::initialize ((Logger::log_timing_categories() & LogTimingCategories::FastBare) != LogTimingCategories::FastBare);
+
+	profiler_handle = mono_profiler_create (nullptr);
+	mono_profiler_set_thread_started_callback (profiler_handle, thread_start);
+	mono_profiler_set_thread_stopped_callback (profiler_handle, thread_end);
+	timing_init ();
 
 	size_t total_time_index;
 	if (FastTiming::enabled ()) [[unlikely]] {
@@ -1538,12 +1648,22 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	}
 #endif // def RELEASE && def ANDROID && def NET
 	MonodroidState::mark_startup_done ();
+#if defined(PERFETTO_ENABLED)
+	TRACE_EVENT_END(
+		PerfettoConstants::MonoRuntimeCategory.data (),
+		PerfettoSupport::get_name_annotated_thread_track<PerfettoTrackId::MonodroidRuntime> ()
+	);
+	perfetto::TrackEvent::Flush ();
+#endif
 }
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad (JavaVM *vm, void *reserved)
 {
 	Util::initialize ();
+#if defined(PERFETTO_ENABLED)
+	MonodroidRuntime::perfetto_init ();
+#endif
 	return monodroidRuntime.Java_JNI_OnLoad (vm, reserved);
 }
 

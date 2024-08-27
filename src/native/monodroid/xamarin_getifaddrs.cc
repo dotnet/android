@@ -279,7 +279,7 @@ typedef void (*freeifaddrs_impl_fptr)(struct _monodroid_ifaddrs *ifa);
 static getifaddrs_impl_fptr getifaddrs_impl = NULL;
 static freeifaddrs_impl_fptr freeifaddrs_impl = NULL;
 static bool initialized;
-static xamarin::android::mutex init_lock;
+static mutex_t init_lock;
 
 void
 _monodroid_getifaddrs_init ()
@@ -291,7 +291,7 @@ int
 _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap)
 {
 	if (!initialized) {
-		std::lock_guard<xamarin::android::mutex> lock (init_lock);
+		lock_guard_t<mutex_t> lock (init_lock);
 		if (!initialized) {
 			_monodroid_getifaddrs_init ();
 			initialized = true;

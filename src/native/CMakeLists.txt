@@ -63,12 +63,21 @@ endif()
 
 option(ENABLE_CLANG_ASAN "Enable the clang AddressSanitizer support" OFF)
 option(ENABLE_CLANG_UBSAN "Enable the clang UndefinedBehaviorSanitizer support" OFF)
+option(ENABLE_PERFETTO "Enable use of perfetto." OFF)
+
+if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
+  message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
+endif()
 
 if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
   message(FATAL_ERROR "Both ASAN and UBSAN builds cannot be enabled at the same time")
 endif()
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
+  if(ENABLE_PERFETTO)
+    message(FATAL_ERROR "Perfetto and analyzer builds cannot be enabled at the same time")
+  endif()
+
   set(STRIP_DEBUG_DEFAULT OFF)
   set(ANALYZERS_ENABLED ON)
 else()
@@ -88,6 +97,8 @@ if(ENABLE_CLANG_ASAN)
   set(STATIC_LIB_NAME_SUFFIX "-asan")
 elseif(ENABLE_CLANG_UBSAN)
   set(STATIC_LIB_NAME_SUFFIX "-ubsan")
+elseif(ENABLE_PERFETTO)
+  set(STATIC_LIB_NAME_SUFFIX "-perfetto")
 endif()
 
 if(DEBUG_BUILD)
@@ -115,11 +126,11 @@ else()
   set(USES_LIBSTDCPP True)
 endif()
 
-if(ANALYZERS_ENABLED)
-  message(STATUS "Analyzers enabled")
+if(ANALYZERS_ENABLED OR ENABLE_PERFETTO)
+  message(STATUS "Analyzers or perfetto enabled")
   set(SHARED_LIB_NAME xa::shared-no-abi)
 else()
-  message(STATUS "NO analyzers enabled")
+  message(STATUS "NO analyzers or perfetto enabled")
   set(SHARED_LIB_NAME xa::shared)
 endif()
 #
@@ -181,6 +192,23 @@ macro(xa_add_compile_definitions TARGET)
     _REENTRANT
     PLATFORM_ANDROID
   )
+
+  if(ENABLE_PERFETTO)
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      PERFETTO_ENABLED
+      USES_LIBSTDCPP
+    )
+  endif()
+
+  if(ENABLE_PERFETTO OR ANALYZERS_ENABLED)
+    target_compile_definitions(
+      ${TARGET}
+      PRIVATE
+      USES_LIBSTDCPP
+    )
+  endif()
 
   if(ANDROID_ABI MATCHES "^(arm64-v8a|x86_64)")
     target_compile_definitions(
@@ -472,6 +500,11 @@ endmacro()
 
 add_subdirectory(libunwind)
 add_subdirectory(lz4)
+
+if(ENABLE_PERFETTO)
+  add_subdirectory(perfetto)
+endif()
+
 add_subdirectory(libstub)
 add_subdirectory(shared)
 add_subdirectory(java-interop)
