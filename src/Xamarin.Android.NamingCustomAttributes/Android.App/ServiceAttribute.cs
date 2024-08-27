@@ -20,6 +20,8 @@ public sealed partial class ServiceAttribute : Attribute, Java.Interop.IJniNameP
 	{
 	}
 
+	public string? Description { get; set; }
+
 	public bool DirectBootAware { get; set; }
 
 	public bool Enabled { get; set; }
@@ -47,6 +49,12 @@ public sealed partial class ServiceAttribute : Attribute, Java.Interop.IJniNameP
 
 	static ServiceAttribute ()
 	{
+		mapping.Add (
+			member: "Description",
+			attributeName: "description",
+			getter: self => self.Description,
+			setter: (self, value) => self.Description = (string?) value
+		);
 		mapping.Add (
 			member: "DirectBootAware",
 			attributeName: "directBootAware",

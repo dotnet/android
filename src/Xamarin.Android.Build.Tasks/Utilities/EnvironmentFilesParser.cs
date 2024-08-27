@@ -11,7 +11,6 @@ namespace Xamarin.Android.Tasks
 	class EnvironmentFilesParser
 	{
 		public bool BrokenExceptionTransitions       { get; set; }
-		public bool HavebuildId                      { get; private set; }
 		public bool HaveHttpMessageHandler           { get; private set; }
 		public bool HaveLogLevel                     { get; private set; }
 		public bool HaveMonoDebug                    { get; private set; }
@@ -46,8 +45,6 @@ namespace Xamarin.Android.Tasks
 							log.LogCodedWarning ("XA2000", Properties.Resources.XA2000_gcParams_bridgeImpl);
 						}
 					}
-					if (lineToWrite.StartsWith ("XAMARIN_BUILD_ID=", StringComparison.Ordinal))
-						HavebuildId = true;
 					if (lineToWrite.StartsWith ("MONO_DEBUG=", StringComparison.Ordinal)) {
 						HaveMonoDebug = true;
 						if (sequencePointsMode != SequencePointsMode.None && !lineToWrite.Contains ("gen-compact-seq-points"))

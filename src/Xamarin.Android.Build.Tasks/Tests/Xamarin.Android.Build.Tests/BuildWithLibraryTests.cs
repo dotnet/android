@@ -152,7 +152,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 			libB.OtherBuildItems.Add (new AndroidItem.AndroidNativeLibrary (default (Func<string>)) {
 				Update = () => "libfoo.so",
-				MetadataValues = "Link=x86\\libfoo.so",
+				MetadataValues = "Link=x86_64\\libfoo.so",
 				BinaryContent = () => Array.Empty<byte> (),
 			});
 			libB.AddReference (libC);
@@ -183,7 +183,7 @@ namespace Xamarin.Android.Build.Tests
 				aar.AssertContainsEntry (aarPath, "libs/A1AFA985571E728E.jar");
 				aar.AssertContainsEntry (aarPath, $"libs/{projectJarHash}.jar");
 				aar.AssertContainsEntry (aarPath, "jni/arm64-v8a/libfoo.so");
-				aar.AssertContainsEntry (aarPath, "jni/x86/libfoo.so");
+				aar.AssertContainsEntry (aarPath, "jni/x86_64/libfoo.so");
 				// proguard.txt from Library C should not flow to Library B and "double"
 				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryB");
 			}
@@ -223,7 +223,7 @@ namespace Xamarin.Android.Build.Tests
 				apk.AssertContainsEntry (aarPath, "res/layout/mylayout.xml");
 				apk.AssertContainsEntry (apkPath, "res/raw/bar.txt");
 				apk.AssertContainsEntry (apkPath, "lib/arm64-v8a/libfoo.so");
-				apk.AssertContainsEntry (apkPath, "lib/x86/libfoo.so");
+				apk.AssertContainsEntry (apkPath, "lib/x86_64/libfoo.so");
 			}
 
 			// Check classes.dex contains foo.jar
@@ -242,7 +242,7 @@ namespace Xamarin.Android.Build.Tests
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
 			// Check environment variable
-			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86", required: true);
+			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
 			Assert.IsTrue (environmentVariables.TryGetValue (env_var, out string actual), $"Environment should contain {env_var}");
 			Assert.AreEqual (env_val, actual, $"{env_var} should be {env_val}");

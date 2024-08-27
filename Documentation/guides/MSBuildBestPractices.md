@@ -19,22 +19,7 @@ Waiting for debugger to attach (dotnet PID 13001).  Press enter to continue...
 
 You can then use VS or VSCode to attach to this process and debug you tasks.
 
-In the case of .NET for Android we need to do a couple of thing first though. Firstly
-we need to disable the use of `ILRepacker` on the `Xamarin.Android.Build.Tasks`
-assembly. This is because `ILRepacker` does NOT handle debug symbols very well.
-Assemblies it generates seem to be JIT optimized so the debugger will not load
-the symbols. A new MSBuild property has been introduced to disable this feature
-while debugging. `_ILRepackEnabled` can be set as an environment variable which
-MSBuild will pickup. You will also need to build the `Debug` Configuration.
-
-```dotnetcli
-export CONFIGURATION=Debug
-make prepare && _ILRepackEnabled=false make jenkins
-```
-
-This will disable the `ILRepacker` for the build.
-
-You can then start your test app with the `dotnet-local` script (so it uses your build)
+You can start your test app with the `dotnet-local` script (so it uses your build).
 
 ### [MacOS](#tab/macos)
 

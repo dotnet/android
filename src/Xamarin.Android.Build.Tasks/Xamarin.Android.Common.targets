@@ -125,6 +125,9 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props"
+	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props')"/>
+
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.props"
 	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.props')" />
 
@@ -907,13 +910,18 @@ because xbuild doesn't support framework reference assemblies.
 		<AndroidLinkResources Condition="'$(AndroidLinkResources)' == '' And '$(AndroidIncludeDebugSymbols)' != 'True'">False</AndroidLinkResources>
 		<_AndroidBuildPropertiesCacheExists Condition=" Exists('$(_AndroidBuildPropertiesCache)') ">True</_AndroidBuildPropertiesCacheExists>
 		<_NuGetAssetsFile      Condition=" Exists('$(ProjectAssetsFile)') ">$(ProjectAssetsFile)</_NuGetAssetsFile>
-		<_NuGetAssetsFile      Condition=" Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
+		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
-		<_NuGetAssetsTimestamp Condition=" '$(_NuGetAssetsFile)' != '' ">$([System.IO.File]::GetLastWriteTime('$(_NuGetAssetsFile)').Ticks)</_NuGetAssetsTimestamp>
 		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">mvid</_TypeMapKind>
 		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' == 'True' ">strings-files</_TypeMapKind>
 		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' != 'True' ">strings-asm</_TypeMapKind>
 	</PropertyGroup>
+	<GetFileHash
+				Condition=" Exists('$(_NuGetAssetsFile)') "
+				Files="$(_NuGetAssetsFile)"
+		>
+			<Output TaskParameter="Items" ItemName="_NuGetAssetsFileHash" />
+	</GetFileHash>
 	<ItemGroup>
 		<!-- List of items we want to trigger a build if changed -->
 		<_PropertyCacheItems Include="AotAssemblies=$(AotAssemblies)" />
@@ -942,7 +950,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_PropertyCacheItems Include="OS=$(OS)" />
 		<_PropertyCacheItems Include="AndroidIncludeDebugSymbols=$(AndroidIncludeDebugSymbols)" />
 		<_PropertyCacheItems Include="AndroidPackageNamingPolicy=$(AndroidPackageNamingPolicy)" />
-		<_PropertyCacheItems Include="_NuGetAssetsTimestamp=$(_NuGetAssetsTimestamp)" />
+		<_PropertyCacheItems Include="_NuGetAssetsFileHash=%(_NuGetAssetsFileHash.FileHash)" />
 		<_PropertyCacheItems Include="TypeMapKind=$(_TypeMapKind)" />
 		<_PropertyCacheItems Include="AndroidManifestPlaceholders=$(AndroidManifestPlaceholders)" />
 		<_PropertyCacheItems Include="ProjectFullPath=$(MSBuildProjectFullPath)" />
@@ -1444,7 +1452,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+    Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1691,7 +1699,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);$(MSBuildProjectFile);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -1725,17 +1733,9 @@ because xbuild doesn't support framework reference assemblies.
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
   >
-    <Output TaskParameter="BuildId" PropertyName="_XamarinBuildId" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
-  <WriteLinesToFile
-      File="$(_AndroidBuildIdFile)"
-      Lines="$(_XamarinBuildId)"
-      Overwrite="true"
-      WriteOnlyWhenDifferent="true"
-  />
   <ItemGroup>
-    <FileWrites Include="$(_AndroidBuildIdFile)" />
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
   </ItemGroup>
 </Target>
@@ -2544,7 +2544,6 @@ because xbuild doesn't support framework reference assemblies.
 	<Delete Files="$(_AndroidAapt2VersionFile)" />
 	<Delete Files="$(IntermediateOutputPath)R.txt" />
 	<Delete Files="$(_AndroidMainDexListFile)" />
-	<Delete Files="$(_AndroidBuildIdFile)" />
 	<Delete Files="$(_ResolvedUserAssembliesHashFile)" />
 </Target>
 

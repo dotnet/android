@@ -3,10 +3,13 @@
   <PropertyGroup>
     <Authors>Microsoft</Authors>
     <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
-    <PackageProjectUrl>https://github.com/dotnet/android</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dotnet/android</RepositoryUrl>
+    <PackageProjectUrl>https://dot.net</PackageProjectUrl>
+    <Owners>microsoft,dotnetframework</Owners>
     <NuGetLicense Condition="Exists('$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt')">$(XamarinAndroidSourcePath)external\monodroid\tools\scripts\License.txt</NuGetLicense>
     <NuGetLicense Condition=" '$(NuGetLicense)' == '' or '$(PackageId)' != 'Microsoft.Android.Sdk.$(HostOS)' ">$(XamarinAndroidSourcePath)LICENSE.TXT</NuGetLicense>
     <PackageLicenseFile>LICENSE.TXT</PackageLicenseFile>
+    <PackageIcon>Icon.png</PackageIcon>
     <BeforePack>_GetLicense;$(BeforePack)</BeforePack>
   </PropertyGroup>
   <Target Name="_GetLicense">
@@ -19,6 +22,7 @@
     <ItemGroup>
       <_PackageFiles Include="$(IntermediateOutputPath)$(PackageLicenseFile)" PackagePath="\" />
       <_PackageFiles Include="$(XAInstallPrefix)THIRD-PARTY-NOTICES.TXT" PackagePath="\" />
+      <_PackageFiles Include="$(MSBuildThisFileDirectory)Icon.png" PackagePath="\" />
     </ItemGroup>
   </Target>
 </Project>

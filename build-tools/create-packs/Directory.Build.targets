@@ -39,7 +39,7 @@
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
-      <PackageVersion>$(AndroidPackVersionLong)+sha.$(XAVersionHash)</PackageVersion>
+      <PackageVersion>$(AndroidPackVersionLong)</PackageVersion>
     </PropertyGroup>
   </Target>
 
@@ -120,9 +120,6 @@
     </PropertyGroup>
     <ItemGroup>
       <_NuGetSources Include="$(OutputPath.TrimEnd('\'))" />
-      <!-- This allows us to install our older Android .NET packs -->
-      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet7/nuget/v3/index.json" />
-      <_NuGetSources Include="https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet6/nuget/v3/index.json" />
       <_PreviewPacks Condition=" '$(AndroidLatestStableApiLevel)' != '$(AndroidLatestUnstableApiLevel)' " Include="$(XamarinAndroidSourcePath)bin\Build$(Configuration)\nuget-unsigned\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel).*.nupkg" />
       <_InstallArguments Include="android" />
       <_InstallArguments Include="android-$(AndroidLatestUnstableApiLevel)" Condition=" '@(_PreviewPacks->Count())' != '0' " />
@@ -163,7 +160,7 @@
     <RemoveDir Directories="@(_PackFoldersToDelete)" />
   </Target>
 
-  <!-- https://github.com/dotnet/arcade/blob/efc3da96e5ac110513e92ebd9ef87c73f44d8540/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
+  <!-- https://github.com/dotnet/arcade/blob/00d6decc59f5030c2399a64fd3e4f6e8e11bacca/Documentation/DependencyFlowOnboardingWithoutArcade.md -->
   <Target Name="PushManifestToBuildAssetRegistry" 
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
@@ -192,7 +189,7 @@
       <ManifestBuildData Include="AzureDevOpsBranch=$(BUILD_SOURCEBRANCH)" />
     </ItemGroup>
 
-    <PushToAzureDevOpsArtifacts
+    <PushToBuildStorage
         ItemsToPush="@(ItemsToPush)"
         IsStableBuild="$(IsStableBuild)"
         ManifestBuildData="@(ManifestBuildData)"

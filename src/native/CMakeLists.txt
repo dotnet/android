@@ -101,6 +101,12 @@ elseif(ENABLE_PERFETTO)
   set(STATIC_LIB_NAME_SUFFIX "-perfetto")
 endif()
 
+if(DEBUG_BUILD)
+  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-debug")
+else()
+  set(STATIC_LIB_NAME_SUFFIX "${STATIC_LIB_NAME_SUFFIX}-release")
+endif()
+
 if(USE_CCACHE)
   if(CMAKE_CXX_COMPILER MATCHES "/ccache/")
     message(STATUS "ccache: compiler already uses ccache")

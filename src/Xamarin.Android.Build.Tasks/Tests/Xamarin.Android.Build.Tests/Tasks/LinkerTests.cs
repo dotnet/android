@@ -661,6 +661,7 @@ public abstract class MyRunner {
 }"
 			});
 			var proj = new XamarinAndroidApplicationProject { IsRelease = true, ProjectName = "App1" };
+			proj.SetRuntimeIdentifiers(["armeabi-v7a", "arm64-v8a", "x86", "x86_64"]);
 			proj.References.Add(new BuildItem.ProjectReference (Path.Combine ("..", "Lib1", "Lib1.csproj"), "Lib1"));
 			proj.MainActivity = proj.DefaultMainActivity.Replace (
 				"base.OnCreate (bundle);",

@@ -539,7 +539,7 @@ extends:
         dependsOn:
         - nuget_convert
         - sign_net_linux
-        condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
+        condition: and(or(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.nuget_convert.result, 'SucceededWithIssues')), or(eq(dependencies.sign_net_linux.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'SucceededWithIssues')))
         timeoutInMinutes: 90
         pool:
           name: AzurePipelines-EO
@@ -547,15 +547,12 @@ extends:
           os: windows
         workspace:
           clean: all
-        variables:
-        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
-          - group: Publish-Build-Assets
         templateContext:
           outputs:
           - output: artifactsDrop
             dropServiceURI: https://devdiv.artifacts.visualstudio.com/DefaultCollection
             buildNumber: $(ReleaseDropPrefix)/symbols
-            dropMetadataContainerName: DropMetadata-$(Build.BuildId)-symbols-$(System.JobAttempt)
+            dropMetadataContainerName: DropMetadata-shipping-symbols
             sourcePath: $(Build.StagingDirectory)\symbols
             retentionDays: 120
             toLowerCase: false
@@ -563,6 +560,12 @@ extends:
         - checkout: self
           clean: true
           submodules: recursive
+
+        - task: UseDotNet@2
+          displayName: Install .NET 9.x
+          inputs:
+            version: 9.x
+            includePreviewVersions: true
 
         # Download symbols to be published to the symbols artifact drop declared above
         - task: DownloadPipelineArtifact@2
@@ -572,7 +575,7 @@ extends:
 
         - task: DownloadPipelineArtifact@2
           inputs:
-            artifactName: DropMetadata-$(Build.BuildId)-nugets-$(System.JobAttempt)
+            artifactName: DropMetadata-shipping-nugets
             downloadPath: $(Build.StagingDirectory)\metadata
           displayName: Download nugets drop metadata
 
@@ -597,25 +600,33 @@ extends:
             arguments: -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\bootstrap.binlog
           condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-        - task: DotNetCoreCLI@2
-          displayName: generate and publish BAR manifest
-          inputs:
-            projects: $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
-            arguments: >-
-              -t:PushManifestToBuildAssetRegistry
-              -p:BuildAssetRegistryToken=$(MaestroAccessToken)
-              -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
-              -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+        - ${{ if eq(variables['MicroBuildSignType'], 'Real') }}:
+          - task: AzureCLI@2
+            displayName: generate and publish BAR manifest
+            inputs:
+              azureSubscription: "Darc: Maestro Production"
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript: >-
+                dotnet build $(System.DefaultWorkingDirectory)\build-tools\create-packs\Microsoft.Android.Sdk.proj
+                -t:PushManifestToBuildAssetRegistry
+                -p:OutputPath=$(Build.StagingDirectory)\nuget-signed\
+                -c $(XA.Build.Configuration) -bl:$(System.DefaultWorkingDirectory)\bin\Build$(XA.Build.Configuration)\push-bar-manifest.binlog
+            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
-        - powershell: |
-            $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
-            $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
-            $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
-            & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
-            & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --publishing-infra-version 3 --password $(MaestroAccessToken) --azdev-pat $(publishing-dnceng-devdiv-code-r-build-re)
-          displayName: add build to default darc channel
-          condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
+          - task: AzureCLI@2
+            inputs:
+              azureSubscription: "Darc: Maestro Production"
+              scriptType: ps
+              scriptLocation: inlineScript
+              inlineScript: |
+                $versionEndpoint = 'https://maestro.dot.net/api/assets/darc-version?api-version=2019-01-16'
+                $darcVersion = $(Invoke-WebRequest -Uri $versionEndpoint -UseBasicParsing).Content
+                $arcadeServicesSource = 'https://pkgs.dev.azure.com/dnceng/public/_packaging/dotnet-eng/nuget/v3/index.json'
+                & dotnet tool update microsoft.dotnet.darc --version "$darcVersion" --add-source "$arcadeServicesSource" --tool-path $(Agent.ToolsDirectory)\darc -v n
+                & $(Agent.ToolsDirectory)\darc\darc add-build-to-channel --default-channels --id $(BARBuildId) --ci --publishing-infra-version 3 --azdev-pat $(System.AccessToken)
+            displayName: add build to default darc channel
+            condition: and(succeeded(), eq('${{ parameters.pushXAPackagesToMaestro }}', 'true'))
 
         - template: build-tools\automation\yaml-templates\upload-results.yaml@self
           parameters:

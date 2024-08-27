@@ -299,7 +299,7 @@ see the [net6-samples][net6-samples] repo.
 
 ## Package Versioning Scheme
 
-This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX]+sha.1b2c3d4`.
+This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prereleaseX].CommitDistance`.
 
 * Major: The highest stable API level, such as 30. On Apple platforms, this is the major OS version.
 * Minor: Always 0 for Android. On Apple platforms, this is the minor OS version.
@@ -327,24 +327,6 @@ This is the package version scheme: `OS-Major.OS-Minor.InternalRelease[-prerelea
           referencing `*-android-r.beta.*`
         * It's still possible to sign up for all `android-r` builds, by
           referencing `*-ci.android-r.*`
-* Build metadata: Required Hash
-    * This is `sha.` + the short commit hash.
-        * Use the short hash because the long hash is quite long and
-          cumbersome. This leaves the complete version open for duplication,
-          but this is extremely unlikely.
-    * Example: `30.0.100+sha.1a2b3c`
-    * Example (CI build): `30.0.100-ci.master.1234+sha.1a2b3c`
-    * Since the build metadata is required for all builds, we're able to
-      recognize incomplete version numbers and determine if a particular
-      version string refers to a stable version or not.
-        * Example: `30.0.100`: incomplete version
-        * Example: `30.0.100+sha.1a2b3c`: stable
-        * Example: `30.0.100-ci.d17-0.1234+sha.1a2b3c`: CI build
-        * Example: `30.0.100-android-r.beta.1+sha.1a2b3c`: official
-          preview
-            * Technically it's possible to remove the prerelease part, but
-              we’d still be able to figure out it’s not a stable version by
-              using the commit hash.
 
 
 [0]: https://github.com/dotnet/installer#installers-and-binaries

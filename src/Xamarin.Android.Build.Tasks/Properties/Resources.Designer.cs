@@ -1375,6 +1375,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Maven artifact specification &apos;{0}&apos; is invalid. The correct format is &apos;group_id:artifact_id:version&apos;..
+        /// </summary>
+        public static string XA4249 {
+            get {
+                return ResourceManager.GetString("XA4249", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>
         public static string XA4300 {

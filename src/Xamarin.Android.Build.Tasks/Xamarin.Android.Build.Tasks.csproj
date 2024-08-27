@@ -26,9 +26,8 @@
 
   <ItemGroup>
     <PackageReference Include="Mono.Cecil" Version="$(MonoCecilVersion)" GeneratePathProperty="true" />
-    <PackageReference Include="ILRepack" Version="2.0.28" />
     <PackageReference Include="Irony" />
-    <PackageReference Include="NuGet.ProjectModel" Version="6.9.1" />
+    <PackageReference Include="NuGet.ProjectModel" Version="6.11.0" />
     <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="System.CodeDom" />
     <PackageReference Include="System.IO.Hashing" Version="$(SystemIOHashingPackageVersion)" />
@@ -161,6 +160,8 @@
     <Compile Include="..\..\build-tools\xa-prep-tasks\Xamarin.Android.BuildTools.PrepTasks\Sleep.cs">
       <Link>Xamarin.Android.BuildTools.PrepTasks\Sleep.cs</Link>
     </Compile>
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ApplicationCategories.cs" />
+    <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.GwpAsan.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.LaunchMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ScreenOrientation.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ConfigChanges.cs" />
@@ -172,6 +173,7 @@
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.ActivityPersistableMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Content.PM.DocumentLaunchMode.cs" />
     <_MonoAndroidEnum Include="$(AndroidGeneratedClassDirectory)\Android.Views.WindowRotationAnimation.cs" />
+    <_MonoAndroidEnum Include="..\Mono.Android\Android.App\RequiredContentUriPermission.cs" />
     <Compile Include="@(_MonoAndroidEnum)">
       <Link>Mono.Android\%(Filename)%(Extension)</Link>
     </Compile>

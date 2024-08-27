@@ -119,6 +119,16 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Mono.Options.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)MULTIDEX_JAR_LICENSE" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Newtonsoft.Json.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Common.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Configuration.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.DependencyResolver.Core.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Frameworks.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.LibraryModel.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Packaging.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.ProjectModel.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Protocol.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)NuGet.Versioning.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)startup-xf.aotprofile" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)r8.jar" />
@@ -133,6 +143,7 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Collections.Immutable.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Buffers.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.IO.Hashing.dll" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Reflection.Metadata.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt2.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Application.targets" />
