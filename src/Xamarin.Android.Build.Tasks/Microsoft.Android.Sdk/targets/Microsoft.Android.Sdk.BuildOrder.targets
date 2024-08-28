@@ -90,6 +90,7 @@ properties that determine build ordering.
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
       $(AndroidBuildDependsOn);
+      _CalculateAssetsWithAssetPackMetaData;
       _CreateAar;
     </BuildDependsOn>
     <IncrementalCleanDependsOn>

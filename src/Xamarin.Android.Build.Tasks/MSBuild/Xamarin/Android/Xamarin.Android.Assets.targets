@@ -34,6 +34,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <PropertyGroup>
   <BeforeBuildAndroidAssetPacks>
     UpdateAndroidAssets
+    ;_CalculateAssetsWithAssetPackMetaData
     ;_CalculateAssetPacks
     ;$(BeforeBuildAndroidAssetPacks)
     ;_CreateAssetPackManifests
@@ -74,9 +75,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   </ItemGroup>
 </Target>
 
-<Target Name="_CalculateAssetPacks"
-    Condition=" '$(AndroidPackageFormat)' == 'aab' "
-  >
+<Target Name="_CalculateAssetsWithAssetPackMetaData">
   <ItemGroup>
     <_AssetsWithAssetPackMetaData Include="@(AndroidAsset)" Condition=" '%(AndroidAsset.AssetPack)' != '' " />
   </ItemGroup>
@@ -85,6 +84,12 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       Code="XA0138"
       ResourceName="XA0138"
   />
+</Target>
+
+<Target Name="_CalculateAssetPacks"
+    DependsOnTargets="_CalculateAssetsWithAssetPackMetaData"
+    Condition=" ('$(AndroidPackageFormat)' == 'aab' And '$(AndroidApplication)' == 'true') "
+  >
   <!-- Enumerate the assetpacks directory and build a pack per top level directory -->
   <GetAssetPacks
       Assets="@(_AssetsWithAssetPackMetaData)"
