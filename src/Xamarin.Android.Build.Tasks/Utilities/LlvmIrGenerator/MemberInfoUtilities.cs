@@ -5,14 +5,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	static class MemberInfoUtilities
 	{
-		public static bool IsNativePointer (this MemberInfo mi)
+		public static bool IsNativePointer (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			return mi.GetCustomAttribute <NativePointerAttribute> () != null;
+			return cache.GetNativePointerAttribute (mi) != null;
 		}
 
-		public static bool IsNativePointerToPreallocatedBuffer (this MemberInfo mi, out ulong requiredBufferSize)
+		public static bool IsNativePointerToPreallocatedBuffer (this MemberInfo mi, LlvmIrTypeCache cache, out ulong requiredBufferSize)
 		{
-			var attr = mi.GetCustomAttribute <NativePointerAttribute> ();
+			var attr = cache.GetNativePointerAttribute (mi);
 			if (attr == null) {
 				requiredBufferSize = 0;
 				return false;
@@ -22,9 +22,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return attr.PointsToPreAllocatedBuffer;
 		}
 
-		public static bool PointsToSymbol (this MemberInfo mi, out string? symbolName)
+		public static bool PointsToSymbol (this MemberInfo mi, LlvmIrTypeCache cache, out string? symbolName)
 		{
-			var attr = mi.GetCustomAttribute <NativePointerAttribute> ();
+			var attr = cache.GetNativePointerAttribute (mi);
 			if (attr == null || attr.PointsToSymbol == null) {
 				symbolName = null;
 				return false;
@@ -34,27 +34,27 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return true;
 		}
 
-		public static bool ShouldBeIgnored (this MemberInfo mi)
+		public static bool ShouldBeIgnored (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			return attr != null && attr.Ignore;
 		}
 
-		public static bool UsesDataProvider (this MemberInfo mi)
+		public static bool UsesDataProvider (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			return attr != null && attr.UsesDataProvider;
 		}
 
-		public static bool IsInlineArray (this MemberInfo mi)
+		public static bool IsInlineArray (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			return attr != null && attr.InlineArray;
 		}
 
-		public static int GetInlineArraySize (this MemberInfo mi)
+		public static int GetInlineArraySize (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			if (attr == null || !attr.InlineArray) {
 				return -1;
 			}
@@ -62,9 +62,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return attr.InlineArraySize;
 		}
 
-		public static bool InlineArrayNeedsPadding (this MemberInfo mi)
+		public static bool InlineArrayNeedsPadding (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			if (attr == null || !attr.InlineArray) {
 				return false;
 			}
@@ -72,9 +72,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return attr.NeedsPadding;
 		}
 
-		public static LlvmIrVariableNumberFormat GetNumberFormat (this MemberInfo mi)
+		public static LlvmIrVariableNumberFormat GetNumberFormat (this MemberInfo mi, LlvmIrTypeCache cache)
 		{
-			var attr = mi.GetCustomAttribute<NativeAssemblerAttribute> ();
+			var attr = cache.GetNativeAssemblerAttribute (mi);
 			if (attr == null) {
 				return LlvmIrVariableNumberFormat.Default;
 			}

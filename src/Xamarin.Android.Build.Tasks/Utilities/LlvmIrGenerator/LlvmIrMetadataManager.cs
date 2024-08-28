@@ -7,17 +7,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 {
 	class LlvmIrMetadataField
 	{
+		readonly LlvmIrTypeCache cache;
+
 		public string Contents { get; }
 		public bool IsReference { get; }
 
 		public LlvmIrMetadataField (LlvmIrMetadataField other)
 		{
+			this.cache = other.cache;
 			Contents = other.Contents;
 			IsReference = other.IsReference;
 		}
 
-		public LlvmIrMetadataField (string value, bool isReference = false)
+		public LlvmIrMetadataField (LlvmIrTypeCache cache, string value, bool isReference = false)
 		{
+			this.cache = cache;
 			if (isReference) {
 				Contents = $"!{value}";
 			} else {
@@ -27,8 +31,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			IsReference = isReference;
 		}
 
-		public LlvmIrMetadataField (object value)
+		public LlvmIrMetadataField (LlvmIrTypeCache cache, object value)
 		{
+			this.cache = cache;
 			Contents = FormatValue (value);
 			IsReference = false;
 		}
@@ -41,7 +46,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return QuoteString ((string)value);
 			}
 
-			string irType = LlvmIrGenerator.MapToIRType (vt);
+			string irType = LlvmIrGenerator.MapToIRType (vt, cache);
 			return $"{irType} {MonoAndroidHelper.CultureInvariantToString (value)}";
 		}
 
@@ -53,12 +58,15 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 	class LlvmIrMetadataItem
 	{
+		readonly LlvmIrTypeCache cache;
+
 		List<LlvmIrMetadataField> fields;
 
 		public string Name { get; }
 
 		public LlvmIrMetadataItem (LlvmIrMetadataItem other)
 		{
+			this.cache = other.cache;
 			Name = other.Name;
 			fields = new List<LlvmIrMetadataField> ();
 			foreach (LlvmIrMetadataField field in other.fields) {
@@ -66,19 +74,20 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
-		public LlvmIrMetadataItem (string name)
+		public LlvmIrMetadataItem (LlvmIrTypeCache cache, string name)
 		{
 			if (name.Length == 0) {
 				throw new ArgumentException ("must not be empty", nameof (name));
 			}
 
+			this.cache = cache;
 			Name = name;
 			fields = new List<LlvmIrMetadataField> ();
 		}
 
 		public void AddReferenceField (string referenceName)
 		{
-			fields.Add (new LlvmIrMetadataField (referenceName, isReference: true));
+			fields.Add (new LlvmIrMetadataField (cache, referenceName, isReference: true));
 		}
 
 		public void AddReferenceField (LlvmIrMetadataItem referencedItem)
@@ -88,7 +97,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public void AddField (object value)
 		{
-			AddField (new LlvmIrMetadataField (value));
+			AddField (new LlvmIrMetadataField (cache, value));
 		}
 
 		public void AddField (LlvmIrMetadataField field)
@@ -119,17 +128,21 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 	class LlvmIrMetadataManager
 	{
+		readonly LlvmIrTypeCache cache;
 		ulong counter = 0;
 		List<LlvmIrMetadataItem> items = new List<LlvmIrMetadataItem> ();
 		Dictionary<string, LlvmIrMetadataItem> nameToItem = new Dictionary<string, LlvmIrMetadataItem> (StringComparer.Ordinal);
 
 		public List<LlvmIrMetadataItem> Items => items;
 
-		public LlvmIrMetadataManager ()
-		{}
+		public LlvmIrMetadataManager (LlvmIrTypeCache cache)
+		{
+			this.cache = cache;
+		}
 
 		public LlvmIrMetadataManager (LlvmIrMetadataManager other)
 		{
+			this.cache = other.cache;
 			foreach (LlvmIrMetadataItem item in other.items) {
 				var newItem = new LlvmIrMetadataItem (item);
 				items.Add (newItem);
@@ -144,7 +157,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new InvalidOperationException ($"Internal error: metadata item '{name}' has already been added");
 			}
 
-			var ret = new LlvmIrMetadataItem (name);
+			var ret = new LlvmIrMetadataItem (cache, name);
 
 			if (values != null && values.Length > 0) {
 				foreach (object v in values) {

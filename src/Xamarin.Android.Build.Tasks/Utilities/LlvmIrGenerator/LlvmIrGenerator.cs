@@ -27,16 +27,18 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public readonly LlvmIrModule Module;
 		public readonly LlvmIrModuleTarget Target;
 		public readonly LlvmIrMetadataManager MetadataManager;
+		public readonly LlvmIrTypeCache TypeCache;
 		public string CurrentIndent { get; private set; } = String.Empty;
 		public bool InVariableGroup { get; set; }
 		public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Default;
 
-		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager)
+		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
 		{
 			Output = writer;
 			Module = module;
 			Target = target;
 			MetadataManager = metadataManager;
+			TypeCache = cache;
 		}
 
 		public void IncreaseIndent ()
@@ -161,7 +163,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
 			target.AddTargetSpecificMetadata (metadataManager);
 
-			var context = new GeneratorWriteContext (writer, module, target, metadataManager);
+			var context = new GeneratorWriteContext (writer, module, target, metadataManager, module.TypeCache);
 			if (!String.IsNullOrEmpty (FilePath)) {
 				WriteCommentLine (context, $" ModuleID = '{FileName}'");
 				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
@@ -379,7 +381,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			if (memberInfo.IsIRStruct ()) {
+			if (memberInfo.IsIRStruct (context.TypeCache)) {
 				var sim = new GeneratorStructureInstance (context.Module.GetStructureInfo (memberInfo.MemberType), memberInfo.GetValue (si.Obj));
 				WriteStructureType (context, sim, out typeInfo);
 				return;
@@ -429,7 +431,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			irType = GetIRType (type, out size, out isPointer);
+			irType = GetIRType (context, type, out size, out isPointer);
 			typeInfo = new LlvmTypeInfo (
 				isPointer: isPointer,
 				isAggregate: false,
@@ -460,7 +462,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				maxFieldAlignment = GetStructureMaxFieldAlignment (si);
 				isPointer = false;
 			} else {
-				irType = GetIRType (elementType, out size, out isPointer);
+				irType = GetIRType (context, elementType, out size, out isPointer);
 				maxFieldAlignment = size;
 
 				if (elementType.IsArray) {
@@ -562,7 +564,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				return;
 			}
 
-			string irType = MapToIRType (typeof(byte));
+			string irType = MapToIRType (typeof(byte), context.TypeCache);
 			bool first = true;
 			context.Output.Write ("[ ");
 			foreach (byte b in bytes) {
@@ -601,13 +603,13 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new NotSupportedException ($"Internal error: inline arrays of type {smi.MemberType} aren't supported at this point. Field {smi.Info.Name} in structure {structInstance.Info.Name}");
 			}
 
-			if (smi.IsIRStruct ()) {
+			if (smi.IsIRStruct (context.TypeCache)) {
 				StructureInfo si = context.Module.GetStructureInfo (smi.MemberType);
 				WriteValue (context, typeof(GeneratorStructureInstance), new GeneratorStructureInstance (si, value));
 				return;
 			}
 
-			if (smi.Info.IsNativePointerToPreallocatedBuffer (out _)) {
+			if (smi.Info.IsNativePointerToPreallocatedBuffer (context.TypeCache, out _)) {
 				string bufferVariableName = context.Module.LookupRequiredBufferVariableName (structInstance, smi);
 				context.Output.Write ('@');
 				context.Output.Write (bufferVariableName);
@@ -622,8 +624,8 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			// Structure members decorated with the [NativePointer] attribute cannot have a
 			// value other than `null`, unless they are strings or references to symbols
 
-			if (smi.Info.PointsToSymbol (out string? symbolName)) {
-				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider ()) {
+			if (smi.Info.PointsToSymbol (context.TypeCache, out string? symbolName)) {
+				if (String.IsNullOrEmpty (symbolName) && smi.Info.UsesDataProvider (context.TypeCache)) {
 					if (si.Info.DataProvider == null) {
 						throw new InvalidOperationException ($"Field '{smi.Info.Name}' of structure '{si.Info.Name}' points to a symbol, but symbol name wasn't provided and there's no configured data context provider");
 					}
@@ -752,7 +754,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.Output.Write (' ');
 
 				object? value = GetTypedMemberValue (context, info, smi, instance, smi.MemberType);
-				LlvmIrVariableNumberFormat numberFormat = smi.Info.GetNumberFormat ();
+				LlvmIrVariableNumberFormat numberFormat = smi.Info.GetNumberFormat (context.TypeCache);
 				LlvmIrVariableNumberFormat? savedNumberFormat = null;
 
 				if (numberFormat != LlvmIrVariableNumberFormat.Default && numberFormat != context.NumberFormat) {
@@ -1272,7 +1274,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				WriteReturnAttributes (context, func.Signature.ReturnAttributes);
 			}
 
-			context.Output.Write (MapToIRType (func.Signature.ReturnType));
+			context.Output.Write (MapToIRType (func.Signature.ReturnType, context.TypeCache));
 			context.Output.Write (" @");
 			context.Output.Write (func.Signature.Name);
 			context.Output.Write ('(');
@@ -1297,7 +1299,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					continue;
 				}
 
-				context.Output.Write (MapToIRType (parameter.Type));
+				context.Output.Write (MapToIRType (parameter.Type, context.TypeCache));
 				WriteParameterAttributes (context, parameter);
 
 				if (writeParameterNames) {
@@ -1492,19 +1494,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return value;
 		}
 
-		public static string MapToIRType (Type type)
+		public static string MapToIRType (Type type, LlvmIrTypeCache cache)
 		{
-			return MapToIRType (type, out _, out _);
+			return MapToIRType (type, cache, out _, out _);
 		}
 
-		public static string MapToIRType (Type type, out ulong size)
+		public static string MapToIRType (Type type, LlvmIrTypeCache cache, out ulong size)
 		{
-			return MapToIRType (type, out size, out _);
+			return MapToIRType (type, cache, out size, out _);
 		}
 
-		public static string MapToIRType (Type type, out bool isPointer)
+		public static string MapToIRType (Type type, LlvmIrTypeCache cache, out bool isPointer)
 		{
-			return MapToIRType (type, out _, out isPointer);
+			return MapToIRType (type, cache, out _, out isPointer);
 		}
 
 		/// <summary>
@@ -1514,10 +1516,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		/// size, the instance method <see cref="GetIRType"/> must be called (private to the generator as other classes should not
 		/// have any need to know the pointer size).
 		/// </summary>
-		public static string MapToIRType (Type type, out ulong size, out bool isPointer)
+		public static string MapToIRType (Type type, LlvmIrTypeCache cache, out ulong size, out bool isPointer)
 		{
 			type = GetActualType (type);
-			if (!type.IsNativePointer () && basicTypeMap.TryGetValue (type, out BasicType typeDesc)) {
+			if (!type.IsNativePointer (cache) && basicTypeMap.TryGetValue (type, out BasicType typeDesc)) {
 				size = typeDesc.Size;
 				isPointer = false;
 				return typeDesc.Name;
@@ -1529,9 +1531,9 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return IRPointerType;
 		}
 
-		string GetIRType (Type type, out ulong size, out bool isPointer)
+		string GetIRType (GeneratorWriteContext context, Type type, out ulong size, out bool isPointer)
 		{
-			string ret = MapToIRType (type, out size, out isPointer);
+			string ret = MapToIRType (type, context.TypeCache, out size, out isPointer);
 			if (isPointer && size == 0) {
 				size = target.NativePointerSize;
 			}

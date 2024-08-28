@@ -132,7 +132,7 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			string irType = LlvmIrGenerator.MapToIRType (result.Type, out ulong size, out bool isPointer);
+			string irType = LlvmIrGenerator.MapToIRType (result.Type, context.TypeCache, out ulong size, out bool isPointer);
 
 			context.Output.Write (irType);
 			WriteAlignment (context, size, isPointer);
@@ -270,7 +270,7 @@ sealed class LlvmIrInstructions
 				LlvmIrGenerator.WriteReturnAttributes (context, function.Signature.ReturnAttributes);
 			}
 
-			context.Output.Write (LlvmIrGenerator.MapToIRType (function.Signature.ReturnType));
+			context.Output.Write (LlvmIrGenerator.MapToIRType (function.Signature.ReturnType, context.TypeCache));
 
 			if (function.UsesVarArgs) {
 				context.Output.Write (" (");
@@ -280,7 +280,7 @@ sealed class LlvmIrInstructions
 					}
 
 					LlvmIrFunctionParameter parameter = function.Signature.Parameters[j];
-					string irType = parameter.IsVarArgs ? "..." : LlvmIrGenerator.MapToIRType (parameter.Type);
+					string irType = parameter.IsVarArgs ? "..." : LlvmIrGenerator.MapToIRType (parameter.Type, context.TypeCache);
 					context.Output.Write (irType);
 				}
 				context.Output.Write (')');
@@ -329,16 +329,16 @@ sealed class LlvmIrInstructions
 
 			string irType;
 			if (!isVararg) {
-				irType = LlvmIrGenerator.MapToIRType (parameter.Type);
+				irType = LlvmIrGenerator.MapToIRType (parameter.Type, context.TypeCache);
 			} else if (value is LlvmIrVariable v1) {
-				irType = LlvmIrGenerator.MapToIRType (v1.Type);
+				irType = LlvmIrGenerator.MapToIRType (v1.Type, context.TypeCache);
 			} else {
 				if (value == null) {
 					// We have no way of verifying the vararg parameter type if value is null, so we'll assume it's a pointer.
 					// If our assumption is wrong, llc will fail and signal the error
 					irType = "ptr";
 				} else {
-					irType = LlvmIrGenerator.MapToIRType (value.GetType ());
+					irType = LlvmIrGenerator.MapToIRType (value.GetType (), context.TypeCache);
 				}
 			}
 
@@ -349,7 +349,7 @@ sealed class LlvmIrInstructions
 			context.Output.Write (' ');
 
 			if (value == null) {
-				if (!parameter.Type.IsNativePointer ()) {
+				if (!parameter.Type.IsNativePointer (context.TypeCache)) {
 					throw new InvalidOperationException ($"Internal error: value for argument {index} to function '{function.Signature.Name}' must not be null");
 				}
 
@@ -406,11 +406,11 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			context.Output.Write (LlvmIrGenerator.MapToIRType (source.Type));
+			context.Output.Write (LlvmIrGenerator.MapToIRType (source.Type, context.TypeCache));
 			context.Output.Write (' ');
 			context.Output.Write (source.Reference);
 			context.Output.Write (" to ");
-			context.Output.Write ( LlvmIrGenerator.MapToIRType (targetType));
+			context.Output.Write ( LlvmIrGenerator.MapToIRType (targetType, context.TypeCache));
 		}
 
 		static string GetOpCode (Type targetType)
@@ -455,7 +455,7 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			string irType = LlvmIrGenerator.MapToIRType (op1.Type, out ulong size, out bool isPointer);
+			string irType = LlvmIrGenerator.MapToIRType (op1.Type, context.TypeCache, out ulong size, out bool isPointer);
 			string condOp = cond switch {
 				LlvmIrIcmpCond.Equal => "eq",
 				LlvmIrIcmpCond.NotEqual => "ne",
@@ -500,7 +500,7 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			string irType = LlvmIrGenerator.MapToIRType (result.Type, out ulong size, out bool isPointer);
+			string irType = LlvmIrGenerator.MapToIRType (result.Type, context.TypeCache, out ulong size, out bool isPointer);
 			context.Output.Write (irType);
 			context.Output.Write (", ptr ");
 			WriteValue (context, result.Type, source, isPointer);
@@ -540,7 +540,7 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			context.Output.Write (LlvmIrGenerator.MapToIRType (result.Type));
+			context.Output.Write (LlvmIrGenerator.MapToIRType (result.Type, context.TypeCache));
 			context.Output.Write (" [");
 			context.Output.Write (val1.Reference);
 			context.Output.Write (", %");
@@ -572,7 +572,7 @@ sealed class LlvmIrInstructions
 				return;
 			}
 
-			string irType = LlvmIrGenerator.MapToIRType (retvalType, out bool isPointer);
+			string irType = LlvmIrGenerator.MapToIRType (retvalType, context.TypeCache, out bool isPointer);
 			context.Output.Write (irType);
 			context.Output.Write (' ');
 
@@ -605,7 +605,7 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			string irType = LlvmIrGenerator.MapToIRType (to.Type, out ulong size, out bool isPointer);
+			string irType = LlvmIrGenerator.MapToIRType (to.Type, context.TypeCache, out ulong size, out bool isPointer);
 			context.Output.Write (irType);
 			context.Output.Write (' ');
 

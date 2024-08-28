@@ -10,6 +10,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 	abstract class LlvmIrComposer
 	{
 		bool constructed;
+		readonly LlvmIrTypeCache cache = new();
 
 		protected readonly TaskLoggingHelper Log;
 
@@ -22,7 +23,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public LlvmIrModule Construct ()
 		{
-			var module = new LlvmIrModule ();
+			var module = new LlvmIrModule (cache);
 			Construct (module);
 			module.AfterConstruction ();
 			constructed = true;
