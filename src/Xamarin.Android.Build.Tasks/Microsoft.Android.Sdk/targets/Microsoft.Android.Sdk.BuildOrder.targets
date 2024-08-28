@@ -10,8 +10,8 @@ properties that determine build ordering.
 
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
-  <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' ">
-    <BuildDependsOn>
+  <PropertyGroup>
+    <AndroidBuildDependsOn>
       _ValidateLinkMode;
       _CheckNonIdealConfigurations;
       _SetupMSBuildAllProjects;
@@ -20,6 +20,7 @@ properties that determine build ordering.
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
+      AndroidPrepareForBuild;
       _CheckForContent;
       _CheckForObsoleteFrameworkAssemblies;
       _ValidateAndroidPackageProperties;
@@ -27,6 +28,12 @@ properties that determine build ordering.
       _CollectJavaSourceForBinding;
       _CompileBindingJava;
       $(BuildDependsOn);
+    </AndroidBuildDependsOn>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' ">
+    <BuildDependsOn>
+      $(AndroidBuildDependsOn);
       _CompileDex;
       $(_AfterCompileDex);
     </BuildDependsOn>
@@ -82,23 +89,7 @@ properties that determine build ordering.
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
-      _ValidateLinkMode;
-      _CheckNonIdealBindingConfigurations;
-      _SetupMSBuildAllProjects;
-      _SetupDesignTimeBuildForBuild;
-      _CategorizeAndroidLibraries;
-      _CreatePropertiesCache;
-      _CleanIntermediateIfNeeded;
-      _AddAndroidDefines;
-      _CheckForContent;
-      _CheckForObsoleteFrameworkAssemblies;
-      _CalculateAssetsWithAssetPackMetaData;
-      _RemoveLegacyDesigner;
-      _ValidateAndroidPackageProperties;
-      AddLibraryJarsToBind;
-      _CollectJavaSourceForBinding;
-      _CompileBindingJava;
-      $(BuildDependsOn);
+      $(AndroidBuildDependsOn);
       _CreateAar;
     </BuildDependsOn>
     <IncrementalCleanDependsOn>
@@ -138,7 +129,7 @@ properties that determine build ordering.
     <CompileDependsOn>
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForCompile;
-      _AddAndroidDefines;
+      AndroidPrepareForBuild;
       _IncludeLayoutBindingSources;
       AddLibraryJarsToBind;
       _CollectLibrariesToBind;

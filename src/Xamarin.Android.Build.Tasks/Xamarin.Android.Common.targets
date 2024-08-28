@@ -540,6 +540,16 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
       FormatArguments="AndroidFastDeploymentType;9"
       Condition=" '$(AndroidFastDeploymentType)' != '' "
   />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="_AndroidUseJavaLegacyResolver;10"
+      Condition=" '$(_AndroidUseJavaLegacyResolver)' == 'true' and '$(AndroidApplication)' != 'true' "
+  />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="_AndroidEmitLegacyInterfaceInvokers;10"
+      Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == 'true' and '$(AndroidApplication)' != 'true' "
+  />
 </Target>
 
 <!--
@@ -616,10 +626,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" '$(_AndroidBuildPropertiesCacheExists)' == 'True' " />
   <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
   <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNeeded.stamp" AlwaysCreate="true" />
-</Target>
-
-<Target Name="_AddAndroidDefines"
-		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
 
 <PropertyGroup>
