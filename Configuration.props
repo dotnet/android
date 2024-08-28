@@ -113,7 +113,7 @@
     <AndroidSupportedTargetJitAbis Condition=" '$(AndroidSupportedTargetJitAbis)' == '' ">armeabi-v7a:arm64-v8a:x86:x86_64</AndroidSupportedTargetJitAbis>
     <JavaInteropSourceDirectory Condition=" '$(JavaInteropSourceDirectory)' == '' ">$(MSBuildThisFileDirectory)external\Java.Interop</JavaInteropSourceDirectory>
     <MonoSourceDirectory>$(MSBuildThisFileDirectory)external\mono</MonoSourceDirectory>
-    <MonoDarwinPackageUrl>https://xamjenkinsartifact.azureedge.net/build-package-osx-mono/2020-02/151/c633fe923832f0c3db3c4e6aa98e5592bf5a06e7/MonoFramework-MDK-6.12.0.145.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
+    <MonoDarwinPackageUrl>https://download.mono-project.com/archive/6.12.0/macos-10-universal/MonoFramework-MDK-6.12.0.145.macos10.xamarin.universal.pkg</MonoDarwinPackageUrl>
     <MonoRequiredMinimumVersion Condition=" '$(MonoRequiredMinimumVersion)' == '' ">6.12.0.145</MonoRequiredMinimumVersion>
     <MonoRequiredMaximumVersion Condition=" '$(MonoRequiredMaximumVersion)' == '' ">$(MonoRequiredMinimumVersion)</MonoRequiredMaximumVersion>
     <IgnoreMaxMonoVersion Condition=" '$(IgnoreMaxMonoVersion)' == '' And '$(RunningOnCI)' == 'true' ">False</IgnoreMaxMonoVersion>
