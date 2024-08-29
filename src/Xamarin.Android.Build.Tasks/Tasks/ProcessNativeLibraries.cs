@@ -30,6 +30,7 @@ namespace Xamarin.Android.Tasks
 		public string [] ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
+		public bool NativeRuntimeLinking { get; set; }
 
 		[Output]
 		public ITaskItem [] OutputLibraries { get; set; }
@@ -64,6 +65,11 @@ namespace Xamarin.Android.Tasks
 				// We may eventually have files such as `libmono-android-checked+asan.release.so` as well.
 				var fileName = Path.GetFileNameWithoutExtension (library.ItemSpec);
 				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal)) {
+					if (NativeRuntimeLinking) {
+						// We don't need the precompiled runtime, it will be linked during application build
+						continue;
+					}
+
 					if (fileName.EndsWith (".debug", StringComparison.Ordinal)) {
 						if (!IncludeDebugSymbols)
 							continue;
