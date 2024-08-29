@@ -26,6 +26,9 @@
     <_GetChildProjectCopyToPublishDirectoryItems>false</_GetChildProjectCopyToPublishDirectoryItems>
     <UseMonoRuntime Condition=" '$(UseMonoRuntime)' == '' ">true</UseMonoRuntime>
 
+    <!-- $(SupportedOSPlatformVersion) must be '21.0', but we should support integer values like '21' -->
+    <SupportedOSPlatformVersion Condition=" '$(SupportedOSPlatformVersion)' != '' and !$(SupportedOSPlatformVersion.Contains('.')) ">$(SupportedOSPlatformVersion).0</SupportedOSPlatformVersion>
+
     <!-- Bindings properties -->
     <!-- jar2xml is not supported -->
     <AndroidClassParser>class-parse</AndroidClassParser>
