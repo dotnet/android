@@ -627,7 +627,12 @@ namespace Xamarin.Android.Tasks
 				foreach (ITaskItem item in ApplicationSharedLibraries) {
 					if (String.Compare (abi, item.GetMetadata ("abi"), StringComparison.Ordinal) != 0)
 						continue;
-					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, Path.GetFileName (item.ItemSpec), item);
+					string? inArchiveFileName = item.GetMetadata ("ArchiveFileName");
+					if (String.IsNullOrEmpty (inArchiveFileName)) {
+						inArchiveFileName = Path.GetFileName (item.ItemSpec);
+					}
+
+					AddNativeLibraryToArchive (apk, abi, item.ItemSpec, inArchiveFileName, item);
 				}
 			}
 		}

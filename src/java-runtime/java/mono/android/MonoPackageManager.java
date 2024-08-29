@@ -91,17 +91,17 @@ public class MonoPackageManager {
 					System.loadLibrary ("xamarin-debug-app-helper");
 					DebugRuntime.init (apks, runtimeDir, appDirs, haveSplitApks);
 				} else {
-					System.loadLibrary("monosgen-2.0");
+				//	System.loadLibrary("monosgen-2.0");
 				}
-				System.loadLibrary("xamarin-app");
+				// System.loadLibrary("xamarin-app");
 
 				if (!BuildConfig.DotNetRuntime) {
 					// .net5+ APKs don't contain `libmono-native.so`
-					System.loadLibrary("mono-native");
+				//	System.loadLibrary("mono-native");
 				} else {
 					// for .net6 we temporarily need to load the SSL DSO
 					// see: https://github.com/dotnet/runtime/issues/51274#issuecomment-832963657
-					System.loadLibrary("System.Security.Cryptography.Native.Android");
+				//	System.loadLibrary("System.Security.Cryptography.Native.Android");
 				}
 
 				System.loadLibrary("monodroid");

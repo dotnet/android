@@ -58,26 +58,29 @@ class NativeRuntimeComponents
 		this.monoComponents = monoComponents;
 		KnownArchives = new () {
 			// Mono components
-			new MonoComponentArchive ("libmono-component-diagnostics_tracing-static.a", "diagnostics_tracing", MonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-diagnostics_tracing-stub-static.a", "diagnostics_tracing", MonoComponentAbsent),
-			new MonoComponentArchive ("libmono-component-marshal-ilgen-static.a", "marshal-ilgen", MonoComponentPresent),
-			new MonoComponentArchive ("libmono-component-marshal-ilgen-stub-static.a", "marshal-ilgen", MonoComponentAbsent),
+			new MonoComponentArchive ("libmono-component-debugger-static.a",                 "debugger",            IncludeIfMonoComponentPresent),
+			new MonoComponentArchive ("libmono-component-debugger-stub-static.a",            "debugger",            IncludeIfMonoComponentAbsent),
+			new MonoComponentArchive ("libmono-component-diagnostics_tracing-static.a",      "diagnostics_tracing", IncludeIfMonoComponentPresent),
+			new MonoComponentArchive ("libmono-component-diagnostics_tracing-stub-static.a", "diagnostics_tracing", IncludeIfMonoComponentAbsent),
+			new MonoComponentArchive ("libmono-component-hot_reload-static.a",               "hot_reload",          IncludeIfMonoComponentPresent),
+			new MonoComponentArchive ("libmono-component-hot_reload-stub-static.a",          "hot_reload",          IncludeIfMonoComponentAbsent),
+			new MonoComponentArchive ("libmono-component-marshal-ilgen-static.a",            "marshal-ilgen",       IncludeIfMonoComponentPresent),
+			new MonoComponentArchive ("libmono-component-marshal-ilgen-stub-static.a",       "marshal-ilgen",       IncludeIfMonoComponentAbsent),
 
 			// MonoVM runtime + BCL
 			new Archive ("libmonosgen-2.0.a"),
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
 			new BclArchive ("libSystem.Native.a"),
-
-			// Can't link whole archive for this one because it contains conflicting JNI_OnLoad
-			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", wholeArchive: false),
+			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a"),
 
 			// .NET for Android
-			new AndroidArchive ("libruntime-base.a"),
-			new AndroidArchive ("libxa-java-interop.a"),
-			new AndroidArchive ("libxa-lz4.a"),
-			new AndroidArchive ("libxa-shared-bits.a"),
-			new AndroidArchive ("libmono-android.release-static.a"),
+			new AndroidArchive ("libpinvoke-override-dynamic-release.a"),
+			new AndroidArchive ("libruntime-base-release.a"),
+			new AndroidArchive ("libxa-java-interop-release.a"),
+			new AndroidArchive ("libxa-lz4-release.a"),
+			new AndroidArchive ("libxa-shared-bits-release.a"),
+			new AndroidArchive ("libmono-android.release-static-release.a"),
 		};
 
 		// Just the base names of libraries to link into the unified runtime.  Must have all the dependencies of all the static archives we
@@ -111,12 +114,12 @@ class NativeRuntimeComponents
 		return false;
 	}
 
-	bool MonoComponentAbsent (Archive archive)
+	bool IncludeIfMonoComponentAbsent (Archive archive)
 	{
 		return !MonoComponentExists (archive);
 	}
 
-	bool MonoComponentPresent (Archive archive)
+	bool IncludeIfMonoComponentPresent (Archive archive)
 	{
 		return MonoComponentExists (archive);
 	}

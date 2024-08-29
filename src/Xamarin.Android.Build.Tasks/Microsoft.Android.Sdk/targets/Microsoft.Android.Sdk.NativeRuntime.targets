@@ -14,11 +14,13 @@ Contains code to build and link the native runtime at application build time.
     <ItemGroup>
       <_UnifiedNativeRuntime Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libmonodroid-unified.so">
         <abi>%(_BuildTargetAbis.Identity)</abi>
+        <ArchiveFileName>libmonodroid.so</ArchiveFileName>
       </_UnifiedNativeRuntime>
     </ItemGroup>
 
     <ItemGroup>
       <_ResolvedNativeArchive Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.a' " />
+      <_ApplicationSharedLibrary Include="@(_UnifiedNativeRuntime)" />
     </ItemGroup>
 
     <GetNativeRuntimeComponents
