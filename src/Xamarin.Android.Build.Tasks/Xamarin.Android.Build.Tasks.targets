@@ -199,6 +199,7 @@
       <_XACommonPropsReplacement Include="@COMMAND_LINE_TOOLS_VERSION@=$(CommandLineToolsFolder)" />
       <_XACommonPropsReplacement Include="@BUNDLETOOL_VERSION@=$(XABundleToolVersion)" />
       <_XACommonPropsReplacement Include="@JAVA_SDK_VERSION@=$(JavaSdkVersion)" />
+      <_XACommonPropsReplacement Include="@MIN_SUPPORTED_JDK_VERSION@=$(MinimumSupportedJavaSdkVersion)" />
       <!-- <_XACommonPropsReplacement Include="@NDK_PKG_REVISION@=$(AndroidNdkPkgRevision)" /> -->
       <_XACommonPropsReplacement Include="@NDK_PKG_REVISION@=26.3.11579264" />
       <_XACommonPropsReplacement Include="@NDK_ARM64_V8A_API@=$(AndroidNdkApiLevel_ArmV8a)" />

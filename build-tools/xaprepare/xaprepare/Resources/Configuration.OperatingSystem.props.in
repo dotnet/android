@@ -7,6 +7,7 @@
         <HostCpuCount Condition=" '$(HostCpuCount)' == '' ">@HOST_CPUS@</HostCpuCount>
         <HostBits Condition=" '$(HostBits)' == '' ">@ARCHITECTURE_BITS@</HostBits>
         <JavaSdkVersion>@JAVA_SDK_VERSION@</JavaSdkVersion>
+        <MinimumSupportedJavaSdkVersion>@MIN_SUPPORTED_JDK_VERSION@</MinimumSupportedJavaSdkVersion>
         <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">@JavaSdkDirectory@</JavaSdkDirectory>
         <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>
