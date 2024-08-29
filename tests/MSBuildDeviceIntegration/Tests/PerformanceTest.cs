@@ -58,6 +58,41 @@ namespace Xamarin.Android.Build.Tests
 			}
 		}
 
+		void ProfileTask (ProjectBuilder builder, string task, int iterations, Action<ProjectBuilder> action, [CallerMemberName] string caller = null)
+		{
+			if (!csv_values.TryGetValue (caller, out int expected)) {
+				Assert.Fail ($"No timeout value found for a key of {caller}");
+			}
+			double total = 0;
+			for (int i=0; i < iterations; i++) {
+				action (builder);
+				var duration = GetTaskDurationFromBinLog (builder, task);
+				TestContext.Out.WriteLine($"run {i}took: {duration}ms");
+				total += duration;
+			}
+			total /= iterations;
+			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
+			if (total > expected) {
+				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
+			}
+		}
+
+		double GetTaskDurationFromBinLog (ProjectBuilder builder, string task)
+		{
+			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
+			FileAssert.Exists (binlog);
+
+			var build = BinaryLog.ReadBuild (binlog);
+			var duration = build
+				.FindChildrenRecursive<Task> (t => t.Name == task)
+				.Aggregate (TimeSpan.Zero, (duration, target) => duration + target.Duration);
+
+			if (duration == TimeSpan.Zero)
+				throw new InvalidDataException ($"No task build duration found in {binlog}");
+
+			return duration.TotalMilliseconds;
+		}
+
 		double GetDurationFromBinLog (ProjectBuilder builder)
 		{
 			var binlog = Path.Combine (Root, builder.ProjectDirectory, $"{Path.GetFileNameWithoutExtension (builder.BuildLogFile)}.binlog");
@@ -330,6 +365,28 @@ namespace Xamarin.Android.Build.Tests
 				proj.MainActivity += $"{Environment.NewLine}//comment";
 				proj.Touch ("MainActivity.cs");
 				Profile (builder, b => b.Install (proj));
+			}
+		}
+
+		[Test]
+		[Category ("UsesDevice")]
+		[Retry (Retry)]
+		public void Install_CSharp_FromClean ()
+		{
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+
+			var proj = CreateApplicationProject ();
+			proj.PackageName = "com.xamarin.install_csharp_change";
+			proj.MainActivity = proj.DefaultMainActivity;
+			using (var builder = CreateBuilderWithoutLogFile ()) {
+				builder.BuildLogFile = "install.log";
+				builder.Verbosity = LoggerVerbosity.Quiet;
+				builder.Install (proj);
+				builder.AutomaticNuGetRestore = false;
+				ProfileTask (builder, "FastDeploy", 20, b => {
+					b.Uninstall (proj);
+					b.Install (proj);
+				});
 			}
 		}
 	}
