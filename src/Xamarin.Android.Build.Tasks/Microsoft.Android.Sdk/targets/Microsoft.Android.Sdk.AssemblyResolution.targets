@@ -240,6 +240,7 @@ _ResolveAssemblies MSBuild target.
       <_ExcludedNativeLibraries Condition=" '$(_AndroidEnableNativeStackTracing)' != 'true' " Include="libxamarin-native-tracing" />
     </ItemGroup>
     <ProcessNativeLibraries
+        NativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)"
         InputLibraries="@(_ResolvedNativeLibraries)"
         ExcludedLibraries="@(_ExcludedNativeLibraries)"
         Components="@(_MonoComponent->Distinct())"
