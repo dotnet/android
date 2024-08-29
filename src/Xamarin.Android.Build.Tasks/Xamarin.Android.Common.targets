@@ -567,9 +567,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 *******************************************
 -->
 
-<Target Name="_ValidateLinkMode">
-</Target>
-
 <Target Name="UpdateGeneratedFiles"
 		DependsOnTargets="ResolveAssemblyReferences;_RemoveLegacyDesigner;UpdateAndroidResources"
 	>

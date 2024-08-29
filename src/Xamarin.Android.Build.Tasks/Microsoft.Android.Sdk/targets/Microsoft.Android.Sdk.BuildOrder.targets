@@ -11,8 +11,8 @@ properties that determine build ordering.
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
 
   <PropertyGroup>
-    <AndroidBuildDependsOn>
-      _ValidateLinkMode;
+    <_AndroidBuildDependsOn>
+      AndroidPrepareForBuild;
       _CheckNonIdealConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
@@ -20,20 +20,19 @@ properties that determine build ordering.
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
       _CheckProjectItems;
-      AndroidPrepareForBuild;
       _CheckForContent;
       _CheckForObsoleteFrameworkAssemblies;
       _ValidateAndroidPackageProperties;
       AddLibraryJarsToBind;
       _CollectJavaSourceForBinding;
       _CompileBindingJava;
-      $(BuildDependsOn);
-    </AndroidBuildDependsOn>
+    </_AndroidBuildDependsOn>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(AndroidApplication)' == 'True' ">
     <BuildDependsOn>
-      $(AndroidBuildDependsOn);
+      $(_AndroidBuildDependsOn);
+      $(BuildDependsOn);
       _CompileDex;
       $(_AfterCompileDex);
     </BuildDependsOn>
@@ -89,7 +88,8 @@ properties that determine build ordering.
 
   <PropertyGroup Condition=" '$(AndroidApplication)' != 'True' ">
     <BuildDependsOn>
-      $(AndroidBuildDependsOn);
+      $(_AndroidBuildDependsOn);
+      $(BuildDependsOn);
       _CalculateAssetsWithAssetPackMetaData;
       _CreateAar;
     </BuildDependsOn>
