@@ -8,6 +8,7 @@
 		<AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
 		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">@NDK_PKG_REVISION@</AndroidNdkVersion>
 		<JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">@JAVA_SDK_VERSION@</JavaSdkVersion>
+		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">@MIN_SUPPORTED_JDK_VERSION@</MinimumSupportedJavaVersion>
 	</PropertyGroup>
 	<PropertyGroup>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
@@ -17,7 +18,6 @@
 		<CopyNuGetImplementations Condition=" '$(CopyNuGetImplementations)' == ''">true</CopyNuGetImplementations>
 		<YieldDuringToolExecution Condition="'$(YieldDuringToolExecution)' == ''">true</YieldDuringToolExecution>
 		<LatestSupportedJavaVersion Condition="'$(LatestSupportedJavaVersion)' == ''">17.0.99</LatestSupportedJavaVersion>
-		<MinimumSupportedJavaVersion Condition="'$(MinimumSupportedJavaVersion)' == ''">1.6.0</MinimumSupportedJavaVersion>
 		<AndroidVersionCodePattern Condition=" '$(AndroidUseLegacyVersionCode)' != 'True' And '$(AndroidVersionCodePattern)' == '' ">{abi}{versionCode:D5}</AndroidVersionCodePattern>
 		<AndroidResourceGeneratorTargetName>UpdateGeneratedFiles</AndroidResourceGeneratorTargetName>
 		<AndroidUseApkSigner Condition=" '$(AndroidUseApkSigner)' == '' ">True</AndroidUseApkSigner>

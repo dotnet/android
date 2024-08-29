@@ -162,6 +162,7 @@ namespace Xamarin.Android.Prepare
 				{ "@java@",                 context.OS.JavaPath },
 				{ "@jar@",                  context.OS.JarPath },
 				{ "@NDK_LLVM_TAG@",         $"{context.OS.Type.ToLowerInvariant ()}-x86_64" },
+				{ "@MIN_SUPPORTED_JDK_VERSION@",    $"{Configurables.Defaults.MicrosoftOpenJDK17Version.Major}.0" },
 			};
 
 			return new GeneratedPlaceholdersFile (
