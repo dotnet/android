@@ -2,9 +2,9 @@
   <!--Package versions-->
   <PropertyGroup>
     <MicrosoftDotnetSdkInternalPackageVersion>8.0.205-servicing.24212.27</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkPackageVersion>8.0.9-servicing.24413.16</MicrosoftNETILLinkPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>8.0.9</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>8.0.9</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkPackageVersion>8.0.8-servicing.24366.11</MicrosoftNETILLinkPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>8.0.8</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>8.0.8</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>9.0.0-beta.24408.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>8.0.8</MicrosoftNETWorkloadEmscriptenCurrentManifest80100Version>
