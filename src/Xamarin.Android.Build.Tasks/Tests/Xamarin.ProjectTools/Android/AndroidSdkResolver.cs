@@ -9,7 +9,7 @@ namespace Xamarin.ProjectTools
 	public static class AndroidSdkResolver
 	{
 		static string HomeDirectory = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-		static string DefaultToolchainPath = Path.Combine (HomeDirectory, "android-toolchain");
+		public static string DefaultToolchainPath = Path.Combine (HomeDirectory, "android-toolchain");
 
 		static string GetPathFromRegistry (string valueName)
 		{
