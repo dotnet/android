@@ -12,10 +12,10 @@ properties that determine build ordering.
 
   <PropertyGroup>
     <_AndroidBuildDependsOn>
-      AndroidPrepareForBuild;
       _CheckNonIdealConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
+      AndroidPrepareForBuild;
       _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
