@@ -17,6 +17,9 @@ public class GetNativeRuntimeComponents : AndroidTask
 	[Required]
 	public ITaskItem[] ResolvedNativeArchives { get; set; }
 
+	[Required]
+	public ITaskItem[] ResolvedNativeObjectFiles { get; set; }
+
 	[Output]
 	public ITaskItem[] NativeArchives { get; set; }
 
@@ -28,6 +31,7 @@ public class GetNativeRuntimeComponents : AndroidTask
 		var components = new NativeRuntimeComponents (MonoComponents);
 		var uniqueAbis = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		var archives = new List<ITaskItem> ();
+
 		foreach (NativeRuntimeComponents.Archive archiveItem in components.KnownArchives) {
 			if (!archiveItem.Include) {
 				continue;
