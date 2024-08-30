@@ -23,6 +23,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
   -->
   <ImportGroup Condition=" '$(MonoAOTCompilerTasksAssemblyPath)' == '' and '$(AotAssemblies)' == 'true' ">
     <Import Project="Sdk.props" Sdk="Microsoft.NET.Runtime.MonoAOTCompiler.Task" />
+    <Import Project="Sdk.props" Sdk="Microsoft.NET.Runtime.MonoTargets.Task" />
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x86" />
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-x64" />
     <Import Project="Sdk.props" Sdk="Microsoft.NETCore.App.Runtime.AOT.Cross.android-arm" />
@@ -39,7 +40,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
 
   <Target Name="_AndroidAot"
       Condition=" '$(AotAssemblies)' == 'true' and '$(RuntimeIdentifier)' != '' "
-      DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs;_AndroidAotCompilation">
+      DependsOnTargets="_CreatePropertiesCache;_AndroidAotInputs;_AndroidBeforeAotCompilation;_AndroidAotCompilation">
     <ReadLinesFromFile File="$(_AndroidStampDirectory)_AndroidAot.stamp">
       <Output TaskParameter="Lines" ItemName="_AotCompiledAssemblies" />
     </ReadLinesFromFile>
@@ -71,9 +72,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     </ItemGroup>
   </Target>
 
-  <Target Name="_AndroidAotCompilation"
-      Inputs="@(_AndroidAotInputs)"
-      Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp">
+  <Target Name="_AndroidGetAotAssemblies">
     <ItemGroup>
       <AndroidAotProfile Include="$(MSBuildThisFileDirectory)dotnet.aotprofile" Condition=" '$(AndroidEnableProfiledAot)' == 'true' and '$(AndroidUseDefaultAotProfile)' != 'false' " />
     </ItemGroup>
@@ -102,11 +101,37 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
     <ItemGroup Condition=" '$(AndroidExtraAotOptions)' != '' ">
       <_MonoAOTAssemblies Update="@(_MonoAOTAssemblies)" ProcessArguments="$(AndroidExtraAotOptions)" />
     </ItemGroup>
+  </Target>
+
+  <Target Name="_AndroidPrepareProfiledAot"
+          Condition="'$(AndroidEnableProfiledAot)' == 'true' and '$(NetTraceFilePath)' != '' and '$(DotnetPgoToolPath)' != '' and '$(AotAssemblies)' == 'true' and '$(AndroidAotMode)' != 'Full'">
+    <PropertyGroup>
+      <_ToolPath>$([System.IO.Path]::GetDirectoryName('$(DotnetPgoToolPath)'))</_ToolPath>
+    </PropertyGroup>
+
+    <NetTraceToMibcConverter
+      ToolPath="$(_ToolPath)"
+      Assemblies="@(_MonoAOTAssemblies)"
+      NetTraceFilePath="$(NetTraceFilePath)"
+      OutputDir="$(IntermediateOutputPath)">
+      <Output TaskParameter="MibcFilePath" ItemName="ProfiledAOTProfilePaths" />
+    </NetTraceToMibcConverter>
+  </Target>
+
+  <Target Name="_AndroidBeforeAotCompilation" DependsOnTargets="_AndroidGetAotAssemblies;_AndroidPrepareProfiledAot" />
+
+  <Target Name="_AndroidAotCompilation"
+      Inputs="@(_AndroidAotInputs)"
+      Outputs="$(_AndroidStampDirectory)_AndroidAot.stamp"
+      DependsOnTargets="_AndroidBeforeAotCompilation">
     <PropertyGroup>
       <_MonoAOTCompilerPath>@(MonoAotCrossCompiler->WithMetadataValue('RuntimeIdentifier', '$(RuntimeIdentifier)'))</_MonoAOTCompilerPath>
       <_LLVMPath Condition=" '$(EnableLLVM)' == 'true' ">$([System.IO.Path]::GetDirectoryName ('$(_MonoAOTCompilerPath)'))</_LLVMPath>
     </PropertyGroup>
     <MakeDir Directories="$(IntermediateOutputPath)aot\" />
+    <ItemGroup>
+      <ProfiledAOTProfilePaths Include="$(MibcFilePath)" />
+    </ItemGroup>
     <MonoAOTCompiler
         Triple="$(_Triple)"
         ToolPrefix="$(_ToolPrefix)"
@@ -126,6 +151,7 @@ They run in a context of an inner build with a single $(RuntimeIdentifier).
         LdFlags="$(_LdFlags)"
         CollectTrimmingEligibleMethods="$(AndroidStripILAfterAOT)"
         TrimmingEligibleMethodsOutputDirectory="$(IntermediateOutputPath)tokens"
+        MibcProfilePath="@(ProfiledAOTProfilePaths)"
         WorkingDirectory="$(MSBuildProjectDirectory)"
         AotArguments="$(AndroidAotAdditionalArguments)">
       <Output TaskParameter="CompiledAssemblies" ItemName="_MonoAOTCompiledAssemblies" />
