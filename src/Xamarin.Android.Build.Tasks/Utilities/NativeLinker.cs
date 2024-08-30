@@ -19,16 +19,18 @@ class NativeLinker
 		// TODO: need to enable zstd in binutils build
 		// "--compress-debug-sections=zstd",
 		// TODO: test the commented-out flags
-		// "--gc-sections",
+		"--gc-sections",
 		// "--icf=safe",
 		// "--lto=full|thin",
 		"--export-dynamic",
 		"-z relro",
 		"-z noexecstack",
+		"-z max-page-size=16384",
 		"--enable-new-dtags",
-		"--build-id",
+		"--build-id=sha1",
 		"--warn-shared-textrel",
-		"--fatal-warnings"
+		"--fatal-warnings",
+		"--no-rosegment"
 	};
 
 	readonly List<string> extraArgs = new ();
@@ -160,6 +162,10 @@ class NativeLinker
 					sw.Write ("--whole-archive ");
 				}
 				sw.Write (MonoAndroidHelper.QuoteFileNameArgument (file.ItemSpec));
+				string abi = file.GetMetadata ("Abi") ?? String.Empty;
+				string destDir = Path.Combine ("/tmp/t", abi);
+				Directory.CreateDirectory (destDir);
+				File.Copy (file.ItemSpec, Path.Combine (destDir, Path.GetFileName (file.ItemSpec)));
 				if (wholeArchive) {
 					sw.Write (" --no-whole-archive");
 				}

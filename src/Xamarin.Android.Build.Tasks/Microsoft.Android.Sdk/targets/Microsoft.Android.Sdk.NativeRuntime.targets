@@ -20,11 +20,13 @@ Contains code to build and link the native runtime at application build time.
 
     <ItemGroup>
       <_ResolvedNativeArchive Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.a' " />
+      <_ResolvedNativeObjectFile Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.o' " />
       <_ApplicationSharedLibrary Include="@(_UnifiedNativeRuntime)" />
     </ItemGroup>
 
     <GetNativeRuntimeComponents
         MonoComponents="@(_MonoComponent)"
+        ResolvedNativeObjectFiles="@(_ResolvedNativeObjectFile)"
         ResolvedNativeArchives="@(_ResolvedNativeArchive)">
       <Output TaskParameter="NativeArchives" ItemName="_SelectedNativeArchive" />
       <Output TaskParameter="RequiredLibraries" ItemName="_RequiredLinkLibraries" />
