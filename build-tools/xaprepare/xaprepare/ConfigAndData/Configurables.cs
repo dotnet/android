@@ -145,6 +145,37 @@ namespace Xamarin.Android.Prepare
 				{ "x86_64",         "x86_64-linux-android" },
 			};
 
+			public static readonly Dictionary<string, string> AbiToRID = new (StringComparer.Ordinal) {
+				{ "armeabi-v7a",    "android-arm" },
+				{ "arm64-v8a",      "android-arm64" },
+				{ "x86",            "android-x86" },
+				{ "x86_64",         "android-x64" },
+			};
+
+			public static readonly Dictionary<string, string> AbiToClangArch = new (StringComparer.Ordinal) {
+				{ "armeabi-v7a",    "arm" },
+				{ "arm64-v8a",      "aarch64" },
+				{ "x86",            "i686" },
+				{ "x86_64",         "x86_64" },
+			};
+
+			/// <summary>
+			///   Used in rules.mk generator. Files to include in the XA bundle archives.
+			/// </summary>
+			public static readonly List <string> BundleZipsInclude = new List <string> {
+				"$(ZIP_OUTPUT_BASENAME)/THIRD-PARTY-NOTICES.TXT",
+				"$(ZIP_OUTPUT_BASENAME)/bin/Debug",
+				"$(ZIP_OUTPUT_BASENAME)/bin/Release",
+			};
+
+			/// <summary>
+			///   Used in rules.mk generator. Files to exclude from the XA bundle archives. Must be syntactically
+			///   correct for GNU Make.
+			/// </summary>
+			public static readonly List <string> BundleZipsExclude = new List <string> {
+				"$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip"
+			};
+
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				// Tools prefixed with architecture triple
 				new NDKTool (name: "as", prefixed: true),
@@ -219,6 +250,7 @@ namespace Xamarin.Android.Prepare
 			// Other
 			public static string AndroidNdkDirectory                 => ctx.Properties.GetRequiredValue (KnownProperties.AndroidNdkDirectory);
 			public static string AndroidToolchainRootDirectory       => GetCachedPath (ref androidToolchainRootDirectory,       () => Path.Combine (AndroidNdkDirectory, "toolchains", "llvm", "prebuilt", NdkToolchainOSTag));
+			public static string AndroidClangRootDirectory           => GetCachedPath (ref androidClangRootDirectory,           () => Path.Combine (AndroidToolchainRootDirectory, "lib", "clang"));
 			public static string AndroidToolchainBinDirectory        => GetCachedPath (ref androidToolchainBinDirectory,        () => Path.Combine (AndroidToolchainRootDirectory, "bin"));
 			public static string AndroidToolchainSysrootLibDirectory => GetCachedPath (ref androidToolchainSysrootLibDirectory, () => Path.Combine (AndroidToolchainRootDirectory, "sysroot", "usr", "lib"));
 			public static string WindowsBinutilsInstallDir           => GetCachedPath (ref windowsBinutilsInstallDir,           () => Path.Combine (InstallMSBuildDir, "binutils"));
@@ -263,6 +295,7 @@ namespace Xamarin.Android.Prepare
 			static string? buildBinDir;
 			static string? binDir;
 			static string? androidToolchainRootDirectory;
+			static string? androidClangRootDirectory;
 			static string? androidToolchainBinDirectory;
 			static string? androidToolchainSysrootLibDirectory;
 			static string? installMSBuildDir;

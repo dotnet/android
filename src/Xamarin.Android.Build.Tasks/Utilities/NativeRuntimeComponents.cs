@@ -91,6 +91,9 @@ class NativeRuntimeComponents
 			"m",
 			"z",
 			"log",
+
+			// Atomic is a static library in clang, need to investigate if it's really needed
+//			"atomic",
 		};
 	}
 
