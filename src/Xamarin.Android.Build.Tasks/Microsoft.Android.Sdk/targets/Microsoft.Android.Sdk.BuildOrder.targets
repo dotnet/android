@@ -12,6 +12,7 @@ properties that determine build ordering.
 
   <PropertyGroup>
     <_AndroidBuildDependsOn>
+      _ValidateLinkMode
       _CheckNonIdealConfigurations;
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
