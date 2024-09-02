@@ -31,6 +31,12 @@ public class LinkNativeRuntime : AsyncTask
 	public ITaskItem[] NativeObjectFiles { get; set; }
 
 	[Required]
+	public ITaskItem[] NativeLinkStartFiles { get; set; }
+
+	[Required]
+	public ITaskItem[] NativeLinkEndFiles { get; set; }
+
+	[Required]
 	public ITaskItem[] OutputRuntimes { get; set; }
 
 	[Required]
@@ -60,7 +66,9 @@ public class LinkNativeRuntime : AsyncTask
 			outputRuntime,
 			GetAbiItems (NativeObjectFiles, "_NativeAssemblyTarget", abi),
 			GetAbiItems (NativeArchives, "_SelectedNativeArchive", abi),
-			GetAbiItems (LinkLibraries, "_RequiredLinkLibraries", abi)
+			GetAbiItems (LinkLibraries, "_RequiredLinkLibraries", abi),
+			GetAbiItems (NativeLinkStartFiles, "_NativeLinkStartFiles", abi),
+			GetAbiItems (NativeLinkEndFiles, "_NativeLinkEndFiles", abi)
 		);
 	}
 

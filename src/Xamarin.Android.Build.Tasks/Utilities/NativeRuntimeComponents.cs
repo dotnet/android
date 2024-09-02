@@ -34,6 +34,13 @@ class NativeRuntimeComponents
 		}
 	}
 
+	sealed class ClangBuiltinsArchive : Archive
+	{
+		public ClangBuiltinsArchive (string clangAbi)
+			: base ($"libclang_rt.builtins-{clangAbi}-android.a")
+		{}
+	}
+
 	class AndroidArchive : Archive
 	{
 		public AndroidArchive (string name)
@@ -41,7 +48,7 @@ class NativeRuntimeComponents
 		{}
 	}
 
-	class BclArchive : Archive
+	sealed class BclArchive : Archive
 	{
 		public BclArchive (string name, bool wholeArchive = true)
 			: base (name, wholeArchive: wholeArchive)
@@ -52,6 +59,8 @@ class NativeRuntimeComponents
 
 	public readonly List<Archive> KnownArchives;
 	public readonly List<string> NativeLibraries;
+	public readonly List<string> LinkStartFiles;
+	public readonly List<string> LinkEndFiles;
 
 	public NativeRuntimeComponents (ITaskItem[] monoComponents)
 	{
@@ -81,6 +90,12 @@ class NativeRuntimeComponents
 			new AndroidArchive ("libxa-lz4-release.a"),
 			new AndroidArchive ("libxa-shared-bits-release.a"),
 			new AndroidArchive ("libmono-android.release-static-release.a"),
+
+			// LLVM clang built-ins archives
+			new ClangBuiltinsArchive ("aarch64"),
+			new ClangBuiltinsArchive ("arm"),
+			new ClangBuiltinsArchive ("i686"),
+			new ClangBuiltinsArchive ("x86_64"),
 		};
 
 		// Just the base names of libraries to link into the unified runtime.  Must have all the dependencies of all the static archives we
@@ -94,6 +109,16 @@ class NativeRuntimeComponents
 
 			// Atomic is a static library in clang, need to investigate if it's really needed
 //			"atomic",
+		};
+
+		// Files that will be linked before any other object/archive/library files
+		LinkStartFiles = new () {
+			"crtbegin_so.o",
+		};
+
+		// Files that will be linked after any other object/archive/library files
+		LinkEndFiles = new () {
+			"crtend_so.o",
 		};
 	}
 
