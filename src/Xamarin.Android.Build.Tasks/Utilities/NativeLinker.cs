@@ -99,13 +99,16 @@ class NativeLinker
 		extraArgs.Add ($"-L {MonoAndroidHelper.QuoteFileNameArgument (runtimeLibsDir)}");
 	}
 
-	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries)
+	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries,
+	                  List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles)
 	{
 		log.LogDebugMessage ($"Linking: {outputLibraryPath}");
 		EnsureCorrectAbi (outputLibraryPath);
 		EnsureCorrectAbi (objectFiles);
 		EnsureCorrectAbi (archives);
 		EnsureCorrectAbi (libraries);
+		EnsureCorrectAbi (linkStartFiles);
+		EnsureCorrectAbi (linkEndFiles);
 
 		Directory.CreateDirectory (Path.GetDirectoryName (outputLibraryPath.ItemSpec));
 
@@ -124,6 +127,7 @@ class NativeLinker
 				sw.WriteLine ("-s");
 			}
 
+			WriteFilesToResponseFile (sw, linkStartFiles);
 			WriteFilesToResponseFile (sw, objectFiles);
 			WriteFilesToResponseFile (sw, archives);
 
@@ -131,6 +135,7 @@ class NativeLinker
 				sw.WriteLine ($"-l{libItem.ItemSpec}");
 			}
 
+			WriteFilesToResponseFile (sw, linkEndFiles);
 			sw.Flush ();
 		}
 
@@ -162,10 +167,10 @@ class NativeLinker
 					sw.Write ("--whole-archive ");
 				}
 				sw.Write (MonoAndroidHelper.QuoteFileNameArgument (file.ItemSpec));
-				string abi = file.GetMetadata ("Abi") ?? String.Empty;
-				string destDir = Path.Combine ("/tmp/t", abi);
-				Directory.CreateDirectory (destDir);
-				File.Copy (file.ItemSpec, Path.Combine (destDir, Path.GetFileName (file.ItemSpec)));
+				// string abi = file.GetMetadata ("Abi") ?? String.Empty;
+				// string destDir = Path.Combine ("/tmp/t", abi);
+				// Directory.CreateDirectory (destDir);
+				// File.Copy (file.ItemSpec, Path.Combine (destDir, Path.GetFileName (file.ItemSpec)));
 				if (wholeArchive) {
 					sw.Write (" --no-whole-archive");
 				}
