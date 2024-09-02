@@ -73,11 +73,11 @@ namespace xamarin::android {
 
 		bool already_loaded = !__atomic_compare_exchange (
 			/* ptr */              &entry.func,
-								   /* expected */         &expected_null,
-														  /* desired */          &entry_handle,
-																				 /* weak */              false,
-																										 /* success_memorder */  __ATOMIC_ACQUIRE,
-																																 /* failure_memorder */  __ATOMIC_RELAXED
+			/* expected */         &expected_null,
+			/* desired */          &entry_handle,
+			/* weak */             false,
+			/* success_memorder */ __ATOMIC_ACQUIRE,
+			/* failure_memorder */ __ATOMIC_RELAXED
 		);
 
 		if (already_loaded) {

@@ -218,6 +218,7 @@ namespace Xamarin.Android.Tasks
 						return;
 					}
 					state.PinvokeInfos = pinfos;
+					Log.LogDebugMessage ($"Number of unique p/invokes for architecture '{arch}': {pinfos.Count}");
 				}
 
 				// If this is the first architecture, we need to store the state for later use
