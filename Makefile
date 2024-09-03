@@ -24,7 +24,6 @@ all:
 	$(call DOTNET_BINLOG,all) $(MSBUILD_FLAGS) $(SOLUTION)
 	$(call DOTNET_BINLOG,setup-workload) -t:ConfigureLocalWorkload build-tools/create-packs/Microsoft.Android.Sdk.proj
 
--include bin/Build$(CONFIGURATION)/rules.mk
 
 ifeq ($(OS_NAME),)
 export OS_NAME       := $(shell uname)

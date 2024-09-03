@@ -42,7 +42,6 @@ namespace Xamarin.Android.Prepare
 		bool? useColor;
 		bool? dullMode;
 		Scenario? defaultScenario;
-		List<RuleGenerator>? ruleGenerators;
 		string? debugFileExtension;
 		CompressionFormat? compressionFormat;
 		Dictionary<KnownConditions, bool> conditions  = new Dictionary<KnownConditions, bool> ();
@@ -259,18 +258,6 @@ namespace Xamarin.Android.Prepare
 						throw new InvalidOperationException (".NET for Android install prefix property has an empty value or is absent");
 				}
 				return xaInstallPrefix!;
-			}
-		}
-
-		/// <summary>
-		///   A collection of delegates which can add rules to the `rules.mk` file generated at the end of
-		///   bootstrapper's run
-		/// </summary>
-		public List<RuleGenerator> RuleGenerators {
-			get {
-				if (ruleGenerators == null)
-					ruleGenerators = new List<RuleGenerator> ();
-				return ruleGenerators;
 			}
 		}
 
