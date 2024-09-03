@@ -31,19 +31,6 @@ It is shared between "legacy" binding projects and .NET 5 projects.
     <NoWarn Condition=" '$(DocumentationFile)' != '' ">$(NoWarn);CS1573;CS1591</NoWarn>
   </PropertyGroup>
 
-  <Target Name="_CheckNonIdealBindingConfigurations">
-    <AndroidWarning Code="XA1037"
-        ResourceName="XA1037"
-        FormatArguments="_AndroidUseJavaLegacyResolver;10"
-        Condition=" '$(_AndroidUseJavaLegacyResolver)' == 'true' "
-    />
-    <AndroidWarning Code="XA1037"
-        ResourceName="XA1037"
-        FormatArguments="_AndroidEmitLegacyInterfaceInvokers;10"
-        Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == 'true' "
-    />
-  </Target>
-
   <Target Name="_CollectLibrariesToBind" DependsOnTargets="_CategorizeAndroidLibraries">
     <ItemGroup>
       <_LibrariesToBind  Include="@(EmbeddedJar)" />

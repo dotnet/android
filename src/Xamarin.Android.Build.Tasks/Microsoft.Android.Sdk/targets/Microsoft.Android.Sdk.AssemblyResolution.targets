@@ -33,7 +33,7 @@ _ResolveAssemblies MSBuild target.
       $([MSBuild]::Unescape($(CoreBuildDependsOn.Replace('IncrementalClean;', ''))))
     </CoreBuildDependsOn>
     <CompileDependsOn>
-      _AddAndroidDefines;
+      AndroidPrepareForBuild;
       $(CompileDependsOn);
     </CompileDependsOn>
   </PropertyGroup>

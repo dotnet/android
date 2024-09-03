@@ -486,7 +486,22 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
-<Target Name="_CheckNonIdealConfigurations">
+<Target Name="_CheckNonIdealLibraryConfigurations"
+    Condition=" '$(AndroidApplication)' != 'true' ">
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="_AndroidUseJavaLegacyResolver;10"
+      Condition=" '$(_AndroidUseJavaLegacyResolver)' == 'true' "
+  />
+  <AndroidWarning Code="XA1037"
+      ResourceName="XA1037"
+      FormatArguments="_AndroidEmitLegacyInterfaceInvokers;10"
+      Condition=" '$(_AndroidEmitLegacyInterfaceInvokers)' == 'true' "
+  />
+</Target>
+
+<Target Name="_CheckNonIdealAppConfigurations"
+    Condition=" '$(AndroidApplication)' == 'true' ">
   <AndroidWarning Code="XA0119"
       ResourceName="XA0119_AOT"
       Condition=" '$(EmbedAssembliesIntoApk)' != 'True' And '$(AotAssemblies)' == 'True' "
@@ -542,12 +557,17 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   />
 </Target>
 
+<Target Name="_CheckNonIdealConfigurations"
+    DependsOnTargets="_CheckNonIdealLibraryConfigurations;_CheckNonIdealAppConfigurations">
+</Target>
+
 <!--
 *******************************************
           Application Build
 *******************************************
 -->
 
+<!-- Used by Xamarin.AndroidX.Migration.targets -->
 <Target Name="_ValidateLinkMode">
 </Target>
 
@@ -616,10 +636,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <CallTarget Targets="_CleanMonoAndroidIntermediateDir" Condition=" '$(_AndroidBuildPropertiesCacheExists)' == 'True' " />
   <MakeDir Directories="$(_AndroidStampDirectory)" Condition=" !Exists('$(_AndroidStampDirectory)') " />
   <Touch Files="$(_AndroidStampDirectory)_CleanIntermediateIfNeeded.stamp" AlwaysCreate="true" />
-</Target>
-
-<Target Name="_AddAndroidDefines"
-		DependsOnTargets="$(_OnResolveMonoAndroidSdks)">
 </Target>
 
 <PropertyGroup>
