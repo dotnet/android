@@ -146,23 +146,6 @@ namespace Xamarin.Android.Prepare
 				{ "x86_64",         "x86_64-linux-android" },
 			};
 
-			/// <summary>
-			///   Used in rules.mk generator. Files to include in the XA bundle archives.
-			/// </summary>
-			public static readonly List <string> BundleZipsInclude = new List <string> {
-				"$(ZIP_OUTPUT_BASENAME)/THIRD-PARTY-NOTICES.TXT",
-				"$(ZIP_OUTPUT_BASENAME)/bin/Debug",
-				"$(ZIP_OUTPUT_BASENAME)/bin/Release",
-			};
-
-			/// <summary>
-			///   Used in rules.mk generator. Files to exclude from the XA bundle archives. Must be syntactically
-			///   correct for GNU Make.
-			/// </summary>
-			public static readonly List <string> BundleZipsExclude = new List <string> {
-				"$(ZIP_OUTPUT_BASENAME)/bin/*/bundle-*.zip"
-			};
-
 			public static readonly List <NDKTool> NDKTools = new List<NDKTool> {
 				// Tools prefixed with architecture triple
 				new NDKTool (name: "as", prefixed: true),
