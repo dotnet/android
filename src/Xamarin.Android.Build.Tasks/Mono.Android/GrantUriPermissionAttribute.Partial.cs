@@ -17,8 +17,6 @@ namespace Android.Content {
 		public static IEnumerable<GrantUriPermissionAttribute> FromTypeDefinition (TypeDefinition type, TypeDefinitionCache cache)
 		{
 			IEnumerable<CustomAttribute> attrs = type.GetCustomAttributes ("Android.Content.GrantUriPermissionAttribute");
-			if (!attrs.Any ())
-				yield break;
 			foreach (CustomAttribute attr in attrs) {
 				var self = new GrantUriPermissionAttribute ();
 				self.specified = mapping.Load (self, attr, cache);
