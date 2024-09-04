@@ -246,8 +246,8 @@ class JCWGenerator
 	{
 		logger.LogDebugMessage ($"Ensuring Java type collection in architecture '{state.TargetArch}' matches the one in architecture '{templateState.TargetArch}'");
 
-		var templateSet = new SortedSet<string> (templateState.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
-		var typesSet = new SortedSet<string> (state.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
+		var templateSet = new HashSet<string> (templateState.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
+		var typesSet = new HashSet<string> (state.AllJavaTypes.Select (t => t.FullName), StringComparer.Ordinal);
 
 		if (typesSet.Count != templateSet.Count) {
 			throw new InvalidOperationException ($"Internal error: architecture '{state.TargetArch}' has a different number of types ({typesSet.Count}) than the template architecture '{templateState.TargetArch}' ({templateSet.Count})");
