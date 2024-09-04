@@ -26,7 +26,7 @@ namespace Xamarin.ProjectTools
 			icon_binary_xxxhdpi = GetResourceContents ("mipmap-xxxhdpi/appicon.png");
 		}
 
-		static byte[] GetResourceContents (string resourceName)
+		public static byte[] GetResourceContents (string resourceName)
 		{
 			var assembly    = typeof (XamarinAndroidCommonProject).Assembly;
 			var stream      = assembly.GetManifestResourceStream (resourceName) ??
@@ -36,7 +36,7 @@ namespace Xamarin.ProjectTools
 			}
 			using (stream) {
 				var contents    = new byte [stream.Length];
-				stream.Read (contents, 0, (int) stream.Length);
+				_ = stream.Read (contents, 0, (int) stream.Length);
 				return contents;
 			}
 		}

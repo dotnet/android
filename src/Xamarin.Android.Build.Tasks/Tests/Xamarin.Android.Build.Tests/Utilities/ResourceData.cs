@@ -57,7 +57,7 @@ namespace Xamarin.Android.Build.Tests
 			var assembly = typeof (XamarinAndroidCommonProject).Assembly;
 			using (var stream = assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{keyname}")) {
 				var data = new byte [stream.Length];
-				stream.Read (data, 0, (int) stream.Length);
+				_ = stream.Read (data, 0, (int) stream.Length);
 				return data;
 			}
 		}

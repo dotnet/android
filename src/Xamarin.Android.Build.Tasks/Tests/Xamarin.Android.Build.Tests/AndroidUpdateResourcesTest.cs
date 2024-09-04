@@ -158,12 +158,9 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var proj = new XamarinAndroidApplicationProject ();
 			BuildItem image = null;
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
-				var image_data = new byte [stream.Length];
-				stream.Read (image_data, 0, (int)stream.Length);
-				image = new AndroidItem.AndroidResource ("Resources\\drawable\\Image.png") { BinaryContent = () => image_data };
-				proj.AndroidResources.Add (image);
-			}
+			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
+			image = new AndroidItem.AndroidResource ("Resources\\drawable\\Image.png") { BinaryContent = () => image_data };
+			proj.AndroidResources.Add (image);
 			using (var b = CreateApkBuilder ("temp/MoveResource")) {
 				Assert.IsTrue (b.Build (proj), "First build should have succeeded.");
 				var oldpath = image.Include ().Replace ('\\', Path.DirectorySeparatorChar);
@@ -213,14 +210,11 @@ namespace Xamarin.Android.Build.Tests
 			var proj = new XamarinAndroidApplicationProject ();
 			using (var b = CreateApkBuilder ()) {
 				BuildItem image1, image2;
-				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
-					var image_data = new byte [stream.Length];
-					stream.Read (image_data, 0, (int)stream.Length);
-					image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image1);
-					image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image2);
-				}
+				var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
+				image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.png") { BinaryContent = () => image_data };
+				proj.AndroidResources.Add (image1);
+				image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.png") { BinaryContent = () => image_data };
+				proj.AndroidResources.Add (image2);
 				b.ThrowOnBuildFailure = false;
 				Assert.IsTrue (b.Build (proj), "First build was supposed to build without errors");
 				var firstBuildTime = b.LastBuildTime;
@@ -251,21 +245,14 @@ namespace Xamarin.Android.Build.Tests
 		{
 			var projectPath = Path.Combine ("temp", "Check9PatchFilesAreProcessed");
 			var libproj = new XamarinAndroidLibraryProject () { ProjectName = "Library1"};
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Image.9.png")) {
-				var image_data = new byte [stream.Length];
-				stream.Read (image_data, 0, (int)stream.Length);
-				var image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.9.png") { BinaryContent = () => image_data };
-				libproj.AndroidResources.Add (image2);
-			}
+			var image_data = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Image.9.png");
+			var image2 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image2.9.png") { BinaryContent = () => image_data };
+			libproj.AndroidResources.Add (image2);
 			using (var libb = CreateDllBuilder (Path.Combine (projectPath, "Library1"))) {
 				libb.Build (libproj);
 				var proj = new XamarinFormsMapsApplicationProject ();
-				using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Image.9.png")) {
-					var image_data = new byte [stream.Length];
-					stream.Read (image_data, 0, (int)stream.Length);
-					var image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.9.png") { BinaryContent = () => image_data };
-					proj.AndroidResources.Add (image1);
-				}
+				var image1 = new AndroidItem.AndroidResource ("Resources\\drawable\\Image1.9.png") { BinaryContent = () => image_data };
+				proj.AndroidResources.Add (image1);
 				proj.References.Add (new BuildItem ("ProjectReference", "..\\Library1\\Library1.csproj"));
 				using (var b = CreateApkBuilder (Path.Combine (projectPath, "Application1"), false, false)) {
 					Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

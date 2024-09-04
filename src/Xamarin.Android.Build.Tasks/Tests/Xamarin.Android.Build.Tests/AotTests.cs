@@ -86,11 +86,7 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetProperty (proj.ActiveConfigurationProperties, "AndroidExtraAotOptions", "--verbose");
 
-			byte [] custom_aot_profile;
-			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.custom.aotprofile")) {
-				custom_aot_profile = new byte [stream.Length];
-				stream.Read (custom_aot_profile, 0, (int) stream.Length);
-			}
+			byte [] custom_aot_profile = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.custom.aotprofile");
 			proj.OtherBuildItems.Add (new BuildItem ("AndroidAotProfile", "custom.aotprofile") { BinaryContent = () => custom_aot_profile });
 
 			using var b = CreateApkBuilder ();
