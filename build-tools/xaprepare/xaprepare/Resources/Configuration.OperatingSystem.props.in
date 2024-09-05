@@ -15,6 +15,7 @@
         <HostCc64 Condition=" '$(HostCc64)' == '' ">@HOST_CC64@</HostCc64>
         <HostCxx32 Condition=" '$(HostCxx32)' == '' ">@HOST_CXX32@</HostCxx32>
         <HostCxx64 Condition=" '$(HostCxx64)' == '' ">@HOST_CXX64@</HostCxx64>
+        <JavaSdkVersion>@JAVA_SDK_VERSION@</JavaSdkVersion>
         <JavaSdkDirectory Condition=" '$(JavaSdkDirectory)' == '' ">@JavaSdkDirectory@</JavaSdkDirectory>
         <JavaCPath Condition=" '$(JavaCPath)' == '' ">@javac@</JavaCPath>
         <JarPath Condition=" '$(JarPath)' == '' ">@jar@</JarPath>

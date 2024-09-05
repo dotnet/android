@@ -39,7 +39,7 @@
   <Target Name="_GetDefaultPackageVersion"
       DependsOnTargets="GetXAVersionInfo" >
     <PropertyGroup>
-      <PackageVersion>$(AndroidPackVersionLong)+sha.$(XAVersionHash)</PackageVersion>
+      <PackageVersion>$(AndroidPackVersionLong)</PackageVersion>
     </PropertyGroup>
   </Target>
 

@@ -539,7 +539,7 @@ extends:
         dependsOn:
         - nuget_convert
         - sign_net_linux
-        condition: and(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'Succeeded'))
+        condition: and(or(eq(dependencies.nuget_convert.result, 'Succeeded'), eq(dependencies.nuget_convert.result, 'SucceededWithIssues')), or(eq(dependencies.sign_net_linux.result, 'Succeeded'), eq(dependencies.sign_net_linux.result, 'SucceededWithIssues')))
         timeoutInMinutes: 90
         pool:
           name: AzurePipelines-EO

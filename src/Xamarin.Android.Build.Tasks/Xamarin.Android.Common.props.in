@@ -1,6 +1,14 @@
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-	<!-- Android Sdk Tool versions are sourced from this file. This is maintained in the xamarin-android-tools repo. -->
-	<Import Project="$(MSBuildThisFileDirectory)\Xamarin.Android.Tools.Versions.props" />
+	<PropertyGroup>
+		<AndroidSdkBuildToolsVersion Condition=" '$(AndroidSdkBuildToolsVersion)' == '' ">@SDK_BUILD_TOOLS_VERSION@</AndroidSdkBuildToolsVersion>
+		<AndroidSdkPlatformToolsVersion Condition="'$(AndroidSdkPlatformToolsVersion)' == ''">@SDK_PLATFORM_TOOLS_VERSION@</AndroidSdkPlatformToolsVersion>
+		<AndroidSdkPlatformVersion Condition=" '$(AndroidSdkPlatformVersion)' == '' ">@SDK_PLATFORM_VERSION@</AndroidSdkPlatformVersion>
+
+		<AndroidCommandLineToolsVersion Condition=" '$(AndroidCommandLineToolsVersion)' == '' ">@COMMAND_LINE_TOOLS_VERSION@</AndroidCommandLineToolsVersion>
+		<AndroidSdkEmulatorVersion Condition="'$(AndroidSdkEmulatorVersion)' == ''"></AndroidSdkEmulatorVersion>
+		<AndroidNdkVersion Condition="'$(AndroidNdkVersion)' == ''">@NDK_PKG_REVISION@</AndroidNdkVersion>
+		<JavaSdkVersion Condition="'$(JavaSdkVersion)' == ''">@JAVA_SDK_VERSION@</JavaSdkVersion>
+	</PropertyGroup>
 	<PropertyGroup>
 		<XamarinAndroidVersion Condition=" '$(UsingAndroidNETSdk)' != 'true' ">@PACKAGE_VERSION@-@PACKAGE_VERSION_BUILD@</XamarinAndroidVersion>
 		<_JavaInteropReferences>Java.Interop;System.Runtime</_JavaInteropReferences>
