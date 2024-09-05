@@ -45,33 +45,33 @@ class PinvokeScanner
 				log.LogWarning ($"Failed to resolve assembly '{fasm.ItemSpec}' for target architecture {targetArch}");
 				continue;
 			}
-			Scan (asmdef, pinvokeCache, pinvokes);
+			Scan (targetArch, asmdef, pinvokeCache, pinvokes);
 		}
 
 		return pinvokes;
 	}
 
-	void Scan (AssemblyDefinition assembly, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
+	void Scan (AndroidTargetArch targetArch, AssemblyDefinition assembly, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
 	{
-		log.LogDebugMessage ($"Scanning assembly {assembly}");
+		log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning assembly {assembly}");
 		foreach (ModuleDefinition module in assembly.Modules) {
 			if (!module.HasTypes) {
 				continue;
 			}
 
 			foreach (TypeDefinition type in module.Types) {
-				Scan (type, pinvokeCache, pinvokes);
+				Scan (targetArch, type, pinvokeCache, pinvokes);
 			}
 		}
 	}
 
-	void Scan (TypeDefinition type, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
+	void Scan (AndroidTargetArch targetArch, TypeDefinition type, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
 	{
 		if (!type.HasMethods) {
 			return;
 		}
 
-		log.LogDebugMessage ($"Scanning type '{type}'");
+		log.LogDebugMessage ($"[p/invoke][{targetArch}] Scanning type '{type}'");
 		foreach (MethodDefinition method in type.Methods) {
 			if (!method.HasPInvokeInfo) {
 				continue;
@@ -83,9 +83,17 @@ class PinvokeScanner
 				continue;
 			}
 
-			log.LogDebugMessage ($"  p/invoke method: {pinfo.LibraryName}/{pinfo.EntryName}");
+			log.LogDebugMessage ($"  [{targetArch}] p/invoke method: {pinfo.LibraryName}/{pinfo.EntryName}");
 			pinvokeCache.Add (key);
 			pinvokes.Add (pinfo);
+		}
+
+		if (!type.HasNestedTypes) {
+			return;
+		}
+
+		foreach (TypeDefinition nestedType in type.NestedTypes) {
+			Scan (targetArch, nestedType, pinvokeCache, pinvokes);
 		}
 	}
 }

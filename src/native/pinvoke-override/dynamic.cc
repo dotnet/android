@@ -1562,6 +1562,8 @@ namespace {
 	}
 #endif
 
+	extern "C"
+	[[gnu::noinline]]
 	void* find_pinvoke (hash_t library_name_hash, hash_t entrypoint_hash, bool& known_library)
 	{
 		// Order of `case` statements should be roughly sorted by the (projected) frequency of calls from the
