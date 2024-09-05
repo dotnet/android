@@ -127,19 +127,19 @@ _monodroid_get_network_interface_state (const char *ifname, mono_bool *is_up, mo
 	return ret;
 }
 
-mono_bool
+extern "C" mono_bool
 _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up)
 {
 	return _monodroid_get_network_interface_state (ifname, is_up, nullptr);
 }
 
-mono_bool
+extern "C" mono_bool
 _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast)
 {
 	return _monodroid_get_network_interface_state (ifname, nullptr, supports_multicast);
 }
 
-int
+extern "C" int
 _monodroid_get_dns_servers (void **dns_servers_array)
 {
 	if (!dns_servers_array) {
