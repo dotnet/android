@@ -105,20 +105,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <Import Project="$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets"
         Condition="Exists('$(MSBuildThisFileDirectory)$(MSBuildThisFileName).Before.targets')"/>
 
-
-<!--
-*******************************************
-          Code Analysis Setup
-*******************************************
--->
-
-<PropertyGroup>
-	<XamarinAnalysisTargetsFile Condition="Exists ('$(MSBuildThisFileDirectory)Xamarin.Android.Analysis.targets')">$(MSBuildThisFileDirectory)Xamarin.Android.Analysis.targets</XamarinAnalysisTargetsFile>
-</PropertyGroup>
-
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Analysis.targets"
-	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Analysis.targets')" />
-
 <!--
 *******************************************
           Common Properties
