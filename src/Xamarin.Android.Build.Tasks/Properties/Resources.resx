@@ -1072,4 +1072,9 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
+  <data name="XAGRDL1000" xml:space="preserve">
+    <value>Executable 'gradlew' not found in project directory '{0}'. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts.</value>
+    <comment>The following are literal names and should not be translated: gradlew, Gradle, Gradle Wrapper
+{0} - The value of the AndroidGradleProjectReference item</comment>
+  </data>
 </root>

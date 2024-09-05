@@ -20,7 +20,7 @@ This file contains MSBuild targets that support building and operating on Androi
       <Bind>true</Bind>
       <Configuration>Release</Configuration>
       <ReferenceLibraryOutputs>true</ReferenceLibraryOutputs>
-      <Module></Module>
+      <ModuleName></ModuleName>
       <OutputPath>$(MSBuildProjectDirectory)/$(OutputPath)gradle/</OutputPath>
       <Pack>true</Pack>
       <Visible>false</Visible>
@@ -42,7 +42,7 @@ This file contains MSBuild targets that support building and operating on Androi
 
   <Target Name="BuildAndroidGradleProjects"
       Condition=" '@(AndroidGradleProjectReference->Count())' != '0' "
-      DependsOnTargets="$(BuildAndroidGradleProjectsDependsOnTargets)"
+      DependsOnTargets="_GetBuildAndroidGradleProjectsInputs"
       Inputs="@(_GradleInputs)"
       Outputs="$(_BuildAndroidGradleProjectsStamp)" >
     <!-- Delete outputs folder if inputs have changed to force a partial rebuild -->
@@ -59,12 +59,13 @@ This file contains MSBuild targets that support building and operating on Androi
       <Output TaskParameter="AppOutputs" ItemName="AndroidGradleProjectAppOutputs" />
       <Output TaskParameter="LibraryOutputs" ItemName="AndroidGradleProjectLibraryOutputs" />
     </Gradle>
+
     <Touch Files="$(_BuildAndroidGradleProjectsStamp)" AlwaysCreate="True" />
     <ItemGroup>
       <FileWrites Include="$(_BuildAndroidGradleProjectsStamp)" />
     </ItemGroup>
 
-    <!-- Automatically add library outputs to be processed by following build steps -->
+    <!-- Automatically add library outputs to be bound or otherwise processed later in the build -->
     <ItemGroup>
       <AndroidLibrary Include="@(AndroidGradleProjectLibraryOutputs)" Condition=" '%(AndroidGradleProjectReference.ReferenceLibraryOutputs)' == 'true' ">
         <Bind>%(AndroidGradleProjectReference.Bind)</Bind>

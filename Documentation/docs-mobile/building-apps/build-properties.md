@@ -1019,6 +1019,13 @@ specifying the Java package names of generated Java source code.
 The only supported value is
 `LowercaseCrc64`.
 
+## AndroidPrepareForBuildDependsOn
+
+A semi-colon delimited property that can be used to extend the
+Android build process. MSBuild targets added to this property
+will execute early in the build for both Application and Library
+project types. This property is empty by default.
+
 ## AndroidProguardMappingFile
 
 Specifies the `-printmapping` proguard rule for `r8`. This will

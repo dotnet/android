@@ -807,7 +807,7 @@ because xbuild doesn't support framework reference assemblies.
 	<Message Text="Application Java class: $(AndroidApplicationJavaClass)" />
 </Target>
 
-<Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks)" />
+<Target Name="AndroidPrepareForBuild" DependsOnTargets="$(_OnResolveMonoAndroidSdks);$(AndroidPrepareForBuildDependsOn)" />
 
 <!-- uploadflags.txt
 	- This file says which devices this package has been deployed to.

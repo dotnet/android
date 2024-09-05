@@ -20,10 +20,7 @@ namespace Xamarin.ProjectTools
 
 		public void Create ()
 		{
-			if (Directory.Exists (ProjectDirectory))
-				Directory.Delete (ProjectDirectory, true);
 			Directory.CreateDirectory (ProjectDirectory);
-
 			gradleCLI.Init (ProjectDirectory);
 			var settingsFile = Path.Combine (ProjectDirectory, "settings.gradle.kts");
 			File.WriteAllText (settingsFile, settings_gradle_kts_content);
@@ -32,6 +29,20 @@ namespace Xamarin.ProjectTools
 				module.Create ();
 				File.AppendAllText (settingsFile, $"{Environment.NewLine}include(\":{module.Name}\")");
 			}
+			File.AppendAllText (Path.Combine (ProjectDirectory, "gradle.properties"), "android.useAndroidX=true");
+		}
+
+		public static AndroidGradleProject CreateDefault (string projectDir, bool isApplication = false)
+		{
+			var proj = new AndroidGradleProject (projectDir) {
+				Modules = {
+					new AndroidGradleModule (Path.Combine (projectDir, "TestModule")) {
+						IsApplication = isApplication,
+					},
+				},
+			};
+			proj.Create ();
+			return proj;
 		}
 
 		const string build_gradle_kts_content =

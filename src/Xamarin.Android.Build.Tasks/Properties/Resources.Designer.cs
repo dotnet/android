@@ -1748,5 +1748,14 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA8000", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Executable 'gradlew' not found in project directory '{0}'. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts..
+        /// </summary>
+        public static string XAGRDL1000 {
+            get {
+                return ResourceManager.GetString("XAGRDL1000", resourceCulture);
+            }
+        }
     }
 }

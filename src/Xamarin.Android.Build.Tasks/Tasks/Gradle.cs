@@ -90,8 +90,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			if (string.IsNullOrEmpty (ToolPath) || !File.Exists (GenerateFullPathToTool ())) {
-				// TODO LOC
-				Log.LogError ("Executable 'gradlew' not found in project directory. Please ensure the path to your project folder is correct, and that it contains the Gradle Wrapper.");
+				Log.LogCodedError ("XAGRDL1000", Properties.Resources.XAGRDL1000, ToolPath ?? string.Empty);
 				return false;
 			}
 
