@@ -67,18 +67,20 @@ namespace Xamarin.Android.Tasks
 			// }
 
 			data.DestinationPath = Path.Combine (outputDirectory, $"{Path.GetFileName (data.SourcePath)}.lz4");
-			data.SourceSize = (uint)fi.Length;
+			data.SourceSize = checked((uint)fi.Length);
 
+			int bytesRead;
 			byte[] sourceBytes = null;
 			byte[] destBytes = null;
 			try {
-				sourceBytes = bytePool.Rent (checked((int)fi.Length));
+				int fileSize = checked((int)fi.Length);
+				sourceBytes = bytePool.Rent (fileSize);
 				using (var fs = File.Open (data.SourcePath, FileMode.Open, FileAccess.Read, FileShare.Read)) {
-					fs.Read (sourceBytes, 0, (int)fi.Length);
+					bytesRead = fs.Read (sourceBytes, 0, fileSize);
 				}
 
-				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (sourceBytes.Length));
-				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, checked((int)fi.Length), destBytes, 0, destBytes.Length, LZ4Level.L12_MAX);
+				destBytes = bytePool.Rent (LZ4Codec.MaximumOutputSize (bytesRead));
+				int encodedLength = LZ4Codec.Encode (sourceBytes, 0, bytesRead, destBytes, 0, destBytes.Length, LZ4Level.L12_MAX);
 				if (encodedLength < 0)
 					return CompressionResult.EncodingFailed;
 

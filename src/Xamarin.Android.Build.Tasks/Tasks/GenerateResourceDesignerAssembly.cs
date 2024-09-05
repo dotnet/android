@@ -353,7 +353,7 @@ namespace Xamarin.Android.Tasks
 		{
 			using (Stream stream = typeof (GenerateResourceDesignerAssembly).Assembly.GetManifestResourceStream ("Resource.Designer.snk")) {
 				byte[] publicKey = new byte[stream.Length];
-				stream.Read (publicKey, 0, publicKey.Length);
+				_ = stream.Read (publicKey, 0, publicKey.Length);
 				name.HashAlgorithm = AssemblyHashAlgorithm.SHA1;
 				name.PublicKey = SigningHelper.GetPublicKey (publicKey);
 				name.HasPublicKey = true;

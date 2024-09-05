@@ -215,6 +215,7 @@ visual_basic_preferred_modifier_order = Partial,Default,Private,Protected,Public
 # Code files
 [*.{cs,vb}]
 
+dotnet_diagnostic.CA2022.severity = error		# Avoid inexact read with 'System.IO.FileStream.Read(byte[], int, int)'
 dotnet_diagnostic.CA2153.severity = error		# Do Not Catch Corrupted State Exceptions
 dotnet_diagnostic.CA2301.severity = error		# Do not call BinaryFormatter.Deserialize without first setting BinaryFormatter.Binder
 dotnet_diagnostic.CA2302.severity = error		# Ensure BinaryFormatter.Binder is set before calling BinaryFormatter.Deserialize

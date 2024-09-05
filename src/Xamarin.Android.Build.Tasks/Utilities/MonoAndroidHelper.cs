@@ -175,21 +175,9 @@ namespace Xamarin.Android.Tasks
 			{
 				if (x.Exists != y.Exists || x.Length != y.Length)
 					return false;
-				using (var f1 = File.OpenRead (x.FullName)) {
-					using (var f2 = File.OpenRead (y.FullName)) {
-						var b1 = new byte [0x1000];
-						var b2 = new byte [0x1000];
-						int total = 0;
-						while (total < x.Length) {
-							int size = f1.Read (b1, 0, b1.Length);
-							total += size;
-							f2.Read (b2, 0, b2.Length);
-							if (!b1.Take (size).SequenceEqual (b2.Take (size)))
-								return false;
-						}
-					}
-				}
-				return true;
+				string xHash = Files.HashFile (x.FullName);
+				string yHash = Files.HashFile (y.FullName);
+				return xHash == yHash;
 			}
 
 			public int GetHashCode (FileInfo obj)

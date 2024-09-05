@@ -16,11 +16,8 @@ namespace Xamarin.Android.Build.Tests {
 			Directory.CreateDirectory (Path.Combine (Root, path));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "drawable"));
 			Directory.CreateDirectory (Path.Combine (Root, path, "res", "values"));
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.Icon.png")) {
-				var icon_binary_mdpi = new byte [stream.Length];
-				stream.Read (icon_binary_mdpi, 0, (int)stream.Length);
-				File.WriteAllBytes (Path.Combine (Root, path, "res", "drawable", "IMALLCAPS.png"), icon_binary_mdpi);
-			}
+			var icon_binary_mdpi = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.Icon.png");
+			File.WriteAllBytes (Path.Combine (Root, path, "res", "drawable", "IMALLCAPS.png"), icon_binary_mdpi);
 		}
 
 		[Test]
