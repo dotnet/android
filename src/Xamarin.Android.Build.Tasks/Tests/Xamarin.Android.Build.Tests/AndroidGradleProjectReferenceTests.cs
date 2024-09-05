@@ -58,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 
 			using var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
-			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, "gradle", "outputs", "apk", "release", $"{moduleName}-release-unsigned.apk"));
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-release-unsigned.apk"));
 		}
 
 		static readonly object [] AGPMetadataTestSources = new object [] {
@@ -165,6 +165,52 @@ namespace Xamarin.Android.Build.Tests
 			} else {
 				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
 			}
+		}
+
+		[Test]
+		public void BuildIncremental ()
+		{
+			var gradleProject = AndroidGradleProject.CreateDefault (GradleTestProjectDir);
+			var gradleModule = gradleProject.Modules.First ();
+
+			var proj = new XamarinAndroidLibraryProject {
+				OtherBuildItems = {
+					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+						Metadata = {
+							{ "ModuleName", gradleModule.Name },
+						},
+					},
+				},
+			};
+
+			using var builder = CreateDllBuilder ();
+			builder.Verbosity = LoggerVerbosity.Detailed;
+			Assert.IsTrue (builder.Build (proj), "First build should have succeeded.");
+			var outputAar = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{gradleModule.Name}-release.aar");
+			FileAssert.Exists (outputAar);
+			var outputAarFirstWriteTime = File.GetLastWriteTime (outputAar);
+			var packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
+			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""21""", packagedManifestContent);
+
+			// Build again, BuildAndroidGradleProjects should be skipped
+			builder.BuildLogFile = "build2.log";
+			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("BuildAndroidGradleProjects"), "The 'BuildAndroidGradleProjects' target should be skipped on incremental build");
+			FileAssert.Exists (outputAar);
+			var outputAarSecondWriteTime = File.GetLastWriteTime (outputAar);
+			Assert.IsTrue (outputAarFirstWriteTime == outputAarSecondWriteTime, $"Expected {outputAar} write time to be '{outputAarFirstWriteTime}', but was '{outputAarSecondWriteTime}'");
+
+			// Update gradle project, BuildAndroidGradleProjects should run and outputs should be updated
+			builder.BuildLogFile = "build3.log";
+			gradleModule.MinSdk = 30;
+			gradleModule.WriteGradleBuildFile ();
+			Assert.IsTrue (builder.Build (proj), "Third build should have succeeded.");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("BuildAndroidGradleProjects"), "The 'BuildAndroidGradleProjects' target should run on partial rebuild");
+			FileAssert.Exists (outputAar);
+			var outputAarThirdWriteTime = File.GetLastWriteTime (outputAar);
+			Assert.IsTrue (outputAarThirdWriteTime > outputAarFirstWriteTime, $"Expected '{outputAar}' write time of '{outputAarThirdWriteTime}' to be greater than first write '{outputAarFirstWriteTime}'");
+			packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
+			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""30""", packagedManifestContent);
 		}
 
 		[Test]

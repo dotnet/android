@@ -33,6 +33,8 @@ namespace Xamarin.ProjectTools
 			using (var p = new Process ()) {
 				p.StartInfo.FileName = GradlePath;
 				p.StartInfo.Arguments = string.Join (" ", args);
+				p.StartInfo.Arguments += $" --no-daemon";
+
 				p.StartInfo.CreateNoWindow = true;
 				p.StartInfo.UseShellExecute = false;
 				p.StartInfo.RedirectStandardOutput = true;

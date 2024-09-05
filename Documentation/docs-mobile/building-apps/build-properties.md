@@ -1026,6 +1026,18 @@ Android build process. MSBuild targets added to this property
 will execute early in the build for both Application and Library
 project types. This property is empty by default.
 
+Example:
+
+```xml
+<PropertyGroup>
+  <AndroidPrepareForBuildDependsOn>MyPrepareTarget;</AndroidPrepareForBuildDependsOn>
+</PropertyGroup>
+
+<Target Name="MyPrepareTarget" >
+  <Message Text="Running target: 'MyPrepareTarget'" Importance="high"  />
+</Target>
+```
+
 ## AndroidProguardMappingFile
 
 Specifies the `-printmapping` proguard rule for `r8`. This will

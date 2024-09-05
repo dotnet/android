@@ -39,7 +39,7 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem[] LibraryOutputs { get; set; } = Array.Empty<ITaskItem>();
 
 
-		string InitScriptPath => Path.Combine (WorkingDirectory, IntermediateOutputPath, "net.android.init.gradle.kts");
+		string InitScriptPath => Path.Combine (IntermediateOutputPath, "net.android.init.gradle.kts");
 
 		protected override string ToolName => OS.IsWindows ? "gradlew.bat" : "gradlew";
 
@@ -63,14 +63,17 @@ namespace Xamarin.Android.Tasks
 			}
 			cmd.AppendSwitch (commandArg);
 
+			// If an output path is specified, use init script to set the gradle projects build directory to that path
 			if (!string.IsNullOrEmpty (OutputPath)) {
-				// If an output path is specified, use init script to override the gradle projects build directory
 				cmd.AppendSwitchIfNotNull ("-P", $"netAndroidBuildDirOverride={OutputPath}");
 				cmd.AppendSwitchIfNotNull ("--init-script ", InitScriptPath);
 			}
 
 			if (!string.IsNullOrEmpty (Arguments))
 				cmd.AppendSwitch (Arguments);
+
+			// Do not leave gradle daemon running
+			cmd.AppendSwitch ("--no-daemon");
 
 			return cmd.ToString ();
 		}
@@ -95,22 +98,22 @@ namespace Xamarin.Android.Tasks
 			}
 
 			if (!string.IsNullOrEmpty (OutputPath)) {
-				File.WriteAllText (InitScriptPath, init_script);
+				Files.CopyIfStringChanged (init_script_content, InitScriptPath);
 			}
 
 			bool didTaskSucceed = base.RunTask ();
 			if (didTaskSucceed)
-				CollectProjectOutputs ();
+				CollectOutputs ();
 			return didTaskSucceed;
 		}
 
-		void CollectProjectOutputs ()
+		void CollectOutputs ()
 		{
 			string outDir = string.IsNullOrEmpty (OutputPath) ?  Path.Combine (ToolPath, ModuleName, "build") : OutputPath;
-			string outputDir = Path.Combine (outDir, "outputs");
-			if (Directory.Exists (outputDir)) {
-				AppOutputs = Directory.EnumerateFiles (outputDir, $"*{ModuleName}*.apk", SearchOption.AllDirectories).Select (apk => new TaskItem (apk)).ToArray ();
-				LibraryOutputs = Directory.EnumerateFiles (outputDir, $"*{ModuleName}*.aar", SearchOption.AllDirectories).Select (aar => new TaskItem (aar)).ToArray ();
+			string outputsDir = Path.Combine (outDir, "outputs");
+			if (Directory.Exists (outputsDir)) {
+				AppOutputs = Directory.EnumerateFiles (outputsDir, $"*{ModuleName}*.apk", SearchOption.AllDirectories).Select (apk => new TaskItem (apk)).ToArray ();
+				LibraryOutputs = Directory.EnumerateFiles (outputsDir, $"*{ModuleName}*.aar", SearchOption.AllDirectories).Select (aar => new TaskItem (aar)).ToArray ();
 			}
 			string gradleDirName = Path.GetFileName (Path.GetDirectoryName (GenerateFullPathToTool ()));
 			foreach (var apk in AppOutputs) {
@@ -121,7 +124,7 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
-		const string init_script = @"
+		const string init_script_content = @"
 gradle.projectsLoaded {
 	if (gradle.startParameter.projectProperties.containsKey(""netAndroidBuildDirOverride"")) {
 		val customBuildDir = gradle.startParameter.projectProperties[""netAndroidBuildDirOverride""]
