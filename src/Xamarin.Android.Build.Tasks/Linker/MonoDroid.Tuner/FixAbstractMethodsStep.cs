@@ -113,9 +113,6 @@ namespace MonoDroid.Tuner
 			if (!CheckShouldProcessAssembly (assembly))
 				return;
 
-			if (!MightNeedFix (type))
-				return;
-
 			if (!FixAbstractMethods (type))
 				return;
 
@@ -146,10 +143,18 @@ namespace MonoDroid.Tuner
 		{
 			bool changed = false;
 			foreach (var type in assembly.MainModule.Types) {
-				if (MightNeedFix (type))
-					changed |= FixAbstractMethods (type);
+				changed |= FixAbstractMethodsNested (type);
 			}
 			return changed;
+
+			bool FixAbstractMethodsNested (TypeDefinition type)
+			{
+				bool changed = FixAbstractMethods (type);
+				foreach (var nested in type.NestedTypes) {
+					changed |= FixAbstractMethodsNested (nested);
+				}
+				return changed;
+			}
 		}
 
 		readonly HashSet<string> warnedAssemblies = new (StringComparer.Ordinal);
@@ -281,6 +286,9 @@ namespace MonoDroid.Tuner
 
 		bool FixAbstractMethods (TypeDefinition type)
 		{
+			if (!MightNeedFix (type))
+				return false;
+
 			if (!type.HasInterfaces)
 				return false;
 
