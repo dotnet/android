@@ -17,7 +17,7 @@ namespace Xamarin.Android.Prepare
 	{
 		const string BinutilsVersion                = "L_18.1.6-8.0.0";
 
-		const string MicrosoftOpenJDK17Version      = "17.0.12;
+		const string MicrosoftOpenJDK17Version      = "17.0.12";
 		const string MicrosoftOpenJDK17Release      = "17.0.12";
 		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.12+7";
 
