@@ -28,12 +28,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public readonly LlvmIrModuleTarget Target;
 		public readonly LlvmIrMetadataManager MetadataManager;
 		public readonly LlvmIrTypeCache TypeCache;
+		public readonly LlvmIrGenerator Generator;
 		public string CurrentIndent { get; private set; } = String.Empty;
 		public bool InVariableGroup { get; set; }
 		public LlvmIrVariableNumberFormat NumberFormat { get; set; } = LlvmIrVariableNumberFormat.Default;
 
-		public GeneratorWriteContext (TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
+		public GeneratorWriteContext (LlvmIrGenerator generator, TextWriter writer, LlvmIrModule module, LlvmIrModuleTarget target, LlvmIrMetadataManager metadataManager, LlvmIrTypeCache cache)
 		{
+			Generator = generator;
 			Output = writer;
 			Module = module;
 			Target = target;
@@ -163,7 +165,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			LlvmIrMetadataManager metadataManager = module.GetMetadataManagerCopy ();
 			target.AddTargetSpecificMetadata (metadataManager);
 
-			var context = new GeneratorWriteContext (writer, module, target, metadataManager, module.TypeCache);
+			var context = new GeneratorWriteContext (this, writer, module, target, metadataManager, module.TypeCache);
 			if (!String.IsNullOrEmpty (FilePath)) {
 				WriteCommentLine (context, $" ModuleID = '{FileName}'");
 				context.Output.WriteLine ($"source_filename = \"{FileName}\"");
@@ -670,7 +672,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			return $"{(basicTypeDesc.IsUnsigned ? prefixUnsigned : prefixSigned)}0x{hex}";
 		}
 
-		void WriteValue (GeneratorWriteContext context, Type type, object? value)
+		public void WriteValue (GeneratorWriteContext context, Type type, object? value)
 		{
 			if (value is LlvmIrVariable variableRef) {
 				context.Output.Write (variableRef.Reference);
@@ -1226,6 +1228,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				context.Output.Write (llvmVisibility[func.Visibility]);
 				context.Output.Write (' ');
 			}
+
+			if (func.CallingConvention != LlvmIrCallingConvention.Default) {
+				context.Output.Write (llvmCallingConvention[func.CallingConvention]);
+				context.Output.Write (' ');
+			}
 		}
 
 		void WriteFunctionDeclarationTrailingDecorations (GeneratorWriteContext context, LlvmIrFunction func)
@@ -1251,6 +1258,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 		public static void WriteReturnAttributes (GeneratorWriteContext context, LlvmIrFunctionSignature.ReturnTypeAttributes returnAttrs)
 		{
+			if (AttributeIsSet (returnAttrs.InReg)) {
+				context.Output.Write ("inreg");
+			}
+
 			if (AttributeIsSet (returnAttrs.NoUndef)) {
 				context.Output.Write ("noundef ");
 			}
@@ -1347,6 +1358,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (AttributeIsSet (parameter.ZeroExt)) {
 				attributes.Add ("zeroext");
+			}
+
+			if (AttributeIsSet (parameter.WriteOnly)) {
+				attributes.Add ("writeonly");
 			}
 
 			if (parameter.Align.HasValue) {
