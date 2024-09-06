@@ -634,6 +634,22 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
+		public void AdbTargetArchitecture ()
+		{
+			AssertCommercialBuild ();
+			AssertHasDevices ();
+
+			const string abi = "x86_64";
+			var proj = new XamarinAndroidApplicationProject ();
+
+			using var b = CreateApkBuilder ();
+			b.Verbosity = LoggerVerbosity.Diagnostic;
+			Assert.IsTrue (b.Install (proj, parameters: [ $"AdbTargetArchitecture={abi}" ]), "install should have succeeded.");
+			Assert.IsTrue (StringAssertEx.ContainsText (b.LastBuildOutput, $"Using $(AdbTargetArchitecture): {abi}"),
+				$"`_GetPrimaryCpuAbi` should be skipped for $(AdbTargetArchitecture)!");
+		}
+
+		[Test]
 		public void AppWithAndroidJavaSource ()
 		{
 			var path = Path.Combine ("temp", TestName);
