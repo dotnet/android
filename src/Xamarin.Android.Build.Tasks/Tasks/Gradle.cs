@@ -28,6 +28,8 @@ namespace Xamarin.Android.Tasks
 
 		public string IntermediateOutputPath { get; set; } = string.Empty;
 
+		public bool ReferenceLibraryOutputs { get; set; } = false;
+
 		public string AndroidSdkDirectory { get; set; } = string.Empty;
 
 		public string JavaSdkDirectory { get; set; } = string.Empty;
@@ -121,6 +123,9 @@ namespace Xamarin.Android.Tasks
 			}
 			foreach (var lib in LibraryOutputs) {
 				Log.LogMessage (MessageImportance.High, $"{gradleDirName} -> {lib}");
+				if (ReferenceLibraryOutputs) {
+					Log.LogMessage (Properties.Resources.ResourceManager.GetString ("XAGRDLRefLibraryOutputs", Properties.Resources.Culture), lib);
+				}
 			}
 		}
 

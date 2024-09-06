@@ -78,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 				/* ReferenceLibraryOutputs */    true,
 			},
 			new object [] {
-				/* Bind */                       false,
+				/* Bind */                       true,
 				/* Configuration */              "Debug",
 				/* ReferenceLibraryOutputs */    false,
 			},

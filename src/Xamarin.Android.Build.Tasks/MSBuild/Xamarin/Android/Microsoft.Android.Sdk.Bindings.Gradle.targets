@@ -58,6 +58,7 @@ This file contains MSBuild targets that support building and operating on Androi
         ModuleName="%(AndroidGradleProjectReference.ModuleName)"
         OutputPath="%(AndroidGradleProjectReference.OutputPath)"
         IntermediateOutputPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)"
+        ReferenceLibraryOutputs="%(AndroidGradleProjectReference.ReferenceLibraryOutputs)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         JavaSdkDirectory="$(JavaSdkDirectory)" >
       <Output TaskParameter="AppOutputs" ItemName="_AndroidGradleProjectAppOutputs" />
@@ -95,8 +96,6 @@ This file contains MSBuild targets that support building and operating on Androi
         <Visible>%(AndroidGradleProjectReference.Visible)</Visible>
       </AndroidLibrary>
     </ItemGroup>
-    <Message Text="Adding reference to Gradle output: @(_AndroidGradleProjectLibraryOutputs). The %25(ReferenceLibraryOutputs) metadata can be set to false to opt out of this behavior."
-        Condition=" '@(_AndroidGradleProjectLibraryOutputs->Count())' != '0' and '%(AndroidGradleProjectReference.ReferenceLibraryOutputs)' == 'true' " />
   </Target>
 
   <Target Name="CleanAndroidGradleProjects"

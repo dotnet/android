@@ -1757,5 +1757,14 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XAGRDL1000", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to dding reference to Gradle output: '{0}'. The '%(ReferenceLibraryOutputs)' metadata can be set to 'false' to opt out of this behavior..
+        /// </summary>
+        public static string XAGRDLRefLibraryOutputs {
+            get {
+                return ResourceManager.GetString("XAGRDLRefLibraryOutputs", resourceCulture);
+            }
+        }
     }
 }

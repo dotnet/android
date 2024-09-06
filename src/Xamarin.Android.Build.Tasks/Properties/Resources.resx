@@ -1077,4 +1077,9 @@ To use a custom JDK path for a command line build, set the 'JavaSdkDirectory' MS
     <comment>The following are literal names and should not be translated: gradlew, Gradle, Gradle Wrapper
 {0} - The value of the AndroidGradleProjectReference item</comment>
   </data>
+  <data name="XAGRDLRefLibraryOutputs" xml:space="preserve">
+    <value>Adding reference to Gradle output: '{0}'. The '%(ReferenceLibraryOutputs)' metadata can be set to 'false' to opt out of this behavior.</value>
+    <comment>The following are literal names and should not be translated: Gradle, '%(ReferenceLibraryOutputs)', metadata, 'false'
+{0} - The path to the library output that will be referenced</comment>
+  </data>
 </root>
