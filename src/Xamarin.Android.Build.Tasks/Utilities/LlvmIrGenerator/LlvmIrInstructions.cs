@@ -624,4 +624,109 @@ sealed class LlvmIrInstructions
 			: base ("unreachable")
 		{}
 	}
+
+	public class Switch<T> : LlvmIrInstruction where T: struct
+	{
+		// Since we can't use System.Numerics.IBinaryInteger<T>, this is the poor man's verification that T is acceptable for us
+		static readonly HashSet<Type> acceptedTypes = new () {
+			typeof (byte),
+			typeof (sbyte),
+			typeof (short),
+			typeof (ushort),
+			typeof (int),
+			typeof (uint),
+			typeof (long),
+			typeof (ulong),
+		};
+
+		readonly LlvmIrVariable value;
+		readonly LlvmIrFunctionLabelItem defaultDest;
+		readonly string? automaticLabelPrefix;
+		ulong automaticLabelCounter = 0;
+		List<(T constant, LlvmIrFunctionLabelItem label, string? comment)>? items;
+
+		public Switch (LlvmIrVariable value, LlvmIrFunctionLabelItem defaultDest, string? automaticLabelPrefix = null)
+			: base ("switch")
+		{
+			if (!acceptedTypes.Contains (typeof(T))) {
+				throw new NotSupportedException ($"Type '{typeof(T)}' is unsupported, only integer types are accepted");
+			}
+
+			if (value.Type != typeof (T)) {
+				throw new ArgumentException ($"Must refer to value of type '{typeof(T)}'", nameof (value));
+			}
+
+			this.value = value;
+			this.defaultDest = defaultDest;
+			this.automaticLabelPrefix = automaticLabelPrefix;
+
+			if (!String.IsNullOrEmpty (automaticLabelPrefix)) {
+				items = new ();
+			}
+		}
+
+		protected override void WriteBody (GeneratorWriteContext context)
+		{
+			string irType = LlvmIrGenerator.MapToIRType (value.Type, context.TypeCache, out _, out bool isPointer);
+
+			context.Output.Write (irType);
+			context.Output.Write (' ');
+
+			WriteValue (context, value.Type, value, isPointer);
+
+			context.Output.Write (", label %");
+			context.Output.Write (defaultDest.Name);
+			context.Output.WriteLine (" [");
+			context.IncreaseIndent ();
+
+			foreach ((T constant, LlvmIrFunctionLabelItem label, string? comment) in items) {
+				context.Output.Write (context.CurrentIndent);
+				context.Output.Write (irType);
+				context.Output.Write (' ');
+				context.Generator.WriteValue (context, value.Type, constant);
+				context.Output.Write (", label %");
+				context.Output.Write (label.Name);
+				if (!String.IsNullOrEmpty (comment)) {
+					context.Generator.WriteCommentLine (context, comment);
+				} else {
+					context.Output.WriteLine ();
+				}
+			}
+
+			context.DecreaseIndent ();
+			context.Output.Write (context.CurrentIndent);
+			context.Output.Write (']');
+		}
+
+		public LlvmIrFunctionLabelItem Add (T val, LlvmIrFunctionLabelItem? dest = null, string? comment = null)
+		{
+			var label = MakeLabel (dest);
+			items.Add ((val, label, comment));
+			return label;
+		}
+
+		void EnsureValidity (LlvmIrFunctionLabelItem? dest)
+		{
+			if (dest != null) {
+				return;
+			}
+
+			if (String.IsNullOrEmpty (automaticLabelPrefix)) {
+				throw new InvalidOperationException ($"Internal error: automatic label management requested, but prefix not defined");
+			}
+		}
+
+		LlvmIrFunctionLabelItem MakeLabel (LlvmIrFunctionLabelItem? maybeDest)
+		{
+			EnsureValidity (maybeDest);
+			if (maybeDest != null) {
+				return maybeDest;
+			}
+
+			var ret = new LlvmIrFunctionLabelItem (automaticLabelCounter == 0 ? automaticLabelPrefix : $"{automaticLabelPrefix}{automaticLabelCounter}");
+			automaticLabelCounter++;
+
+			return ret;
+		}
+	}
 }

@@ -46,5 +46,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			{ LlvmIrWritability.Constant, "constant" },
 			{ LlvmIrWritability.Writable, "global" },
 		};
+
+		// https://llvm.org/docs/LangRef.html#callingconv
+		static readonly Dictionary<LlvmIrCallingConvention, string> llvmCallingConvention = new () {
+			{ LlvmIrCallingConvention.Ccc, "ccc" },
+			{ LlvmIrCallingConvention.Fastcc, "fastcc" },
+			{ LlvmIrCallingConvention.Tailcc, "tailcc" },
+		};
 	}
 }

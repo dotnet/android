@@ -21,6 +21,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			public bool? ReadNone;
 			public bool? SignExt;
 			public bool? ZeroExt;
+			public bool? WriteOnly;
 			public bool? IsCplusPlusReference;
 			public bool IsVarArgs;
 
@@ -40,6 +41,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				ReadNone = previousState.ReadNone;
 				SignExt = previousState.SignExt;
 				ZeroExt = previousState.ZeroExt;
+				WriteOnly = previousState.WriteOnly;
 				IsCplusPlusReference = previousState.IsCplusPlusReference;
 				IsVarArgs = previousState.IsVarArgs;
 			}
@@ -129,6 +131,14 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public bool? ZeroExt {
 			get => state.ZeroExt;
 			set => state.ZeroExt = value;
+		}
+
+		/// <summary>
+		/// <c>writeonly</c> attribute, see <see href="https://github.com/llvm/llvm-project/blob/5729e63ac7b47c6ad40f904fedafad3c07cf71ea/llvm/docs/LangRef.rst#L1436"/>
+		/// </summary>
+		public bool? WriteOnly {
+			get => state.WriteOnly;
+			set => state.WriteOnly = value;
 		}
 
 		/// <summary>
@@ -411,6 +421,7 @@ namespace Xamarin.Android.Tasks.LLVMIR
 		public LlvmIrLinkage Linkage                         { get; set; } = LlvmIrLinkage.Default;
 		public LlvmIrRuntimePreemption RuntimePreemption     { get; set; } = LlvmIrRuntimePreemption.Default;
 		public LlvmIrVisibility Visibility                   { get; set; } = LlvmIrVisibility.Default;
+		public LlvmIrCallingConvention CallingConvention     { get; set; } = LlvmIrCallingConvention.Default;
 		public LlvmIrFunctionBody Body                       { get; }
 		public string? Comment                               { get; set; }
 		public bool ReturnsValue                             => Signature.ReturnType != typeof(void);

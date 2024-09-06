@@ -17,10 +17,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	{
 		public readonly LlvmIrFunction NativeFunction;
 		public readonly PinvokeScanner.PinvokeEntryInfo Info;
+		public readonly ulong Hash;
 
-		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
+		public PInvoke (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo, bool is64Bit)
 		{
 			Info = pinfo;
+			Hash = MonoAndroidHelper.GetXxHash (pinfo.EntryName, is64Bit);
 
 			// All the p/invoke functions use the same dummy signature.  The only thing we care about is
 			// a way to reference to the symbol at build time so that we can return pointer to it.  For
@@ -37,12 +39,22 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		public readonly List<PInvoke> PInvokes;
 		public bool Is64Bit;
 
-		public Component (string name, ulong nameHash, List<PInvoke> pinvokes, bool is64Bit)
+		public Component (string name, bool is64Bit)
 		{
 			Name = name;
-			NameHash = nameHash;
-			PInvokes = pinvokes;
+			NameHash = MonoAndroidHelper.GetXxHash (name, is64Bit);
+			PInvokes = new ();
 			Is64Bit = is64Bit;
+		}
+
+		public void Add (LlvmIrModule module, PinvokeScanner.PinvokeEntryInfo pinfo)
+		{
+			PInvokes.Add (new PInvoke (module, pinfo, Is64Bit));
+		}
+
+		public void Sort ()
+		{
+			PInvokes.Sort ((PInvoke a, PInvoke b) => a.Hash.CompareTo (b.Hash));
 		}
 	}
 
@@ -123,23 +135,103 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			Log.LogDebugMessage ("      must be preserved");
 
 			if (!preservedPerComponent.TryGetValue (pinfo.LibraryName, out Component? component)) {
-				component = new Component (
-					pinfo.LibraryName,
-					MonoAndroidHelper.GetXxHash (pinfo.LibraryName, is64Bit),
-					new List<PInvoke> (),
-					is64Bit
-				);
-				preservedPerComponent.Add (pinfo.LibraryName, component);
+				component = new Component (pinfo.LibraryName, is64Bit);
+				preservedPerComponent.Add (component.Name, component);
 			}
-			component.PInvokes.Add (new PInvoke (module, pinfo));
+			component.Add (module, pinfo);
 		}
 
+		var components = new List<Component> (preservedPerComponent.Values);
+		if (is64Bit) {
+			AddFindPinvoke<ulong> (module, components, is64Bit);
+		} else {
+			AddFindPinvoke<uint> (module, components, is64Bit);
+		}
+	}
+
+	void AddFindPinvoke<T> (LlvmIrModule module, List<Component> components, bool is64Bit) where T: struct
+	{
+		var hashType = is64Bit ? typeof (ulong) : typeof (uint);
+		var parameters = new List<LlvmIrFunctionParameter> {
+			new LlvmIrFunctionParameter (hashType, "library_name_hash") {
+				NoUndef = true,
+			},
+
+			new LlvmIrFunctionParameter (hashType, "entrypoint_hash") {
+				NoUndef = true,
+			},
+
+			new LlvmIrFunctionParameter (typeof(IntPtr), "known_library") {
+				Align = 1, // it's a reference to C++ `bool`
+				Dereferenceable = 1,
+				IsCplusPlusReference = true,
+				NoCapture = true,
+				NonNull = true,
+				NoUndef = true,
+				WriteOnly = true,
+			},
+		};
+
+		var sig = new LlvmIrFunctionSignature (
+			name: "find_pinvoke",
+			returnType: typeof(IntPtr),
+			parameters: parameters,
+			new LlvmIrFunctionSignature.ReturnTypeAttributes {
+				NoUndef = true,
+			}
+		);
+
+		// TODO: attributes
+		var func = new LlvmIrFunction (sig, MakeFindPinvokeAttributeSet (module)) {
+			CallingConvention = LlvmIrCallingConvention.Fastcc,
+			Linkage = LlvmIrLinkage.Internal,
+		};
+		module.Add (func);
+		func.Body.Add (new LlvmIrFunctionLabelItem ("entry"));
+
+		var libraryNameSwitchEpilog = new LlvmIrFunctionLabelItem ("libNameSW.epilog");
+		var componentSwitch = new LlvmIrInstructions.Switch<T> (parameters[0], libraryNameSwitchEpilog, "sw.libname");
+		func.Body.Add (componentSwitch);
+
+		components.Sort ((Component a, Component b) => a.NameHash.CompareTo (b.NameHash));
 		Log.LogDebugMessage ("  Components to be preserved:");
-
-		foreach (var kvp in preservedPerComponent) {
-			var component = kvp.Value;
+		foreach (Component component in components) {
+			component.Sort ();
 			Log.LogDebugMessage ($"    {component.Name} (hash: 0x{component.NameHash:x}; {component.PInvokes.Count} p/invoke(s))");
+
+			LlvmIrFunctionLabelItem componentLabel;
+			if (is64Bit) {
+				componentLabel = componentSwitch.Add ((T)(object)component.NameHash);
+			} else {
+				componentLabel = componentSwitch.Add ((T)(object)(uint)component.NameHash);
+			}
+
+			func.Body.Add (componentLabel);
+			// TODO: output component `switch` here
 		}
+
+		func.Body.Add (libraryNameSwitchEpilog);
+	}
+
+	LlvmIrFunctionAttributeSet MakeFindPinvokeAttributeSet (LlvmIrModule module)
+	{
+		var attrSet = new LlvmIrFunctionAttributeSet {
+			new MustprogressFunctionAttribute (),
+			new NofreeFunctionAttribute (),
+			new NorecurseFunctionAttribute (),
+			new NosyncFunctionAttribute (),
+			new NounwindFunctionAttribute (),
+			new WillreturnFunctionAttribute (),
+			new MemoryFunctionAttribute {
+				Default = MemoryAttributeAccessKind.Write,
+				Argmem = MemoryAttributeAccessKind.None,
+				InaccessibleMem = MemoryAttributeAccessKind.None,
+			},
+			new UwtableFunctionAttribute (),
+			new NoTrappingMathFunctionAttribute (true),
+		};
+
+		return module.AddAttributeSet (attrSet);
 	}
 
 	// Returns `true` for all p/invokes that we know are part of our set of components, otherwise returns `false`.
