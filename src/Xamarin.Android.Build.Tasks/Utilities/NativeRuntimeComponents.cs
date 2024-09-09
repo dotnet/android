@@ -12,6 +12,7 @@ class NativeRuntimeComponents
 		public readonly string Name;
 		public bool Include => shouldInclude (this);
 		public readonly bool WholeArchive;
+		public bool DontExportSymbols { get; set; }
 
 		Func<Archive, bool> shouldInclude;
 
@@ -31,6 +32,7 @@ class NativeRuntimeComponents
 			: base (name, include)
 		{
 			ComponentName = componentName;
+			DontExportSymbols = true;
 		}
 	}
 
@@ -52,7 +54,9 @@ class NativeRuntimeComponents
 	{
 		public BclArchive (string name, bool wholeArchive = false)
 			: base (name, wholeArchive: wholeArchive)
-		{}
+		{
+			DontExportSymbols = true;
+		}
 	}
 
 	readonly ITaskItem[] monoComponents;
@@ -77,7 +81,9 @@ class NativeRuntimeComponents
 			new MonoComponentArchive ("libmono-component-marshal-ilgen-stub-static.a",       "marshal-ilgen",       IncludeIfMonoComponentAbsent),
 
 			// MonoVM runtime + BCL
-			new Archive ("libmonosgen-2.0.a"),
+			new Archive ("libmonosgen-2.0.a") {
+				DontExportSymbols = true,
+			},
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
 			new BclArchive ("libSystem.Native.a"),

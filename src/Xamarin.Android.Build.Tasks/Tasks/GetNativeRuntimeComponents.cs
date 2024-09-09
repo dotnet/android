@@ -90,11 +90,16 @@ public class GetNativeRuntimeComponents : AndroidTask
 	{
 		foreach (ITaskItem resolvedArchive in ResolvedNativeArchives) {
 			string fileName = Path.GetFileName (resolvedArchive.ItemSpec);
-			if (String.Compare (fileName, archive.Name, StringComparison.OrdinalIgnoreCase) == 0) {
-				ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", resolvedArchive, uniqueAbis);
-				newItem.SetMetadata (KnownMetadata.LinkWholeArchive, archive.WholeArchive.ToString ());
-				archives.Add (newItem);
+			if (String.Compare (fileName, archive.Name, StringComparison.OrdinalIgnoreCase) != 0) {
+				continue;
 			}
+
+			ITaskItem newItem = DoMakeItem ("_ResolvedNativeArchive", resolvedArchive, uniqueAbis);
+			newItem.SetMetadata (KnownMetadata.NativeLinkWholeArchive, archive.WholeArchive.ToString ());
+			if (archive.DontExportSymbols) {
+				newItem.SetMetadata (KnownMetadata.NativeDontExportSymbols, "true");
+			}
+			archives.Add (newItem);
 		}
 	}
 
