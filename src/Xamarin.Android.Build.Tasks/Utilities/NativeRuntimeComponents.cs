@@ -44,13 +44,13 @@ class NativeRuntimeComponents
 	class AndroidArchive : Archive
 	{
 		public AndroidArchive (string name)
-			: base (name, wholeArchive: true)
+			: base (name, wholeArchive: false)
 		{}
 	}
 
 	sealed class BclArchive : Archive
 	{
-		public BclArchive (string name, bool wholeArchive = true)
+		public BclArchive (string name, bool wholeArchive = false)
 			: base (name, wholeArchive: wholeArchive)
 		{}
 	}
