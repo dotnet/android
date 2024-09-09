@@ -67,7 +67,7 @@ namespace Xamarin.Android.Build.Tests
 			for (int i=0; i < iterations; i++) {
 				action (builder);
 				var duration = GetTaskDurationFromBinLog (builder, task);
-				TestContext.Out.WriteLine($"run {i}took: {duration}ms");
+				TestContext.Out.WriteLine($"run {i} took: {duration}ms");
 				total += duration;
 			}
 			total /= iterations;
