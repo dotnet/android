@@ -192,6 +192,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 		var func = new LlvmIrFunction (sig, MakeFindPinvokeAttributeSet (module)) {
 			CallingConvention = LlvmIrCallingConvention.Fastcc,
+			Visibility = LlvmIrVisibility.Hidden,
 		};
 		LlvmIrLocalVariable retval = func.CreateLocalVariable (typeof(IntPtr), "retval");
 		var state = new ConstructionState {
