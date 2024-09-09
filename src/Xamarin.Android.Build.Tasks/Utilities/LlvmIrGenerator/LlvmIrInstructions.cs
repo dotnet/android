@@ -73,6 +73,8 @@ abstract class LlvmIrInstruction : LlvmIrFunctionBodyItem
 			context.Output.Write ("null");
 		} else if (value is LlvmIrVariable variable) {
 			context.Output.Write (variable.Reference);
+		} else if (value is bool) {
+			context.Output.Write ((bool)value ? "true" : "false");
 		} else {
 			context.Output.Write (MonoAndroidHelper.CultureInvariantToString (value));
 		}
@@ -510,11 +512,27 @@ sealed class LlvmIrInstructions
 
 	public class Phi : LlvmIrInstruction
 	{
+		sealed class Node
+		{
+			public readonly LlvmIrVariableReference? Variable;
+			public readonly LlvmIrFunctionLabelItem? Label;
+
+			public Node (LlvmIrVariableReference? variable, LlvmIrFunctionLabelItem? label)
+			{
+				Variable = variable;
+				Label = label;
+			}
+		}
+
 		LlvmIrVariable result;
-		LlvmIrVariable val1;
-		LlvmIrFunctionLabelItem label1;
-		LlvmIrVariable val2;
-		LlvmIrFunctionLabelItem label2;
+		readonly List<Node> nodes;
+
+		public Phi (LlvmIrVariable result)
+			: base ("phi")
+		{
+			nodes = new ();
+			this.result = result;
+		}
 
 		/// <summary>
 		/// Represents the `phi` instruction form we use the most throughout marshal methods generator - one which refers to an if/else block and where
@@ -522,14 +540,20 @@ sealed class LlvmIrInstructions
 		/// it is possible that <see cref="LlvmIrFunctionBody"/> hasn't had the required blocks defined prior to adding the `phi` instruction and, thus,
 		/// we must check for the possibility here.
 		/// </summary>
-		public Phi (LlvmIrVariable result, LlvmIrVariable val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariable val2, LlvmIrFunctionLabelItem? label2)
+		public Phi (LlvmIrVariable result, LlvmIrVariableReference val1, LlvmIrFunctionLabelItem? label1, LlvmIrVariableReference val2, LlvmIrFunctionLabelItem? label2)
 			: base ("phi")
 		{
 			this.result = result;
-			this.val1 = val1;
-			this.label1 = label1 ?? throw new ArgumentNullException (nameof (label1));
-			this.val2 = val2;
-			this.label2 = label2 ?? throw new ArgumentNullException (nameof (label2));
+
+			nodes = new () {
+				new Node (val1, label1 ?? throw new ArgumentNullException (nameof (label1))),
+				new Node (val2, label2 ?? throw new ArgumentNullException (nameof (label2))),
+			};
+		}
+
+		public void AddNode (LlvmIrFunctionLabelItem label, LlvmIrVariableReference? variable)
+		{
+			nodes.Add (new Node (variable, label));
 		}
 
 		protected override void WriteValueAssignment (GeneratorWriteContext context)
@@ -541,14 +565,42 @@ sealed class LlvmIrInstructions
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
 			context.Output.Write (LlvmIrGenerator.MapToIRType (result.Type, context.TypeCache));
+			context.IncreaseIndent ();
+
+			bool first = true;
+			foreach (Node node in nodes) {
+				if (!first) {
+					context.Output.WriteLine (',');
+				} else {
+					first = false;
+					context.Output.WriteLine ();
+				}
+				context.Output.Write (context.CurrentIndent);
+				WriteNode (context, node);
+			}
+			context.DecreaseIndent ();
+
+			// context.Output.Write (" [");
+			// context.Output.Write (val1.Reference);
+			// context.Output.Write (", %");
+			// context.Output.Write (label1.Name);
+			// context.Output.Write ("], [");
+			// context.Output.Write (val2.Reference);
+			// context.Output.Write (", %");
+			// context.Output.Write (label2.Name);
+			// context.Output.Write (']');
+		}
+
+		void WriteNode (GeneratorWriteContext context, Node node)
+		{
+			if (node.Label == null) {
+				throw new NotImplementedException ("Internal error: null labels not implemented");
+			}
+
 			context.Output.Write (" [");
-			context.Output.Write (val1.Reference);
+			context.Output.Write (node.Variable == null ? "null" : node.Variable.Reference);
 			context.Output.Write (", %");
-			context.Output.Write (label1.Name);
-			context.Output.Write ("], [");
-			context.Output.Write (val2.Reference);
-			context.Output.Write (", %");
-			context.Output.Write (label2.Name);
+			context.Output.Write (node.Label.Name);
 			context.Output.Write (']');
 		}
 	}
@@ -594,6 +646,13 @@ sealed class LlvmIrInstructions
 			this.to = to;
 		}
 
+		public Store (object from, LlvmIrVariable to)
+			: base (Opcode)
+		{
+			this.from = from;
+			this.to = to;
+		}
+
 		/// <summary>
 		/// Stores `null` in the indicated variable
 		/// </summary>
@@ -605,7 +664,8 @@ sealed class LlvmIrInstructions
 
 		protected override void WriteBody (GeneratorWriteContext context)
 		{
-			string irType = LlvmIrGenerator.MapToIRType (to.Type, context.TypeCache, out ulong size, out bool isPointer);
+			Type type = from?.GetType () ?? to.Type;
+			string irType = LlvmIrGenerator.MapToIRType (type, context.TypeCache, out ulong size, out bool isPointer);
 			context.Output.Write (irType);
 			context.Output.Write (' ');
 
@@ -687,6 +747,7 @@ sealed class LlvmIrInstructions
 				context.Output.Write (", label %");
 				context.Output.Write (label.Name);
 				if (!String.IsNullOrEmpty (comment)) {
+					context.Output.Write (' ');
 					context.Generator.WriteCommentLine (context, comment);
 				} else {
 					context.Output.WriteLine ();

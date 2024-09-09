@@ -58,6 +58,15 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		}
 	}
 
+	sealed class ConstructionState
+	{
+		public LlvmIrFunction Func;
+		public LlvmIrFunctionLabelItem ReturnLabel;
+		public LlvmIrFunctionParameter EntryPointHashParam;
+		public LlvmIrInstructions.Phi Phi;
+		public bool Is64Bit;
+	}
+
 	// Maps a component name after ridding it of the `lib` prefix and the extension to a "canonical"
 	// name of a library, as used in `[DllImport]` attributes.
 	readonly Dictionary<string, string> libraryNameMap = new (StringComparer.Ordinal) {
@@ -181,36 +190,94 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			}
 		);
 
-		// TODO: attributes
 		var func = new LlvmIrFunction (sig, MakeFindPinvokeAttributeSet (module)) {
 			CallingConvention = LlvmIrCallingConvention.Fastcc,
 			Linkage = LlvmIrLinkage.Internal,
 		};
-		module.Add (func);
-		func.Body.Add (new LlvmIrFunctionLabelItem ("entry"));
+		LlvmIrLocalVariable retval = func.CreateLocalVariable (typeof(IntPtr), "retval");
+		var state = new ConstructionState {
+			Func = func,
+			ReturnLabel = new LlvmIrFunctionLabelItem ("return"),
+			EntryPointHashParam = parameters[1],
+			Phi = new LlvmIrInstructions.Phi (retval),
+			Is64Bit = is64Bit,
+		};
+		module.Add (state.Func);
+		state.Func.Body.Add (new LlvmIrFunctionLabelItem ("entry"));
 
 		var libraryNameSwitchEpilog = new LlvmIrFunctionLabelItem ("libNameSW.epilog");
 		var componentSwitch = new LlvmIrInstructions.Switch<T> (parameters[0], libraryNameSwitchEpilog, "sw.libname");
-		func.Body.Add (componentSwitch);
+
+		state.Func.Body.Add (componentSwitch);
+		state.Phi.AddNode (libraryNameSwitchEpilog, null);
 
 		components.Sort ((Component a, Component b) => a.NameHash.CompareTo (b.NameHash));
 		Log.LogDebugMessage ("  Components to be preserved:");
+		uint componentID = 1;
+
 		foreach (Component component in components) {
-			component.Sort ();
 			Log.LogDebugMessage ($"    {component.Name} (hash: 0x{component.NameHash:x}; {component.PInvokes.Count} p/invoke(s))");
 
-			LlvmIrFunctionLabelItem componentLabel;
-			if (is64Bit) {
-				componentLabel = componentSwitch.Add ((T)(object)component.NameHash);
-			} else {
-				componentLabel = componentSwitch.Add ((T)(object)(uint)component.NameHash);
-			}
+			string comment = $" {component.Name}";
+			LlvmIrFunctionLabelItem componentLabel = AddSwitchItem<T> (componentSwitch, component.NameHash, is64Bit, comment, null);
 
-			func.Body.Add (componentLabel);
-			// TODO: output component `switch` here
+			func.Body.Add (componentLabel, comment);
+			AddPInvokeSwitch<T> (state, componentLabel, component, componentID++);
 		}
 
 		func.Body.Add (libraryNameSwitchEpilog);
+
+		var setKnownLib = new LlvmIrInstructions.Store (false, parameters[2]);
+		func.Body.Add (setKnownLib);
+		AddReturnBranch (func, state.ReturnLabel);
+
+		func.Body.Add (state.ReturnLabel);
+		func.Body.Add (state.Phi);
+		func.Body.Add (new LlvmIrInstructions.Ret (typeof (IntPtr), retval));
+	}
+
+	void AddPInvokeSwitch<T> (ConstructionState state, LlvmIrFunctionLabelItem componentLabel, Component component, uint id) where T: struct
+	{
+		var pinvokeSwitchEpilog = new LlvmIrFunctionLabelItem ($"pinvokeSW.epilog.{id}");
+		state.Phi.AddNode (pinvokeSwitchEpilog, null);
+
+		var pinvokeSwitch = new LlvmIrInstructions.Switch<T> (state.EntryPointHashParam, pinvokeSwitchEpilog, $"sw.pinvoke.{id}");
+		state.Func.Body.Add (pinvokeSwitch);
+
+		component.Sort ();
+		bool first = true;
+		foreach (PInvoke pi in component.PInvokes) {
+			string pinvokeName = pi.NativeFunction.Signature.Name;
+			string comment = $" {pinvokeName}";
+			LlvmIrFunctionLabelItem pinvokeLabel = AddSwitchItem<T> (pinvokeSwitch, pi.Hash, state.Is64Bit, comment, first ? state.ReturnLabel : null);
+
+			// First item of every component switch block "reuses" the block's label
+			if (first) {
+				first = false;
+			} else {
+				state.Func.Body.Add (pinvokeLabel, comment);
+				AddReturnBranch (state.Func, state.ReturnLabel);
+			}
+
+			state.Phi.AddNode (pinvokeLabel == state.ReturnLabel ? componentLabel : pinvokeLabel, new LlvmIrGlobalVariableReference (pinvokeName));
+		}
+
+		state.Func.Body.Add (pinvokeSwitchEpilog);
+		AddReturnBranch (state.Func, state.ReturnLabel);
+	}
+
+	void AddReturnBranch (LlvmIrFunction func, LlvmIrFunctionLabelItem returnLabel)
+	{
+		var branch = new LlvmIrInstructions.Br (returnLabel);
+		func.Body.Add (branch);
+	}
+
+	LlvmIrFunctionLabelItem AddSwitchItem<T> (LlvmIrInstructions.Switch<T> sw, ulong hash, bool is64Bit, string? comment, LlvmIrFunctionLabelItem? label) where T: struct
+	{
+		if (is64Bit) {
+			return sw.Add ((T)(object)hash, dest: label, comment: comment);
+		}
+		return sw.Add ((T)(object)(uint)hash, dest: label, comment: comment);
 	}
 
 	LlvmIrFunctionAttributeSet MakeFindPinvokeAttributeSet (LlvmIrModule module)
