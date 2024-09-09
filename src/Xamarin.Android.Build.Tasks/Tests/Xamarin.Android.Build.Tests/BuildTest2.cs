@@ -795,6 +795,21 @@ namespace UnamedProject
 		}
 
 		[Test]
+		public void DesignTimeBuildMissingAndroidPlatformJar ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "35.0.0", []);
+			try {
+				var proj = new XamarinAndroidApplicationProject ();
+				using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+				Assert.IsTrue (builder.DesignTimeBuild (proj, parameters: [$"AndroidSdkDirectory={androidSdkPath}"]),
+					"design-time build should have succeeded.");
+			} finally {
+				Directory.Delete (androidSdkPath, recursive: true);
+			}
+		}
+
+		[Test]
 		public void AndroidResourceNotExist ()
 		{
 			var proj = new XamarinAndroidApplicationProject {

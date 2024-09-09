@@ -1,12 +1,7 @@
 // Copyright (C) 2022 Microsoft Ltd, Inc. All rights reserved.
 using System;
-using System.CodeDom;
-using System.CodeDom.Compiler;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using Microsoft.Build.Framework;
-using Microsoft.Build.Utilities;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -22,7 +17,6 @@ namespace Xamarin.Android.Tasks
 		public string ResourceDirectory { get; set; }
 		public string[] AdditionalResourceDirectories { get; set; }
 
-		[Required]
 		public string JavaPlatformJarPath { get; set; }
 
 		public string ResourceFlagFile { get; set; }
@@ -35,7 +29,7 @@ namespace Xamarin.Android.Tasks
 
 			var resource_fixup = MonoAndroidHelper.LoadMapFile (BuildEngine4, Path.GetFullPath (CaseMapFile), StringComparer.OrdinalIgnoreCase);
 
-			var javaPlatformDirectory = Path.GetDirectoryName (JavaPlatformJarPath);
+			var javaPlatformDirectory = string.IsNullOrEmpty (JavaPlatformJarPath) ? "" : Path.GetDirectoryName (JavaPlatformJarPath);
 			var parser = new FileResourceParser () { Log = Log, JavaPlatformDirectory = javaPlatformDirectory, ResourceFlagFile = ResourceFlagFile};
 			var resources = parser.Parse (ResourceDirectory, AdditionalResourceDirectories, resource_fixup);
 
