@@ -13,6 +13,7 @@ This file contains MSBuild targets that support building and operating on Androi
 
   <PropertyGroup>
     <_BuildAndroidGradleProjectsStamp>$(_AndroidStampDirectory)_BuildAndroidGradleProjects.stamp</_BuildAndroidGradleProjectsStamp>
+    <_AGPOutputCacheFile>agpoutputs.cache</_AGPOutputCacheFile>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
@@ -66,7 +67,7 @@ This file contains MSBuild targets that support building and operating on Androi
     </Gradle>
 
     <WriteLinesToFile
-        File="%(AndroidGradleProjectReference.OutputPath)libraryoutputs.txt"
+        File="%(AndroidGradleProjectReference.OutputPath)$(_AGPOutputCacheFile)"
         Lines="@(_AndroidGradleProjectLibraryOutputs)"
         Overwrite="true"
         WriteOnlyWhenDifferent="true"
@@ -86,7 +87,7 @@ This file contains MSBuild targets that support building and operating on Androi
   <Target Name="_IncludeAndroidGradleProjectsOutputs"
       AfterTargets="BuildAndroidGradleProjects"
       Condition=" '@(AndroidGradleProjectReference->Count())' != '0' ">
-    <ReadLinesFromFile File="%(AndroidGradleProjectReference.OutputPath)libraryoutputs.txt" >
+    <ReadLinesFromFile File="%(AndroidGradleProjectReference.OutputPath)$(_AGPOutputCacheFile)" >
       <Output TaskParameter="Lines" ItemName="_AndroidGradleProjectLibraryOutputs"/>
     </ReadLinesFromFile>
     <ItemGroup>

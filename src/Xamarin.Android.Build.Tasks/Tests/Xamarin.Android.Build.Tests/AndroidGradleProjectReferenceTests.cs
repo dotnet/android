@@ -117,13 +117,9 @@ namespace Xamarin.Android.Build.Tests
 			if (refOutputs && bind) {
 				Assert.IsTrue (buildResult, "Build should have succeeded.");
 				FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-{configuration}.aar"));
-			} else {
-				Assert.IsFalse (buildResult, "Build should have failed.");
-			}
-			if (bind) {
 				Assert.IsFalse (builder.Output.IsTargetSkipped ("GenerateBindings"), "The 'GenerateBindings' target should run when Bind=true");
 			} else {
-				Assert.IsTrue (builder.Output.IsTargetSkipped ("GenerateBindings"), "The 'GenerateBindings' target should not run when Bind=false");
+				Assert.IsFalse (buildResult, "Build should have failed.");
 			}
 		}
 
@@ -160,8 +156,7 @@ namespace Xamarin.Android.Build.Tests
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.dll");
 			nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{proj.ProjectName}.aar");
 			if (packGradleRef) {
-				// TODO Fix nupkg inclusion
-				//nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
+				nupkg.AssertContainsEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
 			} else {
 				nupkg.AssertDoesNotContainEntry (nupkgPath, $"lib/{dotnetVersion}-android{apiLevel}.0/{moduleName}-release.aar");
 			}

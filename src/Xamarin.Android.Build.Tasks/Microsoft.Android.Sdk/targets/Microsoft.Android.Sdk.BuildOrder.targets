@@ -193,6 +193,10 @@ properties that determine build ordering.
       _DetermineBindingJavaLibrariesToCompile;
       _GetJavaPlatformJar;
     </_CompileBindingJavaDependsOnTargets>
+    <_IncludeAarInNuGetPackageDependsOn>
+      _IncludeAndroidGradleProjectsOutputs;
+      _CategorizeAndroidLibraries;
+    </_IncludeAarInNuGetPackageDependsOn>
   </PropertyGroup>
 
 </Project>

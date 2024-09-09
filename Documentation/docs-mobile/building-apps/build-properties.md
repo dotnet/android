@@ -1,7 +1,7 @@
 ---
 title: .NET for Android Build Properties
 description: .NET for Android Build Properties
-ms.date: 04/11/2024
+ms.date: 09/09/2024
 ---
 
 # Build Properties

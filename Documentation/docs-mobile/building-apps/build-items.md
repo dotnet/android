@@ -1,7 +1,7 @@
 ---
 title: .NET for Android Build Items
 description: .NET for Android Build Items
-ms.date: 04/11/2024
+ms.date: 09/09/2024
 ---
 
 # Build Items
@@ -128,6 +128,35 @@ The `AndroidEnvironment` Build action may be applied to
 multiple files, and they will be evaluated in no particular order (so don't
 specify the same environment variable or system property in multiple
 files).
+
+## AndroidGradleProjectReference
+
+`<AndroidGradleProjectReference>` can be used to build and consume the outputs
+of Android Gradle projects.
+
+The `Include` metadata should point to the root directory of your Gradle project
+which contains the `gradlew` wrapper scripts and `build.gradle` files that will
+be used to build the project.
+
+```xml
+<ItemGroup>
+  <AndroidGradleProjectReference Include="path/to/gradle/project" ModuleName="mylibrary" />
+</ItemGroup>
+```
+
+The following MSBuild metadata are supported:
+
+- `%(Configuration)`: The name of the configuration to use to build or assemble
+  the project or project module specified. The default value is `Release`.
+- `%(ModuleName)`: The name of the [module or subproject](https://docs.gradle.org/current/userguide/intro_multi_project_builds.html) that should be built.
+  The default value is empty.
+- `%(OutputPath)`: Can be set to override the build output path of the Gradle project.
+  The default value is `$(IntermediateOutputPath)gradle/{projectname}`.
+- `%(ReferenceLibraryOutputs)`: Output AAR files will be added as an [`AndroidLibrary`](#androidlibrary) to the project.
+  Metadata supported by `<AndroidLibrary>` like `%(Bind)` or `%(Pack)` will be forwarded if set.
+  The default value is `true`.
+
+This build action was introduced in .NET 9.
 
 ## AndroidJavaLibrary
 
