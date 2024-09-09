@@ -114,30 +114,35 @@ class NativeLinker
 
 		string libBaseName = Path.GetFileNameWithoutExtension (outputLibraryPath.ItemSpec);
 		string respFilePath = Path.Combine (intermediateDir, $"ld.{libBaseName}.{abi}.rsp");
-		using (var sw = new StreamWriter (File.Open (respFilePath, FileMode.Create, FileAccess.Write, FileShare.Read), new UTF8Encoding (false))) {
-			foreach (string arg in standardArgs) {
-				sw.WriteLine (arg);
-			}
-
-			foreach (string arg in extraArgs) {
-				sw.WriteLine (arg);
-			}
-
-			if (StripDebugSymbols && !SaveDebugSymbols) {
-				sw.WriteLine ("-s");
-			}
-
-			WriteFilesToResponseFile (sw, linkStartFiles);
-			WriteFilesToResponseFile (sw, objectFiles);
-			WriteFilesToResponseFile (sw, archives);
-
-			foreach (ITaskItem libItem in libraries) {
-				sw.WriteLine ($"-l{libItem.ItemSpec}");
-			}
-
-			WriteFilesToResponseFile (sw, linkEndFiles);
-			sw.Flush ();
+		using var sw = new StreamWriter (File.Open (respFilePath, FileMode.Create, FileAccess.Write, FileShare.Read), new UTF8Encoding (false));
+		foreach (string arg in standardArgs) {
+			sw.WriteLine (arg);
 		}
+
+		foreach (string arg in extraArgs) {
+			sw.WriteLine (arg);
+		}
+
+		if (StripDebugSymbols && !SaveDebugSymbols) {
+			sw.WriteLine ("-s");
+		}
+
+		var excludeExportsLibs = new List<string> ();
+		WriteFilesToResponseFile (sw, linkStartFiles);
+		WriteFilesToResponseFile (sw, objectFiles);
+		WriteFilesToResponseFile (sw, archives);
+
+		if (excludeExportsLibs.Count > 0) {
+			string libs = String.Join (",", excludeExportsLibs);
+			sw.WriteLine ($"--exclude-libs={libs}");
+		}
+
+		foreach (ITaskItem libItem in libraries) {
+			sw.WriteLine ($"-l{libItem.ItemSpec}");
+		}
+
+		WriteFilesToResponseFile (sw, linkEndFiles);
+		sw.Flush ();
 
 		var ldArgs = new List<string> {
 			$"@{respFilePath}",
@@ -163,6 +168,10 @@ class NativeLinker
 			foreach (ITaskItem file in files) {
 				bool wholeArchive = IncludeWholeArchive (file);
 
+				if (ExcludeFromExports (file)) {
+					excludeExportsLibs.Add (Path.GetFileName (file.ItemSpec));
+				}
+
 				if (wholeArchive) {
 					sw.Write ("--whole-archive ");
 				}
@@ -178,15 +187,18 @@ class NativeLinker
 			}
 		}
 
-		bool IncludeWholeArchive (ITaskItem item)
+		bool IncludeWholeArchive (ITaskItem item) => ParseBooleanMetadata (item, KnownMetadata.NativeLinkWholeArchive);
+		bool ExcludeFromExports (ITaskItem item) => ParseBooleanMetadata (item, KnownMetadata.NativeDontExportSymbols);
+
+		bool ParseBooleanMetadata (ITaskItem item, string metadata)
 		{
-			string? wholeArchive = item.GetMetadata (KnownMetadata.LinkWholeArchive);
-			if (String.IsNullOrEmpty (wholeArchive)) {
+			string? value = item.GetMetadata (metadata);
+			if (String.IsNullOrEmpty (value)) {
 				return false;
 			}
 
 			// Purposefully not calling TryParse, let it throw and let us know if the value isn't a boolean.
-			return Boolean.Parse (wholeArchive);
+			return Boolean.Parse (value);
 		}
 	}
 
