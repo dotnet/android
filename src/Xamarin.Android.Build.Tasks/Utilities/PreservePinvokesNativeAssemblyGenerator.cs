@@ -192,7 +192,6 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 		var func = new LlvmIrFunction (sig, MakeFindPinvokeAttributeSet (module)) {
 			CallingConvention = LlvmIrCallingConvention.Fastcc,
-			Linkage = LlvmIrLinkage.Internal,
 		};
 		LlvmIrLocalVariable retval = func.CreateLocalVariable (typeof(IntPtr), "retval");
 		var state = new ConstructionState {
@@ -218,7 +217,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		foreach (Component component in components) {
 			Log.LogDebugMessage ($"    {component.Name} (hash: 0x{component.NameHash:x}; {component.PInvokes.Count} p/invoke(s))");
 
-			string comment = $" {component.Name}";
+			string comment = $" {component.Name} (p/invoke count: {component.PInvokes.Count})";
 			LlvmIrFunctionLabelItem componentLabel = AddSwitchItem<T> (componentSwitch, component.NameHash, is64Bit, comment, null);
 
 			func.Body.Add (componentLabel, comment);
