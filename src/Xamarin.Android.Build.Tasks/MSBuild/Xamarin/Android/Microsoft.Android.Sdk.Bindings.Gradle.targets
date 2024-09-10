@@ -59,18 +59,21 @@ This file contains MSBuild targets that support building and operating on Androi
         ModuleName="%(AndroidGradleProjectReference.ModuleName)"
         OutputPath="%(AndroidGradleProjectReference.OutputPath)"
         IntermediateOutputPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)"
-        ReferenceLibraryOutputs="%(AndroidGradleProjectReference.ReferenceLibraryOutputs)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         JavaSdkDirectory="$(JavaSdkDirectory)" >
-      <Output TaskParameter="AppOutputs" ItemName="_AndroidGradleProjectAppOutputs" />
-      <Output TaskParameter="LibraryOutputs" ItemName="_AndroidGradleProjectLibraryOutputs" />
     </Gradle>
 
-    <WriteLinesToFile
-        File="%(AndroidGradleProjectReference.OutputPath)$(_AGPOutputCacheFile)"
-        Lines="@(_AndroidGradleProjectLibraryOutputs)"
-        Overwrite="true"
-        WriteOnlyWhenDifferent="true"
+    <ItemGroup>
+      <_AndroidGradleProjectAppOutputs      Include="%(AndroidGradleProjectReference.OutputPath)outputs/**/*.apk" />
+      <_AndroidGradleProjectLibraryOutputs  Include="%(AndroidGradleProjectReference.OutputPath)outputs/**/*.aar"
+          Condition=" '%(ReferenceLibraryOutputs)' == true"
+          Bind="%(Bind)"
+          Pack="%(Pack)"
+          Visible="%(Visible)" />
+    </ItemGroup>
+
+    <AndroidMessage ResourceName="XAGRDLRefLibraryOutputs"
+        FormatArguments="%(_AndroidGradleProjectLibraryOutputs.FullPath)"
         Condition=" '@(_AndroidGradleProjectLibraryOutputs->Count())' != '0' "
     />
 
@@ -79,23 +82,8 @@ This file contains MSBuild targets that support building and operating on Androi
       <FileWrites Include="$(_BuildAndroidGradleProjectsStamp);%(AndroidGradleProjectReference.OutputPath)**/*" />
       <!-- Copy app output files to $(OutputPath) -->
       <None Include="@(_AndroidGradleProjectAppOutputs)" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
-    </ItemGroup>
-  </Target>
-
-  <!-- Automatically add library outputs to be bound or otherwise processed later in the build
-        This is done in a separate target to ensure @(AndroidLibrary) items are added even when BuildAndroidGradleProjects is skipped -->
-  <Target Name="_IncludeAndroidGradleProjectsOutputs"
-      AfterTargets="BuildAndroidGradleProjects"
-      Condition=" '@(AndroidGradleProjectReference->Count())' != '0' ">
-    <ReadLinesFromFile File="%(AndroidGradleProjectReference.OutputPath)$(_AGPOutputCacheFile)" >
-      <Output TaskParameter="Lines" ItemName="_AndroidGradleProjectLibraryOutputs"/>
-    </ReadLinesFromFile>
-    <ItemGroup>
-      <AndroidLibrary Include="@(_AndroidGradleProjectLibraryOutputs)" Condition=" '%(AndroidGradleProjectReference.ReferenceLibraryOutputs)' == 'true' ">
-        <Bind>%(AndroidGradleProjectReference.Bind)</Bind>
-        <Pack>%(AndroidGradleProjectReference.Pack)</Pack>
-        <Visible>%(AndroidGradleProjectReference.Visible)</Visible>
-      </AndroidLibrary>
+      <!-- Automatically add library outputs to be bound or otherwise processed later in the build -->
+      <AndroidLibrary Include="@(_AndroidGradleProjectLibraryOutputs)" Bind="%(Bind)" Pack="%(Pack)" Visible="%(Visible)" />
     </ItemGroup>
   </Target>
 

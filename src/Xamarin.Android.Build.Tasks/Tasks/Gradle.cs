@@ -28,18 +28,9 @@ namespace Xamarin.Android.Tasks
 
 		public string IntermediateOutputPath { get; set; } = string.Empty;
 
-		public bool ReferenceLibraryOutputs { get; set; } = false;
-
 		public string AndroidSdkDirectory { get; set; } = string.Empty;
 
 		public string JavaSdkDirectory { get; set; } = string.Empty;
-
-		[Output]
-		public ITaskItem[] AppOutputs { get; set; } = Array.Empty<ITaskItem>();
-
-		[Output]
-		public ITaskItem[] LibraryOutputs { get; set; } = Array.Empty<ITaskItem>();
-
 
 		string InitScriptPath => Path.Combine (IntermediateOutputPath, "net.android.init.gradle.kts");
 
@@ -103,30 +94,7 @@ namespace Xamarin.Android.Tasks
 				Files.CopyIfStringChanged (init_script_content, InitScriptPath);
 			}
 
-			bool didTaskSucceed = base.RunTask ();
-			if (didTaskSucceed)
-				CollectOutputs ();
-			return didTaskSucceed;
-		}
-
-		void CollectOutputs ()
-		{
-			string outDir = string.IsNullOrEmpty (OutputPath) ?  Path.Combine (ToolPath, ModuleName, "build") : OutputPath;
-			string outputsDir = Path.Combine (outDir, "outputs");
-			if (Directory.Exists (outputsDir)) {
-				AppOutputs = Directory.EnumerateFiles (outputsDir, $"*{ModuleName}*.apk", SearchOption.AllDirectories).Select (apk => new TaskItem (apk)).ToArray ();
-				LibraryOutputs = Directory.EnumerateFiles (outputsDir, $"*{ModuleName}*.aar", SearchOption.AllDirectories).Select (aar => new TaskItem (aar)).ToArray ();
-			}
-			string gradleDirName = Path.GetFileName (Path.GetDirectoryName (GenerateFullPathToTool ()));
-			foreach (var apk in AppOutputs) {
-				Log.LogMessage (MessageImportance.High, $"{gradleDirName} -> {apk}");
-			}
-			foreach (var lib in LibraryOutputs) {
-				Log.LogMessage (MessageImportance.High, $"{gradleDirName} -> {lib}");
-				if (ReferenceLibraryOutputs) {
-					Log.LogMessage (Properties.Resources.ResourceManager.GetString ("XAGRDLRefLibraryOutputs", Properties.Resources.Culture), lib);
-				}
-			}
+			return base.RunTask ();;
 		}
 
 		const string init_script_content = @"
