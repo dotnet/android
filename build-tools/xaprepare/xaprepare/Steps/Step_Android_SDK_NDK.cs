@@ -197,9 +197,18 @@ namespace Xamarin.Android.Prepare
 					BuildAndroidPlatforms.NdkMinimumAPI.ToString (CultureInfo.InvariantCulture)
 				);
 
+				string clangArch = Configurables.Defaults.AbiToClangArch[abi];
 				CopyFile (abi, crtFilesPath, "crtbegin_so.o");
 				CopyFile (abi, crtFilesPath, "crtend_so.o");
-				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{Configurables.Defaults.AbiToClangArch[abi]}-android.a");
+				CopyFile (abi, clangLibPath, $"libclang_rt.builtins-{clangArch}-android.a");
+
+				// Yay, consistency
+				if (String.Compare (clangArch, "i686", StringComparison.Ordinal) == 0) {
+					clangArch = "i386";
+				}
+
+				// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
+				CopyFile (abi, Path.Combine (clangLibPath, clangArch), "libunwind.a");
 			}
 
 			return true;

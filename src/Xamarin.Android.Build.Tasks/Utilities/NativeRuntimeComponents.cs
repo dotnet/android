@@ -102,6 +102,11 @@ class NativeRuntimeComponents
 			new ClangBuiltinsArchive ("arm"),
 			new ClangBuiltinsArchive ("i686"),
 			new ClangBuiltinsArchive ("x86_64"),
+
+			// Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released
+			new Archive ("libunwind.a") {
+				DontExportSymbols = true,
+			},
 		};
 
 		// Just the base names of libraries to link into the unified runtime.  Must have all the dependencies of all the static archives we
