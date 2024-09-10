@@ -12,3 +12,5 @@ Build_JLO_Change,4500
 Build_XAML_Change,3000
 Install_CSharp_Change,4000
 Install_XAML_Change,3750
+Install_CSharp_FromClean,3000
+Install_CSharp_FromClean,20000
