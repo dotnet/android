@@ -61,9 +61,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
-		[Required]
-		public bool InstantRunEnabled { get; set; }
-
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -334,7 +331,6 @@ namespace Xamarin.Android.Tasks
 				BrokenExceptionTransitions = environmentParser.BrokenExceptionTransitions,
 				PackageNamingPolicy = pnp,
 				BoundExceptionType = boundExceptionType,
-				InstantRunEnabled = InstantRunEnabled,
 				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.Template != null ? NativeCodeGenState.Template.JniAddNativeMethodRegistrationAttributePresent : false,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				NumberOfAssembliesInApk = assemblyCount,

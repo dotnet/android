@@ -90,7 +90,6 @@ namespace Xamarin.Android.Tasks {
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
-		public bool InstantRunEnabled { get; set; }
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }

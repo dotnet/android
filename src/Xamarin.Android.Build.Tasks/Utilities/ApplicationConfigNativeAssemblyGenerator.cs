@@ -173,7 +173,6 @@ namespace Xamarin.Android.Tasks
 		public string AndroidPackageName { get; set; }
 		public bool BrokenExceptionTransitions { get; set; }
 		public global::Android.Runtime.BoundExceptionType BoundExceptionType { get; set; }
-		public bool InstantRunEnabled { get; set; }
 		public bool JniAddNativeMethodRegistrationAttributePresent { get; set; }
 		public bool HaveRuntimeConfigBlob { get; set; }
 		public bool HaveAssemblyStore { get; set; }
@@ -226,7 +225,7 @@ namespace Xamarin.Android.Tasks
 				aot_lazy_load = AotEnableLazyLoad,
 				uses_assembly_preload = UsesAssemblyPreload,
 				broken_exception_transitions = BrokenExceptionTransitions,
-				instant_run_enabled = InstantRunEnabled,
+				instant_run_enabled = false,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
