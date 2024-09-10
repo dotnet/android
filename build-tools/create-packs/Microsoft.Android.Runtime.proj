@@ -54,6 +54,10 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\crtbegin_so.o" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\crtend_so.o" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libclang_rt.builtins-*-android.a" />
+
+      <!-- Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released -->
+      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind.a" />
+
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>
