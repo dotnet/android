@@ -158,8 +158,8 @@
     <AvdManagerToolExe Condition=" '$(AvdManagerToolExe)' == '' and '$(HostOS)' == 'Windows' ">avdmanager.bat</AvdManagerToolExe>
     <AndroidToolPath Condition=" '$(AndroidToolPath)' == '' ">$(AndroidSdkFullPath)\tools</AndroidToolPath>
     <AndroidToolsBinPath Condition=" '$(AndroidToolsBinPath)' == '' ">$(AndroidToolPath)\bin</AndroidToolsBinPath>
-    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">11.0</CommandLineToolsFolder>
-    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">10406996_latest</CommandLineToolsVersion>
+    <CommandLineToolsFolder Condition=" '$(CommandLineToolsFolder)' == '' ">12.0</CommandLineToolsFolder>
+    <CommandLineToolsVersion Condition=" '$(CommandLineToolsVersion)' == '' ">11076708_latest</CommandLineToolsVersion>
     <CommandLineToolsBinPath Condition=" '$(CommandLineToolsBinPath)' == '' ">$(AndroidSdkFullPath)\cmdline-tools\$(CommandLineToolsFolder)\bin</CommandLineToolsBinPath>
     <!-- Version numbers and PkgVersion are found in https://dl-ssl.google.com/android/repository/repository2-3.xml -->
     <EmulatorVersion Condition=" '$(EmulatorVersion)' == '' ">9364964</EmulatorVersion>
