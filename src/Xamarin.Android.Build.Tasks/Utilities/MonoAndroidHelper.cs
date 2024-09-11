@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 
 			if (proc.ExitCode != 0) {
 				var sb = MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-				log.LogError ($"Command '{psi.FileName} {psi.Arguments}' failed.\n{sb.ToString ()}");
+				log.LogCodedError ("XA0142", Properties.Resources.XA0142, $"{psi.FileName} {psi.Arguments}", sb.ToString ());
 			}
 
 			try {
