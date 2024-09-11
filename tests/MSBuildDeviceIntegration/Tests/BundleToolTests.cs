@@ -136,7 +136,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BaseZip ()
+		public void BaseZip ([Values(false, true)] bool useNativeRuntimeLinkingMode)
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
@@ -177,15 +177,19 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
-				expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+				if (!useNativeRuntimeLinkingMode) {
+					// None of these exist if dynamic native runtime linking is enabled
+					expectedFiles.Add ($"lib/{abi}/libmonosgen-2.0.so");
+					expectedFiles.Add ($"lib/{abi}/libxamarin-app.so");
+					expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
+				}
+
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
 					expectedFiles.Add ($"lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
-				expectedFiles.Add ($"lib/{abi}/libSystem.IO.Compression.Native.so");
-				expectedFiles.Add ($"lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{baseZip}` did not contain `{expected}`");
@@ -193,7 +197,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AppBundle ()
+		public void AppBundle ([Values(false, true)] bool useNativeRuntimeLinkingMode)
 		{
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);
@@ -237,15 +241,20 @@ namespace Xamarin.Android.Build.Tests
 				}
 
 				expectedFiles.Add ($"base/lib/{abi}/libmonodroid.so");
-				expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
-				expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+
+				if (!useNativeRuntimeLinkingMode) {
+					// None of these exist if dynamic native runtime linking is enabled
+					expectedFiles.Add ($"base/lib/{abi}/libmonosgen-2.0.so");
+					expectedFiles.Add ($"base/lib/{abi}/libxamarin-app.so");
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
+					expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
+				}
+
 				if (usesAssemblyBlobs) {
 					expectedFiles.Add ($"{blobEntryPrefix}{abi}/lib_System.Private.CoreLib.dll.so");
 				} else {
 					expectedFiles.Add ($"base/lib/{abi}/lib_System.Private.CoreLib.dll.so");
 				}
-				expectedFiles.Add ($"base/lib/{abi}/libSystem.IO.Compression.Native.so");
-				expectedFiles.Add ($"base/lib/{abi}/libSystem.Native.so");
 			}
 			foreach (var expected in expectedFiles) {
 				CollectionAssert.Contains (contents, expected, $"`{aab}` did not contain `{expected}`");
