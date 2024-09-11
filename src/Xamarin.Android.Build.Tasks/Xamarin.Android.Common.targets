@@ -277,7 +277,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(AotAssemblies)' == 'True' And '$(DebugSymbols)' == 'True' And ('$(DebugType)' == 'PdbOnly' Or '$(DebugType)' == 'Portable')">Offline</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(MonoSymbolArchive)' == 'True' And '$(AndroidUseDebugRuntime)' == 'False' And '$(_AndroidSequencePointsMode)' == ''">Normal</_AndroidSequencePointsMode>
 	<_AndroidSequencePointsMode Condition=" '$(_AndroidSequencePointsMode)' == ''">None</_AndroidSequencePointsMode>
-	<_InstantRunEnabled Condition=" '$(_InstantRunEnabled)' == '' ">False</_InstantRunEnabled>
 	<_AndroidBuildPropertiesCache>$(IntermediateOutputPath)build.props</_AndroidBuildPropertiesCache>
 	<_AdbPropertiesCache>$(IntermediateOutputPath)adb.props</_AdbPropertiesCache>
 	<AndroidGenerateJniMarshalMethods Condition=" '$(AndroidGenerateJniMarshalMethods)' == '' ">False</AndroidGenerateJniMarshalMethods>
@@ -915,8 +914,7 @@ because xbuild doesn't support framework reference assemblies.
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('$(ProjectLockFile)') ">$(ProjectLockFile)</_NuGetAssetsFile>
 		<_NuGetAssetsFile      Condition=" '$(_NuGetAssetsFile)' == '' and Exists('packages.config') ">packages.config</_NuGetAssetsFile>
 		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">mvid</_TypeMapKind>
-		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' == 'True' ">strings-files</_TypeMapKind>
-		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' And '$(_InstantRunEnabled)' != 'True' ">strings-asm</_TypeMapKind>
+		<_TypeMapKind Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">strings-asm</_TypeMapKind>
 	</PropertyGroup>
 	<GetFileHash
 				Condition=" Exists('$(_NuGetAssetsFile)') "
@@ -1435,7 +1433,6 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      InstantRunEnabled="$(_InstantRunEnabled)"
       Debug="$(AndroidIncludeDebugSymbols)"
       Mode="typemap">
     <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
@@ -1464,6 +1461,7 @@ because xbuild doesn't support framework reference assemblies.
     <_LinkingEnabled Condition=" '$(AndroidLinkMode)' == 'None'">False</_LinkingEnabled>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' != '' ">True</_HaveMultipleRIDs>
     <_HaveMultipleRIDs Condition=" '$(RuntimeIdentifiers)' == '' ">False</_HaveMultipleRIDs>
+    <_AndroidGenerateNativeAssembly Condition=" '$(_AndroidGenerateNativeAssembly)' == '' ">True</_AndroidGenerateNativeAssembly>
   </PropertyGroup>
   <ItemGroup>
     <_MergedManifestDocuments Condition=" '$(AndroidManifestMerger)' == 'legacy' " Include="@(ExtractedManifestDocuments)" />
@@ -1478,7 +1476,6 @@ because xbuild doesn't support framework reference assemblies.
       Debug="$(AndroidIncludeDebugSymbols)"
       MultiDex="$(AndroidEnableMultiDex)"
       NeedsInternet="$(AndroidNeedsInternetPermission)"
-      InstantRunEnabled="$(_InstantRunEnabled)"
       AndroidSdkPlatform="$(_AndroidApiLevel)"
       AndroidSdkDir="$(_AndroidSdkDirectory)"
       PackageName="$(_AndroidPackage)"
@@ -1488,7 +1485,7 @@ because xbuild doesn't support framework reference assemblies.
       ManifestPlaceholders="$(AndroidManifestPlaceholders)"
       OutputDirectory="$(IntermediateOutputPath)android"
       TypemapOutputDirectory="$(_NativeAssemblySourceDir)"
-      GenerateNativeAssembly="!$(_InstantRunEnabled)"
+      GenerateNativeAssembly="$(_AndroidGenerateNativeAssembly)"
       MergedAndroidManifestOutput="$(_ManifestOutput)"
       EmbedAssemblies="$(EmbedAssembliesIntoApk)"
       BundledWearApplicationName="$(BundledWearApplicationPackageName)"
@@ -1505,12 +1502,7 @@ because xbuild doesn't support framework reference assemblies.
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
       Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
-    <Output TaskParameter="GeneratedBinaryTypeMaps" ItemName="_AndroidTypeMapping" Condition=" '$(_InstantRunEnabled)' == 'True' " />
   </GenerateJavaStubs>
-
-  <ItemGroup Condition=" '$(_InstantRunEnabled)' == 'True' and '@(_AndroidTypeMapping->Count())' == '0' ">
-    <_AndroidTypeMapping Include="$(_NativeAssemblySourceDir)typemaps\**\*" />
-  </ItemGroup>
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
@@ -1586,7 +1578,6 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
     Debug="$(AndroidIncludeDebugSymbols)"
     Mode="environment">
       <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
@@ -1594,7 +1585,6 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
     Debug="$(AndroidIncludeDebugSymbols)"
     Mode="compressed">
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
@@ -1602,7 +1592,6 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
     Debug="$(AndroidIncludeDebugSymbols)"
     Mode="marshal_methods">
       <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
@@ -1631,7 +1620,6 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      InstantRunEnabled="$(_InstantRunEnabled)"
       Debug="$(AndroidIncludeDebugSymbols)"
       Mode="jniremap">
     <Output TaskParameter="AssemblySources" ItemName="_AndroidRemapAssemblySource" />
@@ -1729,7 +1717,6 @@ because xbuild doesn't support framework reference assemblies.
     EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
     PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
     BoundExceptionType="$(AndroidBoundExceptionType)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"

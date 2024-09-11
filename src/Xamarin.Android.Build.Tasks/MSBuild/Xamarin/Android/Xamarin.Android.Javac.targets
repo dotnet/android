@@ -45,8 +45,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JavaLibraries="@(AndroidJavaLibrary);@(EmbeddedJar)"
         ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
         LibraryProjectJars="@(ExtractedJarImports)"
-        DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
-        EnableInstantRun="$(_InstantRunEnabled)">
+        DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)">
       <Output TaskParameter="JavaLibrariesToCompile" ItemName="_BindingJavaLibrariesToCompile" />
       <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
     </DetermineJavaLibrariesToCompile>
@@ -60,15 +59,13 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JavaLibraries="@(AndroidJavaLibrary)"
         ExternalJavaLibraries="@(AndroidExternalJavaLibrary)"
         LibraryProjectJars="@(ExtractedJarImports)"
-        DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)"
-        EnableInstantRun="$(_InstantRunEnabled)">
+        DoNotPackageJavaLibraries="@(_ResolvedDoNotPackageAttributes)">
       <Output TaskParameter="JavaLibrariesToCompile" ItemName="_JavaLibrariesToCompile" />
       <Output TaskParameter="ReferenceJavaLibraries" ItemName="_ReferenceJavaLibs" />
     </DetermineJavaLibrariesToCompile>
 
     <ItemGroup>
-      <_JavaLibrariesToCompileForApp Include="@(_JavaLibrariesToCompile)" Condition=" '$(_InstantRunEnabled)' != 'True' " />
-      <AndroidExternalJavaLibrary    Include="@(_JavaLibrariesToCompile)" Condition=" '$(_InstantRunEnabled)' == 'True' " />
+      <_JavaLibrariesToCompileForApp Include="@(_JavaLibrariesToCompile)" />
     </ItemGroup>
   </Target>
 
@@ -168,7 +165,7 @@ It is shared between "legacy" binding projects and .NET 7+ projects.
         JavaSourceFiles="@(_JavaSource)"
         ToolPath="$(JavacToolPath)"
         ToolExe="$(JavacToolExe)"
-        Jars="@(_JavaLibrariesToCompile);@(_InstantRunJavaReference);@(_ReferenceJavaLibs)"
+        Jars="@(_JavaLibrariesToCompile);@(_ReferenceJavaLibs)"
         JavacTargetVersion="$(JavacTargetVersion)"
         JavacSourceVersion="$(JavacSourceVersion)"
         IntermediateOutputPath="$(IntermediateOutputPath)"

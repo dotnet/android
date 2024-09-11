@@ -73,7 +73,6 @@ namespace Xamarin.Android.Tasks
 
 		public bool EmbedAssemblies { get; set; }
 		public bool NeedsInternet   { get; set; }
-		public bool InstantRunEnabled { get; set; }
 
 		public bool ErrorOnCustomJavaObject { get; set; }
 
@@ -336,7 +335,6 @@ namespace Xamarin.Android.Tasks
 				Debug = Debug,
 				MultiDex = MultiDex,
 				NeedsInternet = NeedsInternet,
-				InstantRunEnabled = InstantRunEnabled
 			};
 			// Only set manifest.VersionCode if there is no existing value in AndroidManifest.xml.
 			if (manifest.HasVersionCode) {

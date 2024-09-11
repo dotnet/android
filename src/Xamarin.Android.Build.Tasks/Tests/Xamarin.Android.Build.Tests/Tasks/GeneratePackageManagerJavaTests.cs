@@ -82,7 +82,6 @@ namespace Xamarin.Android.Build.Tests
 				SupportedAbis = new string [] { "x86" , "arm64-v8a" },
 				AndroidPackageName = "com.microsoft.net6.helloandroid",
 				EnablePreloadAssembliesDefault = false,
-				InstantRunEnabled = false,
 				Environments = new ITaskItem [] { new TaskItem (Path.Combine (path, "myenv.txt")) },
 			};
 			Assert.IsTrue (task.Execute (), "Task should have executed.");

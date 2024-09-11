@@ -15,8 +15,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public ITaskItem[] MonoPlatformJarPaths { get; set; }
 
-		public bool EnableInstantRun { get; set; }
-
 		public ITaskItem[] JavaSourceFiles { get; set; }
 
 		public ITaskItem[] JavaLibraries { get; set; }
@@ -36,8 +34,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var jars = new List<ITaskItem> ();
-			if (!EnableInstantRun)
-				jars.AddRange (MonoPlatformJarPaths);
+			jars.AddRange (MonoPlatformJarPaths);
 			if (JavaSourceFiles != null)
 				foreach (var jar in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".jar"))
 					jars.Add (jar);
