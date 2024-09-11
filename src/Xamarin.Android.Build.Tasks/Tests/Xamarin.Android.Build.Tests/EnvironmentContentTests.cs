@@ -15,7 +15,7 @@ namespace Xamarin.Android.Build.Tests
 	{
 		[Test]
 		[NonParallelizable]
-		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
+		public void BuildApplicationWithMonoEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values(false, true)] bool useNativeRuntimeLinkingMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
 
@@ -38,6 +38,7 @@ namespace Xamarin.Android.Build.Tests
 			string linkSkip = "FormsViewGroup";
 			app.SetProperty ("AndroidLinkSkip", linkSkip);
 			app.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			app.SetProperty ("_AndroidEnableNativeRuntimeLinking", useNativeRuntimeLinkingMode.ToString ());
 			app.SetAndroidSupportedAbis (supportedAbis);
 			using (var libb = CreateDllBuilder (Path.Combine ("temp", TestName, lib.ProjectName)))
 			using (var appb = CreateApkBuilder (Path.Combine ("temp", TestName, app.ProjectName))) {
@@ -57,7 +58,7 @@ namespace Xamarin.Android.Build.Tests
 				if (!String.IsNullOrEmpty (sequencePointsMode))
 					Assert.IsTrue (monoDebugVar.IndexOf ("gen-compact-seq-points", StringComparison.Ordinal) >= 0, "The values from Mono.env should have been merged into environment");
 
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis, useNativeRuntimeLinkingMode);
 
 				var assemblyDir = Path.Combine (Root, appb.ProjectDirectory, app.IntermediateOutputPath, "android", "assets");
 				var rp = new ReaderParameters { ReadSymbols = false };
@@ -75,7 +76,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode)
+		public void CheckMonoDebugIsAddedToEnvironment ([Values ("", "Normal", "Offline")] string sequencePointsMode, [Values(false, true)] bool useNativeRuntimeLinkingMode)
 		{
 			const string supportedAbis = "armeabi-v7a;x86";
 
@@ -101,7 +102,7 @@ namespace Xamarin.Android.Build.Tests
 					Assert.AreEqual ("gen-compact-seq-points", monoDebugVar, "environment should contain MONO_DEBUG=gen-compact-seq-points");
 				}
 
-				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis);
+				EnvironmentHelper.AssertValidEnvironmentSharedLibrary (intermediateOutputDir, AndroidSdkPath, AndroidNdkPath, supportedAbis, useNativeRuntimeLinkingMode);
 			}
 		}
 
