@@ -51,7 +51,7 @@ This file contains MSBuild targets that support building and operating on Androi
         Outputs="%(AndroidGradleProject.Identity)" >
     <Hash
         ItemsToHash="%(AndroidGradleProject.Identity)"
-        IgnoreCase="false">
+        IgnoreCase="true">
       <Output TaskParameter="HashResult" PropertyName="_AndroidGradleProjectHash" />
     </Hash>
     <ItemGroup>
@@ -99,7 +99,7 @@ This file contains MSBuild targets that support building and operating on Androi
         Condition=" '@(_AndroidGradleProjectLibraryOutputs->Count())' != '0' "
     />
 
-    <Touch Files="$(_BuildAndroidGradleProjectsStamp)" AlwaysCreate="True" />
+    <Touch Files="$(_BuildAndroidGradleProjectsStamp)" AlwaysCreate="true" />
     <ItemGroup>
       <FileWrites Include="$(_BuildAndroidGradleProjectsStamp);%(AndroidGradleProject.OutputPath)**/*" />
       <!-- Add app output files @(None) to be copied to $(OutputPath) -->

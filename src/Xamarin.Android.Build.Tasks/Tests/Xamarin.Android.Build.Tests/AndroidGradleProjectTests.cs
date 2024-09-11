@@ -296,7 +296,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 			StringAssertEx.Contains ("error XAGRDL1000", builder.LastBuildOutput);
-			StringAssertEx.Contains ($"Executable 'gradlew' not found in project directory '{invalidProjectPath}/'. Please ensure the path to your Gradle project folder is correct", builder.LastBuildOutput);
+			StringAssertEx.Contains ($"Executable 'gradlew' not found in project directory '{invalidProjectPath}{Path.DirectorySeparatorChar}'. Please ensure the path to your Gradle project folder is correct", builder.LastBuildOutput);
 		}
 
 		[Test]
