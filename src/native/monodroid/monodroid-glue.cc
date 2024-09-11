@@ -228,22 +228,6 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 inline void
 MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks)
 {
-#if defined(DEBUG)
-	if (application_config.instant_run_enabled) {
-		for (const char *od : AndroidSystem::override_dirs) {
-			if (od == nullptr || !Util::directory_exists (od)) {
-				continue;
-			}
-
-			// TODO: temporary hack for the location of typemaps, to be fixed
-			dynamic_local_string<SENSIBLE_PATH_MAX> above { od };
-			above.append ("/..");
-			log_debug (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
-			embeddedAssemblies.try_load_typemaps_from_directory (above.get());
-		}
-	}
-#endif
-
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
 		return;
