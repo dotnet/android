@@ -11,6 +11,8 @@ namespace Xamarin.ProjectTools
 
 		public List<AndroidGradleModule> Modules { get; set; } = new List<AndroidGradleModule> ();
 
+		public string BuildFilePath => Path.Combine (ProjectDirectory, "build.gradle.kts");
+
 		GradleCLI gradleCLI = new GradleCLI ();
 
 		public AndroidGradleProject (string directory)
@@ -24,7 +26,7 @@ namespace Xamarin.ProjectTools
 			gradleCLI.Init (ProjectDirectory);
 			var settingsFile = Path.Combine (ProjectDirectory, "settings.gradle.kts");
 			File.WriteAllText (settingsFile, settings_gradle_kts_content);
-			File.WriteAllText (Path.Combine (ProjectDirectory, "build.gradle.kts"), build_gradle_kts_content);
+			File.WriteAllText (BuildFilePath, build_gradle_kts_content);
 			foreach (var module in Modules) {
 				module.Create ();
 				File.AppendAllText (settingsFile, $"{Environment.NewLine}include(\":{module.Name}\")");

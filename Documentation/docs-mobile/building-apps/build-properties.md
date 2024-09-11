@@ -1030,11 +1030,11 @@ Example:
 
 ```xml
 <PropertyGroup>
-  <AndroidPrepareForBuildDependsOn>MyPrepareTarget;</AndroidPrepareForBuildDependsOn>
+  <AndroidPrepareForBuildDependsOn>BeforeBuild</AndroidPrepareForBuildDependsOn>
 </PropertyGroup>
 
-<Target Name="MyPrepareTarget" >
-  <Message Text="Running target: 'MyPrepareTarget'" Importance="high"  />
+<Target Name="BeforeBuild" >
+  <Message Text="Running target: 'BeforeBuild'" Importance="high"  />
 </Target>
 ```
 

@@ -12,27 +12,28 @@ This file contains MSBuild targets that support building and operating on Androi
   <UsingTask TaskName="Xamarin.Android.Tasks.Gradle"              AssemblyFile="Xamarin.Android.Build.Tasks.dll" />
 
   <PropertyGroup>
+    <_AndroidGradleDefaultOutputPathRoot>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)gradle/</_AndroidGradleDefaultOutputPathRoot>
+    <_AndroidGradleBuildDirInitScriptPath>$(_AndroidGradleDefaultOutputPathRoot)net.android.init.gradle.kts</_AndroidGradleBuildDirInitScriptPath>
     <_BuildAndroidGradleProjectsStamp>$(_AndroidStampDirectory)_BuildAndroidGradleProjects.stamp</_BuildAndroidGradleProjectsStamp>
-    <_AGPOutputCacheFile>agpoutputs.cache</_AGPOutputCacheFile>
   </PropertyGroup>
 
   <ItemDefinitionGroup>
-    <AndroidGradleProjectReference>
+    <AndroidGradleProject>
       <Bind>true</Bind>
       <Configuration>Release</Configuration>
       <ModuleName></ModuleName>
-      <OutputPath>$(MSBuildProjectDirectory)/$(IntermediateOutputPath)gradle/%(Filename)/</OutputPath>
+      <OutputPath></OutputPath>
       <Pack>true</Pack>
       <ReferenceLibraryOutputs>true</ReferenceLibraryOutputs>
       <Visible>false</Visible>
-    </AndroidGradleProjectReference>
+    </AndroidGradleProject>
   </ItemDefinitionGroup>
 
   <Target Name="_GetBuildAndroidGradleProjectsInputs"
-        Condition=" '@(AndroidGradleProjectReference->Count())' != '0' ">
+        Condition=" '@(AndroidGradleProject->Count())' != '0' ">
     <ItemGroup>
-      <_AllGradleFiles Include="$([System.IO.Directory]::GetFiles('%(AndroidGradleProjectReference.FullPath)', '*.*', System.IO.SearchOption.AllDirectories))"
-          Condition= " Exists('%(AndroidGradleProjectReference.FullPath)') "/>
+      <_AllGradleFiles Include="$([System.IO.Directory]::GetFiles('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)', '*.*', System.IO.SearchOption.AllDirectories))"
+          Condition= " Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)') "/>
       <_GradleInputs Include="@(_AllGradleFiles)"
           Condition="  '%(Extension)' == '.java'
                     or '%(Extension)' == '.kt'
@@ -45,55 +46,77 @@ This file contains MSBuild targets that support building and operating on Androi
     </ItemGroup>
   </Target>
 
-  <Target Name="BuildAndroidGradleProjects"
-      Condition=" '@(AndroidGradleProjectReference->Count())' != '0' "
-      DependsOnTargets="_SetupMSBuildAllProjects;AndroidPrepareForBuild;_GetBuildAndroidGradleProjectsInputs"
+  <Target Name="_CalculateAndroidGradleProjectOutputPath"
+        Condition=" '@(AndroidGradleProject->Count())' != '0' "
+        Outputs="%(AndroidGradleProject.Identity)" >
+    <Hash
+        ItemsToHash="%(AndroidGradleProject.Identity)"
+        IgnoreCase="false">
+      <Output TaskParameter="HashResult" PropertyName="_AndroidGradleProjectHash" />
+    </Hash>
+    <ItemGroup>
+      <AndroidGradleProject Condition=" '%(AndroidGradleProject.OutputPath)' == '' " >
+        <OutputPath>$(_AndroidGradleDefaultOutputPathRoot)%(ModuleName)-$([System.String]::Copy($(_AndroidGradleProjectHash)).Substring(0, 5))/</OutputPath>
+      </AndroidGradleProject>
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BuildAndroidGradleProjects"
+      Condition=" '@(AndroidGradleProject->Count())' != '0' "
+      DependsOnTargets="_SetupMSBuildAllProjects;AndroidPrepareForBuild;_GetBuildAndroidGradleProjectsInputs;_CalculateAndroidGradleProjectOutputPath"
       Inputs="@(_GradleInputs)"
       Outputs="$(_BuildAndroidGradleProjectsStamp)" >
     <!-- Delete outputs folder if inputs have changed to force a partial rebuild -->
-    <RemoveDir Directories="@(AndroidGradleProjectReference->'%(OutputPath)outputs')" />
+    <RemoveDir Directories="@(AndroidGradleProject->'%(OutputPath)outputs')" />
+
+    <!-- Create the net.android.init.gradle.kts script used to override the Gradle project output directory -->
+    <CopyResource
+        ResourceName="net.android.init.gradle.kts"
+        OutputPath="$(_AndroidGradleBuildDirInitScriptPath)"
+    />
 
     <!-- Run assemble task for project outputs, android app and library project outputs are currently supported -->
-    <Gradle ToolPath="%(AndroidGradleProjectReference.FullPath)"
-        Command="assemble%(AndroidGradleProjectReference.Configuration)"
-        ModuleName="%(AndroidGradleProjectReference.ModuleName)"
-        OutputPath="%(AndroidGradleProjectReference.OutputPath)"
-        IntermediateOutputPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)"
+    <Gradle ToolPath="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
+        BuildDirInitScriptPath="$(_AndroidGradleBuildDirInitScriptPath)"
+        Command="assemble%(AndroidGradleProject.Configuration)"
+        ModuleName="%(AndroidGradleProject.ModuleName)"
+        OutputPath="%(AndroidGradleProject.OutputPath)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         JavaSdkDirectory="$(JavaSdkDirectory)" >
     </Gradle>
 
     <ItemGroup>
-      <_AndroidGradleProjectAppOutputs      Include="%(AndroidGradleProjectReference.OutputPath)outputs/**/*.apk" />
-      <_AndroidGradleProjectLibraryOutputs  Include="%(AndroidGradleProjectReference.OutputPath)outputs/**/*.aar"
-          Condition=" '%(ReferenceLibraryOutputs)' == true"
+      <_AndroidGradleProjectAppOutputs      Include="%(AndroidGradleProject.OutputPath)outputs/**/*.apk" />
+      <_AndroidGradleProjectLibraryOutputs  Include="%(AndroidGradleProject.OutputPath)outputs/**/*.aar"
+          Condition=" '%(ReferenceLibraryOutputs)' == 'true' "
           Bind="%(Bind)"
           Pack="%(Pack)"
           Visible="%(Visible)" />
     </ItemGroup>
 
     <AndroidMessage ResourceName="XAGRDLRefLibraryOutputs"
-        FormatArguments="%(_AndroidGradleProjectLibraryOutputs.FullPath)"
+        FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
         Condition=" '@(_AndroidGradleProjectLibraryOutputs->Count())' != '0' "
     />
 
     <Touch Files="$(_BuildAndroidGradleProjectsStamp)" AlwaysCreate="True" />
     <ItemGroup>
-      <FileWrites Include="$(_BuildAndroidGradleProjectsStamp);%(AndroidGradleProjectReference.OutputPath)**/*" />
-      <!-- Copy app output files to $(OutputPath) -->
+      <FileWrites Include="$(_BuildAndroidGradleProjectsStamp);%(AndroidGradleProject.OutputPath)**/*" />
+      <!-- Add app output files @(None) to be copied to $(OutputPath) -->
       <None Include="@(_AndroidGradleProjectAppOutputs)" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
       <!-- Automatically add library outputs to be bound or otherwise processed later in the build -->
       <AndroidLibrary Include="@(_AndroidGradleProjectLibraryOutputs)" Bind="%(Bind)" Pack="%(Pack)" Visible="%(Visible)" />
     </ItemGroup>
   </Target>
 
-  <Target Name="CleanAndroidGradleProjects"
-      Condition=" '@(AndroidGradleProjectReference->Count())' != '0' " >
-    <Gradle ToolPath="%(AndroidGradleProjectReference.FullPath)"
+  <Target Name="_CleanAndroidGradleProjects"
+      Condition=" '@(AndroidGradleProject->Count())' != '0' "
+      DependsOnTargets="_CalculateAndroidGradleProjectOutputPath" >
+    <Gradle ToolPath="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
+        BuildDirInitScriptPath="$(_AndroidGradleBuildDirInitScriptPath)"
         Command="clean"
-        ModuleName="%(AndroidGradleProjectReference.ModuleName)"
-        OutputPath="%(AndroidGradleProjectReference.OutputPath)"
-        IntermediateOutputPath="$(MSBuildProjectDirectory)/$(IntermediateOutputPath)"
+        ModuleName="%(AndroidGradleProject.ModuleName)"
+        OutputPath="%(AndroidGradleProject.OutputPath)"
         AndroidSdkDirectory="$(AndroidSdkDirectory)"
         JavaSdkDirectory="$(JavaSdkDirectory)" >
     </Gradle>

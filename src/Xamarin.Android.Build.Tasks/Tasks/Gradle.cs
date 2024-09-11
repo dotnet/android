@@ -26,13 +26,12 @@ namespace Xamarin.Android.Tasks
 
 		public string OutputPath { get; set; } = string.Empty;
 
-		public string IntermediateOutputPath { get; set; } = string.Empty;
+		public string BuildDirInitScriptPath { get; set; } = string.Empty;
 
 		public string AndroidSdkDirectory { get; set; } = string.Empty;
 
 		public string JavaSdkDirectory { get; set; } = string.Empty;
 
-		string InitScriptPath => Path.Combine (IntermediateOutputPath, "net.android.init.gradle.kts");
 
 		protected override string ToolName => OS.IsWindows ? "gradlew.bat" : "gradlew";
 
@@ -57,9 +56,10 @@ namespace Xamarin.Android.Tasks
 			cmd.AppendSwitch (commandArg);
 
 			// If an output path is specified, use init script to set the gradle projects build directory to that path
-			if (!string.IsNullOrEmpty (OutputPath)) {
+			// See src/Xamarin.Android.Build.Tasks/Resources/net.android.init.gradle.kts
+			if (!string.IsNullOrEmpty (OutputPath) && File.Exists (BuildDirInitScriptPath)) {
 				cmd.AppendSwitchIfNotNull ("-P", $"netAndroidBuildDirOverride={OutputPath}");
-				cmd.AppendSwitchIfNotNull ("--init-script ", InitScriptPath);
+				cmd.AppendSwitchIfNotNull ("--init-script ", BuildDirInitScriptPath);
 			}
 
 			if (!string.IsNullOrEmpty (Arguments))
@@ -90,25 +90,8 @@ namespace Xamarin.Android.Tasks
 				return false;
 			}
 
-			if (!string.IsNullOrEmpty (OutputPath)) {
-				Files.CopyIfStringChanged (init_script_content, InitScriptPath);
-			}
-
 			return base.RunTask ();;
 		}
-
-		const string init_script_content = @"
-gradle.projectsLoaded {
-	if (gradle.startParameter.projectProperties.containsKey(""netAndroidBuildDirOverride"")) {
-		val customBuildDir = gradle.startParameter.projectProperties[""netAndroidBuildDirOverride""]
-		rootProject.allprojects {
-			afterEvaluate {
-				layout.buildDirectory.set(file(customBuildDir))
-			}
-		}
-	}
-}
-";
 
 	}
 }

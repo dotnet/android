@@ -12,7 +12,7 @@ namespace Xamarin.ProjectTools
 		public const string AndroidUseAapt2 = "AndroidUseAapt2";
 		public const string AndroidCreatePackagePerAbi = "AndroidCreatePackagePerAbi";
 		public const string AndroidEnableMarshalMethods = "AndroidEnableMarshalMethods";
-		public const string AndroidGradleProjectReference = "AndroidGradleProjectReference";
+		public const string AndroidGradleProject = "AndroidGradleProject";
 
 		public const string AndroidSupportedAbis = "AndroidSupportedAbis";
 		public const string RuntimeIdentifier = "RuntimeIdentifier";

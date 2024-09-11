@@ -129,18 +129,18 @@ multiple files, and they will be evaluated in no particular order (so don't
 specify the same environment variable or system property in multiple
 files).
 
-## AndroidGradleProjectReference
+## AndroidGradleProject
 
-`<AndroidGradleProjectReference>` can be used to build and consume the outputs
-of Android Gradle projects.
+`<AndroidGradleProject>` can be used to build and consume the outputs
+of Android Gradle projects created in Android Studio or elsewehere.
 
-The `Include` metadata should point to the root directory of your Gradle project
-which contains the `gradlew` wrapper scripts and `build.gradle` files that will
-be used to build the project.
+The `Include` metadata should point to the root `build.gradle` file that will
+be used to build the project, inside of the top directory of your Gradle project
+which also contains the `gradlew` wrapper scripts.
 
 ```xml
 <ItemGroup>
-  <AndroidGradleProjectReference Include="path/to/gradle/project" ModuleName="mylibrary" />
+  <AndroidGradleProject Include="path/to/project/build.gradle.kts" ModuleName="mylibrary" />
 </ItemGroup>
 ```
 
@@ -151,7 +151,7 @@ The following MSBuild metadata are supported:
 - `%(ModuleName)`: The name of the [module or subproject](https://docs.gradle.org/current/userguide/intro_multi_project_builds.html) that should be built.
   The default value is empty.
 - `%(OutputPath)`: Can be set to override the build output path of the Gradle project.
-  The default value is `$(IntermediateOutputPath)gradle/{projectname}`.
+  The default value is `$(IntermediateOutputPath)gradle/{ModuleName}-{Hash}`.
 - `%(ReferenceLibraryOutputs)`: Output AAR files will be added as an [`AndroidLibrary`](#androidlibrary) to the project.
   Metadata supported by `<AndroidLibrary>` like `%(Bind)` or `%(Pack)` will be forwarded if set.
   The default value is `true`.

@@ -223,6 +223,9 @@
     <EmbeddedResource Include="Resources\ApplicationRegistration.java">
       <LogicalName>ApplicationRegistration.java</LogicalName>
     </EmbeddedResource>
+    <EmbeddedResource Include="Resources\net.android.init.gradle.kts">
+      <LogicalName>net.android.init.gradle.kts</LogicalName>
+    </EmbeddedResource>
     <EmbeddedResource Include="..\Mono.Android\java\mono\android\TypeManager.java">
       <LogicalName>JavaInteropTypeManager.java</LogicalName>
     </EmbeddedResource>

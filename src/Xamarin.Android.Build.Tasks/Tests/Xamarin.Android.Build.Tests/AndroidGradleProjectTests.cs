@@ -12,7 +12,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
-	public class AndroidGradleProjectReferenceTests : BaseTest
+	public class AndroidGradleProjectTests : BaseTest
 	{
 		string GradleTestProjectDir = string.Empty;
 
@@ -47,7 +47,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidApplicationProject {
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", moduleName },
 							{ "Configuration", "Release" },
@@ -92,7 +92,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidBindingProject {
 				Jars = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", moduleName },
 							{ "Bind", bind.ToString ()},
@@ -135,7 +135,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", moduleName },
 							{ "Pack", packGradleRef.ToString () },
@@ -170,7 +170,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", gradleModule.Name },
 						},
@@ -187,20 +187,20 @@ namespace Xamarin.Android.Build.Tests
 			var packagedManifestContent = System.Text.Encoding.UTF8.GetString (ZipHelper.ReadFileFromZip (outputAar, "AndroidManifest.xml"));
 			StringAssert.Contains (@"uses-sdk android:minSdkVersion=""21""", packagedManifestContent);
 
-			// Build again, BuildAndroidGradleProjects should be skipped
+			// Build again, _BuildAndroidGradleProjects should be skipped
 			builder.BuildLogFile = "build2.log";
 			Assert.IsTrue (builder.Build (proj), "Second build should have succeeded.");
-			Assert.IsTrue (builder.Output.IsTargetSkipped ("BuildAndroidGradleProjects"), "The 'BuildAndroidGradleProjects' target should be skipped on incremental build");
+			Assert.IsTrue (builder.Output.IsTargetSkipped ("_BuildAndroidGradleProjects"), "The '_BuildAndroidGradleProjects' target should be skipped on incremental build");
 			FileAssert.Exists (outputAar);
 			var outputAarSecondWriteTime = File.GetLastWriteTime (outputAar);
 			Assert.IsTrue (outputAarFirstWriteTime == outputAarSecondWriteTime, $"Expected {outputAar} write time to be '{outputAarFirstWriteTime}', but was '{outputAarSecondWriteTime}'");
 
-			// Update gradle project, BuildAndroidGradleProjects should run and outputs should be updated
+			// Update gradle project, _BuildAndroidGradleProjects should run and outputs should be updated
 			builder.BuildLogFile = "build3.log";
 			gradleModule.MinSdk = 30;
 			gradleModule.WriteGradleBuildFile ();
 			Assert.IsTrue (builder.Build (proj), "Third build should have succeeded.");
-			Assert.IsFalse (builder.Output.IsTargetSkipped ("BuildAndroidGradleProjects"), "The 'BuildAndroidGradleProjects' target should run on partial rebuild");
+			Assert.IsFalse (builder.Output.IsTargetSkipped ("_BuildAndroidGradleProjects"), "The '_BuildAndroidGradleProjects' target should run on partial rebuild");
 			FileAssert.Exists (outputAar);
 			var outputAarThirdWriteTime = File.GetLastWriteTime (outputAar);
 			Assert.IsTrue (outputAarThirdWriteTime > outputAarFirstWriteTime, $"Expected '{outputAar}' write time of '{outputAarThirdWriteTime}' to be greater than first write '{outputAarFirstWriteTime}'");
@@ -223,13 +223,13 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", "TestAppModule" },
 							{ "Configuration", "Debug" },
 						},
 					},
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", "TestLibModule" },
 							{ "Configuration", "Release" },
@@ -261,13 +261,13 @@ namespace Xamarin.Android.Build.Tests
 
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", gradleProject.Modules.First ().Name },
 							{ "Configuration", "Debug" },
 						},
 					},
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject2.ProjectDirectory) {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject2.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", gradleProject2.Modules.First ().Name },
 							{ "Configuration", "Release" },
@@ -288,7 +288,7 @@ namespace Xamarin.Android.Build.Tests
 			var invalidProjectPath = Path.Combine (Root, "doesnotexist");
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
-					new BuildItem (KnownProperties.AndroidGradleProjectReference, invalidProjectPath),
+					new BuildItem (KnownProperties.AndroidGradleProject, Path.Combine (invalidProjectPath, "build.gradle.kts")),
 				},
 			};
 
@@ -296,7 +296,7 @@ namespace Xamarin.Android.Build.Tests
 			builder.ThrowOnBuildFailure = false;
 			Assert.IsFalse (builder.Build (proj), "Build should have failed.");
 			StringAssertEx.Contains ("error XAGRDL1000", builder.LastBuildOutput);
-			StringAssertEx.Contains ($"Executable 'gradlew' not found in project directory '{invalidProjectPath}'. Please ensure the path to your Gradle project folder is correct", builder.LastBuildOutput);
+			StringAssertEx.Contains ($"Executable 'gradlew' not found in project directory '{invalidProjectPath}/'. Please ensure the path to your Gradle project folder is correct", builder.LastBuildOutput);
 		}
 
 		[Test]
@@ -306,7 +306,7 @@ namespace Xamarin.Android.Build.Tests
 			var invalidModuleName = "Invalid";
 			var proj = new XamarinAndroidLibraryProject {
 				OtherBuildItems = {
-					 new BuildItem (KnownProperties.AndroidGradleProjectReference, gradleProject.ProjectDirectory) {
+					 new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
 						Metadata = {
 							{ "ModuleName", invalidModuleName },
 						},

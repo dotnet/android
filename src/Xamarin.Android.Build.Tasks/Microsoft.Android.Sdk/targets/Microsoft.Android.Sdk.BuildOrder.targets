@@ -17,7 +17,7 @@ properties that determine build ordering.
       _SetupMSBuildAllProjects;
       _SetupDesignTimeBuildForBuild;
       AndroidPrepareForBuild;
-      BuildAndroidGradleProjects;
+      _BuildAndroidGradleProjects;
       _CategorizeAndroidLibraries;
       _CreatePropertiesCache;
       _CleanIntermediateIfNeeded;
@@ -167,7 +167,7 @@ properties that determine build ordering.
       CleanBindingsOutput;
       CleanLibraryProjectIntermediaries;
       CleanNativeLibraryIntermediaries;
-      CleanAndroidGradleProjects;
+      _CleanAndroidGradleProjects;
     </CleanDependsOn>
     <ExportJarToXmlDependsOnTargets>
       _ResolveMonoAndroidSdks;
@@ -194,7 +194,7 @@ properties that determine build ordering.
       _GetJavaPlatformJar;
     </_CompileBindingJavaDependsOnTargets>
     <_IncludeAarInNuGetPackageDependsOn>
-      BuildAndroidGradleProjects;
+      _BuildAndroidGradleProjects;
       _CategorizeAndroidLibraries;
     </_IncludeAarInNuGetPackageDependsOn>
   </PropertyGroup>
