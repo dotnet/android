@@ -456,7 +456,7 @@ namespace Xamarin.Android.Build.Tests
 			return environmentFiles;
 		}
 
-		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis)
+		public static void AssertValidEnvironmentSharedLibrary (string outputDirectoryRoot, string sdkDirectory, string ndkDirectory, string supportedAbis, bool nativeRuntimeLinkingModeEnabled)
 		{
 			NdkTools ndk = NdkTools.Create (ndkDirectory);
 			MonoAndroidHelper.AndroidSdk = new AndroidSdkInfo ((arg1, arg2) => {}, sdkDirectory, ndkDirectory, AndroidSdkResolver.GetJavaSdkPath ());
@@ -487,15 +487,25 @@ namespace Xamarin.Android.Build.Tests
 						throw new Exception ("Unsupported Android target architecture ABI: " + abi);
 				}
 
-				string envSharedLibrary = Path.Combine (outputDirectoryRoot, "app_shared_libraries", abi, "libxamarin-app.so");
-				Assert.IsTrue (File.Exists (envSharedLibrary), $"Application environment SharedLibrary '{envSharedLibrary}' must exist");
+				if (!nativeRuntimeLinkingModeEnabled) {
+					string envSharedLibrary = Path.Combine (outputDirectoryRoot, "app_shared_libraries", abi, "libxamarin-app.so");
+					Assert.IsTrue (File.Exists (envSharedLibrary), $"Application environment SharedLibrary '{envSharedLibrary}' must exist");
 
-				// API level doesn't matter in this case
-				var readelf = ndk.GetToolPath ("readelf", arch, 0);
-				if (!File.Exists (readelf)) {
-					readelf = ndk.GetToolPath ("llvm-readelf", arch, 0);
+					// API level doesn't matter in this case
+					var readelf = ndk.GetToolPath ("readelf", arch, 0);
+					if (!File.Exists (readelf)) {
+						readelf = ndk.GetToolPath ("llvm-readelf", arch, 0);
+					}
+					AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, readelf);
+				} else {
+					string runtimeLibrary = Path.Combine (outputDirectoryRoot, "app_shared_libraries", abi, "libmonodroid-unified.so");
+					Assert.IsTrue (File.Exists (runtimeLibrary), $"Application dynamically linked (unified) runtime library '{runtimeLibrary}' must exist");
+
+					runtimeLibrary = Path.Combine (outputDirectoryRoot, "app_shared_libraries", abi, "libmonodroid-unified.dbg.so");
+					Assert.IsTrue (File.Exists (runtimeLibrary), $"Application dynamically linked (unified) runtime library '{runtimeLibrary}' debug symbols must exist");
+
+					// We can't verify fields in this mode, the symbols aren't exported.
 				}
-				AssertSharedLibraryHasRequiredSymbols (envSharedLibrary, readelf);
 			}
 		}
 
