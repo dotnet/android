@@ -1622,7 +1622,6 @@ because xbuild doesn't support framework reference assemblies.
     Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' "
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    InstantRunEnabled="$(_InstantRunEnabled)"
     Debug="$(AndroidIncludeDebugSymbols)"
     Mode="runtime_linking">
       <Output TaskParameter="AssemblySources" ItemName="_RuntimeLinkingAssemblySource" />
