@@ -112,9 +112,6 @@ namespace xamarin::android::internal {
 		{}
 #endif  // def RELEASE
 
-#if defined (DEBUG)
-		void try_load_typemaps_from_directory (const char *path);
-#endif
 		STATIC_IN_ANDROID_RELEASE const char* typemap_managed_to_java (MonoReflectionType *type, const uint8_t *mvid) noexcept;
 
 		void install_preload_hooks_for_appdomains ();

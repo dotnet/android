@@ -225,7 +225,6 @@ namespace Xamarin.Android.Tasks
 				aot_lazy_load = AotEnableLazyLoad,
 				uses_assembly_preload = UsesAssemblyPreload,
 				broken_exception_transitions = BrokenExceptionTransitions,
-				instant_run_enabled = false,
 				jni_add_native_method_registration_attribute_present = JniAddNativeMethodRegistrationAttributePresent,
 				have_runtime_config_blob = HaveRuntimeConfigBlob,
 				have_assemblies_blob = HaveAssemblyStore,
