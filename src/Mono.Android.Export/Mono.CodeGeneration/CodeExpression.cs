@@ -23,11 +23,13 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeExpression: CodeItem
 	{
 		internal CodeVariableReference var;
@@ -185,6 +187,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeConditionExpression: CodeExpression
 	{
 		public virtual void GenerateForBranch (ILGenerator gen, Label label, bool jumpCase)

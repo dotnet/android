@@ -23,12 +23,14 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 using Mono.CodeGeneration;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeCast: CodeExpression
 	{
 		Type type; 

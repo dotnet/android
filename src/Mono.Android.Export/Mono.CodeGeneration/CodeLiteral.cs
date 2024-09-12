@@ -23,12 +23,14 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeLiteral: CodeExpression
 	{
 		object value;

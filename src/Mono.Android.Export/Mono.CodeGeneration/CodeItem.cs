@@ -23,17 +23,20 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeItem
 	{
 		public abstract void Generate (ILGenerator gen);
 		public abstract void PrintCode (CodeWriter cp);
 	}
 
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeStatement: CodeItem
 	{
 	}

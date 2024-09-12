@@ -22,11 +22,14 @@
 using System;
 using System.IO;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresDynamicCode (MonoAndroidExport.DynamicFeatures)]
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeCustomAttribute
 	{
 		public static CodeCustomAttribute Create (Type attributeType)

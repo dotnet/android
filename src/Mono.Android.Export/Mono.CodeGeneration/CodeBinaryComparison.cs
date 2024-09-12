@@ -23,11 +23,13 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeBinaryComparison: CodeConditionExpression
 	{
 		protected CodeExpression exp1;
@@ -63,6 +65,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeGreaterThan: CodeBinaryComparison
 	{
 		public CodeGreaterThan (CodeExpression exp1, CodeExpression exp2)
@@ -88,6 +91,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeGreaterEqualThan: CodeBinaryComparison
 	{
 		public CodeGreaterEqualThan (CodeExpression exp1, CodeExpression exp2)
@@ -115,6 +119,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeLessThan: CodeBinaryComparison
 	{
 		public CodeLessThan (CodeExpression exp1, CodeExpression exp2)
@@ -140,6 +145,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeLessEqualThan: CodeBinaryComparison
 	{
 		public CodeLessEqualThan (CodeExpression exp1, CodeExpression exp2)
