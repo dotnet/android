@@ -54,7 +54,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
 		if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
 			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
-			store_mapped_runtime_config_data (runtime_config_blob_mmap);
+			store_mapped_runtime_config_data (runtime_config_blob_mmap, entry_name.get ());
 			return false;
 		}
 	}
@@ -187,7 +187,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 		close (fd);
 	}
 
-	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map);
+	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map, entry_name.get ());
 	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 

@@ -180,7 +180,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		close (fd);
 	}
 
-	auto [payload_data, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info);
+	auto [payload_data, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file.name);
 
 	// `data_size` might have been ELF wrapper file size, we must store payload size here (the actual DLL size)
 	file.data_size = static_cast<uint32_t>(payload_size);
@@ -1344,7 +1344,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 			}
 
 			runtime_config_blob_mmap = md_mmap_apk_file (fd.value (), 0, file_size.value (), cur->d_name);
-			store_mapped_runtime_config_data (runtime_config_blob_mmap);
+			store_mapped_runtime_config_data (runtime_config_blob_mmap, cur->d_name);
 			continue;
 		}
 

@@ -278,7 +278,7 @@ namespace xamarin::android::internal {
 		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
 		[[gnu::always_inline]]
-		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info) noexcept
+		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info, const  char *file_name) noexcept
 		{
 			using Elf_Header = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Ehdr, Elf32_Ehdr>;
 			using Elf_SHeader = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Shdr, Elf32_Shdr>;
@@ -293,7 +293,7 @@ namespace xamarin::android::internal {
 					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
 					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
 					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debug (LOG_ASSEMBLY, "Not an ELF image");
+						log_debug (LOG_ASSEMBLY, "Not an ELF image: %s", file_name);
 						// Not an ELF image, just return what we mmapped before
 						return { map_info.area, map_info.size };
 				}
@@ -309,9 +309,9 @@ namespace xamarin::android::internal {
 		}
 
 		[[gnu::always_inline]]
-		void store_mapped_runtime_config_data (md_mmap_info const& map_info) noexcept
+		void store_mapped_runtime_config_data (md_mmap_info const& map_info, const char *file_name) noexcept
 		{
-			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info);
+			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file_name);
 			log_debug (LOG_ASSEMBLY, "Runtime config: payload pointer %p ; size %zu", payload_start, payload_size);
 			runtime_config_data = payload_start;
 			runtime_config_data_size = payload_size;
