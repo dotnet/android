@@ -82,6 +82,7 @@ namespace xamarin::android::internal
 			Java   = 0x01,
 		};
 
+		// NOTE: Keep this in sync with managed side in src/Mono.Android/Android.Runtime/JNIEnvInit.cs
 		struct JnienvInitializeArgs {
 			JavaVM         *javaVm;
 			JNIEnv         *env;

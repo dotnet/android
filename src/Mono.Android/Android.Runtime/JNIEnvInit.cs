@@ -13,6 +13,7 @@ namespace Android.Runtime
 	static internal class JNIEnvInit
 	{
 #pragma warning disable 0649
+		// NOTE: Keep this in sync with the native side in src/native/monodroid/monodroid-glue-internal.hh
 		internal struct JnienvInitializeArgs {
 			public IntPtr          javaVm;
 			public IntPtr          env;
