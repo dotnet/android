@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -77,7 +78,7 @@ namespace Xamarin.Android.Build.Tests
 			});
 			libC.OtherBuildItems.Add (new BuildItem ("None", "AndroidManifest.xml") {
 				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
-<manifest xmlns:android='http://schemas.android.com/apk/res/android'>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.libc'>
   <queries>
     <package android:name='com.companyname.someappid' />
   </queries>
@@ -250,6 +251,11 @@ namespace Xamarin.Android.Build.Tests
 			className = "Lcom/soundcloud/android/crop/Crop;"; // from android-crop-1.0.1.aar
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
+			// Check AndroidManifest
+			var androidManifest = Path.Combine (intermediate, "android", "AndroidManifest.xml");
+			FileAssert.Exists (androidManifest);
+			var doc = XDocument.Load (androidManifest);
+			Assert.AreEqual(1, doc.Element ("manifest").Elements ("queries").Count (), "There should be 1 query.");
 			// Check environment variable
 			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);

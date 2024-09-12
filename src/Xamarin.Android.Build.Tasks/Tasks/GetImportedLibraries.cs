@@ -55,6 +55,12 @@ namespace Xamarin.Android.Tasks
 						var directory = Path.GetFileName (Path.GetDirectoryName (file));
 						if (IgnoredManifestDirectories.Contains (directory))
 							continue;
+						var doc = new  ManifestDocument(file);
+						if (string.IsNullOrEmpty (doc.PackageName)) {
+							Log.LogCodedWarning ("XA4315", file, 0, Properties.Resources.XA4315, file);
+							//Log.LogCodedWarning ("", $"Ignoring {file}. Manifest does not have the required 'package' attribute on the manifest.");
+							continue;
+						}
 						manifestDocuments.Add (new TaskItem (file));
 					}
 				}
