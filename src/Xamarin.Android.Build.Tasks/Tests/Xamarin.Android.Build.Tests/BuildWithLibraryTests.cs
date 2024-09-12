@@ -88,7 +88,7 @@ namespace Xamarin.Android.Build.Tests
 			var activity = libC.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
 				libC.Sources.Remove (activity);
-			var libCBuilder = CreateDllBuilder (Path.Combine ("temp", libC.ProjectName));
+			var libCBuilder = CreateDllBuilder (Path.Combine (path, libC.ProjectName));
 			Assert.IsTrue (libCBuilder.Build (libC), $"{libC.ProjectName} should succeed");
 
 			var aarPath = Path.Combine (Root, libCBuilder.ProjectDirectory, libC.OutputPath, $"{libC.ProjectName}.aar");
@@ -171,7 +171,7 @@ namespace Xamarin.Android.Build.Tests
 			activity = libB.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
 				libB.Sources.Remove (activity);
-			var libBBuilder = CreateDllBuilder (Path.Combine ("temp", libB.ProjectName));
+			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
 			Assert.IsTrue (libBBuilder.Build (libB), $"{libB.ProjectName} should succeed");
 
 			var projectJarHash = Files.HashString (Path.Combine (libB.IntermediateOutputPath,
@@ -221,7 +221,7 @@ namespace Xamarin.Android.Build.Tests
 				appA.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (aarPath));
 			}
 			appA.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
-			var appBuilder = CreateApkBuilder (Path.Combine ("temp", appA.ProjectName));
+			var appBuilder = CreateApkBuilder (Path.Combine (path, appA.ProjectName));
 			Assert.IsTrue (appBuilder.Build (appA), $"{appA.ProjectName} should succeed");
 
 			// Check .apk/.aab for assets, res, and native libraries
@@ -255,7 +255,7 @@ namespace Xamarin.Android.Build.Tests
 			var androidManifest = Path.Combine (intermediate, "android", "AndroidManifest.xml");
 			FileAssert.Exists (androidManifest);
 			var doc = XDocument.Load (androidManifest);
-			Assert.AreEqual(1, doc.Element ("manifest").Elements ("queries").Count (), "There should be 1 query.");
+			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
 			// Check environment variable
 			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);

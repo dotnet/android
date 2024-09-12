@@ -55,8 +55,8 @@ namespace Xamarin.Android.Tasks
 						var directory = Path.GetFileName (Path.GetDirectoryName (file));
 						if (IgnoredManifestDirectories.Contains (directory))
 							continue;
-						var doc = new  ManifestDocument(file);
-						if (string.IsNullOrEmpty (doc.PackageName)) {
+						var doc = XDocument.Load(file);
+						if (string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
 							Log.LogCodedWarning ("XA4315", file, 0, Properties.Resources.XA4315, file);
 							//Log.LogCodedWarning ("", $"Ignoring {file}. Manifest does not have the required 'package' attribute on the manifest.");
 							continue;
