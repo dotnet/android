@@ -7,6 +7,9 @@ namespace Java.Interop {
 	[AttributeUsage (AttributeTargets.Method | AttributeTargets.Constructor, 
 			AllowMultiple=false, 
 			Inherited=false)]
+#if !NETSTANDARD2_0
+	[RequiresUnreferencedCode ("[ExportAttribute] uses dynamic features.")]
+#endif
 #if !JCW_ONLY_TYPE_NAMES
 	public
 #endif  // !JCW_ONLY_TYPE_NAMES
