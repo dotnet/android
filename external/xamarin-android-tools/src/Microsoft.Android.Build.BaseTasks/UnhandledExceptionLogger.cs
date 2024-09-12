@@ -62,8 +62,8 @@ namespace Microsoft.Android.Build.Tasks
 				logCodedError (prefix + "7017", ex.ToString ());
 			else if (ex is TypeInitializationException)
 				logCodedError (prefix + "7018", ex.ToString ());
-			else if (ex is UnauthorizedAccessException)
-				logCodedError (prefix + "7019", ex.ToString ());
+			else if (ex is UnauthorizedAccessException uaex)
+				logCodedError (prefix + "7019", GetFileLockedExceptionMessage (uaex));
 			else if (ex is ApplicationException)
 				logCodedError (prefix + "7020", ex.ToString ());
 			else if (ex is KeyNotFoundException)
@@ -81,12 +81,12 @@ namespace Microsoft.Android.Build.Tasks
 			else if (ex is FileNotFoundException)		// IOException
 				logCodedError (prefix + "7028", ex.ToString ());
 			else if (ex is IOException ioex)
-				logCodedError (prefix + "7024", GetIOExceptionMessage (ioex));
+				logCodedError (prefix + "7024", GetFileLockedExceptionMessage (ioex));
 			else
 				logCodedError (prefix + "7000", ex.ToString ());
 		}
 
-		static string GetIOExceptionMessage (IOException ex)
+		static string GetFileLockedExceptionMessage (Exception ex)
 		{
 			// If we find a file path in the message, and the file exists, check if it's locked
 			// en-US message is:

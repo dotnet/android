@@ -40,13 +40,13 @@ public class LockCheckTests
 
 	class MyTask : AndroidTask
 	{
-		public string Path { get; set; }
-
 		public override string TaskPrefix => "MYT";
+
+		public Action Action { get; set; }
 
 		public override bool RunTask ()
 		{
-			using var stream = File.Create (Path);
+			Action ();
 			return false;
 		}
 	}
@@ -70,14 +70,25 @@ public class LockCheckTests
 	}
 
 	[Test]
-	public void LockCheck_AndroidTask ()
+	public void LockCheck_AndroidTask_FileCreate () =>
+		LockCheck_AndroidTask (() => File.Create (tempFile));
+
+	[Test]
+	public void LockCheck_AndroidTask_FileDelete () =>
+		LockCheck_AndroidTask (() => File.Delete (tempFile));
+
+	[Test]
+	public void LockCheck_AndroidTask_UnauthorizedAccessException () =>
+		LockCheck_AndroidTask (() => throw new UnauthorizedAccessException ($"Access to the path '{tempFile}' is denied."));
+
+	void LockCheck_AndroidTask (Action action)
 	{
 		if (!OperatingSystem.IsWindows ())
 			Assert.Ignore ("Test only valid on Windows");
 
 		var task = new MyTask {
 			BuildEngine = engine,
-			Path = tempFile,
+			Action = action,
 		};
 		task.Execute ();
 
