@@ -84,6 +84,7 @@ namespace Xamarin.Android.Build.Tests
 				IsRelease = true,
 			};
 			proj.SetProperty ("_AndroidSequencePointsMode", sequencePointsMode);
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", useNativeRuntimeLinkingMode.ToString ());
 			proj.SetAndroidSupportedAbis (supportedAbis);
 			using (var b = CreateApkBuilder ()) {
 				Assert.IsTrue (b.Build (proj), "Build should have succeeded.");

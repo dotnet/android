@@ -15,8 +15,23 @@ namespace Xamarin.Android.Build.Tests
 	public class BundleToolTests : DeviceTest
 	{
 		static readonly object[] FixtureArgs = {
-			new object[] { false },
-			new object[] { true },
+			new object[] {
+				false, // useAssemblyBlobs
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				true,  // useAssemblyBlobs
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				true,  // useAssemblyBlobs
+				true, // useNativeRuntimeLinkingMode
+			},
+
+			// There's no point in testing further combinations of the two parameters, the tests
+			// wouldn't actually differ.
 		};
 
 		static readonly string [] Abis = new [] { "armeabi-v7a", "arm64-v8a", "x86", "x86_64" };
@@ -26,6 +41,7 @@ namespace Xamarin.Android.Build.Tests
 		string intermediate;
 		string bin;
 		bool usesAssemblyBlobs;
+		bool useNativeRuntimeLinkingMode;
 
 		// Disable split by language
 		const string BuildConfig = @"{
@@ -46,9 +62,10 @@ namespace Xamarin.Android.Build.Tests
 	}
 }";
 
-		public BundleToolTests (bool usesAssemblyBlobs)
+		public BundleToolTests (bool usesAssemblyBlobs, bool useNativeRuntimeLinkingMode)
 		{
 			this.usesAssemblyBlobs = usesAssemblyBlobs;
+			this.useNativeRuntimeLinkingMode = useNativeRuntimeLinkingMode;
 		}
 
 		[OneTimeSetUp]
@@ -97,6 +114,7 @@ namespace Xamarin.Android.Build.Tests
 			app.SetAndroidSupportedAbis (Abis);
 			app.SetProperty ("AndroidBundleConfigurationFile", "buildConfig.json");
 			app.SetProperty ("AndroidUseAssemblyStore", usesAssemblyBlobs.ToString ());
+			app.SetProperty ("_AndroidEnableNativeRuntimeLinking", useNativeRuntimeLinkingMode.ToString ());
 
 			libBuilder = CreateDllBuilder (Path.Combine (path, lib.ProjectName), cleanupOnDispose: true);
 			Assert.IsTrue (libBuilder.Build (lib), "Library build should have succeeded.");
@@ -136,7 +154,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void BaseZip ([Values(false, true)] bool useNativeRuntimeLinkingMode)
+		public void BaseZip ()
 		{
 			var baseZip = Path.Combine (intermediate, "android", "bin", "base.zip");
 			var contents = ListArchiveContents (baseZip, usesAssemblyBlobs);
@@ -197,7 +215,7 @@ namespace Xamarin.Android.Build.Tests
 		}
 
 		[Test]
-		public void AppBundle ([Values(false, true)] bool useNativeRuntimeLinkingMode)
+		public void AppBundle ()
 		{
 			var aab = Path.Combine (intermediate, "android", "bin", $"{app.PackageName}.aab");
 			FileAssert.Exists (aab);

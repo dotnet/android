@@ -958,8 +958,29 @@ namespace Lib2
 			}
 		}
 
+		static object[] GenerateJavaStubsAndAssemblyData () => new object[] {
+			new object[] {
+				true, // isRelease
+				true, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				true, // isRelease
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			new object[] {
+				false, // isRelease
+				false, // useNativeRuntimeLinkingMode
+			},
+
+			// Configuration for debug build and native runtime linking is not used, since
+			// runtime linking happens only in release builds
+		};
+
 		[Test]
-		public void GenerateJavaStubsAndAssembly ([Values (true, false)] bool isRelease)
+		[TestCaseSource (nameof (GenerateJavaStubsAndAssemblyData))]
+		public void GenerateJavaStubsAndAssembly (bool isRelease, bool useNativeRuntimeLinkingMode)
 		{
 			var targets = new [] {
 				"_GenerateJavaStubs",
@@ -968,6 +989,7 @@ namespace Lib2
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 			};
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", useNativeRuntimeLinkingMode.ToString ());
 			proj.SetAndroidSupportedAbis ("armeabi-v7a");
 			proj.OtherBuildItems.Add (new AndroidItem.AndroidEnvironment ("Foo.txt") {
 				TextContent = () => "Foo=Bar",
@@ -978,7 +1000,7 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, useNativeRuntimeLinkingMode);
 
 				// Change C# file and AndroidEvironment file
 				proj.MainActivity += Environment.NewLine + "// comment";
@@ -988,30 +1010,40 @@ namespace Lib2
 				foreach (var target in targets) {
 					Assert.IsFalse (b.Output.IsTargetSkipped (target), $"`{target}` should *not* be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, useNativeRuntimeLinkingMode);
 
 				// No changes
 				Assert.IsTrue (b.Build (proj), "third build should have succeeded.");
 				foreach (var target in targets) {
 					Assert.IsTrue (b.Output.IsTargetSkipped (target), $"`{target}` should be skipped!");
 				}
-				AssertAssemblyFilesInFileWrites (proj, b);
+				AssertAssemblyFilesInFileWrites (proj, b, useNativeRuntimeLinkingMode);
 			}
 		}
 
-		readonly string [] ExpectedAssemblyFiles = new [] {
-			Path.Combine ("android", "environment.armeabi-v7a.o"),
-			Path.Combine ("android", "environment.armeabi-v7a.ll"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.o"),
-			Path.Combine ("android", "typemaps.armeabi-v7a.ll"),
-			Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so")
-		};
+		List<string> GetExpectedAssemblyFiles (bool useNativeRuntimeLinkingMode)
+		{
+			var ret = new List <string> {
+				Path.Combine ("android", "environment.armeabi-v7a.o"),
+				Path.Combine ("android", "environment.armeabi-v7a.ll"),
+				Path.Combine ("android", "typemaps.armeabi-v7a.o"),
+				Path.Combine ("android", "typemaps.armeabi-v7a.ll")
+			};
 
-		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b)
+			if (useNativeRuntimeLinkingMode) {
+				ret.Add (Path.Combine ("app_shared_libraries", "armeabi-v7a", "libmonodroid-unified.so"));
+			} else {
+				ret.Add (Path.Combine ("app_shared_libraries", "armeabi-v7a", "libxamarin-app.so"));
+			}
+
+			return ret;
+		}
+
+		void AssertAssemblyFilesInFileWrites (XamarinAndroidApplicationProject proj, ProjectBuilder b, bool useNativeRuntimeLinkingMode)
 		{
 			var intermediate = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath);
 			var lines = File.ReadAllLines (Path.Combine (intermediate, $"{proj.ProjectName}.csproj.FileListAbsolute.txt"));
-			foreach (var file in ExpectedAssemblyFiles) {
+			foreach (var file in GetExpectedAssemblyFiles (useNativeRuntimeLinkingMode)) {
 				var path = Path.Combine (intermediate, file);
 				CollectionAssert.Contains (lines, path, $"{file} is not in FileWrites!");
 				FileAssert.Exists (path);
