@@ -1,0 +1,324 @@
+{
+    "version": 3,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 21,
+        "patch": 0
+    },
+
+    "configurePresets": [
+        {
+            "name": "common",
+            "hidden": true,
+            "generator": "Ninja",
+            "debug": {
+                "output": true
+            },
+            "toolchainFile": "/Users/peter/android-toolchain/ndk/build/cmake/android.toolchain.cmake",
+            "cacheVariables": {
+                "ANDROID_NDK": "/Users/peter/android-toolchain/ndk",
+                "ANDROID_TOOLCHAIN": "clang",
+                "ANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES": "ON",
+                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
+                "CMAKE_MAKE_PROGRAM": "/Users/peter/android-toolchain/sdk/cmake/3.22.1/bin/ninja",
+                "OUTPUT_PATH": "/Users/peter/source/android2/bin/Release/lib/packs/Microsoft.Android.Sdk.Darwin/35.0.0/tools/lib",
+                "XA_LIB_TOP_DIR": "/Users/peter/source/android2/bin/Release/lib/packs/Microsoft.Android.Sdk.Darwin/35.0.0/tools/",
+                "XA_BUILD_CONFIGURATION": "Release"
+            }
+        },
+
+        {
+            "name": "common-debug",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+
+        {
+            "name": "common-release",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+
+        {
+            "name": "default-common",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "ANDROID_STL": "none",
+                "ANDROID_CPP_FEATURES": "no-rtti no-exceptions"
+            }
+        },
+
+        {
+            "name": "analyzers-common",
+            "hidden": true,
+            "inherits": "common",
+            "cacheVariables": {
+                "ANDROID_STL": "c++_static",
+                "ANDROID_CPP_FEATURES": "rtti exceptions"
+            }
+        },
+
+        {
+            "name": "default-debug",
+            "hidden": true,
+            "inherits": ["default-common", "common-debug"]
+        },
+
+        {
+            "name": "default-release",
+            "hidden": true,
+            "inherits": ["default-common", "common-release"]
+        },
+
+        {
+            "name": "analyzers-debug",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug"]
+        },
+
+        {
+            "name": "analyzers-release",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-release"]
+        },
+
+        {
+            "name": "common-armeabi-v7a",
+            "hidden": true,
+            "cacheVariables": {
+                "ANDROID_ABI": "armeabi-v7a",
+                "ANDROID_NATIVE_API_LEVEL": "21",
+                "ANDROID_PLATFORM": "android-21",
+                "ANDROID_RID": "android-arm"
+            }
+        },
+
+        {
+            "name": "common-arm64-v8a",
+            "hidden": true,
+            "cacheVariables": {
+                "ANDROID_ABI": "arm64-v8a",
+                "ANDROID_NATIVE_API_LEVEL": "21",
+                "ANDROID_PLATFORM": "android-21",
+                "ANDROID_RID": "android-arm64"
+            }
+        },
+
+        {
+            "name": "common-x86",
+            "hidden": true,
+            "cacheVariables": {
+                "ANDROID_ABI": "x86",
+                "ANDROID_NATIVE_API_LEVEL": "21",
+                "ANDROID_PLATFORM": "android-21",
+                "ANDROID_RID": "android-x86"
+            }
+        },
+
+        {
+            "name": "common-x86_64",
+            "hidden": true,
+            "cacheVariables": {
+                "ANDROID_ABI": "x86_64",
+                "ANDROID_NATIVE_API_LEVEL": "21",
+                "ANDROID_PLATFORM": "android-21",
+                "ANDROID_RID": "android-x64"
+            }
+        },
+
+        {
+            "name": "asan-common",
+            "hidden": true,
+            "cacheVariables": {
+                "ENABLE_CLANG_ASAN": "ON"
+            }
+        },
+
+        {
+            "name": "ubsan-common",
+            "hidden": true,
+            "cacheVariables": {
+                "ENABLE_CLANG_UBSAN": "ON"
+            }
+        },
+
+        {
+            "name": "default-debug-armeabi-v7a",
+            "inherits": ["default-common", "common-debug", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "default-release-armeabi-v7a",
+            "inherits": ["default-common", "common-release", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "analyzers-debug-armeabi-v7a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "analyzers-release-armeabi-v7a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-release", "common-armeabi-v7a"]
+        },
+
+        {
+            "name": "asan-release-armeabi-v7a",
+            "inherits": ["analyzers-release-armeabi-v7a", "asan-common"]
+        },
+
+        {
+            "name": "asan-debug-armeabi-v7a",
+            "inherits": ["analyzers-debug-armeabi-v7a", "asan-common"]
+        },
+
+        {
+            "name": "ubsan-release-armeabi-v7a",
+            "inherits": ["analyzers-release-armeabi-v7a", "ubsan-common"]
+        },
+
+        {
+            "name": "ubsan-debug-armeabi-v7a",
+            "inherits": ["analyzers-debug-armeabi-v7a", "ubsan-common"]
+        },
+
+
+
+        {
+            "name": "default-debug-arm64-v8a",
+            "inherits": ["default-common", "common-debug", "common-arm64-v8a"]
+        },
+
+        {
+            "name": "default-release-arm64-v8a",
+            "inherits": ["default-common", "common-release", "common-arm64-v8a"]
+        },
+
+        {
+            "name": "analyzers-debug-arm64-v8a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-arm64-v8a"]
+        },
+
+        {
+            "name": "analyzers-release-arm64-v8a",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-release", "common-arm64-v8a"]
+        },
+
+        {
+            "name": "asan-release-arm64-v8a",
+            "inherits": ["analyzers-release-arm64-v8a", "asan-common"]
+        },
+
+        {
+            "name": "asan-debug-arm64-v8a",
+            "inherits": ["analyzers-debug-arm64-v8a", "asan-common"]
+        },
+
+        {
+            "name": "ubsan-release-arm64-v8a",
+            "inherits": ["analyzers-release-arm64-v8a", "ubsan-common"]
+        },
+
+        {
+            "name": "ubsan-debug-arm64-v8a",
+            "inherits": ["analyzers-debug-arm64-v8a", "ubsan-common"]
+        },
+
+
+
+        {
+            "name": "default-debug-x86",
+            "inherits": ["default-common", "common-debug", "common-x86"]
+        },
+
+        {
+            "name": "default-release-x86",
+            "inherits": ["default-common", "common-release", "common-x86"]
+        },
+
+        {
+            "name": "analyzers-debug-x86",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-x86"]
+        },
+
+        {
+            "name": "analyzers-release-x86",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-release", "common-x86"]
+        },
+
+        {
+            "name": "asan-release-x86",
+            "inherits": ["analyzers-release-x86", "asan-common"]
+        },
+
+        {
+            "name": "asan-debug-x86",
+            "inherits": ["analyzers-debug-x86", "asan-common"]
+        },
+
+        {
+            "name": "ubsan-release-x86",
+            "inherits": ["analyzers-release-x86", "ubsan-common"]
+        },
+
+        {
+            "name": "ubsan-debug-x86",
+            "inherits": ["analyzers-debug-x86", "ubsan-common"]
+        },
+
+
+
+        {
+            "name": "default-debug-x86_64",
+            "inherits": ["default-common", "common-debug", "common-x86_64"]
+        },
+
+        {
+            "name": "default-release-x86_64",
+            "inherits": ["default-common", "common-release", "common-x86_64"]
+        },
+
+        {
+            "name": "analyzers-debug-x86_64",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-debug", "common-x86_64"]
+        },
+
+        {
+            "name": "analyzers-release-x86_64",
+            "hidden": true,
+            "inherits": ["analyzers-common", "common-release", "common-x86_64"]
+        },
+
+        {
+            "name": "asan-release-x86_64",
+            "inherits": ["analyzers-release-x86_64", "asan-common"]
+        },
+
+        {
+            "name": "asan-debug-x86_64",
+            "inherits": ["analyzers-debug-x86_64", "asan-common"]
+        },
+
+        {
+            "name": "ubsan-release-x86_64",
+            "inherits": ["analyzers-release-x86_64", "ubsan-common"]
+        },
+
+        {
+            "name": "ubsan-debug-x86_64",
+            "inherits": ["analyzers-debug-x86_64", "ubsan-common"]
+        }
+    ]
+}
