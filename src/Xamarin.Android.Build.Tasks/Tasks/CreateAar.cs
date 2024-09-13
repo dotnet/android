@@ -116,7 +116,12 @@ namespace Xamarin.Android.Tasks
 				}
 				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
 					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
-					aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
+					var doc = XDocument.Parse(manifest);
+					if (!string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
+						aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
+					} else {
+						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");
+					}
 				}
 				foreach (var entry in existingEntries) {
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
