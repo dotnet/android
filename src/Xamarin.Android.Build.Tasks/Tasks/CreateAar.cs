@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
