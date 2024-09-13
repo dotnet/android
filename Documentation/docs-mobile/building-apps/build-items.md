@@ -152,7 +152,7 @@ The following MSBuild metadata are supported:
   The default value is empty.
 - `%(OutputPath)`: Can be set to override the build output path of the Gradle project.
   The default value is `$(IntermediateOutputPath)gradle/{ModuleName}-{Hash}`.
-- `%(ReferenceLibraryOutputs)`: Output AAR files will be added as an [`AndroidLibrary`](#androidlibrary) to the project.
+- `%(CreateAndroidLibrary)`: Output AAR files will be added as an [`AndroidLibrary`](#androidlibrary) to the project.
   Metadata supported by `<AndroidLibrary>` like `%(Bind)` or `%(Pack)` will be forwarded if set.
   The default value is `true`.
 

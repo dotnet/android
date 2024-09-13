@@ -19,13 +19,13 @@ This file contains MSBuild targets that support building and operating on Androi
 
   <ItemDefinitionGroup>
     <AndroidGradleProject>
-      <Bind>true</Bind>
+      <Bind></Bind>
       <Configuration>Release</Configuration>
       <ModuleName></ModuleName>
       <OutputPath></OutputPath>
-      <Pack>true</Pack>
-      <ReferenceLibraryOutputs>true</ReferenceLibraryOutputs>
-      <Visible>false</Visible>
+      <Pack></Pack>
+      <CreateAndroidLibrary>true</CreateAndroidLibrary>
+      <Visible></Visible>
     </AndroidGradleProject>
   </ItemDefinitionGroup>
 
@@ -88,14 +88,14 @@ This file contains MSBuild targets that support building and operating on Androi
     <ItemGroup>
       <_AndroidGradleProjectAppOutputs      Include="%(AndroidGradleProject.OutputPath)outputs/**/*.apk" />
       <_AndroidGradleProjectLibraryOutputs  Include="%(AndroidGradleProject.OutputPath)outputs/**/*.aar"
-          Condition=" '%(ReferenceLibraryOutputs)' == 'true' "
+          Condition=" '%(CreateAndroidLibrary)' == 'true' "
           Bind="%(Bind)"
           Pack="%(Pack)"
           Visible="%(Visible)" />
     </ItemGroup>
 
     <AndroidMessage ResourceName="XAGRDLRefLibraryOutputs"
-        FormatArguments="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)"
+        FormatArguments="%(_AndroidGradleProjectLibraryOutputs.Identity)"
         Condition=" '@(_AndroidGradleProjectLibraryOutputs->Count())' != '0' "
     />
 

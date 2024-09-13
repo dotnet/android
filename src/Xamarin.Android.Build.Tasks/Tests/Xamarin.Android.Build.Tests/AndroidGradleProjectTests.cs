@@ -65,22 +65,22 @@ namespace Xamarin.Android.Build.Tests
 			new object [] {
 				/* Bind */                       true,
 				/* Configuration */              "Release",
-				/* ReferenceLibraryOutputs */    true,
+				/* CreateAndroidLibrary */       true,
 			},
 			new object [] {
 				/* Bind */                       true,
 				/* Configuration */              "Debug",
-				/* ReferenceLibraryOutputs */    true,
+				/* CreateAndroidLibrary */       true,
 			},
 			new object [] {
 				/* Bind */                       false,
 				/* Configuration */              "Release",
-				/* ReferenceLibraryOutputs */    true,
+				/* CreateAndroidLibrary */       true,
 			},
 			new object [] {
 				/* Bind */                       true,
 				/* Configuration */              "Debug",
-				/* ReferenceLibraryOutputs */    false,
+				/* CreateAndroidLibrary */       false,
 			},
 		};
 		[Test]
@@ -97,7 +97,7 @@ namespace Xamarin.Android.Build.Tests
 							{ "ModuleName", moduleName },
 							{ "Bind", bind.ToString ()},
 							{ "Configuration", configuration },
-							{ "ReferenceLibraryOutputs", refOutputs.ToString () },
+							{ "CreateAndroidLibrary", refOutputs.ToString () },
 						},
 					},
 				},
@@ -149,6 +149,7 @@ namespace Xamarin.Android.Build.Tests
 
 			var dotnet = new DotNetCLI (Path.Combine (Root, builder.ProjectDirectory, proj.ProjectFilePath));
 			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-Release.aar"));
 
 			var nupkgPath = Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{proj.ProjectName}.1.0.0.nupkg");
 			FileAssert.Exists (nupkgPath);

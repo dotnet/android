@@ -1759,7 +1759,7 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
-        ///   Looks up a localized string similar to dding reference to Gradle output: '{0}'. The '%(ReferenceLibraryOutputs)' metadata can be set to 'false' to opt out of this behavior..
+        ///   Looks up a localized string similar to dding reference to Gradle output: '{0}'. The '%(CreateAndroidLibrary)' metadata can be set to 'false' to opt out of this behavior..
         /// </summary>
         public static string XAGRDLRefLibraryOutputs {
             get {
