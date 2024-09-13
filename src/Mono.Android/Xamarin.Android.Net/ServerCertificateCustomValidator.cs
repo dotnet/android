@@ -6,6 +6,7 @@ using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 
 using Android.OS;
+using Android.Net.Http;
 using Android.Runtime;
 using Javax.Net.Ssl;
 
@@ -53,7 +54,8 @@ namespace Xamarin.Android.Net
 				var sslPolicyErrors = SslPolicyErrors.None;
 
 				try {
-					_internalTrustManager.CheckServerTrusted (javaChain, authType);
+					var trustManagerExtensions = new X509TrustManagerExtensions (_internalTrustManager);
+					trustManagerExtensions.CheckServerTrusted (javaChain, authType, _request.RequestUri.Host);
 				} catch (JavaCertificateException) {
 					sslPolicyErrors |= SslPolicyErrors.RemoteCertificateChainErrors;
 				}
