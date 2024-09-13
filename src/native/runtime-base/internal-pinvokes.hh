@@ -15,6 +15,9 @@
 extern "C" {
 	int _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap);
 	void _monodroid_freeifaddrs (struct _monodroid_ifaddrs *ifa);
+	mono_bool _monodroid_get_network_interface_up_state (const char *ifname, mono_bool *is_up);
+	mono_bool _monodroid_get_network_interface_supports_multicast (const char *ifname, mono_bool *supports_multicast);
+	int _monodroid_get_dns_servers (void **dns_servers_array);
 	unsigned int monodroid_get_log_categories ();
 	int monodroid_get_system_property (const char *name, char **value);
 	int monodroid_embedded_assemblies_set_assemblies_prefix (const char *prefix);
