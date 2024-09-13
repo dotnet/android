@@ -132,12 +132,6 @@ _monodroid_gc_wait_for_bridge_processing ()
     mono_gc_wait_for_bridge_processing ();
 }
 
-int
-_monodroid_get_android_api_level ()
-{
-    return monodroidRuntime.get_android_api_level ();
-}
-
 void
 monodroid_clear_gdb_wait ()
 {

@@ -145,7 +145,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.IO.Hashing.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)System.Reflection.Metadata.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Aapt2.targets" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Analysis.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Application.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Assets.targets" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Bindings.ClassParse.targets" />
@@ -176,7 +175,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Aidl.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.AndroidSdk.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Versions.props" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)K4os.Compression.LZ4.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ELFSharp.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ManifestOverlays\Timing.xml" />

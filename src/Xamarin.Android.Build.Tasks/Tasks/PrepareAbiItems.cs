@@ -31,9 +31,6 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool Debug { get; set; }
 
-		[Required]
-		public bool InstantRunEnabled { get; set; }
-
 		[Output]
 		public ITaskItem[] AssemblySources { get; set; }
 

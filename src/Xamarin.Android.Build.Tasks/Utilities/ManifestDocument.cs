@@ -90,7 +90,6 @@ namespace Xamarin.Android.Tasks {
 		public bool Debug { get; set; }
 		public bool MultiDex { get; set; }
 		public bool NeedsInternet { get; set; }
-		public bool InstantRunEnabled { get; set; }
 		public bool ForceExtractNativeLibs { get; set; }
 		public bool ForceDebuggable { get; set; }
 		public string VersionName { get; set; }
@@ -572,33 +571,45 @@ namespace Xamarin.Android.Tasks {
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
-			List<ApplicationAttribute> assemblyAttr =
-				Assemblies.Select (path => ApplicationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
-				.Where (attr => attr != null)
-				.ToList ();
-			List<MetaDataAttribute> metadata =
-				Assemblies.SelectMany (path => MetaDataAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
-					.Where (attr => attr != null)
-					.ToList ();
-			var properties =
-				Assemblies.SelectMany (path => PropertyAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
-					.Where (attr => attr != null)
-					.ToList ();
-			var usesLibraryAttr =
-				Assemblies.SelectMany (path => UsesLibraryAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
-				.Where (attr => attr != null);
-			var usesConfigurationAttr =
-				Assemblies.SelectMany (path => UsesConfigurationAttribute.FromCustomAttributeProvider (Resolver.GetAssembly (path), cache))
-				.Where (attr => attr != null);
+			List<ApplicationAttribute> assemblyAttr = [];
+			List<MetaDataAttribute> metadata = [];
+			List<PropertyAttribute> properties = [];
+			List<UsesLibraryAttribute> usesLibraryAttr = [];
+			List<UsesConfigurationAttribute> usesConfigurationAttr = [];
+			foreach (var assemblyPath in Assemblies) {
+				var assembly = Resolver.GetAssembly (assemblyPath);
+				if (ApplicationAttribute.FromCustomAttributeProvider (assembly, cache) is ApplicationAttribute a) {
+					assemblyAttr.Add (a);
+				}
+				foreach (var m in MetaDataAttribute.FromCustomAttributeProvider (assembly, cache)) {
+					if (m is null)
+						continue;
+					metadata.Add (m);
+				}
+				foreach (var p in PropertyAttribute.FromCustomAttributeProvider (assembly, cache)) {
+					if (p is null)
+						continue;
+					properties.Add (p);
+				}
+				foreach (var u in UsesLibraryAttribute.FromCustomAttributeProvider (assembly, cache)) {
+					if (u is null)
+						continue;
+					usesLibraryAttr.Add (u);
+				}
+				foreach (var uc in UsesConfigurationAttribute.FromCustomAttributeProvider (assembly, cache)) {
+					if (uc is null)
+						continue;
+					usesConfigurationAttr.Add (uc);
+				}
+			}
+
 			if (assemblyAttr.Count > 1)
 				throw new InvalidOperationException ("There can be only one [assembly:Application] attribute defined.");
 
-			List<ApplicationAttribute> typeAttr = new List<ApplicationAttribute> ();
-			List<UsesLibraryAttribute> typeUsesLibraryAttr = new List<UsesLibraryAttribute> ();
-			List<UsesConfigurationAttribute> typeUsesConfigurationAttr = new List<UsesConfigurationAttribute> ();
+			List<ApplicationAttribute> typeAttr = [];
 			foreach (TypeDefinition t in subclasses) {
 				ApplicationAttribute aa = ApplicationAttribute.FromCustomAttributeProvider (t, cache);
-				if (aa == null)
+				if (aa is null)
 					continue;
 
 				if (!t.IsSubclassOf ("Android.App.Application", cache))
@@ -608,7 +619,7 @@ namespace Xamarin.Android.Tasks {
 				metadata.AddRange (MetaDataAttribute.FromCustomAttributeProvider (t, cache));
 				properties.AddRange (PropertyAttribute.FromCustomAttributeProvider (t, cache));
 
-				typeUsesLibraryAttr.AddRange (UsesLibraryAttribute.FromCustomAttributeProvider (t, cache));
+				usesLibraryAttr.AddRange (UsesLibraryAttribute.FromCustomAttributeProvider (t, cache));
 			}
 
 			if (typeAttr.Count > 1)
@@ -619,12 +630,6 @@ namespace Xamarin.Android.Tasks {
 				throw new InvalidOperationException ("Application cannot have both a type with an [Application] attribute and an [assembly:Application] attribute.");
 
 			ApplicationAttribute appAttr = assemblyAttr.SingleOrDefault () ?? typeAttr.SingleOrDefault ();
-			var ull1 = usesLibraryAttr ?? Array.Empty<UsesLibraryAttribute> ();
-			var ull2 = typeUsesLibraryAttr.AsEnumerable () ?? Array.Empty<UsesLibraryAttribute> ();
-			var usesLibraryAttrs = ull1.Concat (ull2);
-			var ucl1 = usesConfigurationAttr ?? Array.Empty<UsesConfigurationAttribute>();
-			var ucl2 = typeUsesConfigurationAttr.AsEnumerable () ?? Array.Empty<UsesConfigurationAttribute> ();
-			var usesConfigurationattrs = ucl1.Concat (ucl2);
 			bool needManifestAdd = true;
 
 			if (appAttr != null) {
@@ -643,14 +648,18 @@ namespace Xamarin.Android.Tasks {
 				application = new XElement ("application");
 			else
 				needManifestAdd = false;
-			application.Add (metadata.Select (md => md.ToElement (PackageName, cache)));
-			application.Add (properties.Select (md => md.ToElement (PackageName, cache)));
+			foreach (var m in metadata) {
+				application.Add (m.ToElement (PackageName, cache));
+			}
+			foreach (var p in properties) {
+				application.Add (p.ToElement (PackageName, cache));
+			}
 
 			if (needManifestAdd)
 				manifest.Add (application);
 
-			AddUsesLibraries (application, usesLibraryAttrs, cache);
-			AddUsesConfigurations (application, usesConfigurationattrs, cache);
+			AddUsesLibraries (application, usesLibraryAttr, cache);
+			AddUsesConfigurations (application, usesConfigurationAttr, cache);
 
 			if (applicationClass != null && application.Attribute (androidNs + "name") == null)
 				application.Add (new XAttribute (androidNs + "name", applicationClass));
@@ -780,16 +789,18 @@ namespace Xamarin.Android.Tasks {
 			if (attr == null)
 				return null;
 
-			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type, cache);
-			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type, cache);
-			var properties = PropertyAttribute.FromCustomAttributeProvider (type, cache);
-
 			XElement element = toElement (attr);
 			if (element.Attribute (attName) == null)
 				element.Add (new XAttribute (attName, name));
-			element.Add (metadata.Select (md => md.ToElement (PackageName, cache)));
-			element.Add (intents.Select (intent => intent.ToElement (PackageName)));
-			element.Add (properties.Select (md => md.ToElement (PackageName, cache)));
+			foreach (var m in MetaDataAttribute.FromCustomAttributeProvider (type, cache)) {
+				element.Add (m.ToElement (PackageName, cache));
+			}
+			foreach (var i in IntentFilterAttribute.FromTypeDefinition (type, cache)) {
+				element.Add (i.ToElement (PackageName));
+			}
+			foreach (var p in PropertyAttribute.FromCustomAttributeProvider (type, cache)) {
+				element.Add (p.ToElement (PackageName, cache));
+			}
 			if (update != null)
 				update (attr, element);
 			return element;
@@ -801,18 +812,21 @@ namespace Xamarin.Android.Tasks {
 			if (attr == null)
 				return null;
 
-			IEnumerable<MetaDataAttribute> metadata = MetaDataAttribute.FromCustomAttributeProvider (type, cache);
-			IEnumerable<GrantUriPermissionAttribute> grants = GrantUriPermissionAttribute.FromTypeDefinition (type, cache);
-			IEnumerable<IntentFilterAttribute> intents = IntentFilterAttribute.FromTypeDefinition (type, cache);
-			var properties = PropertyAttribute.FromCustomAttributeProvider (type, cache);
-
 			XElement element = attr.ToElement (PackageName, cache);
 			if (element.Attribute (attName) == null)
 				element.Add (new XAttribute (attName, name));
-			element.Add (metadata.Select (md => md.ToElement (PackageName, cache)));
-			element.Add (grants.Select (intent => intent.ToElement (PackageName, cache)));
-			element.Add (intents.Select (intent => intent.ToElement (PackageName)));
-			element.Add (properties.Select (md => md.ToElement (PackageName, cache)));
+			foreach (var m in MetaDataAttribute.FromCustomAttributeProvider (type, cache)) {
+				element.Add (m.ToElement (PackageName, cache));
+			}
+			foreach (var g in GrantUriPermissionAttribute.FromTypeDefinition (type, cache)) {
+				element.Add (g.ToElement (PackageName, cache));
+			}
+			foreach (var i in IntentFilterAttribute.FromTypeDefinition (type, cache)) {
+				element.Add (i.ToElement (PackageName));
+			}
+			foreach (var p in PropertyAttribute.FromCustomAttributeProvider (type, cache)) {
+				element.Add (p.ToElement (PackageName, cache));
+			}
 
 			return element;
 		}
@@ -886,13 +900,13 @@ namespace Xamarin.Android.Tasks {
 				if (!application.Parent.Descendants ("uses-permission").Any (x => (string)x.Attribute (attName) == upa.Name))
 					application.AddBeforeSelf (upa.ToElement (PackageName, cache));
 		}
-		void AddUsesConfigurations (XElement application, IEnumerable<UsesConfigurationAttribute> configs, TypeDefinitionCache cache)
+		void AddUsesConfigurations (XElement application, List<UsesConfigurationAttribute> configs, TypeDefinitionCache cache)
 		{
 			foreach (var uca in configs)
 				application.Add (uca.ToElement (PackageName, cache));
 		}
 
-		void AddUsesLibraries (XElement application, IEnumerable<UsesLibraryAttribute> libraries, TypeDefinitionCache cache)
+		void AddUsesLibraries (XElement application, List<UsesLibraryAttribute> libraries, TypeDefinitionCache cache)
 		{
 			// Add unique libraries to the manifest
 			foreach (var ula in libraries)

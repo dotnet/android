@@ -228,22 +228,6 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 inline void
 MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks, size_t *out_user_assemblies_count, bool have_split_apks)
 {
-#if defined(DEBUG)
-	if (application_config.instant_run_enabled) {
-		for (const char *od : AndroidSystem::override_dirs) {
-			if (od == nullptr || !Util::directory_exists (od)) {
-				continue;
-			}
-
-			// TODO: temporary hack for the location of typemaps, to be fixed
-			dynamic_local_string<SENSIBLE_PATH_MAX> above { od };
-			above.append ("/..");
-			log_debug (LOG_ASSEMBLY, "Loading TypeMaps from %s", above.get());
-			embeddedAssemblies.try_load_typemaps_from_directory (above.get());
-		}
-	}
-#endif
-
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
 		*out_user_assemblies_count = embeddedAssemblies.register_from_filesystem<should_register_file> ();
 		return;
@@ -835,7 +819,6 @@ MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobjec
 	init.env                    = env;
 	init.logCategories          = log_categories;
 	init.version                = env->GetVersion ();
-	init.androidSdkVersion      = android_api_level;
 	init.isRunningOnDesktop     = is_running_on_desktop ? 1 : 0;
 	init.brokenExceptionTransitions = application_config.broken_exception_transitions ? 1 : 0;
 	init.packageNamingPolicy    = static_cast<int>(application_config.package_naming_policy);
@@ -1369,7 +1352,7 @@ MonodroidRuntime::install_logging_handlers ()
 inline void
 MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                                           jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset,
-                                                          jobject loader, jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                                          jobject loader, jobjectArray assembliesJava, jboolean isEmulator,
                                                           jboolean haveSplitApks)
 {
 	char *mono_log_mask_raw = nullptr;
@@ -1410,7 +1393,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 		);
 	}
 
-	android_api_level = apiLevel;
 	AndroidSystem::detect_embedded_dso_mode (applicationDirs);
 	AndroidSystem::set_running_in_emulator (isEmulator);
 
@@ -1564,7 +1546,6 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 		0,
 		loader,
 		assembliesJava,
-		apiLevel,
 		/* isEmulator */ JNI_FALSE,
 		/* haveSplitApks */ JNI_FALSE
 	);
@@ -1573,7 +1554,7 @@ Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobject
 JNIEXPORT void JNICALL
 Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jint localDateTimeOffset, jobject loader,
-                                jobjectArray assembliesJava, jint apiLevel, jboolean isEmulator,
+                                jobjectArray assembliesJava, jboolean isEmulator,
                                 jboolean haveSplitApks)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
@@ -1586,7 +1567,6 @@ Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass klass, jstring lang,
 		localDateTimeOffset,
 		loader,
 		assembliesJava,
-		apiLevel,
 		isEmulator,
 		application_config.ignore_split_configs ? false : haveSplitApks
 	);

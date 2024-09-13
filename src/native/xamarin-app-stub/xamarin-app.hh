@@ -237,7 +237,6 @@ struct ApplicationConfig
 	bool aot_lazy_load;
 	bool uses_assembly_preload;
 	bool broken_exception_transitions;
-	bool instant_run_enabled;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
 	bool have_assembly_store;

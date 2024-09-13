@@ -22,13 +22,11 @@ namespace Android.Runtime {
 
 		internal AndroidRuntime (IntPtr jnienv,
 				IntPtr vm,
-				bool allocNewObjectSupported,
 				IntPtr classLoader,
 				IntPtr classLoader_loadClass,
 				bool jniAddNativeMethodRegistrationAttributePresent)
 			: base (new AndroidRuntimeOptions (jnienv,
 					vm,
-					allocNewObjectSupported,
 					classLoader,
 					classLoader_loadClass,
 					jniAddNativeMethodRegistrationAttributePresent))
@@ -87,7 +85,6 @@ namespace Android.Runtime {
 	class AndroidRuntimeOptions : JniRuntime.CreationOptions {
 		public AndroidRuntimeOptions (IntPtr jnienv,
 				IntPtr vm,
-				bool allocNewObjectSupported,
 				IntPtr classLoader,
 				IntPtr classLoader_loadClass,
 				bool jniAddNativeMethodRegistrationAttributePresent)
@@ -96,7 +93,6 @@ namespace Android.Runtime {
 			ClassLoader             = new JniObjectReference (classLoader, JniObjectReferenceType.Global);
 			ClassLoader_LoadClass_id= classLoader_loadClass;
 			InvocationPointer       = vm;
-			NewObjectRequired       = !allocNewObjectSupported;
 			ObjectReferenceManager  = new AndroidObjectReferenceManager ();
 			TypeManager             = new AndroidTypeManager (jniAddNativeMethodRegistrationAttributePresent);
 			ValueManager            = new AndroidValueManager ();

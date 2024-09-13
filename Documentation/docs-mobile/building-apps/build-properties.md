@@ -343,15 +343,17 @@ they're `0` and `10`.
 
 ## AndroidDexTool
 
-An enum-style property with valid
-values of `dx` or `d8`. Indicates which Android [dex][dex]
+An enum-style property with a valid
+value of `d8`. _Previously, a value of `dx` was supported in
+Xamarin.Android._
+
+Indicates which Android [dex][dex]
 compiler is used during the .NET for Android build process.
-The default value is `dx`. See our
+The default value is `d8`. See our
 documentation on [D8 and R8][d8-r8].
 
 [dex]: https://source.android.com/devices/tech/dalvik/dalvik-bytecode
 [d8-r8]: https://github.com/xamarin/xamarin-android/blob/main/Documentation/guides/D8andR8.md
-
 
 ## AndroidEnableDesugar
 

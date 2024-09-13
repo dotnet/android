@@ -175,21 +175,9 @@ namespace Xamarin.Android.Tasks
 			{
 				if (x.Exists != y.Exists || x.Length != y.Length)
 					return false;
-				using (var f1 = File.OpenRead (x.FullName)) {
-					using (var f2 = File.OpenRead (y.FullName)) {
-						var b1 = new byte [0x1000];
-						var b2 = new byte [0x1000];
-						int total = 0;
-						while (total < x.Length) {
-							int size = f1.Read (b1, 0, b1.Length);
-							total += size;
-							f2.Read (b2, 0, b2.Length);
-							if (!b1.Take (size).SequenceEqual (b2.Take (size)))
-								return false;
-						}
-					}
-				}
-				return true;
+				string xHash = Files.HashFile (x.FullName);
+				string yHash = Files.HashFile (y.FullName);
+				return xHash == yHash;
 			}
 
 			public int GetHashCode (FileInfo obj)
@@ -464,10 +452,13 @@ namespace Xamarin.Android.Tasks
 		{
 			var platformPath = MonoAndroidHelper.AndroidSdk.TryGetPlatformDirectoryFromApiLevel (platform, MonoAndroidHelper.SupportedVersions);
 			if (platformPath == null) {
-				if (!designTimeBuild) {
-					var expectedPath = MonoAndroidHelper.AndroidSdk.GetPlatformDirectoryFromId (platform);
-					var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
-					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, Path.Combine (expectedPath, "android.jar"), string.Format (sdkManagerMenuPath, targetFramework, androidSdkDirectory));
+				var expectedPath = Path.Combine (AndroidSdk.GetPlatformDirectoryFromId (platform), "android.jar");
+				var sdkManagerMenuPath = buildingInsideVisualStudio ? Properties.Resources.XA5207_SDK_Manager_Windows : Properties.Resources.XA5207_SDK_Manager_CLI;
+				var details = string.Format (sdkManagerMenuPath, targetFramework, androidSdkDirectory);
+				if (designTimeBuild) {
+					log.LogDebugMessage (string.Format(Properties.Resources.XA5207, platform, expectedPath, details));
+				} else {
+					log.LogCodedError ("XA5207", Properties.Resources.XA5207, platform, expectedPath, details);
 				}
 				return null;
 			}

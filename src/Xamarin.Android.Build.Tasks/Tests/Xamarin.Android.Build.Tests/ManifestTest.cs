@@ -720,11 +720,7 @@ namespace Bug12935
 		[Test]
 		public void MergeLibraryManifest ()
 		{
-			byte [] classesJar;
-			using (var stream = typeof (XamarinAndroidCommonProject).Assembly.GetManifestResourceStream ("Xamarin.ProjectTools.Resources.Base.classes.jar")) {
-				classesJar = new byte [stream.Length];
-				stream.Read (classesJar, 0, (int)stream.Length);
-			}
+			byte [] classesJar = XamarinAndroidCommonProject.GetResourceContents ("Xamarin.ProjectTools.Resources.Base.classes.jar");
 			byte [] data;
 			using (var ms = new MemoryStream ()) {
 				using (var zip = ZipArchive.Create (ms)) {

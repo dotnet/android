@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using Microsoft.Build.Framework;
 using System.Linq;
 using System.IO;
-using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
@@ -15,8 +14,6 @@ namespace Xamarin.Android.Tasks
 
 		[Required]
 		public ITaskItem[] MonoPlatformJarPaths { get; set; }
-
-		public bool EnableInstantRun { get; set; }
 
 		public ITaskItem[] JavaSourceFiles { get; set; }
 
@@ -37,8 +34,7 @@ namespace Xamarin.Android.Tasks
 		public override bool RunTask ()
 		{
 			var jars = new List<ITaskItem> ();
-			if (!EnableInstantRun)
-				jars.AddRange (MonoPlatformJarPaths);
+			jars.AddRange (MonoPlatformJarPaths);
 			if (JavaSourceFiles != null)
 				foreach (var jar in JavaSourceFiles.Where (p => Path.GetExtension (p.ItemSpec) == ".jar"))
 					jars.Add (jar);
@@ -58,8 +54,6 @@ namespace Xamarin.Android.Tasks
 				referenceJavaLibraries.AddRange (ExternalJavaLibraries);
 
 			foreach (var item in distinct) {
-				if (!HasClassFiles (item.ItemSpec))
-					continue;
 				if (IsExcluded (item.ItemSpec)) {
 					referenceJavaLibraries.Add (item);
 				} else {
@@ -73,11 +67,6 @@ namespace Xamarin.Android.Tasks
 			Log.LogDebugTaskItems ("  ReferenceJavaLibraries:", ReferenceJavaLibraries);
 
 			return true;
-		}
-
-		bool HasClassFiles (string jar)
-		{
-			return Files.ZipAny (jar, entry => entry.FullName.EndsWith (".class", StringComparison.OrdinalIgnoreCase));
 		}
 
 		bool IsExcluded (string jar)

@@ -69,8 +69,6 @@ namespace Android.App {
 		public static IEnumerable<IntentFilterAttribute> FromTypeDefinition (TypeDefinition type, IMetadataResolver cache)
 		{
 			IEnumerable<CustomAttribute> attrs = type.GetCustomAttributes ("Android.App.IntentFilterAttribute");
-			if (!attrs.Any ())
-				yield break;
 			foreach (CustomAttribute attr in attrs) {
 				var self = new IntentFilterAttribute (ToStringArray (attr.ConstructorArguments [0].Value));
 				foreach (var e in attr.Properties) {

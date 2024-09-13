@@ -309,6 +309,13 @@ dotnet restore foo.csproj
 dotnet trace collect --format speedscope -- dotnet build -bl --no-restore foo.csproj
 ```
 
+On MacOS (and possibly linux) you need to pass `-p:UseSharedCompilation=false` otherwise the trace will hang.
+
+```dotnetcli
+dotnet restore foo.csproj
+dotnet trace collect --format speedscope -- dotnet build -bl --no-restore foo.csproj -p:UseSharedCompilation=false
+```
+
 This should result in `.speedscope` and `.nettrace` files in the
 current directory.
 
@@ -317,6 +324,13 @@ If you wanted to profile deploy & app launch, do a build first:
 ```dotnetcli
 dotnet build foo.csproj
 dotnet trace collect --format speedscope -- dotnet build "-t:Run" -bl --no-restore foo.csproj
+```
+
+On MacOS (and possibly linux) you need to pass `-p:UseSharedCompilation=false` otherwise the trace will hang.
+
+```dotnetcli
+dotnet restore foo.csproj
+dotnet trace collect --format speedscope -- dotnet build "-t:Run" -bl --no-restore foo.csproj -p:UseSharedCompilation=false
 ```
 
 I found that `"` is necessary when `:` characters are present in the

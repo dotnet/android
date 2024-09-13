@@ -569,17 +569,7 @@ EmbeddedAssemblies::typemap_java_to_managed ([[maybe_unused]] hash_t hash, const
 	c_unique_ptr<char> java_type_name {mono_string_to_utf8 (const_cast<MonoString*>(java_type))};
 	const TypeMapEntry *entry = nullptr;
 
-	if (application_config.instant_run_enabled) {
-		TypeMap *module;
-		for (size_t i = 0; i < type_map_count; i++) {
-			module = &type_maps[i];
-			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), module->java_to_managed, module->entry_count);
-			if (entry != nullptr)
-				break;
-		}
-	} else {
-		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), type_map.java_to_managed, type_map.entry_count);
-	}
+	entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (java_type_name.get (), type_map.java_to_managed, type_map.entry_count);
 
 	if (entry == nullptr) [[unlikely]] {
 		log_info (LOG_ASSEMBLY, "typemap: unable to find mapping to a managed type from Java type '%s'", java_type_name.get ());
@@ -725,21 +715,7 @@ EmbeddedAssemblies::typemap_java_to_managed (MonoString *java_type) noexcept
 force_inline const TypeMapEntry*
 EmbeddedAssemblies::typemap_managed_to_java (const char *managed_type_name) noexcept
 {
-	const TypeMapEntry *entry = nullptr;
-
-	if (application_config.instant_run_enabled) {
-		TypeMap *module;
-		for (size_t i = 0; i < type_map_count; i++) {
-			module = &type_maps[i];
-			entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, module->managed_to_java, module->entry_count);
-			if (entry != nullptr)
-				break;
-		}
-	} else {
-		entry = binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
-	}
-
-	return entry;
+	return binary_search<const char, TypeMapEntry, compare_type_name, false> (managed_type_name, type_map.managed_to_java, type_map.entry_count);
 }
 
 force_inline const char*
@@ -1118,43 +1094,6 @@ EmbeddedAssemblies::typemap_load_file (int dir_fd, const char *dir_path, const c
 	}
 
 	return ret;
-}
-
-void
-EmbeddedAssemblies::try_load_typemaps_from_directory (const char *path)
-{
-	if (!application_config.instant_run_enabled) {
-		log_info (LOG_ASSEMBLY, "typemap: instant run disabled, not loading type maps from storage");
-		return;
-	}
-
-	std::unique_ptr<char> dir_path {Util::path_combine (path, "typemaps")};
-	DIR *dir;
-	if ((dir = ::opendir (dir_path.get ())) == nullptr) {
-		log_warn (LOG_ASSEMBLY, "typemap: could not open directory: `%s`", dir_path.get ());
-		return;
-	}
-
-	int dir_fd = dirfd (dir);
-
-	constexpr char index_name[] = "typemap.index";
-
-	// The pointer must be stored here because, after index is loaded, module.assembly_name points into the index data
-	// and must be valid until after the actual module file is loaded.
-	std::unique_ptr<uint8_t[]> index_data = typemap_load_index (dir_fd, dir_path.get (), index_name);
-	if (!index_data) {
-		log_fatal (LOG_ASSEMBLY, "typemap: unable to load TypeMap data index from '%s/%s'", dir_path.get (), index_name);
-		Helpers::abort_application ();
-	}
-
-	for (size_t i = 0; i < type_map_count; i++) {
-		TypeMap *module = &type_maps[i];
-		if (!typemap_load_file (dir_fd, dir_path.get (), module->assembly_name, *module)) {
-			continue;
-		}
-	}
-
-	::closedir (dir);
 }
 #endif // def DEBUG
 

@@ -47,7 +47,6 @@ const ApplicationConfig application_config = {
 	.aot_lazy_load = false,
 	.uses_assembly_preload = false,
 	.broken_exception_transitions = false,
-	.instant_run_enabled = false,
 	.jni_add_native_method_registration_attribute_present = false,
 	.have_runtime_config_blob = false,
 	.have_assembly_store = false,

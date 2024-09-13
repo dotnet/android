@@ -156,14 +156,10 @@ namespace Xamarin.Android.Build.Tests
 			proj.SetProperty ("LinkerDumpDependencies", "True");
 			proj.SetProperty ("AndroidUseAssemblyStore", "False");
 
-			byte [] apkDescData;
 			var flavor = (forms ? "XForms" : "Simple") + "DotNet";
 			var apkDescFilename = $"BuildReleaseArm64{flavor}.apkdesc";
 			var apkDescReference = "reference.apkdesc";
-			using (var stream = typeof (XamarinAndroidApplicationProject).Assembly.GetManifestResourceStream ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}")) {
-				apkDescData = new byte [stream.Length];
-				stream.Read (apkDescData, 0, (int) stream.Length);
-			}
+			byte [] apkDescData = XamarinAndroidCommonProject.GetResourceContents ($"Xamarin.ProjectTools.Resources.Base.{apkDescFilename}");
 			proj.OtherBuildItems.Add (new BuildItem ("ApkDescFile", apkDescReference) { BinaryContent = () => apkDescData });
 
 			// use BuildHelper.CreateApkBuilder so that the test directory is not removed in tearup
@@ -725,6 +721,21 @@ namespace UnamedProject
 
 				FileAssert.DoesNotExist (build_props, "build.props should *not* exist after `Clean`.");
 				FileAssert.Exists (designtime_build_props, "designtime/build.props should exist after `Clean`.");
+			}
+		}
+
+		[Test]
+		public void DesignTimeBuildMissingAndroidPlatformJar ()
+		{
+			var path = Path.Combine ("temp", TestName);
+			var androidSdkPath = CreateFauxAndroidSdkDirectory (Path.Combine (path, "android-sdk"), "35.0.0", []);
+			try {
+				var proj = new XamarinAndroidApplicationProject ();
+				using var builder = CreateApkBuilder (Path.Combine (path, proj.ProjectName));
+				Assert.IsTrue (builder.DesignTimeBuild (proj, parameters: [$"AndroidSdkDirectory={androidSdkPath}"]),
+					"design-time build should have succeeded.");
+			} finally {
+				Directory.Delete (androidSdkPath, recursive: true);
 			}
 		}
 

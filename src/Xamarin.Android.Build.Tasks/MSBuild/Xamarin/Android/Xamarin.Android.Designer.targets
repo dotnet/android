@@ -99,8 +99,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       FrameworkDirectories="$(_XATargetFrameworkDirectories);$(_XATargetFrameworkDirectories)Facades"
       AcwMapFile="$(_AcwMapFile)"
       SupportedAbis="$(_BuildTargetAbis)"
-      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)"
-      InstantRunEnabled="$(_InstantRunEnabled)">
+      SupportedOSPlatformVersion="$(SupportedOSPlatformVersion)">
   </GenerateJavaStubs>
   <ManifestMerger
       Condition=" '$(AndroidManifestMerger)' == 'manifestmerger.jar' "
@@ -137,8 +136,7 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
       SupportedAbis="$(_BuildTargetAbis)"
       AndroidPackageName="$(_AndroidPackage)"
-      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
-      InstantRunEnabled="$(_InstantRunEnabled)">
+      EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)">
   </GeneratePackageManagerJava>
 </Target>
 
