@@ -32,7 +32,7 @@ This file contains MSBuild targets that support building and operating on Androi
   <Target Name="_GetBuildAndroidGradleProjectsInputs"
         Condition=" '@(AndroidGradleProject->Count())' != '0' ">
     <ItemGroup>
-      <_AllGradleFiles Include="$([System.IO.Directory]::GetFiles('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)', '*.*', System.IO.SearchOption.AllDirectories))"
+      <_AllGradleFiles Include="%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)/**/*"
           Condition= " Exists('%(AndroidGradleProject.RootDir)%(AndroidGradleProject.Directory)') "/>
       <_GradleInputs Include="@(_AllGradleFiles)"
           Condition="  '%(Extension)' == '.java'
