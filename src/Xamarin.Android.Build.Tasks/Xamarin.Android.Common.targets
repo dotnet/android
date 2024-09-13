@@ -1880,6 +1880,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
 		_CreateApplicationSharedLibraries;
+		_LinkNativeRuntime;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
 		_SetProguardMappingFileProperty;
