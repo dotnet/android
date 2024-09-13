@@ -115,9 +115,8 @@ namespace Xamarin.Android.Tasks
 					aar.AddEntry ("proguard.txt", sb.ToString (), Files.UTF8withoutBOM);
 				}
 				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
-					var sb = new StringBuilder ();
-					sb.AppendLine (File.ReadAllText (AndroidManifest.ItemSpec));
-					aar.AddEntry ("AndroidManifest.xml", sb.ToString (), Files.UTF8withoutBOM);
+					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
+					aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
 				}
 				foreach (var entry in existingEntries) {
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
