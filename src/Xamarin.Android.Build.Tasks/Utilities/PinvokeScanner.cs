@@ -67,6 +67,12 @@ class PinvokeScanner
 
 	void Scan (AndroidTargetArch targetArch, TypeDefinition type, HashSet<string> pinvokeCache, List<PinvokeEntryInfo> pinvokes)
 	{
+		if (type.HasNestedTypes) {
+			foreach (TypeDefinition nestedType in type.NestedTypes) {
+				Scan (targetArch, nestedType, pinvokeCache, pinvokes);
+			}
+		}
+
 		if (!type.HasMethods) {
 			return;
 		}
@@ -86,14 +92,6 @@ class PinvokeScanner
 			log.LogDebugMessage ($"  [{targetArch}] p/invoke method: {pinfo.LibraryName}/{pinfo.EntryName}");
 			pinvokeCache.Add (key);
 			pinvokes.Add (pinfo);
-		}
-
-		if (!type.HasNestedTypes) {
-			return;
-		}
-
-		foreach (TypeDefinition nestedType in type.NestedTypes) {
-			Scan (targetArch, nestedType, pinvokeCache, pinvokes);
 		}
 	}
 }
