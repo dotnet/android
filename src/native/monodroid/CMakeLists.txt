@@ -149,6 +149,11 @@ if(BUILD_STATIC_LIBRARY)
     ${XAMARIN_MONODROID_SOURCES}
   )
   set_static_library_suffix(${XAMARIN_MONO_ANDROID_STATIC_LIB})
+  target_compile_definitions(
+    ${XAMARIN_MONO_ANDROID_STATIC_LIB}
+    PRIVATE
+    DYNAMIC_RUNTIME_LINKING
+  )
 endif()
 
 macro(lib_target_options TARGET_NAME)
