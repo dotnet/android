@@ -126,8 +126,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)cil-strip.pdb"   ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)HtmlAgilityPack.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)ICSharpCode.SharpZipLib.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)illinkanalyzer.exe"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)illinkanalyzer.pdb"  ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Irony.dll" />
@@ -242,7 +240,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Aidl.pdb" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.AndroidSdk.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.AndroidSdk.pdb" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Tools.Versions.props" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Android.VisualBasic.targets" ExcludeFromAndroidNETSdk="true" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Build.AsyncTask.dll" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)Xamarin.Build.AsyncTask.pdb" />
