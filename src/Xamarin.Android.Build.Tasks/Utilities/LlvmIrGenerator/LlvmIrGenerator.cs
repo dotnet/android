@@ -3,6 +3,7 @@ using System.Buffers;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Reflection;
 using System.IO;
 using System.Text;
 
@@ -248,6 +249,12 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 		}
 
+		void WriteVariableReference (GeneratorWriteContext context, LlvmIrVariableReference variable)
+		{
+			context.Output.Write (variable.Global ? '@' : '%');
+			context.Output.Write (variable.Name);
+		}
+
 		void WriteGlobalVariableStart (GeneratorWriteContext context, LlvmIrGlobalVariable variable)
 		{
 			if (!String.IsNullOrEmpty (variable.Comment)) {
@@ -353,6 +360,10 @@ namespace Xamarin.Android.Tasks.LLVMIR
 
 			if (type.ImplementsInterface (typeof(ICollection))) {
 				return (uint)((ICollection)value).Count;
+			}
+
+			if (type.ImplementsInterface (typeof(ICollection<>))) {
+				return (ulong)GetCollectionOfTCount (type, value);
 			}
 
 			throw new InvalidOperationException ($"Internal error: should never get here");
@@ -732,6 +743,11 @@ namespace Xamarin.Android.Tasks.LLVMIR
 				throw new NotSupportedException ($"Internal error: array of type {type} is unsupported");
 			}
 
+			if (type == typeof (LlvmIrVariableReference) || type.IsSubclassOf (typeof (LlvmIrVariableReference))) {
+				WriteVariableReference (context, (LlvmIrVariableReference)value);
+				return;
+			}
+
 			throw new NotSupportedException ($"Internal error: value type '{type}' is unsupported");
 		}
 
@@ -940,8 +956,19 @@ namespace Xamarin.Android.Tasks.LLVMIR
 					list.Add (kvp.Value);
 				}
 				entries = list;
-			} else {
+			} else if (variable.Type.ImplementsInterface (typeof (ICollection))) {
 				entries = (ICollection)variable.Value;
+			} else if (variable.Type.ImplementsInterface (typeof (ICollection<>))) {
+				// This is slow and messy, but should work for a wide range of types without us having to add
+				// any explicit support
+				Type elementType = variable.Type.GetArrayElementType ();
+				int elementCount = GetCollectionOfTCount (variable.Type, variable.Value);
+				Array array = Array.CreateInstance (elementType, elementCount);
+				MethodInfo copyTo = variable.Type.GetMethod ("CopyTo", new Type[] { array.GetType (), typeof (int) });
+				copyTo.Invoke (variable.Value, new object[] { array, (int)0 });
+				entries = array;
+			} else {
+				throw new NotSupportedException ($"Unsupported array value type '{variable.Type}'");
 			}
 
 			if (entries.Count == 0) {
@@ -1616,6 +1643,22 @@ namespace Xamarin.Android.Tasks.LLVMIR
 			}
 
 			return QuoteStringNoEscape (sb.ToString ());
+		}
+
+		static int GetCollectionOfTCount (Type type, object instance)
+		{
+			if (!type.ImplementsInterface (typeof (ICollection<>))) {
+				throw new ArgumentException ("Must implement the ICollection<T> interface", nameof (type));
+			}
+
+			PropertyInfo countProperty = type.GetProperty ("Count");
+			var ret = (int)countProperty.GetValue (instance);
+
+			if (ret < 0) {
+				throw new InvalidOperationException ($"Collection count is negative: {ret}");
+			}
+
+			return ret;
 		}
 	}
 }

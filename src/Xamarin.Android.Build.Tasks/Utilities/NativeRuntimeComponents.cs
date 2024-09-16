@@ -10,17 +10,19 @@ class NativeRuntimeComponents
 	internal class Archive
 	{
 		public readonly string Name;
+		public readonly string JniOnLoadName;
 		public bool Include => shouldInclude (this);
 		public readonly bool WholeArchive;
 		public bool DontExportSymbols { get; set; }
 
 		Func<Archive, bool> shouldInclude;
 
-		public Archive (string name, Func<Archive, bool>? include = null, bool wholeArchive = false)
+		public Archive (string name, Func<Archive, bool>? include = null, bool wholeArchive = false, string? jniOnLoadName = null)
 		{
 			Name = name;
 			shouldInclude = include == null ? ((Archive arch) => true) : include;
 			WholeArchive = wholeArchive;
+			JniOnLoadName = jniOnLoadName;
 		}
 	}
 
@@ -52,8 +54,8 @@ class NativeRuntimeComponents
 
 	sealed class BclArchive : Archive
 	{
-		public BclArchive (string name, bool wholeArchive = false)
-			: base (name, wholeArchive: wholeArchive)
+		public BclArchive (string name, bool wholeArchive = false, string? jniOnLoadName = null)
+			: base (name, wholeArchive: wholeArchive, jniOnLoadName: jniOnLoadName)
 		{
 			DontExportSymbols = true;
 		}
@@ -87,7 +89,7 @@ class NativeRuntimeComponents
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
 			new BclArchive ("libSystem.Native.a"),
-			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a"),
+			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", jniOnLoadName: "AndroidCryptoNative_InitLibraryOnLoad"),
 
 			// .NET for Android
 			new AndroidArchive ("libpinvoke-override-dynamic-release.a"),
