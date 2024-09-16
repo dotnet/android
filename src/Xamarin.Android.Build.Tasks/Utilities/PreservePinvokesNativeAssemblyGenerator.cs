@@ -100,7 +100,8 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		}
 
 		Log.LogDebugMessage ("  Looking for enabled native components");
-		var componentNames = new List<string> ();
+		var componentNames = new HashSet<string> (StringComparer.Ordinal);
+		var jniOnLoadNames = new HashSet<string> (StringComparer.Ordinal);
 		var nativeComponents = new NativeRuntimeComponents (monoComponents);
 		foreach (NativeRuntimeComponents.Archive archiveItem in nativeComponents.KnownArchives) {
 			if (!archiveItem.Include) {
@@ -109,12 +110,27 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 
 			Log.LogDebugMessage ($"    {archiveItem.Name}");
 			componentNames.Add (archiveItem.Name);
+			if (!String.IsNullOrEmpty (archiveItem.JniOnLoadName)) {
+				jniOnLoadNames.Add (archiveItem.JniOnLoadName);
+			}
 		}
 
 		if (componentNames.Count == 0) {
 			Log.LogDebugMessage ("No native framework components are included in the build, not scanning for p/invoke usage");
 			return;
 		}
+
+		module.AddGlobalVariable ("__jni_on_load_handler_count", (uint)jniOnLoadNames.Count, LlvmIrVariableOptions.GlobalConstant);
+		var jniOnLoadPointers = new List<LlvmIrVariableReference> ();
+		foreach (string name in jniOnLoadNames) {
+			jniOnLoadPointers.Add (new LlvmIrGlobalVariableReference (name));
+
+			// Just a dummy declaration, we don't care about the arguments
+			var funcSig = new LlvmIrFunctionSignature (name, returnType: typeof(void));
+			var _ = module.DeclareExternalFunction (funcSig);
+		}
+		module.AddGlobalVariable ("__jni_on_load_handlers", jniOnLoadPointers, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("__jni_on_load_handler_names", jniOnLoadNames, LlvmIrVariableOptions.GlobalConstant);
 
 		bool is64Bit = state.TargetArch switch {
 			AndroidTargetArch.Arm64  => true,
@@ -304,7 +320,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 	// Returns `true` for all p/invokes that we know are part of our set of components, otherwise returns `false`.
 	// Returning `false` merely means that the p/invoke isn't in any of BCL or our code and therefore we shouldn't
 	// care.  It doesn't mean the p/invoke will be removed in any way.
-	bool MustPreserve (PinvokeScanner.PinvokeEntryInfo pinfo, List<string> components)
+	bool MustPreserve (PinvokeScanner.PinvokeEntryInfo pinfo, ICollection<string> components)
 	{
 		if (String.Compare ("xa-internal-api", pinfo.LibraryName, StringComparison.Ordinal) == 0) {
 			return true;

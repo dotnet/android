@@ -9,7 +9,7 @@ using namespace xamarin::android;
 
 [[gnu::flatten]]
 void*
-PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name)
+PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const char *entrypoint_name) noexcept
 {
 	if (library_name == nullptr || entrypoint_name == nullptr) {
 		return nullptr;

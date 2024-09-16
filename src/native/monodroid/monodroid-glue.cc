@@ -351,6 +351,9 @@ MonodroidRuntime::Java_JNI_OnLoad (JavaVM *vm, [[maybe_unused]] void *reserved)
 	vm->GetEnv ((void**)&env, JNI_VERSION_1_6);
 	osBridge.initialize_on_onload (vm, env);
 
+#if defined(DYNAMIC_RUNTIME_LINKING)
+	PinvokeOverride::handle_jni_on_load (vm, reserved);
+#endif
 	return JNI_VERSION_1_6;
 }
 
