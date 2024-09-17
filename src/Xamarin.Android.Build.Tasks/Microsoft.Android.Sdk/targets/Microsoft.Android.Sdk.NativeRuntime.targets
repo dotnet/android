@@ -10,7 +10,8 @@ Contains code to build and link the native runtime at application build time.
   <UsingTask TaskName="Xamarin.Android.Tasks.GetNativeRuntimeComponents" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.LinkNativeRuntime" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
-  <Target Name="_PrepareUnifiedNativeRuntimeItems">
+  <Target Name="_PrepareUnifiedNativeRuntimeItems"
+          Condition=" '$(_AndroidEnableNativeRuntimeLinking)' == 'true' ">
     <ItemGroup>
       <_UnifiedNativeRuntime Include="$(_AndroidApplicationSharedLibraryPath)%(_BuildTargetAbis.Identity)\libmonodroid-unified.so">
         <abi>%(_BuildTargetAbis.Identity)</abi>
@@ -53,7 +54,10 @@ Contains code to build and link the native runtime at application build time.
         LinkLibraries="@(_RequiredLinkLibraries)"
         OutputRuntimes="@(_UnifiedNativeRuntime)"
         SupportedAbis="@(_BuildTargetAbis)"
-        SaveDebugSymbols="true"
-    />
+        SaveDebugSymbols="true" />
+
+    <ItemGroup>
+      <FileWrites Include="@(_UnifiedNativeRuntime)" />
+    </ItemGroup>
   </Target>
 </Project>
