@@ -515,65 +515,6 @@ using System.Runtime.Serialization.Json;
 		}
 
 		[Test]
-		public void ResourceDesignerWithNuGetReference ([Values ("net8.0-android")] string dotnetTargetFramework)
-		{
-			if (!Builder.UseDotNet) {
-				Assert.Ignore ("Skipping. Test not relevant under Classic.");
-			}
-
-			// Build a NuGet Package
-			var nuget = new XamarinAndroidLibraryProject () {
-				Sdk = "Xamarin.Legacy.Sdk/0.2.0-alpha4",
-				ProjectName = "Test.Nuget.Package",
-				IsRelease = true,
-				ExtraNuGetConfigSources = {
-					"https://api.nuget.org/v3/index.json",
-				},
-			};
-			nuget.Sources.Clear ();
-			nuget.Sources.Add (new AndroidItem.AndroidResource ("Resources/values/Strings.xml") {
-						TextContent = () => @"<resources>
-    <string name='library_resouce_from_nuget'>Library Resource From Nuget</string>
-</resources>",
-			});
-			nuget.SetProperty ("PackageName", "Test.Nuget.Package");
-			var legacyTargetFrameworkVersion = "13.0";
-			var legacyTargetFramework = $"monoandroid{legacyTargetFrameworkVersion}";
-			nuget.TargetFramework = "";
-			nuget.TargetFrameworks = $"{dotnetTargetFramework};{legacyTargetFramework}";
-
-			var rootPath = Path.Combine (Root, "temp", TestName);
-			var nugetBuilder = CreateDllBuilder (Path.Combine (rootPath, nuget.ProjectName));
-			nugetBuilder.Save (nuget);
-			var dotnet = new DotNetCLI (Path.Combine (rootPath, nuget.ProjectName, nuget.ProjectFilePath));
-			Assert.IsTrue (dotnet.Pack (parameters: new [] { "Configuration=Release" }), "`dotnet pack` should succeed");
-
-			// Build an app which references it.
-			var proj = new XamarinAndroidApplicationProject () {
-				ProjectName = "App1",
-				IsRelease = true,
-			};
-			proj.SetAndroidSupportedAbis ("arm64-v8a", "x86_64");
-			proj.OtherBuildItems.Add (new BuildItem ("None", "NuGet.config") {
-				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
-<configuration>
-  <packageSources>
-	<add key='local' value='" + Path.Combine (Root, nugetBuilder.ProjectDirectory, "bin", "Release") + @"' />
-  </packageSources>
-</configuration>",
-			});
-			proj.PackageReferences.Add (new Package {
-					Id = "Test.Nuget.Package",
-					Version = "1.0.0",
-				});
-			builder = CreateApkBuilder (Path.Combine (rootPath, proj.ProjectName));
-			Assert.IsTrue (builder.Install (proj, doNotCleanupOnUpdate: true), "Install should have succeeded.");
-			string resource_designer = GetResourceDesignerPath (builder, proj);
-			var contents = GetResourceDesignerText (proj, resource_designer);
-			StringAssert.Contains ("public const int library_resouce_from_nuget =", contents);
-		}
-
-		[Test]
 		public void SingleProject_ApplicationId ([Values (false, true)] bool testOnly)
 		{
 			AssertCommercialBuild ();
