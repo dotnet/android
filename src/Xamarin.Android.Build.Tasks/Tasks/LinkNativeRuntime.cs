@@ -37,6 +37,9 @@ public class LinkNativeRuntime : AsyncTask
 	public ITaskItem[] NativeLinkEndFiles { get; set; }
 
 	[Required]
+	public ITaskItem[] NativeSymbolsToExport { get; set; }
+
+	[Required]
 	public ITaskItem[] OutputRuntimes { get; set; }
 
 	[Required]
@@ -68,7 +71,8 @@ public class LinkNativeRuntime : AsyncTask
 			GetAbiItems (NativeArchives, "_SelectedNativeArchive", abi),
 			GetAbiItems (LinkLibraries, "_RequiredLinkLibraries", abi),
 			GetAbiItems (NativeLinkStartFiles, "_NativeLinkStartFiles", abi),
-			GetAbiItems (NativeLinkEndFiles, "_NativeLinkEndFiles", abi)
+			GetAbiItems (NativeLinkEndFiles, "_NativeLinkEndFiles", abi),
+			GetAbiItems (NativeSymbolsToExport, "_NativeSymbolsToExport", abi)
 		);
 	}
 

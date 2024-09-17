@@ -14,6 +14,7 @@ class NativeRuntimeComponents
 		public bool Include => shouldInclude (this);
 		public readonly bool WholeArchive;
 		public bool DontExportSymbols { get; set; }
+		public HashSet<string>? SymbolsToPreserve { get; set; }
 
 		Func<Archive, bool> shouldInclude;
 
@@ -89,7 +90,23 @@ class NativeRuntimeComponents
 			new BclArchive ("libSystem.Globalization.Native.a"),
 			new BclArchive ("libSystem.IO.Compression.Native.a"),
 			new BclArchive ("libSystem.Native.a"),
-			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", jniOnLoadName: "AndroidCryptoNative_InitLibraryOnLoad"),
+			new BclArchive ("libSystem.Security.Cryptography.Native.Android.a", jniOnLoadName: "AndroidCryptoNative_InitLibraryOnLoad") {
+				SymbolsToPreserve = new (StringComparer.Ordinal) {
+					// This isn't referenced directly by any code in libSystem.Security.Cryptography.Native.Android.  It is instead
+					// referenced by the Java code shipped with the component (`DotnetProxyTrustManager`), as a native Java method:
+					//
+					//   static native boolean verifyRemoteCertificate(long sslStreamProxyHandle);
+					//
+					// Therefore we must reference it explicitly
+					"Java_net_dot_android_crypto_DotnetProxyTrustManager_verifyRemoteCertificate"
+				},
+
+				// For now, we have to export all the symbols from this archive because we need the above `Java_net*` symbol to be
+				// externally visible, and the linker's `--exclude-libs` flag works on the archive (.a) level.
+				//
+				// TODO: use `llvm-ar` to extract the relevant object file and link it separately?
+				DontExportSymbols = false,
+			},
 
 			// .NET for Android
 			new AndroidArchive ("libpinvoke-override-dynamic-release.a"),
