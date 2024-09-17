@@ -32,6 +32,7 @@ Contains code to build and link the native runtime at application build time.
       <Output TaskParameter="RequiredLibraries" ItemName="_RequiredLinkLibraries" />
       <Output TaskParameter="LinkStartFiles" ItemName="_NativeLinkStartFiles" />
       <Output TaskParameter="LinkEndFiles" ItemName="_NativeLinkEndFiles" />
+      <Output TaskParameter="NativeSymbolsToExport" ItemName="_NativeSymbolsToExport" />
     </GetNativeRuntimeComponents>
   </Target>
 
@@ -48,6 +49,7 @@ Contains code to build and link the native runtime at application build time.
         NativeObjectFiles="@(_NativeAssemblyTarget)"
         NativeLinkStartFiles="@(_NativeLinkStartFiles)"
         NativeLinkEndFiles="@(_NativeLinkEndFiles)"
+        NativeSymbolsToExport="@(_NativeSymbolsToExport)"
         LinkLibraries="@(_RequiredLinkLibraries)"
         OutputRuntimes="@(_UnifiedNativeRuntime)"
         SupportedAbis="@(_BuildTargetAbis)"

@@ -32,19 +32,33 @@ public class GetNativeRuntimeComponents : AndroidTask
 	[Output]
 	public ITaskItem[] LinkEndFiles { get; set; }
 
+	// TODO: more research, for now it seems `--export-dynamic-symbol=name` options generated from
+	//       this array don't work as expected.
+	[Output]
+	public ITaskItem[] NativeSymbolsToExport { get; set; }
+
 	public override bool RunTask ()
 	{
 		var components = new NativeRuntimeComponents (MonoComponents);
 		var uniqueAbis = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 		var archives = new List<ITaskItem> ();
+		var symbolsToExport = new List<ITaskItem> ();
 
 		foreach (NativeRuntimeComponents.Archive archiveItem in components.KnownArchives) {
 			if (!archiveItem.Include) {
 				continue;
 			}
 			MakeArchiveItem (archiveItem, archives, uniqueAbis);
+			if (archiveItem.SymbolsToPreserve == null || archiveItem.SymbolsToPreserve.Count == 0) {
+				continue;
+			}
+
+			foreach (string symbolName in archiveItem.SymbolsToPreserve) {
+				MakeLibItem (symbolName, symbolsToExport, uniqueAbis);
+			}
 		}
 		NativeArchives = archives.ToArray ();
+		NativeSymbolsToExport = symbolsToExport.ToArray ();
 
 		var items = new List<ITaskItem> ();
 		foreach (string lib in components.NativeLibraries) {

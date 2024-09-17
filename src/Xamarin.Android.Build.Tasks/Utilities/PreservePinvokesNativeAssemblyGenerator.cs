@@ -102,6 +102,7 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		Log.LogDebugMessage ("  Looking for enabled native components");
 		var componentNames = new HashSet<string> (StringComparer.Ordinal);
 		var jniOnLoadNames = new HashSet<string> (StringComparer.Ordinal);
+		var symbolsToExplicitlyPreserve = new HashSet<LlvmIrGlobalVariableReference> ();
 		var nativeComponents = new NativeRuntimeComponents (monoComponents);
 		foreach (NativeRuntimeComponents.Archive archiveItem in nativeComponents.KnownArchives) {
 			if (!archiveItem.Include) {
@@ -112,6 +113,15 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 			componentNames.Add (archiveItem.Name);
 			if (!String.IsNullOrEmpty (archiveItem.JniOnLoadName)) {
 				jniOnLoadNames.Add (archiveItem.JniOnLoadName);
+			}
+
+			if (archiveItem.SymbolsToPreserve == null || archiveItem.SymbolsToPreserve.Count == 0) {
+				continue;
+			}
+
+			foreach (string symbolName in archiveItem.SymbolsToPreserve) {
+				symbolsToExplicitlyPreserve.Add (new LlvmIrGlobalVariableReference (symbolName));
+				DeclareDummyFunction (module, symbolName);
 			}
 		}
 
@@ -124,13 +134,11 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		var jniOnLoadPointers = new List<LlvmIrVariableReference> ();
 		foreach (string name in jniOnLoadNames) {
 			jniOnLoadPointers.Add (new LlvmIrGlobalVariableReference (name));
-
-			// Just a dummy declaration, we don't care about the arguments
-			var funcSig = new LlvmIrFunctionSignature (name, returnType: typeof(void));
-			var _ = module.DeclareExternalFunction (funcSig);
+			DeclareDummyFunction (module, name);
 		}
 		module.AddGlobalVariable ("__jni_on_load_handlers", jniOnLoadPointers, LlvmIrVariableOptions.GlobalConstant);
 		module.AddGlobalVariable ("__jni_on_load_handler_names", jniOnLoadNames, LlvmIrVariableOptions.GlobalConstant);
+		module.AddGlobalVariable ("__explicitly_preserved_symbols", symbolsToExplicitlyPreserve, LlvmIrVariableOptions.GlobalConstant);
 
 		bool is64Bit = state.TargetArch switch {
 			AndroidTargetArch.Arm64  => true,
@@ -359,5 +367,12 @@ class PreservePinvokesNativeAssemblyGenerator : LlvmIrComposer
 		{
 			return String.Compare (libraryName, componentName, StringComparison.Ordinal) == 0;
 		}
+	}
+
+	static void DeclareDummyFunction (LlvmIrModule module, string name)
+	{
+		// Just a dummy declaration, we don't care about the arguments
+		var funcSig = new LlvmIrFunctionSignature (name, returnType: typeof(void));
+		var _ = module.DeclareExternalFunction (funcSig);
 	}
 }

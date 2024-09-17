@@ -100,7 +100,7 @@ class NativeLinker
 	}
 
 	public bool Link (ITaskItem outputLibraryPath, List<ITaskItem> objectFiles, List<ITaskItem> archives, List<ITaskItem> libraries,
-	                  List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles)
+	                  List<ITaskItem> linkStartFiles, List<ITaskItem> linkEndFiles, ICollection<ITaskItem>? exportDynamicSymbols = null)
 	{
 		log.LogDebugMessage ($"Linking: {outputLibraryPath}");
 		EnsureCorrectAbi (outputLibraryPath);
@@ -131,6 +131,12 @@ class NativeLinker
 		WriteFilesToResponseFile (sw, linkStartFiles);
 		WriteFilesToResponseFile (sw, objectFiles);
 		WriteFilesToResponseFile (sw, archives);
+
+		if (exportDynamicSymbols != null && exportDynamicSymbols.Count > 0) {
+			foreach (ITaskItem symbolItem in exportDynamicSymbols) {
+				sw.WriteLine ($"--export-dynamic-symbol={symbolItem.ItemSpec}");
+			}
+		}
 
 		if (excludeExportsLibs.Count > 0) {
 			string libs = String.Join (",", excludeExportsLibs);

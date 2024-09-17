@@ -18,6 +18,7 @@ extern "C" {
 	extern const uint32_t __jni_on_load_handler_count;
 	extern const JniOnLoadHandler __jni_on_load_handlers[];
 	extern const char* __jni_on_load_handler_names[];
+	extern const void* __explicitly_preserved_symbols[];
 }
 
 [[gnu::flatten]]
@@ -72,4 +73,13 @@ void PinvokeOverride::handle_jni_on_load (JavaVM *vm, void *reserved) noexcept
 	for (uint32_t i = 0; i < __jni_on_load_handler_count; i++) {
 		__jni_on_load_handlers[i] (vm, reserved);
 	}
+
+	// This is just to reference the generated array, all we need from it is to be there
+	// TODO: see if there's an attribute we can use to make the linker keep the symbol instead.
+	// void *first_ptr = __explicitly_preserved_symbols;
+	// if (first_ptr == nullptr) {
+	// 	// This will never actually be logged, since by the time this function is called we haven't initialized
+	// 	// logging categories yet.  It's here just to have some code in the if statement body.
+	// 	log_debug (LOG_ASSEMBLY, "No explicitly preserved symbols");
+	// }
 }
