@@ -38,6 +38,11 @@ namespace Xamarin.Android.Tasks
 
 		readonly List<string> tempFiles = new List<string> ();
 
+		public R8 ()
+		{
+			CallBaseLogEventsFromTextOutput = false;
+		}
+
 		public override bool RunTask ()
 		{
 			try {

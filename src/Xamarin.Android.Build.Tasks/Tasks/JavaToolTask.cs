@@ -89,6 +89,8 @@ namespace Xamarin.Android.Tasks
 
 		public string IntermediateOutputPath { get; set; }
 
+		protected bool CallBaseLogEventsFromTextOutput { get; set; } = true;
+
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
@@ -99,7 +101,6 @@ namespace Xamarin.Android.Tasks
 
 		protected override bool HandleTaskExecutionErrors ()
 		{
-			//System.Console.WriteLine ($"DEBUG!!! HandleTaskExecutionErrors called err:{foundError} has:{Log.HasLoggedErrors}");
 			if (foundError) {
 				AssemblyIdentityMap assemblyMap = new AssemblyIdentityMap ();
 				assemblyMap.Load (AssemblyIdentityMapFile);
@@ -143,7 +144,6 @@ namespace Xamarin.Android.Tasks
 		{
 			var match = CodeErrorRegEx.Match (singleLine);
 			var exceptionMatch = ExceptionRegEx.Match (singleLine);
-			//System.Console.WriteLine ($"DEBUG! code:{match.Success} ex:{exceptionMatch.Success} {singleLine}");
 			foreach (Match lp in lpRegex.Matches (singleLine)) {
 				var id = lp.Groups["identifier"].Value;
 				var asmName = assemblyMap.GetAssemblyNameForImportDirectory (id);
@@ -219,7 +219,10 @@ namespace Xamarin.Android.Tasks
 		{
 			errorLines.Add (singleLine);
 			
-			Log.LogMessage (messageImportance, singleLine);
+			if (CallBaseLogEventsFromTextOutput)
+				base.LogEventsFromTextOutput (singleLine, messageImportance);
+			else
+				Log.LogMessage (messageImportance, singleLine);
 			
 			if (foundError) {
 				return;
@@ -230,7 +233,6 @@ namespace Xamarin.Android.Tasks
 			foreach (var customRegex in GetCustomExpressions ()) {
 				customMatch |= customRegex.Match (singleLine).Success;
 			}
-			//System.Console.WriteLine ($"DEBUG!! code:{match.Success} ex:{exceptionMatch.Success} c:{customMatch} {singleLine}");
 			foundError = foundError || match.Success || exceptionMatch.Success || customMatch;
 		}
 	}
