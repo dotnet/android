@@ -34,6 +34,7 @@ namespace Android.Runtime
 			throw new NotImplementedException ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -44,6 +45,7 @@ namespace Android.Runtime
 				sourceValue);
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
