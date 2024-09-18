@@ -42,7 +42,7 @@ namespace %NAMESPACE% {
 //------------------------------------------------------------------------------
 namespace %NAMESPACE%
 
-[<GeneratedCode(""%TOOL%"", ""%VERSION%"")>]
+[<type:System.CodeDom.Compiler.GeneratedCode(""%TOOL%"", ""%VERSION%"")>]
 type Resource = %BASECLASS%
 ";
 
