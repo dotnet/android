@@ -125,6 +125,8 @@ namespace Xamarin.Android.Tasks
 			return cmd;
 		}
 
+		// Note: We do not want to call the base.LogEventsFromTextOutput as it will incorrectly identify
+		// Warnings and Info messages as errors.
 		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
 		{
 			CheckForError (singleLine);
