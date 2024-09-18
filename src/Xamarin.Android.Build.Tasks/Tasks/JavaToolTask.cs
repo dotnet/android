@@ -89,8 +89,6 @@ namespace Xamarin.Android.Tasks
 
 		public string IntermediateOutputPath { get; set; }
 
-		protected bool CallBaseLogEventsFromTextOutput { get; set; } = true;
-
 		protected override string ToolName {
 			get { return OS.IsWindows ? "java.exe" : "java"; }
 		}
@@ -215,14 +213,9 @@ namespace Xamarin.Android.Tasks
 			errorText.AppendLine (text);
 		}
 
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		protected virtual void CheckForError (string singleLine)
 		{
 			errorLines.Add (singleLine);
-			
-			if (CallBaseLogEventsFromTextOutput)
-				base.LogEventsFromTextOutput (singleLine, messageImportance);
-			else
-				Log.LogMessage (messageImportance, singleLine);
 			
 			if (foundError) {
 				return;
@@ -234,6 +227,12 @@ namespace Xamarin.Android.Tasks
 				customMatch |= customRegex.Match (singleLine).Success;
 			}
 			foundError = foundError || match.Success || exceptionMatch.Success || customMatch;
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			CheckForError (singleLine);
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }

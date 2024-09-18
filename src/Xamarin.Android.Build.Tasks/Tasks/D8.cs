@@ -42,11 +42,6 @@ namespace Xamarin.Android.Tasks
 
 		public string ExtraArguments { get; set; }
 
-		public D8 ()
-		{
-			CallBaseLogEventsFromTextOutput = false;
-		}
-
 		protected override string GenerateCommandLineCommands ()
 		{
 			return GetCommandLineBuilder ().ToString ();
@@ -128,6 +123,12 @@ namespace Xamarin.Android.Tasks
 			}
 
 			return cmd;
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			CheckForError (singleLine);
+			Log.LogMessage (messageImportance, singleLine);
 		}
 	}
 }
