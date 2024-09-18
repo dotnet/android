@@ -33,6 +33,12 @@ namespace Xamarin.Android.Build.Tests
 			};
 			proj.SetAndroidSupportedAbis (DeviceAbi);
 
+			// Currently, AOT profiling won't work with dynamic runtime linking because the `libmono-profiler-aot.so` library from
+			// the `mono.aotprofiler.android` package depends on `libmonosgen-2.0.so` which, when dynamic linking is enabled, simply
+			// doesn't exist (it's linked statically into `libmonodroid.so`).  AOT profiler would have to have a static library in
+			// the nuget in order for us to support profiling in this mode.
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "False");
+
 			// TODO: only needed in .NET 6+
 			// See https://github.com/dotnet/runtime/issues/56989
 			proj.PackageReferences.Add (KnownPackages.Mono_AotProfiler_Android);
