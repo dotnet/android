@@ -213,11 +213,10 @@ namespace Xamarin.Android.Tasks
 			errorText.AppendLine (text);
 		}
 
-		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		protected virtual void CheckForError (string singleLine)
 		{
 			errorLines.Add (singleLine);
-			base.LogEventsFromTextOutput (singleLine, messageImportance);  // not sure why/when we would skip this?
-
+			
 			if (foundError) {
 				return;
 			}
@@ -228,6 +227,12 @@ namespace Xamarin.Android.Tasks
 				customMatch |= customRegex.Match (singleLine).Success;
 			}
 			foundError = foundError || match.Success || exceptionMatch.Success || customMatch;
+		}
+
+		protected override void LogEventsFromTextOutput (string singleLine, MessageImportance messageImportance)
+		{
+			CheckForError (singleLine);
+			base.LogEventsFromTextOutput (singleLine, messageImportance);
 		}
 	}
 }
