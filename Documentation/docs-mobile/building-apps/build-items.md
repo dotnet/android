@@ -134,9 +134,9 @@ files).
 `<AndroidGradleProject>` can be used to build and consume the outputs
 of Android Gradle projects created in Android Studio or elsewehere.
 
-The `Include` metadata should point to the root `build.gradle` file that will
-be used to build the project, inside of the top directory of your Gradle project
-which also contains the `gradlew` wrapper scripts.
+The `Include` metadata should point to the top level `build.gradle` or `build.gradle.kts`
+file that will be used to build the project. This will be found in the root directory
+of your Gradle project, which should also contain `gradlew` wrapper scripts.
 
 ```xml
 <ItemGroup>
