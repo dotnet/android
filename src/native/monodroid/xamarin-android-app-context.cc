@@ -49,12 +49,12 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	);
 
 	if (class_index >= marshal_methods_number_of_classes) [[unlikely]] {
-		log_fatal (LOG_DEFAULT,
-		           "Internal error: invalid index for class cache (expected at most %u, got %u)",
-		           marshal_methods_number_of_classes - 1,
-		           class_index
+		char *message = Util::monodroid_strdup_printf (
+			"Internal error: invalid index for class cache (expected at most %u, got %u)",
+			marshal_methods_number_of_classes - 1,
+			class_index
 		);
-		Helpers::abort_application ();
+		Helpers::abort_application (message);
 	}
 
 	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
@@ -102,14 +102,12 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 		log_fatal (LOG_DEFAULT, "Failed to load class from the assembly");
 	}
 
+	const char *message = nullptr;
 	if (error.error_code != MONO_ERROR_NONE) {
-		const char *msg = mono_error_get_message (&error);
-		if (msg != nullptr) {
-			log_fatal (LOG_DEFAULT, msg);
-		}
+		message = mono_error_get_message (&error);
 	}
 
-	Helpers::abort_application ();
+	Helpers::abort_application (message == nullptr ? "Failure to obtain marshal methods function pointer" : message);
 }
 
 void
