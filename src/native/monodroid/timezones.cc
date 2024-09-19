@@ -39,8 +39,7 @@ init ()
 	AndroidEnvironment_NotifyTimeZoneChanged  = mono_class_get_method_from_name (AndroidEnvironment, "NotifyTimeZoneChanged", 0);
 
 	if (AndroidEnvironment_NotifyTimeZoneChanged == nullptr) {
-		log_fatal (LOG_DEFAULT, "Unable to find Android.Runtime.AndroidEnvironment.NotifyTimeZoneChanged()!");
-		Helpers::abort_application ();
+		Helpers::abort_application ("Unable to find Android.Runtime.AndroidEnvironment.NotifyTimeZoneChanged()!");
 	}
 }
 
