@@ -21,8 +21,6 @@ namespace Xamarin.Android.Prepare
 		const string MicrosoftOpenJDK17Release      = "17.0.12";
 		const string MicrosoftOpenJDK17RootDirName  = "jdk-17.0.12+7";
 
-		const string GradleVersion                  = "8.10";
-
 		static Context ctx => Context.Instance;
 
 		public static partial class Urls
@@ -38,8 +36,6 @@ namespace Xamarin.Android.Prepare
 			public static readonly Uri AndroidToolchain_AndroidUri = new Uri ("https://dl.google.com/android/repository/");
 
 			public static Uri BinutilsArchive = new Uri ($"https://github.com/dotnet/android-native-tools/releases/download/{BinutilsVersion}/xamarin-android-toolchain-{BinutilsVersion}.7z");
-
-			public static readonly Uri GradleBinUri = new Uri ($"https://services.gradle.org/distributions/gradle-{GradleVersion}-bin.zip");
 		}
 
 		public static partial class Defaults
@@ -53,8 +49,7 @@ namespace Xamarin.Android.Prepare
 			public static readonly Version MicrosoftOpenJDK17Release       = new Version (Configurables.MicrosoftOpenJDK17Release);
 			public static readonly string  MicrosoftOpenJDK17RootDirName   = Configurables.MicrosoftOpenJDK17RootDirName;
 
-			public static readonly Version GradleVersion                   = new Version (Configurables.GradleVersion);
-			public static readonly string GradleRootDirName                = $"gradle-{Configurables.GradleVersion}";
+			public const string DotNetTestRuntimeVersion                   = "3.1.11";
 
 			// Mono runtimes
 			public const string DebugFileExtension                         = ".pdb";

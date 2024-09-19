@@ -12,7 +12,7 @@ namespace Xamarin.ProjectTools
 		
 		public string JavaSdkPath { get; set; } = AndroidSdkResolver.GetJavaSdkPath ();
 
-		public string GradlePath { get; set; } = Path.Combine (AndroidSdkResolver.DefaultToolchainPath, "gradle", "bin", TestEnvironment.IsWindows ? "gradle.bat" : "gradle");
+		public string GradlePath { get; set; } = Path.Combine (XABuildPaths.TopDirectory, "build-tools", "gradle", TestEnvironment.IsWindows ? "gradlew.bat" : "gradlew");
 
 		public string ProjectDirectory { get; set; } = string.Empty;
 
