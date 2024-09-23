@@ -290,12 +290,12 @@ namespace xamarin::android::internal {
 			if constexpr (SharedConstants::debug_build) {
 				// In debug mode we might be dealing with plain data, without DSO wrapper
 				if (elf_header->e_ident[EI_MAG0] != ELFMAG0 ||
-					elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
-					elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
-					elf_header->e_ident[EI_MAG3] != ELFMAG3) {
-						log_debug (LOG_ASSEMBLY, "Not an ELF image: %s", file_name);
-						// Not an ELF image, just return what we mmapped before
-						return { map_info.area, map_info.size };
+						elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
+						elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
+						elf_header->e_ident[EI_MAG3] != ELFMAG3) {
+					log_debug (LOG_ASSEMBLY, "Not an ELF image: %s", file_name);
+					// Not an ELF image, just return what we mmapped before
+					return { map_info.area, map_info.size };
 				}
 			}
 
