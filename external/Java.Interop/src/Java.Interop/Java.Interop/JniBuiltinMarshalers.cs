@@ -271,6 +271,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -283,6 +284,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -413,6 +415,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -425,6 +428,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -555,6 +559,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -567,6 +572,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -697,6 +703,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -709,6 +716,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -839,6 +847,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -851,6 +860,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -981,6 +991,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -993,6 +1004,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -1123,6 +1135,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -1135,6 +1148,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
@@ -1265,6 +1279,7 @@ namespace Java.Interop {
 			state   = new JniValueMarshalerState ();
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateParameterToManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue, ParameterAttributes synchronize, Type? targetType)
 		{
@@ -1277,6 +1292,7 @@ namespace Java.Interop {
 			return sourceValue;
 		}
 
+		[RequiresDynamicCode (ExpressionRequiresUnreferencedCode)]
 		[RequiresUnreferencedCode (ExpressionRequiresUnreferencedCode)]
 		public override Expression CreateReturnValueFromManagedExpression (JniValueMarshalerContext context, ParameterExpression sourceValue)
 		{
