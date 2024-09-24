@@ -1446,12 +1446,24 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareAssemblies;
     _PrepareNativeAssemblySources;
     $(_AfterPrepareAssemblies);
+    _GetGenerateJavaStubsInputs;
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
 
+<Target Name="_GetGenerateJavaStubsInputs">
+  <ItemGroup>
+    <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateJavaStubsInputs Include="$(_ResolvedUserAssembliesHashFile)" />
+    <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(EmbedAssembliesIntoApk)' == 'true' " />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+    Inputs="@(_GenerateJavaStubsInputs)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1684,12 +1696,23 @@ because xbuild doesn't support framework reference assemblies.
     _GenerateAndroidRemapNativeCode;
     _GenerateEmptyAndroidRemapNativeCode;
     _IncludeNativeSystemLibraries;
+    _GetGeneratePackageManagerJavaInputs;
   </_GeneratePackageManagerJavaDependsOn>
 </PropertyGroup>
 
+<Target Name="_GetGeneratePackageManagerJavaInputs">
+  <ItemGroup>
+    <_GeneratePackageManagerJavaInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_ResolvedUserAssembliesHashFile)" />
+    <_GeneratePackageManagerJavaInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GeneratePackageManagerJavaInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(EmbedAssembliesIntoApk)' == 'true' " />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
