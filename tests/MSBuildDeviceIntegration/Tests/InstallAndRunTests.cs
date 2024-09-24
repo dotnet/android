@@ -955,6 +955,41 @@ namespace UnnamedProject
 		}
 
 		[Test]
+		public void FastDeployEnvironmentFiles ([Values (false, true)] bool isRelease)
+		{
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = nameof (FastDeployEnvironmentFiles),
+				RootNamespace = nameof (FastDeployEnvironmentFiles),
+				IsRelease = isRelease,
+				EnableDefaultItems = true,
+				OtherBuildItems = {
+					new BuildItem("AndroidEnvironment", "env.txt") {
+						TextContent = () => @"Foo=Bar
+Bar=Foo",
+					}
+				}
+			};
+			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
+		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));");
+			var builder = CreateApkBuilder ();
+			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
+			RunProjectAndAssert (proj, builder);
+
+			WaitForPermissionActivity (Path.Combine (Root, builder.ProjectDirectory, "permission-logcat.log"));
+			bool didLaunch = WaitForActivityToStart (proj.PackageName, "MainActivity",
+				Path.Combine (Root, builder.ProjectDirectory, "logcat.log"), 30);
+			Assert.IsTrue(didLaunch, "Activity should have started.");
+			var appStartupLogcatFile = Path.Combine (Root, builder.ProjectDirectory, "logcat.log");
+			var logcatOutput = File.ReadAllText (appStartupLogcatFile);
+
+			StringAssert.Contains (
+					"Foo=Bar",
+					logcatOutput,
+					"The Environment variable \"Foo\" was not set."
+			);
+		}
+
+		[Test]
 		public void EnableAndroidStripILAfterAOT ([Values (false, true)] bool profiledAOT)
 		{
 			var proj = new XamarinAndroidApplicationProject {
