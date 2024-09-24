@@ -1291,7 +1291,7 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		public void BuildAppCheckDebugSymbols ()
+		public void BuildAppCheckDebugSymbols ([Values(true, false)] bool embedAssembliesIntoApk)
 		{
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var lib = new XamarinAndroidLibraryProject () {
@@ -1332,6 +1332,7 @@ namespace App1
 					},
 				},
 			};
+			proj.EmbedAssembliesIntoApk = embedAssembliesIntoApk;
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
