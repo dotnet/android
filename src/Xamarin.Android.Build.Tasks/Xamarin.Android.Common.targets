@@ -1524,6 +1524,10 @@ because xbuild doesn't support framework reference assemblies.
         Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Timing.xml"
         Condition=" '$(_AndroidFastTiming)' == 'True' "
     />
+    <AndroidManifestOverlay
+        Include="$(MSBuildThisFileDirectory)\ManifestOverlays\Tracing.xml"
+        Condition=" '$(_AndroidEnableNativeStackTracing)' == 'True' "
+    />
   </ItemGroup>
   <ManifestMerger
       ToolPath="$(JavaToolPath)"

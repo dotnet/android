@@ -205,6 +205,11 @@ Logger::init_logging_categories (char*& mono_log_mask, char*& mono_log_level) no
 			continue;
 		}
 
+		if (param.starts_with ("native-tracing")) {
+			_native_tracing_enabled = true;
+			continue;
+		}
+
 		if (param.starts_with ("timing=fast-bare")) {
 			log_categories |= LOG_TIMING;
 			_log_timing_categories |= LogTimingCategories::FastBare;
