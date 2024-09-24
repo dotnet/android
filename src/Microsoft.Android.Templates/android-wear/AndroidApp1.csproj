@@ -10,12 +10,10 @@
     <ApplicationVersion>1</ApplicationVersion>
     <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
     <MSBuildWarningsAsMessages>$(MSBuildWarningsAsMessages);XA4218</MSBuildWarningsAsMessages>
-  </PropertyGroup>
-  <!--
-    Enable full trimming in Release mode.
-    To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
-  -->
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <!--
+      Enables trim analyzers and full trimming during Release mode.
+      To learn more, see: https://learn.microsoft.com/dotnet/core/deploying/trimming/trimming-options#trimming-granularity
+    -->
     <TrimMode>full</TrimMode>
   </PropertyGroup>
   <ItemGroup>
