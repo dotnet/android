@@ -56,7 +56,7 @@ This file contains MSBuild targets that support building and operating on Androi
     </Hash>
     <ItemGroup>
       <AndroidGradleProject Condition=" '%(AndroidGradleProject.OutputPath)' == '' " >
-        <OutputPath>$(_AndroidGradleDefaultOutputPathRoot)%(ModuleName)-$([System.String]::Copy($(_AndroidGradleProjectHash)).Substring(0, 5))/</OutputPath>
+        <OutputPath>$(_AndroidGradleDefaultOutputPathRoot)%(ModuleName)%(Configuration)-$([System.String]::Copy($(_AndroidGradleProjectHash)).Substring(0, 5))/</OutputPath>
       </AndroidGradleProject>
     </ItemGroup>
   </Target>
