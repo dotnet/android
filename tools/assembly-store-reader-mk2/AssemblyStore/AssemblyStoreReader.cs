@@ -58,10 +58,12 @@ abstract class AssemblyStoreReader
 
 	protected abstract bool IsSupported ();
 	protected abstract void Prepare ();
+	protected abstract ulong GetStoreStartDataOffset ();
 
 	public Stream ReadEntryImageData (AssemblyStoreItem entry, bool uncompressIfNeeded = false)
 	{
-		StoreStream.Seek (entry.DataOffset, SeekOrigin.Begin);
+		ulong startOffset = GetStoreStartDataOffset ();
+		StoreStream.Seek ((uint)startOffset + entry.DataOffset, SeekOrigin.Begin);
 		var stream = new MemoryStream ();
 
 		if (uncompressIfNeeded) {
@@ -78,6 +80,7 @@ abstract class AssemblyStoreReader
 			remainingToRead -= (long)nread;
 		}
 		stream.Flush ();
+		stream.Seek (0, SeekOrigin.Begin);
 
 		return stream;
 	}

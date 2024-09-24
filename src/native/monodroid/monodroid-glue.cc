@@ -684,11 +684,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 void
 MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
 {
-	if (args == nullptr || args->kind != 1 || args->runtimeconfig.data.data == nullptr) {
-		return;
-	}
-
-	munmap (static_cast<void*>(const_cast<char*>(args->runtimeconfig.data.data)), args->runtimeconfig.data.data_len);
+	embeddedAssemblies.unmap_runtime_config_blob ();
 }
 
 MonoDomain*
