@@ -531,6 +531,15 @@ namespace Xamarin.Android.Tasks.Properties {
         }
 
         /// <summary>
+        ///   Looks up a localized string similar to Command '{0}' failed.\n{1}
+        /// </summary>
+        public static string XA0142 {
+            get {
+                return ResourceManager.GetString("XA0142", resourceCulture);
+            }
+        }
+
+            /// <summary>
         ///   Looks up a localized string similar to There was a problem parsing {0}. This is likely due to incomplete or invalid XML. Exception: {1}.
         /// </summary>
         public static string XA1000 {
@@ -1382,7 +1391,7 @@ namespace Xamarin.Android.Tasks.Properties {
                 return ResourceManager.GetString("XA4249", resourceCulture);
             }
         }
-        
+
         /// <summary>
         ///   Looks up a localized string similar to Native library &apos;{0}&apos; will not be bundled because it has an unsupported ABI. Move this file to a directory with a valid Android ABI name such as &apos;libs/armeabi-v7a/&apos;..
         /// </summary>

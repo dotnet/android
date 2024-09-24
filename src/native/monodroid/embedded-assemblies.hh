@@ -11,12 +11,15 @@
 #include <vector>
 
 #include <dirent.h>
+#include <elf.h>
 #include <semaphore.h>
+#include <sys/mman.h>
 
 #include <mono/metadata/object.h>
 #include <mono/metadata/assembly.h>
 #include <mono/metadata/mono-private-unstable.h>
 
+#include "archive-dso-stub-config.hh"
 #include "strings.hh"
 #include "xamarin-app.hh"
 #include "cpp-util.hh"
@@ -101,6 +104,7 @@ namespace xamarin::android::internal {
 
 		static constexpr size_t assembly_store_file_path_size = calc_size(apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
 		static constexpr auto assembly_store_file_path = concat_string_views<assembly_store_file_path_size> (apk_lib_dir_name, zip_path_separator, SharedConstants::android_lib_abi, zip_path_separator, assembly_store_prefix, SharedConstants::android_lib_abi, assembly_store_extension, dso_suffix);
+		static constexpr size_t dso_size_overhead = ArchiveDSOStubConfig::PayloadSectionOffset + (ArchiveDSOStubConfig::SectionHeaderEntryCount * ArchiveDSOStubConfig::SectionHeaderEntrySize);
 
 	public:
 		/* filename is e.g. System.dll, System.dll.mdb, System.pdb */
@@ -152,10 +156,21 @@ namespace xamarin::android::internal {
 
 		void get_runtime_config_blob (const char *& area, uint32_t& size) const
 		{
-			area = static_cast<char*>(runtime_config_blob_mmap.area);
+			area = static_cast<char*>(runtime_config_data);
 
-			abort_unless (runtime_config_blob_mmap.size < std::numeric_limits<uint32_t>::max (), "Runtime config binary blob size exceeds %u bytes", std::numeric_limits<uint32_t>::max ());
-			size = static_cast<uint32_t>(runtime_config_blob_mmap.size);
+			abort_unless (runtime_config_data_size < std::numeric_limits<uint32_t>::max (), "Runtime config binary blob size exceeds %u bytes", std::numeric_limits<uint32_t>::max ());
+			size = static_cast<uint32_t>(runtime_config_data_size);
+		}
+
+		void unmap_runtime_config_blob ()
+		{
+			if (runtime_config_blob_mmap.area == nullptr) {
+				return;
+			}
+
+			munmap (runtime_config_blob_mmap.area, runtime_config_blob_mmap.size);
+			runtime_config_blob_mmap.area = nullptr;
+			runtime_config_blob_mmap.size = 0;
 		}
 
 		bool have_runtime_config_blob () const noexcept
@@ -258,6 +273,47 @@ namespace xamarin::android::internal {
 		bool zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) const noexcept;
 
 		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
+
+		[[gnu::always_inline]]
+		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info, const  char *file_name) noexcept
+		{
+			using Elf_Header = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Ehdr, Elf32_Ehdr>;
+			using Elf_SHeader = std::conditional_t<SharedConstants::is_64_bit_target, Elf64_Shdr, Elf32_Shdr>;
+
+			const void* const mapped_elf = map_info.area;
+			auto elf_bytes = static_cast<const uint8_t* const>(mapped_elf);
+			auto elf_header = reinterpret_cast<const Elf_Header*const>(mapped_elf);
+
+			if constexpr (SharedConstants::debug_build) {
+				// In debug mode we might be dealing with plain data, without DSO wrapper
+				if (elf_header->e_ident[EI_MAG0] != ELFMAG0 ||
+						elf_header->e_ident[EI_MAG1] != ELFMAG1 ||
+						elf_header->e_ident[EI_MAG2] != ELFMAG2 ||
+						elf_header->e_ident[EI_MAG3] != ELFMAG3) {
+					log_debug (LOG_ASSEMBLY, "Not an ELF image: %s", file_name);
+					// Not an ELF image, just return what we mmapped before
+					return { map_info.area, map_info.size };
+				}
+			}
+
+			auto section_header = reinterpret_cast<const Elf_SHeader*const>(elf_bytes + elf_header->e_shoff);
+			Elf_SHeader const& payload_hdr = section_header[ArchiveDSOStubConfig::PayloadSectionIndex];
+
+			return {
+				const_cast<void*>(reinterpret_cast<const void*const> (elf_bytes + ArchiveDSOStubConfig::PayloadSectionOffset)),
+				payload_hdr.sh_size
+			};
+		}
+
+		[[gnu::always_inline]]
+		void store_mapped_runtime_config_data (md_mmap_info const& map_info, const char *file_name) noexcept
+		{
+			auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file_name);
+			log_debug (LOG_ASSEMBLY, "Runtime config: payload pointer %p ; size %zu", payload_start, payload_size);
+			runtime_config_data = payload_start;
+			runtime_config_data_size = payload_size;
+			runtime_config_blob_found = true;
+		}
 
 		std::tuple<const char*, uint32_t> get_assemblies_prefix_and_length () const noexcept
 		{
@@ -379,6 +435,8 @@ namespace xamarin::android::internal {
 		const char            *assemblies_prefix_override = nullptr;
 
 		md_mmap_info           runtime_config_blob_mmap{};
+		void                  *runtime_config_data = nullptr;
+		size_t                 runtime_config_data_size = 0;
 		bool                   runtime_config_blob_found = false;
 		uint32_t               number_of_mapped_assembly_stores = 0;
 		uint32_t               number_of_zip_dso_entries = 0;

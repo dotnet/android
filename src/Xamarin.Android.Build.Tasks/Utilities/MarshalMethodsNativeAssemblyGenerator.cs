@@ -986,7 +986,7 @@ namespace Xamarin.Android.Tasks
 			foreach (string name in uniqueAssemblyNames) {
 				// We must make sure we keep the possible culture prefix, which will be treated as "directory" path here
 				string cultureName = Path.GetDirectoryName (name) ?? String.Empty;
-				string clippedName = Path.Combine (cultureName, Path.GetFileNameWithoutExtension (name));
+				string clippedName = Path.Combine (cultureName, Path.GetFileNameWithoutExtension (name)).Replace (@"\", "/");
 				string inArchiveName;
 
 				if (cultureName.Length == 0) {
