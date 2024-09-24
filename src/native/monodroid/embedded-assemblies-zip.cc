@@ -25,11 +25,25 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	log_debug (LOG_ASSEMBLY, "%s entry: %s", state.file_name, entry_name.get () == nullptr ? "unknown" : entry_name.get ());
 	if (!result || entry_name.empty ()) {
-		Helpers::abort_application (Util::monodroid_strdup_printf ("Failed to read Central Directory info for entry %u in APK file %s", entry_index, state.file_name));
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to read Central Directory info for entry %u in APK file %s",
+				entry_index,
+				state.file_name
+			)
+		);
 	}
 
 	if (!zip_adjust_data_offset (state.file_fd, state)) {
-		Helpers::abort_application (Util::monodroid_strdup_printf ("Failed to adjust data start offset for entry %u in APK file %s", entry_index, state.file_name));
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to adjust data start offset for entry %u in APK file %s",
+				entry_index,
+				state.file_name
+			)
+		);
 	}
 
 	log_debug (LOG_ASSEMBLY, "    ZIP: local header offset: %u; data offset: %u; file size: %u", state.local_header_offset, state.data_offset, state.file_size);
@@ -59,14 +73,15 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 
 	// assemblies must be 16-byte or 4-byte aligned, or Bad Things happen
 	if (((state.data_offset & 0xf) != 0) || ((state.data_offset & 0x3) != 0)) {
-		char *message = Util::monodroid_strdup_printf (
-			"Assembly '%s' is located at bad offset %lu within the APK archive. You MUST run `zipalign` on %s to align it on 4 or 16 bytes",
-			entry_name.get (),
-			state.data_offset,
-			strrchr (state.file_name, '/') + 1
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly '%s' is located at bad offset %lu within the APK archive. You MUST run `zipalign` on %s to align it on 4 or 16 bytes",
+				entry_name.get (),
+				state.data_offset,
+				strrchr (state.file_name, '/') + 1
+			)
 		);
-
-		Helpers::abort_application (message);
 	}
 
 	return true;
@@ -164,7 +179,13 @@ inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
 	if (number_of_mapped_assembly_stores > number_of_assembly_store_files) {
-		Helpers::abort_application (Util::monodroid_strdup_printf ("Too many assembly stores. Expected at most %u", number_of_assembly_store_files));
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Too many assembly stores. Expected at most %u",
+				number_of_assembly_store_files
+			)
+		);
 	}
 
 	int fd;
@@ -194,21 +215,25 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
 
 	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		char *message = Util::monodroid_strdup_printf (
-			"Assembly store '%s' is not a valid .NET for Android assembly store file",
-			entry_name.get ()
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' is not a valid .NET for Android assembly store file",
+				entry_name.get ()
+			)
 		);
-		Helpers::abort_application (message);
 	}
 
 	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
-		char *message = Util::monodroid_strdup_printf (
-			"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
-			entry_name.get (),
-			header->version,
-			ASSEMBLY_STORE_FORMAT_VERSION
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
+				entry_name.get (),
+				header->version,
+				ASSEMBLY_STORE_FORMAT_VERSION
+			)
 		);
-		Helpers::abort_application (message);
 	}
 
 	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
@@ -282,7 +307,13 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	uint16_t cd_entries;
 
 	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
-		Helpers::abort_application (Util::monodroid_strdup_printf ("Failed to read the EOCD record from APK file %s", apk_name));
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to read the EOCD record from APK file %s",
+				apk_name
+			)
+		);
 	}
 #ifdef DEBUG
 	log_info (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
@@ -291,14 +322,16 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 #endif
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
 	if (retval < 0) {
-		char *message = Util::monodroid_strdup_printf (
-			"Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)",
-			apk_name,
-			std::strerror (errno),
-			retval,
-			errno
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)",
+				apk_name,
+				std::strerror (errno),
+				retval,
+				errno
+			)
 		);
-		Helpers::abort_application (message);
 	}
 
 	std::vector<uint8_t>  buf (cd_size);
@@ -320,15 +353,16 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 
 	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
 	if (static_cast<size_t>(nread) != cd_size) {
-
-		char *message = Util::monodroid_strdup_printf (
-			"Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)",
-			apk_name,
-			std::strerror (errno),
-			nread,
-			errno
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)",
+				apk_name,
+				std::strerror (errno),
+				nread,
+				errno
+			)
 		);
-		Helpers::abort_application (message);
 	}
 
 	if (application_config.have_assembly_store) {

@@ -544,11 +544,13 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		if (options.out_port > 0) {
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
-				char *message = Util::monodroid_strdup_printf (
-					"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s",
-					strerror (errno)
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s",
+						strerror (errno)
+					)
 				);
-				Helpers::abort_application (message);
 			}
 
 			sockaddr_in addr;
@@ -559,37 +561,43 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 			int r;
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
-				char *message = Util::monodroid_strdup_printf (
-					"Could not setup a socket for stdout and stderr: %s",
-					r == -1 ? strerror (errno) : "address not parseable in the specified address family"
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not setup a socket for stdout and stderr: %s",
+						r == -1 ? strerror (errno) : "address not parseable in the specified address family"
+					)
 				);
-				Helpers::abort_application (LOG_DEBUGGER, message);
 			}
 
 			if (options.server) {
 				int accepted = monodroid_debug_accept (sock, addr);
 				log_warn (LOG_DEBUGGER, "Accepted stdout connection: %d", accepted);
 				if (accepted < 0) {
-					char *message = Util::monodroid_strdup_printf (
-						"Error accepting stdout and stderr (%s:%d): %s",
-						options.host,
-						options.out_port,
-						strerror (errno)
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error accepting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
 					);
-					Helpers::abort_application (LOG_DEBUGGER, message);
 				}
 
 				dup2 (accepted, 1);
 				dup2 (accepted, 2);
 			} else {
 				if (monodroid_debug_connect (sock, addr) != 1) {
-					char *message = Util::monodroid_strdup_printf (
-						"Error connecting stdout and stderr (%s:%d): %s",
-						options.host,
-						options.out_port,
-						strerror (errno)
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error connecting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
 					);
-					Helpers::abort_application (LOG_DEBUGGER, message);
 				}
 
 				dup2 (sock, 1);
@@ -730,14 +738,14 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
 #endif
 		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
-		char *message = Util::monodroid_strdup_printf (
-			"Make sure that all entries in the APK directory named `%s` are STORED (not compressed). "
-			"If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed",
-			assemblies_prefix,
-			assemblies_prefix
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"Make sure that all entries in the APK directory named `%s` are STORED (not compressed). "
+				"If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed",
+				assemblies_prefix,
+				assemblies_prefix
+			)
 		);
-
-		Helpers::abort_application (message);
 	}
 
 	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
@@ -776,18 +784,18 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
-	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr ||
-			info->refs_added == nullptr || info->weak_handle == nullptr) {
-				char *message = Util::monodroid_strdup_printf (
-					"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
-					type->_namespace,
-					type->_typename,
-					info->handle,
-					info->handle_type,
-					info->refs_added,
-					info->weak_handle
-				);
-				Helpers::abort_application (message);
+	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr || info->refs_added == nullptr || info->weak_handle == nullptr) {
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
+				type->_namespace,
+				type->_typename,
+				info->handle,
+				info->handle_type,
+				info->refs_added,
+				info->weak_handle
+			)
+		);
 	}
 }
 

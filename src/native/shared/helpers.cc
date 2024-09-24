@@ -17,10 +17,26 @@ Helpers::abort_application (LogCategories category, const char *message, bool lo
 	android_set_abort_message (message);
 
 	if (log_location) {
+		// We don't want to log the full path, just the file name.  libc++ uses full file path here.
+		const char *file_name = sloc.file_name ();
+		const char *last_path_sep = strrchr (file_name, '/');
+
+		if (last_path_sep == nullptr) [[unlikely]] {
+			// In case we were built on Windows
+			last_path_sep = strrchr (file_name, '\\');
+		}
+
+		if (last_path_sep != nullptr) [[likely]] {
+			last_path_sep++;
+			if (*last_path_sep != '\0') [[unlikely]] {
+				file_name = last_path_sep;
+			}
+		}
+
 		log_fatal (
 			category,
 			"Abort at %s:%u:%u ('%s')",
-			sloc.file_name (),
+			file_name,
 			sloc.line (),
 			sloc.column (),
 			sloc.function_name ()

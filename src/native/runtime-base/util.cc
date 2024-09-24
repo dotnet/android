@@ -64,7 +64,12 @@ Util::monodroid_load_assembly (MonoAssemblyLoadContextGCHandle alc_handle, const
 	mono_assembly_name_free (aname);
 
 	if (assm == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-		Helpers::abort_application (monodroid_strdup_printf ("Unable to find assembly '%s'.", basename));
+		Helpers::abort_application (
+			monodroid_strdup_printf (
+				"Unable to find assembly '%s'.",
+				basename
+			)
+		);
 	}
 	return assm;
 }
@@ -90,7 +95,12 @@ Util::monodroid_load_assembly (MonoDomain *domain, const char *basename)
 	mono_assembly_name_free (aname);
 
 	if (!assm) {
-		Helpers::abort_application (monodroid_strdup_printf ("Unable to find assembly '%s'.", basename));
+		Helpers::abort_application (
+			monodroid_strdup_printf (
+				"Unable to find assembly '%s'.",
+				basename
+			)
+		);
 	}
 	return assm;
 }
