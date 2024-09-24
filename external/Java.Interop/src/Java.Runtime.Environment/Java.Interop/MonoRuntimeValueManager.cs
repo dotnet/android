@@ -408,9 +408,6 @@ namespace Java.Interop {
 		internal static extern int java_interop_gc_bridge_remove_current_app_domain (IntPtr bridge);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
-		internal static extern IntPtr java_interop_strdup (string value);
-
-		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
 		internal static extern int java_interop_gc_bridge_set_bridge_processing_field (IntPtr bridge, RuntimeTypeHandle type_handle, string field_name);
 
 		[DllImport (JavaInteropLib, CallingConvention=CallingConvention.Cdecl)]
