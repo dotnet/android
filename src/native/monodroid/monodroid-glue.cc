@@ -818,7 +818,6 @@ MonodroidRuntime::monodroid_debugger_unhandled_exception (MonoException *ex)
 void
 MonodroidRuntime::init_android_runtime (JNIEnv *env, jclass runtimeClass, jobject loader)
 {
-	Helpers::abort_application ("This is an abort message, it should be followed by the abort location in the logcat as well as in the native stack trace");
 	constexpr std::string_view icall_typemap_java_to_managed { "Java.Interop.TypeManager::monodroid_typemap_java_to_managed" };
 	constexpr std::string_view icall_typemap_managed_to_java { "Android.Runtime.JNIEnv::monodroid_typemap_managed_to_java" };
 
