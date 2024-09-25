@@ -1291,8 +1291,10 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		}
 
 		[Test]
-		public void BuildAppCheckDebugSymbols ([Values(true, false)] bool embedAssembliesIntoApk)
+		public void BuildAppCheckDebugSymbols ()
 		{
+			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
+
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,
@@ -1332,7 +1334,6 @@ namespace App1
 					},
 				},
 			};
-			proj.EmbedAssembliesIntoApk = embedAssembliesIntoApk;
 			proj.SetProperty (KnownProperties.AndroidLinkMode, AndroidLinkMode.None.ToString ());
 			using (var libb = CreateDllBuilder (Path.Combine (path, "Library1"))) {
 				Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
