@@ -25,11 +25,13 @@
 using System;
 using System.IO;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection.Emit;
 using System.Reflection;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeBuilder
 	{
 		CodeBlock mainBlock;

@@ -23,11 +23,13 @@
 
 #if !MONOTOUCH
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal abstract class CodeArithmeticOperation: CodeExpression
 	{
 		protected CodeExpression exp1;
@@ -67,6 +69,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeAdd: CodeArithmeticOperation
 	{
 		public CodeAdd (CodeExpression exp1, CodeExpression exp2)
@@ -97,6 +100,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeMul: CodeArithmeticOperation
 	{
 		public CodeMul (CodeExpression exp1, CodeExpression exp2)
@@ -111,7 +115,8 @@ namespace Mono.CodeGeneration
 			gen.Emit (OpCodes.Mul);
 		}
 	}
-	
+
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeDiv: CodeArithmeticOperation
 	{
 		public CodeDiv (CodeExpression exp1, CodeExpression exp2)
@@ -127,6 +132,7 @@ namespace Mono.CodeGeneration
 		}
 	}
 	
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeSub: CodeArithmeticOperation
 	{
 		public CodeSub (CodeExpression exp1, CodeExpression exp2)

@@ -22,6 +22,8 @@ namespace Java.Interop
 		public abstract void GenerateNativeCallbackDelegate ();
 	}
 	
+	[RequiresDynamicCode (MonoAndroidExport.DynamicFeatures)]
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	class DynamicInvokeTypeInfo
 	{
 		// NewArray<T>(T[])
@@ -517,6 +519,8 @@ namespace Java.Interop
 		}
 	}
 	
+	[RequiresDynamicCode (MonoAndroidExport.DynamicFeatures)]
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	static class DynamicCallbackFactory
 	{
 		static DynamicCallbackFactory ()
@@ -530,6 +534,8 @@ namespace Java.Interop
 		public static CodeClass CodeClass { get; private set; }
 	}
 	
+	[RequiresDynamicCode (MonoAndroidExport.DynamicFeatures)]
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	class DynamicCallbackCodeGenerator : CallbackCodeGenerator<Type>
 	{
 		public static Delegate Create (MethodInfo method)

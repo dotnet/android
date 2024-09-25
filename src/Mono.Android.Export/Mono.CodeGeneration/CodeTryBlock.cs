@@ -29,6 +29,7 @@ using System.Collections.Generic;
 #else
 using System.Collections.Specialized;
 #endif
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -44,6 +45,7 @@ using ArrayList = System.Collections.Generic.List<
 
 namespace Mono.CodeGeneration
 {
+	[RequiresUnreferencedCode (MonoAndroidExport.DynamicFeatures)]
 	internal class CodeTry: CodeStatement
 	{
 		CodeExpression condition;
