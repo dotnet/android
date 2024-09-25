@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <Target Name="CreateLocalRuntimeLists"
-      Inputs="$(MSBuildThisFile);@(_RuntimeListInputs)"
+      Inputs="$(MSBuildAllProjects);@(_RuntimeListInputs)"
       Outputs="@(_RuntimeListOutputs)">
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Runtime.proj"
@@ -27,7 +27,7 @@
   </Target>
 
   <Target Name="CreateLocalFrameworkLists"
-      Inputs="$(MSBuildThisFile);@(_FrameworkListInputs)"
+      Inputs="$(MSBuildAllProjects);@(_FrameworkListInputs)"
       Outputs="@(_FrameworkListOutputs)">
     <MSBuild
         Projects="$(MSBuildThisFileDirectory)Microsoft.Android.Ref.proj"
