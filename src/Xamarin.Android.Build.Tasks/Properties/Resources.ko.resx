@@ -1072,4 +1072,8 @@ In this message, the term "handheld app" means "app for handheld devices."
     <comment>The following are literal names and should not be translated: Maven, group_id, artifact_id
 {0} - A Maven artifact specification</comment>
   </data>
+  <data name="XA0142" xml:space="preserve">
+    <value>Command '{0}' failed.\n{1}</value>
+    <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
+  </data>
 </root>
