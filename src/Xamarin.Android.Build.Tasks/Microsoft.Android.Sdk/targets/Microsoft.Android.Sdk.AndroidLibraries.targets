@@ -94,7 +94,7 @@ projects.
   </PropertyGroup>
   <Target Name="_IncludeAarInNuGetPackage"
       Condition=" '$(IncludeBuildOutput)' != 'false' and '$(AndroidApplication)' != 'true' "
-      DependsOnTargets="_CategorizeAndroidLibraries">
+      DependsOnTargets="$(_IncludeAarInNuGetPackageDependsOn)">
     <GetNuGetShortFolderName
         TargetFrameworkMoniker="$(TargetFrameworkMoniker)"
         TargetPlatformMoniker="$(TargetPlatformMoniker)">

@@ -1,7 +1,7 @@
 ---
 title: .NET for Android Build Properties
 description: .NET for Android Build Properties
-ms.date: 04/11/2024
+ms.date: 09/09/2024
 ---
 
 # Build Properties
@@ -1020,6 +1020,25 @@ specifying the Java package names of generated Java source code.
 
 The only supported value is
 `LowercaseCrc64`.
+
+## AndroidPrepareForBuildDependsOn
+
+A semi-colon delimited property that can be used to extend the
+Android build process. MSBuild targets added to this property
+will execute early in the build for both Application and Library
+project types. This property is empty by default.
+
+Example:
+
+```xml
+<PropertyGroup>
+  <AndroidPrepareForBuildDependsOn>MyCustomTarget</AndroidPrepareForBuildDependsOn>
+</PropertyGroup>
+
+<Target Name="MyCustomTarget" >
+  <Message Text="Running target: 'MyCustomTarget'" Importance="high"  />
+</Target>
+```
 
 ## AndroidProguardMappingFile
 

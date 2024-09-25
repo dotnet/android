@@ -66,6 +66,11 @@
       <Link>Xamarin.Android.Bindings.Maven.targets</Link>
     </None>
     <None
+        Include="MSBuild\Xamarin\Android\Microsoft.Android.Sdk.Bindings.Gradle.targets">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <Link>Microsoft.Android.Sdk.Bindings.Gradle.targets</Link>
+    </None>
+    <None
         Include="MSBuild\Xamarin\Android\Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <Link>Xamarin.Android.Common\ImportAfter\Microsoft.Cpp.Android.targets</Link>
