@@ -1293,6 +1293,8 @@ GVuZHNDbGFzc1ZhbHVlLmNsYXNzUEsFBgAAAAADAAMAwgAAAMYBAAAAAA==
 		[Test]
 		public void BuildAppCheckDebugSymbols ()
 		{
+			AssertCommercialBuild (); // FIXME: when Fast Deployment isn't available, we would need to use `llvm-objcopy` to extract the debug symbols
+
 			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
 			var lib = new XamarinAndroidLibraryProject () {
 				IsRelease = false,
