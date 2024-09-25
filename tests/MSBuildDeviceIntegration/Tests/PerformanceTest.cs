@@ -185,6 +185,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidResource_Change ()
 		{
+			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
+
 			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
@@ -202,6 +204,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidAsset_Change ()
 		{
+			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
+
 			var bytes = new byte [1024*1024*10];
 			var rnd = new Random ();
 			rnd.NextBytes (bytes);
@@ -260,6 +264,8 @@ namespace Xamarin.Android.Build.Tests
 		[Retry (Retry)]
 		public void Build_AndroidManifest_Change ()
 		{
+			AssertCommercialBuild (); // If <BuildApk/> runs, this test will fail without Fast Deployment
+
 			var proj = CreateApplicationProject ();
 			using (var builder = CreateBuilderWithoutLogFile ()) {
 				builder.Target = "Build";
