@@ -623,6 +623,8 @@ static Java.Interop.JavaInt16Array.CreateMarshaledValue(nint handle, System.Type
 static Java.Interop.JavaInt32Array.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
 static Java.Interop.JavaInt64Array.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
 static Java.Interop.JavaPeerableExtensions.GetJniTypeName(this Java.Interop.IJavaPeerable! self) -> string?
+static Java.Interop.JavaPeerableExtensions.JavaAs<TResult>(this Java.Interop.IJavaPeerable? self) -> TResult?
+static Java.Interop.JavaPeerableExtensions.TryJavaCast<TResult>(this Java.Interop.IJavaPeerable? self, out TResult? result) -> bool
 static Java.Interop.JavaSByteArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
 static Java.Interop.JavaSingleArray.CreateMarshaledValue(nint handle, System.Type? targetType) -> object?
 static Java.Interop.JniArgumentValue.operator !=(Java.Interop.JniArgumentValue lhs, Java.Interop.JniArgumentValue rhs) -> bool
