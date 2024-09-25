@@ -1702,7 +1702,7 @@ because xbuild doesn't support framework reference assemblies.
 
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
-    <_GeneratePackageManagerJavaInputs Include="@(_GetGenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
     <!-- <_GeneratePackageManagerJavaInputs Include="@(_AndroidMSBuildAllProjects)" />
     <_GeneratePackageManagerJavaInputs Include="$(_ResolvedUserAssembliesHashFile)" />
     <_GeneratePackageManagerJavaInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
