@@ -965,12 +965,13 @@ namespace UnnamedProject
 				OtherBuildItems = {
 					new BuildItem("AndroidEnvironment", "env.txt") {
 						TextContent = () => @"Foo=Bar
-Bar=Foo",
+Bar34=Foo55",
 					}
 				}
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
-		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));");
+		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
+		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -986,6 +987,11 @@ Bar=Foo",
 					"Foo=Bar",
 					logcatOutput,
 					"The Environment variable \"Foo\" was not set."
+			);
+			StringAssert.Contains (
+					"Bar34=Foo55",
+					logcatOutput,
+					"The Environment variable \"Bar34\" was not set."
 			);
 		}
 
