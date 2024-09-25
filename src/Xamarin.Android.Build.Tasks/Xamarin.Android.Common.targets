@@ -160,7 +160,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
-	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
+  <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
@@ -288,6 +288,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
 	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
+
+	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'true' ">True</_AndroidFastDeployEnvironmentFiles>
+	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
+	
 </PropertyGroup>
 
 <Choose>
@@ -1457,7 +1461,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
-    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(EmbedAssembliesIntoApk)' == 'true' " />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == 'false' " />
   </ItemGroup>
 </Target>
 
