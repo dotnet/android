@@ -291,7 +291,7 @@ int
 _monodroid_getifaddrs (struct _monodroid_ifaddrs **ifap)
 {
 	if (!initialized) {
-		std::lock_guard<xamarin::android::mutex> lock (init_lock);
+		xamarin::android::lock_guard<xamarin::android::mutex> lock (init_lock);
 		if (!initialized) {
 			_monodroid_getifaddrs_init ();
 			initialized = true;
