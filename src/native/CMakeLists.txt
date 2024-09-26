@@ -42,7 +42,6 @@ set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS OFF)
 
 include("${CMAKE_ANDROID_NDK}/build/cmake/abis.cmake")
-include("${CMAKE_SOURCE_DIR}/cmake/ArchiveDSOStub.cmake")
 
 if(CMAKE_BUILD_TYPE STREQUAL Debug)
   set(DEBUG_BUILD True)
@@ -70,10 +69,6 @@ if(ENABLE_CLANG_ASAN AND ENABLE_CLANG_UBSAN)
 endif()
 
 if(ENABLE_CLANG_ASAN OR ENABLE_CLANG_UBSAN)
-  if(BUILD_ARCHIVE_DSO_STUB)
-    message(FATAL_ERROR "ASAN/UBSAN builds aren't supported by the archive DSO target")
-  endif()
-
   set(STRIP_DEBUG_DEFAULT OFF)
   set(ANALYZERS_ENABLED ON)
 else()
@@ -196,14 +191,12 @@ macro(xa_add_compile_definitions TARGET)
   endif()
 endmacro()
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
-  if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
-    add_compile_definitions(DEBUG)
-  endif()
+if(DEBUG_BUILD AND NOT DISABLE_DEBUG)
+  add_compile_definitions(DEBUG)
+endif()
 
-  if(NOT DEBUG_BUILD)
-    add_compile_definitions(RELEASE NDEBUG)
-  endif()
+if(NOT DEBUG_BUILD)
+  add_compile_definitions(RELEASE NDEBUG)
 endif()
 
 #
@@ -333,14 +326,9 @@ set(POTENTIAL_COMMON_COMPILER_ARGS
   -funswitch-loops
   -Wa,-noexecstack
   -fPIC
+  -g
   -O2
 )
-
-if(NOT BUILD_ARCHIVE_DSO_STUB)
-  list(APPEND POTENTIAL_COMMON_COMPILER_ARGS
-    -g
-  )
-endif()
 
 set(POTENTIAL_COMMON_LINKER_ARGS
   -fstack-protector-strong
@@ -463,13 +451,11 @@ xa_check_c_linker_args(XA_COMMON_C_LINKER_ARGS "${POTENTIAL_XA_COMMON_LINKER_ARG
 xa_check_c_linker_args(XA_C_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
 xa_check_cxx_linker_args(XA_CXX_DSO_LINKER_ARGS "${POTENTIAL_XA_DSO_LINKER_ARGS}")
 
-if(NOT BUILD_ARCHIVE_DSO_STUB)
-  add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_ARGS}>")
-  add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_ARGS}>")
+add_compile_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_ARGS}>")
 
-  add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
-  add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
-endif()
+add_link_options("$<$<COMPILE_LANGUAGE:CXX>:${COMMON_CXX_LINKER_ARGS}>")
+add_link_options("$<$<COMPILE_LANGUAGE:C>:${COMMON_C_LINKER_ARGS}>")
 
 #
 # Helper macros
@@ -484,29 +470,25 @@ macro(set_static_library_suffix TARGET_NAME)
   endif()
 endmacro()
 
-if(BUILD_ARCHIVE_DSO_STUB)
-  add_subdirectory(archive-dso-stub)
-else()
-  add_subdirectory(libunwind)
-  add_subdirectory(lz4)
-  add_subdirectory(libstub)
-  add_subdirectory(shared)
-  add_subdirectory(java-interop)
-  add_subdirectory(xamarin-app-stub)
-  add_subdirectory(runtime-base)
-  add_subdirectory(tracing)
-  add_subdirectory(pinvoke-override)
+add_subdirectory(libunwind)
+add_subdirectory(lz4)
+add_subdirectory(libstub)
+add_subdirectory(shared)
+add_subdirectory(java-interop)
+add_subdirectory(xamarin-app-stub)
+add_subdirectory(runtime-base)
+add_subdirectory(tracing)
+add_subdirectory(pinvoke-override)
 
-  if(DEBUG_BUILD)
-    add_subdirectory(xamarin-debug-app-helper)
-  endif()
-
-  add_subdirectory(monodroid)
-
-  add_custom_target(run_static_analysis
-    COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
-    COMMAND_EXPAND_LISTS
-    WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
-    USES_TERMINAL
-  )
+if(DEBUG_BUILD)
+  add_subdirectory(xamarin-debug-app-helper)
 endif()
+
+add_subdirectory(monodroid)
+
+add_custom_target(run_static_analysis
+  COMMAND ${ANDROID_TOOLCHAIN_ROOT}/bin/clang-check -analyze -p="${CMAKE_CURRENT_BINARY_DIR}" ${CLANG_CHECK_SOURCES} > ${CMAKE_SOURCE_DIR}/static-analysis.${ANDROID_ABI}.${CMAKE_BUILD_TYPE}.txt 2>&1
+  COMMAND_EXPAND_LISTS
+  WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+  USES_TERMINAL
+)

@@ -61,7 +61,6 @@ class AssemblyStoreExplorer
 				return (null, $"File '{inputFile}' is a ZIP archive, but not an Android one.");
 
 			case FileFormat.AssemblyStore:
-			case FileFormat.ELF:
 				return (new List<AssemblyStoreExplorer> { new AssemblyStoreExplorer (info)}, null);
 
 			case FileFormat.Aab:

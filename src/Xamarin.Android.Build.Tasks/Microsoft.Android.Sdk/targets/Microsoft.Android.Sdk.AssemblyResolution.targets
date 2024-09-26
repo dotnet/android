@@ -13,7 +13,6 @@ _ResolveAssemblies MSBuild target.
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessAssemblies"      AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.ProcessNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
   <UsingTask TaskName="Xamarin.Android.Tasks.StripNativeLibraries" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
-  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareDSOWrapperState" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <!-- HACK: workaround for: https://github.com/dotnet/sdk/issues/25679 -->
   <Target Name="_RemoveLinuxFrameworkReferences"
@@ -122,17 +121,6 @@ _ResolveAssemblies MSBuild target.
       <_ResolvedSymbolFiles   Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.pdb' " />
       <_ResolvedJavaLibraries Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Extension)' == '.jar' " />
     </ItemGroup>
-
-    <ItemGroup>
-      <_ResolvedArchiveDSOStub Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'libarchive-dso-stub.so' " />
-      <ResolvedFileToPublish Remove="@(_ResolvedArchiveDSOStub)" />
-    </ItemGroup>
-
-    <!-- This must run as early as possible, as soon as we have locations of the .so files and before any wrapping/packaging is done -->
-    <PrepareDSOWrapperState
-        ArchiveDSOStubs="@(_ResolvedArchiveDSOStub)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-        BaseOutputDirectory="$(IntermediateOutputPath)" />
 
     <!-- All assemblies must be per-RID, thus no `->Distinct()` on `InputAssemblies` or `ResolvedSymbols` items -->
     <ProcessAssemblies

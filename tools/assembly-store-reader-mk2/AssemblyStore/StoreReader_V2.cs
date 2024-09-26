@@ -31,7 +31,6 @@ partial class StoreReader_V2 : AssemblyStoreReader
 	readonly HashSet<uint> supportedVersions;
 
 	Header? header;
-	ulong elfOffset = 0;
 
 	static StoreReader_V2 ()
 	{
@@ -84,34 +83,12 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
 
-	protected override ulong GetStoreStartDataOffset () => elfOffset;
-
 	protected override bool IsSupported ()
 	{
 		StoreStream.Seek (0, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
 		uint magic = reader.ReadUInt32 ();
-		if (magic == Utils.ELF_MAGIC) {
-			ELFPayloadError error;
-			(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
-
-			if (error != ELFPayloadError.None) {
-				string message = error switch {
-					ELFPayloadError.NotELF           => $"Store '{StorePath}' is not a valid ELF binary",
-					ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
-					ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
-					ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
-					ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
-					_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
-				};
-				Log.Debug (message);
-			} else if (elfOffset >= 0) {
-				StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
-				magic = reader.ReadUInt32 ();
-			}
-		}
-
 		if (magic != Utils.ASSEMBLY_STORE_MAGIC) {
 			Log.Debug ($"Store '{StorePath}' has invalid header magic number.");
 			return false;
@@ -149,7 +126,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		AssemblyCount = header.entry_count;
 		IndexEntryCount = header.index_entry_count;
 
-		StoreStream.Seek ((long)elfOffset + Header.NativeSize, SeekOrigin.Begin);
+		StoreStream.Seek (Header.NativeSize, SeekOrigin.Begin);
 		using var reader = CreateReader ();
 
 		var index = new List<IndexEntry> ();

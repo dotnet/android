@@ -6,7 +6,6 @@ enum FileFormat
 	AabBase,
 	Apk,
 	AssemblyStore,
-	ELF,
 	Zip,
 	Unknown,
 }

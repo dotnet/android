@@ -2,7 +2,7 @@
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask AssemblyFile="$(BootstrapTasksAssembly)" TaskName="Xamarin.Android.Tools.BootstrapTasks.RunParallelCmds" />
   <Target Name="_BuildRuntimes" BeforeTargets="Build"
-          DependsOnTargets="_ConfigureAndBuildArchiveDSOStub;_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
+          DependsOnTargets="_ConfigureRuntimes;_BuildAndroidRuntimes;_BuildAndroidAnalyzerRuntimes;_CopyToPackDirs">
   </Target>
 
   <Target Name="_TestPinvokeTables" Condition=" '$(HostOS)' == 'Linux' And '$(RunningOnCI)' == 'true' ">
@@ -49,39 +49,6 @@
       <_OutputDirsToCreate       Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-asan-Release"   Condition="'$(EnableNativeAnalyzers)' == 'true'" />
       <_OutputDirsToCreate       Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-ubsan-Release"  Condition="'$(EnableNativeAnalyzers)' == 'true'" />
     </ItemGroup>
-  </Target>
-
-  <Target Name="_ConfigureArchiveDSOInputsAndOutputs">
-    <ItemGroup>
-      <_ArchiveDSOInput Include="archive-dso-stub\CMakeLists.txt" />
-
-      <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-archive-dso-stub\CMakeCache.txt')" />
-      <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libarchive-dso-stub.so')" />
-
-      <_ArchiveOutputDirToCreate Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
-    </ItemGroup>
-  </Target>
-
-  <Target Name="_ConfigureAndBuildArchiveDSOStub"
-          DependsOnTargets="_ConfigureArchiveDSOInputsAndOutputs"
-          Inputs="@(_ArchiveDSOInput)"
-          Outputs="@(_ArchiveDSOOutput)">
-    <ItemGroup>
-      <_ConfigureArchiveDSOStubCommands Include="@(AndroidSupportedTargetJitAbi)">
-        <Command>$(CmakePath)</Command>
-        <Arguments>--preset default-release-%(AndroidSupportedTargetJitAbi.Identity) -DBUILD_ARCHIVE_DSO_STUB=ON -DSTRIP_DEBUG=ON "$(MSBuildThisFileDirectory)"</Arguments>
-        <WorkingDirectory>$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub</WorkingDirectory>
-      </_ConfigureArchiveDSOStubCommands>
-    </ItemGroup>
-
-    <MakeDir Directories="@(_ArchiveOutputDirToCreate)" />
-    <RunParallelCmds Commands="@(_ConfigureArchiveDSOStubCommands)" />
-
-    <Exec
-        Command="$(NinjaPath) -v"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
-
-    <Touch Files="@(_ArchiveDSOOutput)" />
   </Target>
 
   <Target Name="_ConfigureRuntimes"
@@ -143,7 +110,6 @@
   <!-- TODO: update for the changes -->
   <Target Name="_FindMonoDroidSources">
     <ItemGroup>
-      <_MonoDroidSources Include="android-dso-stub\*.cc;libstub\*.hh" />
       <_MonoDroidSources Include="libstub\*.cc;libstub\*.hh" />
       <_MonoDroidSources Include="monodroid\*.cc;monodroid\*.hh" />
       <_MonoDroidSources Include="runtime-base\*.cc;runtime-base\*.hh" />
@@ -217,9 +183,6 @@
 
   <Target Name="_CleanRuntimes"
       AfterTargets="Clean">
-    <Exec
-        Command="$(NinjaPath) -v clean"
-        WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-android-dso-stub"/>
     <Exec
         Command="$(NinjaPath) -v clean"
         WorkingDirectory="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-Debug"/>

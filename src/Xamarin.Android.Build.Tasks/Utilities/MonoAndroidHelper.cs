@@ -6,7 +6,6 @@ using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
 using System.Text;
-using System.Threading;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
 
@@ -48,67 +47,6 @@ namespace Xamarin.Android.Tasks
 				foreach (string line in lines) {
 					sb.AppendLine ($"{prefix} | {line}");
 				}
-			}
-		}
-
-		public static int RunProcess (string command, string arguments, TaskLoggingHelper log, DataReceivedEventHandler? onOutput = null, DataReceivedEventHandler? onError = null)
-		{
-			var stdout_completed = new ManualResetEvent (false);
-			var stderr_completed = new ManualResetEvent (false);
-			var psi = new ProcessStartInfo () {
-				FileName = command,
-				Arguments = arguments,
-				UseShellExecute = false,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				CreateNoWindow = true,
-				WindowStyle = ProcessWindowStyle.Hidden,
-			};
-
-			var stdoutLines = new List<string> ();
-			var stderrLines = new List<string> ();
-
-			log.LogDebugMessage ($"Running process: {psi.FileName} {psi.Arguments}");
-			using var proc = new Process ();
-			proc.OutputDataReceived += (s, e) => {
-				if (e.Data != null) {
-					onOutput?.Invoke (s, e);
-					stdoutLines.Add (e.Data);
-				} else
-					stdout_completed.Set ();
-			};
-
-			proc.ErrorDataReceived += (s, e) => {
-				if (e.Data != null) {
-					onError?.Invoke (s, e);
-					stderrLines.Add (e.Data);
-				} else
-					stderr_completed.Set ();
-			};
-
-			proc.StartInfo = psi;
-			proc.Start ();
-			proc.BeginOutputReadLine ();
-			proc.BeginErrorReadLine ();
-			proc.WaitForExit ();
-
-			if (psi.RedirectStandardError) {
-				stderr_completed.WaitOne (TimeSpan.FromSeconds (30));
-			}
-
-			if (psi.RedirectStandardOutput) {
-				stdout_completed.WaitOne (TimeSpan.FromSeconds (30));
-			}
-
-			if (proc.ExitCode != 0) {
-				var sb = MergeStdoutAndStderrMessages (stdoutLines, stderrLines);
-				log.LogCodedError ("XA0142", Properties.Resources.XA0142, $"{psi.FileName} {psi.Arguments}", sb.ToString ());
-			}
-
-			try {
-				return proc.ExitCode;
-			} finally {
-				proc.Close ();
 			}
 		}
 
@@ -780,13 +718,6 @@ namespace Xamarin.Android.Tasks
 				16 => needMask ? pageMask16k : pageSize16k,
 				_  => throw new InvalidOperationException ($"Internal error: unsupported zip page alignment value {alignment}")
 			};
-		}
-
-		public static string QuoteFileNameArgument (string fileName)
-		{
-			var builder = new CommandLineBuilder ();
-			builder.AppendFileNameIfNotNull (fileName);
-			return builder.ToString ();
 		}
 	}
 }

@@ -371,7 +371,6 @@ namespace Xamarin.Android.Tasks
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
 
 			Log.LogDebugTaskItems ("  [Output] OutputFiles :", OutputFiles);
-			DSOWrapperGenerator.CleanUp (BuildEngine4, Log);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -405,8 +404,7 @@ namespace Xamarin.Android.Tasks
 					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 					// like since we can finish scanning the zip central directory earlier at startup.
 					string inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
-					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath), BuildEngine4, Log);
-					AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
+					AddFileToArchiveIfNewer (apk, RuntimeConfigBinFilePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
 				}
 			}
 		}
@@ -450,8 +448,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), BuildEngine4, Log);
-				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
+				AddFileToArchiveIfNewer (apk, kvp.Value, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
 			void AddAssembliesFromCollection (ITaskItem[] assemblies)
@@ -472,11 +469,11 @@ namespace Xamarin.Android.Tasks
 
 				foreach (var kvp in perArchAssemblies) {
 					Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
-					DoAddAssembliesFromArchCollection (kvp.Key, kvp.Value);
+					DoAddAssembliesFromArchCollection (kvp.Value);
 				}
 			}
 
-			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
+			void DoAddAssembliesFromArchCollection (Dictionary<string, ITaskItem> assemblies)
 			{
 				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
@@ -495,8 +492,7 @@ namespace Xamarin.Android.Tasks
 					if (UseAssemblyStore) {
 						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assembly);
 					} else {
-						string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), BuildEngine4, Log);
-						AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
+						AddFileToArchiveIfNewer (apk, sourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
 					}
 
 					// Try to add config if exists
@@ -506,7 +502,7 @@ namespace Xamarin.Android.Tasks
 							storeAssemblyInfo.ConfigFile = new FileInfo (config);
 						}
 					} else {
-						AddAssemblyConfigEntry (apk, arch, assemblyDirectory, config);
+						AddAssemblyConfigEntry (apk, assemblyDirectory, config);
 					}
 
 					// Try to add symbols if Debug
@@ -523,10 +519,9 @@ namespace Xamarin.Android.Tasks
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
 								string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-								string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbolsPath, Path.GetFileName (archiveSymbolsPath), BuildEngine4, Log);
 								AddFileToArchiveIfNewer (
 									apk,
-									wrappedSymbolsPath,
+									symbolsPath,
 									archiveSymbolsPath,
 									compressionMethod: GetCompressionMethod (archiveSymbolsPath)
 								);
@@ -612,7 +607,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		void AddAssemblyConfigEntry (ZipArchiveEx apk, AndroidTargetArch arch, string assemblyPath, string configFile)
+		void AddAssemblyConfigEntry (ZipArchiveEx apk, string assemblyPath, string configFile)
 		{
 			string inArchivePath = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyPath + Path.GetFileName (configFile));
 			existingEntries.Remove (inArchivePath);
@@ -628,8 +623,13 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Log.LogDebugMessage ($"Adding {configFile} as the archive file is out of date.");
-			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (arch, configFile, Path.GetFileName (inArchivePath), BuildEngine4, Log);
-			apk.AddFileAndFlush (wrappedConfigFile, inArchivePath, compressionMethod);
+			using (var source = File.OpenRead (configFile)) {
+				var dest = new MemoryStream ();
+				source.CopyTo (dest);
+				dest.WriteByte (0);
+				dest.Position = 0;
+				apk.AddEntryAndFlush (inArchivePath, dest, compressionMethod);
+			}
 		}
 
 		/// <summary>
