@@ -578,7 +578,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 void
 AndroidSystem::setup_environment () noexcept
 {
-	log_info (LOG_DEFAULT, "DEBUGG!!! setup_environment");
+	log_debug (LOG_DEFAULT, "DEBUGG!!! setup_environment");
 	if (is_mono_aot_enabled () && *mono_aot_mode_name != '\0') {
 		switch (mono_aot_mode_name [0]) {
 			case 'n':
@@ -621,7 +621,7 @@ AndroidSystem::setup_environment () noexcept
 		return;
 	}
 
-	log_info (LOG_DEFAULT, "DEBUGG!!! for loop");
+	log_debug (LOG_DEFAULT, "DEBUGG!!! for loop");
 	const char *var_name;
 	const char *var_value;
 	for (size_t i = 0; i < application_config.environment_variable_count; i += 2) {
@@ -639,14 +639,14 @@ AndroidSystem::setup_environment () noexcept
 		if (setenv (var_name, var_value, 1) < 0)
 			log_warn (LOG_DEFAULT, "Failed to set environment variable: %s", strerror (errno));
 	}
-	log_info (LOG_DEFAULT, "DEBUGG!!! Loading");
+	log_debug (LOG_DEFAULT, "DEBUGG!!! Loading");
 #if defined (DEBUG)
-	log_info (LOG_DEFAULT, "Loading environment from  override directories.");
+	log_debug (LOG_DEFAULT, "Loading environment from  override directories.");
 	for (const char *od : override_dirs) {
-		log_info (LOG_DEFAULT, "%s", od);
+		log_debug (LOG_DEFAULT, "%s", od);
 		std::unique_ptr<char[]> env_override_file {Util::path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
 		if (Util::file_exists (env_override_file.get ())) {
-			log_info (LOG_DEFAULT, "Loading %s", env_override_file.get ());
+			log_debug (LOG_DEFAULT, "Loading %s", env_override_file.get ());
 			setup_environment_from_override_file (env_override_file.get ());
 		}
 	}
