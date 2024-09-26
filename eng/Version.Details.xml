@@ -1,16 +1,16 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.100-rc.2.24474.4">
+    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.100-rc.2.24475.4">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>42b2349ec272dbb8bbc5d8df29adb7b77e3450cd</Sha>
+      <Sha>f59e9ca09cb4d5b903b276c0d3d7825b6ddbc3a0</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rtm.24473.2" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rtm.24475.3" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>3d9da91a9720f7bda3e4cef127b8195441fb2580</Sha>
+      <Sha>2c4266c134aa02718179818098a11e825c9d1362</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.0-rtm.24473.2" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.0-rtm.24475.3" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>3d9da91a9720f7bda3e4cef127b8195441fb2580</Sha>
+      <Sha>2c4266c134aa02718179818098a11e825c9d1362</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100.Transport" Version="9.0.0-rtm.24469.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
