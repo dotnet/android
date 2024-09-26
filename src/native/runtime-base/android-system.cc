@@ -637,6 +637,9 @@ AndroidSystem::setup_environment () noexcept
 #if defined (DEBUG)
 	log_debug (LOG_DEFAULT, "Loading environment from  override directories.");
 	for (const char *od : override_dirs) {
+		if (od == nullptr) {
+			continue;
+		}
 		std::unique_ptr<char[]> env_override_file {Util::path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
 		log_debug (LOG_DEFAULT, "%s", env_override_file.get ());
 		if (Util::file_exists (env_override_file.get ())) {

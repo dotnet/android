@@ -1405,6 +1405,7 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	set_environment_variable_for_directory ("HOME", home);
 	create_xdg_directories_and_environment (home);
 	AndroidSystem::set_primary_override_dir (home);
+	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 
 	AndroidSystem::setup_environment ();
 
@@ -1412,7 +1413,6 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
 
 	Logger::init_reference_logging (AndroidSystem::get_primary_override_dir ());
-	AndroidSystem::create_update_dir (AndroidSystem::get_primary_override_dir ());
 
 #if DEBUG
 	setup_gc_logging ();
