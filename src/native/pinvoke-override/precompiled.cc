@@ -24,7 +24,7 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 		if (entry == nullptr) [[unlikely]] {
 			log_fatal (LOG_ASSEMBLY, "Internal p/invoke symbol '%s @ %s' (hash: 0x%zx) not found in compile-time map.", library_name, entrypoint_name, entrypoint_hash);
 			log_fatal (LOG_ASSEMBLY, "compile-time map contents:");
-			for (size_t i = 0; i < internal_pinvokes_count; i++) {
+			for (size_t i = 0uz; i < internal_pinvokes_count; i++) {
 				PinvokeEntry const& e = internal_pinvokes[i];
 				log_fatal (LOG_ASSEMBLY, "\t'%s'=%p (hash: 0x%zx)", e.name, e.func, e.hash);
 			}

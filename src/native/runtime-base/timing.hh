@@ -76,7 +76,7 @@ namespace xamarin::android
 		static constexpr char MESSAGE_FORMAT[] = "%s" TIMING_FORMAT;
 
 	public:
-		static constexpr size_t DEFAULT_POOL_SIZE = 16;
+		static constexpr size_t DEFAULT_POOL_SIZE = 16uz;
 
 	public:
 		explicit Timing (size_t initial_pool_size = DEFAULT_POOL_SIZE) noexcept
@@ -109,7 +109,7 @@ namespace xamarin::android
 			lock_guard<xamarin::android::mutex> lock (sequence_lock);
 
 			managed_timing_sequence *ret;
-			for (size_t i = 0; i < sequence_pool_size; i++) {
+			for (size_t i = 0uz; i < sequence_pool_size; i++) {
 				if (sequence_pool[i].in_use) {
 					continue;
 				}

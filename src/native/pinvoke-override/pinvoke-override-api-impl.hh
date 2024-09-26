@@ -105,8 +105,8 @@ namespace xamarin::android {
 	PinvokeEntry*
 	PinvokeOverride::find_pinvoke_address (hash_t hash, const PinvokeEntry *entries, size_t entry_count) noexcept
 	{
-		while (entry_count > 0) {
-			const size_t mid = entry_count / 2;
+		while (entry_count > 0uz) {
+			const size_t mid = entry_count / 2uz;
 			const PinvokeEntry *const ret = entries + mid;
 			const std::strong_ordering result = hash <=> ret->hash;
 
@@ -114,7 +114,7 @@ namespace xamarin::android {
 				entry_count = mid;
 			} else if (result > 0) {
 				entries = ret + 1;
-				entry_count -= mid + 1;
+				entry_count -= mid + 1uz;
 			} else {
 				return const_cast<PinvokeEntry*>(ret);
 			}

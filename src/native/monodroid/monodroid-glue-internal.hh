@@ -108,7 +108,7 @@ namespace xamarin::android::internal
 
 	private:
 		static constexpr std::string_view base_apk_name { "/base.apk" };
-		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50;
+		static constexpr size_t SMALL_STRING_PARSE_BUFFER_LEN = 50uz;
 		static constexpr bool is_running_on_desktop = false;
 
 	public:
