@@ -83,6 +83,7 @@
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
       <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
       <AndroidMSIVersion>$(AndroidPackVersion).$(PackVersionCommitCount)</AndroidMSIVersion>
+      <IsStableBuild Condition=" '$(AndroidPackVersionSuffix)' == 'rtm' and $(XAVersionBranch.StartsWith('release/')) ">true</IsStableBuild>
     </PropertyGroup>
   </Target>
 </Project>
