@@ -1461,7 +1461,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
-    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == 'false' " />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
   </ItemGroup>
 </Target>
 
