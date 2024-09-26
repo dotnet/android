@@ -53,16 +53,6 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
-	static Config EnsureConfig (IBuildEngine4 buildEngine)
-	{
-		var config = buildEngine.GetRegisteredTaskObjectAssemblyLocal<Config> (RegisteredConfigKey, RegisteredTaskObjectLifetime.Build);
-		if (config == null) {
-			throw new InvalidOperationException ("Internal error: no registered config found");
-		}
-
-		return config;
-	}
-
 	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config)
 	{
 		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
@@ -72,10 +62,11 @@ class DSOWrapperGenerator
 	/// Puts the indicated file (<paramref name="payloadFilePath"/>) inside an ELF shared library and returns
 	/// path to the wrapped file.
 	/// </summary>
-	public static string WrapIt (AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, IBuildEngine4 buildEngine, TaskLoggingHelper log)
+	public static string WrapIt (AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, BuildApk task)
 	{
+		TaskLoggingHelper log = task.Log;
 		log.LogDebugMessage ($"[{targetArch}] Putting '{payloadFilePath}' inside ELF shared library '{outputFileName}'");
-		Config config = EnsureConfig (buildEngine);
+		Config config = task.EnsureConfig ();
 		string outputDir = GetArchOutputPath (targetArch, config);
 		Directory.CreateDirectory (outputDir);
 
@@ -116,9 +107,9 @@ class DSOWrapperGenerator
 	/// created by this class.  The reason to do so is to ensure that we don't package any "stale" content and those
 	/// wrapper files aren't part of any dependency chain so it's hard to check their up to date state.
 	/// </summary>
-	public static void CleanUp (IBuildEngine4 buildEngine, TaskLoggingHelper log)
+	public static void CleanUp (BuildApk task)
 	{
-		Config config = EnsureConfig (buildEngine);
+		Config config = task.EnsureConfig();
 
 		foreach (var kvp in config.DSOStubPaths) {
 			string outputDir = GetArchOutputPath (kvp.Key, config);

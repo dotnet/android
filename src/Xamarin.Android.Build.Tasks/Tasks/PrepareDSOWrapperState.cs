@@ -47,7 +47,7 @@ public class PrepareDSOWrapperState : AndroidTask
 		}
 
 		var config = new DSOWrapperGenerator.Config (stubPaths, AndroidBinUtilsDirectory, BaseOutputDirectory);
-		BuildEngine4.RegisterTaskObjectAssemblyLocal (DSOWrapperGenerator.RegisteredConfigKey, config, RegisteredTaskObjectLifetime.Build);
+		BuildEngine4.RegisterTaskObjectAssemblyLocal (ProjectSpecificTaskObjectKey (DSOWrapperGenerator.RegisteredConfigKey), config, RegisteredTaskObjectLifetime.Build);
 
 		return !Log.HasLoggedErrors;
 	}
