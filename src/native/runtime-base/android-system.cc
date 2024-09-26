@@ -552,6 +552,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 		log_warn (LOG_DEFAULT, "Malformed header of the environment override file %s: value width has invalid format", path);
 		return;
 	}
+	log_debug(LOG_DEFAULT, "name_width: %d value_width: %d", name_width, value_width);
 
 	uint64_t data_width = name_width + value_width;
 	if (data_width > file_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE || (file_size - OVERRIDE_ENVIRONMENT_FILE_HEADER_SIZE) % data_width != 0) {
