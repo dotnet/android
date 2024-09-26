@@ -105,7 +105,7 @@ namespace xamarin::android
 		char_array<total_length + 1> ret; // lgtm [cpp/paddingbyteinformationdisclosure] the buffer is filled in the loop below
 		ret[total_length] = 0;
 
-		size_t i = 0;
+		size_t i = 0uz;
 		for (char const* from : {parts...}) {
 			for (; *from != '\0'; i++) {
 				ret[i] = *from++;

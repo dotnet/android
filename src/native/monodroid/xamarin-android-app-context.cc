@@ -16,7 +16,7 @@ MonodroidRuntime::get_method_name (uint32_t mono_image_index, uint32_t method_to
 	uint64_t id = (static_cast<uint64_t>(mono_image_index) << 32) | method_token;
 
 	log_debug (LOG_ASSEMBLY, "MM: looking for name of method with id 0x%llx, in mono image at index %u", id, mono_image_index);
-	size_t i = 0;
+	size_t i = 0uz;
 	while (mm_method_names[i].id != 0) {
 		if (mm_method_names[i].id == id) {
 			return mm_method_names[i].name;

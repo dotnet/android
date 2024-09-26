@@ -16,11 +16,11 @@ namespace xamarin::android::internal {
 			static_assert (equal != nullptr, "equal is a required template parameter");
 			static_assert (less_than != nullptr, "less_than is a required template parameter");
 
-			ssize_t left = -1;
+			ssize_t left = -1z;
 			ssize_t right = static_cast<ssize_t>(n);
 
 			while (right - left > 1) {
-				ssize_t middle = (left + right) >> 1;
+				ssize_t middle = (left + right) >> 1u;
 				if (less_than (arr[middle], key)) {
 					left = middle;
 				} else {
@@ -28,7 +28,7 @@ namespace xamarin::android::internal {
 				}
 			}
 
-			return equal (arr[right], key) ? right : -1;
+			return equal (arr[right], key) ? right : -1z;
 		}
 
 		force_inline static ssize_t binary_search (hash_t key, const hash_t *arr, size_t n) noexcept

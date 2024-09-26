@@ -43,16 +43,16 @@ const char* xa_get_native_backtrace () noexcept
 	unw_context_t          uc;
 	unw_word_t             ip;
 	unw_word_t             offp;
-	std::array<char, 512>  name_buf;
-	std::array<char, 32>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
-									// additions (sign, padding, punctuation etc)
+	std::array<char, 512uz>  name_buf;
+	std::array<char, 32uz>   num_buf; // Enough for text representation of a decimal 64-bit integer + some possible
+	                                  // additions (sign, padding, punctuation etc)
 	const char            *symbol_name;
 	Dl_info                info;
 
 	unw_getcontext (&uc);
 	unw_init_local (&cursor, &uc);
 
-	size_t frame_counter = 0;
+	size_t frame_counter = 0uz;
 
 	std::string trace;
 	while (unw_step (&cursor) > 0) {

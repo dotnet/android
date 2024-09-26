@@ -533,7 +533,7 @@ parse_netlink_reply (netlink_session *session, struct _monodroid_ifaddrs **ifadd
 
 	size_t alloc_size = Helpers::multiply_with_overflow_check<size_t> (sizeof(*response), buf_size);
 	response = (unsigned char*)malloc (alloc_size);
-	ssize_t length = 0;
+	ssize_t length = 0z;
 	if (!response) {
 		goto cleanup;
 	}
@@ -838,7 +838,7 @@ calculate_address_netmask (struct _monodroid_ifaddrs *ifa, struct ifaddrmsg *net
 static struct _monodroid_ifaddrs *
 get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **ifaddrs_head)
 {
-	ssize_t length = 0;
+	ssize_t length = 0z;
 	struct rtattr *attribute;
 	struct ifaddrmsg *net_address;
 	struct _monodroid_ifaddrs *ifa = NULL;
@@ -870,7 +870,7 @@ get_link_address (const struct nlmsghdr *message, struct _monodroid_ifaddrs **if
 
 		switch (attribute->rta_type) {
 			case IFA_LABEL: {
-				size_t room_for_trailing_null = 0;
+				size_t room_for_trailing_null = 0uz;
 
 				log_debug (LOG_NETLINK, "     attribute type: LABEL");
 				if (payload_size > MAX_IFA_LABEL_SIZE) {
