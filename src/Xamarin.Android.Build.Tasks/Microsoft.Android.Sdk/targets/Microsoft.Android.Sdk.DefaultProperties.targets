@@ -123,6 +123,7 @@
     <VerifyDependencyInjectionOpenGenericServiceTrimmability Condition="'$(VerifyDependencyInjectionOpenGenericServiceTrimmability)' == '' and '$(PublishTrimmed)' == 'true'">false</VerifyDependencyInjectionOpenGenericServiceTrimmability>
     <VerifyDependencyInjectionOpenGenericServiceTrimmability Condition="'$(VerifyDependencyInjectionOpenGenericServiceTrimmability)' == ''">true</VerifyDependencyInjectionOpenGenericServiceTrimmability>
     <EnableSingleFileAnalyzer Condition="'$(EnableSingleFileAnalyzer)' == ''">true</EnableSingleFileAnalyzer>
+    <EnableTrimAnalyzer Condition="'$(EnableTrimAnalyzer)' == '' and '$(TrimMode)' == 'full'">true</EnableTrimAnalyzer>
 
     <!-- XA feature switches defaults -->
     <VSAndroidDesigner Condition="'$(VSAndroidDesigner)' == ''">false</VSAndroidDesigner>

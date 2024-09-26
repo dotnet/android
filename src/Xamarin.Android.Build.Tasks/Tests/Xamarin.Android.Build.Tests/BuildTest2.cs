@@ -269,7 +269,7 @@ namespace Xamarin.Android.Build.Tests
 		[TestCase ("", new string [0], false)]
 		[TestCase ("", new string [0], true)]
 		[TestCase ("SuppressTrimAnalysisWarnings=false", new string [] { "IL2055" }, true, 2)]
-		[TestCase ("TrimMode=full", new string [0], false)]
+		[TestCase ("TrimMode=full", new string [] { "IL2055" }, false, 1)]
 		[TestCase ("TrimMode=full", new string [] { "IL2055" }, true, 2)]
 		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, false)]
 		[TestCase ("IsAotCompatible=true", new string [] { "IL2055", "IL3050" }, true, 3)]
