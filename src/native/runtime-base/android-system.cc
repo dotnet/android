@@ -578,6 +578,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 void
 AndroidSystem::setup_environment () noexcept
 {
+	log_info (LOG_DEFAULT, "DEBUGG!!! setup_environment");
 	if (is_mono_aot_enabled () && *mono_aot_mode_name != '\0') {
 		switch (mono_aot_mode_name [0]) {
 			case 'n':
@@ -620,6 +621,7 @@ AndroidSystem::setup_environment () noexcept
 		return;
 	}
 
+	log_info (LOG_DEFAULT, "DEBUGG!!! for loop");
 	const char *var_name;
 	const char *var_value;
 	for (size_t i = 0; i < application_config.environment_variable_count; i += 2) {
@@ -637,6 +639,7 @@ AndroidSystem::setup_environment () noexcept
 		if (setenv (var_name, var_value, 1) < 0)
 			log_warn (LOG_DEFAULT, "Failed to set environment variable: %s", strerror (errno));
 	}
+	log_info (LOG_DEFAULT, "DEBUGG!!! Loading");
 #if defined (DEBUG)
 	log_info (LOG_DEFAULT, "Loading environment from  override directories.");
 	for (const char *od : override_dirs) {
