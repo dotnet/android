@@ -1401,12 +1401,12 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 	jstring_wrapper jstr (env, lang);
 	set_environment_variable ("LANG", jstr);
 
-	AndroidSystem::setup_environment ();
-
 	set_environment_variable_for_directory ("TMPDIR", applicationDirs[SharedConstants::APP_DIRS_CACHE_DIR_INDEX]);
 	set_environment_variable_for_directory ("HOME", home);
 	create_xdg_directories_and_environment (home);
 	AndroidSystem::set_primary_override_dir (home);
+
+	AndroidSystem::setup_environment ();
 
 	jstring_array_wrapper runtimeApks (env, runtimeApksJava);
 	AndroidSystem::setup_app_library_directories (runtimeApks, applicationDirs, haveSplitApks);
