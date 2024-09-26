@@ -1462,6 +1462,7 @@ because xbuild doesn't support framework reference assemblies.
     <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
     <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
     <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
   </ItemGroup>
 </Target>
 
@@ -1517,7 +1518,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkingEnabled="$(_LinkingEnabled)"
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
+      Environments="@(_EnvironmentFiles)">
   </GenerateJavaStubs>
 
   <ItemGroup>
@@ -1726,7 +1727,7 @@ because xbuild doesn't support framework reference assemblies.
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
     TargetFrameworkVersion="$(TargetFrameworkVersion)"
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+    Environments="@(_EnvironmentFiles)"
     AndroidAotMode="$(AndroidAotMode)"
     AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
     EnableLLVM="$(EnableLLVM)"
