@@ -19,11 +19,11 @@ This file contains MSBuild targets that support building and operating on Androi
 
   <ItemDefinitionGroup>
     <AndroidGradleProject>
-      <Bind></Bind>
+      <Bind>true</Bind>
       <Configuration>Release</Configuration>
       <ModuleName></ModuleName>
       <OutputPath></OutputPath>
-      <Pack></Pack>
+      <Pack>true</Pack>
       <CreateAndroidLibrary>true</CreateAndroidLibrary>
       <Visible></Visible>
     </AndroidGradleProject>
