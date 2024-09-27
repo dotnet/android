@@ -186,8 +186,6 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
-    <_MSBuildFiles Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.pdb" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />
