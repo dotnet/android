@@ -121,6 +121,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "create-android-api", "build
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Xamarin.Android.Tools.Aidl-Tests", "tests\Xamarin.Android.Tools.Aidl-Tests\Xamarin.Android.Tools.Aidl-Tests.csproj", "{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{FFCF518F-2A4A-40A2-9174-2EE13B76C723}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Microsoft.Android.Sdk.Analysis", "src\Microsoft.Android.Sdk.Analysis\Microsoft.Android.Sdk.Analysis.csproj", "{5E806C9F-1B67-4B6B-A6AB-258834250DBB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|AnyCPU = Debug|AnyCPU
@@ -335,6 +339,10 @@ Global
 		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Debug|AnyCPU.Build.0 = Debug|Any CPU
 		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Release|AnyCPU.ActiveCfg = Release|Any CPU
 		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708}.Release|AnyCPU.Build.0 = Release|Any CPU
+		{5E806C9F-1B67-4B6B-A6AB-258834250DBB}.Debug|AnyCPU.ActiveCfg = Debug|Any CPU
+		{5E806C9F-1B67-4B6B-A6AB-258834250DBB}.Debug|AnyCPU.Build.0 = Debug|Any CPU
+		{5E806C9F-1B67-4B6B-A6AB-258834250DBB}.Release|AnyCPU.ActiveCfg = Release|Any CPU
+		{5E806C9F-1B67-4B6B-A6AB-258834250DBB}.Release|AnyCPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -393,6 +401,7 @@ Global
 		{C0E44558-FEE3-4DD3-986A-3F46DD1BF41B} = {04E3E11E-B47D-4599-8AFC-50515A95E715}
 		{BA4D889D-066B-4C2C-A973-09E319CBC396} = {E351F97D-EA4F-4E7F-AAA0-8EBB1F2A4A62}
 		{A39B6D7C-6616-40D6-8AE4-C6CEE93D2708} = {CAB438D8-B0F5-4AF0-BEBD-9E2ADBD7B483}
+		{5E806C9F-1B67-4B6B-A6AB-258834250DBB} = {FFCF518F-2A4A-40A2-9174-2EE13B76C723}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {53A1F287-EFB2-4D97-A4BB-4A5E145613F6}
