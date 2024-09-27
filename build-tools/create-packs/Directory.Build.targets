@@ -28,7 +28,7 @@
         Files="@(_PackageFiles)"
         FileClassifications="@(FrameworkListFileClass)"
         TargetFile="$(FrameworkListFile)"
-        TargetFilePrefixes="ref;runtimes"
+        TargetFilePrefixes="ref;runtimes;analyzers"
         RootAttributes="@(FrameworkListRootAttributes)"
     />
     <ItemGroup>

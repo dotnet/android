@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <_FrameworkListInputs  Include="$(MicrosoftAndroidRefPackDir)**" />
+    <_FrameworkListInputs  Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
     <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidDefaultTargetDotnetApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
     <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidLatestStableApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
     <_FrameworkListOutputs Include="$(BuildOutputDirectory)lib\packs\Microsoft.Android.Ref.$(AndroidLatestUnstableApiLevel)\$(AndroidPackVersion)\data\FrameworkList.xml" />
