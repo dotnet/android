@@ -1073,7 +1073,7 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
 {0} - A Maven artifact specification</comment>
   </data>
   <data name="XA0142" xml:space="preserve">
-    <value>Command '{0}' failed.\n{1}</value>
+    <value>Comando '{0}' non riuscito.\n{1}</value>
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
