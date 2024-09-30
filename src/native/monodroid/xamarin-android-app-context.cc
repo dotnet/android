@@ -58,7 +58,7 @@ MonodroidRuntime::get_function_pointer (uint32_t mono_image_index, uint32_t clas
 	}
 
 	// We need to do that, as Mono APIs cannot be invoked from threads that aren't attached to the runtime.
-	mono_thread_attach (mono_get_root_domain ());
+	mono_jit_thread_attach (mono_get_root_domain ());
 
 	MonoImage *image = MonoImageLoader::get_from_index (mono_image_index);
 	MarshalMethodsManagedClass &klass = marshal_methods_class_cache[class_index];
