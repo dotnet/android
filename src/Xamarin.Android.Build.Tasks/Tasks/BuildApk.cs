@@ -371,9 +371,18 @@ namespace Xamarin.Android.Tasks
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
 
 			Log.LogDebugTaskItems ("  [Output] OutputFiles :", OutputFiles);
-			DSOWrapperGenerator.CleanUp (BuildEngine4, Log);
+			DSOWrapperGenerator.CleanUp (this);
 
 			return !Log.HasLoggedErrors;
+		}
+
+		internal DSOWrapperGenerator.Config EnsureConfig ()
+		{
+			var config = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<DSOWrapperGenerator.Config> (ProjectSpecificTaskObjectKey (DSOWrapperGenerator.RegisteredConfigKey), RegisteredTaskObjectLifetime.Build);
+			if (config is null) {
+				throw new InvalidOperationException ("Internal error: no registered config found");
+			}
+			return config;
 		}
 
 		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)
@@ -405,7 +414,7 @@ namespace Xamarin.Android.Tasks
 					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 					// like since we can finish scanning the zip central directory earlier at startup.
 					string inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
-					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath), BuildEngine4, Log);
+					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath), this);
 					AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
 				}
 			}
@@ -450,7 +459,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), BuildEngine4, Log);
+				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), this);
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
@@ -495,7 +504,7 @@ namespace Xamarin.Android.Tasks
 					if (UseAssemblyStore) {
 						storeAssemblyInfo = new AssemblyStoreAssemblyInfo (sourcePath, assembly);
 					} else {
-						string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), BuildEngine4, Log);
+						string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), this);
 						AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
 					}
 
@@ -523,7 +532,7 @@ namespace Xamarin.Android.Tasks
 								storeAssemblyInfo.SymbolsFile = new FileInfo (symbolsPath);
 							} else {
 								string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-								string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbolsPath, Path.GetFileName (archiveSymbolsPath), BuildEngine4, Log);
+								string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbolsPath, Path.GetFileName (archiveSymbolsPath), this);
 								AddFileToArchiveIfNewer (
 									apk,
 									wrappedSymbolsPath,
@@ -628,7 +637,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Log.LogDebugMessage ($"Adding {configFile} as the archive file is out of date.");
-			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (arch, configFile, Path.GetFileName (inArchivePath), BuildEngine4, Log);
+			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (arch, configFile, Path.GetFileName (inArchivePath), this);
 			apk.AddFileAndFlush (wrappedConfigFile, inArchivePath, compressionMethod);
 		}
 
