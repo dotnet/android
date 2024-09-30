@@ -53,6 +53,31 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
+	public static Config GetConfig (TaskLoggingHelper log, ITaskItem[] nativeLibraries, string androidBinUtilsDirectory, string baseOutputDirectory)
+	{
+		var stubPaths = new Dictionary<AndroidTargetArch, ITaskItem> ();
+
+		foreach (ITaskItem stubItem in nativeLibraries) {
+			if (Path.GetFileName (stubItem.ItemSpec) != "libarchive-dso-stub.so") {
+				continue;
+			}
+
+			string rid = stubItem.GetRequiredMetadata ("ArchiveDSOStub", "RuntimeIdentifier", log);
+			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (rid);
+			if (stubPaths.ContainsKey (arch)) {
+				throw new InvalidOperationException ($"Internal error: duplicate archive DSO stub architecture '{arch}' (RID: '{rid}')");
+			}
+
+			if (!File.Exists (stubItem.ItemSpec)) {
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubItem.ItemSpec}' does not exist");
+			}
+
+			stubPaths.Add (arch, stubItem);
+		}
+
+		return new Config (stubPaths, androidBinUtilsDirectory, baseOutputDirectory);
+	}
+
 	static string GetArchOutputPath (AndroidTargetArch targetArch, Config config)
 	{
 		return Path.Combine (config.BaseOutputDirectory, MonoAndroidHelper.ArchToRid (targetArch), "wrapped");
@@ -62,11 +87,9 @@ class DSOWrapperGenerator
 	/// Puts the indicated file (<paramref name="payloadFilePath"/>) inside an ELF shared library and returns
 	/// path to the wrapped file.
 	/// </summary>
-	public static string WrapIt (AndroidTargetArch targetArch, string payloadFilePath, string outputFileName, BuildApk task)
+	public static string WrapIt (TaskLoggingHelper log, Config config, AndroidTargetArch targetArch, string payloadFilePath, string outputFileName)
 	{
-		TaskLoggingHelper log = task.Log;
 		log.LogDebugMessage ($"[{targetArch}] Putting '{payloadFilePath}' inside ELF shared library '{outputFileName}'");
-		Config config = task.EnsureConfig ();
 		string outputDir = GetArchOutputPath (targetArch, config);
 		Directory.CreateDirectory (outputDir);
 
@@ -107,10 +130,8 @@ class DSOWrapperGenerator
 	/// created by this class.  The reason to do so is to ensure that we don't package any "stale" content and those
 	/// wrapper files aren't part of any dependency chain so it's hard to check their up to date state.
 	/// </summary>
-	public static void CleanUp (BuildApk task)
+	public static void CleanUp (Config config)
 	{
-		Config config = task.EnsureConfig();
-
 		foreach (var kvp in config.DSOStubPaths) {
 			string outputDir = GetArchOutputPath (kvp.Key, config);
 			if (!Directory.Exists (outputDir)) {

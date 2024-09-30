@@ -124,15 +124,15 @@ _ResolveAssemblies MSBuild target.
     </ItemGroup>
 
     <ItemGroup>
-      <_ResolvedArchiveDSOStub Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'libarchive-dso-stub.so' " />
+      <!-- <_ResolvedArchiveDSOStub Include="@(ResolvedFileToPublish)" Condition=" '%(ResolvedFileToPublish.Filename)%(ResolvedFileToPublish.Extension)' == 'libarchive-dso-stub.so' " /> -->
       <ResolvedFileToPublish Remove="@(_ResolvedArchiveDSOStub)" />
     </ItemGroup>
 
     <!-- This must run as early as possible, as soon as we have locations of the .so files and before any wrapping/packaging is done -->
-    <PrepareDSOWrapperState
-        ArchiveDSOStubs="@(_ResolvedArchiveDSOStub)"
-        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-        BaseOutputDirectory="$(IntermediateOutputPath)" />
+    <!-- <PrepareDSOWrapperState -->
+    <!--     ArchiveDSOStubs="@(_ResolvedArchiveDSOStub)" -->
+    <!--     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)" -->
+    <!--     BaseOutputDirectory="$(IntermediateOutputPath)" /> -->
 
     <!-- All assemblies must be per-RID, thus no `->Distinct()` on `InputAssemblies` or `ResolvedSymbols` items -->
     <ProcessAssemblies

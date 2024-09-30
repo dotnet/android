@@ -110,6 +110,12 @@ namespace Xamarin.Android.Tasks
 		public int ZipAlignmentPages { get; set; } = AndroidZipAlign.DefaultZipAlignment64Bit;
 
 		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
+
+		[Required]
+		public string IntermediateOutputPath { get; set; }
+
+		[Required]
 		public string ProjectFullPath { get; set; }
 
 		[Output]
@@ -141,7 +147,7 @@ namespace Xamarin.Android.Tasks
 
 		List<Regex> includePatterns = new List<Regex> ();
 
-		void ExecuteWithAbi (string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
+		void ExecuteWithAbi (DSOWrapperGenerator.Config dsoWrapperConfig, string [] supportedAbis, string apkInputPath, string apkOutputPath, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			ArchiveFileList files = new ArchiveFileList ();
 			bool refresh = true;
@@ -208,11 +214,11 @@ namespace Xamarin.Android.Tasks
 				}
 
 				if (EmbedAssemblies) {
-					AddAssemblies (apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
+					AddAssemblies (dsoWrapperConfig, apk, debug, compress, compressedAssembliesInfo, assemblyStoreApkName);
 					apk.Flush ();
 				}
 
-				AddRuntimeConfigBlob (apk);
+				AddRuntimeConfigBlob (dsoWrapperConfig, apk);
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
@@ -354,14 +360,15 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}
 
-			ExecuteWithAbi (SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
+			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, FrameworkNativeLibraries, AndroidBinUtilsDirectory, IntermediateOutputPath);
+			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
 				foreach (var abi in SupportedAbis) {
 					existingEntries.Clear ();
 					var path = Path.GetDirectoryName (ApkOutputPath);
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
-					ExecuteWithAbi (new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
+					ExecuteWithAbi (dsoWrapperConfig, new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
 						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
 					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
@@ -371,7 +378,7 @@ namespace Xamarin.Android.Tasks
 			OutputFiles = outputFiles.Select (a => new TaskItem (a)).ToArray ();
 
 			Log.LogDebugTaskItems ("  [Output] OutputFiles :", OutputFiles);
-			DSOWrapperGenerator.CleanUp (this);
+			DSOWrapperGenerator.CleanUp (dsoWrapperConfig);
 
 			return !Log.HasLoggedErrors;
 		}
@@ -403,7 +410,7 @@ namespace Xamarin.Android.Tasks
 			return new Regex (sb.ToString (), options);
 		}
 
-		void AddRuntimeConfigBlob (ZipArchiveEx apk)
+		void AddRuntimeConfigBlob (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk)
 		{
 			// We will place rc.bin in the `lib` directory next to the blob, to make startup slightly faster, as we will find the config file right after we encounter
 			// our assembly store.  Not only that, but also we'll be able to skip scanning the `base.apk` archive when split configs are enabled (which they are in 99%
@@ -414,13 +421,13 @@ namespace Xamarin.Android.Tasks
 					// Prefix it with `a` because bundletool sorts entries alphabetically, and this will place it right next to `assemblies.*.blob.so`, which is what we
 					// like since we can finish scanning the zip central directory earlier at startup.
 					string inArchivePath = MakeArchiveLibPath (abi, "libarc.bin.so");
-					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath), this);
+					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, MonoAndroidHelper.AbiToTargetArch (abi), RuntimeConfigBinFilePath, Path.GetFileName (inArchivePath));
 					AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, compressionMethod: GetCompressionMethod (inArchivePath));
 				}
 			}
 		}
 
-		void AddAssemblies (ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
+		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
@@ -455,7 +462,7 @@ namespace Xamarin.Android.Tasks
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), this);
+				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, kvp.Key, kvp.Value, Path.GetFileName (inArchivePath));
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
@@ -531,7 +538,7 @@ namespace Xamarin.Android.Tasks
 			return true;
 		}
 
-		void AddAssemblyConfigEntry (ZipArchiveEx apk, AndroidTargetArch arch, string assemblyPath, string configFile)
+		void AddAssemblyConfigEntry (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, AndroidTargetArch arch, string assemblyPath, string configFile)
 		{
 			string inArchivePath = MonoAndroidHelper.MakeDiscreteAssembliesEntryName (assemblyPath + Path.GetFileName (configFile));
 			existingEntries.Remove (inArchivePath);
@@ -547,7 +554,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			Log.LogDebugMessage ($"Adding {configFile} as the archive file is out of date.");
-			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (arch, configFile, Path.GetFileName (inArchivePath), this);
+			string wrappedConfigFile = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, configFile, Path.GetFileName (inArchivePath));
 			apk.AddFileAndFlush (wrappedConfigFile, inArchivePath, compressionMethod);
 		}
 
@@ -676,13 +683,15 @@ namespace Xamarin.Android.Tasks
 
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
-			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
-				Path = v.ItemSpec,
-				Link = v.GetMetadata ("Link"),
-				Abi = GetNativeLibraryAbi (v),
-				ArchiveFileName = GetArchiveFileName (v),
-				Item = v,
-			});
+			var frameworkLibs = FrameworkNativeLibraries
+				.Where (item => Path.GetFileName (item.ItemSpec) != "libarchive-dso-stub.so")
+				.Select (v => new LibInfo {
+					Path = v.ItemSpec,
+					Link = v.GetMetadata ("Link"),
+					Abi = GetNativeLibraryAbi (v),
+					ArchiveFileName = GetArchiveFileName (v),
+					Item = v,
+				});
 
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
