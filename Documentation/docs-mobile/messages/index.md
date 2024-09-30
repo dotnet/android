@@ -216,6 +216,7 @@ Either change the value in the AndroidManifest.xml to match the $(SupportedOSPla
 + [XA4312](xa4312.md): Referencing an Android Wear application project from an Android application project is deprecated.
 + [XA4313](xa4313.md): Framework assembly has been deprecated.
 + [XA4314](xa4314.md): `$(Property)` is empty. A value for `$(Property)` should be provided.
++ [XA4315](xa4315.md): Ignoring {file}. Manifest does not have the required 'package' attribute on the manifest element.
 
 ## XA5xxx: GCC and toolchain
 

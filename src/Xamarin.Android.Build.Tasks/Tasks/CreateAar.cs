@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Xamarin.Tools.Zip;
@@ -18,6 +19,8 @@ namespace Xamarin.Android.Tasks
 		public ITaskItem [] AndroidResources { get; set; }
 
 		public ITaskItem [] AndroidEnvironment { get; set; }
+
+		public ITaskItem AndroidManifest { get; set; }
 
 		public ITaskItem [] JarFiles { get; set; }
 
@@ -111,6 +114,15 @@ namespace Xamarin.Android.Tasks
 						sb.AppendLine (File.ReadAllText (file.ItemSpec));
 					}
 					aar.AddEntry ("proguard.txt", sb.ToString (), Files.UTF8withoutBOM);
+				}
+				if (AndroidManifest != null && File.Exists (AndroidManifest.ItemSpec)) {
+					var manifest = File.ReadAllText (AndroidManifest.ItemSpec);
+					var doc = XDocument.Parse(manifest);
+					if (!string.IsNullOrEmpty (doc.Element ("manifest")?.Attribute ("package")?.Value ?? string.Empty)) {
+						aar.AddEntry ("AndroidManifest.xml", manifest, Files.UTF8withoutBOM);
+					} else {
+						Log.LogDebugMessage ($"Skipping {AndroidManifest.ItemSpec}. The `manifest` does not have a `package` attribute.");
+					}
 				}
 				foreach (var entry in existingEntries) {
 					Log.LogDebugMessage ($"Removing {entry} as it is not longer required.");
