@@ -322,5 +322,86 @@ namespace Xamarin.Android.Build.Tests
 			StringAssertEx.Contains ($"'{invalidModuleName}' not found in root project '{TestName}'", builder.LastBuildOutput);
 		}
 
+		[Test]
+		public void BindFacebook ()
+		{
+			var moduleName = "Library";
+			var gradleModule = 	new AndroidGradleModule (Path.Combine (GradleTestProjectDir, moduleName));
+			gradleModule.PackageName = "com.microsoft.mauifacebook";
+			gradleModule.BuildGradleFileContent = $@"
+plugins {{
+    id(""com.android.library"")
+}}
+android {{
+    namespace = ""{gradleModule.PackageName}""
+    compileSdk = {XABuildConfig.AndroidDefaultTargetDotnetApiLevel}
+    defaultConfig {{
+        minSdk = 21
+    }}
+}}
+dependencies {{
+    implementation(""androidx.appcompat:appcompat:1.6.1"")
+    implementation(""com.google.android.material:material:1.11.0"")
+    implementation(""com.facebook.android:facebook-android-sdk:latest.release"")
+}}
+";
+			gradleModule.JavaSources.Add (new AndroidItem.AndroidJavaSource ("FacebookSdk.java") {
+				TextContent = () => $@"
+package com.microsoft.mauifacebook;
+import android.app.Activity;
+import android.app.Application;
+import android.util.Log;
+import com.facebook.LoggingBehavior;
+import com.facebook.appevents.AppEventsLogger;
+public class FacebookSdk {{
+    static AppEventsLogger _logger;
+    public static void initializeSDK(Activity activity, Boolean isDebug) {{
+        Application application = activity.getApplication();
+        com.facebook.FacebookSdk.sdkInitialize(application);
+        com.facebook.FacebookSdk.addLoggingBehavior(LoggingBehavior.APP_EVENTS);
+        AppEventsLogger.activateApp(application);
+        _logger = AppEventsLogger.newLogger(activity);
+    }}
+    public static void logEvent(String eventName) {{
+        _logger.logEvent(eventName);
+    }}
+}}
+",
+			});
+
+			var gradleProject = new AndroidGradleProject (GradleTestProjectDir) {
+				Modules = {
+					gradleModule,
+				},
+			};
+			gradleProject.Create ();
+
+			var proj = new XamarinAndroidBindingProject {
+				Jars = {
+					new BuildItem (KnownProperties.AndroidGradleProject, gradleProject.BuildFilePath) {
+						Metadata = {
+							{ "ModuleName", moduleName },
+						},
+					},
+				},
+				Sources = {
+					new BuildItem.Source ("Foo.cs") {
+						TextContent = () => @$"
+public class Foo {{
+	public void TestFacebook () {{
+		Facebook.FacebookSdk.InitializeSDK((Android.App.Activity)Android.App.Application.Context, Java.Lang.Boolean.True);
+		Facebook.FacebookSdk.LogEvent(""TestFacebook"");
+	}}
+}}"
+					},
+				},
+				MetadataXml = $@"<metadata><attr path=""/api/package[@name='{gradleModule.PackageName}']"" name=""managedName"">Facebook</attr></metadata>",
+			};
+
+			using var builder = CreateDllBuilder ();
+			Assert.IsTrue (builder.Build (proj), "Build should have succeeded.");
+			FileAssert.Exists (Path.Combine (Root, builder.ProjectDirectory, proj.OutputPath, $"{moduleName}-Release.aar"));
+		}
+
 	}
 }
