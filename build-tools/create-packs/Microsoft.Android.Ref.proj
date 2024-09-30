@@ -13,6 +13,7 @@ by projects that use the Microsoft.Android framework in .NET 6+.
     <PackageId>Microsoft.Android.Ref.$(AndroidApiLevel)</PackageId>
     <Description>Microsoft.Android reference assemblies for API $(AndroidApiLevel). Please do not reference directly.</Description>
     <_AndroidRefPackAssemblyPath>ref\$(DotNetTargetFramework)</_AndroidRefPackAssemblyPath>
+    <_AndroidRefPackAnalyzersPath>analyzers\dotnet\cs</_AndroidRefPackAnalyzersPath>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -36,11 +37,14 @@ by projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETDefaultOutDir)ref\Mono.Android.Runtime.dll" />
       <!-- Always include stable Mono.Android.Export.dll -->
       <_AndroidRefPackAssemblies Include="$(_MonoAndroidNETOutputRoot)$(AndroidLatestStableApiLevel)\ref\Mono.Android.Export.dll" />
+      <_AndroidRefPackAnalyzers Include="$(MicrosoftAndroidSdkAnalysisOutDir)Microsoft.Android.Sdk.Analysis.dll" />
       <FrameworkListFileClass Include="@(_AndroidRefPackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
+      <FrameworkListFileClass Include="@(_AndroidRefPackAnalyzers->'%(Filename)%(Extension)')" Profile="Android" />
     </ItemGroup>
 
     <ItemGroup>
       <_PackageFiles Include="@(_AndroidRefPackAssemblies)" PackagePath="$(_AndroidRefPackAssemblyPath)" TargetPath="$(_AndroidRefPackAssemblyPath)" />
+      <_PackageFiles Include="@(_AndroidRefPackAnalyzers)" PackagePath="$(_AndroidRefPackAnalyzersPath)" TargetPath="$(_AndroidRefPackAnalyzersPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETDefaultOutDir)Java.Interop.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETDefaultOutDir)Mono.Android.xml" PackagePath="$(_AndroidRefPackAssemblyPath)" />
       <_PackageFiles Include="$(_MonoAndroidNETDefaultOutDir)mono.android.jar" PackagePath="$(_AndroidRefPackAssemblyPath)" />
