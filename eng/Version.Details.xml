@@ -12,13 +12,13 @@
       <Uri>https://github.com/dotnet/runtime</Uri>
       <Sha>200d05e41fc2212ff8c98ed79ebe9043bfed58aa</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100.Transport" Version="9.0.0-rc.2.24455.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
+    <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100.Transport" Version="9.0.0-rc.2.24468.8" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
-      <Sha>6e079c23aee94577c17bae34522b52df0d646ca5</Sha>
+      <Sha>0b30e0253a0d7c47a99cecd51b0d5ff5c83ad1df</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24419.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24460.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>c667bfea9cdbc5b5493e49e7ddc8dd635a217891</Sha>
+      <Sha>1541df9c44ff8da964b2946e18655c2e37e4a198</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.143">
