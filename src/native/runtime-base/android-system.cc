@@ -612,9 +612,6 @@ AndroidSystem::setup_environment () noexcept
 		}
 	}
 
-	if (application_config.environment_variable_count == 0)
-		return;
-
 	if (application_config.environment_variable_count % 2 != 0) {
 		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries (%u)", application_config.environment_variable_count);
 		return;
@@ -638,10 +635,15 @@ AndroidSystem::setup_environment () noexcept
 			log_warn (LOG_DEFAULT, "Failed to set environment variable: %s", strerror (errno));
 	}
 #if defined (DEBUG)
-	// TODO: for debug read from file in the override directory named `environment`
+	log_debug (LOG_DEFAULT, "Loading environment from  override directories.");
 	for (const char *od : override_dirs) {
+		if (od == nullptr) {
+			continue;
+		}
 		std::unique_ptr<char[]> env_override_file {Util::path_combine (od, OVERRIDE_ENVIRONMENT_FILE_NAME.data ())};
+		log_debug (LOG_DEFAULT, "%s", env_override_file.get ());
 		if (Util::file_exists (env_override_file.get ())) {
+			log_debug (LOG_DEFAULT, "Loading %s", env_override_file.get ());
 			setup_environment_from_override_file (env_override_file.get ());
 		}
 	}

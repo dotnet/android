@@ -161,7 +161,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' And '$(Optimize)' != 'True' And '$(_XASupportsFastDev)' == 'True' ">False</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(_XASupportsFastDev)' == 'False' ">True</EmbedAssembliesIntoApk>
 	<EmbedAssembliesIntoApk Condition=" '$(EmbedAssembliesIntoApk)' == '' ">True</EmbedAssembliesIntoApk>
-	<AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
+  <AndroidPreferNativeLibrariesWithDebugSymbols Condition=" '$(AndroidPreferNativeLibrariesWithDebugSymbols)' == '' ">False</AndroidPreferNativeLibrariesWithDebugSymbols>
 	<AndroidSkipJavacVersionCheck Condition="'$(AndroidSkipJavacVersionCheck)' == ''">False</AndroidSkipJavacVersionCheck>
 	<AndroidBuildApplicationPackage Condition=" '$(AndroidBuildApplicationPackage)' == ''">False</AndroidBuildApplicationPackage>
 	<AndroidGenerateLayoutBindings Condition=" '$(AndroidGenerateLayoutBindings)' == '' ">False</AndroidGenerateLayoutBindings>
@@ -289,6 +289,10 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_NativeAssemblySourceDir>$(IntermediateOutputPath)android\</_NativeAssemblySourceDir>
 	<_AndroidUseNewTypemaps>True</_AndroidUseNewTypemaps>
 	<_SkipJniAddNativeMethodRegistrationAttributeScan Condition=" '$(_SkipJniAddNativeMethodRegistrationAttributeScan)' == '' ">False</_SkipJniAddNativeMethodRegistrationAttributeScan>
+
+	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
+	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
+	
 </PropertyGroup>
 
 <Choose>
@@ -1447,12 +1451,25 @@ because xbuild doesn't support framework reference assemblies.
     _PrepareAssemblies;
     _PrepareNativeAssemblySources;
     $(_AfterPrepareAssemblies);
+    _GetGenerateJavaStubsInputs;
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
 
+<Target Name="_GetGenerateJavaStubsInputs">
+  <ItemGroup>
+    <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
+    <_GenerateJavaStubsInputs Include="$(_ResolvedUserAssembliesHashFile)" />
+    <_GenerateJavaStubsInputs Include="@(_ResolvedUserMonoAndroidAssemblies)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidManifestAbs)" />
+    <_GenerateJavaStubsInputs Include="$(_AndroidBuildPropertiesCache)" />
+    <_GenerateJavaStubsInputs Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+    <_EnvironmentFiles Include="@(AndroidEnvironment);@(LibraryEnvironments)" Condition=" '$(_AndroidFastDeployEnvironmentFiles)' != 'true' " />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GenerateJavaStubs"
     DependsOnTargets="$(_GenerateJavaStubsDependsOnTargets);$(BeforeGenerateAndroidManifest)"
-    Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidManifestAbs);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+    Inputs="@(_GenerateJavaStubsInputs)"
     Outputs="$(_AndroidStampDirectory)_GenerateJavaStubs.stamp">
 
   <PropertyGroup>
@@ -1502,7 +1519,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkingEnabled="$(_LinkingEnabled)"
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      Environments="@(AndroidEnvironment);@(LibraryEnvironments)">
+      Environments="@(_EnvironmentFiles)">
   </GenerateJavaStubs>
 
   <ItemGroup>
@@ -1685,12 +1702,19 @@ because xbuild doesn't support framework reference assemblies.
     _GenerateAndroidRemapNativeCode;
     _GenerateEmptyAndroidRemapNativeCode;
     _IncludeNativeSystemLibraries;
+    _GetGeneratePackageManagerJavaInputs;
   </_GeneratePackageManagerJavaDependsOn>
 </PropertyGroup>
 
+<Target Name="_GetGeneratePackageManagerJavaInputs">
+  <ItemGroup>
+    <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+  </ItemGroup>
+</Target>
+
 <Target Name="_GeneratePackageManagerJava"
   DependsOnTargets="$(_GeneratePackageManagerJavaDependsOn)"
-  Inputs="@(_AndroidMSBuildAllProjects);$(_ResolvedUserAssembliesHashFile);@(_ResolvedUserMonoAndroidAssemblies);$(_AndroidBuildPropertiesCache);@(AndroidEnvironment);@(LibraryEnvironments)"
+  Inputs="@(_GeneratePackageManagerJavaInputs)"
   Outputs="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp">
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
@@ -1704,7 +1728,7 @@ because xbuild doesn't support framework reference assemblies.
     EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
     TargetFrameworkVersion="$(TargetFrameworkVersion)"
     Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
-    Environments="@(AndroidEnvironment);@(LibraryEnvironments)"
+    Environments="@(_EnvironmentFiles)"
     AndroidAotMode="$(AndroidAotMode)"
     AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
     EnableLLVM="$(EnableLLVM)"
