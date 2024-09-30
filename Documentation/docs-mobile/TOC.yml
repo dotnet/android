@@ -184,6 +184,10 @@
         href: messages/xa0139.md
       - name: XA0140
         href: messages/xa0140.md
+      - name: XA0141
+        href: messages/xa0141.md
+      - name: XA0142
+        href: messages/xa0142.md
     - name: "XA1xxx: Project related"
       items:
       - name: "XA1xxx: Project related"

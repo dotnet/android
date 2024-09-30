@@ -64,8 +64,57 @@ namespace Xamarin.Android.Build.Tests
 				ret = ReadZipEntry (path, arch, uncompressIfNecessary);
 			}
 
-			ret?.Seek (0, SeekOrigin.Begin);
-			return ret;
+			if (ret == null) {
+				return null;
+			}
+
+			ret.Flush ();
+			ret.Seek (0, SeekOrigin.Begin);
+			(ulong elfPayloadOffset, ulong elfPayloadSize, ELFPayloadError error) = Xamarin.Android.AssemblyStore.Utils.FindELFPayloadSectionOffsetAndSize (ret);
+
+			if (error != ELFPayloadError.None) {
+				string message = error switch {
+					ELFPayloadError.NotELF           => $"Entry '{path}' is not a valid ELF binary",
+					ELFPayloadError.LoadFailed       => $"Entry '{path}' could not be loaded",
+					ELFPayloadError.NotSharedLibrary => $"Entry '{path}' is not a shared ELF library",
+					ELFPayloadError.NotLittleEndian  => $"Entry '{path}' is not a little-endian ELF image",
+					ELFPayloadError.NoPayloadSection => $"Entry '{path}' does not contain the 'payload' section",
+					_                                => $"Unknown ELF payload section error for entry '{path}': {error}"
+				};
+				Console.WriteLine (message);
+			} else {
+				Console.WriteLine ($"Extracted content from ELF image '{path}'");
+			}
+
+			if (elfPayloadOffset == 0) {
+				ret.Seek (0, SeekOrigin.Begin);
+				return ret;
+			}
+
+			// Make a copy of JUST the payload section, so that it contains only the data the tests expect and support
+			var payload = new MemoryStream ();
+			var data = buffers.Rent (16384);
+			int toRead = data.Length;
+			int nRead = 0;
+			ulong remaining = elfPayloadSize;
+
+			ret.Seek ((long)elfPayloadOffset, SeekOrigin.Begin);
+			while (remaining > 0 && (nRead = ret.Read (data, 0, toRead)) > 0) {
+				payload.Write (data, 0, nRead);
+				remaining -= (ulong)nRead;
+
+				if (remaining < (ulong)data.Length) {
+					// Make sure the last chunk doesn't gobble in more than we need
+					toRead = (int)remaining;
+				}
+			}
+			buffers.Return (data);
+
+			payload.Flush ();
+			ret.Dispose ();
+
+			payload.Seek (0, SeekOrigin.Begin);
+			return payload;
 		}
 
 		Stream? ReadZipEntry (string path, AndroidTargetArch arch, bool uncompressIfNecessary)
