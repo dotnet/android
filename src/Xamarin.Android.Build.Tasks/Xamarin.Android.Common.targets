@@ -292,7 +292,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
-	
+
 </PropertyGroup>
 
 <Choose>
@@ -2108,7 +2108,9 @@ because xbuild doesn't support framework reference assemblies.
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     ZipAlignmentPages="$(AndroidZipAlignment)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    UseAssemblyStore="$(AndroidUseAssemblyStore)"
+    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+    IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2146,7 +2148,9 @@ because xbuild doesn't support framework reference assemblies.
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
