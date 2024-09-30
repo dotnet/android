@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Xml.Linq;
 using Microsoft.Android.Build.Tasks;
 using Mono.Cecil;
 using NUnit.Framework;
@@ -75,11 +76,19 @@ namespace Xamarin.Android.Build.Tests
 			libC.OtherBuildItems.Add (new AndroidItem.AndroidAsset ("Assets\\bar\\bar.txt") {
 				BinaryContent = () => Array.Empty<byte> (),
 			});
+			libC.OtherBuildItems.Add (new BuildItem ("None", "AndroidManifest.xml") {
+				TextContent = () => @"<?xml version='1.0' encoding='utf-8'?>
+<manifest xmlns:android='http://schemas.android.com/apk/res/android' package='com.microsoft.libc'>
+  <queries>
+    <package android:name='com.companyname.someappid' />
+  </queries>
+</manifest>",
+			});
 			libC.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
 			var activity = libC.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
 				libC.Sources.Remove (activity);
-			var libCBuilder = CreateDllBuilder (Path.Combine ("temp", libC.ProjectName));
+			var libCBuilder = CreateDllBuilder (Path.Combine (path, libC.ProjectName));
 			Assert.IsTrue (libCBuilder.Build (libC), $"{libC.ProjectName} should succeed");
 
 			var aarPath = Path.Combine (Root, libCBuilder.ProjectDirectory, libC.OutputPath, $"{libC.ProjectName}.aar");
@@ -87,6 +96,7 @@ namespace Xamarin.Android.Build.Tests
 			using (var aar = ZipHelper.OpenZip (aarPath)) {
 				aar.AssertContainsEntry (aarPath, "assets/bar/bar.txt");
 				aar.AssertEntryEquals (aarPath, "proguard.txt", "# LibraryC");
+				aar.AssertContainsEntry (aarPath, "AndroidManifest.xml");
 			}
 
 			var libB = new XamarinAndroidLibraryProject {
@@ -161,7 +171,7 @@ namespace Xamarin.Android.Build.Tests
 			activity = libB.Sources.FirstOrDefault (s => s.Include () == "MainActivity.cs");
 			if (activity != null)
 				libB.Sources.Remove (activity);
-			var libBBuilder = CreateDllBuilder (Path.Combine ("temp", libB.ProjectName));
+			var libBBuilder = CreateDllBuilder (Path.Combine (path, libB.ProjectName));
 			Assert.IsTrue (libBBuilder.Build (libB), $"{libB.ProjectName} should succeed");
 
 			var projectJarHash = Files.HashString (Path.Combine (libB.IntermediateOutputPath,
@@ -211,7 +221,7 @@ namespace Xamarin.Android.Build.Tests
 				appA.OtherBuildItems.Add (new AndroidItem.AndroidLibrary (aarPath));
 			}
 			appA.SetProperty ("AndroidUseDesignerAssembly", useDesignerAssembly.ToString ());
-			var appBuilder = CreateApkBuilder (Path.Combine ("temp", appA.ProjectName));
+			var appBuilder = CreateApkBuilder (Path.Combine (path, appA.ProjectName));
 			Assert.IsTrue (appBuilder.Build (appA), $"{appA.ProjectName} should succeed");
 
 			// Check .apk/.aab for assets, res, and native libraries
@@ -241,6 +251,11 @@ namespace Xamarin.Android.Build.Tests
 			className = "Lcom/soundcloud/android/crop/Crop;"; // from android-crop-1.0.1.aar
 			Assert.IsTrue (DexUtils.ContainsClass (className, dexFile, AndroidSdkPath), $"`{dexFile}` should include `{className}`!");
 
+			// Check AndroidManifest
+			var androidManifest = Path.Combine (intermediate, "android", "AndroidManifest.xml");
+			FileAssert.Exists (androidManifest);
+			var doc = XDocument.Load (androidManifest);
+			Assert.IsNotNull(doc.Element ("manifest")?.Element ("queries")?.Element ("package"), $"There should be 1 package in the queries in {androidManifest}.");
 			// Check environment variable
 			var environmentFiles = EnvironmentHelper.GatherEnvironmentFiles (intermediate, "x86_64", required: true);
 			var environmentVariables = EnvironmentHelper.ReadEnvironmentVariables (environmentFiles);
