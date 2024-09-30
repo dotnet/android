@@ -91,14 +91,13 @@
 
     <!-- Parse NuGet.config -->
     <XmlPeek
-        Condition=" '$(MauiUseLocalPacks)' != 'true' "
-        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
+        Condition=" '$(MauiUseLocalPacks)' == 'true' "
+        XmlInputPath="$(MauiSourcePath)\NuGet.config"
         Query="/configuration/packageSources/add/@value">
       <Output TaskParameter="Result" ItemName="_NuGetSources" />
     </XmlPeek>
     <XmlPeek
-        Condition=" '$(MauiUseLocalPacks)' == 'true' "
-        XmlInputPath="$(MauiSourcePath)\NuGet.config"
+        XmlInputPath="$(XamarinAndroidSourcePath)NuGet.config"
         Query="/configuration/packageSources/add/@value">
       <Output TaskParameter="Result" ItemName="_NuGetSources" />
     </XmlPeek>
