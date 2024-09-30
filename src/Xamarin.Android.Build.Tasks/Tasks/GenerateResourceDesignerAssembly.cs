@@ -123,6 +123,12 @@ namespace Xamarin.Android.Tasks
 			TypeReference e = ImportType ("System.ComponentModel.EditorBrowsableState", module, netstandardDef.MainModule);
 			var editorBrowserAttr = new CustomAttribute (editorBrowserConstructor);
 			editorBrowserAttr.ConstructorArguments.Add (new CustomAttributeArgument (e, System.ComponentModel.EditorBrowsableState.Never));
+	
+			MethodReference generatedCodeConstructor = ImportCustomAttributeConstructor (cache, "System.CodeDom.Compiler.GeneratedCodeAttribute", module, netstandardDef.MainModule, argCount: 2);
+			var generatedCodeAttr = new CustomAttribute (generatedCodeConstructor);
+			generatedCodeAttr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, nameof(GenerateResourceDesignerAssembly)));
+			var version = typeof(GenerateResourceDesignerAssembly).Assembly.GetName().Version;
+			generatedCodeAttr.ConstructorArguments.Add (new CustomAttributeArgument (module.TypeSystem.String, version.ToString ()));
 
 			var att = TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Public | TypeAttributes.BeforeFieldInit;
 
@@ -139,6 +145,7 @@ namespace Xamarin.Android.Tasks
 			);
 			CreateCtor (cache, resourceDesigner, module);
 			resourceDesigner.CustomAttributes.Add (editorBrowserAttr);
+			resourceDesigner.CustomAttributes.Add (generatedCodeAttr);
 			module.Types.Add (resourceDesigner);
 			TypeDefinition constDesigner = null;
 			if (IsApplication) {
@@ -152,6 +159,7 @@ namespace Xamarin.Android.Tasks
 				);
 				CreateCtor (cache, constDesigner, module);
 				constDesigner.CustomAttributes.Add (editorBrowserAttr);
+				constDesigner.CustomAttributes.Add (generatedCodeAttr);
 				module.Types.Add (constDesigner);
 			}
 
