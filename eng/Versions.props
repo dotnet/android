@@ -3,8 +3,8 @@
   <PropertyGroup>
     <MicrosoftNETSdkPackageVersion>9.0.100-rc.2.24468.2</MicrosoftNETSdkPackageVersion>
     <MicrosoftDotnetSdkInternalPackageVersion>$(MicrosoftNETSdkPackageVersion)</MicrosoftDotnetSdkInternalPackageVersion>
-    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-rc.2.24463.7</MicrosoftNETILLinkTasksPackageVersion>
-    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-rc.2.24463.7</MicrosoftNETCoreAppRefPackageVersion>
+    <MicrosoftNETILLinkTasksPackageVersion>9.0.0-rc.2.24473.4</MicrosoftNETILLinkTasksPackageVersion>
+    <MicrosoftNETCoreAppRefPackageVersion>9.0.0-rc.2.24473.4</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>9.0.0-beta.24408.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
     <MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>9.0.0-rc.2.24455.1</MicrosoftNETWorkloadEmscriptenCurrentManifest90100TransportVersion>
