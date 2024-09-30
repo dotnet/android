@@ -1,4 +1,4 @@
----
+--
 title: .NET for Android errors and warnings reference
 description: Build and deployment error and warning codes in .NET for Android, their meanings, and guidance on how to address them.
 ms.date: 04/11/2024
@@ -104,6 +104,7 @@ or 'Help->Report a Problem' in Visual Studio for Mac.
 + [XA0139](xa0139.md): `@(AndroidAsset)` `{0}` has invalid `DeliveryType` metadata of `{1}`. Supported values are `installtime`, `ondemand` or `fastfollow`
 + [XA0140](xa0140.md):
 + [XA0141](xa0141.md): NuGet package '{0}' version '{1}' contains a shared library '{2}' which is not correctly aligned. See https://developer.android.com/guide/practices/page-sizes for more details
++ [XA0142](xa0142.md): Command '{0}' failed.\n{1}
 
 ## XA1xxx: Project related
 

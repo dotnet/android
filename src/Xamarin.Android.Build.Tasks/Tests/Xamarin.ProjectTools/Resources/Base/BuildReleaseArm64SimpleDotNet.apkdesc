@@ -8,43 +8,43 @@
       "Size": 389672
     },
     "lib/arm64-v8a/lib__Microsoft.Android.Resource.Designer.dll.so": {
-      "Size": 1114
+      "Size": 18208
     },
     "lib/arm64-v8a/lib_Java.Interop.dll.so": {
-      "Size": 69163
+      "Size": 86256
     },
     "lib/arm64-v8a/lib_Mono.Android.dll.so": {
-      "Size": 98246
+      "Size": 115344
     },
     "lib/arm64-v8a/lib_Mono.Android.Runtime.dll.so": {
-      "Size": 5310
+      "Size": 22400
     },
     "lib/arm64-v8a/lib_System.Console.dll.so": {
-      "Size": 7291
+      "Size": 24384
     },
     "lib/arm64-v8a/lib_System.Linq.dll.so": {
-      "Size": 9388
+      "Size": 26480
     },
     "lib/arm64-v8a/lib_System.Private.CoreLib.dll.so": {
-      "Size": 616826
+      "Size": 633920
     },
     "lib/arm64-v8a/lib_System.Runtime.dll.so": {
-      "Size": 2954
+      "Size": 20048
     },
     "lib/arm64-v8a/lib_System.Runtime.InteropServices.dll.so": {
-      "Size": 4498
+      "Size": 21592
     },
     "lib/arm64-v8a/lib_UnnamedProject.dll.so": {
-      "Size": 2932
+      "Size": 20024
     },
     "lib/arm64-v8a/libarc.bin.so": {
-      "Size": 1685
+      "Size": 18776
     },
     "lib/arm64-v8a/libmono-component-marshal-ilgen.so": {
       "Size": 87432
     },
     "lib/arm64-v8a/libmonodroid.so": {
-      "Size": 484568
+      "Size": 485400
     },
     "lib/arm64-v8a/libmonosgen-2.0.so": {
       "Size": 3196336
@@ -98,5 +98,5 @@
       "Size": 1904
     }
   },
-  "PackageSize": 2857493
+  "PackageSize": 2865685
 }

@@ -161,7 +161,7 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 	int fd;
 	bool close_fd;
 	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_ASSEMBLY, "Mapping a runtime file from a filesystem");
+		log_debug (LOG_ASSEMBLY, "Mapping a runtime file from filesystem");
 		close_fd = true;
 
 		// file.file_fd refers to the directory where our files live
@@ -180,14 +180,19 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		close (fd);
 	}
 
+	auto [payload_data, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file.name);
+
+	// `data_size` might have been ELF wrapper file size, we must store payload size here (the actual DLL size)
+	file.data_size = static_cast<uint32_t>(payload_size);
+
 	if (MonodroidState::is_startup_in_progress ()) {
-		file.data = static_cast<uint8_t*>(map_info.area);
+		file.data = static_cast<uint8_t*>(payload_data);
 	} else {
 		uint8_t *expected_null = nullptr;
 		bool already_mapped = !__atomic_compare_exchange (
 			/* ptr */              &file.data,
 			/* expected */         &expected_null,
-			/* desired */           reinterpret_cast<uint8_t**>(&map_info.area),
+			/* desired */           reinterpret_cast<uint8_t**>(&payload_data),
 			/* weak */              false,
 			/* success_memorder */  __ATOMIC_ACQUIRE,
 			/* failure_memorder */  __ATOMIC_RELAXED
@@ -1278,7 +1283,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 			}
 
 			runtime_config_blob_mmap = md_mmap_apk_file (fd.value (), 0, file_size.value (), cur->d_name);
-			runtime_config_blob_found = true;
+			store_mapped_runtime_config_data (runtime_config_blob_mmap, cur->d_name);
 			continue;
 		}
 
