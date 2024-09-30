@@ -324,7 +324,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
-  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">True</AndroidEnableMarshalMethods>
+  <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
 </PropertyGroup>
