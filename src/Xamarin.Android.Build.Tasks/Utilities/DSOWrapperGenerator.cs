@@ -36,11 +36,11 @@ class DSOWrapperGenerator
 
 	internal class Config
 	{
-		public Dictionary<AndroidTargetArch, ITaskItem> DSOStubPaths { get; }
+		public Dictionary<AndroidTargetArch, string> DSOStubPaths    { get; }
 		public string AndroidBinUtilsDirectory                       { get; }
 		public string BaseOutputDirectory                            { get; }
 
-		public Config (Dictionary<AndroidTargetArch, ITaskItem> stubPaths, string androidBinUtilsDirectory, string baseOutputDirectory)
+		public Config (Dictionary<AndroidTargetArch, string> stubPaths, string androidBinUtilsDirectory, string baseOutputDirectory)
 		{
 			DSOStubPaths = stubPaths;
 			AndroidBinUtilsDirectory = androidBinUtilsDirectory;
@@ -53,26 +53,25 @@ class DSOWrapperGenerator
 	//
 	const ulong PayloadSectionAlignment = 0x4000;
 
-	public static Config GetConfig (TaskLoggingHelper log, ITaskItem[] nativeLibraries, string androidBinUtilsDirectory, string baseOutputDirectory)
+	public static Config GetConfig (TaskLoggingHelper log, string androidBinUtilsDirectory, string baseOutputDirectory)
 	{
-		var stubPaths = new Dictionary<AndroidTargetArch, ITaskItem> ();
+		var stubPaths = new Dictionary<AndroidTargetArch, string> ();
+		string archiveDSOStubsRootDir = MonoAndroidHelper.GetDSOStubsRootDirectoryPath (androidBinUtilsDirectory);
 
-		foreach (ITaskItem stubItem in nativeLibraries) {
-			if (Path.GetFileName (stubItem.ItemSpec) != "libarchive-dso-stub.so") {
+		foreach (string dir in Directory.EnumerateDirectories (archiveDSOStubsRootDir, "android-*")) {
+			string rid = Path.GetFileName (dir);
+			AndroidTargetArch arch = MonoAndroidHelper.RidToArchMaybe (rid);
+			if (arch == AndroidTargetArch.None) {
+				log.LogDebugMessage ($"Unable to extract a supported RID name from directory path '{dir}'");
 				continue;
 			}
 
-			string rid = stubItem.GetRequiredMetadata ("ArchiveDSOStub", "RuntimeIdentifier", log);
-			AndroidTargetArch arch = MonoAndroidHelper.RidToArch (rid);
-			if (stubPaths.ContainsKey (arch)) {
-				throw new InvalidOperationException ($"Internal error: duplicate archive DSO stub architecture '{arch}' (RID: '{rid}')");
+			string stubPath = Path.Combine (dir, "libarchive-dso-stub.so");
+			if (!File.Exists (stubPath)) {
+				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubPath}' does not exist");
 			}
 
-			if (!File.Exists (stubItem.ItemSpec)) {
-				throw new InvalidOperationException ($"Internal error: archive DSO stub file '{stubItem.ItemSpec}' does not exist");
-			}
-
-			stubPaths.Add (arch, stubItem);
+			stubPaths.Add (arch, stubPath);
 		}
 
 		return new Config (stubPaths, androidBinUtilsDirectory, baseOutputDirectory);
@@ -96,11 +95,11 @@ class DSOWrapperGenerator
 		string outputFile = Path.Combine (outputDir, outputFileName);
 		log.LogDebugMessage ($"  output file path: {outputFile}");
 
-		if (!config.DSOStubPaths.TryGetValue (targetArch, out ITaskItem? stubItem)) {
+		if (!config.DSOStubPaths.TryGetValue (targetArch, out string? stubPath)) {
 			throw new InvalidOperationException ($"Internal error: archive DSO stub location not known for architecture '{targetArch}'");
 		}
 
-		File.Copy (stubItem.ItemSpec, outputFile, overwrite: true);
+		File.Copy (stubPath, outputFile, overwrite: true);
 
 		string quotedOutputFile = MonoAndroidHelper.QuoteFileNameArgument (outputFile);
 		string objcopy = Path.Combine (config.AndroidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (config.AndroidBinUtilsDirectory, "llvm-objcopy"));

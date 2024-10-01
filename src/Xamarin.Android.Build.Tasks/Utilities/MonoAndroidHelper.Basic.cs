@@ -111,9 +111,19 @@ partial class MonoAndroidHelper
 		return abi;
 	}
 
-	public static AndroidTargetArch RidToArch (string rid)
+	public static AndroidTargetArch RidToArchMaybe (string rid)
 	{
 		if (!RidToArchMap.TryGetValue (rid, out AndroidTargetArch arch)) {
+			return AndroidTargetArch.None;
+		};
+
+		return arch;
+	}
+
+	public static AndroidTargetArch RidToArch (string rid)
+	{
+		AndroidTargetArch arch = RidToArchMaybe (rid);
+		if (arch == AndroidTargetArch.None) {
 			throw new NotSupportedException ($"Internal error: unsupported Runtime Identifier '{rid}'");
 		};
 

@@ -1,4 +1,5 @@
 include("${CMAKE_SOURCE_DIR}/cmake/ArchiveDSOStub.cmake")
+set(XA_ARCHIVE_STUB_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/dsostubs/${ANDROID_RID}")
 
 set(LIB_NAME archive-dso-stub)
 
@@ -13,6 +14,12 @@ add_library(
 )
 
 set(ARCHIVE_DSO_STUB_LIB_NAME "lib${LIB_NAME}.so" PARENT_SCOPE)
+
+set_target_properties(
+  ${LIB_NAME}
+  PROPERTIES
+  LIBRARY_OUTPUT_DIRECTORY "${XA_ARCHIVE_STUB_OUTPUT_DIRECTORY}"
+)
 
 target_compile_options(
   ${LIB_NAME}
