@@ -364,11 +364,13 @@ namespace Xamarin.Android.Tasks
 			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
+				var abiArray = new string[] { String.Empty };
 				foreach (var abi in SupportedAbis) {
 					existingEntries.Clear ();
 					var path = Path.GetDirectoryName (ApkOutputPath);
 					var apk = Path.GetFileNameWithoutExtension (ApkOutputPath);
-					ExecuteWithAbi (dsoWrapperConfig, new [] { abi }, String.Format ("{0}-{1}", ApkInputPath, abi),
+					abiArray[0] = abi;
+					ExecuteWithAbi (dsoWrapperConfig, abiArray, String.Format ("{0}-{1}", ApkInputPath, abi),
 						Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)),
 					        debug, compress, compressedAssembliesInfo, assemblyStoreApkName: abi);
 					outputFiles.Add (Path.Combine (path, String.Format ("{0}-{1}.apk", apk, abi)));
