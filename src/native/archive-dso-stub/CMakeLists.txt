@@ -1,5 +1,4 @@
 include("${CMAKE_SOURCE_DIR}/cmake/ArchiveDSOStub.cmake")
-set(XA_ARCHIVE_STUB_OUTPUT_DIRECTORY "${XA_LIB_TOP_DIR}/dsostubs/${ANDROID_RID}")
 
 set(LIB_NAME archive-dso-stub)
 
