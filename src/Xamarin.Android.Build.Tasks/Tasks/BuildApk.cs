@@ -360,7 +360,7 @@ namespace Xamarin.Android.Tasks
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
 			}
 
-			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, FrameworkNativeLibraries, AndroidBinUtilsDirectory, IntermediateOutputPath);
+			DSOWrapperGenerator.Config dsoWrapperConfig = DSOWrapperGenerator.GetConfig (Log, AndroidBinUtilsDirectory, IntermediateOutputPath);
 			ExecuteWithAbi (dsoWrapperConfig, SupportedAbis, ApkInputPath, ApkOutputPath, debug, compress, compressedAssembliesInfo, assemblyStoreApkName: null);
 			outputFiles.Add (ApkOutputPath);
 			if (CreatePackagePerAbi && SupportedAbis.Length > 1) {
@@ -383,15 +383,6 @@ namespace Xamarin.Android.Tasks
 			DSOWrapperGenerator.CleanUp (dsoWrapperConfig);
 
 			return !Log.HasLoggedErrors;
-		}
-
-		internal DSOWrapperGenerator.Config EnsureConfig ()
-		{
-			var config = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<DSOWrapperGenerator.Config> (ProjectSpecificTaskObjectKey (DSOWrapperGenerator.RegisteredConfigKey), RegisteredTaskObjectLifetime.Build);
-			if (config is null) {
-				throw new InvalidOperationException ("Internal error: no registered config found");
-			}
-			return config;
 		}
 
 		static Regex FileGlobToRegEx (string fileGlob, RegexOptions options)
@@ -685,15 +676,13 @@ namespace Xamarin.Android.Tasks
 
 		private void AddNativeLibraries (ArchiveFileList files, string [] supportedAbis)
 		{
-			var frameworkLibs = FrameworkNativeLibraries
-				.Where (item => Path.GetFileName (item.ItemSpec) != "libarchive-dso-stub.so")
-				.Select (v => new LibInfo {
-					Path = v.ItemSpec,
-					Link = v.GetMetadata ("Link"),
-					Abi = GetNativeLibraryAbi (v),
-					ArchiveFileName = GetArchiveFileName (v),
-					Item = v,
-				});
+			var frameworkLibs = FrameworkNativeLibraries.Select (v => new LibInfo {
+				Path = v.ItemSpec,
+				Link = v.GetMetadata ("Link"),
+				Abi = GetNativeLibraryAbi (v),
+				ArchiveFileName = GetArchiveFileName (v),
+				Item = v,
+			});
 
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
