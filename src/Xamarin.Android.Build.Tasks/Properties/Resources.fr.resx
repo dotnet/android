@@ -828,6 +828,11 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
     <comment>{0} - The MSBuildProperty which contains a value.
 </comment>
   </data>
+  <data name="XA4315" xml:space="preserve">
+    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <comment>{0} - The path the the file.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Répertoire de chaînes d'outils du kit Android NDK manquant '{0}'. Installez le kit Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>
