@@ -828,6 +828,11 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
     <comment>{0} - The MSBuildProperty which contains a value.
 </comment>
   </data>
+  <data name="XA4315" xml:space="preserve">
+    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <comment>{0} - The path the the file.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>Android NDK 도구 체인 디렉터리 '{0}'이(가) 없습니다. Android NDK를 설치하세요.</value>
     <comment>{0} - The path of the missing directory</comment>

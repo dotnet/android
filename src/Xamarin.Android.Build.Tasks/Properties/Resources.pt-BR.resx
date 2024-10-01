@@ -828,6 +828,11 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
     <comment>{0} - The MSBuildProperty which contains a value.
 </comment>
   </data>
+  <data name="XA4315" xml:space="preserve">
+    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <comment>{0} - The path the the file.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>O diretório de cadeias de ferramentas '{0}' do Android NDK está ausente. Instale o Android NDK.</value>
     <comment>{0} - The path of the missing directory</comment>

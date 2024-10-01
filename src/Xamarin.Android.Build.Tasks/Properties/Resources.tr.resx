@@ -828,6 +828,11 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
     <comment>{0} - The MSBuildProperty which contains a value.
 </comment>
   </data>
+  <data name="XA4315" xml:space="preserve">
+    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <comment>{0} - The path the the file.
+</comment>
+  </data>
   <data name="XA5101" xml:space="preserve">
     <value>'{0}' Android NDK araç zincirleri dizini eksik. Lütfen Android NDK'yi yükleyin.</value>
     <comment>{0} - The path of the missing directory</comment>
