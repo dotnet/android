@@ -1522,7 +1522,7 @@ because xbuild doesn't support framework reference assemblies.
       LinkingEnabled="$(_LinkingEnabled)"
       HaveMultipleRIDs="$(_HaveMultipleRIDs)"
       IntermediateOutputDirectory="$(IntermediateOutputPath)"
-      Environments="@(_EnvironmentFiles)">
+      Environments="@(_EnvironmentFiles)"
       EnableNativeRuntimeLinking="$(_AndroidEnableNativeRuntimeLinking)">
   </GenerateJavaStubs>
 
