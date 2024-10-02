@@ -1082,12 +1082,12 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
     <comment>'{0}' is a failed command name (potentially with path) followed by all the arguments passed to it. {1} is the combined output on the standard error and standard output streams.</comment>
   </data>
   <data name="XAGRDL1000" xml:space="preserve">
-    <value>Executable 'gradlew' not found in project directory '{0}'. Please ensure the path to your Gradle project folder is correct, and that it contains Gradle Wrapper scripts.</value>
+    <value>Die ausführbare Datei „gradlew“ wurde im Projektverzeichnis „{0}“ nicht gefunden. Stellen Sie sicher, dass der Pfad zu Ihrem Gradle-Projektordner korrekt ist und dass er Gradle Wrapper-Skripts enthält.</value>
     <comment>The following are literal names and should not be translated: gradlew, Gradle, Gradle Wrapper
 {0} - The value of the AndroidGradleProject item</comment>
   </data>
   <data name="XAGRDLRefLibraryOutputs" xml:space="preserve">
-    <value>Adding reference to Gradle output: '{0}'. The '%(CreateAndroidLibrary)' metadata can be set to 'false' to opt out of this behavior.</value>
+    <value>Verweis auf Gradle-Ausgabe wird hinzugefügt: „{0}“. Die %(CreateAndroidLibrary)-Metadaten können auf FALSE festgelegt werden, um dieses Verhalten zu deaktivieren.</value>
     <comment>The following are literal names and should not be translated: Gradle, '%(CreateAndroidLibrary)', metadata, 'false'
 {0} - The path to the library output that will be referenced</comment>
   </data>
