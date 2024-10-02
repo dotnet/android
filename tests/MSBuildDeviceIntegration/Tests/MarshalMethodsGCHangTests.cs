@@ -47,6 +47,7 @@ public class MainActivity : Activity
 		} catch (Java.IO.IOException) {
 			GC.Collect ();
 		}
+		Console.WriteLine (""XXX:OnStart done"");
 	}
 
 	class StreamMediaDataSource (System.IO.Stream data) : MediaDataSource
@@ -81,7 +82,6 @@ public class MainActivity : Activity
 }
 ";
 
-	// All Tests here require the emulator to be started with -writable-system
 	[Test]
 	public void MarshalMethodsAppRuns ()
 	{
@@ -103,7 +103,7 @@ public class MainActivity : Activity
 		Assert.True (apkBuilder.Install (proj), "Project should have installed.");
 		RunProjectAndAssert (proj, apkBuilder);
 
-		const string expectedLogcatOutput = "XXX:END //StreamMediaDataSource.ReadAt";
+		const string expectedLogcatOutput = "XXX:OnStart done";
 		Assert.IsTrue (
 			MonitorAdbLogcat (
 				InstallAndRunTests.CreateLineChecker (expectedLogcatOutput),
