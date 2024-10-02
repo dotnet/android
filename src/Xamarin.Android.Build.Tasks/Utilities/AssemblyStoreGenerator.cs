@@ -149,15 +149,15 @@ partial class AssemblyStoreGenerator
 		WriteIndex (writer, mw, index, descriptors, is64Bit);
 		mw.Flush ();
 
-		Console.WriteLine ($"Number of descriptors: {descriptors.Count}; index entries: {index.Count}");
-		Console.WriteLine ($"Header size: {AssemblyStoreHeader.NativeSize}; index entry size: {IndexEntrySize ()}; descriptor size: {AssemblyStoreEntryDescriptor.NativeSize}");
+		log.LogDebugMessage ($"Number of descriptors: {descriptors.Count}; index entries: {index.Count}");
+		log.LogDebugMessage ($"Header size: {AssemblyStoreHeader.NativeSize}; index entry size: {IndexEntrySize ()}; descriptor size: {AssemblyStoreEntryDescriptor.NativeSize}");
 
 		WriteDescriptors (writer, descriptors);
 		WriteNames (writer, infos);
 		writer.Flush ();
 
 		if (fs.Position != (long)assemblyDataStart) {
-			Console.WriteLine ($"fs.Position == {fs.Position}; assemblyDataStart == {assemblyDataStart}");
+			log.LogDebugMessage ($"fs.Position == {fs.Position}; assemblyDataStart == {assemblyDataStart}");
 			throw new InvalidOperationException ($"Internal error: store '{storePath}' position is different than metadata size after header write");
 		}
 
