@@ -28,7 +28,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory info for entry %u in APK file %s",
+				"Failed to read Central Directory info for entry %u in APK %s",
 				entry_index,
 				state.file_name
 			)
@@ -39,7 +39,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to adjust data start offset for entry %u in APK file %s",
+				"Failed to adjust data start offset for entry %u in APK %s",
 				entry_index,
 				state.file_name
 			)
@@ -76,7 +76,7 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Assembly '%s' is located at bad offset %lu within the APK archive. You MUST run `zipalign` on %s to align it on 4 or 16 bytes",
+				"Assembly '%s' is at bad offset %lu in the APK (not aligned to 4 or 16 bytes). 'zipalign' MUST be used on %s to align it properly",
 				entry_name.get (),
 				state.data_offset,
 				strrchr (state.file_name, '/') + 1
@@ -325,9 +325,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to seek to central directory position in the APK file %s. %s (result: %d; errno: %d)",
-				apk_name,
+				"Failed to seek to central directory position in APK: %s. File '%s' (result: %d; errno: %d)",
 				std::strerror (errno),
+				apk_name,
 				retval,
 				errno
 			)
@@ -356,9 +356,9 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)",
-				apk_name,
+				"Failed to read Central Directory from APK: %s. File '%s' (nread: %d; errno: %d)",
 				std::strerror (errno),
+				apk_name,
 				nread,
 				errno
 			)

@@ -219,7 +219,7 @@ Debug::start_debugging_and_profiling ()
 			Helpers::abort_application (
 				LOG_DEBUGGER,
 				Util::monodroid_strdup_printf (
-					"Could not start a connection to the debugger with connection args '%s'.",
+					"Connection to debugger failed. Args: %s",
 					connect_args
 				)
 			);

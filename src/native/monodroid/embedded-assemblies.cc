@@ -892,10 +892,10 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Could not `mmap` apk fd %d entry `%s`: %s",
+				"Could not mmap APK fd %d: %s; entry `%s` (in %s)",
 				fd,
-				filename,
-				strerror (errno)
+				strerror (errno),
+				filename
 			)
 		);
 	}

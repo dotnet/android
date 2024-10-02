@@ -71,9 +71,9 @@ Java_mono_android_DebugRuntime_init (JNIEnv *env, [[maybe_unused]] jclass klass,
 	void *monosgen = dlopen (monosgen_path, RTLD_LAZY | RTLD_GLOBAL);
 	if (monosgen == nullptr) {
 		char *message = Util::monodroid_strdup_printf (
-			"Failed to dlopen Mono runtime from %s: %s",
-			monosgen_path,
-			dlerror ()
+			"Failed to dlopen MonoVM: %s (from %s)",
+			dlerror (),
+			monosgen_path
 		);
 		Helpers::abort_application (message);
 	}
