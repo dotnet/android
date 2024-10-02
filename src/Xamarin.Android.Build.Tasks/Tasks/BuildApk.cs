@@ -689,6 +689,7 @@ namespace Xamarin.Android.Tasks
 				Item = v,
 			});
 
+			Log.LogDebugMessage ("BuildApk: adding framework native libraries");
 			AddNativeLibraries (files, supportedAbis, frameworkLibs);
 
 			var libs = NativeLibraries.Concat (BundleNativeLibraries ?? Enumerable.Empty<ITaskItem> ())
@@ -702,6 +703,7 @@ namespace Xamarin.Android.Tasks
 					}
 				);
 
+			Log.LogDebugMessage ("BuildApk: adding other native libraries");
 			AddNativeLibraries (files, supportedAbis, libs);
 
 			if (String.IsNullOrWhiteSpace (CheckedBuild))
@@ -802,6 +804,7 @@ namespace Xamarin.Android.Tasks
 
 		void AddNativeLibrary (ArchiveFileList files, string path, string abi, string archiveFileName, ITaskItem? taskItem = null)
 		{
+			Log.LogDebugMessage ($"BuildApk: adding native library '{path}'; abi '{abi}'; archiveFileName '{archiveFileName}'");
 			string fileName = string.IsNullOrEmpty (archiveFileName) ? Path.GetFileName (path) : archiveFileName;
 			var item = (filePath: path, archivePath: MakeArchiveLibPath (abi, fileName));
 			if (files.Any (x => x.archivePath == item.archivePath)) {
