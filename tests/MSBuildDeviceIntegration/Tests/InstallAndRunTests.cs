@@ -30,11 +30,6 @@ namespace Xamarin.Android.Build.Tests
 		[Test]
 		public void NativeAssemblyCacheWithSatelliteAssemblies ([Values (true, false)] bool enableMarshalMethods)
 		{
-			// TODO: enable when marshal methods are fixed
-			if (enableMarshalMethods) {
-				Assert.Ignore ("Test is skipped when marshal methods are enabled, pending fixes to MM for .NET9");
-			}
-
 			var path = Path.Combine ("temp", TestName);
 			var lib = new XamarinAndroidLibraryProject {
 				ProjectName = "Localization",
