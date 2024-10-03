@@ -30,6 +30,10 @@ resources:
     name: xamarin/monodroid
     ref: refs/heads/main
     endpoint: xamarin
+  - repository: vscode-maui
+    type: git
+    name: DevDiv/vscode-maui
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -91,6 +95,7 @@ extends:
         include:
         - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
           - repository: monodroid
+          - repository: vscode-maui
         exclude:
         - repository: yaml-templates
         - repository: maui

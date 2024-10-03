@@ -20,6 +20,10 @@ resources:
     type: github
     name: xamarin/monodroid
     endpoint: xamarin
+  - repository: vscode-maui
+    type: git
+    name: DevDiv/vscode-maui
+    ref: refs/heads/main
   - repository: maui
     type: github
     name: dotnet/maui

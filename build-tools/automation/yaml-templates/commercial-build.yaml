@@ -41,6 +41,12 @@ steps:
     path: s/xamarin-android/external/monodroid
     persistCredentials: true
 
+  - checkout: vscode-maui
+    clean: true
+    submodules: recursive
+    path: s/xamarin-android/external/vscode-maui
+    persistCredentials: true
+
   - script: rm -rf external/monodroid/external/xamarin-android
     workingDirectory: ${{ parameters.xaSourcePath }}
     displayName: delete legacy xamarin-android submodule
