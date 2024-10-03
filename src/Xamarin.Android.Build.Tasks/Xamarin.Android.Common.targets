@@ -2221,7 +2221,9 @@ because xbuild doesn't support framework reference assemblies.
 			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-			ExcludeFiles="@(AndroidPackagingOptionsExclude)">
+			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
 	</BuildApk>
 	<BuildBaseAppBundle
@@ -2258,7 +2260,9 @@ because xbuild doesn't support framework reference assemblies.
 			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
-			ExcludeFiles="@(AndroidPackagingOptionsExclude)">
+			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
+      AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+      IntermediateOutputPath="$(IntermediateOutputPath)">
 		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
 	</BuildBaseAppBundle>
 	<BuildAppBundle
