@@ -1746,6 +1746,7 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
   >
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
