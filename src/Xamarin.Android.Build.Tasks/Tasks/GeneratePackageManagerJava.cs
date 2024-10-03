@@ -61,6 +61,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
+
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -320,6 +323,17 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+			if (haveRuntimeConfigBlob) {
+				List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
+					Log,
+					SupportedAbis,
+					AndroidBinUtilsDirectory,
+					RuntimeConfigBinFilePath,
+					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+					EnvironmentOutputDirectory
+				);
+			}
+
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
