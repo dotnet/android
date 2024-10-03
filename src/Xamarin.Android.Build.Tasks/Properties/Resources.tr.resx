@@ -829,7 +829,7 @@ Projenizden '{0}' başvurusunu kaldırın ve yerine '{1}' NuGet paketini ekleyin
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>`{0}` yoksayılıyor. Bildirim, gerekli 'package' özniteliğini bildirim öğesinde içermiyor.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>

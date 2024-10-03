@@ -829,7 +829,7 @@ Odeberte z projektu odkaz na {0} a místo toho přidejte balíček NuGet{1}.
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>Ignoruje se: {0}. Manifest nemá požadovaný atribut package v elementu manifestu.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>

@@ -829,7 +829,7 @@ Quite la referencia de "{0}" del proyecto y agregue el paquete NuGet "{1}".
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>Omitiendo `{0}`. El manifiesto no tiene el atributo "package" requerido en el elemento de manifiesto.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>
