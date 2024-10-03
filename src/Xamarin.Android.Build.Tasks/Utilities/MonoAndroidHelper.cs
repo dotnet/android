@@ -783,26 +783,9 @@ namespace Xamarin.Android.Tasks
 			return builder.ToString ();
 		}
 
-		public static AndroidRuntime ParseAndroidRuntime (string androidRuntime)
+		public static string GetLlvmObjcopyPath (string androidBinUtilsDirectory)
 		{
-			if (string.Equals (androidRuntime, "CoreCLR", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.CoreCLR;
-			if (string.Equals (androidRuntime, "NativeAOT", StringComparison.OrdinalIgnoreCase))
-				return AndroidRuntime.NativeAOT;
-
-			// Default runtime is MonoVM
-			return AndroidRuntime.MonoVM;
+			return Path.Combine (androidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (androidBinUtilsDirectory, "llvm-objcopy"));
 		}
-
-		public static JavaPeerStyle ParseCodeGenerationTarget (string codeGenerationTarget)
-		{
-			if (Enum.TryParse (codeGenerationTarget, ignoreCase: true, out JavaPeerStyle style))
-				return style;
-
-			// Default is XAJavaInterop1
-			return JavaPeerStyle.XAJavaInterop1;
-		}
-
-		public static object GetProjectBuildSpecificTaskObjectKey (object key, string workingDirectory, string intermediateOutputPath) => (key, workingDirectory, intermediateOutputPath);
 	}
 }

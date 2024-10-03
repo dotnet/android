@@ -1880,9 +1880,36 @@ because xbuild doesn't support framework reference assemblies.
   
   <!-- Create java needed for Mono runtime -->
   <GeneratePackageManagerJava
-      MainAssembly="$(TargetPath)"
-      OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
-      ResolvedUserAssemblies="@(_ResolvedUserAssemblies)">
+    ResolvedAssemblies="@(_ResolvedAssemblies)"
+    ResolvedUserAssemblies="@(_ResolvedUserAssemblies)"
+    SatelliteAssemblies="@(_AndroidResolvedSatellitePaths)"
+    NativeLibraries="@(AndroidNativeLibrary);@(EmbeddedNativeLibrary);@(FrameworkNativeLibrary)"
+    MonoComponents="@(_MonoComponent)"
+    MainAssembly="$(TargetPath)"
+    OutputDirectory="$(_AndroidIntermediateJavaSourceDirectory)mono"
+    EnvironmentOutputDirectory="$(IntermediateOutputPath)android"
+    TargetFrameworkVersion="$(TargetFrameworkVersion)"
+    Manifest="$(IntermediateOutputPath)android\AndroidManifest.xml"
+    Environments="@(_EnvironmentFiles)"
+    AndroidAotMode="$(AndroidAotMode)"
+    AndroidAotEnableLazyLoad="$(AndroidAotEnableLazyLoad)"
+    EnableLLVM="$(EnableLLVM)"
+    HttpClientHandlerType="$(AndroidHttpClientHandlerType)"
+    TlsProvider="$(AndroidTlsProvider)"
+    Debug="$(AndroidIncludeDebugSymbols)"
+    AndroidSequencePointsMode="$(_SequencePointsMode)"
+    EnableSGenConcurrent="$(AndroidEnableSGenConcurrent)"
+    SupportedAbis="@(_BuildTargetAbis)"
+    AndroidPackageName="$(_AndroidPackage)"
+    EnablePreloadAssembliesDefault="$(_AndroidEnablePreloadAssembliesDefault)"
+    PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
+    BoundExceptionType="$(AndroidBoundExceptionType)"
+    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+    UseAssemblyStore="$(AndroidUseAssemblyStore)"
+    EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
+    CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+  >
   </GeneratePackageManagerJava>
 
   <GenerateNativeApplicationConfigSources
