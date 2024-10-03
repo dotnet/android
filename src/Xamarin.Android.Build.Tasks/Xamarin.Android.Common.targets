@@ -2179,10 +2179,10 @@ because xbuild doesn't support framework reference assemblies.
 </PropertyGroup>
 
 <Target Name="_BuildApkFastDev"
-	DependsOnTargets="_PrepareBuildApk"
-	Inputs="$(_BuildApkFastDevStaticInputs)"
-	Outputs="$(_BuildApkEmbedOutputs)"
-	Condition="'$(EmbedAssembliesIntoApk)' != 'True'">
+		Condition=" '$(EmbedAssembliesIntoApk)' != 'True' "
+		DependsOnTargets="_PrepareBuildApk"
+		Inputs="$(_BuildApkFastDevStaticInputs)"
+		Outputs="$(_BuildApkEmbedOutputs)">
 
 	<!-- Put the assemblies and native libraries in the apk -->
 	<BuildApk
