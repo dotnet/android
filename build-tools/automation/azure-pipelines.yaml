@@ -95,6 +95,7 @@ extends:
         include:
         - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
           - repository: monodroid
+          - repository: vscode-maui
         exclude:
         - repository: yaml-templates
         - repository: maui
