@@ -29,7 +29,7 @@ namespace Xamarin.Android.Prepare
 					var egdUrl = await GetGitHubURL (egd, git);
 					if (egd.Owner == "DevDiv") {
 						egdUrl = GetDevDivUrl (egd);
-						Log.WarningLine ($"You may be prompted to enter DevDiv credentials to clone {egd.Name}. Please navigate to {edgUrl} and click the 'Generate Git Credentials' button to get credentials.");
+						Log.WarningLine ($"You may be prompted to enter DevDiv credentials to clone {egd.Name}. Please navigate to {egdUrl} and click the 'Generate Git Credentials' button to get credentials.");
 					}
 					Log.StatusLine ($"    {context.Characters.Link} cloning from {egd.Owner}/{egd.Name}");
 					if (!await git.Clone (egdUrl, destDir)) {
