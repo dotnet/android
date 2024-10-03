@@ -26,8 +26,13 @@ namespace Xamarin.Android.Build.Tests
 		[Category ("SmokeTests")]
 		[TestCaseSource (nameof (DotNetBuildSource))]
 		[NonParallelizable] // On MacOS, parallel /restore causes issues
-		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore)
+		public void DotNetBuild (string runtimeIdentifiers, bool isRelease, bool aot, bool usesAssemblyStore, bool useRuntimeLinking)
 		{
+			if (!isRelease && useRuntimeLinking) {
+				Assert.Warn ("Dynamic runtime linking is supported only in Release builds, disabling it for this Debug build.");
+				useRuntimeLinking = false;
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				IsRelease = isRelease,
 				EnableDefaultItems = true,
@@ -64,6 +69,7 @@ namespace Xamarin.Android.Build.Tests
 			proj.MainActivity = proj.DefaultMainActivity.Replace (": Activity", ": AndroidX.AppCompat.App.AppCompatActivity");
 			proj.SetProperty ("AndroidUseAssemblyStore", usesAssemblyStore.ToString ());
 			proj.SetProperty ("RunAOTCompilation", aot.ToString ());
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", useRuntimeLinking.ToString ());
 			proj.OtherBuildItems.Add (new AndroidItem.InputJar ("javaclasses.jar") {
 				BinaryContent = () => ResourceData.JavaSourceJarTestJar,
 			});
@@ -149,7 +155,11 @@ namespace Xamarin.Android.Build.Tests
 			helper.AssertContainsEntry ($"assemblies/es/{proj.ProjectName}.resources.dll", shouldContainEntry: expectEmbeddedAssembies);
 			foreach (var abi in rids.Select (AndroidRidAbiHelper.RuntimeIdentifierToAbi)) {
 				helper.AssertContainsEntry ($"lib/{abi}/libmonodroid.so");
-				helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+
+				if (!useRuntimeLinking) {
+					helper.AssertContainsEntry ($"lib/{abi}/libmonosgen-2.0.so");
+				}
+
 				if (rids.Length > 1) {
 					helper.AssertContainsEntry ($"assemblies/{abi}/System.Private.CoreLib.dll",        shouldContainEntry: expectEmbeddedAssembies);
 				} else {
