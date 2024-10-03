@@ -829,7 +829,7 @@ Supprimez la référence de '{0}' de votre projet et ajoutez plutôt le '{1}'.pa
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>Ignorer `{0}`. Le manifeste n’a pas l’attribut « package » requis sur l’élément manifeste.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>

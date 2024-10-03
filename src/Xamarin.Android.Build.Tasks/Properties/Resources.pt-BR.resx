@@ -829,7 +829,7 @@ Remover a referência '{0}' de seu projeto e adicionar o pacote NuGet '{1}' em v
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>Ignorando '{0}'. O manifesto não tem o atributo 'package' necessário no elemento de manifesto.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>

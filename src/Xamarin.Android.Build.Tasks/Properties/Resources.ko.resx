@@ -829,7 +829,7 @@ The following are literal names and should not be translated: ABI, 'libs/armeabi
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>'{0}'를 무시합니다. 매니페스트에 매니페스트 요소에 필요한 'package' 특성이 없습니다.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>

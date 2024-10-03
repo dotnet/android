@@ -829,7 +829,7 @@ Usuń odwołanie „{0}” z projektu i zamiast niego dodaj pakiet NuGet „{1}�
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>Trwa ignorowanie „{0}”. Manifest nie ma wymaganego atrybutu „package” w elemencie manifestu.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>
