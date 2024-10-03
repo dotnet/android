@@ -1800,6 +1800,7 @@ because xbuild doesn't support framework reference assemblies.
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		UpdateAndroidAssets;
+    _DefineBuildTargetAbis;
 		$(_AfterCreateBaseApkDependsOnTargets);
 	</_CreateBaseApkDependsOnTargets>
 </PropertyGroup>
@@ -2165,6 +2166,114 @@ because xbuild doesn't support framework reference assemblies.
   />
 </Target>
 
+<PropertyGroup>
+	<_BuildApkFastDevStaticInputs>
+		@(_AndroidMSBuildAllProjects)
+		;@(_ShrunkFrameworkAssemblies)
+		;@(_AndroidNativeLibraryForFastDev)
+		;@(_DexFileForFastDevInput)
+		;$(_AndroidBuildPropertiesCache)
+		;$(_AdbPropertiesCache)
+		;$(_PackagedResources)
+	</_BuildApkFastDevStaticInputs>
+</PropertyGroup>
+
+<Target Name="_BuildApkFastDev"
+	DependsOnTargets="_PrepareBuildApk"
+	Inputs="$(_BuildApkFastDevStaticInputs)"
+	Outputs="$(_BuildApkEmbedOutputs)"
+	Condition="'$(EmbedAssembliesIntoApk)' != 'True'">
+
+	<!-- Put the assemblies and native libraries in the apk -->
+	<BuildApk
+			Condition=" '$(AndroidPackageFormat)' != 'aab' "
+			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+			ApkInputPath="$(_PackagedResources)"
+			ApkOutputPath="$(ApkFileIntermediate)"
+			AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+			EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+			ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+			ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
+			NativeLibraries="@(_AndroidNativeLibraryForFastDev)"
+			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
+			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+			DalvikClasses="@(_DexFileForFastDev)"
+			SupportedAbis="@(_BuildTargetAbis)"
+			AndroidSequencePointsMode="$(_SequencePointsMode)"
+			CreatePackagePerAbi="$(AndroidCreatePackagePerAbi)"
+			Debug="$(AndroidIncludeDebugSymbols)"
+			EnableCompression="$(AndroidEnableAssemblyCompression)"
+			TypeMappings="@(_AndroidTypeMaps)"
+			JavaSourceFiles="@(AndroidJavaSource)"
+			JavaLibraries="@(AndroidJavaLibrary)"
+			LibraryProjectJars="@(ExtractedJarImports)"
+			TlsProvider="$(AndroidTlsProvider)"
+			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+			ProjectFullPath="$(MSBuildProjectFullPath)"
+			IncludeWrapSh="$(AndroidIncludeWrapSh)"
+			CheckedBuild="$(_AndroidCheckedBuild)"
+			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
+			ExcludeFiles="@(AndroidPackagingOptionsExclude)">
+		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
+	</BuildApk>
+	<BuildBaseAppBundle
+			Condition=" '$(AndroidPackageFormat)' == 'aab' "
+			AndroidNdkDirectory="$(_AndroidNdkDirectory)"
+			ApkInputPath="$(_PackagedResources)"
+			ApkOutputPath="$(_BaseZipIntermediate)"
+			AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+			BundleAssemblies="$(BundleAssemblies)"
+			BundleNativeLibraries="$(_BundleResultNativeLibraries)"
+			EmbedAssemblies="$(EmbedAssembliesIntoApk)"
+			ResolvedUserAssemblies="@(_ResolvedUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+			ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+			FrameworkNativeLibraries="@(FrameworkNativeLibrary)"
+			NativeLibraries="@(AndroidNativeLibrary)"
+			ApplicationSharedLibraries="@(_ApplicationSharedLibrary)"
+			AdditionalNativeLibraryReferences="@(_AdditionalNativeLibraryReferences)"
+			EmbeddedNativeLibraryAssemblies="$(OutDir)$(TargetFileName);@(ReferencePath);@(ReferenceDependencyPaths)"
+			DalvikClasses="@(_DexFile)"
+			SupportedAbis="@(_BuildTargetAbis)"
+			CreatePackagePerAbi="False"
+			Debug="$(AndroidIncludeDebugSymbols)"
+			EnableCompression="$(AndroidEnableAssemblyCompression)"
+			TypeMappings="@(_AndroidTypeMaps)"
+			JavaSourceFiles="@(AndroidJavaSource)"
+			JavaLibraries="@(AndroidJavaLibrary)"
+			AndroidSequencePointsMode="$(_SequencePointsMode)"
+			LibraryProjectJars="@(ExtractedJarImports)"
+			TlsProvider="$(AndroidTlsProvider)"
+			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+			ProjectFullPath="$(MSBuildProjectFullPath)"
+			IncludeWrapSh="$(AndroidIncludeWrapSh)"
+			CheckedBuild="$(_AndroidCheckedBuild)"
+			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
+			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
+			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
+			ExcludeFiles="@(AndroidPackagingOptionsExclude)">
+		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
+	</BuildBaseAppBundle>
+	<BuildAppBundle
+			Condition=" '$(AndroidPackageFormat)' == 'aab' "
+			ToolPath="$(JavaToolPath)"
+			JavaMaximumHeapSize="$(JavaMaximumHeapSize)"
+			JavaOptions="$(JavaOptions)"
+			JarPath="$(AndroidBundleToolJarPath)"
+			BaseZip="$(_BaseZipIntermediate)"
+			Modules="@(AndroidAppBundleModules)"
+			Output="$(_AppBundleIntermediate)"
+			UncompressedFileExtensions="$(AndroidStoreUncompressedFileExtensions)"
+			CustomBuildConfigFile="$(AndroidBundleConfigurationFile)"
+			MetaDataFiles="@(AndroidAppBundleMetaDataFile)"
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			AssemblyIdentityMapFile="$(_AndroidLibrayProjectAssemblyMapFile)"
+	/>
+</Target>
+
 <Target Name="_ResolveCopyPackageInputs">
 	<PropertyGroup>
 		<_CopyPackageInputs>
@@ -2204,6 +2313,7 @@ because xbuild doesn't support framework reference assemblies.
 	<_CopyPackageDependsOn>
 		_DefineBuildTargetAbis
 		;_BuildApkEmbed
+    ;_BuildApkFastDev
 		;_ResolveCopyPackageInputs
 	</_CopyPackageDependsOn>
 </PropertyGroup>
@@ -2482,6 +2592,7 @@ because xbuild doesn't support framework reference assemblies.
 		Build
 		;$(_OnResolveMonoAndroidSdks)
 		;_BuildApkEmbed
+    ;_BuildApkFastDev
 	</_BuildApkDependsOnTargets>
 </PropertyGroup>
 
