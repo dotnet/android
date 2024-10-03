@@ -27,6 +27,10 @@ namespace Xamarin.Android.Prepare
 				string destDir = Path.Combine (Configurables.Paths.ExternalGitDepsDestDir, egd.Name);
 				if (!Directory.Exists (destDir)) {
 					var egdUrl = await GetGitHubURL (egd, git);
+					if (egd.Owner == "DevDiv") {
+						egdUrl = GetDevDivUrl (egd);
+						Log.WarningLine ($"You may be prompted to enter DevDiv credentials to clone {egd.Name}. Please navigate to {edgUrl} and click the 'Generate Git Credentials' button to get credentials.");
+					}
 					Log.StatusLine ($"    {context.Characters.Link} cloning from {egd.Owner}/{egd.Name}");
 					if (!await git.Clone (egdUrl, destDir)) {
 						Log.ErrorLine ($"Failed to clone {egd.Name}");
@@ -49,22 +53,15 @@ namespace Xamarin.Android.Prepare
 					continue;
 				}
 
-				//
-				// Commented out for now because we only have monodroid in .external and its submodules are updated
-				// elsewhere and there's no need to duplicate the (time-consuming) work. However, it might be a good
-				// idea to re-enable this code for the benefit of future .external additions (and, possibly, monodroid
-				// itself after its integration code is updated to not initialize submodules)
-				//
+				string gitModules = Path.Combine (destDir, ".gitmodules");
+				if (!Utilities.FileExists (gitModules))
+					continue;
 
-				// string gitModules = Path.Combine (destDir, ".gitmodules");
-				// if (!Utilities.FileExists (gitModules))
-				// 	continue;
-
-				// Log.StatusLine ($"    {context.Characters.Bullet} updating submodules");
-				// if (!await git.SubmoduleUpdate (destDir)) {
-				// 	Log.ErrorLine ($"Failed to update submodules for {egd.Name}");
-				// 	failed = true;
-				// }
+				Log.StatusLine ($"    {context.Characters.Bullet} updating submodules");
+				if (!await git.SubmoduleUpdate (destDir)) {
+					Log.ErrorLine ($"Failed to update submodules for {egd.Name}");
+					failed = true;
+				}
 			}
 
 			return !failed;
@@ -82,6 +79,11 @@ namespace Xamarin.Android.Prepare
 					return $"git@github.com:/{egd.Owner}/{egd.Name}";
 				}
 			}
+		}
+
+		string GetDevDivUrl (ExternalGitDependency egd)
+		{
+			return $"https://devdiv.visualstudio.com/{egd.Owner}/_git/{egd.Name}";
 		}
 	}
 }
