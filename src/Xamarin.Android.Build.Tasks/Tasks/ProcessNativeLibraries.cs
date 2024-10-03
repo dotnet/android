@@ -118,6 +118,10 @@ namespace Xamarin.Android.Tasks
 
 		bool IgnoreLibraryWhenLinkingRuntime (ITaskItem libItem)
 		{
+			if (!NativeRuntimeLinking) {
+				return false;
+			}
+
 			// We ignore all the shared libraries coming from the runtime packages, as they are all linked into our runtime and
 			// need not be packaged.
 			string packageId = libItem.GetMetadata ("NuGetPackageId");
