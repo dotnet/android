@@ -1,24 +1,24 @@
 <Dependencies>
   <ProductDependencies>
-    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.100-rtm.24479.2">
+    <Dependency Name="Microsoft.NET.Sdk" Version="9.0.100-rtm.24503.1">
       <Uri>https://github.com/dotnet/sdk</Uri>
-      <Sha>4b64dad734c5b0915dedc223fe3ae8429345313b</Sha>
+      <Sha>eab3ae2483035e83669769158a17fbd36d96df9e</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rtm.24476.4" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NET.ILLink.Tasks" Version="9.0.0-rtm.24501.6" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>0d44aea3696bab80b11a12c6bdfdbf8de9c4e815</Sha>
+      <Sha>58801184a1f0300d193517a77a054f51752aa3b2</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.0-rtm.24476.4" CoherentParentDependency="Microsoft.NET.Sdk">
+    <Dependency Name="Microsoft.NETCore.App.Ref" Version="9.0.0-rtm.24501.6" CoherentParentDependency="Microsoft.NET.Sdk">
       <Uri>https://github.com/dotnet/runtime</Uri>
-      <Sha>0d44aea3696bab80b11a12c6bdfdbf8de9c4e815</Sha>
+      <Sha>58801184a1f0300d193517a77a054f51752aa3b2</Sha>
     </Dependency>
     <Dependency Name="Microsoft.NET.Workload.Emscripten.Current.Manifest-9.0.100.Transport" Version="9.0.0-rtm.24469.1" CoherentParentDependency="Microsoft.NETCore.App.Ref">
       <Uri>https://github.com/dotnet/emsdk</Uri>
       <Sha>8e660ff41e91879977e3a9d837e068bd72234c26</Sha>
     </Dependency>
-    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24467.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
+    <Dependency Name="Microsoft.DotNet.Cecil" Version="0.11.5-alpha.24480.1" CoherentParentDependency="Microsoft.NET.ILLink.Tasks">
       <Uri>https://github.com/dotnet/cecil</Uri>
-      <Sha>526b22d829bc9b420dff6ef70877a67053b66e0f</Sha>
+      <Sha>9c9443396f8deacceb8edb169890e52aac25f311</Sha>
     </Dependency>
     <!-- Previous .NET Android version -->
     <Dependency Name="Microsoft.Android.Sdk.Windows" Version="34.0.143">
