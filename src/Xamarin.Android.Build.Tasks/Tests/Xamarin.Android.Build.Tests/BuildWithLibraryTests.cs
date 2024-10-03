@@ -413,6 +413,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			};
 			proj.SetRuntimeIdentifiers (["armeabi-v7a", "x86"]);
+			proj.SetProperty ("_AndroidEnableNativeRuntimeLinking", "False");
 			var path = Path.Combine (Root, "temp", string.Format ("BuildWithNativeLibraries_{0}", isRelease));
 			using (var b1 = CreateDllBuilder (Path.Combine (path, dll2.ProjectName))) {
 				Assert.IsTrue (b1.Build (dll2), "Build should have succeeded.");
