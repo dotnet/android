@@ -38,7 +38,6 @@ jobs:
   - template: /build-tools/automation/yaml-templates/setup-test-environment.yaml
     parameters:
       installTestSlicer: true
-      installLegacyXamarinAndroid: true
       xaSourcePath: ${{ parameters.xaSourcePath }}
       repositoryAlias: ${{ parameters.repositoryAlias }}
       commit: ${{ parameters.commit }}
