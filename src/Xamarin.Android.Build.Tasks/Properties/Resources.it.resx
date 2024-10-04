@@ -829,7 +829,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>`{0}` ignorato. Il manifesto non ha l'attributo 'package' richiesto per l'elemento manifesto.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>
