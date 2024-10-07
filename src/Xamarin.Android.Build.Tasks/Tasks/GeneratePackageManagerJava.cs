@@ -65,6 +65,9 @@ public class GeneratePackageManagerJava : AndroidTask
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		[Output]
+		public ITaskItem[] EmbeddedObjectFiles { get; set; }
+
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -297,6 +300,10 @@ public class GeneratePackageManagerJava : AndroidTask
 					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
 					EnvironmentOutputDirectory
 				);
+
+				EmbeddedObjectFiles = objectFilePaths.ToArray ();
+			} else {
+				EmbeddedObjectFiles = Array.Empty<ITaskItem> ();
 			}
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);

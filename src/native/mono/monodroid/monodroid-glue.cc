@@ -1406,6 +1406,11 @@ MonodroidRuntime::Java_mono_android_Runtime_initInternal (JNIEnv *env, jclass kl
 
 	Logger::init_logging_categories (mono_log_mask_raw, mono_log_level_raw);
 
+	log_warn (LOG_DEFAULT, "Embedded runtime config size: %zu", embedded_runtime_config_size);
+	if (embedded_runtime_config_size > 0) {
+		log_warn (LOG_DEFAULT, "First byte of embedded runtime config: 0x%x", embedded_runtime_config[0]);
+	}
+
 	std::unique_ptr<char[]> mono_log_mask (mono_log_mask_raw);
 	std::unique_ptr<char[]> mono_log_level (mono_log_level_raw);
 
