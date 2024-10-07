@@ -303,3 +303,6 @@ const JniRemappingTypeReplacementEntry jni_remapping_type_replacements[] = {
 		.replacement = "another/replacement/java/type",
 	},
 };
+
+size_t embedded_runtime_config_size = 0;
+uint8_t embedded_runtime_config[0];
