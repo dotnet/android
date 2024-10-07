@@ -3,12 +3,14 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
 	public static class MetadataExtensions
 	{
-		public static string GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute)
+		public static string GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute, TaskLoggingHelper log)
 		{
 			if (attribute.Constructor.Kind == HandleKind.MemberReference) {
 				var ctor = reader.GetMemberReference ((MemberReferenceHandle)attribute.Constructor);
@@ -23,10 +25,14 @@ namespace Xamarin.Android.Tasks
 						EntityHandle typeHandle = blobReader.ReadTypeHandle ();
 						TypeReference typeRef = reader.GetTypeReference ((TypeReferenceHandle)typeHandle);
 						return reader.GetString (typeRef.Namespace) + "." + reader.GetString (typeRef.Name);
+					} else {
+						log.LogDebugMessage($"Unknown EntityHandle.Kind: {ctor.Parent.Kind}");
+						return null;
 					}
 				}
-				catch (InvalidCastException)
+				catch (InvalidCastException ex)
 				{
+					log.LogDebugMessage($"Unknown EntityHandle.Kind: {ex}");
 					return null;
 				}
 			} else if (attribute.Constructor.Kind == HandleKind.MethodDefinition) {

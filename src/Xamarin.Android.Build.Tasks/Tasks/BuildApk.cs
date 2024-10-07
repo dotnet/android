@@ -493,7 +493,7 @@ namespace Xamarin.Android.Tasks
 				// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
 				// or not we're supposed to compress .so files.
 				foreach (ITaskItem assembly in assemblies.Values) {
-					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec)) {
+					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec, Log)) {
 						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
 					}
 
