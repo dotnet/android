@@ -1709,6 +1709,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_BinaryRuntimeConfigPath)" />
   </ItemGroup>
 </Target>
 
@@ -1748,10 +1749,12 @@ because xbuild doesn't support framework reference assemblies.
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
   >
+    <Output TaskParameter="EmbeddedObjectFiles" ItemName="_NativeAssemblyTarget" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="@(_NativeAssemblyTarget)" />
   </ItemGroup>
 </Target>
 
