@@ -16,8 +16,12 @@ using Android.Util;
 using Android.Views;
 using Android.Widget;
 
+[assembly: HelloLibrary.GenericTest<string>]
 namespace HelloLibrary
 {
+    [AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+    public class GenericTestAttribute<T> : Attribute { }
+
     [Activity(Label = "Library Activity", Name="mono.samples.hello.LibraryActivity")]
     public class LibraryActivity : Activity
     {

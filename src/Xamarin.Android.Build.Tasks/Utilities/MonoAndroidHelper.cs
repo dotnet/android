@@ -364,7 +364,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool IsReferenceAssembly (string assembly)
+		public static bool IsReferenceAssembly (string assembly, TaskLoggingHelper log)
 		{
 			using (var stream = File.OpenRead (assembly))
 			using (var pe = new PEReader (stream)) {
@@ -372,7 +372,7 @@ namespace Xamarin.Android.Tasks
 				var assemblyDefinition = reader.GetAssemblyDefinition ();
 				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
 					var attribute = reader.GetCustomAttribute (handle);
-					var attributeName = reader.GetCustomAttributeFullName (attribute);
+					var attributeName = reader.GetCustomAttributeFullName (attribute, log);
 					if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
 						return true;
 				}

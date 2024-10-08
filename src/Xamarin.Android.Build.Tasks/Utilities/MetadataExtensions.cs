@@ -3,17 +3,37 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using Microsoft.Build.Utilities;
+using Microsoft.Android.Build.Tasks;
 
 namespace Xamarin.Android.Tasks
 {
 	public static class MetadataExtensions
 	{
-		public static string GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute)
+		public static string GetCustomAttributeFullName (this MetadataReader reader, CustomAttribute attribute, TaskLoggingHelper log)
 		{
 			if (attribute.Constructor.Kind == HandleKind.MemberReference) {
 				var ctor = reader.GetMemberReference ((MemberReferenceHandle)attribute.Constructor);
-				var type = reader.GetTypeReference ((TypeReferenceHandle)ctor.Parent);
-				return reader.GetString (type.Namespace) + "." + reader.GetString (type.Name);
+				try {
+					if (ctor.Parent.Kind == HandleKind.TypeReference) {
+						var type = reader.GetTypeReference ((TypeReferenceHandle)ctor.Parent);
+						return reader.GetString (type.Namespace) + "." + reader.GetString (type.Name);
+					} else if (ctor.Parent.Kind == HandleKind.TypeSpecification) {
+						var type = reader.GetTypeSpecification ((TypeSpecificationHandle)ctor.Parent);
+						BlobReader blobReader = reader.GetBlobReader (type.Signature);
+						SignatureTypeCode typeCode = blobReader.ReadSignatureTypeCode ();
+						EntityHandle typeHandle = blobReader.ReadTypeHandle ();
+						TypeReference typeRef = reader.GetTypeReference ((TypeReferenceHandle)typeHandle);
+						return reader.GetString (typeRef.Namespace) + "." + reader.GetString (typeRef.Name);
+					} else {
+						log.LogDebugMessage ($"Unsupported EntityHandle.Kind: {ctor.Parent.Kind}");
+						return null;
+					}
+				}
+				catch (InvalidCastException ex) {
+					log.LogDebugMessage ($"Unsupported EntityHandle.Kind `{ctor.Parent.Kind}`: {ex}");
+					return null;
+				}
 			} else if (attribute.Constructor.Kind == HandleKind.MethodDefinition) {
 				var ctor = reader.GetMethodDefinition ((MethodDefinitionHandle)attribute.Constructor);
 				var type = reader.GetTypeDefinition (ctor.GetDeclaringType ());

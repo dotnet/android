@@ -1461,5 +1461,48 @@ namespace App1
 				Environment.SetEnvironmentVariable ("JAVA_TOOL_OPTIONS", oldEnvVar);
 			}
 		}
+
+		[Test]
+		public void LibraryWithGenericAttribute ()
+		{
+			var path = Path.Combine ("temp", TestContext.CurrentContext.Test.Name);
+			var lib = new XamarinAndroidLibraryProject {
+				ProjectName = "Library1",
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("Class1.cs") {
+						TextContent = () => """
+							namespace Library1;
+							public class Class1 { }
+						"""
+					},
+					new BuildItem.Source ("GenericTestAttribute.cs") {
+						TextContent = () => """
+							using System;
+							[assembly: GenericTestAttribute<Guid>]
+							[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true, Inherited = false)]
+							public class GenericTestAttribute<T> : Attribute { }
+						""",
+					},
+				},
+			};
+			var proj = new XamarinAndroidApplicationProject {
+				ProjectName = "App1",
+				IsRelease = true,
+				Sources = {
+					new BuildItem.Source ("Class2.cs") {
+						TextContent= () => """
+							namespace App1;
+							class Class2 : Library1.Class1 { }
+						""",
+					},
+				},
+			};
+			proj.AddReference (lib);
+			using var libb = CreateDllBuilder (Path.Combine (path, "Library1"));
+			Assert.IsTrue (libb.Build (lib), "Library1 Build should have succeeded.");
+			using var b = CreateApkBuilder (Path.Combine (path, "App1"));
+			Assert.IsTrue (b.Build (proj), "App1 Build should have succeeded.");
+		}
 	}
 }
