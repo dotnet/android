@@ -741,12 +741,10 @@ AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_arr
 
 		if (have_split_apks) {
 			if (Util::ends_with (apk, SharedConstants::split_config_abi_apk_name)) {
-				log_warn (LOG_ASSEMBLY, "Here #1");
 				add_apk_libdir (apk, number_of_added_directories, abi);
 				break;
 			}
 		} else {
-			log_warn (LOG_ASSEMBLY, "Here #2");
 			add_apk_libdir (apk, number_of_added_directories, abi);
 		}
 	}
