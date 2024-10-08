@@ -26,13 +26,12 @@ namespace Xamarin.Android.Tasks
 						TypeReference typeRef = reader.GetTypeReference ((TypeReferenceHandle)typeHandle);
 						return reader.GetString (typeRef.Namespace) + "." + reader.GetString (typeRef.Name);
 					} else {
-						log.LogDebugMessage($"Unknown EntityHandle.Kind: {ctor.Parent.Kind}");
+						log.LogDebugMessage ($"Unsupported EntityHandle.Kind: {ctor.Parent.Kind}");
 						return null;
 					}
 				}
-				catch (InvalidCastException ex)
-				{
-					log.LogDebugMessage($"Unknown EntityHandle.Kind: {ex}");
+				catch (InvalidCastException ex) {
+					log.LogDebugMessage ($"Unsupported EntityHandle.Kind `{ctor?.Parent?.Kind?.ToString () ?? "<null>"}`: {ex}");
 					return null;
 				}
 			} else if (attribute.Constructor.Kind == HandleKind.MethodDefinition) {
