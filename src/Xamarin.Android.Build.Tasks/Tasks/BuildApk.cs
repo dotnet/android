@@ -212,7 +212,7 @@ namespace Xamarin.Android.Tasks
 					apk.Flush ();
 				}
 
-				AddRuntimeConfigBlob (apk);
+//				AddRuntimeConfigBlob (apk);
 				AddRuntimeLibraries (apk, supportedAbis);
 				apk.Flush();
 				AddNativeLibraries (files, supportedAbis);
