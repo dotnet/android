@@ -104,7 +104,10 @@ Copyright (C) 2016 Xamarin. All rights reserved.
   <AndroidError Code="XA1038"
       ResourceName="XA1038"
       FormatArguments="AndroidResourceDesignerClassModifier;$(AndroidResourceDesignerClassModifier);&apos;public&apos;, &apos;internal&apos;"
-      Condition=" '$(AndroidResourceDesignerClassModifier)' != 'public' And '$(AndroidResourceDesignerClassModifier)' != 'internal' "
+      Condition="
+        '$([System.String]::CompareOrdinal('public', $(AndroidResourceDesignerClassModifier))' != '0' And
+        '$([System.String]::CompareOrdinal('internal', $(AndroidResourceDesignerClassModifier))' != '0'
+"
   />
   <GenerateResourceDesignerIntermediateClass
       IsApplication="$(AndroidApplication)"
