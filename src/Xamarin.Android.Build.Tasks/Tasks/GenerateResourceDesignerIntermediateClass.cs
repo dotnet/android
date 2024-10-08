@@ -29,7 +29,6 @@ namespace %NAMESPACE% {
 	/// Android Resource Designer class.
 	/// Exposes the Android Resource designer assembly into the project Namespace.
 	/// </summary>
-	[GeneratedCode(""%TOOL%"", ""%VERSION%"")]
 	%MODIFIER% partial class Resource : %BASECLASS% {
 	}
 	#pragma warning restore IDE0002
@@ -42,7 +41,6 @@ namespace %NAMESPACE% {
 //------------------------------------------------------------------------------
 namespace %NAMESPACE%
 
-[<type:System.CodeDom.Compiler.GeneratedCode(""%TOOL%"", ""%VERSION%"")>]
 type %MODIFIER% Resource = %BASECLASS%
 ";
 
@@ -63,15 +61,11 @@ type %MODIFIER% Resource = %BASECLASS%
 			if (isCSharp) {
 				template = CSharpTemplate.Replace ("%NAMESPACE%", Namespace)
 					.Replace ("%BASECLASS%", baseClass)
-					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", Modifier.ToLower ())
-					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
+					.Replace ("%MODIFIER%", Modifier.ToLower ());
 			} else if (isFSharp) {
 				template = FSharpTemplate.Replace ("%NAMESPACE%", Namespace)
 					.Replace ("%BASECLASS%", baseClass)
-					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", Modifier.ToLower ())
-					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
+					.Replace ("%MODIFIER%", Modifier.ToLower ());
 			}
 
 			Files.CopyIfStringChanged (template, OutputFile.ItemSpec);
