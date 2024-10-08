@@ -31,7 +31,7 @@ namespace Xamarin.Android.Tasks
 					}
 				}
 				catch (InvalidCastException ex) {
-					log.LogDebugMessage ($"Unsupported EntityHandle.Kind `{ctor?.Parent?.Kind?.ToString () ?? "<null>"}`: {ex}");
+					log.LogDebugMessage ($"Unsupported EntityHandle.Kind `{ctor.Parent.Kind}`: {ex}");
 					return null;
 				}
 			} else if (attribute.Constructor.Kind == HandleKind.MethodDefinition) {
