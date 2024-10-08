@@ -144,9 +144,13 @@ class ELFEmbeddingHelper
 			throw new NotSupportedException ($"Internal error: unsupported target arch '{arch}'");
 		}
 
+		inputFile = Path.GetFullPath (inputFile);
+		outputFile = Path.GetFullPath (outputFile);
+
 		var fi = new FileInfo (inputFile);
 		long inputFileSize = fi.Length;
 		string asmInputFile = Path.ChangeExtension (outputFile, ".s");
+		string sanitizedInputFilePath = inputFile.Replace ("\\", "\\\\");
 
 		using var fs = File.Open (asmInputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var sw = new StreamWriter (fs, asmFileEncoding);
@@ -158,7 +162,7 @@ class ELFEmbeddingHelper
 		sw.WriteLine ($".global {symbolName}");
 		sw.WriteLine ($".type {symbolName},{cfg.AssemblerDirectivePrefix}object");
 		sw.WriteLine ($"{symbolName}:");
-		sw.WriteLine ($"\t.incbin \"{inputFile}\"");
+		sw.WriteLine ($"\t.incbin \"{sanitizedInputFilePath}\"");
 		sw.WriteLine ($"\t.size {symbolName}, {inputFileSize}");
 		sw.WriteLine ();
 
