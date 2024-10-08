@@ -53,7 +53,6 @@ type %MODIFIER% Resource = %BASECLASS%
 		public override bool RunTask ()
 		{
 			string baseClass = IsApplication ? ResourceDesignerConstants : ResourceDesigner;
-			string modifier = IsApplication ? Modifier : "public";
 			var extension = Path.GetExtension (OutputFile.ItemSpec);
 			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
 			//bool isVB = string.Equals (extension, ".vb", StringComparison.OrdinalIgnoreCase);
@@ -63,15 +62,15 @@ type %MODIFIER% Resource = %BASECLASS%
 			string template = "";
 			if (isCSharp) {
 				template = CSharpTemplate.Replace ("%NAMESPACE%", Namespace)
-					.Replace ("%BASECLASS%", ns)
+					.Replace ("%BASECLASS%", baseClass)
 					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", modifier)
+					.Replace ("%MODIFIER%", Modifier)
 					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
 			} else if (isFSharp) {
 				template = FSharpTemplate.Replace ("%NAMESPACE%", Namespace)
-					.Replace ("%BASECLASS%", ns)
+					.Replace ("%BASECLASS%", baseClass)
 					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", modifier)
+					.Replace ("%MODIFIER%", Modifier)
 					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
 			}
 
