@@ -58,13 +58,7 @@ public class MonoPackageManager {
 				// Should the order change here, src/monodroid/jni/SharedConstants.hh must be updated accordingly
 				//
 				String[] appDirs = new String[] {filesDir, cacheDir, dataDir};
-				boolean haveSplitApks = false;
-
-				if (android.os.Build.VERSION.SDK_INT >= 21) {
-					if (runtimePackage.splitSourceDirs != null) {
-						haveSplitApks = runtimePackage.splitSourceDirs.length > 1;
-					}
-				}
+				boolean haveSplitApks = runtimePackage.splitSourceDirs != null && runtimePackage.splitSourceDirs.length > 0;
 
 				//
 				// Preload DSOs libmonodroid.so depends on so that the dynamic
