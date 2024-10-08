@@ -105,8 +105,8 @@ Copyright (C) 2016 Xamarin. All rights reserved.
       ResourceName="XA1038"
       FormatArguments="AndroidResourceDesignerClassModifier;$(AndroidResourceDesignerClassModifier);&apos;public&apos;, &apos;internal&apos;"
       Condition="
-        '$([System.String]::CompareOrdinal('public', $(AndroidResourceDesignerClassModifier))' != '0' And
-        '$([System.String]::CompareOrdinal('internal', $(AndroidResourceDesignerClassModifier))' != '0'
+        '$([System.String]::CompareOrdinal(&quot;public&quot;, $(AndroidResourceDesignerClassModifier)))' != '0' And
+        '$([System.String]::CompareOrdinal(&quot;internal&quot;, $(AndroidResourceDesignerClassModifier)))' != '0'
 "
   />
   <GenerateResourceDesignerIntermediateClass

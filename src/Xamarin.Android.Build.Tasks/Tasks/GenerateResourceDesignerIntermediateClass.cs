@@ -64,13 +64,13 @@ type %MODIFIER% Resource = %BASECLASS%
 				template = CSharpTemplate.Replace ("%NAMESPACE%", Namespace)
 					.Replace ("%BASECLASS%", baseClass)
 					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", Modifier)
+					.Replace ("%MODIFIER%", Modifier.ToLower ())
 					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
 			} else if (isFSharp) {
 				template = FSharpTemplate.Replace ("%NAMESPACE%", Namespace)
 					.Replace ("%BASECLASS%", baseClass)
 					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%MODIFIER%", Modifier)
+					.Replace ("%MODIFIER%", Modifier.ToLower ())
 					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
 			}
 
