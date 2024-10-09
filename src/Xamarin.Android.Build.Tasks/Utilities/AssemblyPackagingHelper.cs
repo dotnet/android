@@ -10,7 +10,7 @@ namespace Xamarin.Android.Tasks;
 
 static class AssemblyPackagingHelper
 {
-	public static void AddAssembliesFromCollection (TaskLoggingHelper Log, ICollection<string> SupportedAbis, ICollection<ITaskItem> assemblies, Action<AndroidTargetArch, Dictionary<string, ITaskItem>> doAddAssemblies)
+	public static void AddAssembliesFromCollection (TaskLoggingHelper Log, ICollection<string> SupportedAbis, ICollection<ITaskItem> assemblies, Action<TaskLoggingHelper, AndroidTargetArch, ITaskItem> doAddAssembly)
 	{
 		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
 			assemblies,
@@ -28,7 +28,18 @@ static class AssemblyPackagingHelper
 
 		foreach (var kvp in perArchAssemblies) {
 			Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
-			doAddAssemblies (kvp.Key, kvp.Value);
+			DoAddAssembliesFromArchCollection (Log, kvp.Key, kvp.Value, doAddAssembly);
+		}
+	}
+
+	static void DoAddAssembliesFromArchCollection (TaskLoggingHelper Log, AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies, Action<TaskLoggingHelper, AndroidTargetArch, ITaskItem> doAddAssembly)
+	{
+		foreach (ITaskItem assembly in assemblies.Values) {
+			if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec, Log)) {
+				Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
+			}
+
+			doAddAssembly (Log, arch, assembly);
 		}
 	}
 }
