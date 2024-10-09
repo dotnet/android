@@ -501,6 +501,14 @@ namespace Xamarin.Android.Tasks
 				);
 			}
 
+			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
+			{
+				if (compressedAssembly == null)
+					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
+				else
+					compressedAssembly.SetData (sourcePath, descriptorIndex);
+			}
+
 			string CompressAssembly (ITaskItem assembly)
 			{
 				if (!compress) {
