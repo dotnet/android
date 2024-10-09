@@ -515,15 +515,17 @@ namespace Xamarin.Android.Tasks
 
 					string symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
 					if (!File.Exists (symbols)) {
-						string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-						string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbols, Path.GetFileName (archiveSymbolsPath), this);
-						AddFileToArchiveIfNewer (
-							apk,
-							wrappedSymbolsPath,
-							archiveSymbolsPath,
-							compressionMethod: GetCompressionMethod (archiveSymbolsPath)
-						);
+						continue;
 					}
+
+					string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
+					string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbols, Path.GetFileName (archiveSymbolsPath), this);
+					AddFileToArchiveIfNewer (
+						apk,
+						wrappedSymbolsPath,
+						archiveSymbolsPath,
+						compressionMethod: GetCompressionMethod (archiveSymbolsPath)
+					);
 				}
 			}
 
