@@ -118,6 +118,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string ProjectFullPath { get; set; }
 
+		[Required]
+		public string CompressedAssembliesDir { get; set; }
+
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
 
@@ -354,7 +357,7 @@ namespace Xamarin.Android.Tasks
 
 			if (compress) {
 				string key = CompressedAssemblyInfo.GetKey (ProjectFullPath);
-				Log.LogDebugMessage ($"Retrieving assembly compression info with key '{key}'");
+				Log.LogDebugMessage ($"[{TaskPrefix}] Retrieving assembly compression info with key '{key}'");
 				compressedAssembliesInfo = BuildEngine4.UnregisterTaskObjectAssemblyLocal<IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>> (key, RegisteredTaskObjectLifetime.Build);
 				if (compressedAssembliesInfo == null)
 					throw new InvalidOperationException ($"Assembly compression info not found for key '{key}'. Compression will not be performed.");
@@ -424,7 +427,6 @@ namespace Xamarin.Android.Tasks
 		{
 			string sourcePath;
 			AssemblyCompression.AssemblyData compressedAssembly = null;
-			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
 			AssemblyStoreBuilder? storeBuilder = null;
 
 			if (UseAssemblyStore) {
@@ -507,7 +509,7 @@ namespace Xamarin.Android.Tasks
 					return assembly.ItemSpec;
 				}
 
-				return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, compressedOutputDir);
+				return AssemblyCompression.Compress (Log, assembly, compressedAssembliesInfo, CompressedAssembliesDir);
 			}
 		}
 
