@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <UsingTask TaskName="Xamarin.Android.Tasks.CreateEmbeddedAssemblyStore" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+
+  <Target Name="_PrepareCreateEmbeddedAssemblyStoreOutputItems">
+    <!-- NOTE: the `embed_` prefix and `assembly_store` stem must be identical to the values used in ELFEmbeddingHelper -->
+    <ItemGroup>
+      <_EmbeddedAssemblyStoreObjectFile Include="$(_NativeAssemblySourceDir)embed_assembly_store.%(_BuildTargetAbis.Identity).o" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_CreateEmbeddedAssemblyStore"
+          Condition=" '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' "
+          DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
+          Inputs="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
+          Outputs="@(_EmbeddedAssemblyStoreObjectFile)">
+    <CreateEmbeddedAssemblyStore
+        AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+        AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+        ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
+        ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)">
+      <Output TaskParameter="EmbeddedObjectFiles" ItemName="_NativeAssemblyTarget" />
+      <Output TaskParameter="NativeAssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
+    </CreateEmbeddedAssemblyStore>
+
+    <ItemGroup>
+      <FileWrites Include="@(_NativeAssemblyTarget)" />
+      <FileWrites Include="@(_EmbeddedAssemblyStoreSourceFiles)" />
+    </ItemGroup>
+  </Target>
+</Project>
