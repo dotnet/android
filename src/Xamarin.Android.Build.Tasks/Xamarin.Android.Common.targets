@@ -292,7 +292,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
-
+  <_AndroidCompressedAssembliesDir>$(IntermediateOutputPath)android\lz4</_AndroidCompressedAssembliesDir>
 </PropertyGroup>
 
 <Choose>
@@ -1869,6 +1869,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
+    _RemoveRegisterAttribute;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
@@ -1999,7 +2000,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_CreateEmbeddedAssemblyStore;_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore"
     Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
@@ -2113,7 +2114,8 @@ because xbuild doesn't support framework reference assemblies.
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     ZipAlignmentPages="$(AndroidZipAlignment)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)">
+    UseAssemblyStore="$(AndroidUseAssemblyStore)"
+    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2151,7 +2153,8 @@ because xbuild doesn't support framework reference assemblies.
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)">
+      UseAssemblyStore="$(AndroidUseAssemblyStore)"
+      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
