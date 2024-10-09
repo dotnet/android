@@ -20,10 +20,11 @@ do_abort_unless (const char* fmt, ...)
 	va_list ap;
 
 	va_start (ap, fmt);
-	__android_log_vprint (ANDROID_LOG_FATAL, "monodroid", fmt, ap);
+	char *message = nullptr;
+	int n = vasprintf (&message, fmt, ap);
 	va_end (ap);
 
-	xamarin::android::Helpers::abort_application ();
+	xamarin::android::Helpers::abort_application (n == -1 ? "Unable to allocate memory for abort message" : message);
 }
 
 #define abort_unless(_condition_, _fmt_, ...) \

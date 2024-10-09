@@ -216,8 +216,13 @@ Debug::start_debugging_and_profiling ()
 	if (AndroidSystem::monodroid_get_system_property (SharedConstants::DEBUG_MONO_CONNECT_PROPERTY, &connect_args) > 0) {
 		DebuggerConnectionStatus res = start_connection (connect_args);
 		if (res == DebuggerConnectionStatus::Error) {
-			log_fatal (LOG_DEBUGGER, "Could not start a connection to the debugger with connection args '%s'.", connect_args);
-			Helpers::abort_application ();
+			Helpers::abort_application (
+				LOG_DEBUGGER,
+				Util::monodroid_strdup_printf (
+					"Connection to debugger failed. Args: %s",
+					connect_args
+				)
+			);
 		} else if (res == DebuggerConnectionStatus::Connected) {
 			/* Wait for XS to configure debugging/profiling */
 			gettimeofday(&wait_tv, nullptr);
@@ -604,8 +609,7 @@ xamarin::android::conn_thread (void *arg)
 	Debug *instance = static_cast<Debug*> (arg);
 	res = instance->handle_server_connection ();
 	if (res && res != 3) {
-		log_fatal (LOG_DEBUGGER, "Error communicating with the IDE, exiting...");
-		Helpers::abort_application ();
+		Helpers::abort_application (LOG_DEBUGGER, "Error communicating with the IDE, exiting...");
 	}
 
 	return nullptr;
