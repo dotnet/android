@@ -459,7 +459,7 @@ namespace Xamarin.Android.Tasks
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
-			void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly)
+			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
 			{
 				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
