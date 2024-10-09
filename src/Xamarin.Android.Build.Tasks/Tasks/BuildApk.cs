@@ -459,7 +459,7 @@ namespace Xamarin.Android.Tasks
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
-			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
+			void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly)
 			{
 				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
@@ -499,14 +499,6 @@ namespace Xamarin.Android.Tasks
 					archiveSymbolsPath,
 					compressionMethod: GetCompressionMethod (archiveSymbolsPath)
 				);
-			}
-
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
 			}
 
 			string CompressAssembly (ITaskItem assembly)

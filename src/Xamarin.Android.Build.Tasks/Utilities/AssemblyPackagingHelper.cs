@@ -10,11 +10,7 @@ namespace Xamarin.Android.Tasks;
 
 static class AssemblyPackagingHelper
 {
-<<<<<<< HEAD
 	public static void AddAssembliesFromCollection (TaskLoggingHelper Log, ICollection<string> SupportedAbis, ICollection<ITaskItem> assemblies, Action<TaskLoggingHelper, AndroidTargetArch, ITaskItem> doAddAssembly)
-=======
-	public static void AddAssembliesFromCollection (TaskLoggingHelper Log, ICollection<string> SupportedAbis, ICollection<ITaskItem> assemblies, Action<AndroidTargetArch, Dictionary<string, ITaskItem>> doAddAssemblies)
->>>>>>> c4d883405 (Move some of assembly packaging code to a helper class)
 	{
 		Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
 			assemblies,
@@ -32,7 +28,6 @@ static class AssemblyPackagingHelper
 
 		foreach (var kvp in perArchAssemblies) {
 			Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
-<<<<<<< HEAD
 			DoAddAssembliesFromArchCollection (Log, kvp.Key, kvp.Value, doAddAssembly);
 		}
 	}
@@ -45,9 +40,6 @@ static class AssemblyPackagingHelper
 			}
 
 			doAddAssembly (Log, arch, assembly);
-=======
-			doAddAssemblies (kvp.Key, kvp.Value);
->>>>>>> c4d883405 (Move some of assembly packaging code to a helper class)
 		}
 	}
 }
