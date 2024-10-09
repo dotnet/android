@@ -459,60 +459,46 @@ namespace Xamarin.Android.Tasks
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
 			}
 
-			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
+			void DoAddAssembliesFromArchCollection (TaskLoggingHelper log, AndroidTargetArch arch, ITaskItem assembly)
 			{
 				// In the "all assemblies are per-RID" world, assemblies, pdb and config are disguised as shared libraries (that is,
 				// their names end with the .so extension) so that Android allows us to put them in the `lib/{ARCH}` directory.
 				// For this reason, they have to be treated just like other .so files, as far as compression rules are concerned.
 				// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
 				// or not we're supposed to compress .so files.
-				foreach (ITaskItem assembly in assemblies.Values) {
-					if (MonoAndroidHelper.IsReferenceAssembly (assembly.ItemSpec, Log)) {
-						Log.LogCodedWarning ("XA0107", assembly.ItemSpec, 0, Properties.Resources.XA0107, assembly.ItemSpec);
-					}
-
-					sourcePath = CompressAssembly (assembly);
-					if (UseAssemblyStore) {
-						storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
-						continue;
-					}
-
-					// Add assembly
-					(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
-					string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), this);
-					AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
-
-					// Try to add config if exists
-					var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-					AddAssemblyConfigEntry (apk, arch, assemblyDirectory, config);
-
-					// Try to add symbols if Debug
-					if (!debug) {
-						continue;
-					}
-
-					string symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-					if (!File.Exists (symbols)) {
-						continue;
-					}
-
-					string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-					string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbols, Path.GetFileName (archiveSymbolsPath), this);
-					AddFileToArchiveIfNewer (
-						apk,
-						wrappedSymbolsPath,
-						archiveSymbolsPath,
-						compressionMethod: GetCompressionMethod (archiveSymbolsPath)
-					);
+				sourcePath = CompressAssembly (assembly);
+				if (UseAssemblyStore) {
+					storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
+					return;
 				}
-			}
 
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
+				// Add assembly
+				(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
+				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), this);
+				AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
+
+				// Try to add config if exists
+				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
+				AddAssemblyConfigEntry (apk, arch, assemblyDirectory, config);
+
+				// Try to add symbols if Debug
+				if (!debug) {
+					return;
+				}
+
+				string symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
+				if (!File.Exists (symbols)) {
+					return;
+				}
+
+				string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
+				string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbols, Path.GetFileName (archiveSymbolsPath), this);
+				AddFileToArchiveIfNewer (
+					apk,
+					wrappedSymbolsPath,
+					archiveSymbolsPath,
+					compressionMethod: GetCompressionMethod (archiveSymbolsPath)
+				);
 			}
 
 			string CompressAssembly (ITaskItem assembly)
