@@ -26,6 +26,7 @@ class ELFEmbeddingHelper
 	public static class KnownEmbedItems
 	{
 		public static readonly EmbedItem RuntimeConfig = new ("embedded_runtime_config", "runtime_config");
+		public static readonly EmbedItem AssemblyStore = new ("embedded_assembly_store", "assembly_store");
 	}
 
 	sealed class LlvmMcTargetConfig
