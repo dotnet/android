@@ -432,10 +432,10 @@ namespace Xamarin.Android.Tasks
 			}
 
 			// Add user assemblies
-			AddAssembliesFromCollection (ResolvedUserAssemblies);
+			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
 
 			// Add framework assemblies
-			AddAssembliesFromCollection (ResolvedFrameworkAssemblies);
+			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
 
 			if (!UseAssemblyStore) {
 				return;
@@ -457,28 +457,6 @@ namespace Xamarin.Android.Tasks
 				inArchivePath = MakeArchiveLibPath (abi, "lib" + Path.GetFileName (kvp.Value));
 				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (kvp.Key, kvp.Value, Path.GetFileName (inArchivePath), this);
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, inArchivePath, GetCompressionMethod (inArchivePath));
-			}
-
-			void AddAssembliesFromCollection (ITaskItem[] assemblies)
-			{
-				Dictionary<AndroidTargetArch, Dictionary<string, ITaskItem>> perArchAssemblies = MonoAndroidHelper.GetPerArchAssemblies (
-					assemblies,
-					SupportedAbis,
-					validate: true,
-					shouldSkip: (ITaskItem asm) => {
-						if (bool.TryParse (asm.GetMetadata ("AndroidSkipAddToPackage"), out bool value) && value) {
-							Log.LogDebugMessage ($"Skipping {asm.ItemSpec} due to 'AndroidSkipAddToPackage' == 'true' ");
-							return true;
-						}
-
-						return false;
-					}
-				);
-
-				foreach (var kvp in perArchAssemblies) {
-					Log.LogDebugMessage ($"Adding assemblies for architecture '{kvp.Key}'");
-					DoAddAssembliesFromArchCollection (kvp.Key, kvp.Value);
-				}
 			}
 
 			void DoAddAssembliesFromArchCollection (AndroidTargetArch arch, Dictionary<string, ITaskItem> assemblies)
