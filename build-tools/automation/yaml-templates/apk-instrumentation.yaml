@@ -42,7 +42,7 @@ steps:
     testRunTitle: ${{ parameters.testName }}
   condition: and(${{ parameters.condition }}, ne('${{ parameters.testResultsFiles }}', ''))
 
-- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml
   parameters:
     project: ${{ parameters.project }}
     arguments: -t:Clean -c ${{ parameters.configuration }} --no-restore
