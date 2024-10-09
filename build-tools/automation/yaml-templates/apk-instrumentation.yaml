@@ -41,3 +41,10 @@ steps:
     testResultsFiles: ${{ parameters.testResultsFiles }}
     testRunTitle: ${{ parameters.testName }}
   condition: and(${{ parameters.condition }}, ne('${{ parameters.testResultsFiles }}', ''))
+
+- template: /build-tools/automation/yaml-templates/run-dotnet-preview.yaml@self
+  parameters:
+    project: ${{ parameters.project }}
+    arguments: -t:Clean -c ${{ parameters.configuration }} --no-restore
+    displayName: Clean ${{ parameters.testName }}
+    continueOnError: false
