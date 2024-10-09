@@ -17,8 +17,13 @@
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+        CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)\test\"
+        Debug="$(AndroidIncludeDebugSymbols)"
+        EnableCompression="$(AndroidEnableAssemblyCompression)"
+        ProjectFullPath="$(MSBuildProjectFullPath)"
         ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
-        ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)">
+        ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
+        SupportedAbis="@(_BuildTargetAbis)">
       <Output TaskParameter="EmbeddedObjectFiles" ItemName="_NativeAssemblyTarget" />
       <Output TaskParameter="NativeAssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
     </CreateEmbeddedAssemblyStore>
