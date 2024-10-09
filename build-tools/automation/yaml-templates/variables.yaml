@@ -30,7 +30,7 @@ variables:
 - name: GitHub.Token
   value: $(github--pat--vs-mobiletools-engineering-service2)
 - name: HostedMacImage
-  value: macOS-13
+  value: macOS-14
 - name: HostedWinImage
   value: windows-2022
 - name: WindowsPoolImage1ESPT
