@@ -17,6 +17,7 @@
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
+        AssemblySourcesDir="$(IntermediateOutputPath)android"
         CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)\test\"
         Debug="$(AndroidIncludeDebugSymbols)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"
