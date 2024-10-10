@@ -396,4 +396,7 @@ MONO_API MONO_API_EXPORT const MarshalMethodName mm_method_names[];
 
 MONO_API MONO_API_EXPORT size_t embedded_runtime_config_size;
 MONO_API MONO_API_EXPORT uint8_t embedded_runtime_config[];
+
+MONO_API MONO_API_EXPORT size_t embedded_assembly_store_size;
+MONO_API MONO_API_EXPORT uint8_t embedded_assembly_store[];
 #endif // __XAMARIN_ANDROID_TYPEMAP_H

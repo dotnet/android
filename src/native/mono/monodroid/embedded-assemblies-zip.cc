@@ -183,6 +183,47 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 	}
 }
 
+
+[[gnu::always_inline]] void
+EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const char *name) noexcept
+{
+	auto header = static_cast<AssemblyStoreHeader*>(data_start);
+
+	if (header->magic != ASSEMBLY_STORE_MAGIC) {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' is not a valid .NET for Android assembly store file",
+				entry_name.get ()
+			)
+		);
+	}
+
+	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
+				entry_name.get (),
+				header->version,
+				ASSEMBLY_STORE_FORMAT_VERSION
+			)
+		);
+	}
+
+	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
+
+	assembly_store.data_start = static_cast<uint8_t*>(data_start);
+	assembly_store.assembly_count = header->entry_count;
+	assembly_store.index_entry_count = header->index_entry_count;
+	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
+
+	number_of_found_assemblies += assembly_store.assembly_count;
+	number_of_mapped_assembly_stores++;
+	have_and_want_debug_symbols = register_debug_symbols;
+}
+
 inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
@@ -219,42 +260,8 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	}
 
 	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map, entry_name.get ());
-	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: {:p}; size: {}", payload_start, payload_size);
-	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
-
-	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Assembly store '{}' is not a valid .NET for Android assembly store file",
-				optional_string (entry_name.get ())
-			)
-		);
-	}
-
-	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Assembly store '{}' uses format version {:x}, instead of the expected {:x}",
-				optional_string (entry_name.get ()),
-				header->version,
-				ASSEMBLY_STORE_FORMAT_VERSION
-			)
-		);
-	}
-
-	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
-
-	assembly_store.data_start = static_cast<uint8_t*>(payload_start);
-	assembly_store.assembly_count = header->entry_count;
-	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
-	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
-
-	number_of_found_assemblies += assembly_store.assembly_count;
-	number_of_mapped_assembly_stores++;
-	have_and_want_debug_symbols = register_debug_symbols;
+	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
+	verify_assembly_store_and_set_info (payload_start, entry_name.get ());
 }
 
 [[gnu::always_inline]] void
@@ -265,9 +272,15 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool assembly_store_found = false;
+	bool assembly_store_found = embedded_assembly_store_size != 0;
+	if (assembly_store_found) {
+		log_debug (LOG_ASSEMBLY, "Got embedded assembly store, size %zu", embedded_assembly_store_size);
+		verify_assembly_store_and_set_info (embedded_assembly_store, "embedded");
+		log_debug (LOG_ASSEMBLY, "Looking for DSOs in APK");
+	} else {
+		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('%s') and DSOs in APK", assembly_store_file_path.data ());
+	}
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('{}')", assembly_store_file_path.data ());
 	for (size_t i = 0uz; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
