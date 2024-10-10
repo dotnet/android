@@ -625,6 +625,12 @@ namespace Xamarin.Android.Tasks
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
 		}
 
+		public static string GetDSOStubsRootDirectoryPath (string androidBinUtilsDirectory)
+		{
+			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
+			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "dsostubs"));
+		}
+
 		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)
 		{
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
