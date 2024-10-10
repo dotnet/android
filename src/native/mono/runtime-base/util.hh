@@ -69,7 +69,7 @@ namespace xamarin::android
 		static char            *monodroid_strdup_vprintf (const char *format, va_list vargs);
 		static char*            path_combine (const char *path1, const char *path2);
 		static void             create_public_directory (const char *dir);
-		static int              create_directory (const char *pathname, mode_t mode);
+		static int              create_directory (const char *pathname, mode_t mode, mode_t mask = 022);
 		static void             set_world_accessable (const char *path);
 		static auto             set_world_accessible (int fd) noexcept -> bool;
 		static void             set_user_executable (const char *path);
