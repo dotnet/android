@@ -2115,7 +2115,8 @@ because xbuild doesn't support framework reference assemblies.
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     ZipAlignmentPages="$(AndroidZipAlignment)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
-    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2154,7 +2155,8 @@ because xbuild doesn't support framework reference assemblies.
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
-      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+      AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
