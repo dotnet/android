@@ -61,6 +61,15 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
+		[Required]
+		public string AndroidBinUtilsDirectory { get; set; }
+
+		[Required]
+		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
+
+		[Output]
+		public ITaskItem[] EmbeddedObjectFiles { get; set; }
+
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -320,6 +329,21 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
+			if (haveRuntimeConfigBlob) {
+				List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
+					Log,
+					SupportedAbis,
+					AndroidBinUtilsDirectory,
+					RuntimeConfigBinFilePath,
+					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+					EnvironmentOutputDirectory
+				);
+
+				EmbeddedObjectFiles = objectFilePaths.ToArray ();
+			} else {
+				EmbeddedObjectFiles = Array.Empty<ITaskItem> ();
+			}
+
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
 				UsesMonoAOT = usesMonoAOT,
@@ -345,6 +369,7 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				AssemblyStoreEmbeddedInRuntime = UseAssemblyStore && AssemblyStoreEmbeddedInRuntime,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
