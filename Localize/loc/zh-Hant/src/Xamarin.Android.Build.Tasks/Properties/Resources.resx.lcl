@@ -1521,6 +1521,9 @@
       <Item ItemId=";XA4315" ItemType="0;.resx" PsrId="211" InstFlg="true" Leaf="true">
         <Str Cat="Text">
           <Val><![CDATA[Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.]]></Val>
+          <Tgt Cat="Text" Stat="Loc" Orig="New">
+            <Val><![CDATA[正在跳過 `{0}`。Manifest 在 manifest 元素上沒有必要的 'package' 属性。]]></Val>
+          </Tgt>
         </Str>
         <Disp Icon="Str" />
       </Item>
