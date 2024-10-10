@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 
 using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
@@ -17,6 +18,9 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 
 	[Required]
 	public string AppSharedLibrariesDir { get; set; }
+
+	[Required]
+	public string AssemblySourcesDir { get; set; }
 
 	[Required]
 	public string CompressedAssembliesDir { get; set; }
@@ -66,6 +70,39 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 
 		// Add framework assemblies
 		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
+
+		var objectFiles = new List<ITaskItem> ();
+		var sourceFiles = new List<ITaskItem> ();
+		Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (Path.Combine (AppSharedLibrariesDir, "embedded"));
+		foreach (var kvp in assemblyStorePaths) {
+			string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
+			string inputFile = kvp.Value;
+
+			List<ITaskItem> items = ELFEmbeddingHelper.EmbedBinary (
+				Log,
+				abi,
+				AndroidBinUtilsDirectory,
+				inputFile,
+				ELFEmbeddingHelper.KnownEmbedItems.AssemblyStore,
+				AssemblySourcesDir
+			);
+
+			if (items.Count == 0) {
+				continue;
+			}
+
+			objectFiles.AddRange (items);
+			foreach (ITaskItem objectItem in items) {
+				var sourceItem = new TaskItem (
+					Path.ChangeExtension (objectItem.ItemSpec, ".s"),
+					objectItem.CloneCustomMetadata ()
+				);
+				sourceFiles.Add (sourceItem);
+			}
+		}
+
+		NativeAssemblySources = sourceFiles.ToArray ();
+		EmbeddedObjectFiles = objectFiles.ToArray ();
 
 		return !Log.HasLoggedErrors;
 
