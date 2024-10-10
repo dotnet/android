@@ -262,26 +262,14 @@ AndroidSystem::monodroid_get_system_property_from_overrides ([[maybe_unused]] co
 	return 0;
 }
 
-// TODO: review this. Do we really have to create the dir in release?
 void
 AndroidSystem::create_update_dir (char *override_dir) noexcept
 {
-#if defined (RELEASE)
-	/*
-	 * Don't create .__override__ on Release builds, because Google requires
-	 * that pre-loaded apps not create world-writable directories.
-	 *
-	 * However, if any logging is enabled (which should _not_ happen with
-	 * pre-loaded apps!), we need the .__override__ directory...
-	 */
-	if (log_categories == 0 && monodroid_get_system_property (SharedConstants::DEBUG_MONO_PROFILE_PROPERTY, nullptr) == 0) {
-		return;
-	}
-#endif // def RELEASE
-
 	override_dirs [0] = override_dir;
+#if defined(DEBUG)
+	log_debug (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
 	Util::create_public_directory (override_dir);
-	log_warn (LOG_DEFAULT, "Creating public update directory: `%s`", override_dir);
+#endif
 }
 
 bool

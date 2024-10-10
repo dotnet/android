@@ -64,6 +64,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
+		[Required]
+		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
+
 		[Output]
 		public ITaskItem[] EmbeddedObjectFiles { get; set; }
 
@@ -366,6 +369,7 @@ namespace Xamarin.Android.Tasks
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
+				AssemblyStoreEmbeddedInRuntime = UseAssemblyStore && AssemblyStoreEmbeddedInRuntime,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 
