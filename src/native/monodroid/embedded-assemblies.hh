@@ -341,7 +341,7 @@ namespace xamarin::android::internal {
 		}
 
 		template<typename Key, typename Entry, int (*compare)(const Key*, const Entry*), bool use_extra_size = false>
-		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0) noexcept;
+		static const Entry* binary_search (const Key *key, const Entry *base, size_t nmemb, size_t extra_size = 0uz) noexcept;
 
 #if defined (DEBUG)
 		static int compare_type_name (const char *type_name, const TypeMapEntry *entry) noexcept;
@@ -390,7 +390,7 @@ namespace xamarin::android::internal {
 		}
 
 		template<bool IsSatelliteAssembly>
-		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0) noexcept
+		static void unmangle_name (dynamic_local_string<SENSIBLE_PATH_MAX> &name, size_t start_idx = 0uz) noexcept
 		{
 			constexpr size_t mangled_data_size = get_mangled_data_size<IsSatelliteAssembly> ();
 			if (name.length () <= mangled_data_size) {
@@ -423,8 +423,8 @@ namespace xamarin::android::internal {
 
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;
-		size_t                 bundled_assembly_index = 0;
-		size_t                 number_of_found_assemblies = 0;
+		size_t                 bundled_assembly_index = 0uz;
+		size_t                 number_of_found_assemblies = 0uz;
 
 #if defined (DEBUG)
 		TypeMappingInfo       *java_to_managed_maps;
@@ -436,10 +436,10 @@ namespace xamarin::android::internal {
 
 		md_mmap_info           runtime_config_blob_mmap{};
 		void                  *runtime_config_data = nullptr;
-		size_t                 runtime_config_data_size = 0;
+		size_t                 runtime_config_data_size = 0uz;
 		bool                   runtime_config_blob_found = false;
-		uint32_t               number_of_mapped_assembly_stores = 0;
-		uint32_t               number_of_zip_dso_entries = 0;
+		uint32_t               number_of_mapped_assembly_stores = 0u;
+		uint32_t               number_of_zip_dso_entries = 0u;
 		bool                   need_to_scan_more_apks = true;
 
 		AssemblyStoreIndexEntry *assembly_store_hashes;
