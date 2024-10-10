@@ -21,12 +21,45 @@ enum LlvmIrVariableNumberFormat
 	Decimal,
 }
 
-abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
+abstract class LlvmIrVariableReference
 {
 	public abstract bool Global                    { get; }
 	public abstract string NamePrefix              { get; }
-
 	public string? Name                            { get; protected set; }
+
+	/// <summary>
+	/// Returns a string which constitutes a reference to a local (using the <c>%</c> prefix character) or a global
+	/// (using the <c>@</c> prefix character) variable, ready for use in the generated code wherever variables are
+	/// referenced.
+	/// </summary>
+	public virtual string Reference {
+		get {
+			if (String.IsNullOrEmpty (Name)) {
+				throw new InvalidOperationException ("Variable doesn't have a name, it cannot be referenced");
+			}
+
+			return $"{NamePrefix}{Name}";
+		}
+	}
+
+	protected LlvmIrVariableReference (string name)
+	{
+		Name = name;
+	}
+}
+
+class LlvmIrGlobalVariableReference : LlvmIrVariableReference
+{
+	public override bool Global => true;
+	public override string NamePrefix => "@";
+
+	public LlvmIrGlobalVariableReference (string name)
+		: base (name)
+	{}
+}
+
+abstract class LlvmIrVariable : LlvmIrVariableReference, IEquatable<LlvmIrVariable>
+{
 	public Type Type                               { get; protected set; }
 	public LlvmIrVariableWriteOptions WriteOptions { get; set; } = LlvmIrVariableWriteOptions.ArrayWriteIndexComments;
 
@@ -46,21 +79,6 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	/// parameters must not take it into account, thus this property.  If set to <c>false</c>, <see cref="Equals(LlvmIrVariable)"/>
 	/// will ignore name when checking for equality.
 	protected bool NameMatters { get; set; } = true;
-
-	/// <summary>
-	/// Returns a string which constitutes a reference to a local (using the <c>%</c> prefix character) or a global
-	/// (using the <c>@</c> prefix character) variable, ready for use in the generated code wherever variables are
-	/// referenced.
-	/// </summary>
-	public virtual string Reference {
-		get {
-			if (String.IsNullOrEmpty (Name)) {
-				throw new InvalidOperationException ("Variable doesn't have a name, it cannot be referenced");
-			}
-
-			return $"{NamePrefix}{Name}";
-		}
-	}
 
 	/// <summary>
 	/// <para>
@@ -103,6 +121,7 @@ abstract class LlvmIrVariable : IEquatable<LlvmIrVariable>
 	/// is treated as an opaque pointer type.
 	/// </summary>
 	protected LlvmIrVariable (Type type, string? name = null)
+		: base (name)
 	{
 		Type = type;
 		Name = name;
@@ -253,7 +272,7 @@ class LlvmIrGlobalVariable : LlvmIrVariable
 	public LlvmIrStreamedArrayDataProvider? ArrayDataProvider { get; set; }
 
 	/// <summary>
-	/// Constructs a local variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
+	/// Constructs a global variable. <paramref name="type"/> is translated to one of the LLVM IR first class types (see
 	/// https://llvm.org/docs/LangRef.html#t-firstclass) only if it's an integral or floating point type.  In all other cases it
 	/// is treated as an opaque pointer type.  <paramref name="name"/> is required because global variables must be named.
 	/// </summary>
