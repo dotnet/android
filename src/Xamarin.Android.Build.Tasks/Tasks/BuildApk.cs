@@ -121,6 +121,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public string CompressedAssembliesDir { get; set; }
 
+		[Required]
+		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
+
 		[Output]
 		public ITaskItem[] OutputFiles { get; set; }
 
@@ -430,6 +433,11 @@ namespace Xamarin.Android.Tasks
 			AssemblyStoreBuilder? storeBuilder = null;
 
 			if (UseAssemblyStore) {
+				if (AssemblyStoreEmbeddedInRuntime) {
+					// We don't need to do anything here, the store is in `libxamarin-app.so`
+					return;
+				}
+
 				storeBuilder = new AssemblyStoreBuilder (Log);
 			}
 
