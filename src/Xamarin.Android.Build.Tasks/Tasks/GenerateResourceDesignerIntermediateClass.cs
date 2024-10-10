@@ -29,8 +29,7 @@ namespace %NAMESPACE% {
 	/// Android Resource Designer class.
 	/// Exposes the Android Resource designer assembly into the project Namespace.
 	/// </summary>
-	[GeneratedCode(""%TOOL%"", ""%VERSION%"")]
-	public partial class Resource : %BASECLASS% {
+	%MODIFIER% partial class Resource : %BASECLASS% {
 	}
 	#pragma warning restore IDE0002
 }
@@ -42,16 +41,16 @@ namespace %NAMESPACE% {
 //------------------------------------------------------------------------------
 namespace %NAMESPACE%
 
-[<type:System.CodeDom.Compiler.GeneratedCode(""%TOOL%"", ""%VERSION%"")>]
-type Resource = %BASECLASS%
+type %MODIFIER% Resource = %BASECLASS%
 ";
 
 		public string Namespace { get; set; }
+		public string Modifier { get; set; } = "public";
 		public bool IsApplication { get; set; } = false;
 		public ITaskItem OutputFile { get; set; }
 		public override bool RunTask ()
 		{
-			string ns = IsApplication ? ResourceDesignerConstants : ResourceDesigner;
+			string baseClass = IsApplication ? ResourceDesignerConstants : ResourceDesigner;
 			var extension = Path.GetExtension (OutputFile.ItemSpec);
 			var language = string.Compare (extension, ".fs", StringComparison.OrdinalIgnoreCase) == 0 ? "F#" : CodeDomProvider.GetLanguageFromExtension (extension);
 			//bool isVB = string.Equals (extension, ".vb", StringComparison.OrdinalIgnoreCase);
@@ -61,14 +60,12 @@ type Resource = %BASECLASS%
 			string template = "";
 			if (isCSharp) {
 				template = CSharpTemplate.Replace ("%NAMESPACE%", Namespace)
-					.Replace ("%BASECLASS%", ns)
-					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
+					.Replace ("%BASECLASS%", baseClass)
+					.Replace ("%MODIFIER%", Modifier.ToLower ());
 			} else if (isFSharp) {
 				template = FSharpTemplate.Replace ("%NAMESPACE%", Namespace)
-					.Replace ("%BASECLASS%", ns)
-					.Replace ("%VERSION%", version.ToString ())
-					.Replace ("%TOOL%", nameof (GenerateResourceDesignerIntermediateClass));
+					.Replace ("%BASECLASS%", baseClass)
+					.Replace ("%MODIFIER%", Modifier.ToLower ());
 			}
 
 			Files.CopyIfStringChanged (template, OutputFile.ItemSpec);
