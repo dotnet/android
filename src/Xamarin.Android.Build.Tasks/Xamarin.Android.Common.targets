@@ -2118,6 +2118,7 @@ because xbuild doesn't support framework reference assemblies.
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
     IntermediateOutputPath="$(IntermediateOutputPath)">
     CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2159,6 +2160,7 @@ because xbuild doesn't support framework reference assemblies.
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
       CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+      AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
@@ -2233,6 +2235,7 @@ because xbuild doesn't support framework reference assemblies.
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
 			IntermediateOutputPath="$(IntermediateOutputPath)">
 			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
 	</BuildApk>
 	<BuildBaseAppBundle
@@ -2273,6 +2276,7 @@ because xbuild doesn't support framework reference assemblies.
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
 			IntermediateOutputPath="$(IntermediateOutputPath)">
 			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
 	</BuildBaseAppBundle>
 	<BuildAppBundle
