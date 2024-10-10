@@ -1130,7 +1130,7 @@ MonodroidRuntime::set_profile_options ()
 			.append (OUTPUT_ARG)
 			.append (output_path.get (), output_path.length ());
 	}
-	if (Util::create_directory (AndroidSystem::override_dirs[0], 0) < 0) {
+	if (Util::create_directory (AndroidSystem::override_dirs[0], 0777, 000) < 0) {
 		log_warn (LOG_DEFAULT, "Failed to create directory '%s'. %s", AndroidSystem::override_dirs[0], std::strerror (errno));
 	}
 
