@@ -910,51 +910,6 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	return ret;
 }
 
-EmbeddedAssemblies::md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename)
-{
-	md_mmap_info file_info;
-	md_mmap_info mmap_info;
-
-	size_t pageSize        = static_cast<size_t>(Util::monodroid_getpagesize ());
-	size_t offsetFromPage  = offset % pageSize;
-	size_t offsetPage      = offset - offsetFromPage;
-	size_t offsetSize      = size + offsetFromPage;
-
-	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
-
-	if (mmap_info.area == MAP_FAILED) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Could not mmap APK fd {}: {}; File={}",
-				fd,
-				strerror (errno),
-				optional_string (filename)
-			)
-		);
-	}
-
-	mmap_info.size  = offsetSize;
-	file_info.area  = pointer_add (mmap_info.area, offsetFromPage);
-	file_info.size  = size;
-
-	log_info (
-		LOG_ASSEMBLY,
-			"  mmap_start: {:<8p}; mmap_end: {:<8p}  mmap_len: {:<12}  file_start: {:<8p}  file_end: {:<8p}  file_len: {:<12}     apk descriptor: {}  file: {}",
-			mmap_info.area,
-			pointer_add (mmap_info.area, mmap_info.size),
-			mmap_info.size,
-			file_info.area,
-			pointer_add (file_info.area, file_info.size),
-			file_info.size,
-			fd,
-			optional_string (filename)
-	);
-
-	return file_info;
-}
-
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register) noexcept
 {

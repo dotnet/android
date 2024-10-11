@@ -328,6 +328,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 	}
 }
 
+[[gnu::flatten]]
 void
 EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register) noexcept
 {
@@ -335,7 +336,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	uint32_t cd_size;
 	uint16_t cd_entries;
 
-	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
+	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			std::format (
@@ -345,14 +346,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 
-	md_mmap_info apk_map = md_mmap_apk_file (fd, cd_offset, cd_size, apk_name);
-
 	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
 	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
 	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
 
 	// off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	// if (retval < 0) {
+	// if (retval < 0) [[unlikely]] {
 	//	Helpers::abort_application (
 	//		LOG_ASSEMBLY,
 	//		Util::monodroid_strdup_printf (
@@ -365,7 +364,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	//	);
 	// }
 
-	std::span<uint8_t>  buf (reinterpret_cast<uint8_t*>(apk_map.area), apk_map.size);
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.file_fd             = fd,
@@ -402,7 +400,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
 
-	// TODO: unmap here
+	//delete[] raw_data;
 }
 
 template<bool NeedsNameAlloc>
