@@ -17,7 +17,7 @@ using namespace xamarin::android::internal;
 using read_count_type = size_t;
 
 force_inline bool
-EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
 
@@ -143,7 +143,7 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 }
 
 force_inline void
-EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
@@ -257,7 +257,7 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 }
 
 force_inline void
-EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
 		return;
@@ -328,26 +328,28 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 			)
 		);
 	}
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
-	log_info (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
-	log_info (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
-#endif
-	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	if (retval < 0) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
-				std::strerror (errno),
-				retval,
-				errno,
-				apk_name
-			)
-		);
-	}
 
-	std::vector<uint8_t>  buf (cd_size);
+	md_mmap_info apk_map = md_mmap_apk_file (fd, cd_offset, cd_size, apk_name);
+
+	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
+	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
+	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
+
+	// off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
+	// if (retval < 0) {
+	//	Helpers::abort_application (
+	//		LOG_ASSEMBLY,
+	//		Util::monodroid_strdup_printf (
+	//			"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
+	//			std::strerror (errno),
+	//			retval,
+	//			errno,
+	//			apk_name
+	//		)
+	//	);
+	// }
+
+	std::span<uint8_t>  buf (reinterpret_cast<uint8_t*>(apk_map.area), apk_map.size);
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.file_fd             = fd,
@@ -364,25 +366,29 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.max_assembly_file_name_size = 0,
 	};
 
-	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
-	if (static_cast<size_t>(nread) != cd_size) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
-				std::strerror (errno),
-				nread,
-				errno,
-				apk_name
-			)
-		);
-	}
+	// ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
+	// if (static_cast<size_t>(nread) != cd_size) {
+	// 	log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)", apk_name, std::strerror (errno), nread, errno);
+	// 	Helpers::abort_application ();
+	//	Helpers::abort_application (
+	//		LOG_ASSEMBLY,
+	//		Util::monodroid_strdup_printf (
+	//			"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
+	//			std::strerror (errno),
+	//			nread,
+	//			errno,
+	//			apk_name
+	//		)
+	//	);
+	// }
 
 	if (application_config.have_assembly_store) {
 		zip_load_assembly_store_entries (buf, cd_entries, state);
 	} else {
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
+
+	// TODO: unmap here
 }
 
 template<bool NeedsNameAlloc>
@@ -638,7 +644,7 @@ EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dy
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
+EmbeddedAssemblies::zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24;
