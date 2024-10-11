@@ -27,6 +27,7 @@
 #include "cppcompat.hh"
 #include "shared-constants.hh"
 #include "xxhash.hh"
+#include "util.hh"
 
 #include <concepts>
 
@@ -239,7 +240,41 @@ namespace xamarin::android::internal {
 		const TypeMapEntry *typemap_managed_to_java (const char *managed_type_name) noexcept;
 #endif // DEBUG
 
-		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename);
+		[[gnu::always_inline]]
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename, md_mmap_info &original_info, md_mmap_info &adjusted_info) noexcept
+		{
+			size_t pageSize        = static_cast<size_t>(Util::monodroid_getpagesize ());
+			size_t offsetFromPage  = offset % pageSize;
+			size_t offsetPage      = offset - offsetFromPage;
+			size_t offsetSize      = size + offsetFromPage;
+
+			original_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
+
+			if (original_info.area == MAP_FAILED) {
+				log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
+				Helpers::abort_application ();
+			}
+
+			original_info.size  = offsetSize;
+			adjusted_info.area  = (void*)((const char*)original_info.area + offsetFromPage);
+			adjusted_info.size  = size;
+
+			log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk descriptor: %d  file: %s",
+									original_info.area, reinterpret_cast<int*> (original_info.area) + original_info.size, original_info.size,
+																											  adjusted_info.area, reinterpret_cast<int*> (adjusted_info.area) + adjusted_info.size, adjusted_info.size, fd, filename);
+
+			return adjusted_info;
+		}
+
+		[[gnu::flatten, gnu::always_inline]]
+		static md_mmap_info md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename) noexcept
+		{
+			md_mmap_info file_info;
+			md_mmap_info mmap_info;
+
+			return md_mmap_apk_file (fd, offset, size, filename, mmap_info, file_info);
+		}
+
 		static MonoAssembly* open_from_bundles_full (MonoAssemblyName *aname, char **assemblies_path, void *user_data);
 		static MonoAssembly* open_from_bundles (MonoAssemblyLoadContextGCHandle alc_gchandle, MonoAssemblyName *aname, char **assemblies_path, void *user_data, MonoError *error);
 
