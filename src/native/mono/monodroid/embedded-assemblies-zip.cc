@@ -15,8 +15,8 @@
 
 using namespace xamarin::android::internal;
 
-[[gnu::always_inline]] bool
-EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
+force_inline bool
+EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
 
@@ -150,8 +150,8 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
 }
 
-[[gnu::always_inline]] void
-EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
+force_inline void
+EmbeddedAssemblies::zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
@@ -264,8 +264,8 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 	verify_assembly_store_and_set_info (payload_start, entry_name.get ());
 }
 
-[[gnu::always_inline]] void
-EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
+force_inline void
+EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
 		return;
@@ -344,26 +344,28 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 			)
 		);
 	}
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "Central directory offset: {}", cd_offset);
-	log_info (LOG_ASSEMBLY, "Central directory size: {}", cd_size);
-	log_info (LOG_ASSEMBLY, "Central directory entries: {}", cd_entries);
-#endif
-	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	if (retval < 0) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			std::format (
-				"Failed to seek to central directory position in APK: {}. retval={} errno={}, File={}",
-				std::strerror (errno),
-				retval,
-				errno,
-				optional_string (apk_name)
-			)
-		);
-	}
 
-	std::vector<uint8_t>  buf (cd_size);
+	md_mmap_info apk_map = md_mmap_apk_file (fd, cd_offset, cd_size, apk_name);
+
+	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
+	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
+	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
+
+	// off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
+	// if (retval < 0) {
+	//	Helpers::abort_application (
+	//		LOG_ASSEMBLY,
+	//		Util::monodroid_strdup_printf (
+	//			"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
+	//			std::strerror (errno),
+	//			retval,
+	//			errno,
+	//			apk_name
+	//		)
+	//	);
+	// }
+
+	std::span<uint8_t>  buf (reinterpret_cast<uint8_t*>(apk_map.area), apk_map.size);
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.file_fd             = fd,
@@ -399,6 +401,8 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	} else {
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
+
+	// TODO: unmap here
 }
 
 template<bool NeedsNameAlloc>
@@ -660,7 +664,7 @@ EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dy
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10uz;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24uz;
