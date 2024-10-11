@@ -351,8 +351,7 @@ namespace xamarin::android::internal {
 		static bool all_required_zip_entries_found () noexcept
 		{
 			return
-				number_of_mapped_assembly_stores == number_of_assembly_store_files && number_of_zip_dso_entries >= application_config.number_of_shared_libraries
-				&& ((application_config.have_runtime_config_blob && runtime_config_blob_found) || !application_config.have_runtime_config_blob);
+				number_of_mapped_assembly_stores == number_of_assembly_store_files && number_of_zip_dso_entries >= application_config.number_of_shared_libraries;
 		}
 
 		[[gnu::always_inline]] static c_unique_ptr<char> to_utf8 (const MonoString *s) noexcept
@@ -461,13 +460,13 @@ namespace xamarin::android::internal {
 #endif // DEBUG
 		static inline const char   *assemblies_prefix_override = nullptr;
 
-		static inline md_mmap_info  runtime_config_blob_mmap{};
-		static inline void         *runtime_config_data = nullptr;
-		static inline size_t        runtime_config_data_size = 0uz;
-		static inline bool          runtime_config_blob_found = false;
-		static inline uint32_t      number_of_mapped_assembly_stores = 0u;
-		static inline uint32_t      number_of_zip_dso_entries = 0u;
-		static inline bool          need_to_scan_more_apks = true;
+		md_mmap_info           runtime_config_blob_mmap{};
+		void                  *runtime_config_data = nullptr;
+		size_t                 runtime_config_data_size = 0uz;
+		bool                   runtime_config_blob_found = embedded_runtime_config_size > 0u;
+		uint32_t               number_of_mapped_assembly_stores = 0u;
+		uint32_t               number_of_zip_dso_entries = 0u;
+		bool                   need_to_scan_more_apks = true;
 
 		static inline AssemblyStoreIndexEntry *assembly_store_hashes = nullptr;
 		static inline xamarin::android::mutex  assembly_decompress_mutex {};

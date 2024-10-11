@@ -285,10 +285,34 @@ public class GeneratePackageManagerJava : AndroidTask
 			//                pkgmgr.WriteLine ("\t\t\"" + Path.GetFileName (assembly) + "\",");
 			//}
 
-			pkgmgr.WriteLine ("\t};");
+			var uniqueNativeLibraries = new List<ITaskItem> ();
 
-			pkgmgr.WriteLine ("}");
-			pkgmgr.Flush ();
+			// Number of DSOs that will be packaged, it may be different to the number of items in the above
+			// `uniqueNativeLibraries` list.
+			uint packagedNativeLibrariesCount = 0;
+			var seenNativeLibraryNames = new HashSet<string> (StringComparer.OrdinalIgnoreCase);
+			if (NativeLibraries != null) {
+				foreach (ITaskItem item in NativeLibraries) {
+					// We don't care about different ABIs here, just the file name
+					string name = Path.GetFileName (item.ItemSpec);
+					if (seenNativeLibraryNames.Contains (name)) {
+						continue;
+					}
+
+					if (!ELFHelper.IsEmptyAOTLibrary (Log, item.ItemSpec)) {
+						packagedNativeLibrariesCount++;
+					}
+
+					seenNativeLibraryNames.Add (name);
+					uniqueNativeLibraries.Add (item);
+				}
+
+				// libxamarin-app.so is not in NativeLibraries, but we must count it
+				if (!seenNativeLibraryNames.Contains ("libxamarin-app.so")) {
+					uniqueNativeLibraries.Add (new TaskItem ("libxamarin-app.so"));
+					packagedNativeLibrariesCount++;
+				}
+			}
 
 			// Only copy to the real location if the contents actually changed
 			var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
@@ -326,6 +350,7 @@ public class GeneratePackageManagerJava : AndroidTask
 				BundledAssemblyNameWidth = assemblyNameWidth,
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
+				PackagedNativeLibrariesCount = packagedNativeLibrariesCount,
 				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
