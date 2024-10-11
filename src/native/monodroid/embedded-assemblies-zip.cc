@@ -312,6 +312,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 	}
 }
 
+[[gnu::flatten]]
 void
 EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register)
 {
@@ -319,7 +320,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	uint32_t cd_size;
 	uint16_t cd_entries;
 
-	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
+	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
@@ -329,14 +330,12 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 
-	md_mmap_info apk_map = md_mmap_apk_file (fd, cd_offset, cd_size, apk_name);
-
 	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
 	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
 	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
 
 	// off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	// if (retval < 0) {
+	// if (retval < 0) [[unlikely]] {
 	//	Helpers::abort_application (
 	//		LOG_ASSEMBLY,
 	//		Util::monodroid_strdup_printf (
@@ -349,7 +348,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	//	);
 	// }
 
-	std::span<uint8_t>  buf (reinterpret_cast<uint8_t*>(apk_map.area), apk_map.size);
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.file_fd             = fd,
@@ -366,21 +364,22 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.max_assembly_file_name_size = 0,
 	};
 
-	// ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
-	// if (static_cast<size_t>(nread) != cd_size) {
-	// 	log_fatal (LOG_ASSEMBLY, "Failed to read Central Directory from the APK archive %s. %s (nread: %d; errno: %d)", apk_name, std::strerror (errno), nread, errno);
-	// 	Helpers::abort_application ();
-	//	Helpers::abort_application (
-	//		LOG_ASSEMBLY,
-	//		Util::monodroid_strdup_printf (
-	//			"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
-	//			std::strerror (errno),
-	//			nread,
-	//			errno,
-	//			apk_name
-	//		)
-	//	);
-	// }
+	std::unique_ptr<uint8_t[]> raw_data (new uint8_t[cd_size]);
+	//auto raw_data = new uint8_t[cd_size];
+	std::span<uint8_t> buf (raw_data.get (), cd_size);
+	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
+	if (static_cast<size_t>(nread) != cd_size) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
+				std::strerror (errno),
+				nread,
+				errno,
+				apk_name
+			)
+		);
+	}
 
 	if (application_config.have_assembly_store) {
 		zip_load_assembly_store_entries (buf, cd_entries, state);
@@ -388,7 +387,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
 
-	// TODO: unmap here
+	//delete[] raw_data;
 }
 
 template<bool NeedsNameAlloc>
