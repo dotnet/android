@@ -9,6 +9,7 @@
 #include <string_view>
 #include <tuple>
 #include <vector>
+#include <span>
 
 #include <dirent.h>
 #include <elf.h>
@@ -248,9 +249,9 @@ namespace xamarin::android::internal {
 		void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
-		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
-		void zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
-		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
+		void zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
+		void zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
+		bool zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
 		bool zip_adjust_data_offset (int fd, ZipEntryLoadState &state);
 
@@ -272,7 +273,7 @@ namespace xamarin::android::internal {
 		template<ByteArrayContainer T>
 		bool zip_read_field (T const& buf, size_t index, size_t count, dynamic_local_string<SENSIBLE_PATH_MAX>& characters) const noexcept;
 
-		bool zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
+		bool zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state);
 
 		[[gnu::always_inline]]
 		static std::tuple<void*, size_t> get_wrapper_dso_payload_pointer_and_size (md_mmap_info const& map_info, const  char *file_name) noexcept
