@@ -740,9 +740,7 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
 		Helpers::abort_application (
 			Util::monodroid_strdup_printf (
-				"Make sure that all entries in the APK directory named `%s` are STORED (not compressed). "
-				"If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed",
-				assemblies_prefix,
+				"ALL entries in APK named `%s` MUST be STORED. Gradle's minification may COMPRESS such entries."
 				assemblies_prefix
 			)
 		);
