@@ -325,11 +325,11 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to seek to central directory position in APK: %s. File '%s' (result: %d; errno: %d)",
+				"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
 				std::strerror (errno),
-				apk_name,
 				retval,
-				errno
+				errno,
+				apk_name
 			)
 		);
 	}
@@ -356,11 +356,11 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
-				"Failed to read Central Directory from APK: %s. File '%s' (nread: %d; errno: %d)",
+				"Failed to read Central Directory from APK: %s. nread=%d errno=%d File=%s",
 				std::strerror (errno),
-				apk_name,
 				nread,
-				errno
+				errno,
+				apk_name
 			)
 		);
 	}
