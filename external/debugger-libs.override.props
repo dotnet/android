@@ -3,6 +3,7 @@
     <!-- Disables the transitive restore of packages like Microsoft.AspNetCore.App.Ref, Microsoft.WindowsDesktop.App.Ref -->
     <DisableTransitiveFrameworkReferenceDownloads>true</DisableTransitiveFrameworkReferenceDownloads>
     <RestoreAdditionalProjectSources>
+      https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-ef07c4f2/nuget/v3/index.json;
       https://pkgs.dev.azure.com/dnceng/public/_packaging/darc-pub-dotnet-runtime-061c8b71/nuget/v3/index.json;
     </RestoreAdditionalProjectSources>
   </PropertyGroup>
