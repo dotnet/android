@@ -86,12 +86,16 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 	auto header = reinterpret_cast<const CompressedAssemblyHeader*>(data);
 	if (header->magic == COMPRESSED_DATA_MAGIC) {
 		if (compressed_assemblies.descriptors == nullptr) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
-			Helpers::abort_application ();
+			Helpers::abort_application (LOG_ASSEMBLY, "Compressed assembly found but no descriptor defined");
 		}
 		if (header->descriptor_index >= compressed_assemblies.count) [[unlikely]] {
-			log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor index %u", header->descriptor_index);
-			Helpers::abort_application ();
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				Util::monodroid_strdup_printf (
+					"Invalid compressed assembly descriptor index %u",
+					header->descriptor_index
+				)
+			);
 		}
 
 		CompressedAssemblyDescriptor &cad = compressed_assemblies.descriptors[header->descriptor_index];
@@ -105,14 +109,26 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			}
 
 			if (cad.data == nullptr) [[unlikely]] {
-				log_fatal (LOG_ASSEMBLY, "Invalid compressed assembly descriptor at %u: no data", header->descriptor_index);
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Invalid compressed assembly descriptor at %u: no data",
+						header->descriptor_index
+					)
+				);
 			}
 
 			if (header->uncompressed_length != cad.uncompressed_file_size) {
 				if (header->uncompressed_length > cad.uncompressed_file_size) {
-					log_fatal (LOG_ASSEMBLY, "Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!", name, cad.uncompressed_file_size, header->uncompressed_length);
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_ASSEMBLY,
+						Util::monodroid_strdup_printf (
+							"Compressed assembly '%s' is larger than when the application was built (expected at most %u, got %u). Assemblies don't grow just like that!",
+							name,
+							cad.uncompressed_file_size,
+							header->uncompressed_length
+						)
+					);
 				} else {
 					log_debug (LOG_ASSEMBLY, "Compressed assembly '%s' is smaller than when the application was built. Adjusting accordingly.", name);
 				}
@@ -123,13 +139,26 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 			int ret = LZ4_decompress_safe (data_start, reinterpret_cast<char*>(cad.data), static_cast<int>(assembly_data_size), static_cast<int>(cad.uncompressed_file_size));
 
 			if (ret < 0) {
-				log_fatal (LOG_ASSEMBLY, "Decompression of assembly %s failed with code %d", name, ret);
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Decompression of assembly %s failed with code %d",
+						name,
+						ret
+					)
+				);
 			}
 
 			if (static_cast<uint64_t>(ret) != cad.uncompressed_file_size) {
-				log_debug (LOG_ASSEMBLY, "Decompression of assembly %s yielded a different size (expected %lu, got %u)", name, cad.uncompressed_file_size, static_cast<uint32_t>(ret));
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Decompression of assembly %s yielded a different size (expected %lu, got %u)",
+						name,
+						cad.uncompressed_file_size,
+						static_cast<uint32_t>(ret)
+					)
+				);
 			}
 			cad.loaded = true;
 		}
@@ -366,8 +395,14 @@ EmbeddedAssemblies::assembly_store_open_from_bundles (dynamic_local_string<SENSI
 	}
 
 	if (hash_entry->descriptor_index >= assembly_store.assembly_count) {
-		log_fatal (LOG_ASSEMBLY, "Invalid assembly descriptor index %u, exceeds the maximum value of %u", hash_entry->descriptor_index, assembly_store.assembly_count - 1);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Invalid assembly descriptor index %u, exceeds the maximum value of %u",
+				hash_entry->descriptor_index,
+				assembly_store.assembly_count - 1
+			)
+		);
 	}
 
 	AssemblyStoreEntryDescriptor &store_entry = assembly_store.assemblies[hash_entry->descriptor_index];
@@ -499,8 +534,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 
 	// This is a coding error on our part, crash!
 	if (base == nullptr) {
-		log_fatal (LOG_ASSEMBLY, "Map address not passed to binary_search");
-		Helpers::abort_application ();
+		Helpers::abort_application (LOG_ASSEMBLY, "Map address not passed to binary_search");
 	}
 
 	[[maybe_unused]]
@@ -855,8 +889,15 @@ EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, cons
 	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 	if (mmap_info.area == MAP_FAILED) {
-		log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Could not mmap APK fd %d: %s; File=%s",
+				fd,
+				strerror (errno),
+				filename
+			)
+		);
 	}
 
 	mmap_info.size  = offsetSize;
@@ -876,10 +917,15 @@ EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodro
 	int fd;
 
 	if ((fd = open (apk, O_RDONLY)) < 0) {
-		log_error (LOG_DEFAULT, "ERROR: Unable to load application package %s.", apk);
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"ERROR: Unable to load application package %s.",
+				apk
+			)
+		);
 	}
-	log_info (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
+	log_debug (LOG_ASSEMBLY, "APK %s FD: %d", apk, fd);
 
 	zip_load_entries (fd, apk, should_register);
 }

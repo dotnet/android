@@ -83,8 +83,7 @@ MonodroidRuntime::thread_start ([[maybe_unused]] MonoProfiler *prof, [[maybe_unu
 
 	if (r != JNI_OK) {
 #if DEBUG
-		log_fatal (LOG_DEFAULT, "ERROR: Unable to attach current thread to the Java VM!");
-		Helpers::abort_application ();
+		Helpers::abort_application ("ERROR: Unable to attach current thread to the Java VM!");
 #endif
 	}
 }
@@ -545,8 +544,13 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 		if (options.out_port > 0) {
 			int sock = socket (PF_INET, SOCK_STREAM, IPPROTO_TCP);
 			if (sock < 0) {
-				log_fatal (LOG_DEBUGGER, "Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s", strerror (errno));
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not construct a socket for stdout and stderr; does your app have the android.permission.INTERNET permission? %s",
+						strerror (errno)
+					)
+				);
 			}
 
 			sockaddr_in addr;
@@ -557,27 +561,43 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 
 			int r;
 			if ((r = inet_pton (AF_INET, options.host, &addr.sin_addr)) != 1) {
-				log_error (LOG_DEBUGGER, "Could not setup a socket for stdout and stderr: %s",
-						r == -1 ? strerror (errno) : "address not parseable in the specified address family");
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_DEBUGGER,
+					Util::monodroid_strdup_printf (
+						"Could not setup a socket for stdout and stderr: %s",
+						r == -1 ? strerror (errno) : "address not parseable in the specified address family"
+					)
+				);
 			}
 
 			if (options.server) {
 				int accepted = monodroid_debug_accept (sock, addr);
 				log_warn (LOG_DEBUGGER, "Accepted stdout connection: %d", accepted);
 				if (accepted < 0) {
-					log_fatal (LOG_DEBUGGER, "Error accepting stdout and stderr (%s:%d): %s",
-							     options.host, options.out_port, strerror (errno));
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error accepting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
+					);
 				}
 
 				dup2 (accepted, 1);
 				dup2 (accepted, 2);
 			} else {
 				if (monodroid_debug_connect (sock, addr) != 1) {
-					log_fatal (LOG_DEBUGGER, "Error connecting stdout and stderr (%s:%d): %s",
-							     options.host, options.out_port, strerror (errno));
-					Helpers::abort_application ();
+					Helpers::abort_application (
+						LOG_DEBUGGER,
+						Util::monodroid_strdup_printf (
+							"Error connecting stdout and stderr (%s:%d): %s",
+							options.host,
+							options.out_port,
+							strerror (errno)
+						)
+					);
 				}
 
 				dup2 (sock, 1);
@@ -682,7 +702,7 @@ MonodroidRuntime::mono_runtime_init ([[maybe_unused]] JNIEnv *env, [[maybe_unuse
 }
 
 void
-MonodroidRuntime::cleanup_runtime_config (MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
+MonodroidRuntime::cleanup_runtime_config ([[maybe_unused]] MonovmRuntimeConfigArguments *args, [[maybe_unused]] void *user_data)
 {
 	embeddedAssemblies.unmap_runtime_config_blob ();
 }
@@ -718,10 +738,12 @@ MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks
 		log_fatal (LOG_DEFAULT, "No assemblies (or assembly blobs) were found in the application APK file(s) or on the filesystem");
 #endif
 		constexpr const char *assemblies_prefix = EmbeddedAssemblies::get_assemblies_prefix ().data ();
-		log_fatal (LOG_DEFAULT, "Make sure that all entries in the APK directory named `%s` are STORED (not compressed)", assemblies_prefix);
-		log_fatal (LOG_DEFAULT, "If Android Gradle Plugin's minification feature is enabled, it is likely all the entries in `%s` are compressed", assemblies_prefix);
-
-		Helpers::abort_application ();
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"ALL entries in APK named `%s` MUST be STORED. Gradle's minification may COMPRESS such entries.",
+				assemblies_prefix
+			)
+		);
 	}
 
 	MonoDomain *domain = mono_jit_init_version (const_cast<char*> ("RootDomain"), const_cast<char*> ("mobile"));
@@ -760,15 +782,18 @@ MonodroidRuntime::lookup_bridge_info (MonoClass *klass, const OSBridge::MonoJava
 	info->handle_type       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("handle_type"));
 	info->refs_added        = mono_class_get_field_from_name (info->klass, const_cast<char*> ("refs_added"));
 	info->weak_handle       = mono_class_get_field_from_name (info->klass, const_cast<char*> ("weak_handle"));
-	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr ||
-			info->refs_added == nullptr || info->weak_handle == nullptr) {
-		log_fatal (LOG_DEFAULT, "The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
-				type->_namespace, type->_typename,
+	if (info->klass == nullptr || info->handle == nullptr || info->handle_type == nullptr || info->refs_added == nullptr || info->weak_handle == nullptr) {
+		Helpers::abort_application (
+			Util::monodroid_strdup_printf (
+				"The type `%s.%s` is missing required instance fields! handle=%p handle_type=%p refs_added=%p weak_handle=%p",
+				type->_namespace,
+				type->_typename,
 				info->handle,
 				info->handle_type,
 				info->refs_added,
-				info->weak_handle);
-		Helpers::abort_application ();
+				info->weak_handle
+			)
+		);
 	}
 }
 
@@ -1530,7 +1555,7 @@ JNIEXPORT void JNICALL
 Java_mono_android_Runtime_init (JNIEnv *env, jclass klass, jstring lang, jobjectArray runtimeApksJava,
                                 jstring runtimeNativeLibDir, jobjectArray appDirs, jobject loader,
                                 [[maybe_unused]] jobjectArray externalStorageDirs, jobjectArray assembliesJava, [[maybe_unused]] jstring packageName,
-                                jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
+                                [[maybe_unused]] jint apiLevel, [[maybe_unused]] jobjectArray environmentVariables)
 {
 	monodroidRuntime.Java_mono_android_Runtime_initInternal (
 		env,

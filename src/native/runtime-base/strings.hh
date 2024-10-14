@@ -560,8 +560,7 @@ namespace xamarin::android::internal
 			if constexpr (BoundsCheck) {
 				size_t slen = strlen (s);
 				if (offset + count > slen) {
-					log_fatal (LOG_DEFAULT, "Attempt to assign data from a string exceeds the source string length");
-					Helpers::abort_application ();
+					Helpers::abort_application ("Attempt to assign data from a string exceeds the source string length");
 				}
 			}
 
@@ -766,24 +765,23 @@ namespace xamarin::android::internal
 				return;
 			}
 
-			log_fatal (
-				LOG_DEFAULT,
-				"Index %u is out of range (0 - %u)",
-				access_index, idx
-			);
-			Helpers::abort_application ();
+			char *message = nullptr;
+			int n = asprintf (&message, "Index %zu is out of range (0 - %zu)", access_index, idx);
+			Helpers::abort_application (n == -1 ? "Index out of range" : message);
 		}
 
 		force_inline void ensure_have_extra (size_t length) noexcept
 		{
 			size_t needed_space = Helpers::add_with_overflow_check<size_t> (length, idx + 1);
 			if (needed_space > buffer.size ()) {
-				log_fatal (
-					LOG_DEFAULT,
-					"Attempt to store too much data in a buffer (capacity: %u; exceeded by: %u)",
-					buffer.size (), needed_space - buffer.size ()
+				char *message = nullptr;
+				int n = asprintf (
+					&message,
+					"Attempt to store too much data in a buffer (capacity: %zu; exceeded by: %zu)",
+					buffer.size (),
+					needed_space - buffer.size ()
 				);
-				Helpers::abort_application ();
+				Helpers::abort_application (n == -1 ? "Attempt to store too much data in a buffer" : message);
 			}
 		}
 
