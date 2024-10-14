@@ -28,7 +28,14 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 				PinvokeEntry const& e = internal_pinvokes[i];
 				log_fatal (LOG_ASSEMBLY, "\t'%s'=%p (hash: 0x%zx)", e.name, e.func, e.hash);
 			}
-			Helpers::abort_application (LOG_ASSEMBLY, "Failure handling a P/Invoke request");
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				Util::monodroid_strdup_printf (
+					"Failure handling a p/invoke request for '%s'@'%s'",
+					entrypoint_name,
+					library_name
+				)
+			);
 		}
 
 		return entry->func;
