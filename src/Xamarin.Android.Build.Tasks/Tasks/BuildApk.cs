@@ -474,12 +474,12 @@ namespace Xamarin.Android.Tasks
 
 				// Add assembly
 				(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (arch, sourcePath, Path.GetFileName (assemblyPath), this);
+				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, sourcePath, Path.GetFileName (assemblyPath));
 				AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
 
 				// Try to add config if exists
 				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (apk, arch, assemblyDirectory, config);
+				AddAssemblyConfigEntry (dsoWrapperConfig, apk, arch, assemblyDirectory, config);
 
 				// Try to add symbols if Debug
 				if (!debug) {
@@ -492,7 +492,7 @@ namespace Xamarin.Android.Tasks
 				}
 
 				string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-				string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (arch, symbols, Path.GetFileName (archiveSymbolsPath), this);
+				string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, symbols, Path.GetFileName (archiveSymbolsPath));
 				AddFileToArchiveIfNewer (
 					apk,
 					wrappedSymbolsPath,
