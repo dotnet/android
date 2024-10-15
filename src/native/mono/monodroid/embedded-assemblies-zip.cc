@@ -194,7 +194,7 @@ EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const 
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
 				"Assembly store '%s' is not a valid .NET for Android assembly store file",
-				entry_name.get ()
+				name
 			)
 		);
 	}
@@ -204,7 +204,7 @@ EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const 
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
 				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
-				entry_name.get (),
+				name,
 				header->version,
 				ASSEMBLY_STORE_FORMAT_VERSION
 			)
