@@ -186,6 +186,10 @@
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x64\libm.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libc.so" />
     <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)libstubs\android-x86\libm.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-arm64\libarchive-dso-stub.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-arm\libarchive-dso-stub.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-x64\libarchive-dso-stub.so" />
+    <_MSBuildFiles Include="$(MicrosoftAndroidSdkOutDir)dsostubs\android-x86\libarchive-dso-stub.so" />
   </ItemGroup>
   <ItemGroup>
     <_MSBuildTargetsSrcFiles Include="$(MSBuildTargetsSrcDir)\Xamarin.Android.AvailableItems.targets" />
