@@ -350,19 +350,19 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
 	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
 
-	// off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	// if (retval < 0) [[unlikely]] {
-	//	Helpers::abort_application (
-	//		LOG_ASSEMBLY,
-	//		Util::monodroid_strdup_printf (
-	//			"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
-	//			std::strerror (errno),
-	//			retval,
-	//			errno,
-	//			apk_name
-	//		)
-	//	);
-	// }
+	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
+	if (retval < 0) [[unlikely]] {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Failed to seek to central directory position in APK: %s. retval=%d errno=%d, File=%s",
+				std::strerror (errno),
+				retval,
+				errno,
+				apk_name
+			)
+		);
+	}
 
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
