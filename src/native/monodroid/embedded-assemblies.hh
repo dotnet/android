@@ -251,17 +251,25 @@ namespace xamarin::android::internal {
 			original_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
 
 			if (original_info.area == MAP_FAILED) {
-				log_fatal (LOG_DEFAULT, "Could not `mmap` apk fd %d entry `%s`: %s", fd, filename, strerror (errno));
-				Helpers::abort_application ();
+				Helpers::abort_application (
+					LOG_ASSEMBLY,
+					Util::monodroid_strdup_printf (
+						"Could not mmap APK fd %d: %s; File=%s",
+						fd,
+						strerror (errno),
+						filename
+					)
+				);
 			}
 
 			original_info.size  = offsetSize;
 			adjusted_info.area  = (void*)((const char*)original_info.area + offsetFromPage);
 			adjusted_info.size  = size;
 
-			log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk descriptor: %d  file: %s",
+			log_info (LOG_ASSEMBLY, "mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u; apk descriptor: %d; file: %s",
 									original_info.area, reinterpret_cast<int*> (original_info.area) + original_info.size, original_info.size,
-																											  adjusted_info.area, reinterpret_cast<int*> (adjusted_info.area) + adjusted_info.size, adjusted_info.size, fd, filename);
+									adjusted_info.area, reinterpret_cast<int*> (adjusted_info.area) + adjusted_info.size, adjusted_info.size, fd, filename
+			);
 
 			return adjusted_info;
 		}
