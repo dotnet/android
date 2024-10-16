@@ -65,21 +65,21 @@ AndroidSystem::lookup_system_property (const char *name, size_t &value_len) noex
 		return nullptr;
 
 	if (application_config.system_property_count % 2 != 0) {
-		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries (%u)", application_config.environment_variable_count);
+		log_warn (LOG_DEFAULT, "Corrupted environment variable array: does not contain an even number of entries (%u)", application_config.system_property_count);
 		return nullptr;
 	}
 
 	const char *prop_name;
 	const char *prop_value;
-	for (size_t i = 0; i < application_config.system_property_count; i += 2) {
+	for (size_t i = 0uz; i < application_config.system_property_count; i += 2uz) {
 		prop_name = app_system_properties[i];
 		if (prop_name == nullptr || *prop_name == '\0')
 			continue;
 
 		if (strcmp (prop_name, name) == 0) {
-			prop_value = app_system_properties [i + 1];
+			prop_value = app_system_properties [i + 1uz];
 			if (prop_value == nullptr || *prop_value == '\0') {
-				value_len = 0;
+				value_len = 0uz;
 				return "";
 			}
 
@@ -107,7 +107,7 @@ AndroidSystem::add_system_property (const char *name, const char *value) noexcep
 	}
 
 	size_t name_len  = strlen (name);
-	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (sizeof (BundledProperty), name_len + 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (sizeof (BundledProperty), name_len + 1uz);
 	p = reinterpret_cast<BundledProperty*> (malloc (alloc_size));
 	if (p == nullptr)
 		return;
@@ -137,7 +137,7 @@ AndroidSystem::_monodroid__system_property_get (const char *name, char *sp_value
 
 	char *buf = nullptr;
 	if (sp_value_len < PROPERTY_VALUE_BUFFER_LEN) {
-		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (PROPERTY_VALUE_BUFFER_LEN, 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (PROPERTY_VALUE_BUFFER_LEN, 1uz);
 		log_warn (LOG_DEFAULT, "Buffer to store system property may be too small, will copy only %u bytes", sp_value_len);
 		buf = new char [alloc_size];
 	}
@@ -191,7 +191,7 @@ AndroidSystem::monodroid_get_system_property (const char *name, char **value) no
 	}
 
 	if (len >= 0 && value) {
-		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(len), 1);
+		size_t alloc_size = Helpers::add_with_overflow_check<size_t> (static_cast<size_t>(len), 1uz);
 		*value = new char [alloc_size];
 		if (*value == nullptr)
 			return -len;
@@ -225,12 +225,12 @@ AndroidSystem::_monodroid_get_system_property_from_file (const char *path, char 
 		return file_size + 1;
 	}
 
-	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (file_size, 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (file_size, 1uz);
 	*value = new char[alloc_size];
 
 	size_t len = fread (*value, 1, file_size, fp);
 	fclose (fp);
-	for (size_t i = 0; i < file_size + 1; ++i) {
+	for (size_t i = 0uz; i < file_size + 1uz; ++i) {
 		if ((*value) [i] != '\n' && (*value) [i] != '\r')
 			continue;
 		(*value) [i] = 0;
@@ -328,7 +328,7 @@ AndroidSystem::load_dso_from_specified_dirs (const char **directories, size_t nu
 		return nullptr;
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> full_path;
-	for (size_t i = 0; i < num_entries; i++) {
+	for (size_t i = 0uz; i < num_entries; i++) {
 		if (!get_full_dso_path (directories [i], dso_name, full_path)) {
 			continue;
 		}
@@ -503,7 +503,7 @@ AndroidSystem::setup_environment_from_override_file (const char *path) noexcept
 	}
 
 	auto     file_size = static_cast<size_t>(sbuf.st_size);
-	size_t   nread = 0;
+	size_t   nread = 0uz;
 	ssize_t  r;
 	auto     buf = std::make_unique<char[]> (file_size);
 
@@ -619,12 +619,12 @@ AndroidSystem::setup_environment () noexcept
 
 	const char *var_name;
 	const char *var_value;
-	for (size_t i = 0; i < application_config.environment_variable_count; i += 2) {
+	for (size_t i = 0uz; i < application_config.environment_variable_count; i += 2) {
 		var_name = app_environment_variables [i];
 		if (var_name == nullptr || *var_name == '\0')
 			continue;
 
-		var_value = app_environment_variables [i + 1];
+		var_value = app_environment_variables [i + 1uz];
 		if (var_value == nullptr)
 			var_value = "";
 
@@ -698,7 +698,7 @@ AndroidSystem::setup_app_library_directories (jstring_array_wrapper& runtimeApks
 			// dynamically in this case
 			AndroidSystem::app_lib_directories = std::span<const char*> (single_app_lib_directory);
 		} else {
-			size_t app_lib_directories_size = have_split_apks ? 1 : runtimeApks.get_length ();
+			size_t app_lib_directories_size = have_split_apks ? 1uz : runtimeApks.get_length ();
 			AndroidSystem::app_lib_directories = std::span<const char*> (new const char*[app_lib_directories_size], app_lib_directories_size);
 		}
 
@@ -713,7 +713,7 @@ void
 AndroidSystem::for_each_apk (jstring_array_wrapper &runtimeApks, ForEachApkHandler handler, void *user_data) noexcept
 {
 	size_t apksLength = runtimeApks.get_length ();
-	for (size_t i = 0; i < apksLength; ++i) {
+	for (size_t i = 0uz; i < apksLength; ++i) {
 		jstring_wrapper &e = runtimeApks [i];
 
 		(handler) (e.get_cstr (), i, apksLength, user_data);
@@ -733,9 +733,9 @@ force_inline void
 AndroidSystem::setup_apk_directories (unsigned short running_on_cpu, jstring_array_wrapper &runtimeApks, bool have_split_apks) noexcept
 {
 	const char *abi = android_abi_names [running_on_cpu];
-	size_t number_of_added_directories = 0;
+	size_t number_of_added_directories = 0uz;
 
-	for (size_t i = 0; i < runtimeApks.get_length (); ++i) {
+	for (size_t i = 0uz; i < runtimeApks.get_length (); ++i) {
 		jstring_wrapper &e = runtimeApks [i];
 		const char *apk = e.get_cstr ();
 
