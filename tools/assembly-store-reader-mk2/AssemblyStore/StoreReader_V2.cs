@@ -75,9 +75,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add (
-				embeddedBlob ? "libxamarin-app.so" : GetBlobName (abi)
-			);
+			parts.Add (GetBlobName (abi, embeddedBlob));
 
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
@@ -94,7 +92,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		};
 	}
 
-	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
+	static string GetBlobName (string abi, bool embeddedBlob) => embeddedBlob ? "libxamarin-app.so" : $"libassemblies.{abi}.blob.so";
 
 	protected override ulong GetStoreStartDataOffset () => elfOffset;
 
