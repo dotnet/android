@@ -101,8 +101,6 @@ namespace Xamarin.Android.Tasks
 
 		public string RuntimeConfigBinFilePath { get; set; }
 
-		public bool UseAssemblyStore { get; set; }
-
 		public string ZipFlushFilesLimit { get; set; }
 
 		public string ZipFlushSizeLimit { get; set; }
@@ -423,23 +421,14 @@ namespace Xamarin.Android.Tasks
 		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
 			string sourcePath;
-			AssemblyCompression.AssemblyData compressedAssembly = null;
 			string compressedOutputDir = Path.GetFullPath (Path.Combine (Path.GetDirectoryName (ApkOutputPath), "..", "lz4"));
-			AssemblyStoreBuilder? storeBuilder = null;
-
-			if (UseAssemblyStore) {
-				storeBuilder = new AssemblyStoreBuilder (Log);
-			}
+			var storeBuilder = new AssemblyStoreBuilder (Log);
 
 			// Add user assemblies
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
 
 			// Add framework assemblies
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
-
-			if (!UseAssemblyStore) {
-				return;
-			}
 
 			Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (AppSharedLibrariesDir);
 
@@ -467,46 +456,7 @@ namespace Xamarin.Android.Tasks
 				// Thus, we no longer just store them in the apk but we call the `GetCompressionMethod` method to find out whether
 				// or not we're supposed to compress .so files.
 				sourcePath = CompressAssembly (assembly);
-				if (UseAssemblyStore) {
-					storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
-					return;
-				}
-
-				// Add assembly
-				(string assemblyPath, string assemblyDirectory) = GetInArchiveAssemblyPath (assembly);
-				string wrappedSourcePath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, sourcePath, Path.GetFileName (assemblyPath));
-				AddFileToArchiveIfNewer (apk, wrappedSourcePath, assemblyPath, compressionMethod: GetCompressionMethod (assemblyPath));
-
-				// Try to add config if exists
-				var config = Path.ChangeExtension (assembly.ItemSpec, "dll.config");
-				AddAssemblyConfigEntry (dsoWrapperConfig, apk, arch, assemblyDirectory, config);
-
-				// Try to add symbols if Debug
-				if (!debug) {
-					return;
-				}
-
-				string symbols = Path.ChangeExtension (assembly.ItemSpec, "pdb");
-				if (!File.Exists (symbols)) {
-					return;
-				}
-
-				string archiveSymbolsPath = assemblyDirectory + MonoAndroidHelper.MakeDiscreteAssembliesEntryName (Path.GetFileName (symbols));
-				string wrappedSymbolsPath = DSOWrapperGenerator.WrapIt (Log, dsoWrapperConfig, arch, symbols, Path.GetFileName (archiveSymbolsPath));
-				AddFileToArchiveIfNewer (
-					apk,
-					wrappedSymbolsPath,
-					archiveSymbolsPath,
-					compressionMethod: GetCompressionMethod (archiveSymbolsPath)
-				);
-			}
-
-			void EnsureCompressedAssemblyData (string sourcePath, uint descriptorIndex)
-			{
-				if (compressedAssembly == null)
-					compressedAssembly = new AssemblyCompression.AssemblyData (sourcePath, descriptorIndex);
-				else
-					compressedAssembly.SetData (sourcePath, descriptorIndex);
+				storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
 			}
 
 			string CompressAssembly (ITaskItem assembly)
