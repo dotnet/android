@@ -62,14 +62,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::span<uint8_t
 		}
 	}
 
-	// if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-	// 	if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-	// 		runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
-	// 		store_mapped_runtime_config_data (runtime_config_blob_mmap, entry_name.get ());
-	// 		return false;
-	// 	}
-	// }
-
 	// assemblies must be 16-byte or 4-byte aligned, or Bad Things happen
 	if (((state.data_offset & 0xf) != 0) || ((state.data_offset & 0x3) != 0)) {
 		Helpers::abort_application (
@@ -274,7 +266,6 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool assembly_store_found = embedded_assembly_store_size != 0;
 	if (assembly_store_found) {
-		log_debug (LOG_ASSEMBLY, "Got embedded assembly store, size %zu", embedded_assembly_store_size);
 		verify_assembly_store_and_set_info (embedded_assembly_store, "embedded");
 		log_debug (LOG_ASSEMBLY, "Looking for DSOs in APK");
 	} else {
@@ -399,8 +390,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	} else {
 		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
 	}
-
-	//delete[] raw_data;
 }
 
 template<bool NeedsNameAlloc>
