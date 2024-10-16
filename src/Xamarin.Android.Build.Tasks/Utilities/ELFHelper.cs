@@ -16,7 +16,7 @@ using ELFSectionType = global::ELFSharp.ELF.Sections.SectionType;
 
 namespace Xamarin.Android.Tasks
 {
-	static class ELFHelper
+	static partial class ELFHelper
 	{
 		public static void AssertValidLibraryAlignment (TaskLoggingHelper log, int alignmentInPages, string path, ITaskItem? item)
 		{
@@ -217,30 +217,6 @@ namespace Xamarin.Android.Tasks
 
 				return size != 0 && symbolEntry.PointedSection.Type == ELFSectionType.ProgBits;
 			}
-		}
-
-		static ISymbolTable? GetSymbolTable (IELF elf, string sectionName)
-		{
-			ISection? section = GetSection (elf, sectionName);
-			if (section == null) {
-				return null;
-			}
-
-			var symtab = section as ISymbolTable;
-			if (symtab == null) {
-				return null;
-			}
-
-			return symtab;
-		}
-
-		static ISection? GetSection (IELF elf, string sectionName)
-		{
-			if (!elf.TryGetSection (sectionName, out ISection section)) {
-				return null;
-			}
-
-			return section;
 		}
 	}
 }
