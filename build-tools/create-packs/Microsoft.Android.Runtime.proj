@@ -42,7 +42,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libmono-android.release.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-debug-app-helper.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libxamarin-native-tracing.so" />
-
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libarchive-dso-stub.so" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind_xamarin-release.a" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libruntime-base-release.a" />
@@ -54,9 +53,6 @@ projects that use the Microsoft.Android framework in .NET 6+.
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\crtbegin_so.o" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\crtend_so.o" />
       <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libclang_rt.builtins-*-android.a" />
-
-      <!-- Remove once https://github.com/dotnet/runtime/pull/107615 is merged and released -->
-      <_AndroidRuntimePackAssets Include="$(MicrosoftAndroidSdkOutDir)lib\$(AndroidRID)\libunwind.a" />
 
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssemblies->'%(Filename)%(Extension)')" Profile="Android" />
       <FrameworkListFileClass Include="@(_AndroidRuntimePackAssets->'%(Filename)%(Extension)')" Profile="Android" />
