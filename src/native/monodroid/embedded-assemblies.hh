@@ -175,11 +175,6 @@ namespace xamarin::android::internal {
 			runtime_config_blob_mmap.size = 0;
 		}
 
-		bool have_runtime_config_blob () const noexcept
-		{
-			return application_config.have_runtime_config_blob && runtime_config_blob_mmap.area != nullptr;
-		}
-
 		bool keep_scanning () const noexcept
 		{
 			return need_to_scan_more_apks;
