@@ -83,5 +83,17 @@ namespace Xamarin.Android.Build.Tests
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
+
+		[Test]
+		public void DirectoryInUse ()
+		{
+			var file = NewFile ();
+			var task = CreateTask ();
+			using (var f = File.OpenWrite (file)) {
+				Assert.IsFalse (task.Execute (), "task.Execute() should have failed.");
+				Assert.AreEqual (0, task.RemovedDirectories.Length, "Changes should not have been made.");
+				DirectoryAssert.Exists (tempDirectory);
+			}
+		}
 	}
 }

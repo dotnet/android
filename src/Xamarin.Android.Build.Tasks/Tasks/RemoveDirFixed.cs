@@ -28,6 +28,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
+using System.Runtime.InteropServices;
 using Microsoft.Build.Framework;
 using Xamarin.Android.Tools;
 using Microsoft.Android.Build.Tasks;
@@ -37,6 +39,11 @@ namespace Xamarin.Android.Tasks
 	public class RemoveDirFixed : AndroidTask
 	{
 		public override string TaskPrefix => "RDF";
+
+		const int DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS = 1000;
+		const int DEFAULT_REMOVEDIRFIXED_RETRIES = 3;
+		const int ERROR_ACCESS_DENIED = -2147024891;
+		const int ERROR_SHARING_VIOLATION = -2147024864;
 
 		public override bool RunTask ()
 		{
@@ -55,10 +62,31 @@ namespace Xamarin.Android.Tasks
 				} catch (UnauthorizedAccessException ex) {
 					// if that fails we probably have readonly files (or locked files)
 					// so try to make them writable and try again.
+					Log.LogDebugMessage ("error: " + ex);
 					try {
-						Files.SetDirectoryWriteable (fullPath);
-						Directory.Delete (fullPath, true);
-						temporaryRemovedDirectories.Add (directory);
+						int retryCount = 0;
+						while (retryCount <= DEFAULT_REMOVEDIRFIXED_RETRIES) {
+							try {
+								Files.SetDirectoryWriteable (fullPath);
+								Directory.Delete (fullPath, true);
+								temporaryRemovedDirectories.Add (directory);
+								break;
+							} catch (Exception e) {
+								switch (e) {
+									case UnauthorizedAccessException:
+									case IOException:
+										int code = Marshal.GetHRForException(e);
+										if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount == DEFAULT_REMOVEDIRFIXED_RETRIES) {
+											throw;
+										};
+										break;
+									default:
+										throw;
+								} 
+							}
+							Thread.Sleep(DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS);
+							retryCount++;
+						}
 					} catch (Exception inner) {
 						Log.LogUnhandledException (TaskPrefix, ex);
 						Log.LogUnhandledException (TaskPrefix, inner);
