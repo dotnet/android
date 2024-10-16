@@ -40,6 +40,11 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			GetArchPath (AndroidTargetArch.Arm),
 			GetArchPath (AndroidTargetArch.X86_64),
 			GetArchPath (AndroidTargetArch.X86),
+
+			GetArchPath (AndroidTargetArch.Arm64, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.Arm, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86_64, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86, embeddedBlob: true),
 		};
 		ApkPaths = paths.AsReadOnly ();
 		AabBasePaths = ApkPaths;
@@ -50,10 +55,15 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			GetArchPath (AndroidTargetArch.Arm, AabBaseDir),
 			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir),
 			GetArchPath (AndroidTargetArch.X86, AabBaseDir),
+
+			GetArchPath (AndroidTargetArch.Arm64, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.Arm, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86, AabBaseDir, embeddedBlob: true),
 		};
 		AabPaths = paths.AsReadOnly ();
 
-		string GetArchPath (AndroidTargetArch arch, string? root = null)
+		string GetArchPath (AndroidTargetArch arch, string? root = null, bool embeddedBlob = false)
 		{
 			const string LibDirName = "lib";
 
@@ -65,7 +75,9 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add (GetBlobName (abi));
+			parts.Add (
+				embeddedBlob ? "libxamarin-app.so" : GetBlobName (abi)
+			);
 
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
