@@ -320,8 +320,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup>
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
-  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' and ('$(EmbedAssembliesIntoApk)' != 'true' or '$(AndroidIncludeDebugSymbols)' == 'true') ">false</AndroidUseAssemblyStore>
-  <AndroidUseAssemblyStore Condition=" '$(AndroidUseAssemblyStore)' == '' ">true</AndroidUseAssemblyStore>
+  <AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' != 'true' ">false</AndroidUseAssemblyStore>
+  <AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' != 'true' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
@@ -1588,7 +1588,6 @@ because xbuild doesn't support framework reference assemblies.
   <PropertyGroup>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_EmbeddedDSOsEnabled)' == 'True' ">.so;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
     <AndroidStoreUncompressedFileExtensions Condition=" '$(_UseEmbeddedDex)' == 'True' ">.dex;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
-    <AndroidStoreUncompressedFileExtensions Condition=" '$(AndroidUseAssemblyStore)' == 'True' ">.blob;$(AndroidStoreUncompressedFileExtensions)</AndroidStoreUncompressedFileExtensions>
   </PropertyGroup>
 </Target>
 
@@ -2108,7 +2107,6 @@ because xbuild doesn't support framework reference assemblies.
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
     ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
     ZipAlignmentPages="$(AndroidZipAlignment)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)"
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
     IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
@@ -2148,7 +2146,6 @@ because xbuild doesn't support framework reference assemblies.
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
       ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
       ZipAlignmentPages="$(AndroidZipAlignment)"
-      UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
       IntermediateOutputPath="$(IntermediateOutputPath)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
