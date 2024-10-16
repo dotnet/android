@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using Mono.Cecil;
 using Mono.Linker;
 using Mono.Linker.Steps;
@@ -30,7 +31,7 @@ namespace MonoDroid.Tuner {
 			if (Profile.IsSdkAssembly (assembly))
 				return false;
 			if (Profile.IsProductAssembly (assembly))
-				return false;
+				return true; // MarkInstantiated is also needed for Mono.Android.dll
 
 			return assembly.MainModule.HasTypeReference ("System.Net.Http.HttpMessageHandler") ||
 				assembly.MainModule.HasTypeReference ("Java.Lang.Object") ||
@@ -58,6 +59,9 @@ namespace MonoDroid.Tuner {
 				if (!type.ImplementsIJavaObject (cache))
 					continue;
 
+				// Mark any IJavaObject as instantiated, as they can be created from Java!
+				MarkInstantiated (type);
+
 				// Custom views in Android .xml files
 				if (customViewMap.ContainsKey (type.FullName)) {
 					Annotations.Mark (type);
@@ -71,6 +75,23 @@ namespace MonoDroid.Tuner {
 					PreserveJavaObjectImplementation (type);
 					continue;
 				}
+			}
+		}
+
+		MethodInfo? markInstantiated;
+
+		void MarkInstantiated (TypeDefinition type)
+		{
+			//NOTE: this is not public:
+			// * https://github.com/dotnet/runtime/blob/def5e3240bdee3ee37ba22c41c840bbf431c4b15/src/tools/illink/src/linker/ref/Linker/Annotations.cs
+			// * https://github.com/dotnet/runtime/blob/def5e3240bdee3ee37ba22c41c840bbf431c4b15/src/tools/illink/src/linker/Linker/Annotations.cs#L237
+			// Annotations.MarkInstantiated (type);
+
+			markInstantiated ??= Annotations.GetType ().GetMethod ("MarkInstantiated", new [] { typeof (TypeDefinition) });
+			if (markInstantiated is not null) {
+				markInstantiated.Invoke (Annotations, new object [] { type });
+			} else {
+				throw new Exception ("Unable to find Annotations.MarkInstantiated method!");
 			}
 		}
 
