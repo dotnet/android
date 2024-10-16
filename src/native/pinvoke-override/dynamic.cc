@@ -29,9 +29,15 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 	log_debug (LOG_ASSEMBLY, "library_name == '%s'; entrypoint_name == '%s'", library_name, entrypoint_name);
 
 	if (library_name == nullptr || entrypoint_name == nullptr) [[unlikely]] {
-		log_fatal (LOG_ASSEMBLY, "Both library name ('%s') and entry point name ('%s') must be specified", library_name, entrypoint_name);
-		Helpers::abort_application ();
-    }
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Both library name ('%s') and entry point name ('%s') must be specified",
+				library_name,
+				entrypoint_name
+			)
+		);
+	}
 
 	hash_t library_name_hash = xxhash::hash (library_name, strlen (library_name));
     hash_t entrypoint_hash = xxhash::hash (entrypoint_name, strlen (entrypoint_name));
@@ -51,8 +57,14 @@ PinvokeOverride::monodroid_pinvoke_override (const char *library_name, const cha
 		// the find* functions didn't know its hash), but we cannot be sure of that so we'll try to load it.
 		pinvoke_ptr = dlsym (RTLD_DEFAULT, entrypoint_name);
 		if (pinvoke_ptr == nullptr) {
-			log_fatal (LOG_ASSEMBLY, "Unable to load p/invoke entry '%s/%s' from the unified runtime DSO", library_name, entrypoint_name);
-			Helpers::abort_application ();
+			Helpers::abort_application (
+				LOG_ASSEMBLY,
+				Util::monodroid_strdup_printf (
+					"Unable to load p/invoke entry '%s/%s' from the unified runtime DSO",
+					library_name,
+					entrypoint_name
+				)
+			);
 		}
 
 		return pinvoke_ptr;
