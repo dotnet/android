@@ -2118,8 +2118,8 @@ because xbuild doesn't support framework reference assemblies.
     ZipAlignmentPages="$(AndroidZipAlignment)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-    IntermediateOutputPath="$(IntermediateOutputPath)">
-    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+    IntermediateOutputPath="$(IntermediateOutputPath)"
+    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
     AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
@@ -2160,8 +2160,8 @@ because xbuild doesn't support framework reference assemblies.
       ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
-      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
       AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
@@ -2235,8 +2235,8 @@ because xbuild doesn't support framework reference assemblies.
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
-			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
 			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
 	</BuildApk>
@@ -2276,8 +2276,8 @@ because xbuild doesn't support framework reference assemblies.
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
-			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
 			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
 	</BuildBaseAppBundle>
