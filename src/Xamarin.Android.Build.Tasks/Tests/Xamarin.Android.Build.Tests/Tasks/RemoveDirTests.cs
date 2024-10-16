@@ -84,7 +84,7 @@ namespace Xamarin.Android.Build.Tests
 			DirectoryAssert.DoesNotExist (tempDirectory);
 		}
 
-		[Test]
+		[Test, Category ("SmokeTests")]
 		public void DirectoryInUse ()
 		{
 			var file = NewFile ();
