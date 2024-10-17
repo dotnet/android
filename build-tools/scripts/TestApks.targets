@@ -377,11 +377,6 @@
   </Target>
 
   <Target Name="InstallAvdImage" >
-    <!-- Try updating the index first -->
-    <Exec
-        Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; update"
-        ContinueOnError="true"
-    />
     <!-- SDK component installation can be frail, try a few times. -->
     <Exec
         Command="&quot;$(CommandLineToolsBinPath)\sdkmanager&quot; &quot;$(SdkManagerImageName)&quot;"
