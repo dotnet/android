@@ -86,11 +86,11 @@ stages:
         Android21-x86:
           avdApiLevel: 21
           avdAbi: x86
-          avdType: default
+          avdType: google_apis
         Android23-x86:
           avdApiLevel: 23
           avdAbi: x86
-          avdType: default
+          avdType: google_apis
         Android24-x86:
           avdApiLevel: 24
           avdAbi: x86
