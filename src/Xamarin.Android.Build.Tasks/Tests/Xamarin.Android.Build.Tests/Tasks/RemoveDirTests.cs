@@ -119,7 +119,7 @@ namespace Xamarin.Android.Build.Tests
 				}
 			});
 			ev.WaitOne ();
-			Assert.IsTrue (task.Execute (), "task.Execute() should have failed.");
+			Assert.IsTrue (task.Execute (), "task.Execute() should have succeeded.");
 			Assert.AreEqual (1, task.RemovedDirectories.Length, "Changes should have been made.");
 			DirectoryAssert.DoesNotExist (tempDirectory);
 			await t;
