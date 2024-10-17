@@ -59,7 +59,14 @@ namespace Xamarin.Android.Tasks
 					// try to do a normal "fast" delete of the directory.
 					Directory.Delete (fullPath, true);
 					temporaryRemovedDirectories.Add (directory);
-				} catch (UnauthorizedAccessException ex) {
+				} catch (Exception ex) {
+					switch (ex) {
+						case UnauthorizedAccessException:
+						case IOException:
+							break;
+						default:
+							throw;
+					}
 					// if that fails we probably have readonly files (or locked files)
 					// so try to make them writable and try again.
 					Log.LogDebugMessage ("error: " + ex);
