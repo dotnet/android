@@ -84,7 +84,8 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 				AndroidBinUtilsDirectory,
 				inputFile,
 				ELFEmbeddingHelper.KnownEmbedItems.AssemblyStore,
-				AssemblySourcesDir
+				AssemblySourcesDir,
+				missingContentOK: false
 			);
 
 			if (items.Count == 0) {

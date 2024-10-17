@@ -62,9 +62,10 @@ class ELFEmbeddingHelper
 		TaskLoggingHelper log,
 		ICollection<string> supportedAbis,
 		string androidBinUtilsDirectory,
-		string inputFile,
+		string? inputFile,
 		EmbedItem embedItem,
-		string outputDirectory)
+		string outputDirectory,
+		bool missingContentOK)
 	{
 		if (supportedAbis.Count < 1) {
 			throw new ArgumentException ("At least one target ABI must be present", nameof (supportedAbis));
@@ -80,7 +81,8 @@ class ELFEmbeddingHelper
 				abi,
 				inputFile,
 				outputDirectory,
-				embedItem
+				embedItem,
+				missingContentOK
 			);
 		}
 
@@ -91,9 +93,10 @@ class ELFEmbeddingHelper
 		TaskLoggingHelper log,
 		string abi,
 		string androidBinUtilsDirectory,
-		string inputFile,
+		string? inputFile,
 		EmbedItem embedItem,
-		string outputDirectory)
+		string outputDirectory,
+		bool missingContentOK)
 	{
 		if (String.IsNullOrEmpty (abi)) {
 			throw new ArgumentException ("Must be a supported ABI name", nameof (abi));
@@ -107,7 +110,8 @@ class ELFEmbeddingHelper
 			abi,
 			inputFile,
 			outputDirectory,
-			embedItem
+			embedItem,
+			missingContentOK
 		);
 		return ret;
 	}
@@ -119,10 +123,11 @@ class ELFEmbeddingHelper
 		string abi,
 		string inputFile,
 		string outputDirectory,
-		EmbedItem embedItem)
+		EmbedItem embedItem,
+		bool missingContentOK)
 	{
 		string outputFile = Path.Combine (outputDirectory, $"embed_{embedItem.BaseFileName}.{abi.ToLowerInvariant ()}.o");
-		DoEmbed (log, MonoAndroidHelper.AbiToTargetArch (abi), llvmMcPath, inputFile, outputFile, embedItem);
+		DoEmbed (log, MonoAndroidHelper.AbiToTargetArch (abi), llvmMcPath, inputFile, outputFile, embedItem, missingContentOK);
 		if (!File.Exists (outputFile)) {
 			return;
 		}
@@ -137,33 +142,54 @@ class ELFEmbeddingHelper
 		TaskLoggingHelper log,
 		AndroidTargetArch arch,
 		string llvmMcPath,
-		string inputFile,
+		string? inputFile,
 		string outputFile,
-		EmbedItem item)
+		EmbedItem item,
+		bool missingContentOK)
 	{
 		if (!llvmMcConfigs.TryGetValue (arch, out LlvmMcTargetConfig cfg)) {
 			throw new NotSupportedException ($"Internal error: unsupported target arch '{arch}'");
 		}
 
-		inputFile = Path.GetFullPath (inputFile);
+		bool haveInputFile = !String.IsNullOrEmpty (inputFile);
+		if (!haveInputFile) {
+			if (!missingContentOK) {
+				throw new InvalidOperationException ("Internal error: input file must be specified");
+			}
+		} else {
+			inputFile = Path.GetFullPath (inputFile);
+		}
 		outputFile = Path.GetFullPath (outputFile);
 
-		var fi = new FileInfo (inputFile);
-		long inputFileSize = fi.Length;
+		long inputFileSize = 0;
+		string? sanitizedInputFilePath = null;
+
+		if (haveInputFile) {
+			var fi = new FileInfo (inputFile);
+			if (fi.Exists) {
+				inputFileSize = fi.Length;
+				sanitizedInputFilePath = inputFile.Replace ("\\", "\\\\");
+			} else if (!missingContentOK) {
+				throw new InvalidOperationException ($"Internal error: input file '{inputFile}' does not exist");
+			}
+		}
+
 		string asmInputFile = Path.ChangeExtension (outputFile, ".s");
-		string sanitizedInputFilePath = inputFile.Replace ("\\", "\\\\");
 
 		using var fs = File.Open (asmInputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var sw = new StreamWriter (fs, asmFileEncoding);
 
 		string symbolName = item.SymbolName;
 		sw.WriteLine ($".section .rodata,\"a\",{cfg.AssemblerDirectivePrefix}progbits");
-		sw.WriteLine (".p2align 3, 0x00"); // Put the data at 4k boundary
+		sw.WriteLine (".p2align 3, 0x00"); // Put the data at the 4k boundary
 		sw.WriteLine ();
 		sw.WriteLine ($".global {symbolName}");
 		sw.WriteLine ($".type {symbolName},{cfg.AssemblerDirectivePrefix}object");
 		sw.WriteLine ($"{symbolName}:");
-		sw.WriteLine ($"\t.incbin \"{sanitizedInputFilePath}\"");
+
+		if (!String.IsNullOrEmpty (sanitizedInputFilePath)) {
+			sw.WriteLine ($"\t.incbin \"{sanitizedInputFilePath}\"");
+		}
 		sw.WriteLine ($"\t.size {symbolName}, {inputFileSize}");
 		sw.WriteLine ();
 
