@@ -61,7 +61,9 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
-		[Required]
+		// This property should be required but it can't, because during design time builds there's no
+		// value to pass and MSBuild signals an error that a required property wasn't given a value.
+		//[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
 		[Required]
@@ -343,20 +345,17 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			if (haveRuntimeConfigBlob) {
-				List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
-					Log,
-					SupportedAbis,
-					AndroidBinUtilsDirectory,
-					RuntimeConfigBinFilePath,
-					ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
-					EnvironmentOutputDirectory
-				);
+			List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
+				Log,
+				SupportedAbis,
+				AndroidBinUtilsDirectory,
+				RuntimeConfigBinFilePath,
+				ELFEmbeddingHelper.KnownEmbedItems.RuntimeConfig,
+				EnvironmentOutputDirectory,
+				missingContentOK: !haveRuntimeConfigBlob
+			);
 
-				EmbeddedObjectFiles = objectFilePaths.ToArray ();
-			} else {
-				EmbeddedObjectFiles = Array.Empty<ITaskItem> ();
-			}
+			EmbeddedObjectFiles = objectFilePaths.ToArray ();
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {
