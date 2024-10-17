@@ -41,7 +41,7 @@ namespace Xamarin.Android.Tasks
 		public override string TaskPrefix => "RDF";
 
 		const int DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS = 1000;
-		const int DEFAULT_REMOVEDIRFIXED_RETRIES = 3;
+		const int DEFAULT_REMOVEDIRFIXED_RETRIES = 10;
 		const int ERROR_ACCESS_DENIED = -2147024891;
 		const int ERROR_SHARING_VIOLATION = -2147024864;
 
