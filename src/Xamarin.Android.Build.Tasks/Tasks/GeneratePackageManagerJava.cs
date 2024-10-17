@@ -61,12 +61,11 @@ namespace Xamarin.Android.Tasks
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
-		// This property should be required but it can't, because during design time builds there's no
-		// value to pass and MSBuild signals an error that a required property wasn't given a value.
+		// These two properties should be required but they will require modifying `monodroid` first
 		//[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
 
-		[Required]
+		//[Required]
 		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 		[Output]
