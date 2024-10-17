@@ -65,6 +65,7 @@ namespace Xamarin.Android.Tasks
 								Files.SetDirectoryWriteable (fullPath);
 							Directory.Delete (fullPath, true);
 							temporaryRemovedDirectories.Add (directory);
+							break;
 						} catch (Exception e) {
 							switch (e) {
 								case DirectoryNotFoundException:
