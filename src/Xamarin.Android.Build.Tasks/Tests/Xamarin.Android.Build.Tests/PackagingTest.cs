@@ -129,7 +129,6 @@ Console.WriteLine ($""{DateTime.UtcNow.AddHours(-30).Humanize(culture:c)}"");
 				"System.Collections.dll",
 				"System.Collections.Concurrent.dll",
 				"System.Text.RegularExpressions.dll",
-				"libarc.bin.so",
 			};
 
 			using (var b = CreateApkBuilder ()) {
