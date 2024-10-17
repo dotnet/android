@@ -55,64 +55,37 @@ namespace Xamarin.Android.Tasks
 					Log.LogDebugMessage ($"Directory did not exist: {fullPath}");
 					continue;
 				}
+				int retryCount = 0;
 				try {
-					// try to do a normal "fast" delete of the directory.
-					Directory.Delete (fullPath, true);
-					temporaryRemovedDirectories.Add (directory);
-				} catch (Exception ex) {
-					switch (ex) {
-						case UnauthorizedAccessException:
-						case IOException:
-							break;
-						default:
-							throw;
-					}
-					// if that fails we probably have readonly files (or locked files)
-					// so try to make them writable and try again.
-					Log.LogDebugMessage ("error: " + ex);
-					try {
-						int retryCount = 0;
-						while (retryCount <= DEFAULT_REMOVEDIRFIXED_RETRIES) {
-							try {
+					while (retryCount <= DEFAULT_REMOVEDIRFIXED_RETRIES) {
+						try {
+							// try to do a normal "fast" delete of the directory.
+							// only do the set writable on the second attempt
+							if (retryCount == 1)
 								Files.SetDirectoryWriteable (fullPath);
-								Directory.Delete (fullPath, true);
-								temporaryRemovedDirectories.Add (directory);
-								break;
-							} catch (Exception e) {
-								switch (e) {
-									case UnauthorizedAccessException:
-									case IOException:
-										int code = Marshal.GetHRForException(e);
-										if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount == DEFAULT_REMOVEDIRFIXED_RETRIES) {
-											throw;
-										};
-										break;
-									default:
+							Directory.Delete (fullPath, true);
+							temporaryRemovedDirectories.Add (directory);
+						} catch (Exception e) {
+							switch (e) {
+								case DirectoryNotFoundException:
+									if (OS.IsWindows) {
+										fullPath = Files.ToLongPath (fullPath);
+										Log.LogDebugMessage ("Trying long path: " + fullPath);
+									}
+									break;
+								case UnauthorizedAccessException:
+								case IOException:
+									int code = Marshal.GetHRForException(e);
+									if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount == DEFAULT_REMOVEDIRFIXED_RETRIES) {
 										throw;
-								} 
+									};
+									break;
+								default:
+									throw;
 							}
 							Thread.Sleep(DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS);
 							retryCount++;
 						}
-					} catch (Exception inner) {
-						Log.LogUnhandledException (TaskPrefix, ex);
-						Log.LogUnhandledException (TaskPrefix, inner);
-					}
-				} catch (DirectoryNotFoundException ex) {
-					// This could be a file inside the directory over MAX_PATH.
-					// We can attempt using the \\?\ syntax.
-					if (OS.IsWindows) {
-						try {
-							fullPath = Files.ToLongPath (fullPath);
-							Log.LogDebugMessage ("Trying long path: " + fullPath);
-							Directory.Delete (fullPath, true);
-							temporaryRemovedDirectories.Add (directory);
-						} catch (Exception inner) {
-							Log.LogUnhandledException (TaskPrefix, ex);
-							Log.LogUnhandledException (TaskPrefix, inner);
-						}
-					} else {
-						Log.LogUnhandledException (TaskPrefix, ex);
 					}
 				} catch (Exception ex) {
 					Log.LogUnhandledException (TaskPrefix, ex);
