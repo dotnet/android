@@ -221,6 +221,8 @@ namespace generator.SourceWriters
 
 				if (context.ContextGeneratedMethods.Any (_ => _.Name == method.Name && _.JniSignature == method.JniSignature))
 					continue;
+				if (klass.SkippedInterfaceMethods.Contains (method.GetSkipInvokerSignature ()))
+					continue;
 
 				for (var cls = klass; cls != null; cls = cls.BaseGen)
 					if (cls.ContainsMethod (method, false) || cls != klass && klass.ExplicitlyImplementedInterfaceMethods.Contains (sig)) {

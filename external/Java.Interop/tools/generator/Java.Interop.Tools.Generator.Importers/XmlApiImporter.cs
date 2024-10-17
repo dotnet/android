@@ -147,6 +147,10 @@ namespace MonoDroid.Generation
 				}
 			}
 
+			if (elem.Attribute ("skipInterfaceMethods")?.Value is string skip)
+				foreach (var m in skip.Split (new char [] { ',', ' ', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries))
+					klass.SkippedInterfaceMethods.Add (m);
+
 			return klass;
 		}
 

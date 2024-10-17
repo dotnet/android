@@ -380,6 +380,34 @@ namespace generatortests
 		}
 
 		[Test]
+		public void SkipInterfaceMethodsMetadata ()
+		{
+			var xml = @"<api>
+			  <package name='java.lang' jni-name='java/lang'>
+			    <class abstract='false' deprecated='not deprecated' final='false' name='Object' static='false' visibility='public' jni-signature='Ljava/lang/Object;' />
+			  </package>
+			  <package name='com.xamarin.android' jni-name='com/xamarin/android'>
+			    <interface abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyInterface' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyInterface;'>
+			      <method abstract='true' deprecated='not deprecated' final='false' name='countAffectedRows' jni-signature='()I' bridge='false' native='false' return='int' jni-return='I' static='false' synchronized='false' synthetic='false' visibility='public'></method>
+			    </interface>
+			    <class abstract='true' deprecated='not deprecated' extends='java.lang.Object' extends-generic-aware='java.lang.Object' jni-extends='Ljava/lang/Object;' final='false' name='MyBaseClass' static='false' visibility='public' jni-signature='Lcom/xamarin/android/MyBaseClass;' skipInterfaceMethods='com/xamarin/android/MyInterface.countAffectedRows()I'>
+			      <implements name='com.xamarin.android.MyInterface' name-generic-aware='com.xamarin.android.MyInterface' jni-type='Lcom/xamarin/android/MyInterface;'></implements>
+			    </class>
+			  </package>
+			</api>";
+
+			var gens = ParseApiDefinition (xml);
+			var klass = gens.Single (g => g.Name == "MyBaseClass");
+
+			generator.Context.ContextTypes.Push (klass);
+			generator.WriteType (klass, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+			generator.Context.ContextTypes.Pop ();
+
+			// The abstract method should not get generated because we are suppressing it with 'skipInterfaceMethods'
+			Assert.False (writer.ToString ().Contains ("public abstract int CountAffectedRows ();"), $"was: `{writer}`");
+		}
+
+		[Test]
 		public void CompatVirtualMethod_Class ()
 		{
 			var xml = @"<api>
