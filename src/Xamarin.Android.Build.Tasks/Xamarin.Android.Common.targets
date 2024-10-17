@@ -293,6 +293,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
+  <_AndroidCompressedAssembliesDir>$(IntermediateOutputPath)android\lz4</_AndroidCompressedAssembliesDir>
 </PropertyGroup>
 
 <Choose>
@@ -327,6 +328,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
+  <_AndroidEmbedAssemblyStoreInRuntime Condition=" '$(AndroidUseAssemblyStore)' == 'True' And '$(EmbedAssembliesIntoApk)' == 'true' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">True</_AndroidEmbedAssemblyStoreInRuntime>
+  <_AndroidEmbedAssemblyStoreInRuntime Condition="'$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">False</_AndroidEmbedAssemblyStoreInRuntime>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1709,6 +1712,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_BinaryRuntimeConfigPath)" />
   </ItemGroup>
 </Target>
 
@@ -1746,11 +1750,15 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
+    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)"
   >
+    <Output TaskParameter="EmbeddedObjectFiles" ItemName="_NativeAssemblyTarget" />
   </GeneratePackageManagerJava>
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="@(_NativeAssemblyTarget)" />
   </ItemGroup>
 </Target>
 
@@ -1864,6 +1872,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
+		_RemoveRegisterAttribute;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
@@ -1994,7 +2003,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore"
     Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
@@ -2102,7 +2111,6 @@ because xbuild doesn't support framework reference assemblies.
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
     IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
@@ -2110,7 +2118,9 @@ because xbuild doesn't support framework reference assemblies.
     ZipAlignmentPages="$(AndroidZipAlignment)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-    IntermediateOutputPath="$(IntermediateOutputPath)">
+    IntermediateOutputPath="$(IntermediateOutputPath)"
+    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2142,7 +2152,6 @@ because xbuild doesn't support framework reference assemblies.
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
@@ -2150,7 +2159,9 @@ because xbuild doesn't support framework reference assemblies.
       ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+      AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
@@ -2218,12 +2229,13 @@ because xbuild doesn't support framework reference assemblies.
 			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
 	</BuildApk>
 	<BuildBaseAppBundle
@@ -2257,12 +2269,13 @@ because xbuild doesn't support framework reference assemblies.
 			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
 	</BuildBaseAppBundle>
 	<BuildAppBundle

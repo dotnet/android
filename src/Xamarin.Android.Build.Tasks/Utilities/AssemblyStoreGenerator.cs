@@ -101,7 +101,8 @@ partial class AssemblyStoreGenerator
 
 		string androidAbi = MonoAndroidHelper.ArchToAbi (arch);
 		uint infoCount = (uint)infos.Count;
-		string storePath = Path.Combine (baseOutputDirectory, androidAbi, $"assemblies.{androidAbi}.blob.so");
+		string storeDirectory = Path.Combine (baseOutputDirectory, androidAbi);
+		string storePath = Path.Combine (storeDirectory, $"assemblies.{androidAbi}.blob.so");
 		var index = new List<AssemblyStoreIndexEntry> ();
 		var descriptors = new List<AssemblyStoreEntryDescriptor> ();
 		ulong namesSize = 0;
@@ -115,6 +116,7 @@ partial class AssemblyStoreGenerator
 		// We'll start writing to the stream after we seek to the position just after the header, index, descriptors and name data.
 		ulong curPos = assemblyDataStart;
 
+		Directory.CreateDirectory (storeDirectory);
 		using var fs = File.Open (storePath, FileMode.Create, FileAccess.Write, FileShare.Read);
 		fs.Seek ((long)curPos, SeekOrigin.Begin);
 

@@ -794,5 +794,13 @@ namespace Xamarin.Android.Tasks
 			builder.AppendFileNameIfNotNull (fileName);
 			return builder.ToString ();
 		}
+
+		public static string GetLlvmObjcopyPath (string androidBinUtilsDirectory) => GetBinUtilsToolPath (androidBinUtilsDirectory, "llvm-objcopy");
+		public static string GetLlvmMcPath (string androidBinUtilsDirectory) => GetBinUtilsToolPath (androidBinUtilsDirectory, "llvm-mc");
+
+		static string GetBinUtilsToolPath (string androidBinUtilsDirectory, string toolName)
+		{
+			return Path.Combine (androidBinUtilsDirectory, MonoAndroidHelper.GetExecutablePath (androidBinUtilsDirectory, toolName));
+		}
 	}
 }

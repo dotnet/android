@@ -186,8 +186,10 @@ namespace Xamarin.Android.Tasks
 		public MonoComponent MonoComponents { get; set; }
 		public PackageNamingPolicy PackageNamingPolicy { get; set; }
 		public List<ITaskItem> NativeLibraries { get; set; }
+		public uint PackagedNativeLibrariesCount { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
+		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (log)
@@ -235,7 +237,7 @@ namespace Xamarin.Android.Tasks
 				environment_variable_count = (uint)(environmentVariables == null ? 0 : environmentVariables.Count * 2),
 				system_property_count = (uint)(systemProperties == null ? 0 : systemProperties.Count * 2),
 				number_of_assemblies_in_apk = (uint)NumberOfAssembliesInApk,
-				number_of_shared_libraries = (uint)NativeLibraries.Count,
+				number_of_shared_libraries = PackagedNativeLibrariesCount,
 				bundled_assembly_name_width = (uint)BundledAssemblyNameWidth,
 				number_of_dso_cache_entries = (uint)dsoCache.Count,
 				number_of_aot_cache_entries = (uint)aotDsoCache.Count,
@@ -294,6 +296,24 @@ namespace Xamarin.Android.Tasks
 			module.Add (bundled_assemblies);
 
 			AddAssemblyStores (module);
+
+			if (AssemblyStoreEmbeddedInRuntime) {
+				return;
+			}
+
+			// Need these to keep ABI compatibility with `libxamarin-app.so` used at the runtime's build time
+			var embedded_assembly_store_size = new LlvmIrGlobalVariable (
+				(ulong)0,
+				"embedded_assembly_store_size",
+				LlvmIrVariableOptions.GlobalConstant
+			);
+			module.Add (embedded_assembly_store_size);
+
+			var embedded_assembly_store = new LlvmIrGlobalVariable (typeof (byte[]), "embedded_assembly_store", LlvmIrVariableOptions.GlobalWritable) {
+				ZeroInitializeArray = true,
+				ArrayItemCount = 0,
+			};
+			module.Add (embedded_assembly_store);
 		}
 
 		void AddAssemblyStores (LlvmIrModule module)
