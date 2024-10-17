@@ -72,6 +72,8 @@ namespace Xamarin.Android.Tasks
 										fullPath = Files.ToLongPath (fullPath);
 										Log.LogDebugMessage ("Trying long path: " + fullPath);
 									}
+									if (retryCount == DEFAULT_REMOVEDIRFIXED_RETRIES)
+										throw;
 									break;
 								case UnauthorizedAccessException:
 								case IOException:
