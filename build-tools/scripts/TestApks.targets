@@ -18,7 +18,7 @@
 
   <PropertyGroup>
     <!-- APK tests might run on 32-bit emulators -->
-    <RuntimeIdentifiers>android-arm64;android-x86;android-x64;</RuntimeIdentifiers>
+    <RuntimeIdentifiers Condition=" '$(RuntimeIdentifier)' == '' ">android-arm64;android-x86;android-x64;</RuntimeIdentifiers>
     <TestAvdApiLevel Condition=" '$(TestAvdApiLevel)' == '' ">29</TestAvdApiLevel>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' and '$(HostOS)' == 'Darwin' and  '$(HostOSArchitecture)' == 'Arm64' ">arm64-v8a</TestAvdAbi>
     <TestAvdAbi Condition=" '$(TestAvdAbi)' == '' ">x86_64</TestAvdAbi>
