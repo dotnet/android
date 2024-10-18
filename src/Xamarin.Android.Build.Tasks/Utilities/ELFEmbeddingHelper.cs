@@ -215,10 +215,12 @@ class ELFEmbeddingHelper
 			MonoAndroidHelper.QuoteFileNameArgument (asmInputFile),
 		};
 
-		int ret = MonoAndroidHelper.RunProcess (llvmMcPath, String.Join (" ", args), log);
-		if (ret != 0) {
-			return;
-		}
+		// int ret = MonoAndroidHelper.RunProcess (llvmMcPath, String.Join (" ", args), log);
+		// File.Copy (asmInputFile, $"/tmp/{Path.GetFileName (asmInputFile)}", true);
+		// File.Copy (outputFile, $"/tmp/{Path.GetFileName (outputFile)}", true);
+		// if (ret != 0) {
+		// 	return;
+		// }
 	}
 
 	static string GetLlvmMcPath (string androidBinUtilsDirectory) => MonoAndroidHelper.GetLlvmMcPath (androidBinUtilsDirectory);

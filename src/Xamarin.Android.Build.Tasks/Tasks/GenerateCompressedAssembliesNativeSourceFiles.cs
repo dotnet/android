@@ -66,7 +66,7 @@ namespace Xamarin.Android.Tasks
 
 					var assemblyKey = CompressedAssemblyInfo.GetDictionaryKey (assembly);
 					if (assemblies.ContainsKey (assemblyKey)) {
-						Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetAssemblyAbi(assembly)})");
+						Log.LogDebugMessage ($"Skipping duplicate assembly: {assembly.ItemSpec} (arch {MonoAndroidHelper.GetItemAbi(assembly)})");
 						continue;
 					}
 

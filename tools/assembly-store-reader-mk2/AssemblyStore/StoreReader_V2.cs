@@ -128,8 +128,14 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				}
 			}
 
-			StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
-			magic = reader.ReadUInt32 ();
+			// elfOffset cannot be 0, since we have ELF magic and headers (at least) at the beginning of
+			// the file.
+			if (elfOffset > 0) {
+				StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
+				magic = reader.ReadUInt32 ();
+			} else {
+				return false;
+			}
 		}
 
 		if (magic != Utils.ASSEMBLY_STORE_MAGIC) {

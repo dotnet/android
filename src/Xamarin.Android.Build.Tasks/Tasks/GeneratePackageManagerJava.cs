@@ -249,7 +249,7 @@ public class GeneratePackageManagerJava : AndroidTask
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+				string abi = MonoAndroidHelper.GetItemAbi (assembly);
 				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 				if (!archAssemblyNames.Contains (assemblyName)) {
