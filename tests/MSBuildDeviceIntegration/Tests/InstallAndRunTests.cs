@@ -966,7 +966,8 @@ Bar34=Foo55",
 			};
 			proj.MainActivity = proj.DefaultMainActivity.Replace ("//${AFTER_ONCREATE}", @"
 		Console.WriteLine (""Foo="" + Environment.GetEnvironmentVariable(""Foo""));
-		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));");
+		Console.WriteLine (""Bar34="" + Environment.GetEnvironmentVariable(""Bar34""));
+		Console.WriteLine (""DOTNET_MODIFIABLE_ASSEMBLIES="" + Environment.GetEnvironmentVariable(""DOTNET_MODIFIABLE_ASSEMBLIES""));");
 			var builder = CreateApkBuilder ();
 			Assert.IsTrue (builder.Build (proj), "`dotnet build` should succeed");
 			RunProjectAndAssert (proj, builder);
@@ -988,6 +989,14 @@ Bar34=Foo55",
 					logcatOutput,
 					"The Environment variable \"Bar34\" was not set."
 			);
+			// NOTE: set when $(UseInterpreter) is true, default for Debug mode
+			if (!isRelease) {
+				StringAssert.Contains (
+						"DOTNET_MODIFIABLE_ASSEMBLIES=Debug",
+						logcatOutput,
+						"The Environment variable \"DOTNET_MODIFIABLE_ASSEMBLIES\" was not set."
+				);
+			}
 		}
 
 		[Test]
