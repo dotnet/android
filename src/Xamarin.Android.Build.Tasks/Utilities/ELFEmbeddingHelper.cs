@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+using Microsoft.Android.Build.Tasks;
 using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
@@ -67,12 +68,13 @@ class ELFEmbeddingHelper
 		string outputDirectory,
 		bool missingContentOK)
 	{
+		var ret = new List<ITaskItem> ();
 		if (supportedAbis.Count < 1) {
-			throw new ArgumentException ("At least one target ABI must be present", nameof (supportedAbis));
+			log.LogDebugMessage ("ELFEmbeddingHelper: at least one target ABI must be specified. Probably a DTB build, skipping generation.");
+			return ret;
 		}
 
 		string llvmMcPath = GetLlvmMcPath (androidBinUtilsDirectory);
-		var ret = new List<ITaskItem> ();
 		foreach (string abi in supportedAbis) {
 			EmbedBinary (
 				log,
@@ -98,11 +100,12 @@ class ELFEmbeddingHelper
 		string outputDirectory,
 		bool missingContentOK)
 	{
+		var ret = new List<ITaskItem> ();
 		if (String.IsNullOrEmpty (abi)) {
-			throw new ArgumentException ("Must be a supported ABI name", nameof (abi));
+			log.LogDebugMessage ("ELFEmbeddingHelper: ABI must be specified. Probably a DTB build, skipping generation.");
+			return ret;
 		}
 
-		var ret = new List<ITaskItem> ();
 		EmbedBinary (
 			log,
 			ret,
