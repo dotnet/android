@@ -118,7 +118,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 -->
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props"
-	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props')"/>
+	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.props') And '$(DesignTimeBuild)' != 'true'"/>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.props"
 	Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.props')" />
@@ -361,7 +361,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 <!-- As we split up/refactor this file, put new imports here -->
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.D8.targets" Condition=" '$(AndroidDexTool)' == 'd8' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Aapt2.targets" />
-<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Assets.targets" />
+<Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Assets.targets" Condition=" '$(DesignTimeBuild)' != 'true' " />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.DesignTime.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.EmbeddedResource.targets" />
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Javac.targets" />
@@ -2865,14 +2865,14 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets')"/>
+        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Android.Common.Debugging.targets') And '$(DesignTimeBuild)' != 'true' "/>
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Application.targets"
         Condition=" '$(AndroidApplication)' == 'True' "/>
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Android.Designer.targets" />
 
 <Import Project="$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets"
-        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets')"/>
+        Condition="Exists('$(MSBuildThisFileDirectory)Xamarin.Installer.Common.targets') And '$(DesignTimeBuild)' != 'true' "/>
 <!--
 *******************************************
   Extensibility hook that allows VS to
