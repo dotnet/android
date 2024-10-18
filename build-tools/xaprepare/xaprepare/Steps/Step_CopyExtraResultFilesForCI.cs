@@ -90,6 +90,7 @@ namespace Xamarin.Android.Prepare
 			"*log",
 			"TestOutput-*.txt",
 			"Timing_*",
+			"*.runsettings",
 		};
 
 		void CopyExtraTestFiles (string destinationRoot, Context context)

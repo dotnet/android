@@ -11,6 +11,7 @@ using Xamarin.ProjectTools;
 namespace Xamarin.Android.Build.Tests
 {
 	[TestFixture]
+	//[Category ("Performance")]
 	public class PerformanceTest : DeviceTest
 	{
 		const int Retry = 2;
@@ -46,15 +47,28 @@ namespace Xamarin.Android.Build.Tests
 
 		void Profile (ProjectBuilder builder, Action<ProjectBuilder> action, [CallerMemberName] string caller = null)
 		{
+			Profile (builder, iterations: 1, action: action, caller: caller);
+		}
+
+		void Profile (ProjectBuilder builder, int iterations, Action<ProjectBuilder> action, Action<ProjectBuilder> afterRun = null, [CallerMemberName] string caller = null)
+		{
 			if (!csv_values.TryGetValue (caller, out int expected)) {
 				Assert.Fail ($"No timeout value found for a key of {caller}");
 			}
 
-			action (builder);
-			var actual = GetDurationFromBinLog (builder);
-			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {actual}ms");
-			if (actual > expected) {
-				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {actual}ms");
+			double total = 0;
+			for (int i=0; i < iterations; i++) {
+				action (builder);
+				var actual = GetDurationFromBinLog (builder);
+				TestContext.Out.WriteLine($"run {i} took: {actual}ms");
+				total += actual; 
+				if (afterRun is not null)
+					afterRun (builder);
+			}
+			total /= iterations;
+			TestContext.Out.WriteLine($"expected: {expected}ms, actual: {total}ms");
+			if (total > expected) {
+				Assert.Fail ($"Exceeded expected time of {expected}ms, actual {total}ms");
 			}
 		}
 
@@ -346,9 +360,9 @@ namespace Xamarin.Android.Build.Tests
 				lib.Touch ("MyPage.xaml");
 				libBuilder.Build (lib, doNotCleanupOnUpdate: true);
 				if (install) {
-					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), caller);
+					Profile (appBuilder, b => b.Install (app, doNotCleanupOnUpdate: true), caller: caller);
 				} else {
-					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), caller);
+					Profile (appBuilder, b => b.Build (app, doNotCleanupOnUpdate: true), caller: caller);
 				}
 			}
 		}
@@ -392,6 +406,30 @@ namespace Xamarin.Android.Build.Tests
 				ProfileTask (builder, "FastDeploy", 20, b => {
 					b.Uninstall (proj);
 					b.Install (proj);
+				});
+			}
+		}
+
+		[Test]
+		public void DesignTimeBuild_CSharp_From_Clean ()
+		{
+			AssertCommercialBuild (); // This test will fail without Fast Deployment
+
+			var proj = CreateApplicationProject ();
+			proj.PackageName = "com.xamarin.designtimebuild_csharp_from_clean";
+			proj.PackageReferences.Add (KnownPackages.AndroidXAppCompat);
+			proj.MainActivity = proj.DefaultMainActivity;
+			using (var builder = CreateBuilderWithoutLogFile ()) {
+				builder.ThrowOnBuildFailure = false;
+				builder.BuildLogFile = "designtimebuild.log";
+				builder.Verbosity = LoggerVerbosity.Quiet;
+				builder.Clean (proj);
+				builder.Restore (proj);
+				builder.AutomaticNuGetRestore = false;
+				Profile (builder, iterations: 10, action: b => {
+					b.DesignTimeBuild (proj, "CoreCompile", parameters: new string[] { "BuildingInsideVisualStudio=true" });
+				}, afterRun: b => {
+					b.Clean (proj);
 				});
 			}
 		}
