@@ -588,17 +588,17 @@ namespace Xamarin.Android.Tasks
 		}
 
 #if MSBUILD
-		public static string GetAssemblyAbi (ITaskItem asmItem)
+		public static string GetItemAbi (ITaskItem asmItem)
 		{
 			string? abi = asmItem.GetMetadata ("Abi");
 			if (String.IsNullOrEmpty (abi)) {
-				throw new InvalidOperationException ($"Internal error: assembly '{asmItem}' lacks ABI metadata");
+				throw new InvalidOperationException ($"Internal error: item '{asmItem}' lacks ABI metadata");
 			}
 
 			return abi;
 		}
 
-		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetAssemblyAbi (asmItem));
+		public static AndroidTargetArch GetTargetArch (ITaskItem asmItem) => AbiToTargetArch (GetItemAbi (asmItem));
 #endif // MSBUILD
 
 		static string GetToolsRootDirectoryRelativePath (string androidBinUtilsDirectory)
@@ -797,6 +797,7 @@ namespace Xamarin.Android.Tasks
 
 		public static string GetLlvmObjcopyPath (string androidBinUtilsDirectory) => GetBinUtilsToolPath (androidBinUtilsDirectory, "llvm-objcopy");
 		public static string GetLlvmMcPath (string androidBinUtilsDirectory) => GetBinUtilsToolPath (androidBinUtilsDirectory, "llvm-mc");
+		public static string GetLlvmLlcPath (string androidBinUtilsDirectory) => GetBinUtilsToolPath (androidBinUtilsDirectory, "llc");
 
 		static string GetBinUtilsToolPath (string androidBinUtilsDirectory, string toolName)
 		{
