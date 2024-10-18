@@ -1015,7 +1015,7 @@ Para usar um caminho JDK personalizado para um build de linha de comando, defina
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
-    <value>The '{0}' MSBuild property has an invalid value of '{1}'. A valid value is one of: {2}.</value>
+    <value>A propriedade '{0}' MSBuild tem um valor inválido de '{1}'. Um valor válido é um dos seguintes: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
 {0} - The MSBuild property name which has invalid values.
 {1} - The current value of the property
