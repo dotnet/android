@@ -293,6 +293,7 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' And '$(EmbedAssembliesIntoApk)' == 'False' ">True</_AndroidFastDeployEnvironmentFiles>
 	<_AndroidFastDeployEnvironmentFiles Condition=" '$(_AndroidFastDeployEnvironmentFiles)' == '' ">False</_AndroidFastDeployEnvironmentFiles>
 
+  <_AndroidCompressedAssembliesDir>$(IntermediateOutputPath)android\lz4</_AndroidCompressedAssembliesDir>
 </PropertyGroup>
 
 <Choose>
@@ -327,6 +328,8 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' == 'True' ">False</_AndroidUseMarshalMethods>
   <_AndroidUseMarshalMethods Condition=" '$(AndroidIncludeDebugSymbols)' != 'True' ">$(AndroidEnableMarshalMethods)</_AndroidUseMarshalMethods>
+  <_AndroidEmbedAssemblyStoreInRuntime Condition=" '$(AndroidUseAssemblyStore)' == 'True' And '$(EmbedAssembliesIntoApk)' == 'true' And '$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">True</_AndroidEmbedAssemblyStoreInRuntime>
+  <_AndroidEmbedAssemblyStoreInRuntime Condition="'$(_AndroidEmbedAssemblyStoreInRuntime)' == '' ">False</_AndroidEmbedAssemblyStoreInRuntime>
 </PropertyGroup>
 
 <!-- Do not resolve from the GAC under any circumstances in Mobile -->
@@ -1438,10 +1441,8 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      Mode="typemap">
+      Mode="TypeMap">
     <Output TaskParameter="AssemblySources" ItemName="_TypeMapAssemblySource" />
-    <Output TaskParameter="AssemblyIncludes" ItemName="_TypeMapAssemblyInclude" />
   </PrepareAbiItems>
 </Target>
 
@@ -1524,7 +1525,6 @@ because xbuild doesn't support framework reference assemblies.
 
   <ItemGroup>
     <FileWrites Include="@(_TypeMapAssemblySource)" />
-    <FileWrites Include="@(_TypeMapAssemblyInclude)" />
     <FileWrites Include="@(_AndroidTypeMapping)" Condition=" '@(_AndroidTypeMapping->Count())' == '0' " />
     <FileWrites Include="$(_ManifestOutput)" />
   </ItemGroup>
@@ -1596,23 +1596,26 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="environment">
+    Mode="Environment">
       <Output TaskParameter="AssemblySources" ItemName="_EnvironmentAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="compressed">
+    Mode="CompressedAssemblies">
       <Output TaskParameter="AssemblySources" ItemName="_CompressedAssembliesAssemblySource" />
   </PrepareAbiItems>
   <PrepareAbiItems
     BuildTargetAbis="@(_BuildTargetAbis)"
     NativeSourcesDir="$(_NativeAssemblySourceDir)"
-    Debug="$(AndroidIncludeDebugSymbols)"
-    Mode="marshal_methods">
+    Mode="MarshalMethods">
       <Output TaskParameter="AssemblySources" ItemName="_MarshalMethodsAssemblySource" />
+  </PrepareAbiItems>
+  <PrepareAbiItems
+    BuildTargetAbis="@(_BuildTargetAbis)"
+    NativeSourcesDir="$(_NativeAssemblySourceDir)"
+    Mode="EmbeddedRuntimeConfig">
+      <Output TaskParameter="AssemblySources" ItemName="_EmbeddedRuntimeConfigAssemblySource" />
   </PrepareAbiItems>
 </Target>
 
@@ -1638,8 +1641,7 @@ because xbuild doesn't support framework reference assemblies.
   <PrepareAbiItems
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
-      Debug="$(AndroidIncludeDebugSymbols)"
-      Mode="jniremap">
+      Mode="JNIRemap">
     <Output TaskParameter="AssemblySources" ItemName="_AndroidRemapAssemblySource" />
   </PrepareAbiItems>
 </Target>
@@ -1709,6 +1711,7 @@ because xbuild doesn't support framework reference assemblies.
 <Target Name="_GetGeneratePackageManagerJavaInputs">
   <ItemGroup>
     <_GeneratePackageManagerJavaInputs Include="@(_GenerateJavaStubsInputs)" />
+    <_GeneratePackageManagerJavaInputs Include="$(_BinaryRuntimeConfigPath)" />
   </ItemGroup>
 </Target>
 
@@ -1746,11 +1749,12 @@ because xbuild doesn't support framework reference assemblies.
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
-  >
-  </GeneratePackageManagerJava>
+    AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)" />
   <Touch Files="$(_AndroidStampDirectory)_GeneratePackageManagerJava.stamp" AlwaysCreate="True" />
   <ItemGroup>
     <FileWrites Include="@(_EnvironmentAssemblySource)" />
+    <FileWrites Include="@(_EmbeddedRuntimeConfigAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -1864,6 +1868,7 @@ because xbuild doesn't support framework reference assemblies.
 <PropertyGroup>
 	<_CompileToDalvikDependsOnTargets>
 		_CompileJava;
+		_RemoveRegisterAttribute;
 		_CreateApplicationSharedLibraries;
 		_GetMonoPlatformJarPath;
 		_GetLibraryImports;
@@ -1976,6 +1981,18 @@ because xbuild doesn't support framework reference assemblies.
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_EmbeddedRuntimeConfigAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_EmbeddedRuntimeConfigAssemblySource.abi)</abi>
+    </_NativeAssemblyTarget>
+  </ItemGroup>
+
+  <ItemGroup>
+    <_NativeAssemblySource Include="@(_AndroidRemapAssemblySource)" />
+    <_NativeAssemblySource Include="@(_CompressedAssembliesAssemblySource)" />
+    <_NativeAssemblySource Include="@(_EmbeddedRuntimeConfigAssemblySource)" />
+    <_NativeAssemblySource Include="@(_EnvironmentAssemblySource)" />
+    <_NativeAssemblySource Include="@(_MarshalMethodsAssemblySource)" />
+    <_NativeAssemblySource Include="@(_TypeMapAssemblySource)" />
   </ItemGroup>
 </Target>
 
@@ -1994,11 +2011,11 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles"
-    Inputs="@(_TypeMapAssemblySource);@(_TypeMapAssemblyInclude);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore"
+    Inputs="@(_NativeAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
-      Sources="@(_TypeMapAssemblySource);@(_EnvironmentAssemblySource);@(_CompressedAssembliesAssemblySource);@(_MarshalMethodsAssemblySource);@(_AndroidRemapAssemblySource)"
+      Sources="@(_NativeAssemblySource)"
       DebugBuild="$(AndroidIncludeDebugSymbols)"
       WorkingDirectory="$(_NativeAssemblySourceDir)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
@@ -2102,7 +2119,6 @@ because xbuild doesn't support framework reference assemblies.
     ProjectFullPath="$(MSBuildProjectFullPath)"
     IncludeWrapSh="$(AndroidIncludeWrapSh)"
     CheckedBuild="$(_AndroidCheckedBuild)"
-    RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
     ExcludeFiles="@(AndroidPackagingOptionsExclude)"
     IncludeFiles="@(AndroidPackagingOptionsInclude)"
     ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
@@ -2110,7 +2126,9 @@ because xbuild doesn't support framework reference assemblies.
     ZipAlignmentPages="$(AndroidZipAlignment)"
     UseAssemblyStore="$(AndroidUseAssemblyStore)"
     AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-    IntermediateOutputPath="$(IntermediateOutputPath)">
+    IntermediateOutputPath="$(IntermediateOutputPath)"
+    CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+    AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
   </BuildApk>
   <BuildBaseAppBundle
@@ -2142,7 +2160,6 @@ because xbuild doesn't support framework reference assemblies.
       ProjectFullPath="$(MSBuildProjectFullPath)"
       IncludeWrapSh="$(AndroidIncludeWrapSh)"
       CheckedBuild="$(_AndroidCheckedBuild)"
-      RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
       ExcludeFiles="@(AndroidPackagingOptionsExclude)"
       IncludeFiles="@(AndroidPackagingOptionsInclude)"
       ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
@@ -2150,7 +2167,9 @@ because xbuild doesn't support framework reference assemblies.
       ZipAlignmentPages="$(AndroidZipAlignment)"
       UseAssemblyStore="$(AndroidUseAssemblyStore)"
       AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-      IntermediateOutputPath="$(IntermediateOutputPath)">
+      IntermediateOutputPath="$(IntermediateOutputPath)"
+      CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+      AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
     <Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
   </BuildBaseAppBundle>
   <BuildAppBundle
@@ -2218,12 +2237,13 @@ because xbuild doesn't support framework reference assemblies.
 			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="ApkFiles" />
 	</BuildApk>
 	<BuildBaseAppBundle
@@ -2257,12 +2277,13 @@ because xbuild doesn't support framework reference assemblies.
 			ProjectFullPath="$(MSBuildProjectFullPath)"
 			IncludeWrapSh="$(AndroidIncludeWrapSh)"
 			CheckedBuild="$(_AndroidCheckedBuild)"
-			RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
 			ZipFlushFilesLimit="$(_ZipFlushFilesLimit)"
 			ZipFlushSizeLimit="$(_ZipFlushSizeLimit)"
 			ExcludeFiles="@(AndroidPackagingOptionsExclude)"
 			AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
-			IntermediateOutputPath="$(IntermediateOutputPath)">
+			IntermediateOutputPath="$(IntermediateOutputPath)"
+			CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)"
+			AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)">
 		<Output TaskParameter="OutputFiles" ItemName="BaseZipFile" />
 	</BuildBaseAppBundle>
 	<BuildAppBundle

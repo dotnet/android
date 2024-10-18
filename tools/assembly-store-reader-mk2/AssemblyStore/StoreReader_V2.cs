@@ -40,6 +40,11 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			GetArchPath (AndroidTargetArch.Arm),
 			GetArchPath (AndroidTargetArch.X86_64),
 			GetArchPath (AndroidTargetArch.X86),
+
+			GetArchPath (AndroidTargetArch.Arm64, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.Arm, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86_64, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86, embeddedBlob: true),
 		};
 		ApkPaths = paths.AsReadOnly ();
 		AabBasePaths = ApkPaths;
@@ -50,10 +55,15 @@ partial class StoreReader_V2 : AssemblyStoreReader
 			GetArchPath (AndroidTargetArch.Arm, AabBaseDir),
 			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir),
 			GetArchPath (AndroidTargetArch.X86, AabBaseDir),
+
+			GetArchPath (AndroidTargetArch.Arm64, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.Arm, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86_64, AabBaseDir, embeddedBlob: true),
+			GetArchPath (AndroidTargetArch.X86, AabBaseDir, embeddedBlob: true),
 		};
 		AabPaths = paths.AsReadOnly ();
 
-		string GetArchPath (AndroidTargetArch arch, string? root = null)
+		string GetArchPath (AndroidTargetArch arch, string? root = null, bool embeddedBlob = false)
 		{
 			const string LibDirName = "lib";
 
@@ -65,7 +75,7 @@ partial class StoreReader_V2 : AssemblyStoreReader
 				root = LibDirName;
 			}
 			parts.Add (abi);
-			parts.Add (GetBlobName (abi));
+			parts.Add (GetBlobName (abi, embeddedBlob));
 
 			return MonoAndroidHelper.MakeZipArchivePath (root, parts);
 		}
@@ -82,9 +92,22 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		};
 	}
 
-	static string GetBlobName (string abi) => $"libassemblies.{abi}.blob.so";
+	static string GetBlobName (string abi, bool embeddedBlob) => embeddedBlob ? "libxamarin-app.so" : $"libassemblies.{abi}.blob.so";
 
 	protected override ulong GetStoreStartDataOffset () => elfOffset;
+
+	string PayloadErrorToString (ELFPayloadError error)
+	{
+		return error switch {
+			ELFPayloadError.NotELF           => $"Store '{StorePath}' is not a valid ELF binary",
+			ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
+			ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
+			ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
+			ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
+			ELFPayloadError.NoEmbeddedStore  => $"Store '{StorePath}' does not contain embedded data blob",
+			_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
+		};
+	}
 
 	protected override bool IsSupported ()
 	{
@@ -94,21 +117,24 @@ partial class StoreReader_V2 : AssemblyStoreReader
 		uint magic = reader.ReadUInt32 ();
 		if (magic == Utils.ELF_MAGIC) {
 			ELFPayloadError error;
-			(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
-
+			(elfOffset, _, error) = Utils.FindEmbeddedStoreOffsetAndSize (StoreStream);
 			if (error != ELFPayloadError.None) {
-				string message = error switch {
-					ELFPayloadError.NotELF           => $"Store '{StorePath}' is not a valid ELF binary",
-					ELFPayloadError.LoadFailed       => $"Store '{StorePath}' could not be loaded",
-					ELFPayloadError.NotSharedLibrary => $"Store '{StorePath}' is not a shared ELF library",
-					ELFPayloadError.NotLittleEndian  => $"Store '{StorePath}' is not a little-endian ELF image",
-					ELFPayloadError.NoPayloadSection => $"Store '{StorePath}' does not contain the 'payload' section",
-					_                                => $"Unknown ELF payload section error for store '{StorePath}': {error}"
-				};
-				Log.Debug (message);
-			} else if (elfOffset >= 0) {
+				MaybeLogError (error);
+
+				(elfOffset, _, error) = Utils.FindELFPayloadSectionOffsetAndSize (StoreStream);
+				if (error != ELFPayloadError.None) {
+					MaybeLogError (error);
+					return false;
+				}
+			}
+
+			// elfOffset cannot be 0, since we have ELF magic and headers (at least) at the beginning of
+			// the file.
+			if (elfOffset > 0) {
 				StoreStream.Seek ((long)elfOffset, SeekOrigin.Begin);
 				magic = reader.ReadUInt32 ();
+			} else {
+				return false;
 			}
 		}
 
@@ -129,6 +155,15 @@ partial class StoreReader_V2 : AssemblyStoreReader
 
 		header = new Header (magic, version, entry_count, index_entry_count, index_size);
 		return true;
+
+		void MaybeLogError (ELFPayloadError error)
+		{
+			if (error == ELFPayloadError.None) {
+				return;
+			}
+
+			Log.Debug (PayloadErrorToString (error));
+		}
 	}
 
 	protected override void Prepare ()
