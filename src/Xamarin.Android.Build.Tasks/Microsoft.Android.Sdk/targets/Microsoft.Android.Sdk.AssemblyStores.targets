@@ -7,13 +7,17 @@
     <ItemGroup>
       <_EmbeddedAssemblyStoreObjectFile Include="$(_NativeAssemblySourceDir)embed_assembly_store.%(_BuildTargetAbis.Identity).o" />
     </ItemGroup>
+
+    <ItemGroup>
+      <_EmbeddedAssemblyStoreSourceFiles Include="@(_EmbeddedAssemblyStoreObjectFile->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.s'))')" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CreateEmbeddedAssemblyStore"
           Condition=" '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' "
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
           Inputs="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
-          Outputs="@(_EmbeddedAssemblyStoreObjectFile)">
+          Outputs="@(_EmbeddedAssemblyStoreObjectFile);@(_EmbeddedAssemblyStoreSourceFiles)">
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
@@ -30,7 +34,6 @@
     </CreateEmbeddedAssemblyStore>
 
     <ItemGroup>
-      <FileWrites Include="@(_NativeAssemblyTarget)" />
       <FileWrites Include="@(_EmbeddedAssemblyStoreSourceFiles)" />
     </ItemGroup>
   </Target>

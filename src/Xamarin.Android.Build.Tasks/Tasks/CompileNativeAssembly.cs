@@ -99,9 +99,24 @@ namespace Xamarin.Android.Tasks
 			}
 		}
 
+		static readonly List<string> llcArguments = new () {
+			"-O2",
+			"--debugger-tune=lldb", // NDK uses lldb now
+			"--debugify-level=location+variables",
+			"--fatal-warnings",
+			"--filetype=obj",
+			"--relocation-model=pic",
+		};
+
+		static readonly List<string> llvmMcArguments = new () {
+			"--assemble",
+			"--filetype=obj",
+			"-g",
+		};
+
 		IEnumerable<Config> GetAssemblerConfigs ()
 		{
-			const string assemblerOptions =
+			const string llcOptions =
 				"-O2 " +
 				"--debugger-tune=lldb " + // NDK uses lldb now
 				"--debugify-level=location+variables " +
@@ -113,14 +128,14 @@ namespace Xamarin.Android.Tasks
 			foreach (ITaskItem item in Sources) {
 				// We don't need the directory since our WorkingDirectory is where all the sources are
 				string sourceFile = Path.GetFileName (item.ItemSpec);
-				string outputFile = QuoteFileName (sourceFile.Replace (".ll", ".o"));
+				string outputFile = QuoteFileName (Path.ChangeExtension (sourceFile, ".o"));
 				string executableDir = Path.GetDirectoryName (llcPath);
 				string executableName = MonoAndroidHelper.GetExecutablePath (executableDir, Path.GetFileName (llcPath));
 
 				yield return new Config {
 					InputSource = item.ItemSpec,
 					AssemblerPath = Path.Combine (executableDir, executableName),
-					AssemblerOptions = $"{assemblerOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
+					AssemblerOptions = $"{llcOptions} -o={outputFile} {QuoteFileName (sourceFile)}",
 				};
 			}
 		}

@@ -248,7 +248,7 @@ namespace Xamarin.Android.Tasks
 					uniqueAssemblyNames.Add (assemblyName);
 				}
 
-				string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+				string abi = MonoAndroidHelper.GetItemAbi (assembly);
 				archAssemblyNames ??= new HashSet<string> (StringComparer.OrdinalIgnoreCase);
 
 				if (!archAssemblyNames.Contains (assemblyName)) {

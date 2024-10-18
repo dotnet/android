@@ -136,7 +136,7 @@ namespace Xamarin.Android.Tasks
 			AssemblyData compressedAssembly = new AssemblyData (assembly.ItemSpec, info.DescriptorIndex);
 			string assemblyOutputDir;
 			string subDirectory = assembly.GetMetadata ("DestinationSubDirectory");
-			string abi = MonoAndroidHelper.GetAssemblyAbi (assembly);
+			string abi = MonoAndroidHelper.GetItemAbi (assembly);
 			if (!String.IsNullOrEmpty (subDirectory) && !(subDirectory.EndsWith ($"{abi}/", StringComparison.Ordinal) || subDirectory.EndsWith ($"{abi}\\", StringComparison.Ordinal))) {
 				assemblyOutputDir = Path.Combine (compressedOutputDir, abi, subDirectory);
 			} else {
