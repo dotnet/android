@@ -1015,7 +1015,7 @@ Um einen benutzerdefinierten JDK-Pfad für einen Befehlszeilenbuild zu verwenden
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
-    <value>The '{0}' MSBuild property has an invalid value of '{1}'. A valid value is one of: {2}.</value>
+    <value>Die MSBuild-Eigenschaft "{0}" weist einen ungültigen Wert "{1}" auf. Ein gültiger Wert ist: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
 {0} - The MSBuild property name which has invalid values.
 {1} - The current value of the property
