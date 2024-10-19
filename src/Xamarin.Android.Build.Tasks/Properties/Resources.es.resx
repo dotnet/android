@@ -1015,7 +1015,7 @@ Para usar una ruta de acceso de JDK personalizada para una compilación de líne
 {1} - The numeric version of .NET</comment>
   </data>
   <data name="XA1038" xml:space="preserve">
-    <value>The '{0}' MSBuild property has an invalid value of '{1}'. A valid value is one of: {2}.</value>
+    <value>La propiedad '{0}' de MSBuild tiene un valor no válido de '{1}'. Un valor válido es uno de: {2}.</value>
     <comment>The following are literal names and should not be translated: MSBuild.
 {0} - The MSBuild property name which has invalid values.
 {1} - The current value of the property
