@@ -15,6 +15,7 @@ add_library(
 )
 
 add_library(${LIB_ALIAS} ALIAS ${LIB_NAME})
+set_static_library_suffix(${LIB_NAME})
 
 target_compile_definitions(
   ${LIB_NAME}

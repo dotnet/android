@@ -22,6 +22,19 @@ namespace Xamarin.Android.Tasks
 			"libxamarin-debug-app-helper",
 		};
 
+		// Please keep the list sorted.  Any new runtime libraries that are added upstream need to be mentioned here.
+		static readonly HashSet<string> KnownRuntimeNativeLibraries = new (StringComparer.OrdinalIgnoreCase) {
+			"libSystem.Globalization.Native.so",
+			"libSystem.IO.Compression.Native.so",
+			"libSystem.Native.so",
+			"libSystem.Security.Cryptography.Native.Android.so",
+			"libmono-component-debugger.so",
+			"libmono-component-diagnostics_tracing.so",
+			"libmono-component-hot_reload.so",
+			"libmono-component-marshal-ilgen.so",
+			"libmonosgen-2.0.so",
+		};
+
 		/// <summary>
 		/// Assumed to be .so files only
 		/// </summary>
@@ -30,6 +43,7 @@ namespace Xamarin.Android.Tasks
 		public string [] ExcludedLibraries { get; set; }
 
 		public bool IncludeDebugSymbols { get; set; }
+		public bool NativeRuntimeLinking { get; set; }
 
 		[Output]
 		public ITaskItem [] OutputLibraries { get; set; }
@@ -64,6 +78,11 @@ namespace Xamarin.Android.Tasks
 				// We may eventually have files such as `libmono-android-checked+asan.release.so` as well.
 				var fileName = Path.GetFileNameWithoutExtension (library.ItemSpec);
 				if (fileName.StartsWith ("libmono-android", StringComparison.Ordinal)) {
+					if (NativeRuntimeLinking) {
+						// We don't need the precompiled runtime, it will be linked during application build
+						continue;
+					}
+
 					if (fileName.EndsWith (".debug", StringComparison.Ordinal)) {
 						if (!IncludeDebugSymbols)
 							continue;
@@ -87,12 +106,31 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 
-				output.Add (library);
+				if (!IgnoreLibraryWhenLinkingRuntime (library)) {
+					output.Add (library);
+				}
 			}
 
 			OutputLibraries = output.ToArray ();
 
 			return !Log.HasLoggedErrors;
+		}
+
+		bool IgnoreLibraryWhenLinkingRuntime (ITaskItem libItem)
+		{
+			if (!NativeRuntimeLinking) {
+				return false;
+			}
+
+			// We ignore all the shared libraries coming from the runtime packages, as they are all linked into our runtime and
+			// need not be packaged.
+			string packageId = libItem.GetMetadata ("NuGetPackageId");
+			if (packageId.StartsWith ("Microsoft.NETCore.App.Runtime.Mono.android-", StringComparison.OrdinalIgnoreCase)) {
+				return true;
+			}
+
+			// Should `NuGetPackageId` be empty, we check the libs by name, as the last resort.
+			return KnownRuntimeNativeLibraries.Contains (Path.GetFileName (libItem.ItemSpec));
 		}
 	}
 }
