@@ -108,7 +108,8 @@ namespace MonoDroid.Generation
 				Visibility = f.IsPublic ? "public" : f.IsFamilyOrAssembly ? "protected internal" : f.IsFamily ? "protected" : f.IsAssembly ? "internal" : "private"
 			};
 
-			field.SetterParameter = CreateParameter (f.FieldType.Resolve ()?.FullName ?? f.FieldType.FullName, null);
+			var field_parameter_type = f.FieldType.Resolve () ?? f.FieldType;
+			field.SetterParameter = CreateParameter (field_parameter_type.FullNameCorrected ().StripArity (), null);
 			field.SetterParameter.Name = "value";
 
 			return field;

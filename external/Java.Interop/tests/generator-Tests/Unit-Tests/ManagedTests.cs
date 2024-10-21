@@ -41,6 +41,15 @@ namespace Com.Mypackage
 
 	[Register ("com/mypackage/service")]
 	public interface IService { }
+
+	[Register ("com/mypackage/FieldClass")]
+	public class FieldClass : Java.Lang.Object
+	{
+		public NestedFieldClass field;
+
+		public class NestedFieldClass : Java.Lang.Object { }
+	}
+
 }
 
 namespace GenericTestClasses
@@ -131,6 +140,21 @@ namespace generatortests
 			Assert.IsFalse (@class.IsFinal);
 			Assert.IsFalse (@class.IsDeprecated);
 			Assert.IsNull (@class.DeprecatedComment);
+		}
+
+		[Test]
+		public void FieldWithNestedType ()
+		{
+			var @class = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.FieldClass"), options);
+			var @class2 = CecilApiImporter.CreateClass (module.GetType ("Com.Mypackage.FieldClass/NestedFieldClass"), options);
+
+			options.SymbolTable.AddType (@class);
+			options.SymbolTable.AddType (@class2);
+
+			Assert.IsTrue (@class.Validate (options, new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "@class.Validate failed!");
+
+			// Ensure the front slash is replaced with a period
+			Assert.AreEqual ("Com.Mypackage.FieldClass.NestedFieldClass", @class.Fields [0].TypeName);
 		}
 
 		[Test]
