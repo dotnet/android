@@ -1138,7 +1138,7 @@ android {{
     }}
 }}
 dependencies {{
-    implementation(""androidx.appcompat:appcompat:1.6.1"")
+    implementation(""androidx.appcompat:appcompat:1.7.0"")
     implementation(""com.google.android.material:material:1.11.0"")
     implementation(""com.facebook.android:facebook-android-sdk:17.0.2"")
 }}
