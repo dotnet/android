@@ -9,6 +9,12 @@ ms.date: 09/09/2024
 Build items control how a .NET for Android application
 or library project is built.
 
+They're specified within the project file, for example **MyApp.csproj**, within
+an [MSBuild ItemGroup](/visualstudio/msbuild/itemgroup-element-msbuild).
+
+> [!NOTE]
+> In .NET for Android there is technically no distinction between an application and a bindings project, so build items will work in both. In practice it is highly recommended to create separate application and bindings projects. Build items that are primarily used in bindings projects are documented in the [MSBuild bindings project items](../binding-libs/msbuild-reference/build-items.md) reference guide.
+
 ## AndroidAdditionalJavaManifest
 
 `<AndroidAdditionalJavaManifest>` is used in conjunction with

@@ -29,42 +29,47 @@ conceptualContent:
 # itemType: reference
   # Supports up to 3 subsections
   sections:
-    - title: .NET for Android reference
+    - title: .NET for Android Guides
       items:
         # Card
-        - title: Building Android Apps
-          summary: Building Android Apps
+        - title: Build Android apps
           links:
             - url: ./building-apps/build-process.md
               itemType: reference
-              text: Build Process
+              text: Build process
             - url: ./building-apps/build-targets.md
               itemType: reference
-              text: Build Targets
+              text: Build targets
             - url: ./building-apps/build-properties.md
               itemType: reference
-              text: Build Properties
+              text: Build properties
             - url: ./building-apps/build-items.md
               itemType: reference
-              text: Build Items
+              text: Build items
         # Card
-        - title: Features
-          summary: .NET for Android Features
+        - title: Fundamentals
           links:
             - url: ./features/layout-code-behind/index.md
               itemType: reference
-              text: Layout Code Behind
-            - url: ./features/maven/android-maven-library.md
-              itemType: reference
-              text: "@(AndroidMavenLibrary) Build Item"
+              text: Layout code behind
         # Card
-        - title: Message reference
-          summary: Tooling error and warning message reference.
+        - title: Bind Android Java libraries
           links:
-            - url: ./messages/index.md
+            - url: ./binding-libs/binding-java-libs/index.md
               itemType: reference
-              text: Messages reference
-
+              text: Overview
+            - url: ./binding-libs/binding-java-libs/binding-java-library.md
+              itemType: reference
+              text: Bind a Java library
+            - url: ./binding-libs/binding-java-libs/binding-java-maven-library.md
+              itemType: reference
+              text: Bind a Java library from Maven
+            - url: ./binding-libs/customizing-bindings/index.md
+              itemType: reference
+              text: Customize bindings
+            - url: ./binding-libs/customizing-bindings/troubleshooting-bindings.md
+              itemType: reference
+              text: Troubleshoot bindings
 
 # additionalContent section (Optional; Remove if not applicable.)
 # Card with links style
@@ -72,17 +77,20 @@ additionalContent:
   # Supports up to 4 subsections
   sections:
 
-    - title: API reference # < 60 chars (optional)
-      summary: Search the .NET API documentation. # < 160 chars (optional)
+    - title: References # < 60 chars (optional)
       items:
         # Card
         - title: ".NET API reference"
           summary: API reference documentation for .NET
-          url: /dotnet/api/index.md?view=net-8.0
+          url: /dotnet/api/?view=net-8.0
         # Card
-        - title: ".NET for Android reference"
+        - title: ".NET for Android API reference"
           summary: Android-specific API reference
           url: /dotnet/api/?preserve-view=true&view=net-android-34.0
+        # Card
+        - title: "Tooling message reference"
+          summary: Tooling error and warning message reference
+          url: ./messages/index.md
 
   # footer (Optional; Remove if not applicable.)
   footer: "Are you interested in contributing to the .NET docs? For more information, see our [contributor guide](/contribute/dotnet/dotnet-contribute)."

@@ -1,19 +1,21 @@
 ---
 title: Java Dependency Verification in .NET for Android
 description: Java Dependency Verification in .NET for Android
-ms.date: 04/11/2024
+ms.author: jopobst
+ms.date: 05/11/2024
 ---
-# Java Dependency Verification
 
-Note: This feature is only available in .NET 9+.
+# Java dependency verification
 
-## Description
+> [!NOTE]
+> This feature is only available in .NET 9+.
 
 A common problem when creating Java binding libraries for .NET for Android is not providing the required Java dependencies. The binding process ignores API that requires missing dependencies, so this can result in large portions of desired API not being bound.
 
 Unlike .NET assemblies, a Java library does not specify its dependencies in the package. The dependency information is stored in external files called POM files. In order to consume this information to ensure correct dependencies an additional layer of files must be added to a binding project.
 
-Note: the preferred way of interacting with this system is to use [`<AndroidMavenLibrary>`](android-maven-library.md) which will automatically download any needed POM files.
+> [!TIP]
+> The preferred way of interacting with this system is to use [`<AndroidMavenLibrary>`](android-maven-library.md) which will automatically download any needed POM files.
 
 For example:
 
@@ -27,13 +29,11 @@ automatically gets expanded to:
 <AndroidLibrary 
   Include="<MavenCacheDir>/Central/com.squareup.okio/okio/1.17.4/com.squareup.okio_okio.jar" 
   Manifest="<MavenCacheDir>/Central/com.squareup.okio/okio/1.17.4/com.squareup.okio_okio.pom"
-  JavaArtifact="com.squareup.okio:okio" 
-  JavaVersion="1.17.4" />
+  JavaArtifact="com.squareup.okio:okio:1.17.4" />
   
 <AndroidAdditionalJavaManifest
   Include="<MavenCacheDir>/Central/com.squareup.okio/okio-parent/1.17.4/okio-parent-1.17.4.pom"
-  JavaArtifact="com.squareup.okio:okio-parent"
-  JavaVersion="1.17.4" />
+  JavaArtifact="com.squareup.okio:okio-parent:1.17.4" />
   
 etc.
 ```
@@ -42,16 +42,15 @@ However it is also possible to manually opt in to Java dependency verification u
 
 ## Specification
 
-To manually opt in to Java dependency verification, add the `Manifest`, `JavaArtifact`, and `JavaVersion` attributes to an `<AndroidLibrary>` item:
+To manually opt in to Java dependency verification, add the `Manifest` and `JavaArtifact` attributes to an `<AndroidLibrary>` item:
 
 ```xml
-<!-- JavaArtifact format is {GroupId}:{ArtifactId} -->
+<!-- JavaArtifact format is {GroupId}:{ArtifactId}:{Version} -->
 <ItemGroup>
   <AndroidLibrary
     Include="my_binding_library.jar"
     Manifest="my_binding_library.pom"
-    JavaArtifact="com.example:mybinding"
-    JavaVersion="1.0.0" />
+    JavaArtifact="com.example:mybinding:1.0.0" />
 </ItemGroup>
 ```
 
@@ -65,7 +64,7 @@ error : Java dependency 'androidx.collection:collection' version '1.0.0' is not 
 
 Seeing these error(s) or no errors should indicate that the Java dependency verification is working. Follow the [Resolving Java Dependencies](resolving-java-dependencies.md) guide to fix any missing dependency errors.
 
-## Additional POM Files
+## Additional POM files
 
 POM files can sometimes have some optional features in use that make them more complicated than the above example.
 
@@ -104,12 +103,11 @@ error : Unable to resolve POM for artifact 'com.squareup.okio:okio-parent:1.17.4
 In this case, we need to provide the POM file for `com.squareup.okio:okio-parent:1.17.4`:
 
 ```xml
-<!-- JavaArtifact format is {GroupId}:{ArtifactId} -->
+<!-- JavaArtifact format is {GroupId}:{ArtifactId}:{Version} -->
 <ItemGroup>
   <AndroidAdditionalJavaManifest
     Include="com.square.okio.okio-parent.1.17.4.pom"
-    JavaArtifact="com.squareup.okio:okio-parent"
-    JavaVersion="1.17.4" />
+    JavaArtifact="com.squareup.okio:okio-parent:1.17.4" />
 </ItemGroup>
 ```
 
