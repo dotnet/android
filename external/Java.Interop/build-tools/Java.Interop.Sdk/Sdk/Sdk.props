@@ -1,0 +1,6 @@
+<Project>
+  <PropertyGroup>
+    <JavaPathSeparator Condition=" $([MSBuild]::IsOSPlatform('windows')) ">;</JavaPathSeparator>
+    <JavaPathSeparator Condition=" '$(JavacClasspathSeparator)' == '' ">:</JavaPathSeparator>
+  </PropertyGroup>
+</Project>

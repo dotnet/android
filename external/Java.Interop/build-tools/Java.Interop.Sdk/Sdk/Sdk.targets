@@ -1,0 +1,218 @@
+<Project>
+
+  <ItemDefinitionGroup>
+    <JavaCompile>
+      <Bind>True</Bind>
+    </JavaCompile>
+    <JavaReference>
+      <Bind>True</Bind>
+    </JavaReference>
+  </ItemDefinitionGroup>
+
+  <PropertyGroup>
+    <JavaOutputJar Condition=" '$(JavaOutputJar)' == '' ">$(OutputPath)$(AssemblyName).jar</JavaOutputJar>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <JavaCreateManagedBindingsDependsOn>
+      _BuildJavaCompileForManagedBinding;
+      _GenerateApiDescription;
+      _GenerateManagedBinding;
+      _CleanupManagedBinding;
+    </JavaCreateManagedBindingsDependsOn>
+    <JavaCreateOutputJarDependsOn>
+      _JavaCreateJcws;
+      _JavaCreateOutputJar;
+    </JavaCreateOutputJarDependsOn>
+  </PropertyGroup>
+
+  <Target Name="JavaCreateManagedBindings"
+      BeforeTargets="CoreCompile"
+      DependsOnTargets="$(JavaCreateManagedBindingsDependsOn)">
+  </Target>
+
+  <Target Name="JavaCreateOutputJar"
+      AfterTargets="Build"
+      DependsOnTargets="$(JavaCreateOutputJarDependsOn)">
+  </Target>
+
+  <PropertyGroup>
+    <_GeneratorPath>$(UtilityOutputFullPath)generator.dll</_GeneratorPath>
+    <_JavaIntermediateDir>$(IntermediateOutputPath)_ji\</_JavaIntermediateDir>
+    <_JavaManagedBindingInput>$(_JavaIntermediateDir)o.jar</_JavaManagedBindingInput>
+    <_JavaManagedBindingDir>$(_JavaIntermediateDir)mcw\</_JavaManagedBindingDir>
+    <_JavaJcwClassesDir>$(_JavaIntermediateDir)classes\</_JavaJcwClassesDir>
+    <_JavaJcwSourcesDir>$(_JavaIntermediateDir)java\</_JavaJcwSourcesDir>
+  </PropertyGroup>
+
+  <Target Name="_CollectJavaCompileForManagedBindingInputs">
+    <ItemGroup>
+      <_JavaCompileForBindingInputs
+          Condition=" '%(JavaCompile.Bind)' == 'True' "
+          Include="@(JavaCompile)"
+      />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_JavaCollectJavacRefs">
+    <ItemGroup>
+      <_JavacRefs Include="$(ToolOutputFullPath)java-interop.jar" />
+      <_JavacRefs Include="@(JavaReference)" />
+      <_JavacRefsWithForwardSlash Include="@(_JavacRefs->Replace('%5c', '/'))" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_BuildJavaCompileForManagedBinding"
+      DependsOnTargets="_CollectJavaCompileForManagedBindingInputs;_JavaCollectJavacRefs"
+      Inputs="@(_JavaCompileForBindingInputs)"
+      Outputs="$(_JavaManagedBindingInput)">
+    <PropertyGroup>
+      <_ClassesDir>$(_JavaIntermediateDir)\bound-classes</_ClassesDir>
+      <_ResponseFile>$(_JavaIntermediateDir)r.txt</_ResponseFile>
+      <_Classpath>@(_JavacRefsWithForwardSlash, '$(JavaPathSeparator)')</_Classpath>
+    </PropertyGroup>
+    <MakeDir Directories="$(_ClassesDir)" />
+    <ItemGroup>
+      <_Response Include="-classpath" />
+      <_Response Include="&quot;$(_Classpath)&quot;" />
+      <_Response Include="@(_JavaCompileForBindingInputs->Replace('%5c', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_ResponseFile)"
+        Lines="@(_Response)"
+        Overwrite="True"
+    />
+    <Message Text="`javac` response file contents:" Importance="Low" />
+    <Message Text="@(_Response, '
+')" Importance="Low" />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(_ClassesDir)&quot; &quot;@$(_ResponseFile)&quot;" />
+    <Delete Files="$(_ResponseFile)" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(_JavaManagedBindingInput)&quot; -C &quot;$(_ClassesDir)&quot; ." />
+  </Target>
+
+  <Target Name="_CollectClassParseInputs">
+    <ItemGroup>
+      <_ClassParseInputs
+          Condition=" Exists($(_JavaManagedBindingInput))"
+          Include="$(_JavaManagedBindingInput)"
+      />
+      <_ClassParseInputs
+          Condition=" '%(JavaReference.Bind)' == 'True' "
+          Include="@(JavaReference)"
+      />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_GenerateApiDescription"
+      DependsOnTargets="_CollectClassParseInputs"
+      Inputs="@(_ClassParseInputs)"
+      Outputs="$(_JavaManagedBindingDir)api.xml">
+    <MakeDir Directories="$(_JavaManagedBindingDir)" />
+    <PropertyGroup>
+      <_ClassParse>"$(UtilityOutputFullPath)class-parse.dll"</_ClassParse>
+      <_Inputs>@(_ClassParseInputs, ' ')</_Inputs>
+      <_Output>"-o=$(_JavaManagedBindingDir)api.xml"</_Output>
+    </PropertyGroup>
+    <Exec
+        Command="$(DotnetToolPath) $(_ClassParse) $(_Inputs) $(_Output)"
+    />
+  </Target>
+
+  <Target Name="_GenerateManagedBinding"
+      DependsOnTargets="_GenerateApiDescription"
+      Inputs="$(_JavaManagedBindingDir)api.xml"
+      Outputs="$(_JavaManagedBindingDir)$(AssemblyName).projitems">
+    <MakeDir Directories="$(_JavaManagedBindingDir)" />
+    <PropertyGroup>
+      <Generator>"$(_GeneratorPath)"</Generator>
+      <_GenFlags>--public --global</_GenFlags>
+      <_Out>-o "$(_JavaManagedBindingDir)."</_Out>
+      <_Codegen>--codegen-target=JavaInterop1</_Codegen>
+      <_Assembly>"--assembly=$(AssemblyName)"</_Assembly>
+      <_TypeMap>--type-map-report=$(_JavaManagedBindingDir)type-mapping.txt</_TypeMap>
+      <_Api>$(_JavaManagedBindingDir)api.xml</_Api>
+      <_Dirs>"--enumdir=$(_JavaManagedBindingDir)."</_Dirs>
+      <_FullIntermediateOutputPath>$([System.IO.Path]::GetFullPath('$(_JavaManagedBindingDir)'))</_FullIntermediateOutputPath>
+      <_LangFeatures>--lang-features=nullable-reference-types,default-interface-methods,nested-interface-types,interface-constants</_LangFeatures>
+    </PropertyGroup>
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_RefAsmDir Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+      <_Lib Include="@(_RefAsmDir->'-L &quot;%(Identity)&quot;')" />
+      <_JavaBaseRef Include="@(ReferencePathWithRefAssemblies)"
+          Condition=" '%(FileName)' == 'Java.Base' "
+      />
+      <_Ref Include="@(_JavaBaseRef->'-r &quot;%(FullPath)&quot;')" />
+    </ItemGroup>
+    <Exec
+        Command="$(DotnetToolPath) $(Generator) $(_GenFlags) $(_ApiLevel) $(_Out) @(_Lib, ' ') @(_Ref, ' ') $(_Codegen) $(_Assembly) $(_TypeMap) $(_LangFeatures) $(_Dirs) $(_Api) $(_WithJavadocXml)"
+        IgnoreStandardErrorWarningFormat="True"
+    />
+    <ItemGroup>
+      <Compile Include="$(_FullIntermediateOutputPath)\**\*.cs" KeepDuplicates="False" />
+      <FileWrites Include="$(_FullIntermediateOutputPath)\**\*.cs" />
+    </ItemGroup>
+    <XmlPeek
+        Namespaces="&lt;Namespace Prefix='msbuild' Uri='http://schemas.microsoft.com/developer/msbuild/2003' /&gt;"
+        XmlInputPath="$(_JavaManagedBindingDir)$(AssemblyName).projitems"
+        Query="/msbuild:Project/msbuild:PropertyGroup/msbuild:DefineConstants/text()" >
+      <Output TaskParameter="Result" PropertyName="_GeneratedDefineConstants" />
+    </XmlPeek>
+    <PropertyGroup>
+      <DefineConstants>$(DefineConstants);$([System.String]::Copy('$(_GeneratedDefineConstants)').Replace ('%24(DefineConstants);', ''))</DefineConstants>
+    </PropertyGroup>
+  </Target>
+
+  <Target Name="_CleanupManagedBinding" />
+
+  <Target Name="_JavaCreateJcws"
+      Condition=" '$(TargetPath)' != '' And Exists($(TargetPath))"
+      Inputs="$(TargetPath)"
+      Outputs="$(_JavaJcwSourcesDir).stamp">
+    <RemoveDir Directories="$(_JavaJcwSourcesDir)" />
+    <MakeDir Directories="$(_JavaJcwSourcesDir)" />
+    <ItemGroup>
+      <!-- I can't find a good way to trim the trailing `\`, so append with `.` so we can sanely quote for $(_Libpath) -->
+      <_RefAsmDirs Include="@(ReferencePathWithRefAssemblies->'%(RootDir)%(Directory).'->Distinct())" />
+    </ItemGroup>
+    <PropertyGroup>
+      <_JcwGen>"$(UtilityOutputFullPath)/jcw-gen.dll"</_JcwGen>
+      <_Target>--codegen-target JavaInterop1</_Target>
+      <_Output>-o "$(_JavaJcwSourcesDir)."</_Output>
+      <_Libpath>@(_RefAsmDirs->'-L "%(Identity)"', ' ')</_Libpath>
+    </PropertyGroup>
+    <Exec Command="$(DotnetToolPath) $(_JcwGen) -v &quot;$(TargetPath)&quot; $(_Target) $(_Output) $(_Libpath)" />
+    <Touch Files="$(_JavaJcwSourcesDir).stamp" AlwaysCreate="True" />
+  </Target>
+
+  <Target Name="_JavaCollectGeneratdJcwSource">
+    <ItemGroup>
+      <_JavaGeneratedJcwSource Include="$(_JavaJcwSourcesDir)**\*.java" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="_JavaCreateOutputJar"
+      DependsOnTargets="_JavaCollectGeneratdJcwSource;_JavaCollectJavacRefs"
+      Inputs="@(_JavaGeneratedJcwSource)"
+      Outputs="$(JavaOutputJar)">
+    <RemoveDir Directories="$(_JavaJcwClassesDir)" />
+    <MakeDir Directories="$(_JavaJcwClassesDir)" />
+    <PropertyGroup>
+      <_ResponseFile>$(_JavaIntermediateDir)r.txt</_ResponseFile>
+      <_Classpath>@(_JavacRefsWithForwardSlash, '$(JavaPathSeparator)')</_Classpath>
+    </PropertyGroup>
+    <ItemGroup>
+      <_Source Include="@(JavaCompile->Replace('%5c', '/'))" />
+      <_Source Include="@(_JavaGeneratedJcwSource->Replace('%5c', '/'))" />
+    </ItemGroup>
+    <WriteLinesToFile
+        File="$(_JavaIntermediateDir)_java_sources.txt"
+        Lines="@(_Source)"
+        Overwrite="True"
+    />
+    <Exec Command="&quot;$(JavaCPath)&quot; $(_JavacSourceOptions) -d &quot;$(_JavaJcwClassesDir).&quot; -classpath &quot;$(_Classpath)&quot; &quot;@$(_JavaIntermediateDir)_java_sources.txt&quot;" />
+    <Delete Files="$(_JavaIntermediateDir)_java_sources.txt" />
+    <Exec Command="&quot;$(JarPath)&quot; cf &quot;$(JavaOutputJar)&quot; -C &quot;$(_JavaJcwClassesDir).&quot; ." />
+  </Target>
+
+</Project>

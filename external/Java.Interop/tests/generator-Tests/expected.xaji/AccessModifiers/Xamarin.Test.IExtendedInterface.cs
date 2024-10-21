@@ -12,7 +12,7 @@ namespace Xamarin.Test {
 		[Register ("extendedMethod", "()V", "GetExtendedMethodHandler:Xamarin.Test.IExtendedInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void ExtendedMethod ();
 
-		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='BaseInterface']/method[@name='baseMethod' and count(parameter)=0]"
+		// Metadata.xml XPath method reference: path="/api/package[@name='xamarin.test']/interface[@name='ExtendedInterface']/method[@name='baseMethod' and count(parameter)=0]"
 		[Register ("baseMethod", "()V", "GetBaseMethodHandler:Xamarin.Test.IExtendedInterfaceInvoker, Mono.Android, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null")]
 		void BaseMethod ();
 
@@ -95,7 +95,7 @@ namespace Xamarin.Test {
 		{
 			const string __id = "baseMethod.()V";
 			try {
-				_members_xamarin_test_BaseInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
+				_members_xamarin_test_ExtendedInterface.InstanceMethods.InvokeAbstractVoidMethod (__id, this, null);
 			} finally {
 			}
 		}

@@ -786,8 +786,12 @@ namespace Xamarin.Android.Tools.JniMarshalMethodGenerator {
 				if (iface.IsGenericType)
 					continue;
 
+				var location = iface.Assembly.Location;
+				var ad = string.IsNullOrEmpty (location)
+					? resolver.Resolve (iface.Assembly.GetName ().Name)
+					: resolver.GetAssembly (location);
+
 				var ifaceMap = method.DeclaringType.GetInterfaceMap (iface);
-				var ad = resolver.GetAssembly (iface.Assembly.Location);
 				var id = ad.MainModule.GetType (iface.GetCecilName ());
 
 				if (id == null) {

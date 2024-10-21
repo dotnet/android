@@ -8,10 +8,12 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
+  <Import Project="..\..\build-tools\Java.Interop.Sdk\Sdk\Sdk.props" />
   <Import Project="..\..\TargetFrameworkDependentValues.props" />
 
   <PropertyGroup>
     <OutputPath>$(TestOutputFullPath)</OutputPath>
+    <JavaOutputJar>$(OutputPath)java.base-tests.jar</JavaOutputJar>
   </PropertyGroup>
 
   <ItemGroup>
@@ -26,6 +28,15 @@
     <ProjectReference Include="..\TestJVM\TestJVM.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <JavaCompile Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\HasInterfaceMethodInheritance.java" />
+    <JavaCompile Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\InterfaceMethodInheritance.java" />
+    <JavaCompile Include="$(MSBuildThisFileDirectory)java\net\dot\jni\test\PublicInterface.java" />
+    <JavaCompile Include="java\**\*.java" Bind="False" />
+
+  </ItemGroup>
+
   <Import Project="Java.Base-Tests.targets" />
+  <Import Project="..\..\build-tools\Java.Interop.Sdk\Sdk\Sdk.targets" />
 
 </Project>

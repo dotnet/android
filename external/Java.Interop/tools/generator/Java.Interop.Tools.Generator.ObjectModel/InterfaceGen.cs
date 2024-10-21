@@ -69,8 +69,9 @@ namespace MonoDroid.Generation
 					var baseType = opt.SymbolTable.Lookup (implementedInterface);
 					if (baseType is InterfaceGen interfaceGen && interfaceGen.RawVisibility != "public") {
 						// Copy over "private" methods
-						interfaceGen.Methods.Where (m => !Methods.Contains (m)).ToList ().ForEach (Methods.Add);
-
+						foreach (var method in interfaceGen.Methods.ToList ())
+							if (!Methods.Any (m => m.Matches (method)))
+								Methods.Add (method.Clone (this));
 					} else {
 						break;
 					}

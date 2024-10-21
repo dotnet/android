@@ -514,5 +514,41 @@ namespace generatortests
 
 			Assert.True (writer.ToString ().NormalizeLineEndings ().Contains ("catch (Java.Lang.NoSuchMethodError) { throw new Java.Lang.AbstractMethodError (__id); }".NormalizeLineEndings ()), $"was: `{writer}`");
 		}
+
+		[Test]
+		public void FixDefaultInterfaceMethodStackOverflow ()
+		{
+			// The bug was that this causes a stack overflow, but this also tests
+			// that the OverriddenInterfaceMethod is now correctly set in the interface method.
+			var xml = """
+			<api>
+			  <package name='io.grpc' jni-name='io/grpc'>
+			    <interface abstract="true" deprecated="not deprecated" final="false" name="InternalConfigurator" static="false" visibility="public" jni-signature="Lio/grpc/InternalConfigurator;">
+			      <implements name="io.grpc.Configurator" name-generic-aware="io.grpc.Configurator" jni-type="Lio/grpc/Configurator;" />
+			    </interface>
+			    <interface abstract="true" deprecated="not deprecated" final="false" name="Configurator" static="false" visibility="" jni-signature="Lio/grpc/Configurator;">
+			      <method abstract="false" deprecated="not deprecated" final="false" name="configureChannelBuilder" jni-signature="V" bridge="false" native="false" return="void" jni-return="V" static="false" synchronized="false" synthetic="false" visibility="public" />
+			    </interface>
+			  </package>
+			</api>
+			""";
+
+			var gens = ParseApiDefinition (xml);
+
+			foreach (var iface in gens.OfType<InterfaceGen> ()) {
+				generator.Context.ContextTypes.Push (iface);
+				generator.WriteType (iface, string.Empty, new GenerationInfo ("", "", "MyAssembly"));
+				generator.Context.ContextTypes.Pop ();
+			}
+
+			var klass1 = gens.Single (g => g.Name == "IInternalConfigurator");
+			var klass2 = gens.Single (g => g.Name == "IConfigurator");
+
+			Assert.AreEqual (1, klass1.Methods.Count);
+			Assert.AreEqual (1, klass2.Methods.Count);
+
+			Assert.AreNotSame (klass1.Methods [0], klass2.Methods [0]);
+			Assert.AreSame (klass1.Methods [0].OverriddenInterfaceMethod, klass2.Methods [0]);
+		}
 	}
 }
