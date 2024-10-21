@@ -43,12 +43,6 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 	[Required]
 	public string [] SupportedAbis { get; set; }
 
-	[Output]
-	public ITaskItem[] NativeAssemblySources { get; set; }
-
-	[Output]
-	public ITaskItem[] EmbeddedObjectFiles { get; set; }
-
 	public override bool RunTask ()
 	{
 		bool compress = !Debug && EnableCompression;
@@ -71,14 +65,12 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 		// Add framework assemblies
 		AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
 
-		var objectFiles = new List<ITaskItem> ();
-		var sourceFiles = new List<ITaskItem> ();
 		Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (Path.Combine (AppSharedLibrariesDir, "embedded"));
 		foreach (var kvp in assemblyStorePaths) {
 			string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
 			string inputFile = kvp.Value;
 
-			List<ITaskItem> items = ELFEmbeddingHelper.EmbedBinary (
+			ELFEmbeddingHelper.EmbedBinary (
 				Log,
 				abi,
 				AndroidBinUtilsDirectory,
@@ -87,23 +79,7 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 				AssemblySourcesDir,
 				missingContentOK: false
 			);
-
-			if (items.Count == 0) {
-				continue;
-			}
-
-			objectFiles.AddRange (items);
-			foreach (ITaskItem objectItem in items) {
-				var sourceItem = new TaskItem (
-					Path.ChangeExtension (objectItem.ItemSpec, ".s"),
-					objectItem.CloneCustomMetadata ()
-				);
-				sourceFiles.Add (sourceItem);
-			}
 		}
-
-		NativeAssemblySources = sourceFiles.ToArray ();
-		EmbeddedObjectFiles = objectFiles.ToArray ();
 
 		return !Log.HasLoggedErrors;
 

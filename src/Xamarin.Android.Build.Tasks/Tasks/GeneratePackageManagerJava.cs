@@ -69,9 +69,6 @@ public class GeneratePackageManagerJava : AndroidTask
 		//[Required]
 		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
-		[Output]
-		public ITaskItem[] EmbeddedObjectFiles { get; set; }
-
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -319,7 +316,7 @@ public class GeneratePackageManagerJava : AndroidTask
 			var dest = Path.GetFullPath (Path.Combine (OutputDirectory, "MonoPackageManager_Resources.java"));
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
+			ELFEmbeddingHelper.EmbedBinary (
 				Log,
 				SupportedAbis,
 				AndroidBinUtilsDirectory,
@@ -328,8 +325,6 @@ public class GeneratePackageManagerJava : AndroidTask
 				EnvironmentOutputDirectory,
 				missingContentOK: !haveRuntimeConfigBlob
 			);
-
-			EmbeddedObjectFiles = objectFilePaths.ToArray ();
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {

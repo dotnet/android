@@ -4,7 +4,6 @@ using System.IO;
 using System.Text;
 
 using Microsoft.Android.Build.Tasks;
-using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 using Xamarin.Android.Tools;
 
@@ -16,50 +15,25 @@ class ELFEmbeddingHelper
 	{
 		public readonly string SymbolName;
 		public readonly string BaseFileName;
+		public readonly NativeAssemblerItemsHelper.KnownMode NativeAssemblerMode;
 
-		public EmbedItem (string symbolName, string baseFileName)
+		public EmbedItem (string symbolName, string baseFileName, NativeAssemblerItemsHelper.KnownMode nativeAssemblerMode)
 		{
 			SymbolName = symbolName;
 			BaseFileName = baseFileName;
+			NativeAssemblerMode = nativeAssemblerMode;
 		}
 	}
 
 	public static class KnownEmbedItems
 	{
-		public static readonly EmbedItem RuntimeConfig = new ("embedded_runtime_config", "runtime_config");
-		public static readonly EmbedItem AssemblyStore = new ("embedded_assembly_store", "assembly_store");
+		public static readonly EmbedItem RuntimeConfig = new ("embedded_runtime_config", "runtime_config", NativeAssemblerItemsHelper.KnownMode.EmbeddedRuntimeConfig);
+		public static readonly EmbedItem AssemblyStore = new ("embedded_assembly_store", "assembly_store", NativeAssemblerItemsHelper.KnownMode.EmbeddedAssemblyStore);
 	}
-
-	sealed class LlvmMcTargetConfig
-	{
-		public readonly string TargetArch;
-		public readonly string TripleArch;
-		public readonly string TripleApiPrefix;
-		public readonly string AssemblerDirectivePrefix;
-		public readonly string SizeType;
-		public readonly uint WordSize;
-
-		public LlvmMcTargetConfig (string targetArch, string tripleArch, string tripleApiPrefix, string assemblerDirectivePrefix, string sizeType, uint wordSize)
-		{
-			TargetArch = targetArch;
-			TripleArch = tripleArch;
-			TripleApiPrefix = tripleApiPrefix;
-			AssemblerDirectivePrefix = assemblerDirectivePrefix;
-			SizeType = sizeType;
-			WordSize = wordSize;
-		}
-	}
-
-	static readonly Dictionary<AndroidTargetArch, LlvmMcTargetConfig> llvmMcConfigs = new () {
-		{ AndroidTargetArch.Arm64,  new ("aarch64", "aarch64", "android",     "@", ".xword", 8) },
-		{ AndroidTargetArch.Arm,    new ("arm",     "armv7a",  "androideabi", "%", ".long",  4) },
-		{ AndroidTargetArch.X86_64, new ("x86-64",  "x86_64",  "android",     "@", ".quad",  8) },
-		{ AndroidTargetArch.X86,    new ("x86",     "i686",    "android",     "@", ".long",  4) },
-	};
 
 	static readonly Encoding asmFileEncoding = new UTF8Encoding (false);
 
-	public static List<ITaskItem> EmbedBinary (
+	public static void EmbedBinary (
 		TaskLoggingHelper log,
 		ICollection<string> supportedAbis,
 		string androidBinUtilsDirectory,
@@ -68,30 +42,23 @@ class ELFEmbeddingHelper
 		string outputDirectory,
 		bool missingContentOK)
 	{
-		var ret = new List<ITaskItem> ();
 		if (supportedAbis.Count < 1) {
 			log.LogDebugMessage ("ELFEmbeddingHelper: at least one target ABI must be specified. Probably a DTB build, skipping generation.");
-			return ret;
+			return;
 		}
 
-		string llvmMcPath = GetLlvmMcPath (androidBinUtilsDirectory);
 		foreach (string abi in supportedAbis) {
-			EmbedBinary (
+			DoEmbed (
 				log,
-				ret,
-				llvmMcPath,
-				abi,
-				inputFile,
-				outputDirectory,
+				MonoAndroidHelper.AbiToTargetArch (abi),
+				inputFile, outputDirectory,
 				embedItem,
 				missingContentOK
 			);
 		}
-
-		return ret;
 	}
 
-	public static List<ITaskItem> EmbedBinary (
+	public static void EmbedBinary (
 		TaskLoggingHelper log,
 		string abi,
 		string androidBinUtilsDirectory,
@@ -100,59 +67,30 @@ class ELFEmbeddingHelper
 		string outputDirectory,
 		bool missingContentOK)
 	{
-		var ret = new List<ITaskItem> ();
 		if (String.IsNullOrEmpty (abi)) {
 			log.LogDebugMessage ("ELFEmbeddingHelper: ABI must be specified. Probably a DTB build, skipping generation.");
-			return ret;
+			return;
 		}
 
-		EmbedBinary (
+		DoEmbed (
 			log,
-			ret,
-			GetLlvmMcPath (androidBinUtilsDirectory),
-			abi,
+			MonoAndroidHelper.AbiToTargetArch (abi),
 			inputFile,
 			outputDirectory,
 			embedItem,
 			missingContentOK
 		);
-		return ret;
-	}
-
-	static void EmbedBinary (
-		TaskLoggingHelper log,
-		List<ITaskItem> resultItems,
-		string llvmMcPath,
-		string abi,
-		string inputFile,
-		string outputDirectory,
-		EmbedItem embedItem,
-		bool missingContentOK)
-	{
-		string outputFile = Path.Combine (outputDirectory, $"embed_{embedItem.BaseFileName}.{abi.ToLowerInvariant ()}.o");
-		DoEmbed (log, MonoAndroidHelper.AbiToTargetArch (abi), llvmMcPath, inputFile, outputFile, embedItem, missingContentOK);
-		if (!File.Exists (outputFile)) {
-			return;
-		}
-
-		var taskItem = new TaskItem (outputFile);
-		taskItem.SetMetadata ("Abi", abi);
-		taskItem.SetMetadata ("RuntimeIdentifier", MonoAndroidHelper.AbiToRid (abi));
-		resultItems.Add (taskItem);
 	}
 
 	static void DoEmbed (
 		TaskLoggingHelper log,
 		AndroidTargetArch arch,
-		string llvmMcPath,
 		string? inputFile,
-		string outputFile,
+		string outputDirectory,
 		EmbedItem item,
 		bool missingContentOK)
 	{
-		if (!llvmMcConfigs.TryGetValue (arch, out LlvmMcTargetConfig cfg)) {
-			throw new NotSupportedException ($"Internal error: unsupported target arch '{arch}'");
-		}
+		NativeAssemblerCompilation.LlvmMcTargetConfig cfg = NativeAssemblerCompilation.GetLlvmMcConfig (arch);
 
 		bool haveInputFile = !String.IsNullOrEmpty (inputFile);
 		if (!haveInputFile) {
@@ -162,7 +100,6 @@ class ELFEmbeddingHelper
 		} else {
 			inputFile = Path.GetFullPath (inputFile);
 		}
-		outputFile = Path.GetFullPath (outputFile);
 
 		long inputFileSize = 0;
 		string? sanitizedInputFilePath = null;
@@ -177,9 +114,9 @@ class ELFEmbeddingHelper
 			}
 		}
 
-		string asmInputFile = Path.ChangeExtension (outputFile, ".s");
+		string asmSourceFile = NativeAssemblerItemsHelper.GetSourcePath (log, item.NativeAssemblerMode, outputDirectory, arch);
 
-		using var fs = File.Open (asmInputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
+		using var fs = File.Open (asmSourceFile, FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var sw = new StreamWriter (fs, asmFileEncoding);
 
 		string symbolName = item.SymbolName;
@@ -204,24 +141,5 @@ class ELFEmbeddingHelper
 
 		sw.Flush ();
 		sw.Close ();
-
-		var args = new List<string> {
-			$"--arch={cfg.TargetArch}",
-			"--assemble",
-			"--filetype=obj",
-			"-g",
-			$"--triple={cfg.TripleArch}-linux-{cfg.TripleApiPrefix}{XABuildConfig.AndroidMinimumDotNetApiLevel}",
-			"-o", MonoAndroidHelper.QuoteFileNameArgument (outputFile),
-			MonoAndroidHelper.QuoteFileNameArgument (asmInputFile),
-		};
-
-		// int ret = MonoAndroidHelper.RunProcess (llvmMcPath, String.Join (" ", args), log);
-		// File.Copy (asmInputFile, $"/tmp/{Path.GetFileName (asmInputFile)}", true);
-		// File.Copy (outputFile, $"/tmp/{Path.GetFileName (outputFile)}", true);
-		// if (ret != 0) {
-		// 	return;
-		// }
 	}
-
-	static string GetLlvmMcPath (string androidBinUtilsDirectory) => MonoAndroidHelper.GetLlvmMcPath (androidBinUtilsDirectory);
 }
