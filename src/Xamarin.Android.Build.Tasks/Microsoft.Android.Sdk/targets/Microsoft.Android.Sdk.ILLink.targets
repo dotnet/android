@@ -16,6 +16,7 @@ This file contains the .NET 5-specific targets to customize ILLink
     <PropertyGroup>
       <TrimmerRemoveSymbols Condition=" '$(AndroidIncludeDebugSymbols)' != 'true' ">true</TrimmerRemoveSymbols>
       <_ExtraTrimmerArgs Condition=" '$(_EnableSerializationDiscovery)' != 'false' ">--enable-serialization-discovery $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
+      <_ExtraTrimmerArgs Condition=" '$(_AndroidEnableUnusedTypeChecks)' != 'true' ">--disable-opt unusedtypechecks $(_ExtraTrimmerArgs)</_ExtraTrimmerArgs>
       <!--
         Used for the <ILLink DumpDependencies="$(_TrimmerDumpDependencies)" /> value:
         https://github.com/dotnet/sdk/blob/a5393731b5b7b225692fff121f747fbbc9e8b140/src/Tasks/Microsoft.NET.Build.Tasks/targets/Microsoft.NET.ILLink.targets#L150
