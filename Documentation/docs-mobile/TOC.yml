@@ -1,6 +1,6 @@
 - name: .NET for Android
   items:
-  - name: Getting Started
+  - name: Get started
     items:
     - name: Installation
       items:
@@ -10,7 +10,7 @@
           href: getting-started/installation/net-android.md
         - name: Install dependencies
           href: getting-started/installation/dependencies.md
-  - name: Building apps
+  - name: Build apps
     items:
     - name: Build process
       href: building-apps/build-process.md
@@ -20,18 +20,50 @@
       href: building-apps/build-properties.md
     - name: Build items
       href: building-apps/build-items.md
-  - name: Features
+  - name: Fundamentals
     items:
     - name: Layout code behind
       href: features/layout-code-behind/index.md
-    - name: Maven
+  - name: Bind Java libraries
+    items:
+    - name: Overview
+      href: binding-libs/binding-java-libs/index.md
+    - name: Bind a Java library
+      href: binding-libs/binding-java-libs/binding-java-library.md
+    - name: Bind a Java library from Maven
+      href: binding-libs/binding-java-libs/binding-java-maven-library.md
+    - name: Migrate a Xamarin.Android bindings project
+      href: /dotnet/maui/migration/android-binding-projects?toc=/dotnet/android/toc.json&bc=/dotnet/breadcrumb/android/toc.json
+    - name: Customize bindings
       items:
-      - name: "@(AndroidMavenLibrary) build item"
-        href: features/maven/android-maven-library.md
-      - name: Resolving Java ependencies
-        href: features/maven/resolving-java-dependencies.md
+      - name: Overview
+        href: binding-libs/customizing-bindings/index.md
+      - name: Customize namespaces
+        href: binding-libs/customizing-bindings/namespace-customization.md
+      - name: Java bindings metadata
+        href: binding-libs/customizing-bindings/java-bindings-metadata.md
+      - name: Create enumerations
+        href: binding-libs/customizing-bindings/creating-enums.md
+    - name: MSBuild reference
+      items:
+      - name: MSBuild bindings project properties
+        href: binding-libs/msbuild-reference/build-properties.md
+      - name: MSBuild bindings project items
+        href: binding-libs/msbuild-reference/build-items.md
+    - name: Advanced concepts
+      items:
+      - name: AndroidMavenLibrary reference
+        href: binding-libs/advanced-concepts/android-maven-library.md
       - name: Java dependency verification
-        href: features/maven/java-dependency-verification.md
+        href: binding-libs/advanced-concepts/java-dependency-verification.md
+      - name: Resolve Java dependencies
+        href: binding-libs/advanced-concepts/resolving-java-dependencies.md
+      - name: Distribute bindings libraries
+        href: binding-libs/advanced-concepts/distributing.md
+      - name: Native Library Interop
+        href: binding-libs/advanced-concepts/native-library-interop.md
+    - name: Troubleshoot bindings
+      href: binding-libs/customizing-bindings/troubleshooting-bindings.md
   - name: Message reference
     items:
     - name: Overview
@@ -296,6 +328,8 @@
         href: messages/xa4247.md
       - name: XA4248
         href: messages/xa4248.md
+      - name: XA4249
+        href: messages/xa4249.md
       - name: XA4301
         href: messages/xa4301.md
       - name: XA4302

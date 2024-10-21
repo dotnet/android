@@ -1,13 +1,14 @@
 ---
 title: Resolving Java Dependencies in .NET for Android
 description: Resolving Java Dependencies in .NET for Android
-ms.date: 04/11/2024
+ms.author: jopobst
+ms.date: 05/11/2024
 ---
-# Resolving Java Dependencies
 
-Note: This feature is only available in .NET 9+.
+# Resolving Java dependencies
 
-## Description
+> [!NOTE]
+> This feature is only available in .NET 9+.
 
 Once Java dependency verification has been enabled for a bindings project, either automatically via `<AndroidMavenLibrary>` or manually via `<AndroidLibrary>`, there may be errors to resolve, such as:
 
@@ -32,19 +33,19 @@ Adding the `Xamarin.AndroidX.Collection` package to the project should automatic
 <PackageTags>artifact=androidx.collection:collection:1.0.0</PackageTags>
 ```
 
-However there may be NuGet packages which fulfill a dependency but have not had this metadata added to it.  In this case, you will need to explicitly specify which dependency the package contains with `JavaArtifact` and `JavaVersion`:
+However there may be NuGet packages which fulfill a dependency but have not had this metadata added to it.  In this case, you will need to explicitly specify which dependency the package contains with `JavaArtifact`:
 
 ```xml
 <PackageReference 
   Include="Xamarin.Kotlin.StdLib" 
   Version="1.7.10" 
-  JavaArtifact="org.jetbrains.kotlin:kotlin-stdlib" 
-  JavaVersion="1.7.10" />
+  JavaArtifact="org.jetbrains.kotlin:kotlin-stdlib:1.7.10" />
 ```
 
 With this, the binding process knows the Java dependency is satisfied by the NuGet package.
 
-> Note: NuGet packages specify their own dependencies, so you will not need to worry about transitive dependencies.
+> [!NOTE]
+> NuGet packages specify their own dependencies, so you will not need to worry about transitive dependencies.
 
 ## `<ProjectReference>`
 
@@ -53,13 +54,13 @@ If the needed Java dependency is provided by another project in your solution, y
 ```xml
 <ProjectReference 
   Include="..\My.Other.Binding\My.Other.Binding.csproj" 
-  JavaArtifact="my.other.binding:helperlib" 
-  JavaVersion="1.0.0" />
+  JavaArtifact="my.other.binding:helperlib:1.0.0" />
 ```
 
 With this, the binding process knows the Java dependency is satisfied by the referenced project.
 
-> Note: Each project specifies their own dependencies, so you will not need to worry about transitive dependencies.
+> [!NOTE]
+> Each project specifies their own dependencies, so you will not need to worry about transitive dependencies.
 
 ## `<AndroidLibrary>`
 
@@ -69,7 +70,7 @@ This can be done by adding additional `<AndroidLibrary>` items to the project:
 
 ```xml
 <ItemGroup>
-  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" />
+  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library:1.0.0" />
 </ItemGroup>
 ```
 
@@ -77,7 +78,7 @@ To include the Java library but not produce C# bindings for it, mark it with `Bi
 
 ```xml
 <ItemGroup>
-  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library" JavaVersion="1.0.0" Bind="false" />
+  <AndroidLibrary Include="mydependency.jar" JavaArtifact="my.library:dependency-library:1.0.0" Bind="false" />
 </ItemGroup>
 ```
 
@@ -91,7 +92,8 @@ Alternatively, `<AndroidMavenLibrary>` can be used to retrieve a Java library fr
 </ItemGroup>
 ```
 
-> Note: If the dependency library has its own dependencies, you will be required to ensure they are fulfilled.
+> [!NOTE]
+> If the dependency library has its own dependencies, you will be required to ensure they are fulfilled.
 
 ## `<AndroidIgnoredJavaDependency>`
 
@@ -101,6 +103,9 @@ Note that while the error message will go away, it does not mean the package wil
 
 ```xml
 <ItemGroup>
-  <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations" Version="2.15.0" />
+  <AndroidIgnoredJavaDependency Include="com.google.errorprone:error_prone_annotations:2.15.0" />
 </ItemGroup>
 ```
+
+> [!NOTE]
+> Any usage of `JavaArtifact` can specify multiple artifacts by delimiting them with a comma or semicolon.
