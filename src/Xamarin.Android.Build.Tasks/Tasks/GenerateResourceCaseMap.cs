@@ -91,8 +91,8 @@ namespace Xamarin.Android.Tasks
 						while ((line = reader.ReadLine()) != null) {
 							if (string.IsNullOrEmpty (line))
 								continue;
-							//string [] tok = line.Split (';');
-							//AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
+							string [] tok = line.Split (';');
+							AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
 						}
 					}
 				}
