@@ -31,19 +31,19 @@ namespace MonoDroid.Generation
 				var implements_charsequence = t.Interfaces.Any (it => it.InterfaceType.FullName == "Java.Lang.CharSequence");
 
 				foreach (var m in t.Methods) {
-					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
+					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes, opt) == null)
 						continue;
 					if (implements_charsequence && t.Methods.Any (mm => mm.Name == m.Name + "Formatted"))
 						continue;
 					if (m.IsConstructor)
-						klass.Ctors.Add (CreateCtor (klass, m));
+						klass.Ctors.Add (CreateCtor (klass, m, opt));
 					else
-						klass.AddMethod (CreateMethod (klass, m));
+						klass.AddMethod (CreateMethod (klass, m, opt));
 				}
 
 				foreach (var f in t.Fields)
-					if (!f.IsPrivate && GetRegisterAttribute (f.CustomAttributes) == null)
-						klass.AddField (CreateField (f));
+					if (!f.IsPrivate && GetRegisterAttribute (f.CustomAttributes, opt) == null)
+						klass.AddField (CreateField (f, opt));
 			};
 
 			if (klass.IsShallow)
@@ -61,9 +61,9 @@ namespace MonoDroid.Generation
 			return klass;
 		}
 
-		public static Ctor CreateCtor (GenBase declaringType, MethodDefinition m)
+		public static Ctor CreateCtor (GenBase declaringType, MethodDefinition m, CodeGenerationOptions opt)
 		{
-			var reg_attr = GetRegisterAttribute (m.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (m.CustomAttributes, opt);
 
 			var ctor = new Ctor (declaringType) {
 				AssemblyName = m.DeclaringType.Module.Assembly.FullName,
@@ -88,10 +88,10 @@ namespace MonoDroid.Generation
 			return ctor;
 		}
 
-		public static Field CreateField (FieldDefinition f)
+		public static Field CreateField (FieldDefinition f, CodeGenerationOptions opt)
 		{
 			var obs_attr = GetObsoleteAttribute (f.CustomAttributes);
-			var reg_attr = GetRegisterAttribute (f.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (f.CustomAttributes, opt);
 
 			var field = new Field {
 				DeprecatedComment = GetObsoleteComment (obs_attr),
@@ -118,7 +118,7 @@ namespace MonoDroid.Generation
 		public static GenBaseSupport CreateGenBaseSupport (TypeDefinition t, CodeGenerationOptions opt)
 		{
 			var obs_attr = GetObsoleteAttribute (t.CustomAttributes);
-			var reg_attr = GetRegisterAttribute (t.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (t.CustomAttributes, opt);
 
 			var jn = reg_attr != null ? ((string) reg_attr.ConstructorArguments [0].Value).Replace ('/', '.') : t.FullNameCorrected ();
 			var idx = jn.LastIndexOf ('.');
@@ -165,10 +165,10 @@ namespace MonoDroid.Generation
 
 			Action populate = () => {
 				foreach (var m in t.Methods) {
-					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes) == null)
+					if (m.IsPrivate || m.IsAssembly || GetRegisterAttribute (m.CustomAttributes, opt) == null)
 						continue;
 
-					iface.AddMethod (CreateMethod (iface, m));
+					iface.AddMethod (CreateMethod (iface, m, opt));
 				}
 			};
 
@@ -182,9 +182,9 @@ namespace MonoDroid.Generation
 			return iface;
 		}
 
-		public static Method CreateMethod (GenBase declaringType, MethodDefinition m)
+		public static Method CreateMethod (GenBase declaringType, MethodDefinition m, CodeGenerationOptions opt)
 		{
-			var reg_attr = GetRegisterAttribute (m.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (m.CustomAttributes, opt);
 
 			var method = new Method (declaringType) {
 				AssemblyName = m.DeclaringType.Module.Assembly.FullName,
@@ -250,11 +250,18 @@ namespace MonoDroid.Generation
 		static string GetObsoleteComment (CustomAttribute attribute) =>
 			attribute?.ConstructorArguments.Any () == true ? (string) attribute.ConstructorArguments [0].Value : null;
 
-		static CustomAttribute GetRegisterAttribute (Collection<CustomAttribute> attributes) =>
+		static CustomAttribute GetRegisterAttribute (Collection<CustomAttribute> attributes, CodeGenerationOptions opt) =>
 			attributes.FirstOrDefault (a => {
 				var attrType    = a.AttributeType.FullNameCorrected ();
-				return attrType == "Android.Runtime.RegisterAttribute" ||
-					attrType == "Java.Interop.JniTypeSignatureAttribute";
+
+				if (opt.CodeGenerationTarget == Xamarin.Android.Binder.CodeGenerationTarget.JavaInterop1) {
+					return attrType == "Java.Interop.JniTypeSignatureAttribute";
+				}
+
+				if (attrType == "Android.Runtime.RegisterAttribute")
+					return true;
+
+				return false;
 			});
 
 		static bool IsDefaultInterfaceMethod (GenBase declaringType, MethodDefinition method)

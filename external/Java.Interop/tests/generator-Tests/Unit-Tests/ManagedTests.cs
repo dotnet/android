@@ -162,7 +162,7 @@ namespace generatortests
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = CecilApiImporter.CreateClass (type, options);
-			var method = CecilApiImporter.CreateMethod (@class, type.Methods.First (m => m.Name == "Bar"));
+			var method = CecilApiImporter.CreateMethod (@class, type.Methods.First (m => m.Name == "Bar"), options);
 			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 
 			Assert.AreEqual ("public", method.Visibility);
@@ -183,8 +183,8 @@ namespace generatortests
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = CecilApiImporter.CreateClass (type, options);
 			var unknownTypes = type.Methods.First (m => m.Name == "UnknownTypes");
-			var methodA = CecilApiImporter.CreateMethod (@class, unknownTypes);
-			var methodB = CecilApiImporter.CreateMethod (@class, unknownTypes);
+			var methodA = CecilApiImporter.CreateMethod (@class, unknownTypes, options);
+			var methodB = CecilApiImporter.CreateMethod (@class, unknownTypes, options);
 			Assert.IsTrue (methodA.Matches (methodB), "Methods should match!");
 		}
 
@@ -196,8 +196,8 @@ namespace generatortests
 			var unknownTypesA = type.Methods.First (m => m.Name == "UnknownTypes");
 			var unknownTypesB = type.Methods.First (m => m.Name == "UnknownTypesReturn");
 			unknownTypesB.Name = "UnknownTypes";
-			var methodA = CecilApiImporter.CreateMethod (@class, unknownTypesA);
-			var methodB = CecilApiImporter.CreateMethod (@class, unknownTypesB);
+			var methodA = CecilApiImporter.CreateMethod (@class, unknownTypesA, options);
+			var methodB = CecilApiImporter.CreateMethod (@class, unknownTypesB, options);
 			//Everything the same besides return type
 			Assert.IsFalse (methodA.Matches (methodB), "Methods should not match!");
 		}
@@ -207,7 +207,7 @@ namespace generatortests
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = CecilApiImporter.CreateClass (type, options);
-			var method = CecilApiImporter.CreateMethod (@class, type.Methods.First (m => m.Name == "BarWithParams"));
+			var method = CecilApiImporter.CreateMethod (@class, type.Methods.First (m => m.Name == "BarWithParams"), options);
 			Assert.IsTrue (method.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "method.Validate failed!");
 			Assert.AreEqual ("(ZID)Ljava/lang/String;", method.JniSignature);
 			Assert.AreEqual ("java.lang.String", method.Return);
@@ -237,7 +237,7 @@ namespace generatortests
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = CecilApiImporter.CreateClass (type, options);
-			var ctor = CecilApiImporter.CreateCtor (@class, type.Methods.First (m => m.IsConstructor && !m.IsStatic));
+			var ctor = CecilApiImporter.CreateCtor (@class, type.Methods.First (m => m.IsConstructor && !m.IsStatic), options);
 			Assert.IsTrue (ctor.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "ctor.Validate failed!");
 
 			Assert.AreEqual ("public", ctor.Visibility);
@@ -251,7 +251,7 @@ namespace generatortests
 		{
 			var type = module.GetType ("Com.Mypackage.Foo");
 			var @class = CecilApiImporter.CreateClass (type, options);
-			var field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "Value"));
+			var field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "Value"), options);
 			Assert.IsTrue (field.Validate (new CodeGenerationOptions (), new GenericParameterDefinitionList (), new CodeGeneratorContext ()), "field.Validate failed!");
 
 			Assert.AreEqual ("Value", field.Name);
@@ -303,23 +303,23 @@ namespace generatortests
 			var type = module.GetType ("NullableTestTypes.NullableClass");
 			var gen = CecilApiImporter.CreateClass (module.GetType ("NullableTestTypes.NullableClass"), options);
 
-			var not_null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "not_null_field"));
+			var not_null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "not_null_field"), options);
 			Assert.AreEqual (true, not_null_field.NotNull);
 
-			var null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "null_field"));
+			var null_field = CecilApiImporter.CreateField (type.Fields.First (f => f.Name == "null_field"), options);
 			Assert.AreEqual (false, null_field.NotNull);
 
-			var null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NullableReturnMethod"));
+			var null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NullableReturnMethod"), options);
 			Assert.AreEqual (false, null_method.ReturnNotNull);
 			Assert.AreEqual (true, null_method.Parameters.First (f => f.Name == "notnull").NotNull);
 			Assert.AreEqual (false, null_method.Parameters.First (f => f.Name == "nullable").NotNull);
 
-			var not_null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NotNullReturnMethod"));
+			var not_null_method = CecilApiImporter.CreateMethod (gen, type.Methods.First (f => f.Name == "NotNullReturnMethod"), options);
 			Assert.AreEqual (true, not_null_method.ReturnNotNull);
 			Assert.AreEqual (true, not_null_method.Parameters.First (f => f.Name == "notnull").NotNull);
 			Assert.AreEqual (false, not_null_method.Parameters.First (f => f.Name == "nullable").NotNull);
 
-			var ctor = CecilApiImporter.CreateCtor (gen, type.Methods.First (f => f.Name == ".ctor"));
+			var ctor = CecilApiImporter.CreateCtor (gen, type.Methods.First (f => f.Name == ".ctor"), options);
 			Assert.AreEqual (true, ctor.Parameters.First (f => f.Name == "notnull").NotNull);
 			Assert.AreEqual (false, ctor.Parameters.First (f => f.Name == "nullable").NotNull);
 		}

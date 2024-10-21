@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>$(DotNetTargetFramework)</TargetFramework>
     <Nullable>enable</Nullable>
-    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\TargetFrameworkDependentValues.props" />

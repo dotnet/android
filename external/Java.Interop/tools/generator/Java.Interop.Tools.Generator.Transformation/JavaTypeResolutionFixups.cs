@@ -4,6 +4,7 @@ using System.Linq;
 using Java.Interop.Tools.Cecil;
 using Java.Interop.Tools.Generator;
 using Java.Interop.Tools.JavaTypeSystem;
+using Xamarin.Android.Binder;
 
 namespace generator
 {
@@ -14,17 +15,23 @@ namespace generator
 
 		// This fixup ensures all referenced Java types can be resolved, and
 		// removes types and members that rely on unresolvable Java types.
-		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references, TypeDefinitionCache cache)
+		public static void Fixup (string xmlFile, string outputXmlFile, DirectoryAssemblyResolver resolver, string [] references, TypeDefinitionCache cache, CodeGeneratorOptions opt)
 		{
 			// Parse api.xml
 			var type_collection = JavaXmlApiImporter.Parse (xmlFile);
+			var options = new ApiImporterOptions ();
+
+			if (opt.CodeGenerationTarget == CodeGenerationTarget.JavaInterop1) {
+				options.SupportedTypeMapAttributes.Clear ();
+				options.SupportedTypeMapAttributes.Add ("Java.Interop.JniTypeSignatureAttribute");
+			}
 
 			// Add in reference types from assemblies
 			foreach (var reference in references.Distinct ()) {
 				Report.Verbose (0, "Resolving assembly for Java type resolution: '{0}'.", reference);
 				var assembly = resolver.Load (reference);
 
-				ManagedApiImporter.Parse (assembly, type_collection, cache);
+				ManagedApiImporter.Parse (assembly, type_collection, cache, options);
 			}
 
 			// Run the type resolution pass

@@ -113,7 +113,7 @@ namespace Xamarin.Android.Binder
 			// Resolve types using Java.Interop.Tools.JavaTypeSystem
 			if (is_classparse && !options.UseLegacyJavaResolver) {
 				var output_xml = api_xml_adjuster_output ?? Path.Combine (Path.GetDirectoryName (filename), Path.GetFileName (filename) + ".adjusted");
-				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray (), resolverCache);
+				JavaTypeResolutionFixups.Fixup (filename, output_xml, resolver, references.Distinct ().ToArray (), resolverCache, options);
 
 				if (only_xml_adjuster)
 					return;

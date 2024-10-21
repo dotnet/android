@@ -13,13 +13,13 @@ namespace Java.Interop.Tools.JavaTypeSystem
 		[Obsolete ("Use the TypeDefinitionCache overload for better performance.", error: true)]
 		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection) => throw new NotSupportedException ();
 
-		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection, TypeDefinitionCache resolver)
+		public static JavaTypeCollection Parse (AssemblyDefinition assembly, JavaTypeCollection collection, TypeDefinitionCache resolver, ApiImporterOptions options)
 		{
 			var types_to_add = new List<JavaTypeModel> ();
 
 			foreach (var md in assembly.Modules)
 				foreach (var td in md.Types) {
-					if (!ShouldSkipType (td, resolver) && ParseType (td, collection) is JavaTypeModel type)
+					if (!ShouldSkipType (td, resolver, options) && ParseType (td, collection, options) is JavaTypeModel type)
 						types_to_add.Add (type);
 				}
 
@@ -33,7 +33,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			return collection;
 		}
 
-		public static JavaTypeModel? ParseType (TypeDefinition type, JavaTypeCollection collection)
+		public static JavaTypeModel? ParseType (TypeDefinition type, JavaTypeCollection collection, ApiImporterOptions options)
 		{
 			if (!type.IsPublic && !type.IsNested)
 				return null;
@@ -41,13 +41,13 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			if (!ShouldImport (type))
 				return null;
 
-			var model = type.IsInterface ? (JavaTypeModel?) ParseInterface (type, collection) : ParseClass (type, collection);
+			var model = type.IsInterface ? (JavaTypeModel?) ParseInterface (type, collection, options) : ParseClass (type, collection, options);
 
 			if (model is null)
 				return null;
 
 			foreach (var nested in type.NestedTypes)
-				if (ParseType (nested, collection) is JavaTypeModel nested_model)
+				if (ParseType (nested, collection, options) is JavaTypeModel nested_model)
 					model.NestedTypes.Add (nested_model);
 
 			return model;
@@ -89,11 +89,11 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			return true;
 		}
 
-		public static JavaClassModel? ParseClass (TypeDefinition type, JavaTypeCollection collection)
+		public static JavaClassModel? ParseClass (TypeDefinition type, JavaTypeCollection collection, ApiImporterOptions options)
 		{
 			// TODO: type parameters?
 			var obs_attr = GetObsoleteAttribute (type.CustomAttributes);
-			var reg_attr = GetRegisterAttribute (type.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (type.CustomAttributes, options);
 
 			if (reg_attr is null)
 				return null;
@@ -101,7 +101,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			var encoded_fullname = ((string) reg_attr.ConstructorArguments [0].Value).Replace ('/', '.');
 			var (package, nested_name) = DecodeRegisterJavaFullName (encoded_fullname);
 
-			var base_jni = GetBaseTypeJni (type);
+			var base_jni = GetBaseTypeJni (type, options);
 
 			var model = new JavaClassModel (
 				javaPackage: GetOrCreatePackage (collection, package, type.Namespace),
@@ -118,20 +118,20 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				annotatedVisibility: string.Empty
 			); ;
 
-			ParseImplementedInterfaces (type, model);
+			ParseImplementedInterfaces (type, model, options);
 
 			foreach (var method in type.Methods.Where (m => !m.IsConstructor))
-				if (ParseMethod (method, model) is JavaMethodModel m)
+				if (ParseMethod (method, model, options) is JavaMethodModel m)
 					model.Methods.Add (m);
 
 			return model;
 		}
 
-		public static JavaInterfaceModel? ParseInterface (TypeDefinition type, JavaTypeCollection collection)
+		public static JavaInterfaceModel? ParseInterface (TypeDefinition type, JavaTypeCollection collection, ApiImporterOptions options)
 		{
 			// TODO: type paramters?
 			var obs_attr = GetObsoleteAttribute (type.CustomAttributes);
-			var reg_attr = GetRegisterAttribute (type.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (type.CustomAttributes, options);
 
 			if (reg_attr is null)
 				return null;
@@ -149,22 +149,22 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				annotatedVisibility: ""
 			);
 
-			ParseImplementedInterfaces (type, model);
+			ParseImplementedInterfaces (type, model, options);
 
 			foreach (var method in type.Methods)
-				if (ParseMethod (method, model) is JavaMethodModel m)
+				if (ParseMethod (method, model, options) is JavaMethodModel m)
 					model.Methods.Add (m);
 
 			return model;
 		}
 
-		public static JavaMethodModel? ParseMethod (MethodDefinition method, JavaTypeModel declaringType)
+		public static JavaMethodModel? ParseMethod (MethodDefinition method, JavaTypeModel declaringType, ApiImporterOptions options)
 		{
 			if (method.IsPrivate || method.IsAssembly)
 				return null;
 
 			var obs_attr = GetObsoleteAttribute (method.CustomAttributes);
-			var reg_attr = GetRegisterAttribute (method.CustomAttributes);
+			var reg_attr = GetRegisterAttribute (method.CustomAttributes, options);
 
 			if (reg_attr is null)
 				return null;
@@ -225,7 +225,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				AddReferenceTypeRecursive (nested, collection);
 		}
 
-		static bool ShouldSkipType (TypeDefinition type, TypeDefinitionCache cache)
+		static bool ShouldSkipType (TypeDefinition type, TypeDefinitionCache cache, ApiImporterOptions options)
 		{
 			// We want to use Java's collection types instead of our managed adapter.
 			// eg: 'Java.Util.ArrayList' over 'Android.Runtime.JavaList'
@@ -246,28 +246,28 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				? type.Module.GetType (type.FullName.Substring (0, type.FullName.IndexOf ('`')))
 				: null;
 
-			if (ShouldSkipGeneric (type, non_generic_type, cache))
+			if (ShouldSkipGeneric (type, non_generic_type, cache, options))
 				return true;
 
 			return false;
 		}
 
-		static bool ShouldSkipGeneric (TypeDefinition? a, TypeDefinition? b, TypeDefinitionCache cache)
+		static bool ShouldSkipGeneric (TypeDefinition? a, TypeDefinition? b, TypeDefinitionCache cache, ApiImporterOptions options)
 		{
 			if (a == null || b == null)
 				return false;
 			if (!a.ImplementsInterface ("Android.Runtime.IJavaObject", cache) || !b.ImplementsInterface ("Android.Runtime.IJavaObject", cache))
 				return false;
 
-			return GetRegisteredJavaTypeName (a) == GetRegisteredJavaTypeName (b);
+			return GetRegisteredJavaTypeName (a, options) == GetRegisteredJavaTypeName (b, options);
 		}
 
-		static string? TypeReferenceToJavaType (TypeReference type)
+		static string? TypeReferenceToJavaType (TypeReference type, ApiImporterOptions options)
 		{
-			var retval = GetRegisteredJavaName (type);
+			var retval = GetRegisteredJavaName (type, options);
 
 			if (retval != null && type is GenericInstanceType generic) {
-				var parameters = generic.GenericArguments.Select (ga => GetRegisteredJavaName (ga.Resolve ())).ToArray ();
+				var parameters = generic.GenericArguments.Select (ga => GetRegisteredJavaName (ga.Resolve (), options)).ToArray ();
 
 				if (parameters.WhereNotNull ().Any ())
 					retval += $"<{string.Join (", ", parameters.WhereNotNull ())}>";
@@ -276,14 +276,14 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			return retval;
 		}
 
-		static string? GetRegisteredJavaName (TypeReference type)
+		static string? GetRegisteredJavaName (TypeReference type, ApiImporterOptions options)
 		{
 			var td = type.Resolve ();
 
-			return GetRegisteredJavaTypeName (td);
+			return GetRegisteredJavaTypeName (td, options);
 		}
 
-		static void ParseImplementedInterfaces (TypeDefinition type, JavaTypeModel model)
+		static void ParseImplementedInterfaces (TypeDefinition type, JavaTypeModel model, ApiImporterOptions options)
 		{
 			foreach (var iface_impl in type.Interfaces) {
 				var iface = iface_impl.InterfaceType;
@@ -292,7 +292,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				if (iface_def is null || iface_def.IsNotPublic)
 					continue;
 
-				if (GetRegisterAttribute (iface_def.CustomAttributes) is CustomAttribute reg_attr) {
+				if (GetRegisterAttribute (iface_def.CustomAttributes, options) is CustomAttribute reg_attr) {
 					var jni = (string) reg_attr.ConstructorArguments [0].Value;
 					var name = jni.Replace ('/', '.').Replace ('$', '.');
 
@@ -301,7 +301,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 			}
 		}
 
-		static string GetBaseTypeJni (TypeDefinition type)
+		static string GetBaseTypeJni (TypeDefinition type, ApiImporterOptions options)
 		{
 			// Find a Java base type, ignoring generic types, if nothing else it will be Java.Lang.Object
 			TypeDefinition? base_type = type;
@@ -319,7 +319,7 @@ namespace Java.Interop.Tools.JavaTypeSystem
 				if (base_type.HasGenericParameters || base_type.IsGenericInstance)
 					continue;
 
-				if (GetRegisterAttribute (base_type.CustomAttributes) is CustomAttribute reg_attr)
+				if (GetRegisterAttribute (base_type.CustomAttributes, options) is CustomAttribute reg_attr)
 					return (string) reg_attr.ConstructorArguments [0].Value;
 			}
 
@@ -329,19 +329,19 @@ namespace Java.Interop.Tools.JavaTypeSystem
 		static CustomAttribute? GetObsoleteAttribute (Collection<CustomAttribute> attributes) =>
 			attributes.FirstOrDefault (a => a.AttributeType.FullNameCorrected () == "System.ObsoleteAttribute");
 
-		static CustomAttribute? GetRegisterAttribute (Collection<CustomAttribute> attributes) =>
+		static CustomAttribute? GetRegisterAttribute (Collection<CustomAttribute> attributes, ApiImporterOptions options) =>
 			attributes.FirstOrDefault (a => {
 				var attrType    = a.AttributeType.FullNameCorrected ();
-				return attrType == "Android.Runtime.RegisterAttribute" ||
-					attrType == "Java.Interop.JniTypeSignatureAttribute";
+
+				return options.SupportedTypeMapAttributes.Contains (attrType);
 			});
 
-		static string? GetRegisteredJavaTypeName (TypeDefinition type)
+		static string? GetRegisteredJavaTypeName (TypeDefinition type, ApiImporterOptions options)
 		{
 			if (GetSpecialCase (type) is string s)
 				return s;
 
-			if (GetRegisterAttribute (type.CustomAttributes) is CustomAttribute reg_attr)
+			if (GetRegisterAttribute (type.CustomAttributes, options) is CustomAttribute reg_attr)
 				return ((string) reg_attr.ConstructorArguments [0].Value).Replace ('/', '.');
 
 			return null;
