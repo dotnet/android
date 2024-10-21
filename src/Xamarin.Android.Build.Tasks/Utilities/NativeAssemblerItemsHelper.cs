@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 
 using Microsoft.Build.Utilities;
+using Xamarin.Android.Tools;
 
 namespace Xamarin.Android.Tasks;
 
@@ -43,6 +44,11 @@ static class NativeAssemblerItemsHelper
 		{ KnownMode.MarshalMethods,        new ("marshal_methods",       LlvmIrExtension) },
 		{ KnownMode.TypeMap,               new ("typemaps",              LlvmIrExtension) },
 	};
+
+	public static string? GetSourcePath (TaskLoggingHelper log, KnownMode mode, string nativeSourcesDir, AndroidTargetArch arch)
+	{
+		return GetSourcePath (log, mode, nativeSourcesDir, MonoAndroidHelper.ArchToAbi (arch));
+	}
 
 	public static string? GetSourcePath (TaskLoggingHelper log, KnownMode mode, string nativeSourcesDir, string abi)
 	{

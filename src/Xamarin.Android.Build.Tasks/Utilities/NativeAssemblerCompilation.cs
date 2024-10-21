@@ -149,26 +149,25 @@ class NativeAssemblerCompilation
 			if (e.Data != null) {
 				OnOutputData (context, assemblerName, s, e);
 				stdoutLines.Add (e.Data);
-			} else
+			} else {
 				stdout_completed.Set ();
+			}
 		};
 
 		proc.ErrorDataReceived += (s, e) => {
 			if (e.Data != null) {
 				OnErrorData (context, assemblerName, s, e);
 				stderrLines.Add (e.Data);
-			} else
+			} else {
 				stderr_completed.Set ();
+			}
 		};
 
 		proc.StartInfo = psi;
 		proc.Start ();
 		proc.BeginOutputReadLine ();
 		proc.BeginErrorReadLine ();
-
-		if (context.RegisterForCancellation != null) {
-			context.RegisterForCancellation (proc);
-		}
+		context.RegisterForCancellation?.Invoke (proc);
 
 		proc.WaitForExit ();
 

@@ -1,23 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <UsingTask TaskName="Xamarin.Android.Tasks.CreateEmbeddedAssemblyStore" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
+  <UsingTask TaskName="Xamarin.Android.Tasks.PrepareAbiItems" AssemblyFile="$(_XamarinAndroidBuildTasksAssembly)" />
 
   <Target Name="_PrepareCreateEmbeddedAssemblyStoreOutputItems">
-    <!-- NOTE: the `embed_` prefix and `assembly_store` stem must be identical to the values used in ELFEmbeddingHelper -->
-    <ItemGroup>
-      <_EmbeddedAssemblyStoreObjectFile Include="$(_NativeAssemblySourceDir)embed_assembly_store.%(_BuildTargetAbis.Identity).o" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <_EmbeddedAssemblyStoreSourceFiles Include="@(_EmbeddedAssemblyStoreObjectFile->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.s'))')" />
-    </ItemGroup>
+    <PrepareAbiItems
+      BuildTargetAbis="@(_BuildTargetAbis)"
+      NativeSourcesDir="$(_NativeAssemblySourceDir)"
+      Mode="EmbeddedAssemblyStore">
+    <Output TaskParameter="AssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
+  </PrepareAbiItems>
   </Target>
 
   <Target Name="_CreateEmbeddedAssemblyStore"
           Condition=" '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' "
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
           Inputs="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
-          Outputs="@(_EmbeddedAssemblyStoreObjectFile);@(_EmbeddedAssemblyStoreSourceFiles)">
+          Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
@@ -28,10 +27,7 @@
         ProjectFullPath="$(MSBuildProjectFullPath)"
         ResolvedUserAssemblies="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths)"
         ResolvedFrameworkAssemblies="@(_ShrunkFrameworkAssemblies)"
-        SupportedAbis="@(_BuildTargetAbis)">
-      <Output TaskParameter="EmbeddedObjectFiles" ItemName="_NativeAssemblyTarget" />
-      <Output TaskParameter="NativeAssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
-    </CreateEmbeddedAssemblyStore>
+        SupportedAbis="@(_BuildTargetAbis)" />
 
     <ItemGroup>
       <FileWrites Include="@(_EmbeddedAssemblyStoreSourceFiles)" />

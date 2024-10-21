@@ -68,9 +68,6 @@ namespace Xamarin.Android.Tasks
 		//[Required]
 		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
-		[Output]
-		public ITaskItem[] EmbeddedObjectFiles { get; set; }
-
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
 		public string BoundExceptionType { get; set; }
@@ -344,7 +341,7 @@ namespace Xamarin.Android.Tasks
 			}
 
 			bool haveRuntimeConfigBlob = !String.IsNullOrEmpty (RuntimeConfigBinFilePath) && File.Exists (RuntimeConfigBinFilePath);
-			List<ITaskItem> objectFilePaths = ELFEmbeddingHelper.EmbedBinary (
+			ELFEmbeddingHelper.EmbedBinary (
 				Log,
 				SupportedAbis,
 				AndroidBinUtilsDirectory,
@@ -353,8 +350,6 @@ namespace Xamarin.Android.Tasks
 				EnvironmentOutputDirectory,
 				missingContentOK: !haveRuntimeConfigBlob
 			);
-
-			EmbeddedObjectFiles = objectFilePaths.ToArray ();
 
 			var jniRemappingNativeCodeInfo = BuildEngine4.GetRegisteredTaskObjectAssemblyLocal<GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfo> (ProjectSpecificTaskObjectKey (GenerateJniRemappingNativeCode.JniRemappingNativeCodeInfoKey), RegisteredTaskObjectLifetime.Build);
 			var appConfigAsmGen = new ApplicationConfigNativeAssemblyGenerator (environmentVariables, systemProperties, Log) {

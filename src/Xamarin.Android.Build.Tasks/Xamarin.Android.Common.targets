@@ -1961,7 +1961,7 @@ because xbuild doesn't support framework reference assemblies.
    <Touch Files="$(_AndroidApkPerAbiFlagFile)" Condition="'$(AndroidCreatePackagePerAbi)' == 'true'" AlwaysCreate="True" />
 </Target>
 
-<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs">
+<Target Name="_PrepareNativeAssemblyItems" DependsOnTargets="_GenerateJavaStubs;_PrepareCreateEmbeddedAssemblyStoreOutputItems">
   <ItemGroup>
     <_NativeAssemblyTarget Include="@(_TypeMapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_TypeMapAssemblySource.abi)</abi>
@@ -1981,6 +1981,9 @@ because xbuild doesn't support framework reference assemblies.
     <_NativeAssemblyTarget Include="@(_AndroidRemapAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_AndroidRemapAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
+    <_NativeAssemblyTarget Include="@(_EmbeddedAssemblyStoreSourceFiles->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
+      <abi>%(_EmbeddedAssemblyStoreSourceFiles.abi)</abi>
+    </_NativeAssemblyTarget>
     <_NativeAssemblyTarget Include="@(_EmbeddedRuntimeConfigAssemblySource->'$([System.IO.Path]::ChangeExtension('%(Identity)', '.o'))')">
       <abi>%(_EmbeddedRuntimeConfigAssemblySource.abi)</abi>
     </_NativeAssemblyTarget>
@@ -1989,6 +1992,7 @@ because xbuild doesn't support framework reference assemblies.
   <ItemGroup>
     <_NativeAssemblySource Include="@(_AndroidRemapAssemblySource)" />
     <_NativeAssemblySource Include="@(_CompressedAssembliesAssemblySource)" />
+    <_NativeAssemblySource Include="@(_EmbeddedAssemblyStoreSourceFiles)" />
     <_NativeAssemblySource Include="@(_EmbeddedRuntimeConfigAssemblySource)" />
     <_NativeAssemblySource Include="@(_EnvironmentAssemblySource)" />
     <_NativeAssemblySource Include="@(_MarshalMethodsAssemblySource)" />
@@ -2011,7 +2015,7 @@ because xbuild doesn't support framework reference assemblies.
 </Target>
 
 <Target Name="_CompileNativeAssemblySources"
-    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore"
+    DependsOnTargets="_PrepareNativeAssemblyItems;_GenerateCompressedAssembliesNativeSourceFiles;_CreateEmbeddedAssemblyStore;"
     Inputs="@(_NativeAssemblySource)"
     Outputs="@(_NativeAssemblyTarget)">
   <CompileNativeAssembly
