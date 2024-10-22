@@ -7,7 +7,7 @@
     <MicrosoftNETCoreAppRefPackageVersion>9.0.0</MicrosoftNETCoreAppRefPackageVersion>
     <MicrosoftDotNetApiCompatPackageVersion>7.0.0-beta.22103.1</MicrosoftDotNetApiCompatPackageVersion>
     <MicrosoftDotNetBuildTasksFeedPackageVersion>10.0.0-beta.24476.2</MicrosoftDotNetBuildTasksFeedPackageVersion>
-    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>9.0.0-rtm.24515.1</MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>
+    <MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>9.0.0</MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
     <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.24480.1</MicrosoftDotNetCecilPackageVersion>
