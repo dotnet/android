@@ -8,13 +8,18 @@
       BuildTargetAbis="@(_BuildTargetAbis)"
       NativeSourcesDir="$(_NativeAssemblySourceDir)"
       Mode="EmbeddedAssemblyStore">
-    <Output TaskParameter="AssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
-  </PrepareAbiItems>
+      <Output TaskParameter="AssemblySources" ItemName="_EmbeddedAssemblyStoreSourceFiles" />
+    </PrepareAbiItems>
+
+    <ItemGroup>
+      <_CreateEmbeddedAssemblyStoreAssembly Include="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"/>
+      <_CreateEmbeddedAssemblyStoreAssembly Condition=" '@(_CreateEmbeddedAssemblyStoreAssembly->Count())' == '0' " Include="@(_ResolvedUserAssemblies);@(_ResolvedFrameworkAssemblies);@(_AndroidResolvedSatellitePaths)" />
+    </ItemGroup>
   </Target>
 
   <Target Name="_CreateEmbeddedAssemblyStore"
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
-          Inputs="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
+          Inputs="@(_CreateEmbeddedAssemblyStoreAssembly)"
           Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
     <CreateEmbeddedAssemblyStore
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
