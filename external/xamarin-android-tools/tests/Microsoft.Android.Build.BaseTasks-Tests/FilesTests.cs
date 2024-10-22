@@ -6,6 +6,8 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using Xamarin.Tools.Zip;
 using Microsoft.Android.Build.Tasks;
 
@@ -434,6 +436,34 @@ namespace Microsoft.Android.Build.BaseTasks.Tests
 				var files = Directory.GetFiles (Path.GetDirectoryName (dest), "Foo");
 				Assert.AreEqual ("Foo", Path.GetFileName (files [0]), "File name should match");
 			}
+		}
+
+		[Test]
+		public async Task CopyIfChanged_LockedFile ()
+		{
+			var dest = NewFile (contents: "foo", fileName: "foo_locked");
+			var src = NewFile (contents: "foo0", fileName: "foo");
+			using (var file = File.OpenWrite (dest)) {
+				Assert.Throws<IOException> (() => Files.CopyIfChanged (src, dest));
+			}
+			src = NewFile (contents: "foo1", fileName: "foo");
+			Assert.IsTrue (Files.CopyIfChanged (src, dest));
+			src = NewFile (contents: "foo2", fileName: "foo");
+			dest = NewFile (contents: "foo", fileName: "foo_locked2");
+			var ev = new ManualResetEvent (false);
+			var task = Task.Run (async () => {
+				var file = File.Open (dest, FileMode.OpenOrCreate, FileAccess.Write, FileShare.Read);
+				try {
+					ev.Set ();
+					await Task.Delay (2500);
+				} finally {
+					file.Close();
+					file.Dispose ();
+				}
+			});
+			ev.WaitOne ();
+			Assert.IsTrue (Files.CopyIfChanged (src, dest));
+			await task;
 		}
 
 		[Test]
