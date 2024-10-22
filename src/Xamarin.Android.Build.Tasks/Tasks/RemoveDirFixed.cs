@@ -40,8 +40,6 @@ namespace Xamarin.Android.Tasks
 	{
 		public override string TaskPrefix => "RDF";
 
-		const int DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS = 1000;
-		const int DEFAULT_REMOVEDIRFIXED_RETRIES = 10;
 		const int ERROR_ACCESS_DENIED = -2147024891;
 		const int ERROR_SHARING_VIOLATION = -2147024864;
 
@@ -56,8 +54,10 @@ namespace Xamarin.Android.Tasks
 					continue;
 				}
 				int retryCount = 0;
+				int attempts = Files.GetFileWriteRetryAttempts ();
+				int delay = Files.GetFileWriteRetryDelay ();
 				try {
-					while (retryCount <= DEFAULT_REMOVEDIRFIXED_RETRIES) {
+					while (retryCount <= attempts) {
 						try {
 							// try to do a normal "fast" delete of the directory.
 							// only do the set writable on the second attempt
@@ -78,14 +78,14 @@ namespace Xamarin.Android.Tasks
 								case UnauthorizedAccessException:
 								case IOException:
 									int code = Marshal.GetHRForException(e);
-									if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount == DEFAULT_REMOVEDIRFIXED_RETRIES) {
+									if ((code != ERROR_ACCESS_DENIED && code != ERROR_SHARING_VIOLATION) || retryCount >= attempts) {
 										throw;
 									};
 									break;
 								default:
 									throw;
 							}
-							Thread.Sleep(DEFAULT_DIRECTORY_DELETE_RETRY_DELAY_MS);
+							Thread.Sleep (delay);
 							retryCount++;
 						}
 					}
