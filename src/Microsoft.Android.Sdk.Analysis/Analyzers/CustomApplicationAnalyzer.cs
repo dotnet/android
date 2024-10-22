@@ -31,6 +31,13 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
     private static void AnalyzeClass(SyntaxNodeAnalysisContext context)
     {
         var classDeclarationSyntax = (ClassDeclarationSyntax)context.Node;
+        var classSymbol = context.SemanticModel.GetDeclaredSymbol(classDeclarationSyntax) as INamedTypeSymbol;
+        if (classSymbol == null)
+            return;
+
+        if (!IsDerivedFrom (classSymbol, "Android.App.Application"))
+            return;
+        
         var constructors = classDeclarationSyntax.Members
             .OfType<ConstructorDeclarationSyntax>();
 
@@ -49,5 +56,18 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
             var diagnostic = Diagnostic.Create(Rule, classDeclarationSyntax.Identifier.GetLocation(), classDeclarationSyntax.Identifier.Value);
             context.ReportDiagnostic(diagnostic);
         }
+    }
+
+    private static bool IsDerivedFrom(INamedTypeSymbol typeSymbol, string baseClassName)
+    {
+        while (typeSymbol != null)
+        {
+            if (typeSymbol.ToDisplayString().StartsWith(baseClassName))
+            {
+                return true;
+            }
+            typeSymbol = typeSymbol.BaseType;
+        }
+        return false;
     }
 }
