@@ -62,12 +62,9 @@ public class GeneratePackageManagerJava : AndroidTask
 		[Required]
 		public bool EnablePreloadAssembliesDefault { get; set; }
 
-		// These two properties should be required but they will require modifying `monodroid` first
+		// This property should be required but it will require modifying `monodroid` first
 		//[Required]
 		public string AndroidBinUtilsDirectory { get; set; }
-
-		//[Required]
-		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 		public bool EnableMarshalMethods { get; set; }
 		public string RuntimeConfigBinFilePath { get; set; }
@@ -352,7 +349,6 @@ public class GeneratePackageManagerJava : AndroidTask
 				JniRemappingReplacementMethodIndexEntryCount = jniRemappingNativeCodeInfo == null ? 0 : jniRemappingNativeCodeInfo.ReplacementMethodIndexEntryCount,
 				MarshalMethodsEnabled = EnableMarshalMethods,
 				IgnoreSplitConfigs = ShouldIgnoreSplitConfigs (),
-				AssemblyStoreEmbeddedInRuntime = UseAssemblyStore && AssemblyStoreEmbeddedInRuntime,
 			};
 			LLVMIR.LlvmIrModule appConfigModule = appConfigAsmGen.Construct ();
 

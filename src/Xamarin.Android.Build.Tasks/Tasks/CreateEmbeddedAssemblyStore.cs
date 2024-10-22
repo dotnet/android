@@ -26,6 +26,9 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 	public string CompressedAssembliesDir { get; set; }
 
 	[Required]
+	public bool AssemblyStoreEmbeddedInRuntime { get; set; }
+
+	[Required]
 	public bool Debug { get; set; }
 
 	[Required]
@@ -44,6 +47,28 @@ public class CreateEmbeddedAssemblyStore : AndroidTask
 	public string [] SupportedAbis { get; set; }
 
 	public override bool RunTask ()
+	{
+		if (AssemblyStoreEmbeddedInRuntime) {
+			return EmbedAssemblyStore ();
+		}
+
+		// Generate sources to satisfy libmonodroid's ABI requirements
+		foreach (string abi in SupportedAbis) {
+			ELFEmbeddingHelper.EmbedBinary (
+				Log,
+				abi,
+				AndroidBinUtilsDirectory,
+				inputFile: null,
+				ELFEmbeddingHelper.KnownEmbedItems.AssemblyStore,
+				AssemblySourcesDir,
+				missingContentOK: true
+			);
+		}
+
+		return !Log.HasLoggedErrors;
+	}
+
+	bool EmbedAssemblyStore ()
 	{
 		bool compress = !Debug && EnableCompression;
 		IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>>? compressedAssembliesInfo = null;
