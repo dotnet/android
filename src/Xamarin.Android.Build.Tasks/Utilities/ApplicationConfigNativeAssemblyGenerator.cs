@@ -189,7 +189,6 @@ namespace Xamarin.Android.Tasks
 		public uint PackagedNativeLibrariesCount { get; set; }
 		public bool MarshalMethodsEnabled { get; set; }
 		public bool IgnoreSplitConfigs { get; set; }
-		public bool AssemblyStoreEmbeddedInRuntime { get; set; }
 
 		public ApplicationConfigNativeAssemblyGenerator (IDictionary<string, string> environmentVariables, IDictionary<string, string> systemProperties, TaskLoggingHelper log)
 			: base (log)
@@ -296,24 +295,6 @@ namespace Xamarin.Android.Tasks
 			module.Add (bundled_assemblies);
 
 			AddAssemblyStores (module);
-
-			if (AssemblyStoreEmbeddedInRuntime) {
-				return;
-			}
-
-			// Need these to keep ABI compatibility with `libxamarin-app.so` used at the runtime's build time
-			var embedded_assembly_store_size = new LlvmIrGlobalVariable (
-				(ulong)0,
-				"embedded_assembly_store_size",
-				LlvmIrVariableOptions.GlobalConstant
-			);
-			module.Add (embedded_assembly_store_size);
-
-			var embedded_assembly_store = new LlvmIrGlobalVariable (typeof (byte[]), "embedded_assembly_store", LlvmIrVariableOptions.GlobalWritable) {
-				ZeroInitializeArray = true,
-				ArrayItemCount = 0,
-			};
-			module.Add (embedded_assembly_store);
 		}
 
 		void AddAssemblyStores (LlvmIrModule module)

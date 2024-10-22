@@ -13,7 +13,6 @@
   </Target>
 
   <Target Name="_CreateEmbeddedAssemblyStore"
-          Condition=" '$(_AndroidEmbedAssemblyStoreInRuntime)' == 'True' "
           DependsOnTargets="_PrepareCreateEmbeddedAssemblyStoreOutputItems"
           Inputs="@(_ShrunkUserAssemblies);@(_AndroidResolvedSatellitePaths);@(_ShrunkFrameworkAssemblies)"
           Outputs="@(_EmbeddedAssemblyStoreSourceFiles)">
@@ -21,6 +20,7 @@
         AndroidBinUtilsDirectory="$(AndroidBinUtilsDirectory)"
         AppSharedLibrariesDir="$(_AndroidApplicationSharedLibraryPath)"
         AssemblySourcesDir="$(IntermediateOutputPath)android"
+        AssemblyStoreEmbeddedInRuntime="$(_AndroidEmbedAssemblyStoreInRuntime)"
         CompressedAssembliesDir="$(_AndroidCompressedAssembliesDir)\test\"
         Debug="$(AndroidIncludeDebugSymbols)"
         EnableCompression="$(AndroidEnableAssemblyCompression)"
