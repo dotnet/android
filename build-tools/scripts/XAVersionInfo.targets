@@ -81,9 +81,10 @@
       <_AndroidPackBranch>$([System.Text.RegularExpressions.Regex]::Replace('$(XAVersionBranch)', '[^a-zA-Z0-9-]', '-'))</_AndroidPackBranch>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' and $(XAVersionBranch.StartsWith('release/'))">$(AndroidPackVersionSuffix).$(PackVersionCommitCount)</_AndroidPackLabel>
       <_AndroidPackLabel Condition=" '$(_AndroidPackLabel)' == '' ">ci.$(_AndroidPackBranch).$(PackVersionCommitCount)</_AndroidPackLabel>
-      <AndroidPackVersionLong>$(AndroidPackVersion)-$(_AndroidPackLabel)</AndroidPackVersionLong>
-      <AndroidMSIVersion>$(AndroidPackVersion).$(PackVersionCommitCount)</AndroidMSIVersion>
+      <AndroidPackVersionLong>$(AndroidPackVersionMajorMinor).$([MSBuild]::Add($(AndroidPackVersionPatch), $(PackVersionCommitCount)))</AndroidPackVersionLong>
+      <AndroidMSIVersion>$(AndroidPackVersionLong).0</AndroidMSIVersion>
       <IsStableBuild Condition=" '$(AndroidPackVersionSuffix)' == 'rtm' and $(XAVersionBranch.StartsWith('release/')) ">true</IsStableBuild>
     </PropertyGroup>
+    <Message Text="XAVersionInfo: $(XAVersionBranch)/$(XAVersionHash) - PackVersion: $(AndroidPackVersionLong) MSIVersion: $(AndroidMSIVersion) IsStable: $(IsStableBuild)" />
   </Target>
 </Project>
