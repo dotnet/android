@@ -408,11 +408,14 @@ namespace Xamarin.Android.Tasks
 
 		void AddAssemblies (DSOWrapperGenerator.Config dsoWrapperConfig, ZipArchiveEx apk, bool debug, bool compress, IDictionary<AndroidTargetArch, Dictionary<string, CompressedAssemblyInfo>> compressedAssembliesInfo, string assemblyStoreApkName)
 		{
+			Log.LogDebugMessage ("g#: in AddAssemblies");
 			string sourcePath;
 			AssemblyStoreBuilder? storeBuilder = null;
 
 			if (UseAssemblyStore) {
+				Log.LogDebugMessage ("g#: assembly store used");
 				if (AssemblyStoreEmbeddedInRuntime) {
+					Log.LogDebugMessage ("g#: assembly store embedded in the runtime");
 					// We don't need to do anything here, the store is in `libxamarin-app.so`
 					return;
 				}
@@ -420,16 +423,20 @@ namespace Xamarin.Android.Tasks
 				storeBuilder = new AssemblyStoreBuilder (Log);
 			}
 
+			Log.LogDebugMessage ("g#: adding user assemblies");
 			// Add user assemblies
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedUserAssemblies, DoAddAssembliesFromArchCollection);
 
+			Log.LogDebugMessage ("g#: adding framework assemblies");
 			// Add framework assemblies
 			AssemblyPackagingHelper.AddAssembliesFromCollection (Log, SupportedAbis, ResolvedFrameworkAssemblies, DoAddAssembliesFromArchCollection);
 
 			if (!UseAssemblyStore) {
+				Log.LogDebugMessage ("g#: assembly store not used, returning");
 				return;
 			}
 
+			Log.LogDebugMessage ("g#: generating assembly stores");
 			Dictionary<AndroidTargetArch, string> assemblyStorePaths = storeBuilder.Generate (AppSharedLibrariesDir);
 
 			if (assemblyStorePaths.Count == 0) {
@@ -440,6 +447,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ("Internal error: assembly store did not generate store for each supported ABI");
 			}
 
+			Log.LogDebugMessage ($"g#: {assemblyStorePaths.Count} assembly stores added");
 			string inArchivePath;
 			foreach (var kvp in assemblyStorePaths) {
 				string abi = MonoAndroidHelper.ArchToAbi (kvp.Key);
@@ -457,6 +465,7 @@ namespace Xamarin.Android.Tasks
 				// or not we're supposed to compress .so files.
 				sourcePath = CompressAssembly (assembly);
 				if (UseAssemblyStore) {
+					Log.LogDebugMessage ($"g#: adding '{assembly}' to the store");
 					storeBuilder.AddAssembly (sourcePath, assembly, includeDebugSymbols: debug);
 					return;
 				}
