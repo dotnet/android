@@ -468,16 +468,16 @@ namespace Xamarin.Android.Tasks
 
 		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
 		{
-			if (File.Exists (assemblyFilePath)) {
-				using var pe = new PEReader (File.OpenRead (assemblyFilePath));
-				GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
-			} else {
+			if (!File.Exists (assemblyFilePath)) {
 				android_runtime_jnienv_class_token = -1;
 				jnienv_initialize_method_token = -1;
 				jnienv_registerjninatives_method_token = -1;
 				Log.LogDebugMessage ($"Assembly '{assemblyFilePath}' does not exist, unable to read required tokens from it");
 				return;
 			}
+
+			using var pe = new PEReader (File.OpenRead (assemblyFilePath));
+			GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
 
 			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
 				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens for {assemblyFilePath}");
