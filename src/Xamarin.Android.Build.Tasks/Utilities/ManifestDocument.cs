@@ -290,7 +290,7 @@ namespace Xamarin.Android.Tasks {
 					string.IsNullOrEmpty (VersionName) ? "1.0" : VersionName);
 			}
 
-			app = CreateApplicationElement (manifest, applicationClass, subclasses, cache);
+			app = CreateApplicationElement (log, manifest, applicationClass, subclasses, cache);
 
 			if (app.Attribute (androidNs + "label") == null && !string.IsNullOrEmpty (ApplicationLabel))
 				app.SetAttributeValue (androidNs + "label", ApplicationLabel);
@@ -570,7 +570,7 @@ namespace Xamarin.Android.Tasks {
 			return null;
 		}
 
-		XElement CreateApplicationElement (XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
+		XElement CreateApplicationElement (TaskLoggingHelper log, XElement manifest, string applicationClass, List<TypeDefinition> subclasses, TypeDefinitionCache cache)
 		{
 			var application = manifest.Descendants ("application").FirstOrDefault ();
 
@@ -582,6 +582,7 @@ namespace Xamarin.Android.Tasks {
 			foreach (var assemblyPath in Assemblies) {
 				var assembly = Resolver.GetAssembly (assemblyPath);
 				if (assembly == null) {
+					log.LogDebugMessage ($"Assembly '{assemblyPath}' not found.");
 					continue;
 				}
 
