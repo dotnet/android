@@ -578,6 +578,10 @@ namespace Xamarin.Android.Tasks {
 			List<UsesConfigurationAttribute> usesConfigurationAttr = [];
 			foreach (var assemblyPath in Assemblies) {
 				var assembly = Resolver.GetAssembly (assemblyPath);
+				if (assembly == null) {
+					continue;
+				}
+
 				if (ApplicationAttribute.FromCustomAttributeProvider (assembly, cache) is ApplicationAttribute a) {
 					assemblyAttr.Add (a);
 				}

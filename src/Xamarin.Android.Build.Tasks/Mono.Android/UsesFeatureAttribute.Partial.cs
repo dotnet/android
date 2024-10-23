@@ -35,12 +35,18 @@ namespace Android.App {
 
 		public static IEnumerable<UsesFeatureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
+			// `provider` might be null in situations when application configuration is broken, and it surfaces in a number of
+			// tests which check these situations.
+			if (provider == null) {
+				yield break;
+			}
+
 			var attrs = provider.GetCustomAttributes ("Android.App.UsesFeatureAttribute");
 			foreach (var attr in attrs) {
 
 				UsesFeatureAttribute self = new UsesFeatureAttribute ();
 
-				if (attr.HasProperties) {	
+				if (attr.HasProperties) {
 					// handle the case where the user sets additional properties
 					self.specified = mapping.Load (self, attr, cache);
 					if (self.specified.Contains("GLESVersion") && self.GLESVersion==0) {
@@ -64,4 +70,3 @@ namespace Android.App {
 		}
 	}
 }
-
