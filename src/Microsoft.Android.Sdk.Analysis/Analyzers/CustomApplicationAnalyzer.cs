@@ -11,12 +11,12 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
     private const string AndroidApplication = "Android.App.Application";
     public const string DiagnosticId = "XAA001";
     private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor (
-        DiagnosticId,                          // Diagnostic ID
-        "Application class does not have an Activation Constructor",      // Title
-        "Application class '{0}' does not have an Activation Constructor",  // Message format
-        "Code",                          // Category
-        DiagnosticSeverity.Warning,        // Default severity
-        isEnabledByDefault: true  // Enabled by default
+        id: DiagnosticId,
+        title: "Application class does not have an Activation Constructor",
+        messageFormat: "Application class '{0}' does not have an Activation Constructor",
+        category: "Usage",
+        defaultSeverity: DiagnosticSeverity.Warning,
+        isEnabledByDefault: true
     );
 
 	public override ImmutableArray<DiagnosticDescriptor> SupportedDiagnostics => ImmutableArray.Create (Rule);
