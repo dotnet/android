@@ -432,6 +432,86 @@ public class GeneratePackageManagerJava : AndroidTask
 			}
 		}
 
-		return !Log.HasLoggedErrors;
+		bool ShouldIgnoreSplitConfigs ()
+		{
+			if (String.IsNullOrEmpty (CustomBundleConfigFile)) {
+				return false;
+			}
+
+			return BundleConfigSplitConfigsChecker.ShouldIgnoreSplitConfigs (Log, CustomBundleConfigFile);
+		}
+
+		void GetRequiredTokens (string assemblyFilePath, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
+		{
+			if (File.Exists (assemblyFilePath)) {
+				using var pe = new PEReader (File.OpenRead (assemblyFilePath));
+				GetRequiredTokens (pe.GetMetadataReader (), out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
+			} else {
+				android_runtime_jnienv_class_token = -1;
+				jnienv_initialize_method_token = -1;
+				jnienv_registerjninatives_method_token = -1;
+				Log.LogDebugMessage ($"Assembly '{assemblyFilePath}' does not exist, unable to read required tokens from it");
+				return;
+			}
+
+			if (android_runtime_jnienv_class_token == -1 || jnienv_initialize_method_token == -1 || jnienv_registerjninatives_method_token == -1) {
+				throw new InvalidOperationException ($"Unable to find the required Android.Runtime.JNIEnvInit method tokens for {assemblyFilePath}");
+			}
+		}
+
+		void GetRequiredTokens (MetadataReader reader, out int android_runtime_jnienv_class_token, out int jnienv_initialize_method_token, out int jnienv_registerjninatives_method_token)
+		{
+			android_runtime_jnienv_class_token = -1;
+			jnienv_initialize_method_token = -1;
+			jnienv_registerjninatives_method_token = -1;
+
+			TypeDefinition? typeDefinition = null;
+
+			foreach (TypeDefinitionHandle typeHandle in reader.TypeDefinitions) {
+				TypeDefinition td = reader.GetTypeDefinition (typeHandle);
+				if (!TypeMatches (td)) {
+					continue;
+				}
+
+				typeDefinition = td;
+				android_runtime_jnienv_class_token = MetadataTokens.GetToken (reader, typeHandle);
+				break;
+			}
+
+			if (typeDefinition == null) {
+				return;
+			}
+
+			foreach (MethodDefinitionHandle methodHandle in typeDefinition.Value.GetMethods ()) {
+				MethodDefinition md = reader.GetMethodDefinition (methodHandle);
+				string name = reader.GetString (md.Name);
+
+				if (jnienv_initialize_method_token == -1 && String.Compare (name, "Initialize", StringComparison.Ordinal) == 0) {
+					jnienv_initialize_method_token = MetadataTokens.GetToken (reader, methodHandle);
+				} else if (jnienv_registerjninatives_method_token == -1 && String.Compare (name, "RegisterJniNatives", StringComparison.Ordinal) == 0) {
+					jnienv_registerjninatives_method_token = MetadataTokens.GetToken (reader, methodHandle);
+				}
+
+				if (jnienv_initialize_method_token != -1 && jnienv_registerjninatives_method_token != -1) {
+					break;
+				}
+			}
+
+
+			bool TypeMatches (TypeDefinition td)
+			{
+				string ns = reader.GetString (td.Namespace);
+				if (String.Compare (ns, "Android.Runtime", StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				string name = reader.GetString (td.Name);
+				if (String.Compare (name, "JNIEnvInit", StringComparison.Ordinal) != 0) {
+					return false;
+				}
+
+				return true;
+			}
+		}
 	}
 }
