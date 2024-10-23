@@ -53,19 +53,6 @@ public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor
 
     private static bool IsResourceDesignerDerivedType(INamedTypeSymbol typeSymbol)
     {
-        return IsDerivedFrom(typeSymbol, DesignerNamespace);
-    }
-
-    private static bool IsDerivedFrom(INamedTypeSymbol typeSymbol, string baseClassName)
-    {
-        while (typeSymbol != null)
-        {
-            if (typeSymbol.ToDisplayString().StartsWith(baseClassName))
-            {
-                return true;
-            }
-            typeSymbol = typeSymbol.BaseType;
-        }
-        return false;
+        return Utilities.IsDerivedFrom(typeSymbol, DesignerNamespace);
     }
 }
