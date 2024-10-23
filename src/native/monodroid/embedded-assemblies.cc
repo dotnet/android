@@ -1310,13 +1310,21 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 size_t
 EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
-	constexpr bool LookForMangledNames = true;
-	size_t assembly_count = register_from_filesystem (
-		AndroidSystem::app_lib_directories[0],
-		LookForMangledNames,
-		should_register
-	);
+	size_t assembly_count;
+
+	if (embedded_assembly_store_size > 0) {
+		log_debug (LOG_ASSEMBLY, "Filesystem mode, but registering assemblies from the embedded assembly store");
+		load_embedded_assembly_store ();
+		assembly_count = assembly_store.assembly_count;
+	} else {
+		log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
+		constexpr bool LookForMangledNames = true;
+		assembly_count = register_from_filesystem (
+			AndroidSystem::app_lib_directories[0],
+			LookForMangledNames,
+			should_register
+		);
+	}
 
 #if defined(DEBUG)
 	constexpr bool DoNotLookForMangledNames = false;
@@ -1328,6 +1336,6 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 	);
 #endif
 
-	log_debug (LOG_ASSEMBLY, "Found %zu assemblies on the filesystem", assembly_count);
+	log_debug (LOG_ASSEMBLY, "Found %zu assemblies", assembly_count);
 	return assembly_count;
 }
