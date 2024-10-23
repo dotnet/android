@@ -147,14 +147,14 @@ namespace UnnamedProject
 				Assert.IsTrue (b.Build (proj, parameters: DesignerParameters), $"{b.Target} should have succeeded.");
 
 				// Change a layout, DTB
-				proj.LayoutMain = proj.LayoutMain.Replace ("@string/hello", "hello");
+				proj.LayoutMain = proj.LayoutMain.Replace ("</LinearLayout>", "<Button android:id=\"foo\" android:text=\"hello\" /></LinearLayout>");
 				proj.Touch ("Resources\\layout\\Main.axml");
 				Assert.IsTrue (b.DesignTimeBuild (proj, target: "UpdateGeneratedFiles"), "DTB should have succeeded.");
 
-				var resourcepathscache = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "libraryprojectimports.cache");
-				FileAssert.Exists (resourcepathscache);
-				var doc = XDocument.Load (resourcepathscache);
-				Assert.AreEqual (54, doc.Root.Element ("Jars").Elements ("Jar").Count (), "libraryprojectimports.cache did not contain expected jar files");
+				var rTxtFile = Path.Combine (Root, b.ProjectDirectory, proj.IntermediateOutputPath, "designtime", "R.txt");
+				FileAssert.Exists (rTxtFile);
+				var doc = File.ReadAllText (rTxtFile);
+				StringAssert.Contains ("foo", doc, "R.tct did not contain expected id of foo");
 			}
 		}
 

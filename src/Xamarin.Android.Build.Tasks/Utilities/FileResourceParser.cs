@@ -1,5 +1,6 @@
 using System;
 using System.CodeDom;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -332,8 +333,8 @@ namespace Xamarin.Android.Tasks
 						fields.Add (r);
 					}
 				}
-				if (field.Type != RType.Array)
-					return;
+				//if (field.Type != RType.Array)
+				//	return;
 				arrayMapping.Add (field, fields.ToArray ());
 
 				field.Ids = new int [attribs.Count];
