@@ -1455,7 +1455,7 @@ because xbuild doesn't support framework reference assemblies.
   </_GenerateJavaStubsDependsOnTargets>
 </PropertyGroup>
 
-<Target Name="_GetGenerateJavaStubsInputs">
+<Target Name="_GetGenerateJavaStubsInputs" DependsOnTargets="_GenerateEnvironmentFiles">
   <ItemGroup>
     <_GenerateJavaStubsInputs Include="@(_AndroidMSBuildAllProjects)" />
     <_GenerateJavaStubsInputs Include="$(_ResolvedUserAssembliesHashFile)" />
@@ -1616,7 +1616,7 @@ because xbuild doesn't support framework reference assemblies.
   </PrepareAbiItems>
 </Target>
 
-<Target Name="_GenerateEnvironmentFiles" DependsOnTargets="_ReadAndroidManifest">
+<Target Name="_GenerateEnvironmentFiles">
   <ItemGroup>
     <_GeneratedAndroidEnvironment Include="__XA_PACKAGE_NAMING_POLICY__=$(AndroidPackageNamingPolicy)" />
     <_GeneratedAndroidEnvironment Include="mono.enable_assembly_preload=0" Condition=" '$(AndroidEnablePreloadAssemblies)' != 'True' " />
