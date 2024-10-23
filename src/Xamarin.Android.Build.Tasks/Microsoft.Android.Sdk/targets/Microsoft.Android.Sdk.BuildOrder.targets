@@ -72,7 +72,7 @@ properties that determine build ordering.
       _ConvertCustomView;
       $(_AfterConvertCustomView);
       $(AfterGenerateAndroidManifest);
-      _GenerateEnvironmentFiles;
+      _ReadAndroidManifest;
       _CompileJava;
       _CreateApplicationSharedLibraries;
       _CompileDex;

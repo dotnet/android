@@ -1796,7 +1796,7 @@ because xbuild doesn't support framework reference assemblies.
 		_ManifestMerger;
 		_ConvertCustomView;
 		$(_AfterConvertCustomView);
-		_GenerateEnvironmentFiles;
+		_ReadAndroidManifest;
 		_GetLibraryImports;
 		_CheckDuplicateJavaLibraries;
 		UpdateAndroidAssets;
