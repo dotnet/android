@@ -82,10 +82,14 @@ Copyright (C) 2016 Xamarin. All rights reserved.
     Inputs="@(_AndroidResourceDest);@(LibraryResourceDirectories->'%(StampFile)')"
     Outputs="$(_GenerateResourceCaseMapFile)"
   >
+  <ItemGroup>
+    <!-- Only use the aar files if we have not extracted the data -->
+    <_LocalAarFiles Include="@(AndroidAarLibrary)" Condition=" '@(LibraryResourceDirectories->Count())' == '0' " />
+  </ItemGroup>
   <!-- Generate a ResourceMap file for the project and its resources -->
   <GenerateResourceCaseMap
       AdditionalResourceDirectories="@(LibraryResourceDirectories)"
-      AarLibraries="@(AndroidAarLibrary)"
+      AarLibraries="@(_LocalAarFiles)"
       OutputFile="$(_GenerateResourceCaseMapFile)"
       ProjectDir="$(ProjectDir)"
       ResourceDirectory="$(MonoAndroidResDirIntermediate)"

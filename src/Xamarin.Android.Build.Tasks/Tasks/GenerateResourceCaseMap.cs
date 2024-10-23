@@ -82,6 +82,7 @@ namespace Xamarin.Android.Tasks
 							continue;
 						if (entry.FullName != resmap)
 							continue;
+						Log.LogDebugMessage ($"Found: {entry.FullName}");
 						using var ms = new MemoryStream();
 						entry.Extract (ms);
 						ms.Position = 0;
@@ -94,6 +95,8 @@ namespace Xamarin.Android.Tasks
 							string [] tok = line.Split (';');
 							AddRename (tok [1].Replace ('/', Path.DirectorySeparatorChar), tok [0].Replace ('/', Path.DirectorySeparatorChar));
 						}
+						// no need to read the rest of the files we found the one we want
+						break;
 					}
 				}
 			}
