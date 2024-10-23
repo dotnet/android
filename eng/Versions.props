@@ -10,7 +10,7 @@
     <MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>9.0.0</MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version>
     <MicrosoftNETWorkloadEmscriptenPackageVersion>$(MicrosoftNETWorkloadEmscriptenCurrentManifest90100Version)</MicrosoftNETWorkloadEmscriptenPackageVersion>
     <MicrosoftTemplateEngineTasksPackageVersion>7.0.100-rc.1.22410.7</MicrosoftTemplateEngineTasksPackageVersion>
-    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.24480.1</MicrosoftDotNetCecilPackageVersion>
+    <MicrosoftDotNetCecilPackageVersion>0.11.5-alpha.24515.1</MicrosoftDotNetCecilPackageVersion>
     <SystemIOHashingPackageVersion>$(MicrosoftNETCoreAppRefPackageVersion)</SystemIOHashingPackageVersion>
     <!-- Previous .NET Android version -->
     <MicrosoftAndroidSdkWindowsPackageVersion>34.0.145</MicrosoftAndroidSdkWindowsPackageVersion>
