@@ -266,7 +266,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& b
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
 	bool assembly_store_found = embedded_assembly_store_size != 0;
 	if (assembly_store_found) {
-		verify_assembly_store_and_set_info (embedded_assembly_store, "embedded");
+		load_embedded_assembly_store ();
 		log_debug (LOG_ASSEMBLY, "Looking for DSOs in APK");
 	} else {
 		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('%s') and DSOs in APK", assembly_store_file_path.data ());
