@@ -6,23 +6,22 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 using Microsoft.CodeAnalysis.Text;
 
-[DiagnosticAnalyzer(LanguageNames.CSharp)]
+[DiagnosticAnalyzer (LanguageNames.CSharp)]
 public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor
 {
     private const string DesignerNamespace = "_Microsoft.Android.Resource.Designer";
-    private static readonly SuppressionDescriptor Rule = new(
+    private static readonly SuppressionDescriptor Rule = new (
         "XAD0001",
         "IDE0002",
         "The Resource Designer class should not be simplified."
     );
 
     public override ImmutableArray<SuppressionDescriptor> SupportedSuppressions
-        => ImmutableArray.Create(Rule);
+        => ImmutableArray.Create (Rule);
 
-    public override void ReportSuppressions(SuppressionAnalysisContext context)
+    public override void ReportSuppressions (SuppressionAnalysisContext context)
     {
-        foreach (var diagnostic in context.ReportedDiagnostics)
-        {
+        foreach (var diagnostic in context.ReportedDiagnostics) {
             if (diagnostic.Id != Rule.SuppressedDiagnosticId)
                 continue;
             Location location = diagnostic.Location;
@@ -30,29 +29,28 @@ public class ResourceDesignerDiagnosticSuppressor : DiagnosticSuppressor
             if (syntaxTree is null)
                 continue;
 
-            SyntaxNode root = syntaxTree.GetRoot(context.CancellationToken);
-            SyntaxNode syntaxNode = root.FindNode(location.SourceSpan)
-                .DescendantNodesAndSelf()
+            SyntaxNode root = syntaxTree.GetRoot (context.CancellationToken);
+            SyntaxNode syntaxNode = root.FindNode (location.SourceSpan)
+                .DescendantNodesAndSelf ()
                 .FirstOrDefault ();
 
             if (syntaxNode is null)
                 continue;
-            
-            SemanticModel model = context.GetSemanticModel(syntaxTree);
+
+            SemanticModel model = context.GetSemanticModel (syntaxTree);
             ISymbol typeSymbol = model.GetSymbolInfo (syntaxNode).Symbol;
             if (typeSymbol is not INamedTypeSymbol namedTypeSymbol)
                 continue;
 
-            if (IsResourceDesignerDerivedType(namedTypeSymbol))
-            {
-                Suppression suppression = Suppression.Create(Rule, diagnostic);
-                context.ReportSuppression(suppression);
+            if (IsResourceDesignerDerivedType (namedTypeSymbol)) {
+                Suppression suppression = Suppression.Create (Rule, diagnostic);
+                context.ReportSuppression (suppression);
             }
         }
     }
 
-    private static bool IsResourceDesignerDerivedType(INamedTypeSymbol typeSymbol)
+    private static bool IsResourceDesignerDerivedType (INamedTypeSymbol typeSymbol)
     {
-        return Utilities.IsDerivedFrom(typeSymbol, DesignerNamespace);
+        return Utilities.IsDerivedFrom (typeSymbol, DesignerNamespace);
     }
 }
