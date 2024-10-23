@@ -185,7 +185,7 @@ namespace xamarin::android::internal
 #if defined (RELEASE)
 			if (AndroidSystem::is_embedded_dso_mode_enabled ()) {
 				DSOApkEntry *apk_entry = dso_apk_entries;
-				for (size_t i = 0; i < application_config.number_of_shared_libraries; i++) {
+				for (size_t i = 0uz; i < application_config.number_of_shared_libraries; i++) {
 					if (apk_entry->name_hash != dso->real_name_hash) {
 						apk_entry++;
 						continue;

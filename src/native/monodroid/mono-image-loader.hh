@@ -102,7 +102,7 @@ namespace xamarin::android::internal {
 		force_inline static ssize_t find_index (hash_t hash) noexcept
 		{
 			ssize_t idx = Search::binary_search (hash, assembly_image_cache_hashes, number_of_cache_index_entries);
-			return idx >= 0 ? static_cast<ssize_t>(assembly_image_cache_indices[idx]) : -1;
+			return idx >= 0 ? static_cast<ssize_t>(assembly_image_cache_indices[idx]) : -1z;
 
 		}
 #endif // def USE_CACHE
