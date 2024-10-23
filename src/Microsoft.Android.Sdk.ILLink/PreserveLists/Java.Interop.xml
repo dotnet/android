@@ -5,13 +5,11 @@
       <field name="handle" />
       <field name="handle_type" />
       <field name="refs_added" />
-      <field name="weak_handle" />
     </type>
     <type fullname="Java.Interop.JavaException">
       <field name="handle" />
       <field name="handle_type" />
       <field name="refs_added" />
-      <field name="weak_handle" />
     </type>
   </assembly>
 </linker>
