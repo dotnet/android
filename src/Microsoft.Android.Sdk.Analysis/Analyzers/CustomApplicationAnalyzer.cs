@@ -5,13 +5,15 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
+[DiagnosticAnalyzer(LanguageNames.CSharp)]
 public class CustomApplicationAnalyzer : DiagnosticAnalyzer
 {
+    private const string AndroidApplication = "Android.App.Application";
     public const string DiagnosticId = "XAA001";
     private static readonly DiagnosticDescriptor Rule = new DiagnosticDescriptor (
         DiagnosticId,                          // Diagnostic ID
-        "Application class does not have an Activation Constructor.",      // Title
-        "Application class '{0}' does not have an Activation Constructor.",  // Message format
+        "Application class does not have an Activation Constructor",      // Title
+        "Application class '{0}' does not have an Activation Constructor",  // Message format
         "Code",                          // Category
         DiagnosticSeverity.Warning,        // Default severity
         isEnabledByDefault: true  // Enabled by default
@@ -35,7 +37,7 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
         if (classSymbol == null)
             return;
 
-        if (!IsDerivedFrom (classSymbol, "Android.App.Application"))
+        if (!Utilities.IsDerivedFrom (classSymbol, AndroidApplication))
             return;
         
         var constructors = classDeclarationSyntax.Members
@@ -53,21 +55,8 @@ public class CustomApplicationAnalyzer : DiagnosticAnalyzer
             foundActivationConstructor = true;
         }
         if (!foundActivationConstructor) {
-            var diagnostic = Diagnostic.Create(Rule, classDeclarationSyntax.Identifier.GetLocation(), classDeclarationSyntax.Identifier.Value);
+            var diagnostic = Diagnostic.Create(Rule, classDeclarationSyntax.Identifier.GetLocation(), classDeclarationSyntax.Identifier.Text);
             context.ReportDiagnostic(diagnostic);
         }
-    }
-
-    private static bool IsDerivedFrom(INamedTypeSymbol typeSymbol, string baseClassName)
-    {
-        while (typeSymbol != null)
-        {
-            if (typeSymbol.ToDisplayString().StartsWith(baseClassName))
-            {
-                return true;
-            }
-            typeSymbol = typeSymbol.BaseType;
-        }
-        return false;
     }
 }
