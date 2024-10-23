@@ -36,7 +36,7 @@ public class CustomApplicationCodeFixProvider : CodeFixProvider
         private async Task<Document> InjectConstructorAsync(Document document, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
         {
             // Create the new constructor
-            var constructor = CreateConstructorWithParameters();
+            var constructor = CreateConstructorWithParameters(classDeclaration.Identifier);
 
             // Add the constructor to the class
             var newClassDeclaration = classDeclaration.AddMembers(constructor);
@@ -49,24 +49,24 @@ public class CustomApplicationCodeFixProvider : CodeFixProvider
             return document.WithSyntaxRoot(newRoot);
         }
 
-        private ConstructorDeclarationSyntax CreateConstructorWithParameters ()
+        private ConstructorDeclarationSyntax CreateConstructorWithParameters (SyntaxToken identifier)
         {
             var parameters = SyntaxFactory.ParameterList (SyntaxFactory.SeparatedList(new[] {
-                SyntaxFactory.Parameter (SyntaxFactory.Identifier ("handle"))
+                SyntaxFactory.Parameter (SyntaxFactory.Identifier ("javaReference"))
                     .WithType (SyntaxFactory.ParseTypeName ("IntPtr")),
                 SyntaxFactory.Parameter (SyntaxFactory.Identifier ("transfer"))
                     .WithType (SyntaxFactory.ParseTypeName ("JniHandleOwnership"))
             }));
 
             var baseArguments = SyntaxFactory.ArgumentList (SyntaxFactory.SeparatedList(new [] {
-                SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("handle")),
+                SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("javaReference")),
                 SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("transfer"))
             }));
             var constructorInitializer = SyntaxFactory.ConstructorInitializer (SyntaxKind.BaseConstructorInitializer, baseArguments);
 
             var body = SyntaxFactory.Block ();
 
-            var constructor = SyntaxFactory.ConstructorDeclaration (SyntaxFactory.Identifier("MyClass"))
+            var constructor = SyntaxFactory.ConstructorDeclaration (identifier)
                 .WithModifiers (SyntaxFactory.TokenList (SyntaxFactory.Token (SyntaxKind.PublicKeyword)))
                 .WithParameterList (parameters)
                 .WithInitializer (constructorInitializer)
