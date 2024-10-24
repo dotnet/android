@@ -320,8 +320,6 @@ Copyright (C) 2011-2012 Xamarin. All rights reserved.
 
 <PropertyGroup>
   <_AndroidAotStripLibraries Condition=" '$(_AndroidAotStripLibraries)' == '' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</_AndroidAotStripLibraries>
-  <AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' != 'true' ">false</AndroidUseAssemblyStore>
-  <AndroidUseAssemblyStore Condition=" '$(EmbedAssembliesIntoApk)' != 'true' ">true</AndroidUseAssemblyStore>
   <AndroidAotEnableLazyLoad Condition=" '$(AndroidAotEnableLazyLoad)' == '' And '$(AotAssemblies)' == 'true' And '$(AndroidIncludeDebugSymbols)' != 'true' ">True</AndroidAotEnableLazyLoad>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' and ('$(UsingMicrosoftNETSdkRazor)' == 'true') ">False</AndroidEnableMarshalMethods>
   <AndroidEnableMarshalMethods Condition=" '$(AndroidEnableMarshalMethods)' == '' ">False</AndroidEnableMarshalMethods>
@@ -1742,7 +1740,6 @@ because xbuild doesn't support framework reference assemblies.
     PackageNamingPolicy="$(AndroidPackageNamingPolicy)"
     BoundExceptionType="$(AndroidBoundExceptionType)"
     RuntimeConfigBinFilePath="$(_BinaryRuntimeConfigPath)"
-    UseAssemblyStore="$(AndroidUseAssemblyStore)"
     EnableMarshalMethods="$(_AndroidUseMarshalMethods)"
     CustomBundleConfigFile="$(AndroidBundleConfigurationFile)"
   >
