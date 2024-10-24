@@ -116,6 +116,7 @@ class ELFEmbeddingHelper
 
 		string asmSourceFile = NativeAssemblerItemsHelper.GetSourcePath (log, item.NativeAssemblerMode, outputDirectory, arch);
 
+		Directory.CreateDirectory (Path.GetDirectoryName (asmSourceFile));
 		using var fs = File.Open (asmSourceFile, FileMode.Create, FileAccess.Write, FileShare.Read);
 		using var sw = new StreamWriter (fs, asmFileEncoding);
 
