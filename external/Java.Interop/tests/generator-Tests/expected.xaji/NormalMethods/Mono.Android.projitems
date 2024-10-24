@@ -10,6 +10,8 @@
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Integer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Object.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Java.Lang.Throwable.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Util.ArrayList.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Java.Util.IList.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.A.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.C.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xamarin.Test.SomeObject.cs" />

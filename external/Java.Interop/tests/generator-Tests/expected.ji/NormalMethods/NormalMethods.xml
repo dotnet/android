@@ -14,6 +14,20 @@
 	    	final="false" name="Integer" static="false" visibility="public">
 	    </class>
 	  </package>
+
+  <package name="java.util" jni-name="java/util">
+    <interface abstract="true" deprecated="not deprecated" final="false" name="List" static="false" visibility="public" jni-signature="Ljava/util/List;">
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+    </interface>
+    <class abstract="false" deprecated="not deprecated" extends="java.lang.Object" extends-generic-aware="java.lang.Object" jni-extends="Ljava/lang/Object;" final="false" name="ArrayList" static="false" visibility="public" jni-signature="Ljava/util/ArrayList;">
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+    </class>
+  </package>
+
 	<package name="xamarin.test">
     <!--
       public class SomeObject {

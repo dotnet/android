@@ -7,6 +7,15 @@
 			final="false" name="Integer" static="false" visibility="public">
 		</class>
 	</package>
+
+  <package name="java.util" jni-name="java/util">
+    <interface abstract="true" deprecated="not deprecated" final="false" name="List" static="false" visibility="public" jni-signature="Ljava/util/List;">
+      <typeParameters>
+        <typeParameter name="E" classBound="java.lang.Object" jni-classBound="Ljava/lang/Object;"></typeParameter>
+      </typeParameters>
+    </interface>
+  </package>
+
 	<package name="xamarin.test">
 		<!--
 			public class A<T extends java.lang.Object> extends java.lang.Object {
