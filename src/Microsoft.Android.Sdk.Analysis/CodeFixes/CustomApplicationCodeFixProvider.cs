@@ -25,27 +25,18 @@ public class CustomApplicationCodeFixProvider : CodeFixProvider
         var root = await context.Document.GetSyntaxRootAsync (context.CancellationToken).ConfigureAwait (false);
         var diagnostic = context.Diagnostics.First ();
         var diagnosticSpan = diagnostic.Location.SourceSpan;
-
         var classDeclaration = root.FindToken (diagnosticSpan.Start).Parent.AncestorsAndSelf ()
                 .OfType<ClassDeclarationSyntax> ().First ();
-
         context.RegisterCodeFix (CodeAction.Create (title, c =>
             InjectConstructorAsync (context.Document, classDeclaration, c), equivalenceKey: title), diagnostic);
     }
 
     private async Task<Document> InjectConstructorAsync (Document document, ClassDeclarationSyntax classDeclaration, CancellationToken cancellationToken)
     {
-        // Create the new constructor
         var constructor = CreateConstructorWithParameters (classDeclaration.Identifier);
-
-        // Add the constructor to the class
         var newClassDeclaration = classDeclaration.AddMembers (constructor);
-
-        // Get the root and replace the old class with the new class containing the constructor
         var root = await document.GetSyntaxRootAsync (cancellationToken);
         var newRoot = root.ReplaceNode (classDeclaration, newClassDeclaration);
-
-        // Return the updated document
         return document.WithSyntaxRoot (newRoot);
     }
 
@@ -57,21 +48,17 @@ public class CustomApplicationCodeFixProvider : CodeFixProvider
                 SyntaxFactory.Parameter (SyntaxFactory.Identifier ("transfer"))
                     .WithType (SyntaxFactory.ParseTypeName ("JniHandleOwnership"))
             }));
-
         var baseArguments = SyntaxFactory.ArgumentList (SyntaxFactory.SeparatedList (new [] {
                 SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("javaReference")),
                 SyntaxFactory.Argument (SyntaxFactory.IdentifierName ("transfer"))
             }));
         var constructorInitializer = SyntaxFactory.ConstructorInitializer (SyntaxKind.BaseConstructorInitializer, baseArguments);
-
         var body = SyntaxFactory.Block ();
-
         var constructor = SyntaxFactory.ConstructorDeclaration (identifier)
             .WithModifiers (SyntaxFactory.TokenList (SyntaxFactory.Token (SyntaxKind.PublicKeyword)))
             .WithParameterList (parameters)
             .WithInitializer (constructorInitializer)
             .WithBody (body);
-
         return constructor;
     }
 }
