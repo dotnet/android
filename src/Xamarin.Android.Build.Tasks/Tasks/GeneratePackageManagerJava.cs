@@ -35,8 +35,6 @@ namespace Xamarin.Android.Tasks
 
 		public ITaskItem[] SatelliteAssemblies { get; set; }
 
-		public bool UseAssemblyStore { get; set; }
-
 		[Required]
 		public string OutputDirectory { get; set; }
 
@@ -204,21 +202,7 @@ namespace Xamarin.Android.Tasks
 				throw new InvalidOperationException ($"Unsupported BoundExceptionType value '{BoundExceptionType}'");
 			}
 
-			int assemblyNameWidth = 0;
 			Encoding assemblyNameEncoding = Encoding.UTF8;
-
-			Action<ITaskItem> updateNameWidth = (ITaskItem assembly) => {
-				if (UseAssemblyStore) {
-					return;
-				}
-
-				string assemblyName = Path.GetFileName (assembly.ItemSpec);
-				int nameBytes = assemblyNameEncoding.GetBytes (assemblyName).Length;
-				if (nameBytes > assemblyNameWidth) {
-					assemblyNameWidth = nameBytes;
-				}
-			};
-
 			int assemblyCount = 0;
 			bool enableMarshalMethods = EnableMarshalMethods;
 			HashSet<string> archAssemblyNames = null;
@@ -249,7 +233,6 @@ namespace Xamarin.Android.Tasks
 
 			if (SatelliteAssemblies != null) {
 				foreach (ITaskItem assembly in SatelliteAssemblies) {
-					updateNameWidth (assembly);
 					updateAssemblyCount (assembly);
 				}
 			}
@@ -258,7 +241,6 @@ namespace Xamarin.Android.Tasks
 			int jnienv_initialize_method_token = -1;
 			int jnienv_registerjninatives_method_token = -1;
 			foreach (var assembly in ResolvedAssemblies) {
-				updateNameWidth (assembly);
 				updateAssemblyCount (assembly);
 
 				if (android_runtime_jnienv_class_token != -1) {
@@ -270,17 +252,6 @@ namespace Xamarin.Android.Tasks
 				}
 
 				GetRequiredTokens (assembly.ItemSpec, out android_runtime_jnienv_class_token, out jnienv_initialize_method_token, out jnienv_registerjninatives_method_token);
-			}
-
-			if (!UseAssemblyStore) {
-				int abiNameLength = 0;
-				foreach (string abi in SupportedAbis) {
-					if (abi.Length <= abiNameLength) {
-						continue;
-					}
-					abiNameLength = abi.Length;
-				}
-				assemblyNameWidth += abiNameLength + 2; // room for '/' and the terminating NUL
 			}
 
 			MonoComponent monoComponents = MonoComponent.None;
@@ -334,10 +305,8 @@ namespace Xamarin.Android.Tasks
 				JniAddNativeMethodRegistrationAttributePresent = NativeCodeGenState.TemplateJniAddNativeMethodRegistrationAttributePresent,
 				HaveRuntimeConfigBlob = haveRuntimeConfigBlob,
 				NumberOfAssembliesInApk = assemblyCount,
-				BundledAssemblyNameWidth = assemblyNameWidth,
 				MonoComponents = (MonoComponent)monoComponents,
 				NativeLibraries = uniqueNativeLibraries,
-				HaveAssemblyStore = UseAssemblyStore,
 				AndroidRuntimeJNIEnvToken = android_runtime_jnienv_class_token,
 				JNIEnvInitializeToken = jnienv_initialize_method_token,
 				JNIEnvRegisterJniNativesToken = jnienv_registerjninatives_method_token,

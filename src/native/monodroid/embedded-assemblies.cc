@@ -172,200 +172,9 @@ EmbeddedAssemblies::get_assembly_data (uint8_t *data, uint32_t data_size, [[mayb
 }
 
 force_inline void
-EmbeddedAssemblies::get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
-{
-	get_assembly_data (e.data, e.data_size, e.name, assembly_data, assembly_data_size);
-}
-
-force_inline void
 EmbeddedAssemblies::get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept
 {
 	get_assembly_data (e.image_data, e.descriptor->data_size, "<assembly_store>", assembly_data, assembly_data_size);
-}
-
-template<bool LogMapping>
-force_inline void
-EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept
-{
-	int fd;
-	bool close_fd;
-	if (!AndroidSystem::is_embedded_dso_mode_enabled ()) {
-		log_debug (LOG_ASSEMBLY, "Mapping a runtime file from filesystem");
-		close_fd = true;
-
-		// file.file_fd refers to the directory where our files live
-		auto temp_fd = Util::open_file_ro_at (file.file_fd, file.file_name);
-		if (!temp_fd) {
-			return;
-		}
-		fd = temp_fd.value ();
-	} else {
-		fd = file.file_fd;
-		close_fd = false;
-	}
-
-	md_mmap_info map_info = md_mmap_apk_file (fd, file.data_offset, file.data_size, file.name);
-	if (close_fd) {
-		close (fd);
-	}
-
-	auto [payload_data, payload_size] = get_wrapper_dso_payload_pointer_and_size (map_info, file.name);
-
-	// `data_size` might have been ELF wrapper file size, we must store payload size here (the actual DLL size)
-	file.data_size = static_cast<uint32_t>(payload_size);
-
-	if (MonodroidState::is_startup_in_progress ()) {
-		file.data = static_cast<uint8_t*>(payload_data);
-	} else {
-		uint8_t *expected_null = nullptr;
-		bool already_mapped = !__atomic_compare_exchange (
-			/* ptr */              &file.data,
-			/* expected */         &expected_null,
-			/* desired */           reinterpret_cast<uint8_t**>(&payload_data),
-			/* weak */              false,
-			/* success_memorder */  __ATOMIC_ACQUIRE,
-			/* failure_memorder */  __ATOMIC_RELAXED
-		);
-
-		if (already_mapped) {
-			log_debug (LOG_ASSEMBLY, "Assembly %s already mmapped by another thread, unmapping our copy", file.name);
-			munmap (map_info.area, file.data_size);
-			map_info.area = nullptr;
-		}
-	}
-
-	if constexpr (LogMapping) {
-		if (Util::should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
-			const char *p = (const char*) file.data;
-
-			std::array<char, 9uz> header;
-			for (size_t j = 0uz; j < header.size () - 1uz; ++j)
-				header[j] = isprint (p [j]) ? p [j] : '.';
-			header [header.size () - 1] = '\0';
-
-			log_info_nocheck (LOG_ASSEMBLY, "file-offset: % 8x  start: %08p  end: %08p  len: % 12i  zip-entry:  %s name: %s [%s]",
-			                  (int) file.data_offset, file.data, file.data + file.data_size, (int) file.data_size, file.name, file.name, header.data ());
-		}
-	}
-}
-
-force_inline void
-EmbeddedAssemblies::map_assembly (XamarinAndroidBundledAssembly& file) noexcept
-{
-	map_runtime_file<true> (file);
-}
-
-force_inline void
-EmbeddedAssemblies::map_debug_data (XamarinAndroidBundledAssembly& file) noexcept
-{
-	map_runtime_file<false> (file);
-}
-
-template<LoaderData TLoaderData>
-force_inline MonoAssembly*
-EmbeddedAssemblies::load_bundled_assembly (
-	XamarinAndroidBundledAssembly& assembly,
-	dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
-	dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
-	TLoaderData loader_data,
-	bool ref_only) noexcept
-{
-	if (assembly.name == nullptr || assembly.name[0] == '\0') {
-		return nullptr;
-	}
-
-	if (strcmp (assembly.name, name.get ()) != 0) {
-		if (strcmp (assembly.name, abi_name.get ()) != 0) {
-			return nullptr;
-		} else {
-			log_debug (LOG_ASSEMBLY, "open_from_bundles: found architecture-specific: '%s'", abi_name.get ());
-		}
-	}
-
-	if (assembly.data == nullptr) {
-		map_assembly (assembly);
-	}
-
-	uint8_t *assembly_data;
-	uint32_t assembly_data_size;
-
-	get_assembly_data (assembly, assembly_data, assembly_data_size);
-	MonoImage *image = MonoImageLoader::load (name, loader_data, assembly_data, assembly_data_size);
-	if (image == nullptr) {
-		return nullptr;
-	}
-
-	if (have_and_want_debug_symbols) {
-		uint32_t base_name_length = assembly.name_length - 3; // we need the trailing dot
-		for (XamarinAndroidBundledAssembly& debug_file : *bundled_debug_data) {
-			if (debug_file.name_length != assembly.name_length) {
-				continue;
-			}
-
-			if (strncmp (debug_file.name, assembly.name, base_name_length) != 0) {
-				continue;
-			}
-
-			if (debug_file.data == nullptr) {
-				map_debug_data (debug_file);
-			}
-
-			if (debug_file.data != nullptr) {
-				if (debug_file.data_size > std::numeric_limits<int>::max ()) {
-					log_warn (LOG_ASSEMBLY, "Debug info file '%s' is too big for Mono to consume", debug_file.name);
-				} else {
-					mono_debug_open_image_from_memory (image, reinterpret_cast<const mono_byte*>(debug_file.data), static_cast<int>(debug_file.data_size));
-				}
-			}
-			break;
-		}
-	}
-
-	MonoImageOpenStatus status;
-	MonoAssembly *a = mono_assembly_load_from_full (image, name.get (), &status, ref_only);
-	if (a == nullptr || status != MonoImageOpenStatus::MONO_IMAGE_OK) {
-		log_warn (LOG_ASSEMBLY, "Failed to load managed assembly '%s'. %s", name.get (), mono_image_strerror (status));
-		return nullptr;
-	}
-
-	return a;
-}
-
-template<LoaderData TLoaderData>
-force_inline MonoAssembly*
-EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept
-{
-	if (!Util::ends_with (name, SharedConstants::DLL_EXTENSION)) {
-		name.append (SharedConstants::DLL_EXTENSION);
-	}
-
-	log_debug (LOG_ASSEMBLY, "individual_assemblies_open_from_bundles: looking for bundled name: '%s'", name.get ());
-
-	dynamic_local_string<SENSIBLE_PATH_MAX> abi_name;
-	abi_name
-		.assign (SharedConstants::android_lib_abi)
-		.append (zip_path_separator)
-		.append (name);
-
-	MonoAssembly *a = nullptr;
-
-	for (size_t i = 0uz; i < application_config.number_of_assemblies_in_apk; i++) {
-		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
-		if (a != nullptr) {
-			return a;
-		}
-	}
-
-	if (extra_bundled_assemblies != nullptr) {
-		for (XamarinAndroidBundledAssembly& assembly : *extra_bundled_assemblies) {
-			a = load_bundled_assembly (assembly, name, abi_name, loader_data, ref_only);
-			if (a != nullptr) {
-				return a;
-			}
-		}
-	}
-
-	return nullptr;
 }
 
 force_inline const AssemblyStoreIndexEntry*
@@ -472,13 +281,7 @@ EmbeddedAssemblies::open_from_bundles (MonoAssemblyName* aname, TLoaderData load
 	}
 	name.append_c (asmname);
 
-	MonoAssembly *a;
-	if (application_config.have_assembly_store) {
-		a = assembly_store_open_from_bundles (name, loader_data, ref_only);
-	} else {
-		a = individual_assemblies_open_from_bundles (name, loader_data, ref_only);
-	}
-
+	MonoAssembly *a = assembly_store_open_from_bundles (name, loader_data, ref_only);
 	if (a == nullptr) {
 		log_warn (LOG_ASSEMBLY, "open_from_bundles: failed to load bundled assembly %s", name.get ());
 #if defined(DEBUG)
@@ -1160,69 +963,6 @@ EmbeddedAssemblies::register_from_apk (const char *apk_file, monodroid_should_re
 	return number_of_found_assemblies;
 }
 
-template<bool MangledNamesMode>
-force_inline bool
-EmbeddedAssemblies::maybe_register_assembly_from_filesystem (
-	[[maybe_unused]] monodroid_should_register should_register,
-	size_t &assembly_count,
-	const dirent* dir_entry,
-	ZipEntryLoadState& state) noexcept
-{
-	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	auto copy_dentry_and_update_state = [] (dynamic_local_string<SENSIBLE_PATH_MAX> &name, ZipEntryLoadState& state, const dirent* dir_entry)
-	{
-		name.assign_c (dir_entry->d_name);
-
-		// We don't need to duplicate the name here, it will be done farther on
-		state.file_name = dir_entry->d_name;
-	};
-
-	// We check whether dir_entry->d_name is an array with a fixed size and whether it's
-	// big enough so that we can index the array below without having to worry about buffer
-	// overflows.  These are compile-time checks and the status of the field won't change at
-	// runtime unless Android breaks compatibility (unlikely).
-	//
-	// Currently (Jan 2024), dir_try->d_name is declared as `char[256]` by Bionic
-	static_assert (std::is_bounded_array_v<decltype(dir_entry->d_name)>);
-	static_assert (sizeof(dir_entry->d_name) > SharedConstants::MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER.size());
-	static_assert (sizeof(dir_entry->d_name) > SharedConstants::MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER.size());
-
-	if constexpr (MangledNamesMode) {
-		// We're only interested in "mangled" file names, namely those starting with either the `lib_` or `lib-` prefixes
-		if (dir_entry->d_name[SharedConstants::REGULAR_ASSEMBLY_MARKER_INDEX] == SharedConstants::REGULAR_ASSEMBLY_MARKER_CHAR) {
-			assembly_count++;
-			copy_dentry_and_update_state (entry_name, state, dir_entry);
-			unmangle_name<UnmangleRegularAssembly> (entry_name);
-		} else if (dir_entry->d_name[SharedConstants::SATELLITE_ASSEMBLY_MARKER_INDEX] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
-			assembly_count++;
-			copy_dentry_and_update_state (entry_name, state, dir_entry);
-			unmangle_name<UnmangleSatelliteAssembly> (entry_name);
-		} else {
-			return false;
-		}
-	} else {
-		if (Util::ends_with (dir_entry->d_name, SharedConstants::DLL_EXTENSION) ||
-			Util::ends_with (dir_entry->d_name, SharedConstants::PDB_EXTENSION)) {
-			assembly_count++;
-			copy_dentry_and_update_state (entry_name, state, dir_entry);
-		} else {
-			return false;
-		}
-
-	}
-	state.data_offset = 0;
-
-	auto file_size = Util::get_file_size_at (state.file_fd, state.file_name);
-	if (!file_size) {
-		return false; // don't terminate, keep going
-	}
-
-	state.file_size = static_cast<decltype(state.file_size)>(file_size.value ());
-	store_individual_assembly_data (entry_name, state, should_register);
-
-	return false;
-}
-
 force_inline bool
 EmbeddedAssemblies::maybe_register_blob_from_filesystem (
 	[[maybe_unused]] monodroid_should_register should_register,
@@ -1283,13 +1023,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 		return 0;
 	}
 
-	auto register_fn =
-		application_config.have_assembly_store ? std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem) :
-		(look_for_mangled_names ?
-		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<true>) :
-		 std::mem_fn (&EmbeddedAssemblies::maybe_register_assembly_from_filesystem<false>
-		)
-	);
+	auto register_fn = std::mem_fn (&EmbeddedAssemblies::maybe_register_blob_from_filesystem);
 
 	size_t assembly_count = 0uz;
 	do {

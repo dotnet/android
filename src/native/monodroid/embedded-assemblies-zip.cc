@@ -85,94 +85,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 	return true;
 }
 
-void
-EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, [[maybe_unused]] monodroid_should_register should_register) noexcept
-{
-#if defined (DEBUG)
-	const char *last_slash = Util::find_last (entry_name, '/');
-	bool entry_is_overridden = last_slash == nullptr ? false : !should_register (last_slash + 1);
-#else
-	constexpr bool entry_is_overridden = false;
-#endif
-
-	if (register_debug_symbols && !entry_is_overridden && Util::ends_with (entry_name, SharedConstants::PDB_EXTENSION)) {
-		if (bundled_debug_data == nullptr) {
-			bundled_debug_data = new std::vector<XamarinAndroidBundledAssembly> ();
-			bundled_debug_data->reserve (application_config.number_of_assemblies_in_apk);
-		}
-
-		bundled_debug_data->emplace_back ();
-		set_debug_entry_data (bundled_debug_data->back (), state, entry_name);
-		return;
-	}
-
-	if (!Util::ends_with (entry_name, SharedConstants::DLL_EXTENSION)) {
-		return;
-	}
-
-#if defined (DEBUG)
-	if (entry_is_overridden) {
-		return;
-	}
-#endif
-
-	if (bundled_assembly_index >= application_config.number_of_assemblies_in_apk || state.bundled_assemblies_slow_path) [[unlikely]] {
-		if (!state.bundled_assemblies_slow_path && bundled_assembly_index == application_config.number_of_assemblies_in_apk) {
-			log_warn (LOG_ASSEMBLY, "Number of assemblies stored at build time (%u) was incorrect, switching to slow bundling path.", application_config.number_of_assemblies_in_apk);
-		}
-
-		if (extra_bundled_assemblies == nullptr) {
-			extra_bundled_assemblies = new std::vector<XamarinAndroidBundledAssembly> ();
-		}
-
-		extra_bundled_assemblies->emplace_back ();
-		// <true> means we need to allocate memory to store the entry name, only the entries pre-allocated during
-		// build have valid pointer to the name storage area
-		set_entry_data<true> (extra_bundled_assemblies->back (), state, entry_name);
-		return;
-	}
-
-	log_debug (LOG_ASSEMBLY, "Setting bundled assembly entry data at index %zu", bundled_assembly_index);
-	set_assembly_entry_data (bundled_assemblies [bundled_assembly_index], state, entry_name);
-	log_debug (LOG_ASSEMBLY, "[%zu] data set: name == '%s'; file_name == '%s'", bundled_assembly_index, bundled_assemblies [bundled_assembly_index].name, bundled_assemblies [bundled_assembly_index].file_name);
-	bundled_assembly_index++;
-	number_of_found_assemblies = bundled_assembly_index;
-	have_and_want_debug_symbols = register_debug_symbols && bundled_debug_data != nullptr;
-}
-
-force_inline void
-EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
-{
-	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
-	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	configure_state_for_individual_assembly_load (state);
-
-	// clang-tidy claims we have a leak in the loop:
-	//
-	//   Potential leak of memory pointed to by 'assembly_name'
-	//
-	// This is because we allocate `assembly_name` for a `.config` file, pass it to Mono and we don't free the value.
-	// However, clang-tidy can't know that the value is owned by Mono and we must not free it, thus the suppression.
-	//
-	// NOLINTNEXTLINE(clang-analyzer-unix.Malloc)
-	for (size_t i = 0uz; i < num_entries; i++) {
-		bool interesting_entry = zip_load_entry_common (i, buf, entry_name, state);
-		if (!interesting_entry) {
-			continue;
-		}
-
-		if (entry_name[state.prefix_len + SharedConstants::REGULAR_ASSEMBLY_MARKER_INDEX] == SharedConstants::REGULAR_ASSEMBLY_MARKER_CHAR) {
-			unmangle_name<UnmangleRegularAssembly> (entry_name, state.prefix_len);
-		} else if (entry_name[state.prefix_len + SharedConstants::SATELLITE_ASSEMBLY_MARKER_INDEX] == SharedConstants::SATELLITE_ASSEMBLY_MARKER_CHAR) {
-			unmangle_name<UnmangleSatelliteAssembly> (entry_name, state.prefix_len);
-		} else {
-			continue; // Can't be an assembly, the name's not mangled
-		}
-
-		store_individual_assembly_data (entry_name, state, should_register);
-	}
-}
-
 inline void
 EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept
 {
@@ -345,8 +257,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.data_offset         = 0u,
 		.file_size           = 0u,
 		.bundled_assemblies_slow_path = false,
-		.max_assembly_name_size = 0u,
-		.max_assembly_file_name_size = 0u,
 	};
 
 	ssize_t nread = read (fd, buf.data (), buf.size ());
@@ -363,52 +273,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 
-	if (application_config.have_assembly_store) {
-		zip_load_assembly_store_entries (buf, cd_entries, state);
-	} else {
-		zip_load_individual_assembly_entries (buf, cd_entries, should_register, state);
-	}
-}
-
-template<bool NeedsNameAlloc>
-force_inline void
-EmbeddedAssemblies::set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
-{
-	entry.file_fd = state.file_fd;
-	if constexpr (NeedsNameAlloc) {
-		entry.name = Util::strdup_new (entry_name.get () + state.prefix_len);
-		if (!AndroidSystem::is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
-			entry.file_name = Util::strdup_new (state.file_name);
-		}
-	} else {
-		// entry.name is preallocated at build time here and is max_name_size + 1 bytes long, filled with 0s, thus we
-		// don't need to append the terminating NUL even for strings of `max_name_size` characters
-		strncpy (entry.name, entry_name.get () + state.prefix_len, state.max_assembly_name_size);
-		if (!AndroidSystem::is_embedded_dso_mode_enabled () && state.file_name != nullptr) {
-			strncpy (entry.file_name, state.file_name, state.max_assembly_file_name_size);
-		}
-	}
-	entry.name_length = std::min (static_cast<uint32_t>(entry_name.length ()) - state.prefix_len, state.max_assembly_name_size);
-	entry.data_offset = state.data_offset;
-	entry.data_size = state.file_size;
-
-	log_debug (
-		LOG_ASSEMBLY,
-		"Set bundled assembly entry data. file name: '%s'; entry name: '%s'; data size: %u",
-		entry.file_name, entry.name, entry.data_size
-	);
-}
-
-force_inline void
-EmbeddedAssemblies::set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
-{
-	set_entry_data<false> (entry, state, entry_name);
-}
-
-force_inline void
-EmbeddedAssemblies::set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept
-{
-	set_entry_data<true> (entry, state, entry_name);
+	zip_load_assembly_store_entries (buf, cd_entries, state);
 }
 
 bool

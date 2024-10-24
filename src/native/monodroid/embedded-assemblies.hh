@@ -73,8 +73,6 @@ namespace xamarin::android::internal {
 			uint32_t              data_offset;
 			uint32_t              file_size;
 			bool                  bundled_assemblies_slow_path;
-			uint32_t              max_assembly_name_size;
-			uint32_t              max_assembly_file_name_size;
 		};
 
 	private:
@@ -185,10 +183,6 @@ namespace xamarin::android::internal {
 
 		void ensure_valid_assembly_stores () const noexcept
 		{
-			if (!application_config.have_assembly_store) {
-				return;
-			}
-
 			abort_unless (assembly_store_hashes != nullptr, "Invalid or incomplete assembly store data");
 		}
 
@@ -199,33 +193,15 @@ namespace xamarin::android::internal {
 		size_t register_from_filesystem (monodroid_should_register should_register) noexcept;
 		size_t register_from_filesystem (const char *dir, bool look_for_mangled_names, monodroid_should_register should_register) noexcept;
 
-		template<bool MangledNamesMode>
-		bool maybe_register_assembly_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
 		bool maybe_register_blob_from_filesystem (monodroid_should_register should_register, size_t& assembly_count, const dirent* dir_entry, ZipEntryLoadState& state) noexcept;
 
 		void gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register);
-
-		template<LoaderData TLoaderData>
-		MonoAssembly* individual_assemblies_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
 
 		template<LoaderData TLoaderData>
 		MonoAssembly* assembly_store_open_from_bundles (dynamic_local_string<SENSIBLE_PATH_MAX>& name, TLoaderData loader_data, bool ref_only) noexcept;
 
 		template<LoaderData TLoaderData>
 		MonoAssembly* open_from_bundles (MonoAssemblyName* aname, TLoaderData loader_data, MonoError *error, bool ref_only) noexcept;
-
-		template<bool LogMapping>
-		void map_runtime_file (XamarinAndroidBundledAssembly& file) noexcept;
-		void map_assembly (XamarinAndroidBundledAssembly& file) noexcept;
-		void map_debug_data (XamarinAndroidBundledAssembly& file) noexcept;
-
-		template<LoaderData TLoaderData>
-		MonoAssembly* load_bundled_assembly (
-			XamarinAndroidBundledAssembly& assembly,
-			dynamic_local_string<SENSIBLE_PATH_MAX> const& name,
-			dynamic_local_string<SENSIBLE_PATH_MAX> const& abi_name,
-			TLoaderData loader_data,
-			bool ref_only) noexcept;
 
 #if defined (DEBUG)
 		template<typename H>
@@ -244,11 +220,9 @@ namespace xamarin::android::internal {
 
 		void set_assembly_data_and_size (uint8_t* source_assembly_data, uint32_t source_assembly_data_size, uint8_t*& dest_assembly_data, uint32_t& dest_assembly_data_size) noexcept;
 		void get_assembly_data (uint8_t *data, uint32_t data_size, const char *name, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
-		void get_assembly_data (XamarinAndroidBundledAssembly const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 		void get_assembly_data (AssemblyStoreSingleAssemblyRuntimeData const& e, uint8_t*& assembly_data, uint32_t& assembly_data_size) noexcept;
 
 		void zip_load_entries (int fd, const char *apk_name, monodroid_should_register should_register);
-		void zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, monodroid_should_register should_register, ZipEntryLoadState &state) noexcept;
 		void zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept;
 		bool zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept;
 		bool zip_read_cd_info (int fd, uint32_t& cd_offset, uint32_t& cd_size, uint16_t& cd_entries);
@@ -321,11 +295,7 @@ namespace xamarin::android::internal {
 				return { assemblies_prefix_override, static_cast<uint32_t>(strlen (assemblies_prefix_override)) };
 			}
 
-			if (application_config.have_assembly_store) {
-				return { apk_lib_prefix.data (), apk_lib_prefix.size () - 1 };
-			}
-
-			return {assemblies_prefix.data (), assemblies_prefix.size () - 1};
+			return { apk_lib_prefix.data (), apk_lib_prefix.size () - 1 };
 		}
 
 		bool all_required_zip_entries_found () const noexcept
@@ -349,13 +319,8 @@ namespace xamarin::android::internal {
 		static int compare_mvid (const uint8_t *mvid, const TypeMapModule *module) noexcept;
 		static const TypeMapModuleEntry* binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept;
 #endif
-		template<bool NeedsNameAlloc>
-		void set_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_assembly_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
-		void set_debug_entry_data (XamarinAndroidBundledAssembly &entry, ZipEntryLoadState const& state, dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name) noexcept;
 		void map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState &state) noexcept;
 		const AssemblyStoreIndexEntry* find_assembly_store_entry (hash_t hash, const AssemblyStoreIndexEntry *entries, size_t entry_count) noexcept;
-		void store_individual_assembly_data (dynamic_local_string<SENSIBLE_PATH_MAX> const& entry_name, ZipEntryLoadState const& state, monodroid_should_register should_register) noexcept;
 
 		constexpr size_t get_mangled_name_max_size_overhead ()
 		{
@@ -367,10 +332,6 @@ namespace xamarin::android::internal {
 		void configure_state_for_individual_assembly_load (ZipEntryLoadState& state) noexcept
 		{
 			state.bundled_assemblies_slow_path = bundled_assembly_index >= application_config.number_of_assemblies_in_apk;
-			state.max_assembly_name_size = application_config.bundled_assembly_name_width - 1;
-
-			// Enough room for the mangle character at the start, plus the extra extension
-			state.max_assembly_file_name_size = static_cast<uint32_t>(state.max_assembly_name_size + get_mangled_name_max_size_overhead ());
 		}
 
 		template<bool IsSatelliteAssembly>
@@ -417,9 +378,6 @@ namespace xamarin::android::internal {
 	private:
 		static inline constexpr bool UnmangleSatelliteAssembly = true;
 		static inline constexpr bool UnmangleRegularAssembly = false;
-
-		std::vector<XamarinAndroidBundledAssembly> *bundled_debug_data = nullptr;
-		std::vector<XamarinAndroidBundledAssembly> *extra_bundled_assemblies = nullptr;
 
 		bool                   register_debug_symbols;
 		bool                   have_and_want_debug_symbols;

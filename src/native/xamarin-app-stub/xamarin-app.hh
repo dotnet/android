@@ -122,17 +122,6 @@ struct CompressedAssemblies
 	CompressedAssemblyDescriptor *descriptors;
 };
 
-struct XamarinAndroidBundledAssembly
-{
-	int32_t  file_fd;
-	char    *file_name;
-	uint32_t data_offset;
-	uint32_t data_size;
-	uint8_t *data;
-	uint32_t name_length;
-	char    *name;
-};
-
 //
 // Assembly store format
 //
@@ -239,7 +228,6 @@ struct ApplicationConfig
 	bool broken_exception_transitions;
 	bool jni_add_native_method_registration_attribute_present;
 	bool have_runtime_config_blob;
-	bool have_assembly_store;
 	bool marshal_methods_enabled;
 	bool ignore_split_configs;
 	uint8_t bound_exception_type;
@@ -247,7 +235,6 @@ struct ApplicationConfig
 	uint32_t environment_variable_count;
 	uint32_t system_property_count;
 	uint32_t number_of_assemblies_in_apk;
-	uint32_t bundled_assembly_name_width;
 	uint32_t number_of_dso_cache_entries;
 	uint32_t number_of_aot_cache_entries;
 	uint32_t number_of_shared_libraries;
@@ -334,7 +321,6 @@ MONO_API MONO_API_EXPORT const char* const app_system_properties[];
 
 MONO_API MONO_API_EXPORT const char* const mono_aot_mode_name;
 
-MONO_API MONO_API_EXPORT XamarinAndroidBundledAssembly bundled_assemblies[];
 MONO_API MONO_API_EXPORT AssemblyStoreSingleAssemblyRuntimeData assembly_store_bundled_assemblies[];
 MONO_API MONO_API_EXPORT AssemblyStoreRuntimeData assembly_store;
 
