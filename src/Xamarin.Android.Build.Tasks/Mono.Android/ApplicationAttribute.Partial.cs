@@ -57,6 +57,12 @@ namespace Android.App {
 
 		public static ApplicationAttribute FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
+			// `provider` might be null in situations when application configuration is broken, and it surfaces in a number of
+			// tests which check these situations.
+			if (provider == null) {
+				return null;
+			}
+
 			CustomAttribute attr = provider.GetCustomAttributes ("Android.App.ApplicationAttribute")
 				.SingleOrDefault ();
 			if (attr == null)

@@ -17,7 +17,7 @@ using namespace xamarin::android::internal;
 using read_count_type = size_t;
 
 force_inline bool
-EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX> &entry_name, ZipEntryLoadState &state) noexcept
 {
 	entry_name.clear ();
 
@@ -59,14 +59,6 @@ EmbeddedAssemblies::zip_load_entry_common (size_t entry_index, std::vector<uint8
 		}
 
 		if (entry_name.get ()[0] != apk_lib_prefix[0] || memcmp (apk_lib_prefix.data (), entry_name.get (), apk_lib_prefix.size () - 1) != 0) {
-			return false;
-		}
-	}
-
-	if (application_config.have_runtime_config_blob && !runtime_config_blob_found) {
-		if (Util::ends_with (entry_name, SharedConstants::RUNTIME_CONFIG_BLOB_NAME)) {
-			runtime_config_blob_mmap = md_mmap_apk_file (state.file_fd, state.data_offset, state.file_size, entry_name.get ());
-			store_mapped_runtime_config_data (runtime_config_blob_mmap, entry_name.get ());
 			return false;
 		}
 	}
@@ -143,7 +135,7 @@ EmbeddedAssemblies::store_individual_assembly_data (dynamic_local_string<SENSIBL
 }
 
 force_inline void
-EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_individual_assembly_entries (std::span<uint8_t> const& buf, uint32_t num_entries, [[maybe_unused]] monodroid_should_register should_register, ZipEntryLoadState &state) noexcept
 {
 	// TODO: do away with all the string manipulation here. Replace it with generating xxhash for the entry name
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
@@ -173,6 +165,47 @@ EmbeddedAssemblies::zip_load_individual_assembly_entries (std::vector<uint8_t> c
 
 		store_individual_assembly_data (entry_name, state, should_register);
 	}
+}
+
+
+[[gnu::always_inline]] void
+EmbeddedAssemblies::verify_assembly_store_and_set_info (void *data_start, const char *name) noexcept
+{
+	auto header = static_cast<AssemblyStoreHeader*>(data_start);
+
+	if (header->magic != ASSEMBLY_STORE_MAGIC) {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' is not a valid .NET for Android assembly store file",
+				name
+			)
+		);
+	}
+
+	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
+		Helpers::abort_application (
+			LOG_ASSEMBLY,
+			Util::monodroid_strdup_printf (
+				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
+				name,
+				header->version,
+				ASSEMBLY_STORE_FORMAT_VERSION
+			)
+		);
+	}
+
+	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
+
+	assembly_store.data_start = static_cast<uint8_t*>(data_start);
+	assembly_store.assembly_count = header->entry_count;
+	assembly_store.index_entry_count = header->index_entry_count;
+	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
+	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
+
+	number_of_found_assemblies += assembly_store.assembly_count;
+	number_of_mapped_assembly_stores++;
+	have_and_want_debug_symbols = register_debug_symbols;
 }
 
 inline void
@@ -212,54 +245,25 @@ EmbeddedAssemblies::map_assembly_store (dynamic_local_string<SENSIBLE_PATH_MAX> 
 
 	auto [payload_start, payload_size] = get_wrapper_dso_payload_pointer_and_size (assembly_store_map, entry_name.get ());
 	log_debug (LOG_ASSEMBLY, "Adjusted assembly store pointer: %p; size: %zu", payload_start, payload_size);
-	auto header = static_cast<AssemblyStoreHeader*>(payload_start);
-
-	if (header->magic != ASSEMBLY_STORE_MAGIC) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' is not a valid .NET for Android assembly store file",
-				entry_name.get ()
-			)
-		);
-	}
-
-	if (header->version != ASSEMBLY_STORE_FORMAT_VERSION) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Assembly store '%s' uses format version 0x%x, instead of the expected 0x%x",
-				entry_name.get (),
-				header->version,
-				ASSEMBLY_STORE_FORMAT_VERSION
-			)
-		);
-	}
-
-	constexpr size_t header_size = sizeof(AssemblyStoreHeader);
-
-	assembly_store.data_start = static_cast<uint8_t*>(payload_start);
-	assembly_store.assembly_count = header->entry_count;
-	assembly_store.index_entry_count = header->index_entry_count;
-	assembly_store.assemblies = reinterpret_cast<AssemblyStoreEntryDescriptor*>(assembly_store.data_start + header_size + header->index_size);
-	assembly_store_hashes = reinterpret_cast<AssemblyStoreIndexEntry*>(assembly_store.data_start + header_size);
-
-	number_of_found_assemblies += assembly_store.assembly_count;
-	number_of_mapped_assembly_stores++;
-	have_and_want_debug_symbols = register_debug_symbols;
+	verify_assembly_store_and_set_info (payload_start, entry_name.get ());
 }
 
 force_inline void
-EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
+EmbeddedAssemblies::zip_load_assembly_store_entries (std::span<uint8_t> const& buf, uint32_t num_entries, ZipEntryLoadState &state) noexcept
 {
 	if (all_required_zip_entries_found ()) {
 		return;
 	}
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> entry_name;
-	bool assembly_store_found = false;
+	bool assembly_store_found = embedded_assembly_store_size != 0;
+	if (assembly_store_found) {
+		load_embedded_assembly_store ();
+		log_debug (LOG_ASSEMBLY, "Looking for DSOs in APK");
+	} else {
+		log_debug (LOG_ASSEMBLY, "Looking for assembly store ('%s') and DSOs in APK", assembly_store_file_path.data ());
+	}
 
-	log_debug (LOG_ASSEMBLY, "Looking for assembly stores in APK ('%s)", assembly_store_file_path.data ());
 	for (size_t i = 0; i < num_entries; i++) {
 		if (all_required_zip_entries_found ()) {
 			need_to_scan_more_apks = false;
@@ -299,6 +303,7 @@ EmbeddedAssemblies::zip_load_assembly_store_entries (std::vector<uint8_t> const&
 	}
 }
 
+[[gnu::flatten]]
 void
 EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unused]] monodroid_should_register should_register)
 {
@@ -306,7 +311,7 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 	uint32_t cd_size;
 	uint16_t cd_entries;
 
-	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) {
+	if (!zip_read_cd_info (fd, cd_offset, cd_size, cd_entries)) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
@@ -315,13 +320,13 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 			)
 		);
 	}
-#ifdef DEBUG
-	log_info (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
-	log_info (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
-	log_info (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
-#endif
+
+	log_debug (LOG_ASSEMBLY, "Central directory offset: %u", cd_offset);
+	log_debug (LOG_ASSEMBLY, "Central directory size: %u", cd_size);
+	log_debug (LOG_ASSEMBLY, "Central directory entries: %u", cd_entries);
+
 	off_t retval = ::lseek (fd, static_cast<off_t>(cd_offset), SEEK_SET);
-	if (retval < 0) {
+	if (retval < 0) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
@@ -334,7 +339,6 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		);
 	}
 
-	std::vector<uint8_t>  buf (cd_size);
 	const auto [prefix, prefix_len] = get_assemblies_prefix_and_length ();
 	ZipEntryLoadState state {
 		.file_fd             = fd,
@@ -351,8 +355,10 @@ EmbeddedAssemblies::zip_load_entries (int fd, const char *apk_name, [[maybe_unus
 		.max_assembly_file_name_size = 0,
 	};
 
+	std::unique_ptr<uint8_t[]> raw_data (new uint8_t[cd_size]);
+	std::span<uint8_t> buf (raw_data.get (), cd_size);
 	ssize_t nread = read (fd, buf.data (), static_cast<read_count_type>(buf.size ()));
-	if (static_cast<size_t>(nread) != cd_size) {
+	if (static_cast<size_t>(nread) != cd_size) [[unlikely]] {
 		Helpers::abort_application (
 			LOG_ASSEMBLY,
 			Util::monodroid_strdup_printf (
@@ -625,7 +631,7 @@ EmbeddedAssemblies::zip_read_field (T const& buf, size_t index, size_t count, dy
 }
 
 bool
-EmbeddedAssemblies::zip_read_entry_info (std::vector<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
+EmbeddedAssemblies::zip_read_entry_info (std::span<uint8_t> const& buf, dynamic_local_string<SENSIBLE_PATH_MAX>& file_name, ZipEntryLoadState &state)
 {
 	constexpr size_t CD_COMPRESSION_METHOD_OFFSET = 10;
 	constexpr size_t CD_UNCOMPRESSED_SIZE_OFFSET  = 24;

@@ -29,16 +29,21 @@ namespace Android.App
 
 		public static IEnumerable<SupportsGLTextureAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
+			// `provider` might be null in situations when application configuration is broken, and it surfaces in a number of
+			// tests which check these situations.
+			if (provider == null) {
+				yield break;
+			}
+
 			var attrs = provider.GetCustomAttributes ("Android.App.SupportsGLTextureAttribute");
 			foreach (var attr in attrs) {
 				if (attr.HasConstructorArguments && attr.ConstructorArguments.Count == 1) {
 					SupportsGLTextureAttribute self = new SupportsGLTextureAttribute((string)attr.ConstructorArguments[0].Value);
 					self.specified = mapping.Load (self, attr, cache);
 					self.specified.Add("Name");
-					yield return self;					 
+					yield return self;
 				}
 			}
 		}
 	}
 }
-

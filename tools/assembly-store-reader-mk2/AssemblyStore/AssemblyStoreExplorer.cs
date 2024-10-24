@@ -140,7 +140,19 @@ class AssemblyStoreExplorer
 			ZipEntry entry = zip.ReadEntry (path);
 			var stream = new MemoryStream ();
 			entry.Extract (stream);
-			ret.Add (new AssemblyStoreExplorer (stream, $"{fi.FullName}!{path}"));
+			AssemblyStoreExplorer? explorer = null;
+			try {
+				// It may throw when opening an apk without any assembly stores, in which case the v2 store reader would
+				// always find `libxamarin-app.so` and try to read the embedded store and fail, throwing from the explorer
+				// constructor.
+				explorer = new AssemblyStoreExplorer (stream, $"{fi.FullName}!{path}");
+			} catch (NotSupportedException) {
+				// Ignore
+			}
+
+			if (explorer != null) {
+				ret.Add (explorer);
+			}
 		}
 
 		if (ret.Count == 0) {

@@ -16,11 +16,17 @@ using Android.Content.PM;
 namespace Android.App {
 
 	partial class PermissionGroupAttribute {
-		
+
 		ICollection<string> specified;
 
 		public static IEnumerable<PermissionGroupAttribute> FromCustomAttributeProvider (ICustomAttributeProvider provider, TypeDefinitionCache cache)
 		{
+			// `provider` might be null in situations when application configuration is broken, and it surfaces in a number of
+			// tests which check these situations.
+			if (provider == null) {
+				yield break;
+			}
+
 			var attrs = provider.GetCustomAttributes ("Android.App.PermissionGroupAttribute");
 			foreach (var attr in attrs) {
 				PermissionGroupAttribute self = new PermissionGroupAttribute ();

@@ -875,42 +875,6 @@ EmbeddedAssemblies::typemap_managed_to_java (MonoReflectionType *reflection_type
 	return ret;
 }
 
-EmbeddedAssemblies::md_mmap_info
-EmbeddedAssemblies::md_mmap_apk_file (int fd, uint32_t offset, size_t size, const char* filename)
-{
-	md_mmap_info file_info;
-	md_mmap_info mmap_info;
-
-	size_t pageSize        = static_cast<size_t>(Util::monodroid_getpagesize ());
-	size_t offsetFromPage  = offset % pageSize;
-	size_t offsetPage      = offset - offsetFromPage;
-	size_t offsetSize      = size + offsetFromPage;
-
-	mmap_info.area        = mmap (nullptr, offsetSize, PROT_READ, MAP_PRIVATE, fd, static_cast<off_t>(offsetPage));
-
-	if (mmap_info.area == MAP_FAILED) {
-		Helpers::abort_application (
-			LOG_ASSEMBLY,
-			Util::monodroid_strdup_printf (
-				"Could not mmap APK fd %d: %s; File=%s",
-				fd,
-				strerror (errno),
-				filename
-			)
-		);
-	}
-
-	mmap_info.size  = offsetSize;
-	file_info.area  = (void*)((const char*)mmap_info.area + offsetFromPage);
-	file_info.size  = size;
-
-	log_info (LOG_ASSEMBLY, "                       mmap_start: %08p  mmap_end: %08p  mmap_len: % 12u  file_start: %08p  file_end: %08p  file_len: % 12u      apk descriptor: %d  file: %s",
-	          mmap_info.area, reinterpret_cast<int*> (mmap_info.area) + mmap_info.size, mmap_info.size,
-	          file_info.area, reinterpret_cast<int*> (file_info.area) + file_info.size, file_info.size, fd, filename);
-
-	return file_info;
-}
-
 void
 EmbeddedAssemblies::gather_bundled_assemblies_from_apk (const char* apk, monodroid_should_register should_register)
 {
@@ -1346,13 +1310,21 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 size_t
 EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_register) noexcept
 {
-	log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
-	constexpr bool LookForMangledNames = true;
-	size_t assembly_count = register_from_filesystem (
-		AndroidSystem::app_lib_directories[0],
-		LookForMangledNames,
-		should_register
-	);
+	size_t assembly_count;
+
+	if (embedded_assembly_store_size > 0) {
+		log_debug (LOG_ASSEMBLY, "Filesystem mode, but registering assemblies from the embedded assembly store");
+		load_embedded_assembly_store ();
+		assembly_count = assembly_store.assembly_count;
+	} else {
+		log_debug (LOG_ASSEMBLY, "Registering assemblies from the filesystem");
+		constexpr bool LookForMangledNames = true;
+		assembly_count = register_from_filesystem (
+			AndroidSystem::app_lib_directories[0],
+			LookForMangledNames,
+			should_register
+		);
+	}
 
 #if defined(DEBUG)
 	constexpr bool DoNotLookForMangledNames = false;
@@ -1364,6 +1336,6 @@ EmbeddedAssemblies::register_from_filesystem (monodroid_should_register should_r
 	);
 #endif
 
-	log_debug (LOG_ASSEMBLY, "Found %zu assemblies on the filesystem", assembly_count);
+	log_debug (LOG_ASSEMBLY, "Found %zu assemblies", assembly_count);
 	return assembly_count;
 }
