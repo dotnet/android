@@ -85,7 +85,7 @@ namespace Xamarin.Android.Tasks
 			var assembly = reader.GetAssemblyDefinition ();
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
-				var fullName = reader.GetCustomAttributeFullName (attribute);
+				var fullName = reader.GetCustomAttributeFullName (attribute, Log);
 				if (fullName == "Android.Runtime.ResourceDesignerAttribute") {
 					var values = attribute.GetCustomAttributeArguments ();
 					foreach (var arg in values.NamedArguments) {

@@ -102,7 +102,7 @@ namespace Xamarin.Android.Tasks
 		{
 			foreach (var handle in assembly.GetCustomAttributes ()) {
 				var attribute = reader.GetCustomAttribute (handle);
-				var name = reader.GetCustomAttributeFullName (attribute);
+				var name = reader.GetCustomAttributeFullName (attribute, Log);
 				switch (name) {
 					case "System.Runtime.Versioning.TargetFrameworkAttribute":
 						string targetFrameworkIdentifier = null;

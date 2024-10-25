@@ -56,7 +56,6 @@
       <_ArchiveDSOInput Include="archive-dso-stub\CMakeLists.txt" />
 
       <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(IntermediateOutputPath)\%(AndroidRID)-archive-dso-stub\CMakeCache.txt')" />
-      <_ArchiveDSOOutput Include="@(AndroidSupportedTargetJitAbi->'$(OutputPath)\%(AndroidRID)\libarchive-dso-stub.so')" />
 
       <_ArchiveOutputDirToCreate Include="$(IntermediateOutputPath)%(AndroidSupportedTargetJitAbi.AndroidRID)-archive-dso-stub" />
     </ItemGroup>

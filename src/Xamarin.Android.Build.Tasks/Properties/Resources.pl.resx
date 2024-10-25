@@ -1014,6 +1014,13 @@ Aby użyć niestandardowej ścieżki zestawu JDK dla kompilacji wiersza poleceni
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
   </data>
+  <data name="XA1038" xml:space="preserve">
+    <value>Właściwość MSBuild „{0}” ma nieprawidłową wartość „{1}”. Prawidłowa wartość to jedna z następujących: {2}.</value>
+    <comment>The following are literal names and should not be translated: MSBuild.
+{0} - The MSBuild property name which has invalid values.
+{1} - The current value of the property
+{2} - The list of valid values for the property these can be Comma-separated.</comment>
+  </data>
   <data name="XA1039" xml:space="preserve">
     <value>Biblioteki pomocy technicznej systemu Android nie są obsługiwane na platformie .NET 9 i nowszych. Przeprowadź migrację do systemu AndroidX. Aby uzyskać więcej informacji, zobacz stronę https://aka.ms/net-android/androidx.</value>
     <comment>The following are literal names and should not be translated: Android Support, AndroidX, .NET.</comment>

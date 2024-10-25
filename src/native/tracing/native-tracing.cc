@@ -304,7 +304,7 @@ void init_jni (JNIEnv *env) noexcept
 	if (env->ExceptionOccurred ()) {
 		env->ExceptionDescribe ();
 		env->ExceptionClear ();
-		xamarin::android::Helpers::abort_application ();
+		xamarin::android::Helpers::abort_application ("Java exception occurred");
 	}
 
 	bool all_found = assert_valid_jni_pointer (java_lang_Thread, "class", "java.lang.Thread");
@@ -314,7 +314,7 @@ void init_jni (JNIEnv *env) noexcept
 	all_found &= assert_valid_jni_pointer (java_lang_Thread_currentThread, "method", "java.lang.StackTraceElement.toString ()");
 
 	if (!all_found) {
-		xamarin::android::Helpers::abort_application ();
+		xamarin::android::Helpers::abort_application ("JNI failure to look up type or method pointers");
 	}
 }
 

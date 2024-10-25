@@ -364,7 +364,7 @@ namespace Xamarin.Android.Tasks
 			return false;
 		}
 
-		public static bool IsReferenceAssembly (string assembly)
+		public static bool IsReferenceAssembly (string assembly, TaskLoggingHelper log)
 		{
 			using (var stream = File.OpenRead (assembly))
 			using (var pe = new PEReader (stream)) {
@@ -372,7 +372,7 @@ namespace Xamarin.Android.Tasks
 				var assemblyDefinition = reader.GetAssemblyDefinition ();
 				foreach (var handle in assemblyDefinition.GetCustomAttributes ()) {
 					var attribute = reader.GetCustomAttribute (handle);
-					var attributeName = reader.GetCustomAttributeFullName (attribute);
+					var attributeName = reader.GetCustomAttributeFullName (attribute, log);
 					if (attributeName == "System.Runtime.CompilerServices.ReferenceAssemblyAttribute")
 						return true;
 				}
@@ -623,6 +623,12 @@ namespace Xamarin.Android.Tasks
 		{
 			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
 			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "libstubs"));
+		}
+
+		public static string GetDSOStubsRootDirectoryPath (string androidBinUtilsDirectory)
+		{
+			string relPath = GetToolsRootDirectoryRelativePath (androidBinUtilsDirectory);
+			return Path.GetFullPath (Path.Combine (androidBinUtilsDirectory, relPath, "dsostubs"));
 		}
 
 		public static string GetNativeLibsRootDirectoryPath (string androidBinUtilsDirectory)

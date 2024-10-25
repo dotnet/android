@@ -7,7 +7,6 @@ parameters:
   dotnetQuality: $(DotNetSdkQuality)
   installTestSlicer: false
   installApkDiff: true
-  installLegacyXamarinAndroid: false
   updateMono: false
   androidSdkPlatforms: $(DefaultTestSdkPlatforms)
   repositoryAlias: 'self'
@@ -55,15 +54,6 @@ steps:
       arguments: --s=UpdateMono --auto-provision=yes --auto-provision-uses-sudo=yes
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
       xaSourcePath: ${{ parameters.xaSourcePath }}
-
-- ${{ if eq(parameters.installLegacyXamarinAndroid, true) }}:
-  - template: /build-tools/automation/yaml-templates/install-dotnet-tool.yaml
-    parameters:
-      toolName: boots
-      version: $(BootsToolVersion)
-      continueOnError: false
-  - pwsh: $(Agent.ToolsDirectory)/boots --stable Xamarin.Android
-    displayName: install Xamarin.Android stable
 
 - template: /build-tools/automation/yaml-templates/run-xaprepare.yaml
   parameters:

@@ -829,7 +829,7 @@ Rimuovere il riferimento '{0}' dal progetto e aggiungere invece il pacchetto NuG
 </comment>
   </data>
   <data name="XA4315" xml:space="preserve">
-    <value>Ignoring `{0}`. Manifest does not have the required 'package' attribute on the manifest element.</value>
+    <value>`{0}` ignorato. Il manifesto non ha l'attributo 'package' richiesto per l'elemento manifesto.</value>
     <comment>{0} - The path the the file.
 </comment>
   </data>
@@ -1013,6 +1013,13 @@ Per usare un percorso JDK personalizzato per una compilazione della riga di coma
     <comment>The following are literal names and should not be translated: MSBuild, .NET.
 {0} - The deprecated MSBuild property name
 {1} - The numeric version of .NET</comment>
+  </data>
+  <data name="XA1038" xml:space="preserve">
+    <value>Il valore ''{0}'' della proprietà Microsoft Build Engine del ''{1}'' non è valido. Un valore valido è uno dei seguenti:{2}.</value>
+    <comment>The following are literal names and should not be translated: MSBuild.
+{0} - The MSBuild property name which has invalid values.
+{1} - The current value of the property
+{2} - The list of valid values for the property these can be Comma-separated.</comment>
   </data>
   <data name="XA1039" xml:space="preserve">
     <value>Le librerie di supporto Android non sono supportate in .NET 9 e versioni successive. Esegui la migrazione ad AndroidX. Per altri dettagli, vedere https://aka.ms/net-android/androidx.</value>
