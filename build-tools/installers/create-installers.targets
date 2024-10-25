@@ -19,7 +19,7 @@
     <LibExtension Condition=" '$(HostOS)' == 'Windows' ">dll</LibExtension>
     <UseCommercialInstallerName Condition="'$(UseCommercialInstallerName)' == ''">False</UseCommercialInstallerName>
     <_HasCommercialFiles Condition="Exists('$(MicrosoftAndroidSdkOutDir)Xamarin.Android.Common.Debugging.targets')">True</_HasCommercialFiles>
-    <_MonoDroidPath Condition=" '$(_MonoDroidPath)' == '' ">..\..\external\monodroid</_MonoDroidPath>
+    <_MonoDroidPath Condition=" '$(_MonoDroidPath)' == '' ">..\..\external\android-platform-support</_MonoDroidPath>
   </PropertyGroup>
   <Target Name="_FindFrameworkDirs">
     <ItemGroup>

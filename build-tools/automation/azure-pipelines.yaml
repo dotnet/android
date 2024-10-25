@@ -25,15 +25,10 @@ resources:
     name: xamarin/sdk-insertions
     ref: refs/heads/main
     endpoint: xamarin
-  - repository: monodroid
-    type: github
-    name: xamarin/monodroid
-    ref: refs/heads/main
-    endpoint: xamarin
-  - repository: vscode-maui
+  - repository: android-platform-support
     type: git
-    name: DevDiv/vscode-maui
-    ref: refs/heads/main
+    name: DevDiv/android-platform-support
+    ref: refs/heads/new-main
   - repository: maui
     type: github
     name: dotnet/maui
@@ -94,8 +89,7 @@ extends:
       sourceRepositoriesToScan:
         include:
         - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-          - repository: monodroid
-          - repository: vscode-maui
+          - repository: android-platform-support
         exclude:
         - repository: yaml-templates
         - repository: maui

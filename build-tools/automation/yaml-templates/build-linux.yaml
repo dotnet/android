@@ -53,21 +53,11 @@ stages:
     - checkout: maui
 
     - ${{ if ne(variables['System.PullRequest.IsFork'], 'True') }}:
-      - checkout: monodroid
+      - checkout: android-platform-support
         clean: true
         submodules: recursive
-        path: s/xamarin-android/external/monodroid
+        path: s/xamarin-android/external/android-platform-support
         persistCredentials: true
-
-      - checkout: vscode-maui
-        clean: true
-        submodules: recursive
-        path: s/xamarin-android/external/vscode-maui
-        persistCredentials: true
-
-      - script: rm -rf external/monodroid/external/xamarin-android
-        workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
-        displayName: delete external xamarin-android submodule
 
       - script: make prepare-external-git-dependencies PREPARE_CI=1 CONFIGURATION=$(XA.Build.Configuration)
         workingDirectory: $(System.DefaultWorkingDirectory)/xamarin-android
