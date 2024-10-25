@@ -20,7 +20,7 @@
 #include "jni-wrappers.hh"
 #include "strings.hh"
 
-static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1;
+static inline constexpr size_t PROPERTY_VALUE_BUFFER_LEN = PROP_VALUE_MAX + 1uz;
 
 extern  FILE  *gref_log;
 extern  FILE  *lref_log;

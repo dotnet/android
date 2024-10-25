@@ -22,10 +22,10 @@ namespace xamarin::android::internal
 		// These three MUST be the same as like-named constants in src/Xamarin.Android.Build.Tasks/Utilities/MonoAndroidHelper.Basic.cs
 		static constexpr std::string_view MANGLED_ASSEMBLY_NAME_EXT { ".so" };
 		static constexpr std::string_view MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER { "lib_" };
-		static constexpr size_t REGULAR_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
+		static constexpr size_t REGULAR_ASSEMBLY_MARKER_INDEX = 3uz;            // this ☝️
 		static constexpr char REGULAR_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_REGULAR_ASSEMBLY_MARKER[REGULAR_ASSEMBLY_MARKER_INDEX];
 		static constexpr std::string_view MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER { "lib-" };
-		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3;              // this ☝️
+		static constexpr size_t SATELLITE_ASSEMBLY_MARKER_INDEX = 3uz;            // this ☝️
 		static constexpr char SATELLITE_ASSEMBLY_MARKER_CHAR = MANGLED_ASSEMBLY_SATELLITE_ASSEMBLY_MARKER[SATELLITE_ASSEMBLY_MARKER_INDEX];
 
 		static constexpr std::string_view MONO_ANDROID_RUNTIME_ASSEMBLY_NAME  { "Mono.Android.Runtime" };
@@ -89,16 +89,16 @@ namespace xamarin::android::internal
 		//
 		// Indexes must match these of trhe `appDirs` array in src/java-runtime/mono/android/MonoPackageManager.java
 		//
-		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0;
-		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1;
-		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2;
+		static constexpr size_t APP_DIRS_FILES_DIR_INDEX = 0uz;
+		static constexpr size_t APP_DIRS_CACHE_DIR_INDEX = 1uz;
+		static constexpr size_t APP_DIRS_DATA_DIR_INDEX = 2uz;
 
 		// 64-bit unsigned or 64-bit signed with sign
-		static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21;
-		static constexpr size_t INTEGER_BASE10_BUFFER_SIZE = MAX_INTEGER_DIGIT_COUNT_BASE10 + 1;
+		static constexpr size_t MAX_INTEGER_DIGIT_COUNT_BASE10 = 21uz;
+		static constexpr size_t INTEGER_BASE10_BUFFER_SIZE = MAX_INTEGER_DIGIT_COUNT_BASE10 + 1uz;
 
 		// Documented in NDK's <android/log.h> comments
-		static constexpr size_t MAX_LOGCAT_MESSAGE_LENGTH = 1023;
+		static constexpr size_t MAX_LOGCAT_MESSAGE_LENGTH = 1023uz;
 
 		static constexpr std::string_view LOG_CATEGORY_NAME_NONE               { "*none*" };
 		static constexpr std::string_view LOG_CATEGORY_NAME_MONODROID          { "monodroid" };

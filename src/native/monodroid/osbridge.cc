@@ -86,9 +86,9 @@ OSBridge::clear_mono_java_gc_bridge_info ()
 int
 OSBridge::get_gc_bridge_index (MonoClass *klass)
 {
-	uint32_t f = 0;
+	uint32_t f = 0u;
 
-	for (size_t i = 0; i < NUM_GC_BRIDGE_TYPES; ++i) {
+	for (size_t i = 0uz; i < NUM_GC_BRIDGE_TYPES; ++i) {
 		MonoClass *k = mono_java_gc_bridge_info [i].klass;
 		if (k == nullptr) {
 			f++;

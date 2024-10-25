@@ -238,8 +238,8 @@ EmbeddedAssemblies::map_runtime_file (XamarinAndroidBundledAssembly& file) noexc
 		if (Util::should_log (LOG_ASSEMBLY) && map_info.area != nullptr) [[unlikely]] {
 			const char *p = (const char*) file.data;
 
-			std::array<char, 9> header;
-			for (size_t j = 0; j < header.size () - 1; ++j)
+			std::array<char, 9uz> header;
+			for (size_t j = 0uz; j < header.size () - 1uz; ++j)
 				header[j] = isprint (p [j]) ? p [j] : '.';
 			header [header.size () - 1] = '\0';
 
@@ -349,7 +349,7 @@ EmbeddedAssemblies::individual_assemblies_open_from_bundles (dynamic_local_strin
 
 	MonoAssembly *a = nullptr;
 
-	for (size_t i = 0; i < application_config.number_of_assemblies_in_apk; i++) {
+	for (size_t i = 0uz; i < application_config.number_of_assemblies_in_apk; i++) {
 		a = load_bundled_assembly (bundled_assemblies [i], name, abi_name, loader_data, ref_only);
 		if (a != nullptr) {
 			return a;
@@ -575,7 +575,7 @@ EmbeddedAssemblies::binary_search (const Key *key, const Entry *base, size_t nme
 force_inline const TypeMapModuleEntry*
 EmbeddedAssemblies::binary_search (uint32_t key, const TypeMapModuleEntry *arr, uint32_t n) noexcept
 {
-	ssize_t left = -1;
+	ssize_t left = -1z;
 	ssize_t right = static_cast<ssize_t>(n);
 	ssize_t middle;
 
@@ -1010,7 +1010,7 @@ EmbeddedAssemblies::typemap_load_index (TypeMapIndexHeader &header, size_t file_
 	}
 
 	uint8_t *p = data.get ();
-	for (size_t i = 0; i < type_map_count; i++) {
+	for (size_t i = 0uz; i < type_map_count; i++) {
 		type_maps[i].assembly_name = reinterpret_cast<char*>(p);
 		p += entry_size;
 	}
@@ -1043,7 +1043,7 @@ EmbeddedAssemblies::typemap_load_index (int dir_fd, const char *dir_path, const 
 bool
 EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *dir_path, const char *file_path, int file_fd, TypeMap &module)
 {
-	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (header.assembly_name_length, 1);
+	size_t alloc_size = Helpers::add_with_overflow_check<size_t> (header.assembly_name_length, 1uz);
 	module.assembly_name = new char[alloc_size];
 
 	ssize_t nread = do_read (file_fd, module.assembly_name, header.assembly_name_length);
@@ -1086,7 +1086,7 @@ EmbeddedAssemblies::typemap_load_file (BinaryTypeMapHeader &header, const char *
 	TypeMapEntry *cur;
 
 	constexpr uint32_t INVALID_TYPE_INDEX = std::numeric_limits<uint32_t>::max ();
-	for (size_t i = 0; i < module.entry_count; i++) {
+	for (size_t i = 0uz; i < module.entry_count; i++) {
 		cur = const_cast<TypeMapEntry*> (&module.java_to_managed[i]);
 		cur->from = reinterpret_cast<char*>(java_pos);
 
@@ -1291,7 +1291,7 @@ EmbeddedAssemblies::register_from_filesystem (const char *lib_dir_path,bool look
 		)
 	);
 
-	size_t assembly_count = 0;
+	size_t assembly_count = 0uz;
 	do {
 		errno = 0;
 		dirent *cur = readdir (lib_dir);

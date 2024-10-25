@@ -5,7 +5,7 @@
 #include "cpu-arch.hh"
 
 #if __arm__
-static inline constexpr size_t BUF_SIZE = 512;
+static inline constexpr size_t BUF_SIZE = 512uz;
 
 static int
 find_in_maps (const char *str)

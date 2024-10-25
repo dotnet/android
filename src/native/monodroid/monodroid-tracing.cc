@@ -22,7 +22,7 @@ void
 MonodroidRuntime::log_traces (JNIEnv *env, TraceKind kind, const char *first_line) noexcept
 {
 	if (!tracing_init_done) {
-		std::lock_guard lock (tracing_init_lock);
+		xamarin::android::lock_guard lock (tracing_init_lock);
 
 		char *err = nullptr;
 		void *handle = MonodroidDl::monodroid_dlopen (SharedConstants::xamarin_native_tracing_name.data (), MONO_DL_EAGER, &err, nullptr);

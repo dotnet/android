@@ -157,7 +157,7 @@ MonodroidRuntime::open_from_update_dir (MonoAssemblyName *aname, [[maybe_unused]
 	pname.append (name, name_len);
 
 	bool is_dll = Util::ends_with (name, SharedConstants::DLL_EXTENSION);
-	size_t file_name_len = pname.length () + 1;
+	size_t file_name_len = pname.length () + 1uz;
 	if (!is_dll)
 		file_name_len += SharedConstants::DLL_EXTENSION.length ();
 
@@ -205,7 +205,7 @@ MonodroidRuntime::should_register_file ([[maybe_unused]] const char *filename)
 		return true;
 	}
 
-	size_t filename_len = strlen (filename) + 1; // includes space for path separator
+	size_t filename_len = strlen (filename) + 1uz; // includes space for path separator
 	for (const char *odir : AndroidSystem::override_dirs) {
 		if (odir == nullptr) {
 			continue;
@@ -233,7 +233,7 @@ MonodroidRuntime::gather_bundled_assemblies (jstring_array_wrapper &runtimeApks,
 	}
 
 	int64_t apk_count = static_cast<int64_t>(runtimeApks.get_length ());
-	size_t prev_num_assemblies = 0;
+	size_t prev_num_assemblies = 0uz;
 	bool got_split_config_abi_apk = false;
 	bool got_base_apk = false;
 
@@ -330,11 +330,9 @@ MonodroidRuntime::monodroid_debug_accept (int sock, struct sockaddr_in addr)
 	if (accepted < 0)
 		return -3;
 
-	constexpr const char handshake_msg [] = "MonoDroid-Handshake\n";
-	constexpr size_t handshake_length = sizeof (handshake_msg) - 1;
-
+	constexpr std::string_view msg { "MonoDroid-Handshake\n" };
 	do {
-		res = send (accepted, handshake_msg, handshake_length, 0);
+		res = send (accepted, msg.data (), msg.size (), 0);
 	} while (res == -1 && errno == EINTR);
 	if (res < 0)
 		return -4;
@@ -413,16 +411,16 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 			options->debug = true;
 
 			if (token.has_at ('=', ARG_DEBUG.length ())) {
-				constexpr size_t arg_name_length = ARG_DEBUG.length () + 1; // Includes the '='
+				constexpr size_t arg_name_length = ARG_DEBUG.length () + 1uz; // Includes the '='
 
 				static_local_string<SMALL_STRING_PARSE_BUFFER_LEN> hostport (token.length () - arg_name_length);
 				hostport.assign (token.start () + arg_name_length, token.length () - arg_name_length);
 
 				string_segment address;
-				size_t field = 0;
-				while (field < 3 && hostport.next_token (':', address)) {
+				size_t field = 0uz;
+				while (field < 3uz && hostport.next_token (':', address)) {
 					switch (field) {
-						case 0: // host
+						case 0uz: // host
 							if (address.empty ()) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the host field (empty string)");
 							} else {
@@ -430,13 +428,13 @@ MonodroidRuntime::parse_runtime_args (dynamic_local_string<PROPERTY_VALUE_BUFFER
 							}
 							break;
 
-						case 1: // sdb_port
+						case 1uz: // sdb_port
 							if (!address.to_integer (sdb_port)) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
 							}
 							break;
 
-						case 2: // out_port
+						case 2uz: // out_port
 							if (!address.to_integer (out_port)) {
 								log_error (LOG_DEFAULT, "Invalid --debug argument for the sdb_port field");
 							}
@@ -710,7 +708,7 @@ MonodroidRuntime::cleanup_runtime_config ([[maybe_unused]] MonovmRuntimeConfigAr
 MonoDomain*
 MonodroidRuntime::create_domain (JNIEnv *env, jstring_array_wrapper &runtimeApks, bool is_root_domain, bool have_split_apks)
 {
-	size_t user_assemblies_count   = 0;
+	size_t user_assemblies_count = 0uz;
 
 	gather_bundled_assemblies (runtimeApks, &user_assemblies_count, have_split_apks);
 
@@ -1092,7 +1090,7 @@ MonodroidRuntime::set_profile_options ()
 	}
 
 	constexpr std::string_view OUTPUT_ARG { "output=" };
-	constexpr size_t start_index = AOT_PREFIX.length () + 1; // one char past ':'
+	constexpr size_t start_index = AOT_PREFIX.length () + 1uz; // one char past ':'
 
 	dynamic_local_string<SENSIBLE_PATH_MAX> output_path;
 	bool have_output_arg = false;
@@ -1195,7 +1193,7 @@ MonodroidRuntime::load_assembly (MonoDomain *domain, jstring_wrapper &assembly)
 		internal_timing->end_event (total_time_index, true /* uses_more_info */);
 
 		constexpr std::string_view PREFIX { " (domain): " };
-		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1;
+		constexpr size_t PREFIX_SIZE = sizeof(PREFIX) - 1uz;
 
 		dynamic_local_string<SENSIBLE_PATH_MAX + PREFIX_SIZE> more_info { PREFIX };
 		more_info.append_c (assm_name);
@@ -1211,8 +1209,8 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 		total_time_index = internal_timing->start_event (TimingEventKind::AssemblyPreload);
 	}
 
-	size_t i = 0;
-	for (i = 0; i < assemblies.get_length (); ++i) {
+	size_t i = 0uz;
+	for (i = 0uz; i < assemblies.get_length (); ++i) {
 		jstring_wrapper &assembly = assemblies [i];
 		load_assembly (ctx, assembly);
 		// only load the first "main" assembly if we are not preloading.
@@ -1224,7 +1222,7 @@ MonodroidRuntime::load_assemblies (load_assemblies_context_type ctx, bool preloa
 		internal_timing->end_event (total_time_index, true /* uses-more_info */);
 
 		static_local_string<SharedConstants::INTEGER_BASE10_BUFFER_SIZE> more_info;
-		more_info.append (static_cast<uint64_t>(i + 1));
+		more_info.append (static_cast<uint64_t>(i + 1u));
 		internal_timing->add_more_info (total_time_index, more_info);
 	}
 }
