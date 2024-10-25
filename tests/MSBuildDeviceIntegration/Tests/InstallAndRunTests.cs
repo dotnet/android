@@ -951,12 +951,20 @@ namespace UnnamedProject
 		}
 
 		[Test]
-		public void FastDeployEnvironmentFiles ([Values (false, true)] bool isRelease)
+		[TestCase (false, true)]
+		[TestCase (false, false)]
+		[TestCase (true, false)]
+		public void FastDeployEnvironmentFiles (bool isRelease, bool embedAssembliesIntoApk)
 		{
+			if (embedAssembliesIntoApk) {
+				AssertCommercialBuild ();
+			}
+
 			var proj = new XamarinAndroidApplicationProject {
 				ProjectName = nameof (FastDeployEnvironmentFiles),
 				RootNamespace = nameof (FastDeployEnvironmentFiles),
 				IsRelease = isRelease,
+				EmbedAssembliesIntoApk = embedAssembliesIntoApk,
 				EnableDefaultItems = true,
 				OtherBuildItems = {
 					new BuildItem("AndroidEnvironment", "env.txt") {
